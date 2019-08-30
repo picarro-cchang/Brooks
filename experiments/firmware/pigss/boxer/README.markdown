@@ -10,11 +10,9 @@ hardware will be a custom PCB.
 
 - [Boxer -- Manifold Box Controller](#boxer----manifold-box-controller)
     - [Serial connection details](#serial-connection-details)
-        - [OFF hardware](#off-hardware)
-            - [Command interface](#command-interface)
-            - [Debug interface](#debug-interface)
+        - [Command interface](#command-interface)
+        - [Debug interface](#debug-interface)
     - [Uploading new firmware](#uploading-new-firmware)
-        - [OFF hardware](#off-hardware-1)
     - [Command reference](#command-reference)
         - [IEEE-488 common commands](#ieee-488-common-commands)
             - [\*IDN?](#idn)
@@ -94,27 +92,29 @@ hardware will be a custom PCB.
 
 ## Serial connection details ##
 
-### OFF hardware ###
-
-#### Command interface ####
+### Command interface ###
 
 The command interface is via USB, but the hardware will enumerate as a
 virtual serial port.  The port will need to be configured with these
 settings:
 
-| Baud  | Data bits | Stop bits | Parity checking |
-|-------|-----------|-----------|-----------------|
-| 38400 | 8         | 1         | None            |
+| Platform | Baud   | Data bits | Stop bits | Parity checking |
+|----------|--------|-----------|-----------|-----------------|
+| OFF      | 38400  | 8         | 1         | None            |
+| IFF      | 230400 | 8         | 1         | None            |
 
-#### Debug interface ####
+
+### Debug interface ###
 
 The debug interface is via USB, but the hardware will enumerate as a
 virtual serial port.  The port will need to be configured with these
 settings:
 
-| Baud  | Data bits | Stop bits | Parity checking |
-|-------|-----------|-----------|-----------------|
-| 38400 | 8         | 1         | None            |
+| Platform | Baud   | Data bits | Stop bits | Parity checking |
+|----------|--------|-----------|-----------|-----------------|
+| OFF      | 38400  | 8         | 1         | None            |
+| IFF      | 230400 | 8         | 1         | None            |
+
 
 ## Uploading new firmware ##
 
@@ -134,12 +134,15 @@ Comm Port, `$(avrdude_baud)` is the baud rate used by the bootloader,
 and `$(hex_file)` is the new firmware in Intel HEX format.
 
 For Windows, VCP examples are `com5`, `com23`, etc.  For Linux, VCP
-examples are `/dev/ttyUSB0`, `/dev/ttyUSB1`, etc.
+examples are `/dev/ttyUSB0`, `/dev/ttyUSB1`, etc.  Baud rates for our
+two platforms are shown below.
 
-### OFF hardware ###
 
-OFF hardware uses 38400 baud.  IFF hardware may use something
-different.
+| Platform                  | Baud   |
+|---------------------------|--------|
+| OFF (Arduino Mega)        | 38400  |
+| IFF (Picarro's Whitfield) | 230400 |
+
 
 ## Command reference ##
 
@@ -533,8 +536,11 @@ Hex file releases now have an extra attribute: `_mega` or
 
 This release supports two Topaz boards with the new system board --
 Whitfield.  You'll need to use the new 230.4k baud rate instead of the
-old 38.4k.
+old 38.4k.  The Topaz boards need to be modified to have an I2C
+multiplexer address of 0x71 instead of the default 0x70.
 
 Added the TZB.SN command.  Note that you can't communicate with new
 Topaz boards until they have serial numbers.  Getting the serial
 number is the system board's way of discovering the hardware.
+
+This firmware reads the 10 pressure sensors at about 35 Hz.
