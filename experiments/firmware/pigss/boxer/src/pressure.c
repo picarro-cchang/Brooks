@@ -278,6 +278,7 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
+  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
   return 0;
 }
 
@@ -292,6 +293,7 @@ int8_t pressure_mpr_outlet_trigger(char board) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
+  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
   return 0;
 }
 
@@ -300,7 +302,6 @@ int8_t pressure_mpr_trigger_cycle( void ) {
   // Trigger all the inlet channels
   for (uint8_t channel = 1; channel < 9; channel++) {
     retval += pressure_mpr_inlet_trigger(channel);
-    _delay_ms(5);
   }
   // Trigger the outlet channels
   retval += pressure_mpr_outlet_trigger('a');
@@ -381,7 +382,7 @@ void pressure_mpr_read_task(void) {
     pressure_inlet_old_pascals[index] =
       pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
     // This delay has to be here to avoid SPI read errors
-    _delay_ms(5);
+    _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
   }
   
   // Outlet A
@@ -389,8 +390,11 @@ void pressure_mpr_read_task(void) {
   pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						pressure_outlet_old_counts[0],
 						PRESSURE_EMA_ALPHA);
+  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
   pressure_outlet_old_pascals[0] =
     pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
+  // This delay has to be here to avoid SPI read errors
+  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
 
   // Outlet B
   pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
@@ -399,6 +403,8 @@ void pressure_mpr_read_task(void) {
 						PRESSURE_EMA_ALPHA);
   pressure_outlet_old_pascals[1] =
     pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
+  // This delay has to be here to avoid SPI read errors
+  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
 
   // Cancel the read
   OS_SetTaskState(1, SUSPENDED);

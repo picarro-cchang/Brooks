@@ -13,6 +13,9 @@
 // Setpoint for bypass DACs when channels are disabled
 #define PRESSURE_DAC_INACTIVE_COUNTS 17134
 
+// Pressure read delay
+#define PRESSURE_READ_KLUDGE_DELAY_MS 1
+
 // Set the voltage output from one of the pressure-control DACs
 //
 // Arguments:
