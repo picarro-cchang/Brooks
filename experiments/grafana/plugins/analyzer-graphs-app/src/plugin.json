@@ -7,8 +7,8 @@
       "name": "Picarro, Inc."
     },
     "logos": {
-      "small": "img/graph.jpg",
-      "large": "img/graph.jpg"
+      "small": "img/icn-panel.svg",
+      "large": "img/icn-panel.svg"
     }
   },
   "includes": [

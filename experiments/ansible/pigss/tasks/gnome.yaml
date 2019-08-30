@@ -1,0 +1,211 @@
+- name: Copy wallpaper
+  copy: src=files/picarro_wallpaper.png dest={{ playbook_home }}/.wallpaper.png owner={{ playbook_user }} mode=0600
+
+- name: Copy lockscreen
+  copy: src=files/picarro_lockscreen.png dest={{ playbook_home }}/.lockscreen.png owner={{ playbook_user }} mode=0600
+
+- name: Copy logo
+  copy: src=files/picarro_typelogo.png dest={{ playbook_home }}/.type_logo.png owner={{ playbook_user }} mode=0600
+
+- name: Set favorite apps
+  dconf:
+    key: "/org/gnome/shell/favorite-apps"
+    value: "['chromium-browser.desktop', 'org.gnome.Terminal.desktop', 'org.gnome.Nautilus.desktop', 'org.gnome.gedit.desktop']"
+    state: present
+
+- name: Set wallpaper
+  dconf:
+    key: "/org/gnome/desktop/background/picture-uri"
+    value: "'file://{{ playbook_home }}/.wallpaper.png'"
+    state: present
+
+- name: Set login wallpaper (ubuntu.css)
+  replace:
+    path: /usr/share/gnome-shell/theme/ubuntu.css
+    after: 'url'
+    regexp: 'resource:///org/gnome/shell/theme/noise-texture.png'
+    replace: 'file:///home/picarro/.lockscreen.png'
+  become: yes
+
+- name: Set login logo
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.login-screen logo "'{{ playbook_home }}/.type_logo.png'"
+
+- name: Set lockscreen image
+# dconf cannot read or write this register
+  shell: gsettings set org.gnome.desktop.screensaver picture-uri "'file://{{ playbook_home }}/.lockscreen.png'"
+
+- name: Enable Gnome Shell extensions
+  dconf:
+    key: "/org/gnome/shell/enabled-extensions"
+    value: "['user-theme', 'user-theme@gnome-shell-extensions.gcampax.github.com']"
+    state: present
+
+- name: Set icon theme
+  # dconf seems to have a bug that only allows us to read this register
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface icon-theme 'Papirus'
+
+- name: Set GTK theme
+  dconf:
+    key: "/org/gnome/desktop/interface/gtk-theme"
+    value: "'Materia-dark-compact'"
+    state: present
+
+- name: Set Gnome Shell theme
+  dconf:
+    key: "/org/gnome/shell/extensions/user-theme/name"
+    value: "'Materia-dark-compact'"
+    state: present
+
+- name: Set document font
+# dconf seems to have a bug that only allows us to read this register
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface document-font-name 'Roboto 11'
+
+- name: Set interface font
+# dconf seems to have a bug that only allows us to read this register
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface font-name 'Roboto 10'
+
+- name: Set monospace font
+# dconf seems to have a bug that only allows us to read this register
+  shell: /usr/bin/gsettings set org.gnome.desktop.interface monospace-font-name 'Fira Code 11'
+
+- name: Set window title font
+# dconf seems to have a bug that only allows us to read this register
+  shell: /usr/bin/gsettings set org.gnome.desktop.wm.preferences titlebar-font 'Roboto 11'
+
+- name: Set background primary color
+  dconf:
+    key: "/org/gnome/desktop/background/primary-color"
+    value: "'#ffffff'"
+    state: present
+
+- name: Set background secondary color
+  dconf:
+    key: "/org/gnome/desktop/background/secondary-color"
+    value: "'#ffffff'"
+    state: present
+
+# dconf writes to this register improperly
+- name: Disable auto screen lock
+  shell: /usr/bin/gsettings set org.gnome.desktop.session idle-delay 0
+
+- name: Disable desktop icons
+  dconf:
+    key: "/org/gnome/desktop/background/show-desktop-icons"
+    value: 'false'
+    state: present
+
+- name: Disable multiple workspaces
+# dconf cannot read or write to this register
+  shell: gsettings set org.gnome.shell.window-switcher current-workspace-only true
+
+- name: Prevent gnome from auto-opening file manager when media is plugged in
+  dconf:
+    key: "/org/gnome/desktop/media-handling/automount-open"
+    value: 'false'
+    state: present
+
+- name: Prevent user from locking screen
+  dconf:
+    key: "/org/gnome/desktop/lockdown/disable-lock-screen"
+    value: 'true'
+    state: present
+
+# Removed step to prevent user from logging out
+# If we remove this feature, the user cannot shutdown/reboot the system
+# It also allows them to put the system in a hibernate state that cannot
+# be easily recovered from
+
+- name: Disable gnome user administration
+  dconf:
+    key: "/org/gnome/desktop/lockdown/user-administration-disabled"
+    value: 'true'
+    state: present
+
+- name: Prevent the user from switching users
+  dconf:
+    key: "/org/gnome/desktop/lockdown/disable-user-switching"
+    value: 'true'
+    state: present
+
+- name: Disabling printing
+  dconf:
+    key: "/org/gnome/desktop/lockdown/disable-printing"
+    value: 'true'
+    state: present
+
+- name: Disable print dialogs
+  dconf:
+    key: "/org/gnome/desktop/lockdown/disable-print-setup"
+    value: 'true'
+    state: present
+
+- name: Disable banner notifications
+  dconf:
+    key: "/org/gnome/desktop/notifications/show-banner"
+    value: 'false'
+    state: present
+
+- name: Disable lock-screen notifications
+  dconf:
+    key: "/org/gnome/desktop/notification/show-in-lock-screen"
+    value: 'false'
+    state: present
+
+- name: Disable screensaver
+  dconf:
+    key: "/org/gnome/desktop/screensaver/idle-activation-enabled"
+    value: 'false'
+    state: present
+
+- name: Disable screensaver auto-lock on wake
+  dconf:
+    key: "/org/gnome/desktop/screensaver/lock-enabled"
+    value: 'false'
+    state: present
+
+- name: Set file browser default view to list-view
+  dconf:
+    key: "/org/gnome/nautilus/preferences/default-folder-viewer"
+    value: "'list-view'"
+    state: present
+
+- name: Enable on-screen keyboard
+  dconf:
+    key: "/org/gnome/desktop/a11y/applications/screen-keyboard-enabled"
+    value: 'true'
+    state: present
+
+- name: Disable geolocation
+  dconf:
+    key: "/org/gnome/system/location/enabled"
+    value: 'false'
+    state: present
+
+# dconf doesn't have access to this register
+- name: Display line numbers in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor display-line-numbers true
+
+# dconf doesn't have access to this register
+- name: Display minimap in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor display-overview-map true
+
+# dconf doesn't have access to this register
+- name: Set gedit font
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor editor-font 'Fira Code 11'
+
+# dconf doesn't have access to this register
+- name: Set gedit to insert spaces instead of tab
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor insert-spaces true
+
+# dconf doesn't have access to this register
+- name: Disable word wrap in gedit
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor wrap-mode none
+
+# dconf doesn't have access to this register
+- name: Set default tab-size to 4
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor tabs-size 4
+
+# dconf doesn't have access to this register
+- name: Set gedit theme
+  shell: /usr/bin/gsettings set org.gnome.gedit.preferences.editor scheme oblivion

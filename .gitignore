@@ -5,6 +5,7 @@
 *.so
 *.db
 *~
+*.retry
 target/
 build/
 attic/

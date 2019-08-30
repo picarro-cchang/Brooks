@@ -1,0 +1,27 @@
+- hosts: localhost
+  vars_prompt:
+  - name: "githubuser"
+    prompt: "Enter your github username"
+    private: no
+  - name: "githubemail"
+    prompt: "Enter your github email"
+    private: no
+  - name: "grafanauser"
+    prompt: "Enter the default grafana username"
+    private: no
+  - name: "grafanapass"
+    prompt: "Enter the default grafana password"
+    private: yes
+  pre_tasks:
+    - include: tasks/bootstrap.yaml
+  tasks:
+    - name: Set playbook vars
+      set_fact: playbook_user="{{ lookup('env','USER') }}" playbook_home="{{  lookup('env','HOME')  }}"   
+    - include: tasks/gnome.yaml
+    - include: tasks/environmental-variables.yaml 
+    - include: tasks/miniconda.yaml
+    - include: tasks/non-apt-install.yaml
+    - include: tasks/configure-git.yaml
+    - include: tasks/pigss-meta.yaml
+    - include: tasks/grafana-npm-gem.yaml
+    - include: tasks/build-menu.yaml

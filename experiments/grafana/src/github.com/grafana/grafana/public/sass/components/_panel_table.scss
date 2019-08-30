@@ -49,7 +49,8 @@
 }
 
 .table-panel-table {
-  width: 100%;
+  width: 80%;
+  margin-left: 10%;
   border-collapse: collapse;
 
   th {
@@ -60,6 +61,10 @@
         padding-left: 15px;
       }
     }
+  }
+
+  tbody {
+    font-size:18px;
   }
 
   td {
@@ -117,15 +122,19 @@
   border-bottom: 2px solid $body-bg;
   height: 2em;
   position: absolute;
+  width: 80%;
+  margin-left: 10%;
   top: 0;
   right: 0;
   left: 0;
 }
 
 .table-panel-table-header-inner {
-  padding: 0.3em 0 0.45em 1.1em;
+  padding: 0 0 0.45em 1.1em;
   text-align: left;
-  color: $blue;
+  color: $white;
+  font-weight: 700;
+  font-size: 20px;
   position: absolute;
   top: 0;
 }

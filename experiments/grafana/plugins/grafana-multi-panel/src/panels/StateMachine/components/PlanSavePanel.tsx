@@ -8,7 +8,8 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
             <div className="btn-group d-flex">
                 <button type="button" className="btn btn-light w-100 btn-small"
                         onClick={e => this.props.ws_sender({element: "plan_save_filename",
-                            name: this.props.plan.plan_files[index+1]})}>
+                            name: this.props.plan.plan_files[index+1]})}
+                style={{color: "black"}}>
                     {this.props.plan.plan_files[index+1]}
                 </button>
                 <button type="button" className="btn btn-danger btn-small"

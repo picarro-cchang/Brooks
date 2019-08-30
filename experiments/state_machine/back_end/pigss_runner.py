@@ -8,6 +8,8 @@ from aiohttp_swagger import setup_swagger
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.state_machine.back_end.bank_name_service import \
+    BankNameService
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
 from experiments.state_machine.back_end.pigss_farm import PigssFarm
@@ -60,6 +62,10 @@ class Server:
         supervisor_service = SupervisorService()
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
+
+        bank_name_service = BankNameService()
+        bank_name_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/bank_name/", bank_name_service.app)
 
         setup_swagger(self.app)
 
