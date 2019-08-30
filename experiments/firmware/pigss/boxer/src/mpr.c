@@ -40,7 +40,7 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   uint8_t bytes[3] = {0xaa, 0x00, 0x00};
   uint8_t status_byte = 0;
 
-  uint8_t maxtries = 100;
+  uint8_t maxtries = 10;
   uint8_t tries = 0;
 
   // Pull cs low
