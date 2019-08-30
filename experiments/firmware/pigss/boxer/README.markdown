@@ -65,6 +65,8 @@ hardware will be a custom PCB.
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-8)
                 - [Typical Return](#typical-return-16)
+            - [PRS.OUT.RAW? n](#prsoutraw-n)
+                - [Typical Return](#typical-return-17)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-9)
@@ -387,6 +389,17 @@ Each channel has one inlet sensor.  The raw pressure reading is a
 ##### Parameter (n) #####
 
 Channel number 1-8.
+
+##### Typical Return #####
+
+14799059
+
+#### PRS.OUT.RAW? n ####
+
+Query the raw digital pressure reading from one of the outlet sensors.
+Each manifold (Topaz) board has one outlet sensor.  Outlet sensor 1 is
+on the board with channels 1-4, and sensor 2 is on the board with
+channels 5-8.
 
 ##### Typical Return #####
 

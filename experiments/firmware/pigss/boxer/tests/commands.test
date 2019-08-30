@@ -398,7 +398,7 @@ foreach pressure_channel $inlet_channel_list {
 
 set outlet_channel_list "1 2"
 foreach pressure_channel $outlet_channel_list {
-    tcltest::test prs.in_raw_$pressure_channel {
+    tcltest::test prs.out_raw_$pressure_channel {
 	Test querying the raw outlet pressure values.
     } -setup {
 	set garbage_string [boxer::readline $channel]
