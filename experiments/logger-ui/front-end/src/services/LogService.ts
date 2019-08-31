@@ -1,6 +1,4 @@
-import { TimeFragment, dateTime } from '@grafana/data';
-import { LoggerGetLogsAPI } from '../constants/API';
-import { LogProps } from 'components/types';
+import { LoggerGetLogsAPI, DEFAULT_LOG_PROPS } from '../constants';
 
 export const LogService = (() => {
   function getLogs(query = '') {
@@ -19,17 +17,7 @@ export const LogService = (() => {
 
   return {
     getDefaults: () => {
-      const defaults: LogProps = {
-        level: '10',
-        limit: 20,
-        date: {
-          from: dateTime(),
-          to: dateTime(),
-          raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment }
-        },
-        data: [[]],
-      };
-      return defaults;
+      return DEFAULT_LOG_PROPS;
     },
     getLogs: getLogs,
   };

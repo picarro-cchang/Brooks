@@ -4,7 +4,7 @@ import { TimeRange } from '@grafana/data';
 export interface LogProps {
   level: string;
   limit: number;
-  date: TimeRange;
+  timeRange: TimeRange;
   data: string[][];
 }
 

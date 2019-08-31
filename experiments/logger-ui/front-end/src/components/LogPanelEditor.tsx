@@ -1,25 +1,31 @@
 import React, { PureComponent } from 'react';
 import { PanelOptionsGroup, PanelEditorProps, Select, FormLabel, TimePicker } from '@grafana/ui';
-// @ts-ignore
-import { TimeFragment, dateTime } from '@grafana/data';
+import { TimeRange, dateTime } from '@grafana/data';
 import { LogProps } from './types';
+
+import { LEVEL_OPTIONS, LIMIT_OPTIONS, DEFAULT_TIME_OPTIONS } from '../constants';
 
 const labelWidth = 6;
 const selectWidth = 12;
 
-const levelOptions = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '30', label: '30' }];
-const limitOptions = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '50', label: '50' }];
-
 export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
+
   onLevelChange = (level: any) => this.props.onOptionsChange({ ...this.props.options, level: level.value });
   onLimitChange = (limit: any) => this.props.onOptionsChange({ ...this.props.options, limit: limit.value });
-  onDateChange = (timeRange: any) => {
-    this.props.onOptionsChange({ ...this.props.options, date: timeRange })
+  onDateChange = (timeRange: TimeRange) => {
+    this.props.onOptionsChange({ ...this.props.options, timeRange });
   };
 
   render() {
-    console.log(this.props);
-    const { level, limit } = this.props.options;
+    const { level, limit, timeRange } = this.props.options;
+
+    // Fix for grafana TimePicker issue, where from and to are string instead of DateTime Objects
+    if (typeof timeRange.from === "string") {
+        timeRange.from = dateTime(timeRange.from);
+    }
+    if (typeof timeRange.to === "string") {
+        timeRange.to = dateTime(timeRange.to);
+    }
 
     return (
       <PanelOptionsGroup title="Configuration">
@@ -28,10 +34,9 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
             <FormLabel width={labelWidth}>Level</FormLabel>
             <Select
               width={selectWidth}
-              options={levelOptions}
+              options={LEVEL_OPTIONS}
               onChange={this.onLevelChange}
-              value={levelOptions.find(option => option.value === level)}
-              defaultValue={'10'}
+              value={LEVEL_OPTIONS.find(option => option.value === level)}
               backspaceRemovesValue
               isLoading
             />
@@ -40,10 +45,9 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
             <FormLabel width={labelWidth}>Limit</FormLabel>
             <Select
               width={selectWidth}
-              options={limitOptions}
+              options={LIMIT_OPTIONS}
               onChange={this.onLimitChange}
-              value={limitOptions.find(option => option.value === '' + limit)}
-              defaultValue={'10'}
+              value={LIMIT_OPTIONS.find(option => option.value === '' + limit)}
               backspaceRemovesValue
               isLoading
             />
@@ -51,20 +55,11 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
           <div className="gf-form col-md-6 col-sm-6">
             <FormLabel width={labelWidth}>Date</FormLabel>
 
-
             <TimePicker
-              selectOptions={[
-                { from: 'now-5m', to: 'now', display: 'Last 5 minutes', section: 3 },
-                { from: 'now-15m', to: 'now', display: 'Last 15 minutes', section: 3 },
-                { from: 'now-30m', to: 'now', display: 'Last 30 minutes', section: 3 },
-                { from: 'now-1h', to: 'now', display: 'Last 1 hour', section: 3 },
-                { from: 'now-3h', to: 'now', display: 'Last 3 hours', section: 3 },
-                { from: 'now-6h', to: 'now', display: 'Last 6 hours', section: 3 },
-                { from: 'now-12h', to: 'now', display: 'Last 12 hours', section: 3 },
-                { from: 'now-24h', to: 'now', display: 'Last 24 hours', section: 3 },
-              ]}
+              timeZone="browser"
+              selectOptions={DEFAULT_TIME_OPTIONS}
               onChange={this.onDateChange}
-              value={{ from: dateTime(), to: dateTime(), raw: { from: dateTime(), to: dateTime() } }}
+              value={timeRange}
               onMoveBackward={() => console.log('Move Backward')}
               onMoveForward={() => console.log('Move forward')}
               onZoom={() => console.log('Zoom')}

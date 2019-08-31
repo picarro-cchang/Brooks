@@ -1049,13 +1049,13 @@ function (_super) {
   LogLayout.prototype.render = function () {
     var data = this.props.options.data;
     var styleObj = {
-      overflow: "scroll",
-      height: "inherit"
+      overflow: 'scroll',
+      height: 'inherit'
     };
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1__["Fragment"], null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h3", {
       className: "text-center",
       style: {
-        "marginTop": "24px"
+        marginTop: '24px'
       }
     }, "Logs"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "container-fluid",
@@ -1091,7 +1091,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _LogLayout__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./LogLayout */ "./components/LogLayout.tsx");
-/* harmony import */ var _constants_API__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants/API */ "./constants/API.ts");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants */ "./constants/index.ts");
 /* harmony import */ var _services_LogService__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./../services/LogService */ "./services/LogService.ts");
 
 
@@ -1100,6 +1100,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+var LIMIT = 100;
 
 var LogPanel =
 /** @class */
@@ -1109,16 +1110,10 @@ function (_super) {
   function LogPanel(props) {
     var _this = _super.call(this, props) || this;
 
-    _this.ws = new WebSocket(_constants_API__WEBPACK_IMPORTED_MODULE_4__["SocketURL"]);
+    _this.ws = new WebSocket(_constants__WEBPACK_IMPORTED_MODULE_4__["SocketURL"]);
 
-    _this.wsSendParams = function (o) {
-      console.error('Sending to websocket:', o);
-
-      _this.ws.send(JSON.stringify(o));
-    };
-
-    _this.getLogsData = function () {
-      _services_LogService__WEBPACK_IMPORTED_MODULE_5__["LogService"].getLogs().then(function (response) {
+    _this.getLogsData = function (query) {
+      _services_LogService__WEBPACK_IMPORTED_MODULE_5__["LogService"].getLogs(query).then(function (response) {
         response.json().then(function (logArr) {
           _this.setState({
             data: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](_this.state.data, logArr)
@@ -1128,38 +1123,40 @@ function (_super) {
     };
 
     _this.updateLogsData = function (query) {
-      if (query === void 0) {
-        query = '';
-      } // Send the data through websockets
-
-
-      _services_LogService__WEBPACK_IMPORTED_MODULE_5__["LogService"].getLogs(query).then(function (response) {
-        response.json().then(function (logArr) {
-          // console.log('logArr here', logArr);
-          _this.setState({
-            data: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](logArr)
-          });
-        });
-      });
+      if (_this.ws.readyState) {
+        _this.ws.send(JSON.stringify(query));
+      }
     };
 
     _this.state = {
-      data: []
+      data: [],
+      query: {}
     };
     return _this;
   }
 
   LogPanel.prototype.componentDidMount = function () {
-    var _this = this; // Call REST to get the data
-    // Set up web sockets to continually update the ui
-    // this.updateLogsData(`?level=${this.props.options.level}&limit=${this.props.options.limit}`);
-
-
-    this.getLogsData();
+    var _this = this;
 
     this.ws.onopen = function () {
-      // on connecting, do nothing but log it to the console
       console.log('web socket connected');
+      console.log(_this.ws); // @ts-ignore
+
+      var start_date = new Date(_this.props.options.timeRange.from).getTime(); // @ts-ignore
+
+      var end_date = new Date(_this.props.options.timeRange.to).getTime();
+      var query = {
+        level: _this.props.options.level,
+        limit: _this.props.options.level,
+        start_date: start_date,
+        end_date: end_date
+      };
+
+      _this.setState({
+        query: query
+      });
+
+      _this.updateLogsData(query);
     };
 
     this.ws.onmessage = function (evt) {
@@ -1167,7 +1164,7 @@ function (_super) {
       var rows = JSON.parse(evt.data); // console.log('-->', rows)
       // Remove the previous logs data on front-end, if the rows are more than 1000.
 
-      if (_this.state.data.length > 1000) {
+      if (_this.state.data.length > LIMIT) {
         _this.setState({
           data: []
         });
@@ -1180,19 +1177,34 @@ function (_super) {
 
     this.ws.onclose = function () {
       console.log('web socket disconnected');
-      _this.ws = new WebSocket(_constants_API__WEBPACK_IMPORTED_MODULE_4__["SocketURL"]);
+      _this.ws = new WebSocket(_constants__WEBPACK_IMPORTED_MODULE_4__["SocketURL"]);
 
-      _this.updateLogsData("?level=" + _this.props.options.level + "&limit=" + _this.props.options.limit);
+      _this.updateLogsData(_this.state.query);
     };
   };
 
   LogPanel.prototype.componentDidUpdate = function (prevProps) {
-    if (this.props.options.level !== prevProps.options.level || this.props.options.limit !== prevProps.options.limit || this.props.options.date !== prevProps.options.date) {
-      // TO DO: Make API
-      console.log('Make call to the API', this.props);
-      var query = "?level=" + this.props.options.level + "&limit=" + this.props.options.limit;
+    if (this.props.options.level !== prevProps.options.level || this.props.options.limit !== prevProps.options.limit || this.props.options.timeRange !== prevProps.options.timeRange) {
+      // @ts-ignore
+      var start_date = new Date(this.props.options.timeRange.from).getTime(); // @ts-ignore
+
+      var end_date = new Date(this.props.options.timeRange.to).getTime();
+      var query = {
+        level: this.props.options.level,
+        limit: this.props.options.limit,
+        start_date: start_date,
+        end_date: end_date
+      };
+      this.setState({
+        query: query
+      });
       this.updateLogsData(query);
     }
+  };
+
+  LogPanel.prototype.componentWillUnmount = function () {
+    this.ws.send("CLOSE");
+    this.ws.close(1000, "Client Initited Connection Termination");
   };
 
   LogPanel.prototype.render = function () {
@@ -1233,32 +1245,14 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_3__);
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants */ "./constants/index.ts");
+
 
 
 
 
 var labelWidth = 6;
 var selectWidth = 12;
-var levelOptions = [{
-  value: '10',
-  label: '10'
-}, {
-  value: '20',
-  label: '20'
-}, {
-  value: '30',
-  label: '30'
-}];
-var limitOptions = [{
-  value: '10',
-  label: '10'
-}, {
-  value: '20',
-  label: '20'
-}, {
-  value: '50',
-  label: '50'
-}];
 
 var LogPanelEditor =
 /** @class */
@@ -1281,8 +1275,8 @@ function (_super) {
     };
 
     _this.onDateChange = function (timeRange) {
-      return _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
-        date: timeRange
+      _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
+        timeRange: timeRange
       }));
     };
 
@@ -1290,10 +1284,19 @@ function (_super) {
   }
 
   LogPanelEditor.prototype.render = function () {
-    console.log(this.props);
     var _a = this.props.options,
         level = _a.level,
-        limit = _a.limit;
+        limit = _a.limit,
+        timeRange = _a.timeRange; // Fix for grafana TimePicker issue, where from and to are string instead of DateTime Objects
+
+    if (typeof timeRange.from === "string") {
+      timeRange.from = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(timeRange.from);
+    }
+
+    if (typeof timeRange.to === "string") {
+      timeRange.to = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(timeRange.to);
+    }
+
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["PanelOptionsGroup"], {
       title: "Configuration"
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
@@ -1304,12 +1307,11 @@ function (_super) {
       width: labelWidth
     }, "Level"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["Select"], {
       width: selectWidth,
-      options: levelOptions,
+      options: _constants__WEBPACK_IMPORTED_MODULE_4__["LEVEL_OPTIONS"],
       onChange: this.onLevelChange,
-      value: levelOptions.find(function (option) {
+      value: _constants__WEBPACK_IMPORTED_MODULE_4__["LEVEL_OPTIONS"].find(function (option) {
         return option.value === level;
       }),
-      defaultValue: '10',
       backspaceRemovesValue: true,
       isLoading: true
     })), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
@@ -1318,12 +1320,11 @@ function (_super) {
       width: labelWidth
     }, "Limit"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["Select"], {
       width: selectWidth,
-      options: limitOptions,
+      options: _constants__WEBPACK_IMPORTED_MODULE_4__["LIMIT_OPTIONS"],
       onChange: this.onLimitChange,
-      value: limitOptions.find(function (option) {
+      value: _constants__WEBPACK_IMPORTED_MODULE_4__["LIMIT_OPTIONS"].find(function (option) {
         return option.value === '' + limit;
       }),
-      defaultValue: '10',
       backspaceRemovesValue: true,
       isLoading: true
     })), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
@@ -1331,56 +1332,10 @@ function (_super) {
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["FormLabel"], {
       width: labelWidth
     }, "Date"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["TimePicker"], {
-      selectOptions: [{
-        from: 'now-5m',
-        to: 'now',
-        display: 'Last 5 minutes',
-        section: 3
-      }, {
-        from: 'now-15m',
-        to: 'now',
-        display: 'Last 15 minutes',
-        section: 3
-      }, {
-        from: 'now-30m',
-        to: 'now',
-        display: 'Last 30 minutes',
-        section: 3
-      }, {
-        from: 'now-1h',
-        to: 'now',
-        display: 'Last 1 hour',
-        section: 3
-      }, {
-        from: 'now-3h',
-        to: 'now',
-        display: 'Last 3 hours',
-        section: 3
-      }, {
-        from: 'now-6h',
-        to: 'now',
-        display: 'Last 6 hours',
-        section: 3
-      }, {
-        from: 'now-12h',
-        to: 'now',
-        display: 'Last 12 hours',
-        section: 3
-      }, {
-        from: 'now-24h',
-        to: 'now',
-        display: 'Last 24 hours',
-        section: 3
-      }],
+      timeZone: "browser",
+      selectOptions: _constants__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_TIME_OPTIONS"],
       onChange: this.onDateChange,
-      value: {
-        from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(),
-        to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(),
-        raw: {
-          from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(),
-          to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])()
-        }
-      },
+      value: timeRange,
       onMoveBackward: function onMoveBackward() {
         return console.log('Move Backward');
       },
@@ -1400,21 +1355,214 @@ function (_super) {
 
 /***/ }),
 
-/***/ "./constants/API.ts":
-/*!**************************!*\
-  !*** ./constants/API.ts ***!
-  \**************************/
-/*! exports provided: LoggerGetColumnsAPI, LoggerGetLogsAPI, SocketURL */
+/***/ "./constants/index.ts":
+/*!****************************!*\
+  !*** ./constants/index.ts ***!
+  \****************************/
+/*! exports provided: LoggerGetLogsAPI, SocketURL, DEFAULT_TIME_RANGE, DEFAULT_LOG_PROPS, LEVEL_OPTIONS, LIMIT_OPTIONS, DEFAULT_TIME_OPTIONS */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoggerGetColumnsAPI", function() { return LoggerGetColumnsAPI; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LoggerGetLogsAPI", function() { return LoggerGetLogsAPI; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "SocketURL", function() { return SocketURL; });
-var LoggerGetColumnsAPI = 'http://localhost:5000/logger/api/v1.0/getcolumns';
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_RANGE", function() { return DEFAULT_TIME_RANGE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_LOG_PROPS", function() { return DEFAULT_LOG_PROPS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LEVEL_OPTIONS", function() { return LEVEL_OPTIONS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LIMIT_OPTIONS", function() { return LIMIT_OPTIONS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_OPTIONS", function() { return DEFAULT_TIME_OPTIONS; });
+/* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
+/* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_0__);
+ // Constants for LogService
+
 var LoggerGetLogsAPI = "http://" + window.location.hostname + ":8004/api_ws/getlogs";
 var SocketURL = "ws://" + window.location.hostname + ":8004/api_ws/ws";
+var DEFAULT_TIME_RANGE = {
+  from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
+  to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
+  raw: {
+    from: 'now-6h',
+    to: 'now'
+  }
+};
+var DEFAULT_LOG_PROPS = {
+  level: '10',
+  limit: 20,
+  timeRange: DEFAULT_TIME_RANGE,
+  data: [[]]
+}; // Constants for LogPanelEditor
+
+var LEVEL_OPTIONS = [{
+  value: '10',
+  label: '10'
+}, {
+  value: '20',
+  label: '20'
+}, {
+  value: '30',
+  label: '30'
+}];
+var LIMIT_OPTIONS = [{
+  value: '10',
+  label: '10'
+}, {
+  value: '20',
+  label: '20'
+}, {
+  value: '50',
+  label: '50'
+}];
+var DEFAULT_TIME_OPTIONS = [{
+  from: 'now-5m',
+  to: 'now',
+  display: 'Last 5 minutes',
+  section: 3
+}, {
+  from: 'now-15m',
+  to: 'now',
+  display: 'Last 15 minutes',
+  section: 3
+}, {
+  from: 'now-30m',
+  to: 'now',
+  display: 'Last 30 minutes',
+  section: 3
+}, {
+  from: 'now-1h',
+  to: 'now',
+  display: 'Last 1 hour',
+  section: 3
+}, {
+  from: 'now-3h',
+  to: 'now',
+  display: 'Last 3 hours',
+  section: 3
+}, {
+  from: 'now-6h',
+  to: 'now',
+  display: 'Last 6 hours',
+  section: 3
+}, {
+  from: 'now-12h',
+  to: 'now',
+  display: 'Last 12 hours',
+  section: 3
+}, {
+  from: 'now-24h',
+  to: 'now',
+  display: 'Last 24 hours',
+  section: 3
+}, {
+  from: 'now-2d',
+  to: 'now',
+  display: 'Last 2 days',
+  section: 3
+}, {
+  from: 'now-7d',
+  to: 'now',
+  display: 'Last 7 days',
+  section: 3
+}, {
+  from: 'now-30d',
+  to: 'now',
+  display: 'Last 30 days',
+  section: 3
+}, {
+  from: 'now-90d',
+  to: 'now',
+  display: 'Last 90 days',
+  section: 3
+}, {
+  from: 'now-6M',
+  to: 'now',
+  display: 'Last 6 months',
+  section: 3
+}, {
+  from: 'now-1y',
+  to: 'now',
+  display: 'Last 1 year',
+  section: 3
+}, {
+  from: 'now-2y',
+  to: 'now',
+  display: 'Last 2 years',
+  section: 3
+}, {
+  from: 'now-5y',
+  to: 'now',
+  display: 'Last 5 years',
+  section: 3
+}, {
+  from: 'now-1d/d',
+  to: 'now-1d/d',
+  display: 'Yesterday',
+  section: 3
+}, {
+  from: 'now-2d/d',
+  to: 'now-2d/d',
+  display: 'Day before yesterday',
+  section: 3
+}, {
+  from: 'now-7d/d',
+  to: 'now-7d/d',
+  display: 'This day last week',
+  section: 3
+}, {
+  from: 'now-1w/w',
+  to: 'now-1w/w',
+  display: 'Previous week',
+  section: 3
+}, {
+  from: 'now-1M/M',
+  to: 'now-1M/M',
+  display: 'Previous month',
+  section: 3
+}, {
+  from: 'now-1y/y',
+  to: 'now-1y/y',
+  display: 'Previous year',
+  section: 3
+}, {
+  from: 'now/d',
+  to: 'now/d',
+  display: 'Today',
+  section: 3
+}, {
+  from: 'now/d',
+  to: 'now',
+  display: 'Today so far',
+  section: 3
+}, {
+  from: 'now/w',
+  to: 'now/w',
+  display: 'This week',
+  section: 3
+}, {
+  from: 'now/w',
+  to: 'now',
+  display: 'This week so far',
+  section: 3
+}, {
+  from: 'now/M',
+  to: 'now/M',
+  display: 'This month',
+  section: 3
+}, {
+  from: 'now/M',
+  to: 'now',
+  display: 'This month so far',
+  section: 3
+}, {
+  from: 'now/y',
+  to: 'now/y',
+  display: 'This year',
+  section: 3
+}, {
+  from: 'now/y',
+  to: 'now',
+  display: 'This year so far',
+  section: 3
+}];
 
 /***/ }),
 
@@ -1453,10 +1601,7 @@ plugin.setDefaults(_src_services_LogService__WEBPACK_IMPORTED_MODULE_3__["LogSer
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "LogService", function() { return LogService; });
-/* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
-/* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _constants_API__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../constants/API */ "./constants/API.ts");
-
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants */ "./constants/index.ts");
 
 var LogService = function () {
   function getLogs(query) {
@@ -1464,7 +1609,7 @@ var LogService = function () {
       query = '';
     }
 
-    var url = _constants_API__WEBPACK_IMPORTED_MODULE_1__["LoggerGetLogsAPI"] + query;
+    var url = _constants__WEBPACK_IMPORTED_MODULE_0__["LoggerGetLogsAPI"] + query;
     console.log('url', url);
     return fetch(url, {
       method: 'GET'
@@ -1480,20 +1625,7 @@ var LogService = function () {
 
   return {
     getDefaults: function getDefaults() {
-      var defaults = {
-        level: '10',
-        limit: 20,
-        date: {
-          from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
-          to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
-          raw: {
-            from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
-            to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])()
-          }
-        },
-        data: [[]]
-      };
-      return defaults;
+      return _constants__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_LOG_PROPS"];
     },
     getLogs: getLogs
   };
