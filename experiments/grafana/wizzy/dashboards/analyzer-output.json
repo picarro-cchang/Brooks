@@ -16,7 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1565623922823,
+  "id": 1,
+  "iteration": 1567201720680,
   "links": [],
   "panels": [
     {
@@ -41,21 +42,267 @@
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 9,
-        "w": 10,
+        "h": 5,
+        "w": 12,
         "x": 0,
         "y": 1
       },
       "hideTimeOverride": false,
       "id": 2,
       "legend": {
-        "alignAsTable": true,
         "avg": false,
         "current": false,
         "max": false,
         "min": false,
-        "rightSide": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 2,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 2,
+      "points": true,
+      "renderer": "flot",
+      "repeat": "species_available",
+      "repeatDirection": "h",
+      "scopedVars": {
+        "species_available": {
+          "selected": true,
+          "text": "NH3",
+          "value": "NH3"
+        }
+      },
+      "seriesOverrides": [
+        {
+          "alias": "unselected",
+          "color": "rgb(102, 84, 84)"
+        },
+        {
+          "alias": "unstable",
+          "color": "#1F60C4"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$species_available",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unstable",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": "<",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unselected",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "$species_available",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
         "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "PiGSS data source",
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 1
+      },
+      "hideTimeOverride": false,
+      "id": 26,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
         "total": false,
         "values": false
       },
@@ -74,11 +321,23 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
+      "repeatIteration": 1567201720680,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "species_available": {
+          "selected": true,
+          "text": "HF",
+          "value": "HF"
+        }
+      },
       "seriesOverrides": [
         {
+          "alias": "unselected",
+          "color": "rgb(102, 84, 84)"
+        },
+        {
           "alias": "unstable",
-          "color": "#1F60C4",
-          "pointradius": 1
+          "color": "#1F60C4"
         }
       ],
       "spaceLength": 10,
@@ -86,7 +345,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "NH3",
+          "alias": "$species_available",
           "groupBy": [
             {
               "params": [
@@ -104,704 +363,531 @@
           "measurement": "crds",
           "orderByTime": "ASC",
           "policy": "default",
-          "query": "SELECT last(\"NH3\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ AND \"valve_stable_time\" > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unstable",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": "<",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unselected",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "$species_available",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "PiGSS data source",
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "hideTimeOverride": false,
+      "id": 27,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 1,
+      "links": [],
+      "maxPerRow": 2,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 2,
+      "points": true,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201720680,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "species_available": {
+          "selected": true,
+          "text": "HCl",
+          "value": "HCl"
+        }
+      },
+      "seriesOverrides": [
+        {
+          "alias": "unselected",
+          "color": "rgb(102, 84, 84)"
+        },
+        {
+          "alias": "unstable",
+          "color": "#1F60C4"
+        }
+      ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$species_available",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unstable",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT last(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": "<",
+              "value": "$stabilization_time"
+            }
+          ]
+        },
+        {
+          "alias": "unselected",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "none"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "C",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species_available"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "$species_available",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 11
+      },
+      "id": 25,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "valve_pos",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "limit": "",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT * FROM \"crds\" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
           "rawQuery": true,
           "refId": "A",
-          "resultFormat": "time_series",
+          "resultFormat": "table",
           "select": [
             [
               {
                 "params": [
-                  "NH3"
+                  "*"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               }
             ]
           ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        },
-        {
-          "alias": "unstable",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT last(\"$species_available\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ AND \"valve_stable_time\" < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "NH3"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": "<",
-              "value": "$stabilization_time"
-            }
-          ]
+          "tags": []
         }
       ],
-      "thresholds": [],
+      "thresholds": "",
       "timeFrom": null,
-      "timeRegions": [],
       "timeShift": null,
-      "title": "NH3",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
+      "title": "Valve Position",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 12,
-        "y": 1
-      },
-      "id": 19,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": true,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "unstable",
-          "color": "#1F60C4",
-          "pointradius": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        },
-        {
-          "alias": "unstable",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": "<",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "H2S",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 0,
-        "y": 10
-      },
-      "id": 18,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": true,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "unstable",
-          "color": "#1F60C4",
-          "pointradius": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        },
-        {
-          "alias": "unstable",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": "<",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "HF",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 10,
-        "x": 12,
-        "y": 10
-      },
-      "id": 20,
-      "legend": {
-        "alignAsTable": true,
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": true,
-      "renderer": "flot",
-      "seriesOverrides": [
-        {
-          "alias": "unstable",
-          "color": "#1F60C4",
-          "pointradius": 1
-        }
-      ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HCl"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        },
-        {
-          "alias": "unstable",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "none"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "default",
-          "query": "SELECT mean(\"HF\") FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_positions$/ ) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HCl"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_positions$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": "<",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "HCl",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "valueName": "avg"
     }
   ],
   "refresh": "5s",
@@ -818,15 +904,15 @@
             "$__all"
           ]
         },
-        "datasource": "PiGSS data source",
+        "datasource": "bank name server",
         "definition": "show tag values on pigss_data with key=\"valve_pos\"",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
-        "name": "valve_positions",
+        "name": "ports",
         "options": [],
-        "query": "show tag values on pigss_data with key=\"valve_pos\"",
+        "query": "",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -841,9 +927,11 @@
         "allValue": null,
         "current": {
           "tags": [],
-          "text": "All",
+          "text": "NH3 + HF + HCl",
           "value": [
-            "$__all"
+            "NH3",
+            "HF",
+            "HCl"
           ]
         },
         "hide": 0,
@@ -853,12 +941,12 @@
         "name": "species_available",
         "options": [
           {
-            "selected": true,
+            "selected": false,
             "text": "All",
             "value": "$__all"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "NH3",
             "value": "NH3"
           },
@@ -868,12 +956,12 @@
             "value": "H2S"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "HF",
             "value": "HF"
           },
           {
-            "selected": false,
+            "selected": true,
             "text": "HCl",
             "value": "HCl"
           }
@@ -892,9 +980,8 @@
         "name": "stabilization_time",
         "options": [
           {
-            "selected": false,
-            "text": "25",
-            "value": "25"
+            "text": "15",
+            "value": "15"
           }
         ],
         "query": "15",
@@ -904,7 +991,7 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -935,5 +1022,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "0C5NddvZk",
-  "version": 1
+  "version": 21
 }

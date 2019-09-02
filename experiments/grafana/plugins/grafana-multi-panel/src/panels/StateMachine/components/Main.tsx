@@ -27,6 +27,7 @@ export class Main extends Component<any, any> {
     plan: {
       max_steps: 10,
       panel_to_show: 0,
+      current_step: 1,
       focus: { row: 0, column: 0 },
       last_step: 0,
       steps: {},

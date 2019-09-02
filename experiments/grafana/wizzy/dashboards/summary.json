@@ -15,7 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1565900524091,
+  "id": 6,
+  "iteration": 1567201782624,
   "links": [],
   "panels": [
     {
@@ -47,198 +48,24 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
         "x": 0,
         "y": 1
       },
-      "hideTimeOverride": true,
       "id": 2,
-      "links": [],
-      "maxPerRow": null,
-      "options": {},
-      "pageSize": null,
-      "repeat": "valve_pos",
-      "repeatDirection": "h",
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "0",
-          "value": "0"
-        }
-      },
-      "scroll": true,
-      "showHeader": true,
-      "sort": {
-        "col": null,
-        "desc": false
-      },
-      "styles": [
-        {
-          "alias": "Species",
-          "colorMode": "cell",
-          "colors": [
-            "rgba(50, 172, 45, 0.97)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(245, 54, 54, 0.9)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 2,
-          "mappingType": 1,
-          "pattern": "Metric",
-          "preserveFormat": false,
-          "rangeMaps": [],
-          "sanitize": false,
-          "thresholds": [],
-          "type": "string",
-          "unit": "short",
-          "valueMaps": [
-            {
-              "text": "NH3",
-              "value": "crds.NH3"
-            },
-            {
-              "text": "H2S",
-              "value": "crds.H2S"
-            },
-            {
-              "text": "HF",
-              "value": "crds.HF"
-            },
-            {
-              "text": "HCl",
-              "value": "crds.HCl"
-            }
-          ]
-        },
-        {
-          "alias": "",
-          "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
-          "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
-          "link": false,
-          "linkTooltip": "",
-          "linkUrl": "",
-          "mappingType": 1,
-          "pattern": "/.*/",
-          "thresholds": [],
-          "type": "number",
-          "unit": "short"
-        }
-      ],
-      "targets": [
-        {
-          "alias": "",
-          "groupBy": [],
-          "limit": "500",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "NH3"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              }
-            ],
-            [
-              {
-                "params": [
-                  "HCl"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ],
-          "tz": ""
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Valve:  $valve_pos",
-      "transform": "timeseries_aggregations",
-      "transparent": true,
-      "type": "table"
-    },
-    {
-      "columns": [
-        {
-          "text": "Avg",
-          "value": "avg"
-        },
-        {
-          "text": "Min",
-          "value": "min"
-        },
-        {
-          "text": "Max",
-          "value": "max"
-        }
-      ],
-      "datasource": "PiGSS data source",
-      "fontSize": "110%",
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "hideTimeOverride": true,
-      "id": 55,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
-      "repeat": null,
+      "repeat": "port",
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
-      "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "1",
+          "text": "1: Top Port 1",
           "value": "1"
         }
       },
@@ -295,7 +122,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -356,7 +183,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -368,9 +195,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -391,27 +218,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 1
       },
-      "hideTimeOverride": true,
-      "id": 56,
+      "id": 88,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "2",
+          "text": "2: Top Port B",
           "value": "2"
         }
       },
@@ -468,7 +294,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -529,7 +355,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -541,9 +367,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -564,27 +390,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 18,
+        "x": 12,
         "y": 1
       },
-      "hideTimeOverride": true,
-      "id": 57,
+      "id": 89,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "3",
+          "text": "3: Top Port C",
           "value": "3"
         }
       },
@@ -641,7 +466,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -702,7 +527,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -714,9 +539,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -737,27 +562,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 0,
-        "y": 9
+        "x": 18,
+        "y": 1
       },
-      "hideTimeOverride": true,
-      "id": 58,
+      "id": 90,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "4",
+          "text": "4: Top Port D",
           "value": "4"
         }
       },
@@ -814,7 +638,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -875,7 +699,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -887,9 +711,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -910,27 +734,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 6,
+        "x": 0,
         "y": 9
       },
-      "hideTimeOverride": true,
-      "id": 59,
+      "id": 91,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "5",
+          "text": "5: Top Port E",
           "value": "5"
         }
       },
@@ -987,7 +810,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1048,7 +871,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1060,9 +883,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1083,27 +906,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 9
       },
-      "hideTimeOverride": true,
-      "id": 60,
+      "id": 92,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "6",
+          "text": "6: Top Port F",
           "value": "6"
         }
       },
@@ -1160,7 +982,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1221,7 +1043,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1233,9 +1055,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1256,27 +1078,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 18,
+        "x": 12,
         "y": 9
       },
-      "hideTimeOverride": true,
-      "id": 61,
+      "id": 93,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "7",
+          "text": "7: Top Port G",
           "value": "7"
         }
       },
@@ -1333,7 +1154,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1394,7 +1215,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1406,9 +1227,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1429,27 +1250,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 0,
-        "y": 17
+        "x": 18,
+        "y": 9
       },
-      "hideTimeOverride": true,
-      "id": 62,
+      "id": 94,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "8",
+          "text": "8: Top Port H",
           "value": "8"
         }
       },
@@ -1506,7 +1326,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1567,7 +1387,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1579,9 +1399,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1602,27 +1422,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 6,
+        "x": 0,
         "y": 17
       },
-      "hideTimeOverride": true,
-      "id": 63,
+      "id": 95,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "9",
+          "text": "9: Bank 2 Ch. 1",
           "value": "9"
         }
       },
@@ -1679,7 +1498,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1740,7 +1559,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1752,9 +1571,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1775,27 +1594,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 17
       },
-      "hideTimeOverride": true,
-      "id": 64,
+      "id": 96,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "10",
+          "text": "10: Bank 2 Ch. 2",
           "value": "10"
         }
       },
@@ -1852,7 +1670,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -1913,7 +1731,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -1925,9 +1743,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -1948,27 +1766,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 18,
+        "x": 12,
         "y": 17
       },
-      "hideTimeOverride": true,
-      "id": 65,
+      "id": 97,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "11",
+          "text": "11: Bank 2 Ch. 3",
           "value": "11"
         }
       },
@@ -2025,7 +1842,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2086,7 +1903,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -2098,9 +1915,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -2121,27 +1938,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 0,
-        "y": 25
+        "x": 18,
+        "y": 17
       },
-      "hideTimeOverride": true,
-      "id": 66,
+      "id": 98,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "12",
+          "text": "12: Bank 2 Ch. 4",
           "value": "12"
         }
       },
@@ -2198,7 +2014,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2259,7 +2075,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -2271,9 +2087,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -2294,27 +2110,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 6,
+        "x": 0,
         "y": 25
       },
-      "hideTimeOverride": true,
-      "id": 67,
+      "id": 99,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "13",
+          "text": "13: Bank 2 Ch. 5",
           "value": "13"
         }
       },
@@ -2371,7 +2186,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2432,7 +2247,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -2444,9 +2259,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -2467,27 +2282,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 12,
+        "x": 6,
         "y": 25
       },
-      "hideTimeOverride": true,
-      "id": 68,
+      "id": 100,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "14",
+          "text": "14: Bank 2 Ch. 6",
           "value": "14"
         }
       },
@@ -2544,7 +2358,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2605,7 +2419,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -2617,9 +2431,9 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
@@ -2640,27 +2454,26 @@
         }
       ],
       "datasource": "PiGSS data source",
-      "fontSize": "110%",
+      "fontSize": "100%",
       "gridPos": {
         "h": 8,
         "w": 6,
-        "x": 18,
+        "x": 12,
         "y": 25
       },
-      "hideTimeOverride": true,
-      "id": 69,
+      "id": 101,
       "links": [],
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1565900524091,
+      "repeatIteration": 1567201782624,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "port": {
           "selected": false,
-          "text": "15",
+          "text": "15: Bank 2 Ch. 7",
           "value": "15"
         }
       },
@@ -2717,7 +2530,7 @@
             "rgba(50, 172, 45, 0.97)"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
-          "decimals": 3,
+          "decimals": 4,
           "link": false,
           "linkTooltip": "",
           "linkUrl": "",
@@ -2778,7 +2591,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$port$/"
             },
             {
               "condition": "AND",
@@ -2790,15 +2603,3047 @@
           "tz": ""
         }
       ],
-      "timeFrom": null,
+      "timeFrom": "$avg_time",
       "timeShift": null,
-      "title": "Valve:  $valve_pos",
+      "title": "$port",
       "transform": "timeseries_aggregations",
       "transparent": true,
       "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 25
+      },
+      "id": 102,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "16: Bank 2 Ch. 8",
+          "value": "16"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 33
+      },
+      "id": 103,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "17: Third bank Ch. 1",
+          "value": "17"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 33
+      },
+      "id": 104,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "18: Third bank Ch. 2",
+          "value": "18"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 33
+      },
+      "id": 105,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "19: Third bank Ch. 3",
+          "value": "19"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 33
+      },
+      "id": 106,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "20: Third bank Ch. 4",
+          "value": "20"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 41
+      },
+      "id": 107,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "21: Third bank Ch. 5",
+          "value": "21"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 41
+      },
+      "id": 108,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "22: Third bank Ch. 6",
+          "value": "22"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 41
+      },
+      "id": 109,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "23: Third bank Ch. 7",
+          "value": "23"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 41
+      },
+      "id": 110,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "24: Third bank Ch. 8",
+          "value": "24"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 49
+      },
+      "id": 111,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "25: Bank 4 Ch. 1",
+          "value": "25"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 49
+      },
+      "id": 112,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "26: Bank 4 Ch. 2",
+          "value": "26"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 49
+      },
+      "id": 113,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "27: Bank 4 Ch. 3",
+          "value": "27"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 49
+      },
+      "id": 114,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "28: Bank 4 Ch. 4",
+          "value": "28"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 0,
+        "y": 57
+      },
+      "id": 115,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "29: Bank 4 Ch. 5",
+          "value": "29"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 6,
+        "y": 57
+      },
+      "id": 116,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "30: Bank 4 Ch. 6",
+          "value": "30"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 12,
+        "y": 57
+      },
+      "id": 117,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "31: Bank 4 Ch. 7",
+          "value": "31"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "columns": [
+        {
+          "text": "Avg",
+          "value": "avg"
+        },
+        {
+          "text": "Min",
+          "value": "min"
+        },
+        {
+          "text": "Max",
+          "value": "max"
+        }
+      ],
+      "datasource": "PiGSS data source",
+      "fontSize": "100%",
+      "gridPos": {
+        "h": 8,
+        "w": 6,
+        "x": 18,
+        "y": 57
+      },
+      "id": 118,
+      "links": [],
+      "maxPerRow": 4,
+      "options": {},
+      "pageSize": null,
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567201782624,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "port": {
+          "selected": false,
+          "text": "32: Bank 4 Ch. 8",
+          "value": "32"
+        }
+      },
+      "scroll": true,
+      "showHeader": true,
+      "sort": {
+        "col": null,
+        "desc": false
+      },
+      "styles": [
+        {
+          "alias": "Species",
+          "colorMode": "cell",
+          "colors": [
+            "rgba(50, 172, 45, 0.97)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(245, 54, 54, 0.9)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "preserveFormat": false,
+          "rangeMaps": [],
+          "sanitize": false,
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            }
+          ]
+        },
+        {
+          "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 4,
+          "link": false,
+          "linkTooltip": "",
+          "linkUrl": "",
+          "mappingType": 1,
+          "pattern": "/.*/",
+          "thresholds": [],
+          "type": "number",
+          "unit": "short"
+        }
+      ],
+      "targets": [
+        {
+          "alias": "",
+          "groupBy": [],
+          "limit": "500",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT \"NH3\", \"H2S\", \"HF\", \"HCl\" FROM \"crds\" WHERE (\"valve_pos\" =~ /^$valve_pos$/ AND \"valve_settle_time\" > 15) AND $timeFilter ORDER BY time DESC LIMIT 100",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "NH3"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "H2S"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "field"
+              }
+            ],
+            [
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$port$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ],
+          "tz": ""
+        }
+      ],
+      "timeFrom": "$avg_time",
+      "timeShift": null,
+      "title": "$port",
+      "transform": "timeseries_aggregations",
+      "transparent": true,
+      "type": "table"
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 65
+      },
+      "id": 87,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "valve_pos",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "limit": "",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT * FROM \"crds\" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Valve Position",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
     }
   ],
-  "refresh": "5s",
+  "refresh": "",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
@@ -2810,15 +5655,15 @@
           "text": "All",
           "value": "$__all"
         },
-        "datasource": "PiGSS data source",
-        "definition": "show tag values on pigss_data with key=\"valve_pos\"",
+        "datasource": "bank name server",
+        "definition": "",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
-        "name": "valve_pos",
+        "name": "port",
         "options": [],
-        "query": "show tag values on pigss_data with key=\"valve_pos\"",
+        "query": "",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -2828,6 +5673,25 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "current": {
+          "text": "16m",
+          "value": "16m"
+        },
+        "hide": 0,
+        "label": "Interval to average",
+        "name": "avg_time",
+        "options": [
+          {
+            "selected": false,
+            "text": "1h",
+            "value": "1h"
+          }
+        ],
+        "query": "16m",
+        "skipUrlSync": false,
+        "type": "textbox"
       },
       {
         "current": {
@@ -2883,5 +5747,5 @@
   "timezone": "",
   "title": "Summary",
   "uid": "vCQ3IOvWk",
-  "version": 1
+  "version": 11
 }

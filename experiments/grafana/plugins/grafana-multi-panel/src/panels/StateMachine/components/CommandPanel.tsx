@@ -60,15 +60,16 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                         </button>
                         <button
                             onClick={e => this.props.ws_sender({element: "plan_run"})}
-                            disabled = {this.getDisabled("run")}
-                            value="run_plan"
-                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("run")}>
+                            disabled = {this.getDisabled("plan_run")}
+                            value="plan_run"
+                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("plan_run")}>
                             Run Plan
                         </button>
                         <button
-                            onClick={e => this.props.ws_sender({element: "plan_loop1"})}
-                            disabled = {this.getDisabled("run")}
-                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("run")}>
+                            onClick={e => this.props.ws_sender({element: "plan_loop"})}
+                            disabled = {this.getDisabled("plan_loop")}
+                            value="plan_loop"
+                            className={"btn btn-large btn-command btn-run " + this.getClassNameOpt("plan_loop")}>
                             Loop Plan
                         </button>
                         <button

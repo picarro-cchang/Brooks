@@ -46,6 +46,7 @@ export interface ModalInfo {
 export interface Plan {
   max_steps: number,
   panel_to_show: number,
+  current_step: number,
   focus: PlanFocus,
   last_step: number,
   steps: { [key: string]: PlanStep }

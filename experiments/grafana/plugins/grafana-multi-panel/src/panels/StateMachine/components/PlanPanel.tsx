@@ -53,7 +53,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            style={{ backgroundColor: 'white'}}
                            value={portString} placeholder="Select port" readOnly/>
                 </div>
-                <div className="col-sm-4">
+                <div className="col-sm-3">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 2) && this.manageFocus(input)}
                            onChange={(e) => this.props.ws_sender({element: "plan_panel", row, duration: e.target.value})}
@@ -62,6 +62,11 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            }}
                            type="text" className="form-control input-small plan-input" id={"plan-duration-" + row}
                            value={durationString} placeholder="Duration" />
+                </div>
+                <div className="col-sm-1">
+                    <input type="radio" id={"plan-row-" + row} checked={row == this.props.plan.current_step}
+                     onChange={e => this.props.ws_sender({element: "plan_panel", current_step: row})}                    
+                    />
                 </div>
             </div>
         );
@@ -108,7 +113,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             </button>
                         </div>
                     </div>
-                    <div className="row  btn-row-1">
+                    <div className="row btn-row-1">
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
@@ -132,13 +137,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                 Cancel
                             </button>
                         </div>
-                        {/*<div className="col-sm-4">*/}
-                        {/*    <button type="button"*/}
-                        {/*            onClick={e => this.props.ws_sender({element: "plan_loop"})}*/}
-                        {/*            className={"btn btn-block btn-success btn-group-2"}>*/}
-                        {/*        Loop*/}
-                        {/*    </button>*/}
-                        {/*</div>*/}
                         <div className="col-sm-4">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_ok"})}
