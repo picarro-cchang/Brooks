@@ -24,7 +24,7 @@ datasources:
    # <string> database user, if used
    user:
    # <string> database name, if used
-   database: pigss_data
+   database: pigss_sim_data
    # <bool> enable/disable basic auth
    basicAuth: false
    # <string> basic auth username

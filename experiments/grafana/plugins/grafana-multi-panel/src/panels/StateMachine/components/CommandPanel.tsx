@@ -7,9 +7,9 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
    // manual = this.props.uistatus["run"];
     loop_plan = this.props.uistatus["run"];
 
-    classNameOpt = { DISABLED:"btn-inverse disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-success" };
-    runclassNameOpt = {ACTIVE: "btn-success", READY: "btn-outline-success", DISABLED:" disabled command-disabled btn-run-issue"};
-    editplanOpt = {ACTIVE: "btn-outline-success", READY: "btn-outline-success", DISABLED:" disabled command-disabled btn-run-issue"}
+    classNameOpt = { DISABLED:"btn-inverse disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-success " };
+   runclassNameOpt = { DISABLED:"btn-inverse disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-success disabled" };
+    editplanOpt = {ACTIVE: "btn-outline-success", READY: "btn-outline-success", DISABLED:"btn-inverse disabled command-disabled btn-run-issue"};
 
     getDisabled = (element: string): boolean => {
         let disabled = true;
@@ -28,6 +28,9 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                 classNames = (this.editplanOpt as any)[status_dict[element]];
 
             }
+            else if (element === "manual_run" || element === "loop_plan" || element === "run_plan") {
+                classNames = (this.runclassNameOpt as any)[status_dict[element]];
+            }
             else {
                 classNames = (this.classNameOpt as any)[status_dict[element]];
             }
@@ -36,24 +39,24 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
         return classNames;
     };
 
-    getrunClassNameOpt = (element: string): string => {
-        let classNames = "";
-        // if (element === "manual") {
-        //     const status = this.manual;
-        //     console.log("manual ", status);
-        //     classNames = (this.runclassNameOpt as any)[status]
-        // }
-        // else
-        if (element === "run_plan") {
-            const status = this.run_plan;
-            classNames = (this.runclassNameOpt as any)[status]
-        }
-        else {
-            const status = this.loop_plan;
-            classNames = (this.runclassNameOpt as any)[status]
-        }
-        return classNames;
-    };
+    // getrunClassNameOpt = (element: string): string => {
+    //     let classNames = "";
+    //     // if (element === "manual") {
+    //     //     const status = this.manual;
+    //     //     console.log("manual ", status);
+    //     //     classNames = (this.runclassNameOpt as any)[status]
+    //     // }
+    //     // else
+    //     if (element === "run_plan") {
+    //         const status = this.run_plan;
+    //         classNames = (this.runclassNameOpt as any)[status]
+    //     }
+    //     else {
+    //         const status = this.loop_plan;
+    //         classNames = (this.runclassNameOpt as any)[status]
+    //     }
+    //     return classNames;
+    // };
 
 
 
@@ -107,7 +110,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                         <button
                             onClick={(e) => {
                                 this.props.ws_sender({element: "plan_run"})
-                                
+
                             }}
                             disabled = {this.getDisabled("run_plan")}
                             value="run_plan"

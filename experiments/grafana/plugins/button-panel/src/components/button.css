@@ -1,0 +1,48 @@
+.btn-panel-link {
+    height: 100px;
+    width: 100px;
+    border-radius: 50%;
+    color: white;
+    padding: 20px 34px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 4px 2px;
+    cursor: pointer;
+
+}
+.btn-container {
+    margin-left: 20px;
+}
+.btn-label-container {
+    margin-left: 40px;
+}
+
+.btn-sampler {
+    background-color: forestgreen;
+    background-image: url("../img/icon_org.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-analyzer {
+    background-color: forestgreen;
+    background-image: url("../img/icn-panel.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-valve-graphs {
+    background-color: forestgreen;
+    background-image: url("../img/visualization.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-tables {
+    background-color: forestgreen;
+    background-image: url("../img/summary.png");
+    background-repeat: no-repeat;
+    background-position: center;
+}
