@@ -11,7 +11,7 @@ import { LogService } from './../services/LogService';
 // @ts-ignore
 import console = require('console');
 
-interface Props extends PanelProps<LogProps> { }
+interface Props extends PanelProps<LogProps> {}
 
 interface State {
   data: string[][];
@@ -39,11 +39,12 @@ export class LogPanel extends PureComponent<Props, State> {
       // @ts-ignore
       const end_date = new Date(this.props.options.timeRange.to).getTime();
       const query: any = {
-        level: this.props.options.level,
-        limit: this.props.options.level,
+        level: this.props.options.level.map((item:any) => item.value),
+        limit: this.props.options.limit,
         start_date,
         end_date,
       };
+      console.log("query", query);
       this.setState({ query });
       this.updateLogsData(query);
     };
@@ -51,12 +52,11 @@ export class LogPanel extends PureComponent<Props, State> {
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       const rows = JSON.parse(evt.data);
-      // console.log('-->', rows)
       // Remove the previous logs data on front-end, if the rows are more than 1000.
       if (this.state.data.length > LIMIT) {
         this.setState({ data: [] });
       }
-      this.setState({ data: [...rows, ...this.state.data] });
+      this.setState({ data: [...rows.reverse(), ...this.state.data] });
     };
 
     this.ws.onclose = () => {
@@ -76,8 +76,9 @@ export class LogPanel extends PureComponent<Props, State> {
       const start_date = new Date(this.props.options.timeRange.from).getTime();
       // @ts-ignore
       const end_date = new Date(this.props.options.timeRange.to).getTime();
+
       const query: any = {
-        level: this.props.options.level,
+        level: this.props.options.level.map((item:any) => item.value),
         limit: this.props.options.limit,
         start_date,
         end_date,
@@ -102,8 +103,9 @@ export class LogPanel extends PureComponent<Props, State> {
   };
 
   componentWillUnmount() {
-    this.ws.send("CLOSE");
-    this.ws.close(1000, "Client Initited Connection Termination");
+    console.log('Component will unmount');
+    this.ws.send('CLOSE');
+    this.ws.close(1000, 'Client Initited Connection Termination');
   }
 
   render() {

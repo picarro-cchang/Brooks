@@ -9,9 +9,12 @@ const labelWidth = 6;
 const selectWidth = 12;
 
 export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
-
-  onLevelChange = (level: any) => this.props.onOptionsChange({ ...this.props.options, level: level.value });
-  onLimitChange = (limit: any) => this.props.onOptionsChange({ ...this.props.options, limit: limit.value });
+  onLevelChange = (item: any) => {
+    this.props.onOptionsChange({ ...this.props.options, level: [...item] });
+  }
+  onLimitChange = (limit: any) => {
+    this.props.onOptionsChange({ ...this.props.options, limit: limit.value });
+  }
   onDateChange = (timeRange: TimeRange) => {
     this.props.onOptionsChange({ ...this.props.options, timeRange });
   };
@@ -20,11 +23,11 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
     const { level, limit, timeRange } = this.props.options;
 
     // Fix for grafana TimePicker issue, where from and to are string instead of DateTime Objects
-    if (typeof timeRange.from === "string") {
-        timeRange.from = dateTime(timeRange.from);
+    if (typeof timeRange.from === 'string') {
+      timeRange.from = dateTime(timeRange.from);
     }
-    if (typeof timeRange.to === "string") {
-        timeRange.to = dateTime(timeRange.to);
+    if (typeof timeRange.to === 'string') {
+      timeRange.to = dateTime(timeRange.to);
     }
 
     return (
@@ -36,9 +39,10 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
               width={selectWidth}
               options={LEVEL_OPTIONS}
               onChange={this.onLevelChange}
-              value={LEVEL_OPTIONS.find(option => option.value === level)}
+              value={level}
               backspaceRemovesValue
               isLoading
+              isMulti={true}
             />
           </div>
           <div className="gf-form col-md-3 col-sm-3">
@@ -47,7 +51,7 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
               width={selectWidth}
               options={LIMIT_OPTIONS}
               onChange={this.onLimitChange}
-              value={LIMIT_OPTIONS.find(option => option.value === '' + limit)}
+              value={LIMIT_OPTIONS.find(option => option.value === limit.toString())}
               backspaceRemovesValue
               isLoading
             />
@@ -70,3 +74,4 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
     );
   }
 }
+

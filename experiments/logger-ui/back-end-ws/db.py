@@ -1,6 +1,7 @@
 from db_connection import DBInstance
 import sqlite3
 
+
 class QueryParser:
     """
     Parsing query parameters in the url
@@ -29,10 +30,15 @@ class EventsModel:
     @classmethod
     def build_sql_select_query(cls, query_params):
         """
-        Given a query dictionary, create a sql statement
+        description: Given a query dictionary, create a sql statement
+        params:
+            query_params: dict
+        returns:
+            SQL Query: string
         """
         rowid = client = limit = level = start_date = limit_tpl = end_date = None
-        columns = ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
+        columns = ["rowid", "ClientTimestamp",
+                   "ClientName", "LogMessage", "Level"]
 
         try:
             if "columns" in query_params:
@@ -60,7 +66,8 @@ class EventsModel:
             if client:
                 constraints.append(f'ClientName = "{client}"')
             if level:
-                constraints.append(f'Level >= {level}')
+                print("\nLevel:", level, "\n")
+                constraints.append(f'Level in ({", ".join(level)})')
             if start_date:
                 constraints.append(f'EpochTime >= {start_date}')
             if end_date:
@@ -68,7 +75,7 @@ class EventsModel:
             if limit:
                 limit_tpl = (f'LIMIT {limit}')
 
-            # Respect the space between queries
+            # Respect the space between constraints
             query += f'SELECT {columns_tpl} FROM {EventsModel.table_name} '
             if len(constraints) > 0:
                 query += f'WHERE {" AND ".join(constraints)} '
@@ -77,8 +84,9 @@ class EventsModel:
                 query += f'{limit_tpl}'
             query += ';'
         except Exception as ex:
+            print("Exception in query")
             print("Exception", ex)
-            return f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level FROM {EventsModel.table_name} ORDER BY rowid ASC LIMIT 20"
+            return None
         return query
 
     @classmethod

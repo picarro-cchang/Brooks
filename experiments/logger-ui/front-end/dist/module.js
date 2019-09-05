@@ -1146,11 +1146,14 @@ function (_super) {
 
       var end_date = new Date(_this.props.options.timeRange.to).getTime();
       var query = {
-        level: _this.props.options.level,
-        limit: _this.props.options.level,
+        level: _this.props.options.level.map(function (item) {
+          return item.value;
+        }),
+        limit: _this.props.options.limit,
         start_date: start_date,
         end_date: end_date
       };
+      console.log("query", query);
 
       _this.setState({
         query: query
@@ -1161,8 +1164,7 @@ function (_super) {
 
     this.ws.onmessage = function (evt) {
       // on receiving a message, add it to the list of messages
-      var rows = JSON.parse(evt.data); // console.log('-->', rows)
-      // Remove the previous logs data on front-end, if the rows are more than 1000.
+      var rows = JSON.parse(evt.data); // Remove the previous logs data on front-end, if the rows are more than 1000.
 
       if (_this.state.data.length > LIMIT) {
         _this.setState({
@@ -1171,7 +1173,7 @@ function (_super) {
       }
 
       _this.setState({
-        data: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](rows, _this.state.data)
+        data: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](rows.reverse(), _this.state.data)
       });
     };
 
@@ -1190,7 +1192,9 @@ function (_super) {
 
       var end_date = new Date(this.props.options.timeRange.to).getTime();
       var query = {
-        level: this.props.options.level,
+        level: this.props.options.level.map(function (item) {
+          return item.value;
+        }),
         limit: this.props.options.limit,
         start_date: start_date,
         end_date: end_date
@@ -1203,8 +1207,9 @@ function (_super) {
   };
 
   LogPanel.prototype.componentWillUnmount = function () {
-    this.ws.send("CLOSE");
-    this.ws.close(1000, "Client Initited Connection Termination");
+    console.log('Component will unmount');
+    this.ws.send('CLOSE');
+    this.ws.close(1000, 'Client Initited Connection Termination');
   };
 
   LogPanel.prototype.render = function () {
@@ -1262,14 +1267,14 @@ function (_super) {
   function LogPanelEditor() {
     var _this = _super !== null && _super.apply(this, arguments) || this;
 
-    _this.onLevelChange = function (level) {
-      return _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
-        level: level.value
+    _this.onLevelChange = function (item) {
+      _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
+        level: tslib__WEBPACK_IMPORTED_MODULE_0__["__spread"](item)
       }));
     };
 
     _this.onLimitChange = function (limit) {
-      return _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
+      _this.props.onOptionsChange(tslib__WEBPACK_IMPORTED_MODULE_0__["__assign"]({}, _this.props.options, {
         limit: limit.value
       }));
     };
@@ -1289,11 +1294,11 @@ function (_super) {
         limit = _a.limit,
         timeRange = _a.timeRange; // Fix for grafana TimePicker issue, where from and to are string instead of DateTime Objects
 
-    if (typeof timeRange.from === "string") {
+    if (typeof timeRange.from === 'string') {
       timeRange.from = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(timeRange.from);
     }
 
-    if (typeof timeRange.to === "string") {
+    if (typeof timeRange.to === 'string') {
       timeRange.to = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_3__["dateTime"])(timeRange.to);
     }
 
@@ -1309,11 +1314,10 @@ function (_super) {
       width: selectWidth,
       options: _constants__WEBPACK_IMPORTED_MODULE_4__["LEVEL_OPTIONS"],
       onChange: this.onLevelChange,
-      value: _constants__WEBPACK_IMPORTED_MODULE_4__["LEVEL_OPTIONS"].find(function (option) {
-        return option.value === level;
-      }),
+      value: level,
       backspaceRemovesValue: true,
-      isLoading: true
+      isLoading: true,
+      isMulti: true
     })), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "gf-form col-md-3 col-sm-3"
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_2__["FormLabel"], {
@@ -1323,7 +1327,7 @@ function (_super) {
       options: _constants__WEBPACK_IMPORTED_MODULE_4__["LIMIT_OPTIONS"],
       onChange: this.onLimitChange,
       value: _constants__WEBPACK_IMPORTED_MODULE_4__["LIMIT_OPTIONS"].find(function (option) {
-        return option.value === '' + limit;
+        return option.value === limit.toString();
       }),
       backspaceRemovesValue: true,
       isLoading: true
@@ -1385,8 +1389,12 @@ var DEFAULT_TIME_RANGE = {
     to: 'now'
   }
 };
+var DEFAULT_LEVEL = [{
+  value: '10',
+  label: '10'
+}];
 var DEFAULT_LOG_PROPS = {
-  level: '10',
+  level: DEFAULT_LEVEL,
   limit: 20,
   timeRange: DEFAULT_TIME_RANGE,
   data: [[]]

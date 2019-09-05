@@ -2,7 +2,7 @@ import { GrafanaTheme } from '@grafana/ui';
 import { TimeRange } from '@grafana/data';
 
 export interface LogProps {
-  level: string;
+  level: Object[];
   limit: number;
   timeRange: TimeRange;
   data: string[][];

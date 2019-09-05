@@ -5,10 +5,16 @@ from aiohttp_swagger import setup_swagger
 
 from experiments.common.async_helper import log_async_exception
 
-from Server import Server
+from LoggerServer import LoggerServer
 
 
 class Main:
+
+    """
+    This class will create a top level server for logger application. It will
+    create a top level web application, that will have a logger server as 
+    subapp.
+    """
 
     def __init__(self, port=9090, addr="0.0.0.0", identifier="Logger"):
         self.tasks = []
@@ -44,7 +50,7 @@ class Main:
                 allow_headers="*",
             )})
 
-        api_ws_server = Server()
+        api_ws_server = LoggerServer()
         api_ws_server.app['send_queue'] = self.ws_send_queue
         self.app.add_subapp("/api_ws/", api_ws_server.app)
         setup_swagger(self.app)

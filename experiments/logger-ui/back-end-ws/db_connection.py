@@ -1,10 +1,6 @@
 import os
 import sqlite3
 
-# DATABASE = "~/Code/POCs/NEW0814_2019_08.db"
-DATABASE = "Logs.db"
-
-
 class DBInstance:
     """
     Singleton class for creating DB connection
@@ -17,8 +13,12 @@ class DBInstance:
             DBInstance()
         return DBInstance.__instance
 
-    def __init__(self):
+    def __init__(self, DATABASE="Logs.db"):
         if DBInstance.__instance != None:
             raise Exception("This is a Singleton DB connection class")
         else:
             DBInstance.__instance = self = sqlite3.connect(DATABASE)
+
+    @classmethod
+    def close_db_connection(cls):
+        __instance.close()
