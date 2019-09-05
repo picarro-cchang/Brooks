@@ -13,57 +13,58 @@
 
 }
 .btn-container {
-    margin-left: 20px;
-    width: 95%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 5px;
     height:100%;
+    text-align: center;
 }
 .btn-label-container {
+    margin-top: 25px;
     margin-left: 40px;
-    width: 40%;
-    margin-bottom: -20%;
 }
 
 .btn-sampler {
-    background-color: rgba(141, 216, 140, 0.69);
+    height: 75%;
+    width: 100%;
+    border: 2px solid #054405;
+    background-color: rgb(167, 208, 166);
     background-image: url("../img/icon_org.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-analyzer {
-    background-color: rgba(141, 216, 140, 0.69);
+    height: 75%;
+    width: 100%;
+    border: 2px solid #054405;
+    background-color: rgb(167, 208, 166);
     background-image: url("../img/icn-panel.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-valve-graphs {
-    background-color: rgba(141, 216, 140, 0.69);
+    height: 75%;
+    border: 2px solid #054405;
+    background-color: rgb(167, 208, 166);
     background-image: url("../img/visualization.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-tables {
-    background-color: rgba(141, 216, 140, 0.69);
+    height: 75%;
+    border: 2px solid #054405;
+    background-color: rgb(167, 208, 166);
     background-image: url("../img/summary.png");
     background-repeat: no-repeat;
     background-position: center;
 }
-/*.vertical-rule {*/
-/*    box-sizing: content-box;*/
-/*    border: 0;*/
-/*    border-left: 1px solid #343436;*/
-/*    !*heigh*!*/
-/*    !*background-color: $popover-help-color;*!*/
-/*    !*margin: $space-sm 0;*!*/
-/*}*/
 .row-test{
-    margin-top: 20%;
-    margin-left: 15%;
-    width: 70%;
-    height: 80%;
+    /*margin-top: 20%;*/
+    /*!*margin-left: 15%;*!*/
+    /*width: 70%;*/
+    /*height: 80%;*/
 }
-.tts {
-    height: 50%;
-}
+
