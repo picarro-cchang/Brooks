@@ -21,7 +21,7 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1):
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False):
         self.serial = None
         self.terminate = False
         self.port = port
@@ -34,8 +34,8 @@ class PigletDriver(object):
                                                 ServerDescription=f'RPC Server for {__class__.__name__}',
                                                 ServerVersion=1.0,
                                                 threaded=True)
-        self.piglet_simulator = SyncWrapper(PigletSimulator, bank=bank).wrap(['cli'])
-        self.piglet_simulator.random_ids = False
+        self.piglet_simulator = SyncWrapper(PigletSimulator, bank=bank, random_ids=random_ids).wrap(['cli'])
+        self.piglet_simulator.random_ids = random_ids
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()

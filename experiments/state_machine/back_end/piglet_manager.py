@@ -34,7 +34,7 @@ POLL_PERIOD = 0.5
 
 
 class PigletManager(Ahsm):
-    def __init__(self, farm, simulation=False):
+    def __init__(self, farm, simulation=False, **kwargs):
         super().__init__()
         self.farm = farm
         self.simulation = simulation

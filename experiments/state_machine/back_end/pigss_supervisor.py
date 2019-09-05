@@ -100,11 +100,12 @@ class ProcessWrapper:
 
 
 class PigssSupervisor(Ahsm):
-    def __init__(self, farm=None, simulation=False):
+    def __init__(self, farm=None, simulation=False, random_ids=False):
         log.info("Starting PigssSupervisor")
         super().__init__()
         self.farm = farm
         self.simulation = simulation
+        self.random_ids = random_ids
         self.farm.RPC = {}
         self.wrapped_processes = {}  # List of Process objects
         self.tasks = []
@@ -273,7 +274,8 @@ class PigssSupervisor(Ahsm):
                                                 port=dev_params['Path'],
                                                 rpc_port=dev_params['RPC_Port'],
                                                 baudrate=dev_params['Baudrate'],
-                                                bank=dev_params['Bank_ID'])
+                                                bank=dev_params['Bank_ID'],
+                                                random_ids=self.random_ids)
             elif dev_params['Driver'] == 'AlicatDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = "MFC"

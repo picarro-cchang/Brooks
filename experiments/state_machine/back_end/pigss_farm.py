@@ -12,7 +12,6 @@ from experiments.state_machine.back_end.pigss_supervisor import PigssSupervisor
 log = LOLoggerClient(client_name="PigssFarm", verbose=True)
 
 
-@attr.s
 class PigssFarm:
     """Collection of Heirarchical State Machines for controlling PiGSS.
         The send_queue and receive_queue are used to transfer information
@@ -21,16 +20,14 @@ class PigssFarm:
         the piglets. The comms state machine is used to communicate with
         the serial ports and to handle errors.
     """
-    simulation = attr.ib(default=False)
-    send_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
-    receive_queue = attr.ib(factory=lambda: asyncio.Queue(maxsize=256))
-    tasks = attr.ib(factory=list)
-    RPC = attr.ib(factory=dict)
-
-    def __attrs_post_init__(self):
-        self.controller = PigssController(self, simulation=self.simulation)
-        self.piglet_manager = PigletManager(self, simulation=self.simulation)
-        self.pigss_supervisor = PigssSupervisor(self, simulation=self.simulation)
+    def __init__(self, **kwargs):
+        self.controller = PigssController(self, **kwargs)
+        self.piglet_manager = PigletManager(self, **kwargs)
+        self.pigss_supervisor = PigssSupervisor(self, **kwargs)
+        self.send_queue = asyncio.Queue(maxsize=256)
+        self.receive_queue = asyncio.Queue(maxsize=256)
+        self.tasks = []
+        self.RPC = {}
 
     async def shutdown(self):
         for task in self.tasks:

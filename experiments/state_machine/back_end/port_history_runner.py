@@ -6,7 +6,7 @@ from aiohttp_swagger import setup_swagger
 
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
-from experiments.state_machine.back_end.bank_name_service import BankNameService
+from experiments.state_machine.back_end.port_history_service import PortHistoryService
 
 
 class Server:
@@ -43,8 +43,8 @@ class Server:
                 allow_headers="*",
             )})
 
-        bank_name_service = BankNameService()
-        self.app.add_subapp("/bank_name/", bank_name_service.app)
+        port_history_service = PortHistoryService()
+        self.app.add_subapp("/port_history/", port_history_service.app)
 
         setup_swagger(self.app)
 

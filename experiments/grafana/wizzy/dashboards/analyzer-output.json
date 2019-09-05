@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 1,
-  "iteration": 1567201720680,
+  "id": 10,
+  "iteration": 1567647269682,
   "links": [],
   "panels": [
     {
@@ -321,7 +321,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1567201720680,
+      "repeatIteration": 1567647269682,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -571,7 +571,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1567201720680,
+      "repeatIteration": 1567647269682,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -890,7 +890,7 @@
       "valueName": "avg"
     }
   ],
-  "refresh": "5s",
+  "refresh": false,
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
@@ -904,15 +904,15 @@
             "$__all"
           ]
         },
-        "datasource": "bank name server",
-        "definition": "show tag values on pigss_data with key=\"valve_pos\"",
+        "datasource": "port history server",
+        "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
         "name": "ports",
         "options": [],
-        "query": "",
+        "query": "[$__from, $__to]",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -926,7 +926,6 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
           "text": "NH3 + HF + HCl",
           "value": [
             "NH3",
@@ -980,6 +979,7 @@
         "name": "stabilization_time",
         "options": [
           {
+            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -991,7 +991,7 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-30m",
     "to": "now"
   },
   "timepicker": {
@@ -1021,6 +1021,6 @@
   },
   "timezone": "",
   "title": "Analyzer Output Graphs",
-  "uid": "0C5NddvZk",
-  "version": 21
+  "uid": "rHPC-eKZz",
+  "version": 16
 }

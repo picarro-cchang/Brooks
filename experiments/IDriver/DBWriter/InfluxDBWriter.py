@@ -60,5 +60,5 @@ if __name__ == "__main__":
     db_Writer = InfluxDBWriter()
     data = [{"measurement": "modbusSettings", "tags": {}, "fields": {"sslave": 4, "port": 505}}]
     db_Writer.write_data(data)
-    data = db_Writer.read_data("select * from modbusSettings ")
+    data = db_Writer.read_data("select * from modbusSettings")
     print(list(data.get_points()))

@@ -8,8 +8,8 @@ from aiohttp_swagger import setup_swagger
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
-from experiments.state_machine.back_end.bank_name_service import \
-    BankNameService
+from experiments.state_machine.back_end.port_history_service import \
+    PortHistoryService
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
 from experiments.state_machine.back_end.pigss_farm import PigssFarm
@@ -41,13 +41,13 @@ class Server:
         pass
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
-    async def server_init(self, simulation=False):
+    async def server_init(self, **kwargs):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
         self.app.on_cleanup.append(self.on_cleanup)
 
-        self.app['farm'] = PigssFarm(simulation=simulation)
+        self.app['farm'] = PigssFarm(**kwargs)
         cors = aiohttp_cors.setup(
             self.app, defaults={"*": aiohttp_cors.ResourceOptions(
                 allow_credentials=True,
@@ -63,9 +63,9 @@ class Server:
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
 
-        bank_name_service = BankNameService()
-        bank_name_service.app['farm'] = self.app['farm']
-        self.app.add_subapp("/bank_name/", bank_name_service.app)
+        port_history_service = PortHistoryService()
+        port_history_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/port_history/", port_history_service.app)
 
         setup_swagger(self.app)
 
@@ -78,8 +78,8 @@ class Server:
         await site.start()
         print(f"======== Running on http://{site._host}:{site._port} ========")
 
-    async def startup(self, simulation=False):
-        self.tasks.append(asyncio.create_task(self.server_init(simulation)))
+    async def startup(self, **kwargs):
+        self.tasks.append(asyncio.create_task(self.server_init(**kwargs)))
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
@@ -89,12 +89,13 @@ class Server:
 
 
 @click.command()
-@click.option('--simulation/--no-simulation', '-s/ ', is_flag=True, help="Use simulation")
-def main(simulation):
+@click.option('--simulation/--no-simulation', '-s/ ', is_flag=True, default=False, help="Use simulation")
+@click.option('--random/--no-random', '-r/ ', 'random_ids', is_flag=True, default=False, help='Randomly select available channels')
+def main(**kwargs):
     service = Server(port=8000)
     loop = asyncio.get_event_loop()
     loop.set_exception_handler(service.handle_exception)
-    loop.run_until_complete(asyncio.gather(service.startup(simulation)))
+    loop.run_until_complete(asyncio.gather(service.startup(**kwargs)))
     try:
         loop.run_forever()
     finally:
