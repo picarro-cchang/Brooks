@@ -1,7 +1,8 @@
 $$$
 cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal_lct.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
-
+#fsr of Second Cavity
+fsr2 = float(cfg['AUTOCAL']['CAVITY2_FSR'])
 schemeVersion = 1
 repeat = 3
 
@@ -174,21 +175,21 @@ scan_HF.append(Row(f_HF+hf_baseline_offset*fsr,1,HF|fit,HF_laser,th_HF,extra2=1)
 #             with baseline_offset = -2 and baseline_interval = 1 it is essentially same as V1 (jah)
 #   Version 6 attempts to write lines with dwell > 1 when the baseline interval and scheme permit (may be too clever) (jah)
  
-scanHCl = makeScan_HCl(f_HCl,fsr,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
-scanHCl += makeScan_HCl(f_HCl,fsr,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],H2O_a,HCl_laser,th_HCl)
+scanHCl = makeScan_HCl(f_HCl,fsr2,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
+scanHCl += makeScan_HCl(f_HCl,fsr2,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],H2O_a,HCl_laser,th_HCl)
 
-scanHCl_first = makeScan_HCl(f_HCl,fsr,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
-scanHCl_first += makeScan_HCl(f_HCl,fsr,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],H2O_a,HCl_laser,th_HCl)
+scanHCl_first = makeScan_HCl(f_HCl,fsr2,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
+scanHCl_first += makeScan_HCl(f_HCl,fsr2,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],H2O_a,HCl_laser,th_HCl)
 
-scanHCl_last = makeScan_HCl(f_HCl,fsr,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
-scanHCl_last += makeScan_HCl(f_HCl,fsr,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],cal|H2O_a,HCl_laser,th_HCl)
+scanHCl_last = makeScan_HCl(f_HCl,fsr2,[(-3,5),(-2,1),(-1,1),(0,10),(1,1),(2,1),(3,5)],H2O_a,HCl_laser,th_HCl)
+scanHCl_last += makeScan_HCl(f_HCl,fsr2,[(3,5),(2,1),(1,1),(0,10),(-1,1),(-2,1),(-3,5)],cal|H2O_a,HCl_laser,th_HCl)
 
-scanH2O_a = makeScan_HCl(f_HCl,fsr,[(-4,8),(-5,4),(-6,8),(-7,2),(-8,2),(-9,2),(-10,2),(-11,2),(-12,2),(-13,2),(-14,2),(-15,2),(-16,2),(-17,2),(-18,4),(-19,4),(-20,4),(-21,4),(-22,4),(-23,8),(-24,8)],cal|H2O_a,HCl_laser,th_HCl)
-scanH2O_a += makeScan_HCl(f_HCl,fsr,[(-23,8),(-22,4),(-21,4),(-20,4),(-19,4),(-18,4),(-17,2),(-16,2),(-15,2),(-14,2),(-13,2),(-12,2),(-11,2),(-10,2),(-9,2),(-8,2),(-7,2),(-6,8),(-5,4),(-4,7),(-4,1)],H2O_a,HCl_laser,th_HCl)
+scanH2O_a = makeScan_HCl(f_HCl,fsr2,[(-4,8),(-5,4),(-6,8),(-7,2),(-8,2),(-9,2),(-10,2),(-11,2),(-12,2),(-13,2),(-14,2),(-15,2),(-16,2),(-17,2),(-18,4),(-19,4),(-20,4),(-21,4),(-22,4),(-23,8),(-24,8)],cal|H2O_a,HCl_laser,th_HCl)
+scanH2O_a += makeScan_HCl(f_HCl,fsr2,[(-23,8),(-22,4),(-21,4),(-20,4),(-19,4),(-18,4),(-17,2),(-16,2),(-15,2),(-14,2),(-13,2),(-12,2),(-11,2),(-10,2),(-9,2),(-8,2),(-7,2),(-6,8),(-5,4),(-4,7),(-4,1)],H2O_a,HCl_laser,th_HCl)
 
-scanH2O_a.append(Row(f_HCl+HCl_baseline_offset*fsr,1,H2O_a|fit,HCl_laser,th_HCl,extra2=1))
+scanH2O_a.append(Row(f_HCl+HCl_baseline_offset*fsr2,1,H2O_a|fit,HCl_laser,th_HCl,extra2=1))
 
-schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + goto_start_H2O + scan_O2 + goto_start_HF + scanHCl_first + scanHCl + scanHCl + scanHCl + scanHCl_last + scanH2O_a
-#schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + scan_O2 + goto_start_HF + scan_NH3 + goto_start_H2O + scanHCl_first + scanHCl + scanHCl+ scanHCl_last + scanH2O_a
+#schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + goto_start_H2O + scan_O2 + goto_start_HF + scanHCl_first + scanHCl + scanHCl + scanHCl + scanHCl_last + scanH2O_a
+schemeRows = scan_H2O + goto_start_NH3 + scan_HF + goto_start_O2 + scan_NH3 + scan_O2 + goto_start_HF + scan_NH3 + goto_start_H2O + scanHCl_first + scanHCl + scanHCl+ scanHCl_last + scanH2O_a
 
 $$$
