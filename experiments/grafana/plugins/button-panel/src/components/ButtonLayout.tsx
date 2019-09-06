@@ -17,7 +17,7 @@ export default class ButtonLayout extends Component<any, any> {
                       </div>
                       <div className="btn-label-container " style={{gridColumnStart: 1, gridColumnEnd: 2}}>
                           <h4>Graphs by Port</h4>
-                          <a className="btn-panel-link btn-valve-graphs" href="/d/pV3XhcDWz"></a>
+                          <a className="btn-panel-link btn-analyzer" href="/d/pV3XhcDWz"></a>
                       </div>
                       <div className="btn-label-container ">
                           <h4>Data Tables</h4>

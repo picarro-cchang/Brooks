@@ -1,4 +1,6 @@
 .btn-panel-link {
+    /*border: 2px solid #054405;*/
+    background-color: #161719;
     border-radius: 15%;
     color: white;
     padding: 34px 34px;
@@ -25,32 +27,31 @@
 }
 
 .btn-sampler {
-    border: 2px solid #054405;
-    background-color: rgb(167, 208, 166);
+
     background-image: url("../img/icon_org.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-analyzer {
-    border: 2px solid #054405;
-    background-color: rgb(167, 208, 166);
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
     background-image: url("../img/icn-panel.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-valve-graphs {
-    border: 2px solid #054405;
-    background-color: rgb(167, 208, 166);
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
     background-image: url("../img/visualization.svg");
     background-repeat: no-repeat;
     background-position: center;
 }
 
 .btn-tables {
-    border: 2px solid #054405;
-    background-color: rgb(167, 208, 166);
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
     background-image: url("../img/summary.png");
     background-repeat: no-repeat;
     background-position: center;

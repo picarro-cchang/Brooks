@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 11,
-  "iteration": 1567796487805,
+  "iteration": 1567798084837,
   "links": [],
   "panels": [
     {
@@ -35,12 +35,12 @@
       },
       "id": 12,
       "legend": {
-        "alignAsTable": false,
+        "alignAsTable": true,
         "avg": false,
         "current": false,
         "max": false,
         "min": false,
-        "rightSide": false,
+        "rightSide": true,
         "show": true,
         "total": false,
         "values": false
@@ -52,9 +52,10 @@
         "dataLinks": []
       },
       "percentage": false,
-      "pointradius": 1,
+      "pointradius": 2,
       "points": true,
       "renderer": "flot",
+      "repeat": null,
       "seriesOverrides": [
         {
           "alias": "Unstable",
@@ -63,7 +64,7 @@
         },
         {
           "alias": "crds.NH3",
-          "color": "#C4162A"
+          "color": "#FF780A"
         },
         {
           "alias": "crds.H2S",
@@ -201,7 +202,7 @@
       "timeShift": null,
       "title": "",
       "tooltip": {
-        "shared": true,
+        "shared": false,
         "sort": 0,
         "value_type": "individual"
       },
@@ -217,7 +218,7 @@
       "yaxes": [
         {
           "format": "short",
-          "label": null,
+          "label": "",
           "logBase": 1,
           "max": null,
           "min": null,
@@ -229,7 +230,7 @@
           "logBase": 1,
           "max": null,
           "min": null,
-          "show": true
+          "show": false
         }
       ],
       "yaxis": {
@@ -422,9 +423,9 @@
           "alias": "",
           "colorMode": "value",
           "colors": [
-            "#F2CC0C",
-            "#F2CC0C",
-            "rgba(50, 172, 45, 0.97)"
+            "#56A64B",
+            "#56A64B",
+            "#56A64B"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
@@ -438,9 +439,9 @@
           "alias": "",
           "colorMode": "value",
           "colors": [
-            "#FA6400",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
+            "#8F3BB8",
+            "#8F3BB8",
+            "#8F3BB8"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
@@ -454,9 +455,9 @@
           "alias": "",
           "colorMode": "value",
           "colors": [
-            "#8F3BB8",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
+            "#FF780A",
+            "#FF780A",
+            "#FF780A"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
@@ -470,9 +471,9 @@
           "alias": "",
           "colorMode": "value",
           "colors": [
-            "#1F60C4",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
+            "#E0B400",
+            "#E0B400",
+            "#E0B400"
           ],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
