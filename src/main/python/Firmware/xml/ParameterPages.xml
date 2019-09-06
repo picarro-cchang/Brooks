@@ -485,6 +485,8 @@
             <title>Ringdown Manager Parameters</title>
             <register>RDD_BALANCE_REGISTER</register>
             <register>RDD_GAIN_REGISTER</register>
+            <register>RDD2_BALANCE_REGISTER</register>
+            <register>RDD2_GAIN_REGISTER</register>
             <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
             <!-- <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register> -->
             <fpga_register offset="FPGA_RDMAN">OPTIONS</fpga_register>

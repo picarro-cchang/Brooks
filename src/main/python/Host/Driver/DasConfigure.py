@@ -919,7 +919,8 @@ class DasConfigure(SharedTypes.Singleton):
         if rddVarGainPresent:
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_RDD_CNTRL_STEP"))
-
+            self.opGroups["FAST"]["CONTROLLER"].addOperation(
+                Operation("ACTION_RDD2_CNTRL_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
 
@@ -1029,7 +1030,7 @@ class DasConfigure(SharedTypes.Singleton):
             sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
         if rddVarGainPresent:
             sender.doOperation(Operation("ACTION_RDD_CNTRL_INIT"))
-
+            sender.doOperation(Operation("ACTION_RDD2_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [
                            0x8000, "FPGA_PWM_WARMBOX", "PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [

@@ -1220,7 +1220,7 @@ int r_read_flow_sensor(unsigned int numInt, void *params, void *env)
     return STATUS_OK;
 }
 
-// The following actions are for interacting with the variable gain ring down detector
+// The following actions are for interacting with the variable gain ring down detector 1
 
 int r_rdd_cntrl_init(unsigned int numInt, void *params, void *env)
 {
@@ -1242,6 +1242,30 @@ int r_rdd_cntrl_do_command(unsigned int numInt, void *params, void *env)
     if (1 != numInt)
         return ERROR_BAD_NUM_PARAMS;
     return rddCntrlDoCommand(reg[0]);
+}
+
+// The following actions are for interacting with the variable gain ring down detector 2
+
+int r_rdd2_cntrl_init(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return rdd2CntrlInit();
+}
+
+int r_rdd2_cntrl_step(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return rdd2CntrlStep();
+}
+
+int r_rdd2_cntrl_do_command(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (1 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return rdd2CntrlDoCommand(reg[0]);
 }
 
 int r_batt_mon_read_regs(unsigned int numInt, void *params, void *env)

@@ -3876,6 +3876,18 @@
         <register ident="CAVITY2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity2 temperature</description>
         </register>
+        <register ident="RDD2_BALANCE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector 2 balance register</description>
+            <initial>0</initial>
+            <display format="%d">Ringdown 2 detector balance</display>
+            <save/>
+        </register>
+        <register ident="RDD2_GAIN_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector 2 gain register</description>
+            <initial>128</initial>
+            <display format="%d">Ringdown 2 detector gain</display>
+            <save/>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3915,6 +3927,7 @@
 
         <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x54" />
         <i2c ident="RDD_POTENTIOMETERS" chain="0" mux="7" address="0x2C" />
+        <i2c ident="RDD2_POTENTIOMETERS" chain="1" mux="4" address="0x2C" />
         <i2c ident="FLOW1_SENSOR" chain="0" mux="7" address="0x49" />
 
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
@@ -5049,6 +5062,9 @@
         <action ident="ACTION_RDD_CNTRL_INIT">r_rdd_cntrl_init</action>
         <action ident="ACTION_RDD_CNTRL_STEP">r_rdd_cntrl_step</action>
         <action ident="ACTION_RDD_CNTRL_DO_COMMAND">r_rdd_cntrl_do_command</action>
+        <action ident="ACTION_RDD2_CNTRL_INIT">r_rdd2_cntrl_init</action>
+        <action ident="ACTION_RDD2_CNTRL_STEP">r_rdd2_cntrl_step</action>
+        <action ident="ACTION_RDD2_CNTRL_DO_COMMAND">r_rdd2_cntrl_do_command</action>
         <action ident="ACTION_BATTERY_MONITOR_WRITE_BYTE">r_batt_mon_write_byte</action>
         <action ident="ACTION_BATTERY_MONITOR_READ_REGS">r_batt_mon_read_regs</action>
         <action ident="ACTION_ACC_READ_REG">r_acc_read_reg</action>

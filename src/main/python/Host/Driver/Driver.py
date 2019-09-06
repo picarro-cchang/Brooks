@@ -531,7 +531,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """Issues command for ringdown detector variable gain board"""
         sender = self.dasInterface.hostToDspSender
         sender.doOperation(Operation("ACTION_RDD_CNTRL_DO_COMMAND",[int(command) & 0xFF]))
-
+    
+    def rdd2Command(self,command):
+        """Issues command for ringdown detector variable gain board"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation("ACTION_RDD2_CNTRL_DO_COMMAND",[int(command) & 0xFF]))
+    
     def rdDspTimerRegisters(self):
         return self.dasInterface.hostToDspSender.rdDspTimerRegisters()
 
