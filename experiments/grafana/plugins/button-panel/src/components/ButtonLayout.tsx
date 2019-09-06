@@ -8,7 +8,7 @@ export default class ButtonLayout extends Component<any, any> {
             <div className="row-test">
               <div className="btn-container">
                       <div className="btn-label-container" style={{gridColumnStart: 1, gridColumnEnd: 2}}>
-                          <h4>Sampler Setup</h4>
+                          <h4>Flow Setup</h4>
                           <a className="btn-panel-link btn-sampler" href="/d/xemz2IvWk"></a>
                       </div>
                       <div className="btn-label-container">
@@ -16,7 +16,7 @@ export default class ButtonLayout extends Component<any, any> {
                           <a className="btn-panel-link btn-analyzer" href="/d/0C5NddvZk"></a>
                       </div>
                       <div className="btn-label-container " style={{gridColumnStart: 1, gridColumnEnd: 2}}>
-                          <h4>Valve Graphs</h4>
+                          <h4>Graphs by Port</h4>
                           <a className="btn-panel-link btn-valve-graphs" href="/d/pV3XhcDWz"></a>
                       </div>
                       <div className="btn-label-container ">
