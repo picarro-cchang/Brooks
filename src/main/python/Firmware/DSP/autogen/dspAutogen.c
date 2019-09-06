@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[580];
+RegTypes regTypes[582];
 
 /* I2C devices */
-I2C_device i2c_devices[40] = {
+I2C_device i2c_devices[41] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -53,6 +53,7 @@ I2C_device i2c_devices[40] = {
     {1, 4, 0x17},
     {0, 7, 0x54},
     {0, 7, 0x2c},
+    {1, 4, 0x2c},
     {0, 7, 0x49},
     {0, -1, 0x4e},
     {1, 4, 0x70},
@@ -1126,6 +1127,10 @@ void initRegisters()
     writeRegister(BATTERY_MONITOR_CURRENT_REGISTER,d);
     d.asFloat = 0;
     writeRegister(BATTERY_MONITOR_TEMPERATURE_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(RDD2_BALANCE_REGISTER,d);
+    d.asUint = 128;
+    writeRegister(RDD2_GAIN_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1706,6 +1711,8 @@ void initRegisters()
     regTypes[ACCELEROMETER_Y_REGISTER] = float_type;
     regTypes[ACCELEROMETER_Z_REGISTER] = float_type;
     regTypes[CAVITY2_TEMPERATURE_REGISTER] = float_type;
+    regTypes[RDD2_BALANCE_REGISTER] = uint_type;
+    regTypes[RDD2_GAIN_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1871,6 +1878,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_rdd_cntrl_step(numInt,params,env);
         case ACTION_RDD_CNTRL_DO_COMMAND:
             return r_rdd_cntrl_do_command(numInt,params,env);
+        case ACTION_RDD2_CNTRL_INIT:
+            return r_rdd2_cntrl_init(numInt,params,env);
+        case ACTION_RDD2_CNTRL_STEP:
+            return r_rdd2_cntrl_step(numInt,params,env);
+        case ACTION_RDD2_CNTRL_DO_COMMAND:
+            return r_rdd2_cntrl_do_command(numInt,params,env);
         case ACTION_BATTERY_MONITOR_WRITE_BYTE:
             return r_batt_mon_write_byte(numInt,params,env);
         case ACTION_BATTERY_MONITOR_READ_REGS:

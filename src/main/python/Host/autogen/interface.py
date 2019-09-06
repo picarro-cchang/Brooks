@@ -1078,7 +1078,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 580
+INTERFACE_NUMBER_OF_REGISTERS = 582
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1660,6 +1660,8 @@ ACCELEROMETER_X_REGISTER = 576
 ACCELEROMETER_Y_REGISTER = 577
 ACCELEROMETER_Z_REGISTER = 578
 CAVITY2_TEMPERATURE_REGISTER = 579
+RDD2_BALANCE_REGISTER = 580
+RDD2_GAIN_REGISTER = 581
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -1701,13 +1703,14 @@ i2cByIndex[29] = 'CAVITY2_PRESSURE_ADC'
 i2cByIndex[30] = 'AMBIENT2_PRESSURE_ADC'
 i2cByIndex[31] = 'HOT_BOX_HEATSINK_THERMISTOR_ADC'
 i2cByIndex[32] = 'RDD_POTENTIOMETERS'
-i2cByIndex[33] = 'FLOW1_SENSOR'
-i2cByIndex[34] = 'DAS_TEMP_SENSOR'
-i2cByIndex[35] = 'VALVE_PUMP_TEC_PORT'
-i2cByIndex[36] = 'ANALOG_INTERFACE'
-i2cByIndex[37] = 'BATTERY_MONITOR'
-i2cByIndex[38] = 'CHAIN0_MUX'
-i2cByIndex[39] = 'CHAIN1_MUX'
+i2cByIndex[33] = 'RDD2_POTENTIOMETERS'
+i2cByIndex[34] = 'FLOW1_SENSOR'
+i2cByIndex[35] = 'DAS_TEMP_SENSOR'
+i2cByIndex[36] = 'VALVE_PUMP_TEC_PORT'
+i2cByIndex[37] = 'ANALOG_INTERFACE'
+i2cByIndex[38] = 'BATTERY_MONITOR'
+i2cByIndex[39] = 'CHAIN0_MUX'
+i2cByIndex[40] = 'CHAIN1_MUX'
 
 #i2cByIdent tuple is (index,chain,mux,address)
 i2cByIdent = {}
@@ -1744,13 +1747,14 @@ i2cByIdent['CAVITY2_PRESSURE_ADC'] = (29, 1, 4, 0x24)
 i2cByIdent['AMBIENT2_PRESSURE_ADC'] = (30, 1, 4, 0x17)
 i2cByIdent['HOT_BOX_HEATSINK_THERMISTOR_ADC'] = (31, 0, 7, 0x54)
 i2cByIdent['RDD_POTENTIOMETERS'] = (32, 0, 7, 0x2c)
-i2cByIdent['FLOW1_SENSOR'] = (33, 0, 7, 0x49)
-i2cByIdent['DAS_TEMP_SENSOR'] = (34, 0, -1, 0x4e)
-i2cByIdent['VALVE_PUMP_TEC_PORT'] = (35, 1, 4, 0x70)
-i2cByIdent['ANALOG_INTERFACE'] = (36, 0, 4, 0x10)
-i2cByIdent['BATTERY_MONITOR'] = (37, 0, 5, 0x64)
-i2cByIdent['CHAIN0_MUX'] = (38, 0, -1, 0x70)
-i2cByIdent['CHAIN1_MUX'] = (39, 1, -1, 0x71)
+i2cByIdent['RDD2_POTENTIOMETERS'] = (33, 1, 4, 0x2c)
+i2cByIdent['FLOW1_SENSOR'] = (34, 0, 7, 0x49)
+i2cByIdent['DAS_TEMP_SENSOR'] = (35, 0, -1, 0x4e)
+i2cByIdent['VALVE_PUMP_TEC_PORT'] = (36, 1, 4, 0x70)
+i2cByIdent['ANALOG_INTERFACE'] = (37, 0, 4, 0x10)
+i2cByIdent['BATTERY_MONITOR'] = (38, 0, 5, 0x64)
+i2cByIdent['CHAIN0_MUX'] = (39, 0, -1, 0x70)
+i2cByIdent['CHAIN1_MUX'] = (40, 1, -1, 0x71)
 
 #I2C channel definitions
 I2C_LOGIC_EEPROM = 0
@@ -1786,13 +1790,14 @@ I2C_CAVITY2_PRESSURE_ADC = 29
 I2C_AMBIENT2_PRESSURE_ADC = 30
 I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC = 31
 I2C_RDD_POTENTIOMETERS = 32
-I2C_FLOW1_SENSOR = 33
-I2C_DAS_TEMP_SENSOR = 34
-I2C_VALVE_PUMP_TEC_PORT = 35
-I2C_ANALOG_INTERFACE = 36
-I2C_BATTERY_MONITOR = 37
-I2C_CHAIN0_MUX = 38
-I2C_CHAIN1_MUX = 39
+I2C_RDD2_POTENTIOMETERS = 33
+I2C_FLOW1_SENSOR = 34
+I2C_DAS_TEMP_SENSOR = 35
+I2C_VALVE_PUMP_TEC_PORT = 36
+I2C_ANALOG_INTERFACE = 37
+I2C_BATTERY_MONITOR = 38
+I2C_CHAIN0_MUX = 39
+I2C_CHAIN1_MUX = 40
 
 
 registerByName["NOOP_REGISTER"] = NOOP_REGISTER
@@ -3486,6 +3491,12 @@ registerByName["ACCELEROMETER_Z_REGISTER"] = ACCELEROMETER_Z_REGISTER
 registerInfo.append(RegInfo("ACCELEROMETER_Z_REGISTER",c_float,0,1.0,"rw"))
 registerByName["CAVITY2_TEMPERATURE_REGISTER"] = CAVITY2_TEMPERATURE_REGISTER
 registerInfo.append(RegInfo("CAVITY2_TEMPERATURE_REGISTER",c_float,0,1.0,"r"))
+registerByName["RDD2_BALANCE_REGISTER"] = RDD2_BALANCE_REGISTER
+registerInfo.append(RegInfo("RDD2_BALANCE_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["RDD2_BALANCE_REGISTER"] = 0
+registerByName["RDD2_GAIN_REGISTER"] = RDD2_GAIN_REGISTER
+registerInfo.append(RegInfo("RDD2_GAIN_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["RDD2_GAIN_REGISTER"] = 128
 
 # FPGA block definitions
 
@@ -4186,17 +4197,20 @@ ACTION_READ_FLOW_SENSOR = 77
 ACTION_RDD_CNTRL_INIT = 78
 ACTION_RDD_CNTRL_STEP = 79
 ACTION_RDD_CNTRL_DO_COMMAND = 80
-ACTION_BATTERY_MONITOR_WRITE_BYTE = 81
-ACTION_BATTERY_MONITOR_READ_REGS = 82
-ACTION_ACC_READ_REG = 83
-ACTION_ACC_WRITE_REG = 84
-ACTION_ACC_READ_ACCEL = 85
-ACTION_READ_THERMISTOR_RESISTANCE_16BIT = 86
-ACTION_AVERAGE_FLOAT_REGISTERS = 87
-ACTION_UPDATE_FROM_SIMULATORS = 88
-ACTION_STEP_SIMULATORS = 89
-ACTION_TEMP_CNTRL_FILTER_HEATER_INIT = 90
-ACTION_TEMP_CNTRL_FILTER_HEATER_STEP = 91
+ACTION_RDD2_CNTRL_INIT = 81
+ACTION_RDD2_CNTRL_STEP = 82
+ACTION_RDD2_CNTRL_DO_COMMAND = 83
+ACTION_BATTERY_MONITOR_WRITE_BYTE = 84
+ACTION_BATTERY_MONITOR_READ_REGS = 85
+ACTION_ACC_READ_REG = 86
+ACTION_ACC_WRITE_REG = 87
+ACTION_ACC_READ_ACCEL = 88
+ACTION_READ_THERMISTOR_RESISTANCE_16BIT = 89
+ACTION_AVERAGE_FLOAT_REGISTERS = 90
+ACTION_UPDATE_FROM_SIMULATORS = 91
+ACTION_STEP_SIMULATORS = 92
+ACTION_TEMP_CNTRL_FILTER_HEATER_INIT = 93
+ACTION_TEMP_CNTRL_FILTER_HEATER_STEP = 94
 
 # Aliases
 PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER # Old name for number of samples spent in triggered state
@@ -4695,6 +4709,8 @@ __p = []
 
 __p.append(('dsp','uint32',RDD_BALANCE_REGISTER,'Ringdown detector balance','','%d',1,1))
 __p.append(('dsp','uint32',RDD_GAIN_REGISTER,'Ringdown detector gain','','%d',1,1))
+__p.append(('dsp','uint32',RDD2_BALANCE_REGISTER,'Ringdown 2 detector balance','','%d',1,1))
+__p.append(('dsp','uint32',RDD2_GAIN_REGISTER,'Ringdown 2 detector gain','','%d',1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_CONTROL,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Start ringdown cycle', [(0, u'Idle'), (4, u'Start')]), (8, u'Abort ringdown', [(0, u'Idle'), (8, u'Abort')]), (16, u'Reset ringdown manager', [(0, u'Idle'), (16, u'Reset')]), (32, u'Mark bank 0 available for write', [(0, u'Idle'), (32, u'Mark available')]), (64, u'Mark bank 1 available for write', [(0, u'Idle'), (64, u'Mark available')]), (128, u'Acknowledge ring-down interrupt', [(0, u'Idle'), (128, u'Acknowledge')]), (256, u'Acknowledge data acquired interrupt', [(0, u'Idle'), (256, u'Acknowledge')]), (512, u'Tuner waveform mode', [(0, u'Ramp'), (512, u'Dither')])],None,None,1,1))
 __p.append(('fpga','mask',FPGA_RDMAN+RDMAN_OPTIONS,[(1, u'Enable frequency locking', [(0, u'Disable'), (1, u'Enable')]), (2, u'Allow ring-down on positive tuner slope', [(0, u'No'), (2, u'Yes')]), (4, u'Allow ring-down on negative tuner slope', [(0, u'No'), (4, u'Yes')]), (8, u'Allow transition to dither mode', [(0, u'Disallow'), (8, u'Allow')]), (16, u'Ringdown data source', [(0, u'Simulator'), (16, u'Actual ADC')]), (32, u'Oscilloscope mode', [(0, u'Disabled'), (32, u'Enabled')]), (64, u'Tuner slope to trigger scope', [(0, u'Falling'), (64, u'Rising')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_RDMAN+RDMAN_DIVISOR,'Ringdown ADC divisor, Sample freq = 25MHz/(divisor+1)','','%d',1,1))
