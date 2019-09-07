@@ -23,15 +23,17 @@ import zmq
 
 
 class Broadcaster(object):
-    def __init__(self, port: int, name: str = 'Broadcaster', logFunc: Optional[Callable] = None, sendHwm: int = 500) -> None:
+    def __init__(self, port: int, ip: str = '127.0.0.1', name: str = 'Broadcaster', logFunc: Optional[Callable] = None, sendHwm: int = 500) -> None:
         self.name = name
+        self.ip = ip
         self.port = port
         self.logFunc = logFunc
         self.zmqContext = zmq.Context()  # type: zmq.Context
         self.publisher = self.zmqContext.socket(zmq.PUB)  # type: zmq.socket
         # Prevent publisher overflow from slow subscribers
         self.publisher.setsockopt(zmq.SNDHWM, sendHwm)
-        self.publisher.bind("tcp://*:%s" % port)
+        # self.publisher.bind("tcp://*:%s" % port)
+        self.publisher.bind(f"tcp://{ip}:{port}")
 
     def send(self, msg: bytes) -> None:
         self.publisher.send(msg)
