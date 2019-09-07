@@ -1,10 +1,10 @@
 import asyncio
+import os
 
 import aiohttp_cors
 import click
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
-
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
@@ -16,17 +16,21 @@ from experiments.state_machine.back_end.pigss_farm import PigssFarm
 from experiments.state_machine.back_end.supervisor_service import \
     SupervisorService
 
-log = LOLoggerClient(client_name="PigssServer", verbose=True)
+log = LOLoggerClient(client_name="PigssRunner", verbose=True)
+my_path = os.path.dirname(os.path.abspath(__file__))
 
 
-class Server:
-    def __init__(self, port, addr='0.0.0.0', data="unspecified"):
+class PigssRunner:
+    def __init__(self):
         self.tasks = []
         self.app = None
         self.runner = None
+        self.port = None
+        self.addr = None
+
+    def set_host(self, port, addr='0.0.0.0'):
         self.port = port
         self.addr = addr
-        self.data = data
 
     async def on_startup(self, app):
         await app['farm'].startup()
@@ -40,14 +44,16 @@ class Server:
         print("Top level server is cleaning up")
         pass
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
-    async def server_init(self, **kwargs):
+    @log_async_exception(log_func=log.error, stop_loop=True)
+    async def server_init(self, config_filename):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
         self.app.on_cleanup.append(self.on_cleanup)
+        farm = PigssFarm(config_filename)
+        self.app['farm'] = farm
+        self.set_host(farm.config.get_http_server_port(), farm.config.get_http_server_listen_address())
 
-        self.app['farm'] = PigssFarm(**kwargs)
         cors = aiohttp_cors.setup(
             self.app, defaults={"*": aiohttp_cors.ResourceOptions(
                 allow_credentials=True,
@@ -78,8 +84,8 @@ class Server:
         await site.start()
         print(f"======== Running on http://{site._host}:{site._port} ========")
 
-    async def startup(self, **kwargs):
-        self.tasks.append(asyncio.create_task(self.server_init(**kwargs)))
+    async def startup(self, config_filename):
+        self.tasks.append(asyncio.create_task(self.server_init(config_filename)))
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
@@ -89,20 +95,21 @@ class Server:
 
 
 @click.command()
-@click.option('--simulation/--no-simulation', '-s/ ', is_flag=True, default=False, help="Use simulation")
-@click.option('--random/--no-random', '-r/ ', 'random_ids', is_flag=True, default=False, help='Randomly select available channels')
-def main(**kwargs):
-    service = Server(port=8000)
+@click.option('--config', '-c', 'config_filename', default='pigss_config.yaml', help='Name of configuration file in yaml format')
+def main(config_filename):
+    config_filename = os.path.normpath(os.path.join(my_path, config_filename))
+    log.info(f"Starting PigssRunner with configuration file {config_filename}")
+    service = PigssRunner()
     loop = asyncio.get_event_loop()
     loop.set_exception_handler(service.handle_exception)
-    loop.run_until_complete(asyncio.gather(service.startup(**kwargs)))
+    loop.run_until_complete(asyncio.gather(service.startup(config_filename)))
     try:
         loop.run_forever()
     finally:
-        loop.run_until_complete(asyncio.gather(service.runner.cleanup()))
+        if service.runner is not None:
+            loop.run_until_complete(asyncio.gather(service.runner.cleanup()))
         Framework.stop()
-        # log_process.kill()
-    log.info('Server stopped')
+    log.info('PigssRunner stopped')
 
 
 if __name__ == "__main__":

@@ -1,0 +1,25 @@
+Configuration: # This is for high level information
+  Simulation: 
+    enabled: true
+    random_ids: false
+    ip_low: 192.168.10.101
+    ip_high: 192.168.10.254
+  Database:
+    server: localhost
+    port: 8086
+    name: pigss_data
+  HttpServer:
+    listen_address: 0.0.0.0
+    port: 8000
+
+Services:
+  - Name: RpcServer
+    RPC_Port: 32769
+    Parameters: # These are passed to the constructor
+      alpha: 1
+      bravo: 2
+      charlie: 3
+
+  - Name: CompressDataPeriodic
+
+  - Name: AggregateSourceServer

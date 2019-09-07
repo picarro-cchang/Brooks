@@ -18,8 +18,8 @@ from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
 from experiments.relay_driver.numato.numato_driver import NumatoDriver
-from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
 from experiments.RemoteAsync.RpcServer import RpcServer
+from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
 from experiments.state_machine.back_end.pigss_payloads import \
     SystemConfiguration
 from experiments.testing.cmd_fifo import CmdFIFO
@@ -100,12 +100,12 @@ class ProcessWrapper:
 
 
 class PigssSupervisor(Ahsm):
-    def __init__(self, farm=None, simulation=False, random_ids=False):
+    def __init__(self, farm=None):
         log.info("Starting PigssSupervisor")
         super().__init__()
         self.farm = farm
-        self.simulation = simulation
-        self.random_ids = random_ids
+        self.simulation = self.farm.config.get_simulation_enabled()
+        self.random_ids = self.farm.config.get_simulation_random_ids()
         self.farm.RPC = {}
         self.wrapped_processes = {}  # List of Process objects
         self.tasks = []

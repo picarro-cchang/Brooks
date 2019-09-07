@@ -8,6 +8,7 @@ from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.piglet_manager import PigletManager
 from experiments.state_machine.back_end.pigss_controller import PigssController
 from experiments.state_machine.back_end.pigss_supervisor import PigssSupervisor
+from experiments.state_machine.back_end.pigss_config import PigssConfig
 
 log = LOLoggerClient(client_name="PigssFarm", verbose=True)
 
@@ -20,10 +21,12 @@ class PigssFarm:
         the piglets. The comms state machine is used to communicate with
         the serial ports and to handle errors.
     """
-    def __init__(self, **kwargs):
-        self.controller = PigssController(self, **kwargs)
-        self.piglet_manager = PigletManager(self, **kwargs)
-        self.pigss_supervisor = PigssSupervisor(self, **kwargs)
+    def __init__(self, config_filename):
+        self.config_filename = config_filename
+        self.config = PigssConfig(config_filename)
+        self.controller = PigssController(self)
+        self.piglet_manager = PigletManager(self)
+        self.pigss_supervisor = PigssSupervisor(self)
         self.send_queue = asyncio.Queue(maxsize=256)
         self.receive_queue = asyncio.Queue(maxsize=256)
         self.tasks = []

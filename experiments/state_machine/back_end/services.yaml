@@ -1,6 +1,6 @@
 - Name: RpcServer
   RPC_Port: 32769
-  Parameters:
+  Parameters:  # These are passed to the constructor
     alpha: 1
     bravo: 2
     charlie: 3
