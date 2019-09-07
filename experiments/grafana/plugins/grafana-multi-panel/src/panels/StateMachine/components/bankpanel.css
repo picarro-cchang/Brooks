@@ -58,7 +58,8 @@
     /*background-color: #888;*/
     /*border: 3px solid #111;*/
     /*border-radius: 7px;*/
-    background-color: #82828287;
+    /*background-color: #82828287;*/
+    background-color: #cacaca;
     padding: 10px;
     border: 2px solid #1111117a;
     border-radius: 5px;
@@ -142,4 +143,18 @@
 .btn-inverse.disabled {
     background-color: #333;
     opacity: .9;
+}
+.btn-success {
+    background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);
+}
+
+.btn-success:active, .btn-success:focus {
+    background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);
+
+}
+.btn-run-active {
+    background-color: rgba(98, 100, 104, 0.86);
+}
+.btn-run-issue {
+    background-color: #716e6e;
 }

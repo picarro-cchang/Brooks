@@ -117,8 +117,9 @@ class SimMeas(object):
 
 
 class Driver:
-    def __init__(self, sim, analyzer):
-        self.rpc_server = CmdFIFOServer(("", RPC_PORT_DRIVER), ServerName="PicarroDriverSimulator", threaded=True)
+    def __init__(self, sim, analyzer, ip_address):
+        self.ip_address = ip_address
+        self.rpc_server = CmdFIFOServer((f"{ip_address}", RPC_PORT_DRIVER), ServerName="PicarroDriverSimulator", threaded=True)
         self.register_rpc_functions()
         self.sim = sim
         self.analyzer = analyzer
@@ -182,7 +183,8 @@ class Driver:
 
     def calc_data_task(self, analyzer):
         sim = self.sim
-        dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER)
+        # dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER)
+        dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER, self.ip_address)
         while True:
             measurements = []
             for species in analyzer.species:
@@ -196,8 +198,9 @@ class Driver:
 
 
 class Supervisor:
-    def __init__(self, sim, analyzer):
-        self.rpc_server = CmdFIFOServer(("", RPC_PORT_SUPERVISOR), ServerName="PicarroSupervisorSimulator", threaded=True)
+    def __init__(self, sim, analyzer, ip_address='localhost'):
+        self.ip_address = ip_address
+        self.rpc_server = CmdFIFOServer((f"{ip_address}", RPC_PORT_SUPERVISOR), ServerName="PicarroSupervisorSimulator", threaded=True)
         self.sim = sim
         self.analyzer = analyzer
         self.register_rpc_functions()
@@ -212,10 +215,10 @@ class Supervisor:
             yield sim.sim_time + period
 
     def start_applications(self):
-        Thread(target=Driver(self.sim, self.analyzer).rpc_server.serve_forever, daemon=True).start()
-        Thread(target=InstMgr(self.sim).rpc_server.serve_forever, daemon=True).start()
-        self.Driver = CmdFIFOServerProxy(f"http://localhost:{RPC_PORT_DRIVER}", "From Supervisor")
-        self.InstMgr = CmdFIFOServerProxy(f"http://localhost:{RPC_PORT_INSTR_MANAGER}", "From Supervisor")
+        Thread(target=Driver(self.sim, self.analyzer, self.ip_address).rpc_server.serve_forever, daemon=True).start()
+        Thread(target=InstMgr(self.sim, self.ip_address).rpc_server.serve_forever, daemon=True).start()
+        self.Driver = CmdFIFOServerProxy(f"http://{self.ip_address}:{RPC_PORT_DRIVER}", "From Supervisor")
+        self.InstMgr = CmdFIFOServerProxy(f"http://{self.ip_address}:{RPC_PORT_INSTR_MANAGER}", "From Supervisor")
 
     def RPC_TerminateApplications(self):
         self.Driver.CmdFIFO.StopServer()
@@ -227,10 +230,10 @@ class Supervisor:
 
 
 class InstMgr:
-    def __init__(self, sim):
-        self.rpc_server = CmdFIFOServer(("", RPC_PORT_INSTR_MANAGER), ServerName="PicarroInstMgrSimulator", threaded=True)
+    def __init__(self, sim, ip_address):
+        self.rpc_server = CmdFIFOServer((f"{ip_address}", RPC_PORT_INSTR_MANAGER), ServerName="PicarroInstMgrSimulator", threaded=True)
         self.sim = sim
-        self.Supervisor = CmdFIFOServerProxy(f"http://localhost:{RPC_PORT_SUPERVISOR}", "From InstMgr")
+        self.Supervisor = CmdFIFOServerProxy(f"http://{ip_address}:{RPC_PORT_SUPERVISOR}", "From InstMgr")
         self.register_rpc_functions()
 
     def INSTMGR_ShutdownRpc(self):
@@ -245,15 +248,16 @@ class InstMgr:
 @click.command()
 @click.argument("proc_name")
 @click.argument("analyzer_json")
-def main(proc_name, analyzer_json):
+@click.argument("ip_address")
+def main(proc_name, analyzer_json, ip_address):
     if proc_name:
         setproctitle(f"python Simulation on {proc_name}")
-    print(f"{sys.path}")
-    ip_addresses = [ifaddresses(ifname)[AF_INET][0]['addr'] for ifname in interfaces() if not ifname.startswith("lo")]
-    print("IP address:", ip_addresses[0])
+    # print(f"{sys.path}")
+    # ip_addresses = [ifaddresses(ifname)[AF_INET][0]['addr'] for ifname in interfaces() if not ifname.startswith("lo")]
+    # print("IP address:", ip_addresses[0])
 
     sim = Simulator(real_time=True)
-    supervisor = Supervisor(sim, Analyzer(**json.loads(analyzer_json)))
+    supervisor = Supervisor(sim, Analyzer(**json.loads(analyzer_json)), ip_address)
 
     def supervisor_rpc_task():
         supervisor.rpc_server.serve_forever()
@@ -261,7 +265,7 @@ def main(proc_name, analyzer_json):
 
     Thread(target=supervisor_rpc_task, daemon=True).start()
 
-    print(f"Simulator started at {ip_addresses[0]}.", flush=True)
+    # print(f"Simulator started at {ip_addresses[0]}.", flush=True)
     print("Done\n", flush=True)
 
     sim.run()

@@ -83,8 +83,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         */
         return (
             <div className="panel-plan" >
-                <h2 style={{color: "white"}}>Schedule</h2>
-                <h6>Please click on available channels to select port.</h6>
+                <h2 style={{color: "#5f5f5f"}}>Schedule</h2>
+                <h6 style={{color: "#5f5f5f"}}>Please click on available channels to select port.</h6>
                 <div className="panel-plan-inner" >
                     <form>
                         <ReactList
