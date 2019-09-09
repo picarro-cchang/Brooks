@@ -129,11 +129,15 @@ Each state method is decorated using \texttt{@state}. A state function is invoke
 	
 	\item \texttt{self.tran(next\_state)}. This indicates that the machine should transition to \texttt{next\_state} (which is a state method) when an event of this type occurs. An event of type \texttt{Signal.INIT} should return with a transition to a substate of the current state if it is handled.
 
-	\item \texttt{self.super(parent\_state)}. This should be the default return value. The method gets here if the event is not explicitly handled within this state. Note that this default return value informs the code of the identity of the parent of this state.
-
+	\item \texttt{self.super(parent\_state)}. This should be the default return value. The method gets here if the event is not explicitly handled within this state. Note that this default return value informs the code of the identity of the parent of this state. For states which do not have an explicit parent, the return value should be \texttt{self.super(self.top)} since \texttt{self.top} is an internally generated top level state which is the ancestor of all user-defined states.
 \end{itemize}
 
+In the listing, we see how each state method essentially goes through the possible signals in the event passed to it and handles each of them if it can. It should be evident how the code may be written down directly from the state chart of Figure \ref{fig:smofexample1}. The parent of each state is specified in the last return statement of the method, which is executed if the event is not explicitly handled otherwise.
 
+
+Note that a special state method \texttt{\_initial} is required which is used to specify the transition to the actual initial state. This method is called once when the machine is entered, and so is also useful for performing any other initialization required, such as registering signal types.
+
+ 
 \begin{minted}
 [
 baselinestretch=1.0,
@@ -156,6 +160,8 @@ if __name__ == "__main__":
         s1.dispatch(event)
 \end{minted}
 
+In order to run the hierarchical state machine, we may call its  \texttt{dispatch} method, passing in the event that we require it to handle.
+The above listing provides a simple interactive script which prompts the user for a signal to be handled by the HSM. The output of the program is shown below for the sequence of events described in the example above.
 \begin{minted}
 [
 baselinestretch=1.0,
@@ -187,5 +193,10 @@ INIT action 1
 ENTRY action 2
         Event -->
 \end{minted}
+As a result of performing the actions associated with the state machine, new events may be generated. The methods \texttt{postFIFO} and \texttt{postLIFO} are defined on the \texttt{Ahsm} class and these allow events to be enqueued for processing after the current event handler has run to completion. A single state machine works by repeatedly getting an event from its event queue and passing it to its \texttt{dispatch} method. 
+
+When there is more than one hierarchical state machine, each is provided with its own event queue and is given a unique priority level. The framework starts with the machine with the highest priority and calls its dispatch method with the event (if any) at the head of its queue. It proceeds to the machine with the next highest priority and does the same, and continues until all machines have been handled. If any event queue is non-empty, the cycle repeats with the highest priority machine. New events can be placed on the event queue(s) from external sources such as timers, user input, or as a result of actions triggered by earlier events.
+
+A state machine can \textit{subscribe} to an event of a specific type by calling the static method \texttt{Framework.subscribe}, passing a string giving the name of the type of \texttt{Signal} to which it wishes to subscribe. When an \texttt{Event} is published by \textit{any} state machine in the framework (by calling \texttt{Framework.publish}), the event is placed on the event queues of all the machines which have subscribed to the associated signal.
 
 \end{document}

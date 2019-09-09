@@ -7,8 +7,8 @@
       "name": "Picarro, Inc."
     },
     "logos": {
-      "small": "img/analyze-icon.png",
-      "large": "img/analyze-icon.png"
+      "small": "img/visualization.svg",
+      "large": "img/visualization.svg"
     }
   },
   "includes": [
@@ -18,6 +18,12 @@
       "path": "dashboards/ConcentrationByValve.json",
       "addToNav": true,
       "defaultNav": true
+    },
+    {
+      "type": "dashboard",
+      "name": "Analyzer Output Graphs",
+      "path": "dashboards/AnalyzerOutput.json",
+      "addToNav": true
     }
   ],
   "dependencies": {

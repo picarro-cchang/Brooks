@@ -3,7 +3,7 @@ import queue as Queue
 import threading
 import time
 from datetime import datetime, timedelta, tzinfo
-
+from collections import deque
 import experiments.common.timeutils as timeutils
 import experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
 from experiments.IDriver import StringPickler
@@ -295,7 +295,9 @@ class PicarroAnalyzerDriver:
         if timestamp_of_event is None:
             timestamp_of_event = timeutils.get_epoch_timestamp()
         with self.stopwatch_database_tags_lock:
-            self.stopwatch_database_tags[tag_name] = timestamp_of_event
+            if tag_name not in self.stopwatch_database_tags:
+                self.stopwatch_database_tags[tag_name] = deque(maxlen=4)
+            self.stopwatch_database_tags[tag_name].appendleft(timestamp_of_event)
 
     def remove_stopwatch_tag(self, tag_name):
         """Remove a stopwatch tag."""
@@ -416,8 +418,11 @@ class IDriverThread(threading.Thread):
     def equip_data_object_with_stopwatch_tags(self, data, obj):
         with self.parent_idriver.stopwatch_database_tags_lock:
             for tag in self.parent_idriver.stopwatch_database_tags:
-                time_passed = obj['time'] - self.parent_idriver.stopwatch_database_tags[tag]
-                data['tags'][tag] = time_passed
+                for t in self.parent_idriver.stopwatch_database_tags[tag]:
+                    time_passed = obj['time'] - t
+                    if time_passed >= 0:
+                        break
+                data['fields'][tag] = time_passed
         return data
 
     def generate_data_for_database(self, queue):

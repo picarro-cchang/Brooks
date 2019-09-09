@@ -1,14 +1,15 @@
 import asyncio
-from collections import deque
 import json
 import os
 import time
+from collections import deque
 
 import attr
+import yaml
 from aiomultiprocess import Process
+from setproctitle import setproctitle
 
-from async_hsm import Ahsm, Event, Framework, Signal, Spy, TimeEvent, state
-from async_hsm.SimpleSpy import SimpleSpy
+from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
 from experiments.common.async_helper import log_async_exception
 from experiments.common.rpc_ports import rpc_ports
 from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
@@ -18,11 +19,11 @@ from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
 from experiments.relay_driver.numato.numato_driver import NumatoDriver
 from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
+from experiments.RemoteAsync.RpcServer import RpcServer
 from experiments.state_machine.back_end.pigss_payloads import \
     SystemConfiguration
 from experiments.testing.cmd_fifo import CmdFIFO
 
-host = "10.100.3.28"
 port = rpc_ports.get('madmapper')
 ping_interval = 2.0
 
@@ -34,7 +35,6 @@ log = LOLoggerClient(client_name="PigssSupervisor", verbose=True)
 
 class AsyncWrapper:
     """Returns asynchronous version of a method by wrapping it in an executor"""
-
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -59,6 +59,7 @@ class ProcessWrapper:
 
     async def start(self, *args, **kwargs):
         async def start_driver():
+            setproctitle(f"python Supervised {self.name}")
             d = self.driver(*args, **kwargs)
             if hasattr(d, "rpc_serve_forever"):
                 d.rpc_serve_forever()
@@ -99,15 +100,18 @@ class ProcessWrapper:
 
 
 class PigssSupervisor(Ahsm):
-    def __init__(self, farm=None):
+    def __init__(self, farm=None, simulation=False, random_ids=False):
         log.info("Starting PigssSupervisor")
         super().__init__()
         self.farm = farm
+        self.simulation = simulation
+        self.random_ids = random_ids
         self.farm.RPC = {}
         self.wrapped_processes = {}  # List of Process objects
         self.tasks = []
         self.device_dict = {}
         self.bank_list = []
+        self.service_list = []
         self.old_processes = deque(maxlen=32)
         self.te = TimeEvent("MONITOR_PROCESSES")
         self.mon_task = None
@@ -144,8 +148,9 @@ class PigssSupervisor(Ahsm):
 
     @state
     def _initial(self, e):
+        Framework.subscribe("SERVICES_STARTED", self)
         Framework.subscribe("MADMAPPER_DONE", self)
-        Framework.subscribe("PROCESSES_STARTED", self)
+        Framework.subscribe("DRIVERS_STARTED", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("PROCESSES_MONITORED", self)
@@ -167,15 +172,20 @@ class PigssSupervisor(Ahsm):
     def _operational(self, e):
         sig = e.signal
         if sig == Signal.INIT:
-            return self.tran(self._mapping)
+            return self.tran(self._startup)
         elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
         return self.super(self.top)
 
     @state
-    def _mapping(self, e):
+    def _startup(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            with open(os.path.join(my_path, "services.yaml"), "r") as fp:
+                self.service_list = yaml.load(fp.read())
+            self.tasks.append(asyncio.create_task(self.startup_services()))
+            return self.handled(e)
+        elif sig == Signal.SERVICES_STARTED:
             self.tasks.append(asyncio.create_task(self.perform_mapping()))
             return self.handled(e)
         elif sig == Signal.MADMAPPER_DONE:
@@ -185,9 +195,9 @@ class PigssSupervisor(Ahsm):
             for name, descr in payload["Devices"]["Serial_Devices"].items():
                 if descr["Driver"] == "PigletDriver":
                     self.bank_list.append(descr["Bank_ID"])
-            self.tasks.append(asyncio.create_task(self.startup_processes()))
+            self.tasks.append(asyncio.create_task(self.startup_drivers()))
             return self.handled(e)
-        elif sig == Signal.PROCESSES_STARTED:
+        elif sig == Signal.DRIVERS_STARTED:
             Framework.publish(
                 Event(Signal.SYSTEM_CONFIGURE,
                       SystemConfiguration(bank_list=sorted(self.bank_list), mad_mapper_result=self.device_dict)))
@@ -222,7 +232,7 @@ class PigssSupervisor(Ahsm):
         # Run the MadMapper
         wrapped_process = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
         self.wrapped_processes["MadMapper"] = wrapped_process
-        madmapper_rpc = await wrapped_process.start()
+        madmapper_rpc = await wrapped_process.start(simulation=self.simulation)
         # self.device_dict = await madmapper_rpc.read_json()
         self.device_dict = await madmapper_rpc.map_devices(True)
         log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
@@ -250,7 +260,7 @@ class PigssSupervisor(Ahsm):
             log.info(f"Restarted {wrapped_process.driver.__name__} at {key}")
         return
 
-    async def setup_processes(self, at_start=True):
+    async def setup_drivers(self, at_start=True):
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
             if dev_params['Driver'] == 'PigletDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
@@ -264,11 +274,12 @@ class PigssSupervisor(Ahsm):
                                                 port=dev_params['Path'],
                                                 rpc_port=dev_params['RPC_Port'],
                                                 baudrate=dev_params['Baudrate'],
-                                                bank=dev_params['Bank_ID'])
+                                                bank=dev_params['Bank_ID'],
+                                                random_ids=self.random_ids)
             elif dev_params['Driver'] == 'AlicatDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = "MFC"
-                    wrapped_process = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'], name)
+                    wrapped_process = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
                                                 name,
@@ -281,7 +292,7 @@ class PigssSupervisor(Ahsm):
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     relay_id = dev_params['Numato_ID']
                     name = f"Relay_{relay_id}"
-                    wrapped_process = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'], name)
+                    wrapped_process = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
                                                 name,
@@ -294,7 +305,7 @@ class PigssSupervisor(Ahsm):
             if dev_params['Driver'] == 'IDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = f"Picarro_{dev_params['SN']}"
-                    wrapped_process = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name)
+                    wrapped_process = ProcessWrapper(PicarroAnalyzerDriver, dev_params['RPC_Port'], name, dev_name=key)
                     chassis, analyzer = dev_params['SN'].split("-")
                     await self.register_process(key,
                                                 wrapped_process,
@@ -313,12 +324,35 @@ class PigssSupervisor(Ahsm):
                                                     "chassis": chassis
                                                 })
 
+    async def setup_services(self, at_start=True):
+        for service in self.service_list:
+            name = service["Name"]
+            if name == "RpcServer":
+                if at_start or not self.wrapped_processes[name].process.is_alive():
+                    rpc_port = service["RPC_Port"]
+                    wrapped_process = ProcessWrapper(RpcServer, rpc_port, name, dev_name="Service")
+                    await self.register_process(name,
+                                                wrapped_process,
+                                                name,
+                                                ping_interval,
+                                                at_start,
+                                                rpc_port=rpc_port,
+                                                **service.get("Parameters", {}))
+            else:
+                print(f"Unknown service {service} ignored")
+
     @log_async_exception(log_func=log.warning, stop_loop=True)
-    async def startup_processes(self):
-        await self.setup_processes(at_start=True)
-        Framework.publish(Event(Signal.PROCESSES_STARTED, None))
+    async def startup_services(self):
+        await self.setup_services(at_start=True)
+        Framework.publish(Event(Signal.SERVICES_STARTED, None))
+
+    @log_async_exception(log_func=log.warning, stop_loop=True)
+    async def startup_drivers(self):
+        await self.setup_drivers(at_start=True)
+        Framework.publish(Event(Signal.DRIVERS_STARTED, None))
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
     async def monitor_processes(self):
-        await self.setup_processes(at_start=False)
+        await self.setup_services(at_start=False)
+        await self.setup_drivers(at_start=False)
         Framework.publish(Event(Signal.PROCESSES_MONITORED, None))

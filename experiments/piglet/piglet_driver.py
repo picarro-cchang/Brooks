@@ -18,8 +18,7 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-
-    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r'):
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', **kwargs):
         self.serial = None
         self.terminate = False
         self.port = port

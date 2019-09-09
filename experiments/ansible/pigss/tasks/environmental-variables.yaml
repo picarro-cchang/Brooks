@@ -1,0 +1,14 @@
+- name: Update GOPATH
+  shell: echo $GOPATH | grep go || echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+
+- name: Update PATH
+  shell: echo $PATH | grep miniconda || echo "export PATH=/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+
+- name: Update PYTHONPATH
+  shell: echo $PYTHONPATH | grep git || echo "export PYTHONPATH=${HOME}/git:${HOME}/git/host$PYTHONPATH" >> ${HOME}/.bashrc
+
+- name: Update GRAFANA_LOGIN
+  shell: echo $GRAFANA_LOGIN | grep 'i' || echo "export GRAFANA_LOGIN={{ grafanauser }}" >> ${HOME}/.bashrc
+
+- name: Update GRAFANA_PASS
+  shell: echo $GRAFANA_PASS | grep '-i' || echo "export GRAFANA_PASS={{ grafanapass }}" >> ${HOME}/.bashrc

@@ -8,6 +8,7 @@ export class ExampleConfigCtrl {
 
   /** @ngInject */
   constructor($scope: any, $injector: any) {
+    this.appModel.enabled = true;
     this.appEditCtrl.setPostUpdateHook(this.postUpdate.bind(this));
 
     // Make sure it has a JSON Data spot

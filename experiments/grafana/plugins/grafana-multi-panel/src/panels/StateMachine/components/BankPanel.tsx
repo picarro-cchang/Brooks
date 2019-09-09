@@ -1,4 +1,6 @@
 import React, {Component, PureComponent} from 'react';
+import './bankpanel.css'
+
 
 interface BankPanelOptions {
     bank: number,
@@ -8,20 +10,27 @@ interface BankPanelOptions {
         channel?: {[bankNum:string]: {[channelNum:string]: string}}
     }
     ws_sender: (o: object)=>void;
+    plan: {
+        bank_names: {
+            [key: number]: {
+                name: string,
+                channels: { [key: number]: string }
+            }
+        }
+    }
 }
 
 class BankPanel extends PureComponent<BankPanelOptions> {
     bankStyleOpt = {
-        READY:{color:"#fff", backgroundColor:"#888"},
+        READY:{color:"#fff", backgroundColor:"#c5d2e6"},
         ACTIVE:{color:"#fff", backgroundColor:"#080"},
-        CLEAN:{color:"#fff", backgroundColor:"#008"},
-        REFERENCE:{color:"#440", backgroundColor:"#CC0"},
-        DISABLED:{ display: "none" }}; //hope this will work to not display any inactive banks
+        CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
+        REFERENCE:{color:"#440", backgroundColor:"#febb00"}}; //hope this will work to not display any inactive banks
     cleanClassNameOpt = {
-        DISABLED:"btn-inverse disabled my-disabled", READY: "btn-light", ACTIVE:"btn-primary", CLEAN:"btn-secondary"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-light", CLEAN:"btn-secondary btn-clean-act"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled my-disabled", READY: "", AVAILABLE:"", ACTIVE:"btn-primary", CLEAN:"btn-primary", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary", CLEAN:"btn-light", REFERENCE:"btn-warning"
     };
 
     render() {
@@ -50,28 +59,21 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         for (let i=1; i<=8; i++) {
             channelButtons.push(
                 (getChannelDisabled(i)) ? (
-                    <div
-                        style={{ height: 90, width: 90,  color: 'black', backgroundColor: 'white'}}
+                    <button
                         key={i}
-                        className={"btn btn-large " + getChannelClassNames(i)}>
-                        {"Ch " + i}
-                        <br/>
-                        <br/>
-
-                        <p style={{ fontSize: 10 }}>Status: {test[i]}</p>
-                    </div>
+                        className={"btn btn-large bank-btn " + getChannelClassNames(i)}
+                        style={{color: 'black'}}>
+                        <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
+                        <p style={{fontSize: 10, marginTop: 30}}>Status: {test[i]} </p>
+                    </button>
                 ) : (
                     <button
                         onClick={e => this.props.ws_sender({element: "channel", bank: this.props.bank, channel: i})}
                         disabled={getChannelDisabled(i)}
                         key={i}
-                        className={"btn btn-large " + getChannelClassNames(i)}
-                        style={{height: 90, width: 90, backgroundColor: 'white', color: 'black'}}>
-                        {"Ch " + i}
-                        <br/>
-                        <br/>
-
-                        <p style={{ fontSize: 10 }}>Status: {test[i]}</p>
+                        className={"btn btn-large bank-btn " + getChannelClassNames(i)}>
+                        <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
+                        <p style={{ fontSize: 10, marginTop: 30 }}>Status: {test[i]}</p>
                     </button>
                 )
             );
@@ -79,25 +81,24 @@ class BankPanel extends PureComponent<BankPanelOptions> {
 
         const cleanButton = (cleanDisabled) ? (
             <div
-                style={{width:"100%", border:"3px solid #CCC", color: "black"}}
-                className={"btn btn-large " + cleanClassNames}>
+                className={"btn btn-large btn-clean " + cleanClassNames}>
                 {"Clean"}
             </div>
         ) : (
             <button
-                style={{width:"100%", border:"3px solid #CCC", color: 'black'}}
                 onClick={e => this.props.ws_sender({element: "clean", bank: this.props.bank})}
-                className={"btn btn-large " + cleanClassNames}>
+                className={"btn btn-large btn-clean " + cleanClassNames}>
                 {"Clean"}
             </button>
         );
-
+        const value: string = this.props.plan.bank_names[this.props.bank].name;
+        //const value: string = "Bank " + this.props.bank;
         return (
             <div style={{padding: "10px"}}>
-                <div className="panel-bank" style={{...{border: "3px solid #111", borderRadius: "10px", padding:"10px", float: "left"},...bankStyle}}>
+                <div className="panel-bank" style={bankStyle}>
                     <div style={{width: "100%"}}>
-                        <h2>Bank {this.props.bank}</h2>
-                        <div className="grid-bank" style={{display: "grid", gridGap: 10, gridTemplateColumns: "1fr 1fr", paddingBottom: 10}}>
+                        <h2 style={{color: "white"}}>{value}</h2>
+                        <div className="grid-bank">
                             {channelButtons}
                         </div>
                         {cleanButton}

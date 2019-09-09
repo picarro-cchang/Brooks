@@ -15,7 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "iteration": 1564767559500,
+  "id": 11,
+  "iteration": 1567647490600,
   "links": [],
   "panels": [
     {
@@ -40,10 +41,11 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 0,
         "y": 1
@@ -72,314 +74,12 @@
       "pointradius": 3,
       "points": true,
       "renderer": "flot",
-      "repeat": "valve_pos",
+      "repeat": "ports",
       "repeatDirection": "h",
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "0",
-          "value": "0"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$species",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "$species"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Position $valve_pos",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "H2S": "green",
-        "HCl": "blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 1
-      },
-      "id": 53,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 3,
-      "links": [],
-      "maxPerRow": 4,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 3,
-      "points": true,
-      "renderer": "flot",
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "1",
-          "value": "1"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$species",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "$species"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Position $valve_pos",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "H2S": "green",
-        "HCl": "blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 12,
-        "y": 1
-      },
-      "id": 54,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 3,
-      "links": [],
-      "maxPerRow": 4,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 3,
-      "points": true,
-      "renderer": "flot",
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "2",
+          "text": "2: Top Ch. B",
           "value": "2"
         }
       },
@@ -429,7 +129,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -444,7 +144,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -491,15 +191,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
-        "x": 18,
+        "x": 6,
         "y": 1
       },
-      "id": 55,
+      "id": 119,
       "legend": {
         "avg": false,
         "current": false,
@@ -525,163 +226,12 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "3",
-          "value": "3"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$species",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "$species"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Position $valve_pos",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "H2S": "green",
-        "HCl": "blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 5
-      },
-      "id": 56,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 3,
-      "links": [],
-      "maxPerRow": 4,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 3,
-      "points": true,
-      "renderer": "flot",
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "4",
+          "text": "4: Top Ch. D",
           "value": "4"
         }
       },
@@ -731,7 +281,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -746,7 +296,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -793,166 +343,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 6,
-        "y": 5
-      },
-      "id": 57,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 3,
-      "links": [],
-      "maxPerRow": 4,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 3,
-      "points": true,
-      "renderer": "flot",
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "5",
-          "value": "5"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$species",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "$species"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Position $valve_pos",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "H2S": "green",
-        "HCl": "blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 12,
-        "y": 5
+        "y": 1
       },
-      "id": 58,
+      "id": 120,
       "legend": {
         "avg": false,
         "current": false,
@@ -978,12 +378,12 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "6",
+          "text": "6: Top Ch. F",
           "value": "6"
         }
       },
@@ -1033,7 +433,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1048,7 +448,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1095,15 +495,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 18,
-        "y": 5
+        "y": 1
       },
-      "id": 59,
+      "id": 121,
       "legend": {
         "avg": false,
         "current": false,
@@ -1129,163 +530,12 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "7",
-          "value": "7"
-        }
-      },
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "alias": "$species",
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "measurement": "crds",
-          "orderByTime": "ASC",
-          "policy": "autogen",
-          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
-          "rawQuery": false,
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "$species"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": [
-            {
-              "key": "valve_pos",
-              "operator": "=~",
-              "value": "/^$valve_pos$/"
-            },
-            {
-              "condition": "AND",
-              "key": "valve_stable_time",
-              "operator": ">",
-              "value": "$stabilization_time"
-            }
-          ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Position $valve_pos",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": "",
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "decimals": null,
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {
-        "H2S": "green",
-        "HCl": "blue"
-      },
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 4,
-        "w": 6,
-        "x": 0,
-        "y": 9
-      },
-      "id": 60,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "rightSide": true,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": false,
-      "linewidth": 3,
-      "links": [],
-      "maxPerRow": 4,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "paceLength": 10,
-      "percentage": false,
-      "pointradius": 3,
-      "points": true,
-      "renderer": "flot",
-      "repeat": null,
-      "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "valve_pos": {
-          "selected": false,
-          "text": "8",
+          "text": "8: Top Ch. H",
           "value": "8"
         }
       },
@@ -1335,7 +585,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1350,7 +600,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1397,15 +647,168 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
+        "w": 6,
+        "x": 0,
+        "y": 7
+      },
+      "id": 122,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "rightSide": true,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": false,
+      "linewidth": 3,
+      "links": [],
+      "maxPerRow": 4,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "paceLength": 10,
+      "percentage": false,
+      "pointradius": 3,
+      "points": true,
+      "renderer": "flot",
+      "repeat": null,
+      "repeatDirection": "h",
+      "repeatIteration": 1567647490600,
+      "repeatPanelId": 2,
+      "scopedVars": {
+        "ports": {
+          "selected": false,
+          "text": "18: Middle Ch. B",
+          "value": "18"
+        }
+      },
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "alias": "$species",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "autogen",
+          "query": "SELECT mean(\"NH3\") FROM \"autogen\".\"crds\" WHERE (\"analyzer\" = 'AMADS3001' AND \"valve_pos\" = '1' ) AND (\"valve_stable_time\" > 10) AND $timeFilter GROUP BY time($__interval) fill(null)",
+          "rawQuery": false,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "$species"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "valve_stable_time",
+              "operator": ">",
+              "value": "$stabilization_time"
+            }
+          ]
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "$ports",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": "",
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "decimals": null,
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {
+        "H2S": "green",
+        "HCl": "blue"
+      },
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "PiGSS data source",
+      "description": "",
+      "fill": 0,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
         "w": 6,
         "x": 6,
-        "y": 9
+        "y": 7
       },
-      "id": 61,
+      "id": 123,
       "legend": {
         "avg": false,
         "current": false,
@@ -1431,13 +834,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "9",
-          "value": "9"
+          "text": "20: Middle Ch. D",
+          "value": "20"
         }
       },
       "seriesOverrides": [],
@@ -1486,7 +889,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1501,7 +904,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1548,15 +951,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 12,
-        "y": 9
+        "y": 7
       },
-      "id": 62,
+      "id": 124,
       "legend": {
         "avg": false,
         "current": false,
@@ -1582,13 +986,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "10",
-          "value": "10"
+          "text": "22: Middle Ch. F",
+          "value": "22"
         }
       },
       "seriesOverrides": [],
@@ -1637,7 +1041,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1652,7 +1056,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1699,15 +1103,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 18,
-        "y": 9
+        "y": 7
       },
-      "id": 63,
+      "id": 125,
       "legend": {
         "avg": false,
         "current": false,
@@ -1733,13 +1138,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "11",
-          "value": "11"
+          "text": "24: Middle Ch. H",
+          "value": "24"
         }
       },
       "seriesOverrides": [],
@@ -1788,7 +1193,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1803,7 +1208,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1850,15 +1255,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 0,
         "y": 13
       },
-      "id": 64,
+      "id": 126,
       "legend": {
         "avg": false,
         "current": false,
@@ -1884,13 +1290,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "12",
-          "value": "12"
+          "text": "26: Bottom Ch. B",
+          "value": "26"
         }
       },
       "seriesOverrides": [],
@@ -1939,7 +1345,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -1954,7 +1360,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2001,15 +1407,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 6,
         "y": 13
       },
-      "id": 65,
+      "id": 127,
       "legend": {
         "avg": false,
         "current": false,
@@ -2035,13 +1442,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "13",
-          "value": "13"
+          "text": "28: Bottom Ch. D",
+          "value": "28"
         }
       },
       "seriesOverrides": [],
@@ -2090,7 +1497,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -2105,7 +1512,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2152,15 +1559,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 12,
         "y": 13
       },
-      "id": 66,
+      "id": 128,
       "legend": {
         "avg": false,
         "current": false,
@@ -2186,13 +1594,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "14",
-          "value": "14"
+          "text": "30: Bottom Ch. F",
+          "value": "30"
         }
       },
       "seriesOverrides": [],
@@ -2241,7 +1649,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -2256,7 +1664,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2303,15 +1711,16 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "PiGSS data source",
+      "description": "",
       "fill": 0,
       "fillGradient": 0,
       "gridPos": {
-        "h": 4,
+        "h": 6,
         "w": 6,
         "x": 18,
         "y": 13
       },
-      "id": 67,
+      "id": 129,
       "legend": {
         "avg": false,
         "current": false,
@@ -2337,13 +1746,13 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1564767559500,
+      "repeatIteration": 1567647490600,
       "repeatPanelId": 2,
       "scopedVars": {
-        "valve_pos": {
+        "ports": {
           "selected": false,
-          "text": "15",
-          "value": "15"
+          "text": "32: Bottom Ch. H",
+          "value": "32"
         }
       },
       "seriesOverrides": [],
@@ -2392,7 +1801,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -2407,7 +1816,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Position $valve_pos",
+      "title": "$ports",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -2444,6 +1853,114 @@
         "align": false,
         "alignLevel": null
       }
+    },
+    {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 3,
+        "w": 4,
+        "x": 0,
+        "y": 19
+      },
+      "id": 118,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "",
+      "prefixFontSize": "50%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "valve_pos",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "limit": "",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT * FROM \"crds\" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Valve Position",
+      "type": "singlestat",
+      "valueFontSize": "80%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "avg"
     }
   ],
   "refresh": "5s",
@@ -2456,17 +1973,19 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": "$__all"
+          "value": [
+            "$__all"
+          ]
         },
-        "datasource": "PiGSS data source",
-        "definition": "show tag values on pigss_data with key=\"valve_pos\"",
+        "datasource": "port history server",
+        "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": true,
-        "name": "valve_pos",
+        "name": "ports",
         "options": [],
-        "query": "show tag values on pigss_data with key=\"valve_pos\"",
+        "query": "[$__from, $__to]",
         "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
@@ -2481,8 +2000,8 @@
         "allValue": null,
         "current": {
           "tags": [],
-          "text": "H2S",
-          "value": "H2S"
+          "text": "NH3",
+          "value": "NH3"
         },
         "hide": 0,
         "includeAll": false,
@@ -2491,7 +2010,7 @@
         "name": "species",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "NH3",
             "value": "NH3"
           },
@@ -2501,7 +2020,7 @@
             "value": "H2S"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "HF",
             "value": "HF"
           },
@@ -2538,7 +2057,7 @@
     ]
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-12h",
     "to": "now"
   },
   "timepicker": {
@@ -2568,5 +2087,6 @@
   },
   "timezone": "",
   "title": "Concentration By Valve",
-  "uid": "pV3XhcDWz"
+  "uid": "GTo10zcZz",
+  "version": 6
 }

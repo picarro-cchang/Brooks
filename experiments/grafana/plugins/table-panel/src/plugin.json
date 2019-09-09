@@ -1,0 +1,23 @@
+{
+  "type": "panel",
+  "name": "Custom Table",
+  "id": "table-panel",
+  "dataFormats": [],
+  "info": {
+    "description": "Custom Table",
+    "author": {
+      "name": "Emma Peatfield",
+      "url": "https://github.com/epeatfield"
+    },
+    "keywords": [],
+    "links": [],
+    "screenshots": [],
+    "version": "0.1.0",
+    "updated": "2019-08"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}
