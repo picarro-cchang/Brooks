@@ -95,7 +95,7 @@ class LoggerServer:
         self.websockets.append(ws)
 
         async for msg in ws:
-            # print(f"From websocket: {msg}")
+            print(f"From websocket: {msg}")
             if msg.type == WSMsgType.TEXT:
                 if msg.data == 'CLOSE':
                     print("Wbsocket connection closed")
@@ -114,16 +114,18 @@ class LoggerServer:
                 await ws.close(message="Server Shutdown Initiated from Client")
 
     @log_async_exception(stop_loop=True)
-    async def websocket_send_task(self, app, interval=2.0):
+    async def websocket_send_task(self, app, DEFAULT_INTERVAL = 1.0):
         """
         The following code handles multiple clients connected to the server. It sends
         out the logs by reading query parameters.
         """
         while True:
-            await asyncio.sleep(interval)
+            await asyncio.sleep(DEFAULT_INTERVAL)
             if len(self.websockets) > 0:
                 print(f"Number of Open connections: {len(self.websockets)}")
                 for ws in self.websockets:
+                    print(f'Sleep for {float(ws["query_params"]["interval"])}')
+                    await asyncio.sleep(float(ws["query_params"]["interval"]))
                     try:
                         if "query_params" not in ws:
                             ws["query_params"] = {}
