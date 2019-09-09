@@ -18,7 +18,7 @@ dbase_name = 'pigss_sim_data'
 if dbase_name not in [result["name"] for result in client.get_list_database()]:
     print("Database %s not found" % dbase_name)
 client.switch_database(dbase_name)
-durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "24h"]
+durations = ["15s", "1m", "5m", "15m", "1h"]#, "4h", "12h", "24h"]
 durations_ms = [15000, 1 * 60000, 5 * 60000, 15 * 60000, 1 * 3600000, 4 * 3600000, 12 * 3600000, 24 * 3600000]
 
 
@@ -100,7 +100,7 @@ def query():
         candidates = []
         for duration, duration_ms in zip(durations[which:], durations_ms[which:]):
             rs = client.query(
-                'SELECT "mean_{target}" FROM crds_{interval} '
+                'SELECT "mean_{target}" FROM crds_{interval}.crds_{interval} '
                 'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1'.format(
                     target=target,
                     where_clause=where_clause,
@@ -147,7 +147,7 @@ def query():
                 'SELECT sum_tot/sum_count AS mean, min, max FROM'
                 ' (SELECT sum(tot) AS sum_tot, sum(count) AS sum_count, max(max) AS max, min(min) AS min FROM'
                 ' (SELECT ("mean_{target}"*"count_{target}") AS tot, "count_{target}" AS count, "max_{target}" AS max, "min_{target}" AS min'
-                ' FROM crds_{interval} WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms) GROUP BY time({interval}))'
+                ' FROM crds_{interval}.crds_{interval} WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms) GROUP BY time({interval}))'
                 .format(
                     target=target,
                     meas='crds_1m',
