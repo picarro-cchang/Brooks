@@ -42,8 +42,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         return (
             <div className="gf-form-inline" key={row}>
-                <label className="col-sm-1" style={{color: "black", marginRight: -20}}>{row}</label>
-                <div className="col-sm-6">
+                <label className="col-sm-1" style={{color: "black", marginRight: -10}}>{row}</label>
+                <div className="col-sm-6 col-bank-name">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 1) && this.manageFocus(input)}
                            type="text" className="form-control plan-input" id={"plan-port-" + row}
@@ -63,11 +63,12 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            type="text" className="form-control input-small plan-input" id={"plan-duration-" + row}
                            value={durationString} placeholder="Duration" />
                 </div>
-                <div className="col-sm-1">
+                <label className="col-sm-1 radio-btn">
                     <input type="radio" id={"plan-row-" + row} checked={row == this.props.plan.current_step}
                      onChange={e => this.props.ws_sender({element: "plan_panel", current_step: row})}                    
                     />
-                </div>
+                    <span className="checkmark"></span>
+                </label>
             </div>
         );
     }
@@ -84,7 +85,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         return (
             <div className="panel-plan" >
                 <h2 style={{color: "#5f5f5f"}}>Schedule</h2>
-                <h6 style={{color: "#5f5f5f"}}>Please click on available channels to select port.</h6>
+                <h6 style={{color: "black"}}>Please click on available channels to set up a schedule,
+                    then click on the radio button to select starting position.</h6>
                 <div className="panel-plan-inner" >
                     <form>
                         <ReactList
@@ -96,51 +98,54 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 </div>
                 <div className="container" style={{width: "90%"}}>
                     <div className="row text-center btn-row-1" >
-                        <div className="col-sm-4">
+                        <div className="col-sm-3">
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_insert"})}
-                                    className={"btn btn-block btn-secondary btn-group-1"} >
+                                    className={"btn btn-block btn-secondary btn-group"} >
                                 Insert
                             </button>
                         </div>
-                        <div className="col-sm-4">
-                            <button type="button"
-                                    disabled={this.props.plan.focus.row > this.props.plan.last_step}
-                                    onClick={e => this.props.ws_sender({element: "plan_delete"})}
-                                    className={"btn btn-block btn-danger btn-group-1"}>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                    <div className="row btn-row-1">
-                        <div className="col-sm-4">
-                            <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_load"})}
-                                    className={"btn btn-block btn-inverse btn-group-1"} >
-                                Load
-                            </button>
-                        </div>
-                        <div className="col-sm-4">
+                        <div className="col-sm-3">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
-                                    className={"btn btn-block btn-inverse btn-group-1"} >
+                                    className={"btn btn-block btn-light btn-group"}
+                                    style={{color: "black"}}>
                                 Save
                             </button>
                         </div>
+
+
+                        <div className="col-sm-3">
+                            <button type="button"
+                                    onClick={e => this.props.ws_sender({element: "plan_load"})}
+                                    className={"btn btn-block btn-light btn-group"}
+                                    style={{color: "black"}}>
+                            Load
+                            </button>
+                        </div>
                     </div>
-                    <div className="row text-center btn-row-2" >
-                        <div className="col-sm-4">
+                    <div className="row btn-row-2">
+                        <div className="col-sm-3">
+                            <button type="button"
+                                    disabled={this.props.plan.focus.row > this.props.plan.last_step}
+                                    onClick={e => this.props.ws_sender({element: "plan_delete"})}
+                                    className={"btn btn-block btn-danger btn-group"}>
+                                Delete
+                            </button>
+                        </div>
+
+                        <div className="col-sm-3">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_cancel"})}
-                                    className={"btn btn-block btn-danger btn-group-2"} >
+                                    className={"btn btn-block btn-danger btn-group"} >
                                 Cancel
                             </button>
                         </div>
-                        <div className="col-sm-4">
+                        <div className="col-sm-3">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_ok"})}
-                                    className={"btn btn-block btn-success btn-group-2"}>
+                                    className={"btn btn-block btn-success btn-group"}>
                                 OK
                             </button>
                         </div>
