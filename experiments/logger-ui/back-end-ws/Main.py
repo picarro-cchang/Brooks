@@ -26,7 +26,7 @@ class Main:
         self.ws_send_queue = asyncio.Queue(256)
 
     async def on_startup(self, app):
-        print("Top Level Server is Starting Up")
+        print(f"Top Level Server is Starting Up {self.addr}:{self.port}")
 
     async def on_shutdown(self, app):
         for task in self.tasks:

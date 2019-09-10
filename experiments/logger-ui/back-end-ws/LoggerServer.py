@@ -1,32 +1,35 @@
 from aiohttp import web, WSMsgType, WSCloseCode
 import asyncio
-import aiohttp_cors
-from aiohttp_swagger import setup_swagger
 from json import loads as json_to_dict
-import traceback
-from experiments.common.async_helper import log_async_exception
+from datetime import datetime, timedelta
 
 from db_connection import DBInstance
 from db import QueryParser, EventsModel
 
+from experiments.common.async_helper import log_async_exception
+
 
 class LoggerServer:
+    """
+    """
 
     def __init__(self):
         self.app = web.Application()
-        self.app.router.add_route("GET", "/getlogs", self.get_logs_handler)
         self.app.router.add_route("GET", "/ws", self.websocket_handler)
-        self.tasks = []
-        self.websockets = []
+        self.app.router.add_route("GET", "/getlogs", self.get_logs_handler)
+
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
         self.app.on_cleanup.append(self.on_cleanup)
+
+        self.app.websockets = []
+        self.tasks = []
 
     async def on_startup(self, app):
         """
         description: Start the websocket send task
         """
-        self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
+        self.tasks.append(asyncio.create_task(self.listener(app)))
 
     async def on_shutdown(self, app):
         """
@@ -35,7 +38,7 @@ class LoggerServer:
         for task in self.tasks:
             task.cancel()
 
-        for ws in self.websockets:
+        for ws in self.app.websockets:
             await ws.close(code=WSCloseCode.GOING_AWAY,
                            message='Server shutdown')
 
@@ -63,6 +66,41 @@ class LoggerServer:
             parsed = QueryParser.parse(request.query_string)
         return web.json_response(await self.get_logs(parsed))
 
+    @log_async_exception(stop_loop=True)
+    async def websocket_handler(self, request):
+
+        ws = web.WebSocketResponse()
+        await ws.prepare(request)
+
+        ws['query_params'] = {'interval': 3, 'limit': 20}
+
+        self.app.websockets.append(ws)
+
+        async for msg in ws:
+            if msg.type == WSMsgType.TEXT:
+                if msg.data == "close":
+                    await ws.close()
+                else:
+                    i = self.app.websockets.index(ws)
+                    query_params = json_to_dict(msg.data)
+                    self.app.websockets[i]['query_params'] = {
+                        **self.app.websockets[i]['query_params'],
+                        **query_params
+                    }
+                    print(
+                        f"query_params {self.app.websockets[i]['query_params']}")
+            elif msg.type == WSMsgType.ERROR:
+                ws.exception()
+            elif msg.type == WSMsgType.CLOSE:
+                print("Wbsocket connection closed")
+                self.app.websockets.remove(ws)
+                await ws.close(message="Server Shutdown Initiated from Client")
+
+        print("websocket connection closed")
+        self.app.websockets.remove(ws)
+
+        return ws
+
     async def get_logs(self, ws, query_params={}):
         """
         description: Returns logs as a json to caller
@@ -81,59 +119,42 @@ class LoggerServer:
         ws['query'] = query
         if query is not None:
             return EventsModel.execute_query(query)
-        # return []
+
+    async def send_task(self, ws, current_time):
+        print(f"sleeping for {ws['query_params']['interval']}")
+        ws['next_run'] = current_time + \
+            timedelta(seconds=ws['query_params']['interval'])
+        await asyncio.sleep(ws['query_params']['interval'])
+        print("inside send task")
+        
+        logs = await self.get_logs(ws, ws["query_params"])
+        await ws.send_json(logs)
+        await ws.drain()
+
+    def should_send_task(self, ws, current_time):
+        is_time = (ws['next_run'] <= current_time)
+        is_new_interval = current_time + \
+            timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
+        return is_time or is_new_interval
 
     @log_async_exception(stop_loop=True)
-    async def websocket_handler(self, request):
-        """
-        Web socket handler for receiving information from connected client(s)
-        """
-        print("Inside Websocket handler")
-
-        ws = web.WebSocketResponse()
-        await ws.prepare(request)
-        self.websockets.append(ws)
-
-        async for msg in ws:
-            print(f"From websocket: {msg}")
-            if msg.type == WSMsgType.TEXT:
-                if msg.data == 'CLOSE':
-                    print("Wbsocket connection closed")
-                    self.websockets.remove(ws)
-                    await ws.close(message="Server Shutdown Initiated from Client")
-                else:
-                    i = self.websockets.index(ws)
-                    self.websockets[i]["query_params"] = json_to_dict(
-                        msg.data)
-            elif msg.type == WSMsgType.ERROR:
-                self.websockets.remove(ws)
-                print("ws connection failed with exception %s ", ws.exception())
-            elif msg.type == WSMsgType.CLOSE:
-                print("Wbsocket connection closed")
-                self.websockets.remove(ws)
-                await ws.close(message="Server Shutdown Initiated from Client")
-
-    @log_async_exception(stop_loop=True)
-    async def websocket_send_task(self, app, DEFAULT_INTERVAL = 1.0):
+    async def listener(self, app, DEFAULT_INTERVAL=1.0):
         """
         The following code handles multiple clients connected to the server. It sends
         out the logs by reading query parameters.
         """
         while True:
-            await asyncio.sleep(DEFAULT_INTERVAL)
-            if len(self.websockets) > 0:
-                print(f"Number of Open connections: {len(self.websockets)}")
-                for ws in self.websockets:
-                    print(f'Sleep for {float(ws["query_params"]["interval"])}')
-                    await asyncio.sleep(float(ws["query_params"]["interval"]))
-                    try:
-                        if "query_params" not in ws:
-                            ws["query_params"] = {}
-                        logs = await self.get_logs(ws, ws["query_params"])
-                        if len(logs) > 0:
-                            # 0th entry contains the rowid for the logs
-                            ws["query_params"]["rowid"] = logs[-1][0]
-                            await ws.send_json(logs)
-                            await ws.drain()
-                    except ConnectionError as e:
-                        print(f"{e} in websocket_send_task")
+            await asyncio.sleep(1)
+            print(".", end="")
+            print(f"{len(self.app.websockets)}", end=" ")
+            current_time = datetime.now()
+
+            for ws in self.app.websockets:
+                interval = ws['query_params']['interval']
+                if 'next_run' not in ws:
+                    ws['next_run'] = current_time
+            try:
+                asyncio.gather(*[self.send_task(ws, current_time)
+                                 for ws in self.app.websockets if self.should_send_task(ws, current_time)])
+            except ConnectionError as e:
+                print(f"{e} in listener")
