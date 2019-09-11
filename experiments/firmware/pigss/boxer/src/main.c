@@ -144,7 +144,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  logger_setsystem( "mpr" );
+  // logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -160,8 +160,8 @@ int main(void) {
   logger_setsystem( "cal" );
 
   // Enable logging the TCA9539 I2C GPIO system
-  // logger_setsystem( "tca9539" );
-  
+  logger_setsystem( "tca9539" );
+
   // logger_setsystem( "spi" );
   // logger_setsystem( "ltc2601" );
 
@@ -187,11 +187,10 @@ int main(void) {
   metronome_init();
 
   // Set up Topaz boards
-  topaz_init('a');
-  bool connected = topaz_is_connected('a');
-  logger_msg_p("main", log_level_DEBUG, PSTR("topaz_is_connected returns %d"),
-	       connected);
+  topaz_init();
 
+  // Set up Vernon board
+  vernon_init();
 
   command_init( recv_cmd_state_ptr );
 
@@ -228,6 +227,9 @@ int main(void) {
   // Task 1 -- Read all the pressure sensors
   OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
+
+
+
   // The main loop
   for(;;) {
 
@@ -240,6 +242,8 @@ int main(void) {
       break;
     case system_state_CONTROL:
       break;
+    case system_state_CLEAN:
+      break;  
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);
@@ -250,12 +254,9 @@ int main(void) {
     // Execute scheduled tasks
     OS_TaskExecution();
 
-
     // Process the parse buffer to look for commands loaded with the
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
-
-
 
     // Reset the watchdog
     wdt_reset();
@@ -282,8 +283,8 @@ ISR(USART0_RX_vect) {
 		 PSTR("Received a command terminator"));
     if ((recv_cmd_state_ptr -> rbuffer_count) == 0) {
       // We got a terminator, but the received character buffer is
-      // empty.  The user is trying to clear the transmit and
-      // receive queues.
+      // empty.  The user is trying to clear the transmit and receive
+      // queues.
       sei();
       return;
     }

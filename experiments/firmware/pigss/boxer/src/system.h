@@ -14,7 +14,8 @@ typedef enum system_state_enum {
 				system_state_STANDBY,
 				system_state_INIT,
 				system_state_ID_CHANNELS,
-				system_state_CONTROL
+				system_state_CONTROL,
+				system_state_CLEAN
 } system_state_value_t;
 
 // Overall system state structure
@@ -58,6 +59,9 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr );
 // Function called by the standby command
 void cmd_standby( command_arg_t *command_arg_ptr );
 
+// Function called by the clean command
+void cmd_clean( command_arg_t *command_arg_ptr );
+
 // Initialize the system state structure.  This populates the
 // structure with non-volatile values from eeprom.
 void system_init( void );
@@ -73,8 +77,11 @@ int8_t system_state_set_vernon_sernum(uint16_t sernum);
 // Set the system slotid in the system state structure
 int8_t system_state_set_system_slotid(uint8_t slotid);
 
-// Get the Topaz serial number in the system state struction
+// Get the Topaz serial number in the system state structure
 uint16_t system_state_get_topaz_sernum(char board);
+
+// Get the Vernon serial number in the system state structure
+uint16_t system_state_get_vernon_sernum(void);
 
 // Set the system-level serial number
 int8_t system_state_set_system_sernum(uint16_t sernum);
@@ -84,5 +91,8 @@ int8_t system_enter_standby(void);
 
 // Enter control mode
 int8_t system_enter_control(void);
+
+// Enter clean mode
+int8_t system_enter_clean(void);
 
 #endif // End the include guard

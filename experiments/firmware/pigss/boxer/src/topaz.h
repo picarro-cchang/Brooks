@@ -46,8 +46,8 @@
 // fails.
 int8_t topaz_connect(char board);
 
-// Set up GPIO on the Topaz board
-int8_t topaz_init(char board);
+// Set up GPIO on the Topaz boards
+int8_t topaz_init(void);
 
 // Toggle the reset line on the Topaz board
 int8_t topaz_reset(char board);

@@ -15,7 +15,7 @@ REVCODE = 1.1.0
 #   error -- You want to know about this
 #
 # LOG_LEVEL = debug
-LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -322,8 +322,8 @@ avrdude_part = m2560
 # Type: avrdude -c ?
 # to get a full listing.
 #
-AVRDUDE_PROGRAMMER = dragon_isp
-# AVRDUDE_PROGRAMMER = atmelice_isp
+# AVRDUDE_PROGRAMMER = dragon_isp
+AVRDUDE_PROGRAMMER = atmelice_isp
 
 # The Pocket AVR Programmer from Sparkfun
 # Sparkfun part PGM-09825

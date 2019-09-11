@@ -29,6 +29,8 @@
 // Provides functions for working with the TCA9548 I2C switch
 #include "tca954xa.h"
 
+
+
 // Provides setter and getter functions for the system state structure
 #include "system.h"
 
@@ -43,8 +45,38 @@ int8_t vernon_init(void) {
   // Make PD5 an output initialized high for Vernon I2C power control
   PORTD |= _BV(PORTD5);
   DDRD |= _BV(DDB5);
+  if ( vernon_is_connected() ) {
 
-  return 0;
+    // Vernon is on channel 2 of the Whitfield I2C mux
+    retval += whitfield_set_i2c_mux(2);
+
+    
+    // Make P00, P01, P02, P03, P04, P05 GPIO outputs (clear bit
+    // positions) for valve control.
+    tca9539_write(VERNON_I2C_GPIO_ADDRESS,
+		  TCA9539_PORT_0_CONFIG_COMMAND,
+		  ~(_BV(VERNON_CLEAN_SOLENOID_SHIFT)) &
+		  ~(_BV(VERNON_SPARE_SOLENOID_SHIFT)) &
+		  ~(_BV(VERNON_GPIO1_SHIFT)) &
+		  ~(_BV(VERNON_GPIO2_SHIFT)) &
+		  ~(_BV(VERNON_GPIO3_SHIFT)) &
+		  ~(_BV(VERNON_GPIO4_SHIFT)) );
+    // Initialize the outputs to zero
+    tca9539_write(VERNON_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_0_REG,
+		  ~(_BV(VERNON_CLEAN_SOLENOID_SHIFT)) &
+		  ~(_BV(VERNON_SPARE_SOLENOID_SHIFT)) &
+		  ~(_BV(VERNON_GPIO1_SHIFT)) &
+		  ~(_BV(VERNON_GPIO2_SHIFT)) &
+		  ~(_BV(VERNON_GPIO3_SHIFT)) &
+		  ~(_BV(VERNON_GPIO4_SHIFT)) );
+  } else {
+    logger_msg_p("vernon", log_level_ERROR, PSTR("Vernon is not connected"));
+    retval += -1;
+  }
+  
+
+  return retval;
 }
 
 int8_t vernon_connect(void) {
@@ -64,10 +96,7 @@ int8_t vernon_connect(void) {
 
   // Configure I2C mux on Vernon.  Channel 0 is the only active channel.
 
-
   retval = tca9548a_write(VERNON_I2C_MUX_ADDRESS, 1);
-
-
 
   if (retval != 0) {
     // We were unable to connect
@@ -79,7 +108,6 @@ int8_t vernon_connect(void) {
 uint16_t vernon_get_serial_number(void) {
   int8_t retval = 0;
 
-
   // Try to connect to the Vernon board
   retval = vernon_connect();
 
@@ -87,13 +115,57 @@ uint16_t vernon_get_serial_number(void) {
     // There was a problem connecting.  Let the system know that
     // there's no Topaz board connected.
     system_state_set_vernon_sernum(0);
-    logger_msg_p("topaz", log_level_ERROR, PSTR("Vernon is not connected"));
+    logger_msg_p("vernon", log_level_ERROR, PSTR("Vernon is not connected"));
     return 0;
   }
 
-  // We were able to connect just fine. 
-
+  // We were able to connect just fine.  Vernon doesn't actually have
+  // the ability to store a serial number, so we'll just assign a
+  // serial number of 1 for a connected board.
   system_state_set_vernon_sernum(1);
   logger_msg_p("vernon", log_level_INFO, PSTR("Connected to Vernon"));
   return 1;
+}
+
+bool vernon_is_connected(void) {
+  uint16_t sernum = system_state_get_vernon_sernum();
+  if (sernum == 0) {
+    return false;
+  } else {
+    return true;
+  }
+}
+
+int8_t vernon_set_clean_solenoid(uint8_t setting) {
+  int8_t retval = 0;
+  if (vernon_is_connected()) {
+    // Vernon is on channel 2 of the Whitfield I2C mux
+    retval += whitfield_set_i2c_mux(2);
+
+    // Get the GPIO output byte
+    uint8_t gpio_output_byte = tca9539_read(VERNON_I2C_GPIO_ADDRESS,
+					    TCA9539_OUTPUT_PORT_0_REG);
+    uint8_t gpio_setting_byte = 0;
+    switch( setting ) {
+    case 0:
+      gpio_setting_byte = gpio_output_byte & ~(_BV(0));
+      break;
+    case 1:
+      gpio_setting_byte = gpio_output_byte | _BV(0);
+      break;
+    default:
+      gpio_setting_byte = gpio_output_byte;
+      break;
+    }
+    tca9539_write(VERNON_I2C_GPIO_ADDRESS,
+		  TCA9539_OUTPUT_PORT_0_REG,
+		  gpio_setting_byte);
+    gpio_output_byte = tca9539_read(VERNON_I2C_GPIO_ADDRESS,
+				   TCA9539_OUTPUT_PORT_0_REG);
+    logger_msg_p("vernon", log_level_DEBUG, PSTR("Vernon GPIO output byte is 0x%x"),gpio_output_byte);
+  } else {
+    logger_msg_p("vernon", log_level_ERROR, PSTR("Vernon is not connected"));
+    retval += -1;
+  }
+  return retval;
 }

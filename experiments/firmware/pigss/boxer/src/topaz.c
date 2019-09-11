@@ -37,7 +37,7 @@
 
 #include "topaz.h"
 
-int8_t topaz_init(char board) {
+int8_t topaz_init(void) {
   int8_t retval = 0;
   // Handle Topaz A
   if (topaz_is_connected('a')) {

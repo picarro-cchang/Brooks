@@ -215,6 +215,11 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_standby},
+  // clean -- Enter clean state
+  {"clean",
+   "none",
+   0,
+   &cmd_clean},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

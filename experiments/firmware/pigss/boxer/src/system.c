@@ -98,6 +98,7 @@ int8_t system_enter_standby(void) {
     // All channels --> OFF
     channel_set(0);
     // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
     logger_msg_p("system",log_level_INFO,PSTR("State change INIT to STANDBY"));
     set_system_state(system_state_STANDBY);
 
@@ -113,9 +114,20 @@ int8_t system_enter_standby(void) {
     // All channels --> OFF
     channel_set(0);
     // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
     logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to STANDBY"));
     set_system_state(system_state_STANDBY);
     break;
+  case system_state_CLEAN:
+    // Transition from CLEAN to STANDBY
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to STANDBY"));
+    set_system_state(system_state_STANDBY);
+    break;    
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter standby from bad system state %d"),
@@ -133,11 +145,21 @@ int8_t system_enter_control(void) {
     // Transition from INIT to CONTROL is forbidden
     break;
   case system_state_STANDBY:
+    // Transition from STANDBY to CONTROL
     logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));
     set_system_state(system_state_CONTROL);
     break;
+  case system_state_CLEAN:
+    // Transition from CLEAN to CONTROL
+    //
+    // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
+    set_system_state(system_state_CONTROL);
+    break; 
   case system_state_CONTROL:
     break;
+    
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter control from bad system state %d"),
@@ -146,6 +168,43 @@ int8_t system_enter_control(void) {
     break;
   }
   return retval;
+}
+
+int8_t system_enter_clean(void) {
+  int8_t retval = 0;
+  switch( system_state.state_enum ) {
+  case system_state_INIT:
+    // Transition from INIT to CONTROL is forbidden
+    break;
+  case system_state_STANDBY:
+    // Transition from STANDBY to CLEAN
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> ON
+    vernon_set_clean_solenoid(1);
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CLEAN"));
+    set_system_state(system_state_CLEAN);
+    break;
+  case system_state_CONTROL:
+    // Transition from CONTROL to CLEAN
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> ON
+    vernon_set_clean_solenoid(1);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to CLEAN"));
+    set_system_state(system_state_CLEAN);
+    break;
+    
+  default:
+    logger_msg_p("system", log_level_ERROR,
+		 PSTR("Enter clean from bad system state %d"),
+		 system_state.state_enum);
+    retval += -1;
+    break;
+  }
+  return retval; 
 }
 
 void cmd_rst( command_arg_t *command_arg_ptr ) {
@@ -171,12 +230,16 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
 		 "control",
 		 LINE_TERMINATION_CHARACTERS );
     break;
+  case system_state_CLEAN:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "clean",
+		 LINE_TERMINATION_CHARACTERS );
+    break;  
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",
 		 LINE_TERMINATION_CHARACTERS );
   }
-
 }
 
 void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
@@ -197,6 +260,18 @@ void cmd_standby( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_clean( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
+  retval = system_enter_clean();
+  if (retval == 0) {
+    command_ack();
+    return;
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  } 
+}
+
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
   if (board == 'a') {
     system_state.topaz_a_sernum = sernum;
@@ -207,9 +282,7 @@ int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
 }
 
 int8_t system_state_set_vernon_sernum(uint16_t sernum) {
-
   system_state.vernon_sernum = sernum;
-
   return 0;
 }
 
@@ -229,6 +302,9 @@ uint16_t system_state_get_topaz_sernum(char board ) {
   } else {
     return system_state.topaz_b_sernum;
   }
+}
 
+uint16_t system_state_get_vernon_sernum(void) {
+  return system_state.vernon_sernum;
 }
 
