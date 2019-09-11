@@ -19,7 +19,7 @@ class HttpHandlers:
     runner = attr.ib(None)
     tasks = attr.ib(factory=list)
     client = attr.ib(None)
-    durations = attr.ib(factory=lambda: ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "24h"])
+    durations = attr.ib(factory=lambda: ["15s", "1m", "5m", "15m", "1h"])#, "4h", "12h", "24h"])
     durations_ms = attr.ib(
         factory=lambda: [15000, 1 * 60000, 5 * 60000, 15 * 60000, 1 * 3600000, 4 * 3600000, 12 * 3600000, 24 * 3600000])
 
@@ -188,7 +188,7 @@ class HttpHandlers:
             candidates = []
             for duration, duration_ms in zip(self.durations[which:], self.durations_ms[which:]):
                 rs = await self.client.query(
-                    f'SELECT "mean_{target}" FROM crds_{duration} '
+                    f'SELECT "mean_{target}" FROM crds_{duration}.crds_{duration} '
                     f'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1',
                     epoch='ms')
                 times = [result[0] for result in iterpoints(rs)]
@@ -222,7 +222,7 @@ class HttpHandlers:
                     f'SELECT sum_tot/sum_count AS mean, min, max FROM'
                     f' (SELECT sum(tot) AS sum_tot, sum(count) AS sum_count, max(max) AS max, min(min) AS min FROM'
                     f' (SELECT ("mean_{target}"*"count_{target}") AS tot, "count_{target}" AS count, "max_{target}" AS max, "min_{target}" AS min'
-                    f' FROM crds_{best_duration} WHERE {where_clause} time>={start_time_ms-duration_ms}ms AND time<{stop_time_ms+duration_ms}ms)'
+                    f' FROM crds_{best_duration}.crds_{best_duration} WHERE {where_clause} time>={start_time_ms-duration_ms}ms AND time<{stop_time_ms+duration_ms}ms)'
                     f' GROUP BY time({best_duration}))',
                     epoch='ms')
                 # print([row for key, row_gen in rs.items() for row in row_gen])

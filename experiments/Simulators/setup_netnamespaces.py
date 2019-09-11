@@ -49,8 +49,10 @@ async def create_netns(name):
         await client.sendline(f"sudo ip netns add {name}")
         await client.sendline(f"sudo ip link set {name} netns {name}")
         await client.sendline(f"sudo ip netns exec {name} ip link set {name} up")
-        await client.sendline(f"sudo ip netns exec {name} dhclient {name}")
-        await client.sendline(f"sudo ip netns exec {name} ifconfig lo 127.0.0.1 netmask 255.0.0.0 up")
+        # await client.sendline(f"sudo ip netns exec {name} dhclient {name}")
+        await client.sendline(f"sudo ip netns exec {name} ip addr add dev {name} 192.168.10.101/24")
+        # await client.sendline(f"sudo ip netns exec {name} ifconfig lo 127.0.0.1 netmask 255.0.0.0 up")
+        await client.sendline(f"sudo ip netns exec {name} ip addr add dev lo 127.0.0.1/8")
         await client.sendline(f"echo Done")
         await client.expect("Done\n")
 
@@ -81,7 +83,7 @@ def is_host_interface(name):
     ip_high = ipaddress.IPv4Address('192.168.10.254')
 
     # Find interface names belonging to the host-only network
-    for x in ifaddresses(name)[AF_INET]:
+    for x in ifaddresses(name).get(AF_INET,[]):
         ip = ipaddress.IPv4Address(x['addr'])
         if ip_low <= ip <= ip_high:
             return True
