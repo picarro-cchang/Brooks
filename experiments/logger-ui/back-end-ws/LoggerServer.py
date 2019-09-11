@@ -128,8 +128,10 @@ class LoggerServer:
         print("inside send task")
         
         logs = await self.get_logs(ws, ws["query_params"])
-        await ws.send_json(logs)
-        await ws.drain()
+        if len(logs) > 0:
+            ws["query_params"]["rowid"] = logs[-1][0]
+            await ws.send_json(logs)
+            await ws.drain()
 
     def should_send_task(self, ws, current_time):
         is_time = (ws['next_run'] <= current_time)

@@ -17,6 +17,9 @@ export const DEFAULT_LOG_PROPS: LogProps = {
   data: [[]],
 };
 
+// Constants for LogPanel
+export const LOG_LIMIT = 100;
+
 // Constants for LogPanelEditor
 export const LEVEL_OPTIONS = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '30', label: '30' }];
 export const LIMIT_OPTIONS = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '50', label: '50' }];
