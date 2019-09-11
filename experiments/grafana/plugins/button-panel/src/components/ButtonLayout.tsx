@@ -13,15 +13,15 @@ export default class ButtonLayout extends Component<any, any> {
                       </div>
                       <div className="btn-label-container">
                           <h4>Analyzer Graphs</h4>
-                          <a className="btn-panel-link btn-analyzer" href="/d/0C5NddvZk"></a>
+                          <a className="btn-panel-link btn-analyzer" href="/d/rHPC-eKZz"></a>
                       </div>
                       <div className="btn-label-container " style={{gridColumnStart: 1, gridColumnEnd: 2}}>
                           <h4>Graphs by Port</h4>
-                          <a className="btn-panel-link btn-analyzer" href="/d/pV3XhcDWz"></a>
+                          <a className="btn-panel-link btn-analyzer" href="/d/GTo10zcZz"></a>
                       </div>
                       <div className="btn-label-container ">
                           <h4>Data Tables</h4>
-                          <a className="btn-panel-link btn-tables" href="/d/vCQ3IOvWk"></a>
+                          <a className="btn-panel-link btn-tables" href="/d/1iflIi5Wz"></a>
                       </div>
               </div>
             </div>

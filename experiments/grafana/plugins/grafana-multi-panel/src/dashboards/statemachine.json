@@ -14,8 +14,18 @@
   },
   "editable": true,
   "gnetId": null,
-  "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "keepTime": true,
+      "tags": [
+        "pigss"
+      ],
+      "title": "Dashboards",
+      "type": "dashboards"
+    }
+  ],
   "panels": [
     {
       "gridPos": {
@@ -71,7 +81,9 @@
   ],
   "schemaVersion": 19,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "pigss"
+  ],
   "templating": {
     "list": []
   },
@@ -81,6 +93,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",
@@ -96,5 +110,5 @@
   "timezone": "",
   "title": "Sampler Setup",
   "uid": "xemz2IvWk",
-  "version": 1
+  "version": 2
 }

@@ -18,7 +18,7 @@
     {
       "type": "dashboard",
       "name": "Sampler Setup",
-      "path": "../../../wizzy/dashboards/statemachine.json",
+      "path": "dashboards/statemachine.json",
       "addToNav": true,
       "defaultNav": true
     },
