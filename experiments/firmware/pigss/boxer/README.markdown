@@ -34,37 +34,39 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-5)
             - [STANDBY](#standby)
                 - [Typical Return](#typical-return-6)
+            - [CLEAN](#clean)
+                - [Typical Return](#typical-return-7)
             - [TZA.SN n](#tzasn-n)
                 - [Parameter (n)](#parameter-n-2)
-                - [Typical Return](#typical-return-7)
-            - [TZA.SN?](#tzasn)
                 - [Typical Return](#typical-return-8)
+            - [TZA.SN?](#tzasn)
+                - [Typical Return](#typical-return-9)
             - [TZB.SN n](#tzbsn-n)
                 - [Parameter (n)](#parameter-n-3)
-                - [Typical Return](#typical-return-9)
-            - [TZB.SN?](#tzbsn)
                 - [Typical Return](#typical-return-10)
+            - [TZB.SN?](#tzbsn)
+                - [Typical Return](#typical-return-11)
         - [Channel commands](#channel-commands)
             - [CHANENA n](#chanena-n)
                 - [Parameter (n)](#parameter-n-4)
-                - [Typical Return](#typical-return-11)
+                - [Typical Return](#typical-return-12)
             - [CHANENA? n](#chanena-n)
                 - [Parameter (n)](#parameter-n-5)
-                - [Typical Return](#typical-return-12)
+                - [Typical Return](#typical-return-13)
             - [CHANOFF n](#chanoff-n)
                 - [Parameter (n)](#parameter-n-6)
-                - [Typical Return](#typical-return-13)
+                - [Typical Return](#typical-return-14)
             - [CHANSET n](#chanset-n)
                 - [Parameter (n)](#parameter-n-7)
-                - [Typical Return](#typical-return-14)
-            - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-15)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-16)
         - [Pressure commands](#pressure-commands)
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-8)
-                - [Typical Return](#typical-return-16)
-            - [PRS.OUT.RAW? n](#prsoutraw-n)
                 - [Typical Return](#typical-return-17)
+            - [PRS.OUT.RAW? n](#prsoutraw-n)
+                - [Typical Return](#typical-return-18)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-9)
@@ -85,6 +87,7 @@ hardware will be a custom PCB.
         - [Version 1.0.9](#version-109)
         - [Version 1.0.10](#version-1010)
         - [Version 1.1.0](#version-110)
+        - [Version 1.1.1](#version-111)
 
 <!-- markdown-toc end -->
 
@@ -256,7 +259,23 @@ Query the system's operational state.
 
 #### STANDBY ####
 
-Put the system in standby mode.  This will disable all channels and configure their bypass valves for the default flow.  This command may fail if the `standby` state isn't accessible from the current state.
+Put the system in standby mode.  This will disable all channels and
+configure their bypass valves for the default flow.  This command may
+fail if the `standby` state isn't accessible from the current state.
+
+##### Typical Return #####
+
+`0`
+
+#### CLEAN ####
+
+Put the system in clean mode.  As with `standby`, this will disable
+all channels and configure their bypass valves for the default flow.
+Unlike `standby`, this will open the clean solenoid to allow clean gas
+to go to the analyzers.
+
+You can exit clean mode by enabling a sample channel or going back to
+standby mode.
 
 ##### Typical Return #####
 
@@ -544,3 +563,9 @@ Topaz boards until they have serial numbers.  Getting the serial
 number is the system board's way of discovering the hardware.
 
 This firmware reads the 10 pressure sensors at about 35 Hz.
+
+### Version 1.1.1 ###
+
+Added the `clean` command and support for the clean solenoid.  Sending
+the `clean` command will disable all sample channels and open the
+clean solenoid.

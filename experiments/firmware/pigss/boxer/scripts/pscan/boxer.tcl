@@ -14,7 +14,7 @@ namespace eval boxer {
     }
 
     proc readline {channel} {
-	set raw_data [connection::wait_for_data $channel 1000]
+	set raw_data [connection::wait_for_data $channel 5000]
 	set data [string trim $raw_data]
 	return $data
     }

@@ -3,7 +3,7 @@
 project_name = boxer
 
 # Project version code.  This will set the REVCODE symbol in the image
-REVCODE = 1.1.0
+REVCODE = 1.1.1
 
 # Log level
 #
@@ -15,7 +15,7 @@ REVCODE = 1.1.0
 #   error -- You want to know about this
 #
 # LOG_LEVEL = debug
-LOG_LEVEL = debug
+LOG_LEVEL = error
 
 # MCU name
 #
