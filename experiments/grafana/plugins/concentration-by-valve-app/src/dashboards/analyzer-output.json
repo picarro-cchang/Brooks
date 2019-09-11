@@ -259,6 +259,7 @@
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": true,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -330,7 +331,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568160076099,
+      "repeatIteration": 1568224360121,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -580,7 +581,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568160076099,
+      "repeatIteration": 1568224360121,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -887,6 +888,7 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Valve Position",
+      "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [

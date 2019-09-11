@@ -16,8 +16,20 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 13,
-  "iteration": 1568148592138,
-  "links": [],
+  "iteration": 1568224154458,
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "pigss"
+      ],
+      "title": "Dashboards",
+      "type": "dashboards"
+    }
+  ],
   "panels": [
     {
       "aliasColors": {},
@@ -989,6 +1001,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",

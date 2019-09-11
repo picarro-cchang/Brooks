@@ -14,6 +14,7 @@
   },
   "editable": true,
   "gnetId": null,
+  "graphTooltip": 0,
   "links": [
     {
       "asDropdown": true,
@@ -75,7 +76,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Sampler Setup",
+      "title": "",
       "type": "picarro-state-machine"
     }
   ],

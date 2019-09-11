@@ -13,6 +13,4 @@ yarn build
 cd ../summary-app
 yarn install
 yarn build
-cd ../../../grafana_api/provisioning/apps
-python load_apps.py
 

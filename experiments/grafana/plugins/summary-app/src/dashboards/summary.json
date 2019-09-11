@@ -301,6 +301,7 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Valve Position",
+      "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
