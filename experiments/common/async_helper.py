@@ -25,7 +25,7 @@ def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True):
                     log_func(f'\nCoroutine "{coroutine.__qualname__}" terminated due to exception\n' + " |"
                              "\n  | ".join(traceback.format_exc().splitlines()))
                     if stop_loop:
-                        log_func("Stopping event loop due to unhandled exception in coroutine")
+                        log_func("Stopping event loop due to exception in coroutine")
                         loop = asyncio.get_event_loop()
                         loop.stop()
 
@@ -54,7 +54,6 @@ class SyncWrapper:
 
     See https://gist.github.com/dmfigol/3e7d5b84a16d076df02baa9f53271058
     """
-
     def __init__(self, cls, *a, **k):
         self.__class_to_wrap = cls
         self.__args = a

@@ -130,15 +130,16 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 		{Text: "Playlists", Id: "playlists", Url: setting.AppSubUrl + "/playlists", Icon: "gicon gicon-playlists"},
 		{Text: "Snapshots", Id: "snapshots", Url: setting.AppSubUrl + "/dashboard/snapshots", Icon: "gicon gicon-snapshots"},
 	}
-
-	data.NavTree = append(data.NavTree, &dtos.NavLink{
-		Text:     "Dashboards",
-		Id:       "dashboards",
-		SubTitle: "Manage dashboards & folders",
-		Icon:     "gicon gicon-dashboard",
-		Url:      setting.AppSubUrl + "/",
-		Children: dashboardChildNavs,
-	})
+	if c.OrgRole != m.ROLE_VIEWER {
+		data.NavTree = append(data.NavTree, &dtos.NavLink{
+			Text:     "Dashboards",
+			Id:       "dashboards",
+			SubTitle: "Manage dashboards & folders",
+			Icon:     "gicon gicon-dashboard",
+			Url:      setting.AppSubUrl + "/",
+			Children: dashboardChildNavs,
+		})
+	}
 
 	if setting.ExploreEnabled && (c.OrgRole == m.ROLE_ADMIN || c.OrgRole == m.ROLE_EDITOR || setting.ViewersCanEdit) {
 		data.NavTree = append(data.NavTree, &dtos.NavLink{
@@ -296,14 +297,16 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 		})
 	}
 
-	data.NavTree = append(data.NavTree, &dtos.NavLink{
-		Id:       "cfg",
-		Text:     "Configuration",
-		SubTitle: "Organization: " + c.OrgName,
-		Icon:     "gicon gicon-cog",
-		Url:      configNodes[0].Url,
-		Children: configNodes,
-	})
+	if c.OrgRole != m.ROLE_VIEWER {
+		data.NavTree = append(data.NavTree, &dtos.NavLink{
+			Id:       "cfg",
+			Text:     "Configuration",
+			SubTitle: "Organization: " + c.OrgName,
+			Icon:     "gicon gicon-cog",
+			Url:      configNodes[0].Url,
+			Children: configNodes,
+		})
+	}
 
 	if c.IsGrafanaAdmin {
 		data.NavTree = append(data.NavTree, &dtos.NavLink{

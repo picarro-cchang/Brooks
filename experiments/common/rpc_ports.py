@@ -6,5 +6,7 @@ rpc_ports = {
     "piglet_drivers": 33040,
     "logger": 33050,
     "madmapper": 33051,
-    "db_decimator":33052
+    "db_decimator": 33052,
+    # Leave enough ports for as many simulators as needed
+    "analyzer_simulator_base": 33060
 }

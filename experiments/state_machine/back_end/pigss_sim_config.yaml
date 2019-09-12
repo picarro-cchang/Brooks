@@ -1,0 +1,51 @@
+Configuration: # This is for high level information
+  Simulation: 
+    enabled: true
+    random_ids: false
+    analyzers:
+      - ip_address: 192.168.10.101
+        chassis: 4123
+        analyzer: AMADS
+        analyzer_num: 3001
+        species:
+          - NH3
+          - HF
+          - H2O
+        source: analyze_AMADS_LCT
+        mode: AMADS_LCT_mode
+        interval: 1.1
+      - ip_address: 192.168.10.102
+        chassis: 4357
+        analyzer: SBDS
+        analyzer_num: 3002
+        species:
+          - HCl
+          - H2O
+        source: analyze_SADS
+        mode: SBDS_mode
+        interval: 1.2
+      - ip_address: 192.168.10.103
+        chassis: 4532
+        analyzer: BFADS
+        analyzer_num: 3003
+        species:
+          - H2S
+          - HDO
+        source: analyze_BFADS
+        mode: BFADS_mode
+        interval: 1.3
+  Database:
+    server: localhost
+    port: 8086
+    name: pigss_data
+  HttpServer:
+    listen_address: 0.0.0.0
+    port: 8000
+
+Services:
+  - Name: RpcServer
+    RPC_Port: 32769
+    Parameters: # These are passed to the constructor
+      alpha: 1
+      bravo: 2
+      charlie: 3
