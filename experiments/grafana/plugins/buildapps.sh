@@ -1,10 +1,13 @@
 cd ${HOME}/git/host/experiments/grafana/plugins/button-panel
 yarn install
 yarn build
+cd ../analyzer-graphs-app
+yarn install
+yarn build
 cd ../concentration-by-valve-app
 yarn install
 yarn build
-cd ../grafana-multi-panel
+cd ../state-machine-app
 yarn install 
 yarn build
 cd ../simpod-json-datasource

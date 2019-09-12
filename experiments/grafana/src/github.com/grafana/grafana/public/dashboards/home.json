@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 13,
-  "iteration": 1568326777400,
+  "iteration": 1568328903566,
   "links": [
     {
       "asDropdown": true,
@@ -120,7 +120,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -152,7 +152,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -184,7 +184,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -216,7 +216,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -278,7 +278,7 @@
             {
               "key": "valve_pos",
               "operator": "=~",
-              "value": "/^$valve_pos$/"
+              "value": "/^$ports$/"
             },
             {
               "condition": "AND",
@@ -373,6 +373,7 @@
         "#d44a3a"
       ],
       "datasource": "PiGSS data source",
+      "decimals": null,
       "format": "none",
       "gauge": {
         "maxValue": 100,
@@ -406,7 +407,7 @@
       "nullText": null,
       "options": {},
       "postfix": "",
-      "postfixFontSize": "20%",
+      "postfixFontSize": "50%",
       "prefix": "Port: ",
       "prefixFontSize": "50%",
       "rangeMaps": [
@@ -441,6 +442,7 @@
               "type": "fill"
             }
           ],
+          "hide": false,
           "orderByTime": "ASC",
           "policy": "default",
           "query": "SELECT * FROM \"crds\" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
@@ -462,6 +464,45 @@
             ]
           ],
           "tags": []
+        },
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": true,
+          "measurement": "crds",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT * FROM \"crds\" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
+          "rawQuery": false,
+          "refId": "B",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "$ports"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ],
+          "tags": []
         }
       ],
       "thresholds": "",
@@ -478,7 +519,7 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     },
     {
       "cacheTimeout": null,
@@ -926,7 +967,7 @@
       "type": "table"
     }
   ],
-  "refresh": "5s",
+  "refresh": false,
   "schemaVersion": 19,
   "style": "dark",
   "tags": [
@@ -976,12 +1017,37 @@
         "query": "15",
         "skipUrlSync": false,
         "type": "textbox"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "port history server",
+        "definition": "[$__from, $__to]",
+        "hide": 0,
+        "includeAll": true,
+        "label": null,
+        "multi": true,
+        "name": "ports",
+        "options": [],
+        "query": "[$__from, $__to]",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
   "time": {
-    "from": "now-5m",
-    "to": "now"
+    "from": "2019-09-12T22:49:54.033Z",
+    "to": "2019-09-12T22:59:54.033Z"
   },
   "timepicker": {
     "refresh_intervals": [
