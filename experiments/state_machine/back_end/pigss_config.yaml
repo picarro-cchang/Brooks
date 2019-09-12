@@ -1,9 +1,4 @@
 Configuration: # This is for high level information
-  Simulation: 
-    enabled: true
-    random_ids: false
-    ip_low: 192.168.10.101
-    ip_high: 192.168.10.254
   Database:
     server: localhost
     port: 8086
@@ -19,7 +14,3 @@ Services:
       alpha: 1
       bravo: 2
       charlie: 3
-
-  - Name: CompressDataPeriodic
-
-  - Name: AggregateSourceServer

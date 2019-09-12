@@ -5,7 +5,6 @@ import time
 from collections import deque
 
 import attr
-import yaml
 from aiomultiprocess import Process
 from setproctitle import setproctitle
 
@@ -19,6 +18,7 @@ from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
 from experiments.relay_driver.numato.numato_driver import NumatoDriver
 from experiments.RemoteAsync.RpcServer import RpcServer
+from experiments.Simulators.analyzer_simulator import AnalyzerSimulator
 from experiments.state_machine.back_end.dummy_piglet_driver import PigletDriver
 from experiments.state_machine.back_end.pigss_payloads import \
     SystemConfiguration
@@ -56,6 +56,7 @@ class ProcessWrapper:
     stop_time = attr.ib(None)
     dev_name = attr.ib("")
     stop_reason = attr.ib("")
+    daemonic = attr.ib(True)
 
     async def start(self, *args, **kwargs):
         async def start_driver():
@@ -70,9 +71,10 @@ class ProcessWrapper:
         log.info(f"Starting process {self.name}.")
         self.start_time = time.time()
         self.process = Process(target=start_driver)
-        self.process.daemon = True
+        self.process.daemon = self.daemonic
         self.process.start()
-        self.rpc_wrapper = AsyncWrapper(CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{self.rpc_port}", "PigssSupervisor"))
+        self.rpc_raw = CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{self.rpc_port}", "PigssSupervisor")
+        self.rpc_wrapper = AsyncWrapper(self.rpc_raw)
         await asyncio.sleep(0.1)
         return self.rpc_wrapper
 
@@ -181,8 +183,16 @@ class PigssSupervisor(Ahsm):
     def _startup(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            with open(os.path.join(my_path, "services.yaml"), "r") as fp:
-                self.service_list = yaml.load(fp.read())
+            self.service_list = self.farm.config.get_services()
+            if self.farm.config.get_simulation_enabled():
+                for i, simulator in enumerate(self.farm.config.get_simulation_analyzers()):
+                    self.service_list.append({
+                        'Name': f'AnalyzerSimulator_{i+1}',
+                        'RPC_Port': rpc_ports.get('analyzer_simulator_base') + i,
+                        'Parameters': {
+                            "analyzer": simulator
+                        }
+                    })
             self.tasks.append(asyncio.create_task(self.startup_services()))
             return self.handled(e)
         elif sig == Signal.SERVICES_STARTED:
@@ -338,12 +348,24 @@ class PigssSupervisor(Ahsm):
                                                 at_start,
                                                 rpc_port=rpc_port,
                                                 **service.get("Parameters", {}))
+            elif name.startswith("AnalyzerSimulator"):
+                if at_start or not self.wrapped_processes[name].process.is_alive():
+                    rpc_port = service["RPC_Port"]
+                    wrapped_process = ProcessWrapper(AnalyzerSimulator, rpc_port, name, dev_name="Service")
+                    await self.register_process(name,
+                                                wrapped_process,
+                                                name,
+                                                ping_interval,
+                                                at_start,
+                                                rpc_port=rpc_port,
+                                                **service.get("Parameters", {}))
             else:
                 print(f"Unknown service {service} ignored")
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
     async def startup_services(self):
         await self.setup_services(at_start=True)
+        await asyncio.sleep(1.0)
         Framework.publish(Event(Signal.SERVICES_STARTED, None))
 
     @log_async_exception(log_func=log.warning, stop_loop=True)

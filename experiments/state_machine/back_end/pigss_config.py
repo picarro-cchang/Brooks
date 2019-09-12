@@ -11,6 +11,9 @@ class PigssConfig:
         except Exception as e:
             raise ValueError(f"Error while processing YAML file {config_filename}.\n{e}")
 
+    def get_simulation_analyzers(self):
+        return self.config["Configuration"]["Simulation"]["analyzers"] if self.get_simulation_enabled() else []
+
     def get_simulation_enabled(self):
         return ("Simulation" in self.config["Configuration"] and self.config["Configuration"]["Simulation"].get("enabled", False))
 
@@ -22,3 +25,6 @@ class PigssConfig:
 
     def get_http_server_listen_address(self):
         return self.config["Configuration"]["HttpServer"]["listen_address"]
+
+    def get_services(self):
+        return self.config["Services"]
