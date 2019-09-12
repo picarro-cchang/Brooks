@@ -24,7 +24,7 @@ datasources:
    # <string> database user, if used
    user:
    # <string> database name, if used
-   database: pigss_sim_data
+   database: pigss_data
    # <bool> enable/disable basic auth
    basicAuth: false
    # <string> basic auth username
@@ -38,4 +38,32 @@ datasources:
    # <map> fields that will be converted to json and stored in json_data
 
    editable: true
+   # <string, required> name of the datasource. Required
+ - name: port history server
+   # <string, required> datasource type. Required
+   type: simpod-json-datasource
+   # <string, required> access mode. direct or proxy. Required
+   access: proxy
+   # <int> org id. will default to orgId 1 if not specified
+   orgId: 1
+   # <string> url
+   url: http://localhost:8000/port_history/
+   # <string> database password, if used
+   password:
+   # <string> database user, if used
+   user:
+   # <string> database name, if used
+   database:
+   # <bool> enable/disable basic auth
+   basicAuth: false
+   # <string> basic auth username
+   basicAuthUser:
+   # <string> basic auth password
+   basicAuthPassword:
+   # <bool> enable/disable with credentials headers
+   withCredentials:
+   # <bool> mark as default datasource. Max one per org
+   isDefault: false
+   # <map> fields that will be converted to json and stored in json_data
 
+   editable: true

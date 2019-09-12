@@ -13,7 +13,7 @@ import (
 	"github.com/grafana/grafana/pkg/api/dtos"
 	"github.com/grafana/grafana/pkg/bus"
 	"github.com/grafana/grafana/pkg/components/dashdiffs"
-	"github.com/grafana/grafana/pkg/components/simplejson"
+	//"github.com/grafana/grafana/pkg/components/simplejson"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/metrics"
 	m "github.com/grafana/grafana/pkg/models"
@@ -327,30 +327,31 @@ func GetHomeDashboard(c *m.ReqContext) Response {
 		return Error(500, "Failed to load home dashboard", err)
 	}
 
-	if c.HasUserRole(m.ROLE_ADMIN) && !c.HasHelpFlag(m.HelpFlagGettingStartedPanelDismissed) {
-		addGettingStartedPanelToHomeDashboard(dash.Dashboard)
-	}
+	//if c.HasUserRole(m.ROLE_ADMIN) && !c.HasHelpFlag(m.HelpFlagGettingStartedPanelDismissed) {
+		// addGettingStartedPanelToHomeDashboard(dash.Dashboard)
+		//return
+	//}
 
 	return JSON(200, &dash)
 }
 
-func addGettingStartedPanelToHomeDashboard(dash *simplejson.Json) {
-	panels := dash.Get("panels").MustArray()
+//func addGettingStartedPanelToHomeDashboard(dash *simplejson.Json) {
+//	panels := dash.Get("panels").MustArray()
 
-	newpanel := simplejson.NewFromAny(map[string]interface{}{
-		"type": "gettingstarted",
-		"id":   123123,
-		"gridPos": map[string]interface{}{
-			"x": 0,
-			"y": 3,
-			"w": 24,
-			"h": 4,
-		},
-	})
-
-	panels = append(panels, newpanel)
-	dash.Set("panels", panels)
-}
+//	newpanel := simplejson.NewFromAny(map[string]interface{}{
+//		"type": "gettingstarted",
+//		"id":   123123,
+//		"gridPos": map[string]interface{}{
+//			"x": 0,
+//			"y": 3,
+//			"w": 24,
+//			"h": 4,
+//		},
+//	})
+//
+//	panels = append(panels, newpanel)
+//	dash.Set("panels", panels)
+//}
 
 // GetDashboardVersions returns all dashboard versions as JSON
 func GetDashboardVersions(c *m.ReqContext) Response {

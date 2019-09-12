@@ -15,14 +15,14 @@
     {
       "type": "dashboard",
       "name": "Concentration By Valve",
-      "path": "dashboards/ConcentrationByValve.json",
+      "path": "dashboards/concentration-by-valve.json",
       "addToNav": true,
       "defaultNav": true
     },
     {
       "type": "dashboard",
       "name": "Analyzer Output Graphs",
-      "path": "dashboards/AnalyzerOutput.json",
+      "path": "dashboards/analyzer-output.json",
       "addToNav": true
     }
   ],

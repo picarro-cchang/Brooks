@@ -27,21 +27,16 @@
 .test {
     color: black;
 }
-.btn-group-1 {
-    width: 90px;
+.btn-group {
+    width: 110%;
     height: 35px;
-    border-radius: 5px;
+    border-radius: 10%;
     text-align: center;
-    font-size: 20px;
+    margin-right: 20px;
+    margin-left: -20px;
+    font-size: 17px;
 }
-.btn-group-2 {
-    margin-bottom: 10px;
-    width: 95px;
-    height: 35px;
-    border-radius: 5px;
-    text-align: center;
-    font-size: 20px;
-}
+
 .btn-row-1 {
     margin-top: 10px;
     align-items: center;
@@ -50,8 +45,9 @@
 }
 .btn-row-2 {
     margin-top: 10px;
-    margin-bottom: 10px;
-    margin-left: -25px;
+    align-items: center;
+    style: flex;
+    justify-content: center;
 }
 .panel-plan {
     height: 640px;
@@ -61,7 +57,7 @@
     /*background-color: #82828287;*/
     background-color: #cacaca;
     padding: 10px;
-    border: 2px solid #1111117a;
+    /*border: 2px solid #1111117a;*/
     border-radius: 5px;
 }
 .panel-plan-inner {
@@ -157,4 +153,70 @@
 }
 .btn-run-issue {
     background-color: #716e6e;
+}
+.btn-chann {
+     background-color: #499c49;
+ }
+.col-bank-name {
+    max-width: 45%;
+    min-width: 20%;
+}
+.input-small {
+    width: 80px;
+}
+
+.radio-btn {
+    display: block;
+    position: relative;
+    padding-left: 35px;
+    margin-bottom: 12px;
+    margin-left: 20px;
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.radio-btn input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 50%;
+}
+
+.radio-btn:hover input ~ .checkmark {
+    background-color: #ccc;
+}
+
+.radio-btn input:checked ~ .checkmark {
+    background-color: #3274d9a8;
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-btn input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.radio-btn .checkmark:after {
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
 }

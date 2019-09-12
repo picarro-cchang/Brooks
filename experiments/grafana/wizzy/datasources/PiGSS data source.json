@@ -7,7 +7,7 @@
   "url": "http://localhost:8086",
   "password": "",
   "user": "",
-  "database": "pigss_sim_data",
+  "database": "pigss_data",
   "basicAuth": false,
   "isDefault": true,
   "jsonData": {},

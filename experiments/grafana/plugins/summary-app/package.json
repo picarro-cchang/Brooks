@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Grafana Page for summary results from PiGSS DataSource",
   "author": "Picarro, Inc.",
-  "license": "Apache",
+  "license": "MIT",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack --mode development",

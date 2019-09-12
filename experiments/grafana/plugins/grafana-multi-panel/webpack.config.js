@@ -31,7 +31,7 @@ module.exports = {
       { from: 'panels/StateMachine/*.json', to: "."},
 
      // { from: 'config', to: "./config"},
-      { from: 'dashboards/*', to: "."}
+      { from: 'dashboards', to: "./dashboards"}
 
       // { from: 'panels/plugin.json', to: "."},
 

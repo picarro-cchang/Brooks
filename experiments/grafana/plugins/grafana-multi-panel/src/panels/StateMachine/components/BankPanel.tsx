@@ -23,14 +23,14 @@ interface BankPanelOptions {
 class BankPanel extends PureComponent<BankPanelOptions> {
     bankStyleOpt = {
         READY:{color:"#fff", backgroundColor:"#c5d2e6"},
-        ACTIVE:{color:"#fff", backgroundColor:"#080"},
+        ACTIVE:{color:"#fff", backgroundColor:"#499c49"},
         CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
         REFERENCE:{color:"#440", backgroundColor:"#febb00"}}; //hope this will work to not display any inactive banks
     cleanClassNameOpt = {
         DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-light", CLEAN:"btn-secondary btn-clean-act"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary", CLEAN:"btn-light", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-primary btn-chann", CLEAN:"btn-light", REFERENCE:"btn-warning"
     };
 
     render() {

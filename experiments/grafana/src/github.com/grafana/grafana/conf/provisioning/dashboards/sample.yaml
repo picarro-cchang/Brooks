@@ -10,15 +10,15 @@ apiVersion: 1
 #      body: ''
 #      body_format: json
 #      force_basic_auth: yes
-#      headers:
-#        Content-Type: "application/json"
-
-providers:
- - name: 'Picarro'
-   orgId: 1
-   folder: ''
-   folderUid: ''
-   type: file
-   options:
-     path: ../../../../../../../grafana/wizzy/dashboards
-
+##      headers:
+##        Content-Type: "application/json"
+#
+#providers:
+# - name: 'Picarro'
+#   orgId: 1
+#   folder: ''
+#   folderUid: ''
+#   type: file
+#   options:
+#     path: ../../../../../../../grafana/wizzy/dashboards
+#

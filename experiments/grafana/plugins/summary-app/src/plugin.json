@@ -15,7 +15,7 @@
     {
       "type": "dashboard",
       "name": "Summary",
-      "path": "dashboards/Summary.json",
+      "path": "dashboards/summary.json",
       "addToNav": true,
       "defaultNav": true
     }
