@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 13,
-  "iteration": 1568319555739,
+  "iteration": 1568326777400,
   "links": [
     {
       "asDropdown": true,
@@ -293,7 +293,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "",
+      "title": "Analyzer Readings",
       "tooltip": {
         "shared": false,
         "sort": 0,
@@ -482,7 +482,7 @@
     },
     {
       "cacheTimeout": null,
-      "content": "",
+      "content": "<p style=\"font-size: 19px; text-align: center; margin-top: -8px\">Most Recent Values</p>",
       "datasource": "PiGSS data source",
       "gridPos": {
         "h": 1,
@@ -492,11 +492,11 @@
       },
       "id": 13,
       "links": [],
-      "mode": "markdown",
+      "mode": "html",
       "options": {},
       "timeFrom": null,
       "timeShift": null,
-      "title": "Previous Results",
+      "title": "",
       "transparent": true,
       "type": "text"
     },
