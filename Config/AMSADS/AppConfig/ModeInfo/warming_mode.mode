@@ -1,0 +1,4 @@
+[SYNC_SETUP]
+#Define synchronous executions to be run by the DataManager in this mode
+# - Note that these are in addition to any in _BaseDefinition.ini
+NumSyncAnalyzers = 0
