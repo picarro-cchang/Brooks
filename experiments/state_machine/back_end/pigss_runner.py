@@ -92,7 +92,6 @@ class PigssRunner:
 
     async def startup(self, config_filename):
         self.tasks.append(asyncio.create_task(self.server_init(config_filename)))
-        1 / 0
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])

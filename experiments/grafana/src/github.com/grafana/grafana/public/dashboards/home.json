@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 13,
-  "iteration": 1568224154458,
+  "iteration": 1568319555739,
   "links": [
     {
       "asDropdown": true,
@@ -828,10 +828,6 @@
                 "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              },
-              {
                 "params": [
                   "H2S"
                 ],
@@ -846,10 +842,6 @@
                 "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              },
-              {
                 "params": [
                   "HCl"
                 ],
@@ -864,10 +856,6 @@
                 "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              },
-              {
                 "params": [
                   "HF"
                 ],
@@ -880,10 +868,6 @@
                   "NH3"
                 ],
                 "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
               },
               {
                 "params": [
