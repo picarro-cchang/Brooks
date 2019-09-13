@@ -18,12 +18,6 @@
       "path": "dashboards/concentration-by-valve.json",
       "addToNav": true,
       "defaultNav": true
-    },
-    {
-      "type": "dashboard",
-      "name": "Analyzer Output Graphs",
-      "path": "dashboards/analyzer-output.json",
-      "addToNav": true
     }
   ],
   "dependencies": {
