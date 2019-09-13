@@ -1,8 +1,8 @@
 {
-  "name": "table-panel",
+  "name": "picarro-concentration-page",
   "version": "0.0.1",
-  "description": "Basic Grafana Table Panel - React",
-  "author": "Picarro",
+  "description": "Grafana Page for Concentration by Valve Graphs",
+  "author": "Picarro, Inc.",
   "license": "Apache",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",

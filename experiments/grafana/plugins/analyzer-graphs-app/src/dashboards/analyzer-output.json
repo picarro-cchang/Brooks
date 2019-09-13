@@ -331,7 +331,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568224360121,
+      "repeatIteration": 1568395104788,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -510,6 +510,7 @@
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": true,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -581,7 +582,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568224360121,
+      "repeatIteration": 1568395104788,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -760,6 +761,7 @@
         "sort": 0,
         "value_type": "individual"
       },
+      "transparent": true,
       "type": "graph",
       "xaxis": {
         "buckets": null,
@@ -901,7 +903,7 @@
       "valueName": "avg"
     }
   ],
-  "refresh": false,
+  "refresh": "5s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [
@@ -1004,7 +1006,7 @@
     ]
   },
   "time": {
-    "from": "now-30m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {

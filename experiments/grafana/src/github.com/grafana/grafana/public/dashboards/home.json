@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 13,
-  "iteration": 1568328903566,
+  "iteration": 1568395463631,
   "links": [
     {
       "asDropdown": true,
@@ -967,7 +967,7 @@
       "type": "table"
     }
   ],
-  "refresh": false,
+  "refresh": "5s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [
@@ -983,7 +983,7 @@
         },
         "datasource": "PiGSS data source",
         "definition": "show tag values on pigss_data with key=\"valve_pos\"",
-        "hide": 0,
+        "hide": 2,
         "includeAll": true,
         "label": "Port",
         "multi": false,
@@ -1046,8 +1046,8 @@
     ]
   },
   "time": {
-    "from": "2019-09-12T22:49:54.033Z",
-    "to": "2019-09-12T22:59:54.033Z"
+    "from": "now-15m",
+    "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
