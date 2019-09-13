@@ -14,8 +14,26 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Current Values",
-      "path": "dashboards/.json",
+      "name": "Current Values - Gauge",
+      "path": "dashboards/CurrentValues-Gauge.json",
+      "addToNav": true
+    },
+    {
+      "type": "dashboard",
+      "name": "Current Values - Bar",
+      "path": "dashboards/CurrentValues-Bar.json",
+      "addToNav": true
+    },
+    {
+      "type": "dashboard",
+      "name": "Current Values - SingleStat",
+      "path": "dashboards/CurrentValues-SingleStat.json",
+      "addToNav": true
+    },
+    {
+      "type": "dashboard",
+      "name": "Current Values - Table",
+      "path": "dashboards/CurrentValues-Table.json",
       "addToNav": true,
       "defaultNav": true
     }
