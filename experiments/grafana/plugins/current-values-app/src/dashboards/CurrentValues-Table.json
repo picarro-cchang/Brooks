@@ -65,6 +65,40 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2S",
+              "value": "crds.H2S"
+            }
+          ]
+        },
+        {
           "alias": "",
           "colorMode": null,
           "colors": [
@@ -86,7 +120,7 @@
           "orderByTime": "DESC",
           "policy": "default",
           "refId": "A",
-          "resultFormat": "table",
+          "resultFormat": "time_series",
           "select": [
             [
               {
@@ -173,7 +207,7 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "$ports",
-      "transform": "table",
+      "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
@@ -192,7 +226,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -342,7 +376,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -492,7 +526,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -642,7 +676,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -792,7 +826,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -942,7 +976,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1092,7 +1126,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1242,7 +1276,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1392,7 +1426,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1542,7 +1576,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1692,7 +1726,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568400961513,
+      "repeatIteration": 1568406597986,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1885,5 +1919,5 @@
   "timezone": "",
   "title": "Current Values - Table",
   "uid": "2Luty8cZk",
-  "version": 4
+  "version": 5
 }
