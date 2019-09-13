@@ -27,6 +27,10 @@ export default class ButtonLayout extends Component<any, any> {
                           <h4>Data Tables</h4>
                           <a className="btn-panel-link btn-tables" href={"/d/1iflIi5Wz/summary?from=" + from + "&to=" + to}></a>
                       </div>
+                  <div className="btn-label-container ">
+                      <h4>Current Values</h4>
+                      <a className="btn-panel-link btn-values" href={"/d/2Luty8cZk/current-values-table?from=" + from + "&to=" + to}></a>
+                  </div>
               </div>
             </div>
         );

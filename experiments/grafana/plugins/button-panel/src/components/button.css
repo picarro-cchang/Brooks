@@ -23,7 +23,7 @@
 }
 .btn-label-container {
     /*margin-top: 25px;*/
-    height: 20%;
+    height: 15%;
 }
 
 .btn-sampler {
@@ -56,6 +56,14 @@
     background-repeat: no-repeat;
     background-position: center;
 }
+.btn-values {
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
+    background-image: url("../img/summary.png");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
 .row-test{
     /*margin-top: 20%;*/
     /*!*margin-left: 15%;*!*/
