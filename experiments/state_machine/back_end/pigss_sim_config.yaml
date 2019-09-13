@@ -14,6 +14,7 @@ Configuration: # This is for high level information
         source: analyze_AMADS_LCT
         mode: AMADS_LCT_mode
         interval: 1.1
+        seed: 12345
       - ip_address: 192.168.10.102
         chassis: 4357
         analyzer: SBDS
@@ -24,6 +25,7 @@ Configuration: # This is for high level information
         source: analyze_SADS
         mode: SBDS_mode
         interval: 1.2
+        seed: 23456
       - ip_address: 192.168.10.103
         chassis: 4532
         analyzer: BFADS
@@ -34,6 +36,7 @@ Configuration: # This is for high level information
         source: analyze_BFADS
         mode: BFADS_mode
         interval: 1.3
+        seed: 34567
   Database:
     server: localhost
     port: 8086
