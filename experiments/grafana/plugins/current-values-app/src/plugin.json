@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Current Concentration Values",
+  "id": "current-concentration-values",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/visualization.svg",
+      "large": "img/visualization.svg"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Current Values",
+      "path": "dashboards/.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}
