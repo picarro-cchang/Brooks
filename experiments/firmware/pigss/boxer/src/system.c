@@ -150,6 +150,9 @@ int8_t system_enter_standby(void) {
 int8_t system_enter_control(void) {
   int8_t retval = 0;
   switch( system_state.state_enum ) {
+  case system_state_CONTROL:
+    // Nothing to do here
+    break;
   case system_state_INIT:
     // Transition from INIT to CONTROL is forbidden
     break;
@@ -168,8 +171,7 @@ int8_t system_enter_control(void) {
     logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
     set_system_state(system_state_CONTROL);
     break; 
-  case system_state_CONTROL:
-    break;
+  
     
   default:
     logger_msg_p("system", log_level_ERROR,
@@ -184,8 +186,11 @@ int8_t system_enter_control(void) {
 int8_t system_enter_clean(void) {
   int8_t retval = 0;
   switch( system_state.state_enum ) {
+  case system_state_CLEAN:
+    // Nothing to do here
+    break;
   case system_state_INIT:
-    // Transition from INIT to CONTROL is forbidden
+    // Transition from INIT to CLEAN is forbidden
     break;
   case system_state_STANDBY:
     // Transition from STANDBY to CLEAN
