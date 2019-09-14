@@ -41,6 +41,9 @@
 // Provides functions for handling system states
 #include "system.h"
 
+// Provides definitions and functions for working with the front panel
+#include "aloha.h"
+
 // Provides commands for working with bypass DACs
 #include "pressure.h"
 
@@ -116,6 +119,9 @@ int8_t channel_update() {
   // Keep track of how many channels have been enabled
   uint8_t enabled_channels = 0;
 
+  // The new LED value
+  uint32_t new_led_value = system_state_get_fp_led_value();
+
   uint8_t channel_array_index = 0;
   // Loop through the channel array to set the hardware byte for
   // active or inactive channels.  Set the bypass DACs for inactive
@@ -129,18 +135,77 @@ int8_t channel_update() {
       // valves are energized when a channel is disabled, so enabled
       // channel bits are cleared in the hardware byte.
       channel_hardware_byte &= ~(_BV(channel_array[channel_array_index].bitshift));
+
+      // Configure LED values for new lit LEDs
+      switch(channel) {
+      case 1:
+	new_led_value |= (uint32_t) 1<<CH1_GREEN;
+	break;
+      case 2:
+	new_led_value |= (uint32_t) 1<<CH2_GREEN;
+	break;
+      case 3:
+	new_led_value |= (uint32_t) 1<<CH3_GREEN;
+	break;
+      case 4:
+	new_led_value |= (uint32_t) 1<<CH4_GREEN;
+	break;
+      case 5:
+	new_led_value |= (uint32_t) 1<<CH5_GREEN;
+	break;
+      case 6:
+	new_led_value |= (uint32_t) 1<<CH6_GREEN;
+	break;
+      case 7:
+	new_led_value |= (uint32_t) 1<<CH7_GREEN;
+	break;
+      case 8:
+	new_led_value |= (uint32_t) 1<<CH8_GREEN;
+	break;	
+      }
     } else {
       // Channel has been disabled.  Set the bypass DAC to get the
       // inactive flow level.
       retval = pressure_dac_set(channel, PRESSURE_DAC_INACTIVE_COUNTS);
       // Clear the bit in the hardware byte
       channel_hardware_byte |= _BV(channel_array[channel_array_index].bitshift);
+
+      // Remove lit LEDs
+      switch(channel) {
+      case 1:
+	new_led_value &=  ~( (uint32_t) 1<<CH1_GREEN);
+	break;
+      case 2:
+      	new_led_value &= ~( (uint32_t) 1<<CH2_GREEN);
+      	break;
+      case 3:
+      	new_led_value &= ~( (uint32_t) 1<<CH3_GREEN);
+      	break;
+      case 4:
+      	new_led_value &= ~( (uint32_t) 1<<CH4_GREEN);
+      	break;
+      case 5:
+      	new_led_value &= ~( (uint32_t) 1<<CH5_GREEN);
+      	break;
+      case 6:
+      	new_led_value &= ~( (uint32_t) 1<<CH6_GREEN);
+      	break;
+      case 7:
+      	new_led_value &= ~( (uint32_t) 1<<CH7_GREEN);
+      	break;
+      case 8:
+      	new_led_value &= ~( (uint32_t) 1<<CH8_GREEN);
+      	break;
+	
+      }
     }
     channel_array_index++;
   }
   if (enabled_channels > 0) {
     // If any channel is enabled, we need to be in control mode
     retval += system_enter_control();
+    // Clear the blue LED bits
+    new_led_value = aloha_clear_clean_led_bits(new_led_value);
   } else {
     // There are no enabled channels.  This means we're in standby.
     set_system_state(system_state_STANDBY);
@@ -184,6 +249,9 @@ int8_t channel_update() {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),'b');
     retval += -1;
   }
+  // Handle the front panel
+  aloha_write(new_led_value);
+
 
   return retval;
 }

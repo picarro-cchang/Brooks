@@ -34,6 +34,9 @@
 // Provides definitions and functions for working with Vernon
 #include "vernon.h"
 
+// Provides definitions and functions for working with the Aloha front panel
+#include "aloha.h"
+
 #include "system.h"
 
 // ----------------------- Globals ------------------------------------
@@ -71,6 +74,10 @@ void system_init( void ) {
   sernum = vernon_get_serial_number();
   logger_msg_p("system",log_level_INFO,PSTR("Vernon serial number is %i"),
 	       sernum);
+
+  // Set the OK status on the front panel
+  uint32_t led_value = system_state_get_fp_led_value();
+  aloha_write( (uint32_t) 1<<STATUS_GREEN | led_value);
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
@@ -125,6 +132,8 @@ int8_t system_enter_standby(void) {
     channel_set(0);
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
+    // Blue LEDs --> OFF
+    aloha_clear_clean_leds();
     logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to STANDBY"));
     set_system_state(system_state_STANDBY);
     break;    
@@ -154,6 +163,8 @@ int8_t system_enter_control(void) {
     //
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
+    // Turn off blue LEDs
+    aloha_clear_clean_leds();
     logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
     set_system_state(system_state_CONTROL);
     break; 
@@ -183,6 +194,8 @@ int8_t system_enter_clean(void) {
     channel_set(0);
     // Clean solenoid --> ON
     vernon_set_clean_solenoid(1);
+    // Turn blue LEDs on
+    aloha_show_clean_leds();
     logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CLEAN"));
     set_system_state(system_state_CLEAN);
     break;
@@ -193,6 +206,8 @@ int8_t system_enter_clean(void) {
     channel_set(0);
     // Clean solenoid --> ON
     vernon_set_clean_solenoid(1);
+    // Turn blue LEDs on
+    aloha_show_clean_leds();
     logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to CLEAN"));
     set_system_state(system_state_CLEAN);
     break;
@@ -304,7 +319,20 @@ uint16_t system_state_get_topaz_sernum(char board ) {
   }
 }
 
+system_state_value_t system_state_get_system_state(void) {
+  return system_state.state_enum;
+}
+
 uint16_t system_state_get_vernon_sernum(void) {
   return system_state.vernon_sernum;
+}
+
+int8_t system_state_set_fp_led_value(uint32_t value) {
+  system_state.fp_led_value = value;
+  return 0;
+}
+
+uint32_t system_state_get_fp_led_value(void) {
+  return system_state.fp_led_value;
 }
 

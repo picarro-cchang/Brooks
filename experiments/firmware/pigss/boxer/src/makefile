@@ -15,7 +15,7 @@ REVCODE = 1.1.1
 #   error -- You want to know about this
 #
 # LOG_LEVEL = debug
-LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -143,6 +143,9 @@ SRC += vernon.c
 
 # Whitfield (system) board
 SRC += whitfield.c
+
+# Aloha (front panel) board
+SRC += aloha.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

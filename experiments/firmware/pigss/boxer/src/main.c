@@ -32,10 +32,7 @@
 */
 #include <avr/pgmspace.h>
 
-/* logger.h
-
-   Sets up logging
-*/
+// Sets up log messages
 #include "logger.h"
 
 // Functions dealing with periodic interrupts
@@ -77,6 +74,9 @@
 #include "topaz.h"
 
 #include "vernon.h"
+
+// Functions for working with the front panel board
+#include "aloha.h"
 
 // Provides functions for turning the LED on and off.
 #include "led.h"
@@ -160,7 +160,7 @@ int main(void) {
   logger_setsystem( "cal" );
 
   // Enable logging the TCA9539 I2C GPIO system
-  logger_setsystem( "tca9539" );
+  // logger_setsystem( "tca9539" );
 
   // logger_setsystem( "spi" );
   // logger_setsystem( "ltc2601" );
@@ -173,9 +173,13 @@ int main(void) {
   // logger_setsystem( "pressure" );
   logger_setsystem( "vernon" );
   logger_setsystem( "whitfield" );
+  logger_setsystem( "aloha" );
 
   // Start the I2C module
   i2c_init();
+
+  // Set up the front panel board
+  aloha_init();
 
   // Load the serial number and slotid.  Check for connected hardware.
   system_init();
@@ -188,9 +192,6 @@ int main(void) {
 
   // Set up Topaz boards
   topaz_init();
-
-  // Set up Vernon board
-  vernon_init();
 
   command_init( recv_cmd_state_ptr );
 
@@ -227,8 +228,8 @@ int main(void) {
   // Task 1 -- Read all the pressure sensors
   OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
-
-
+  // Task 2 -- Test task
+  // OS_TaskCreate(&test_task, 500, BLOCKED);
 
   // The main loop
   for(;;) {
@@ -243,7 +244,7 @@ int main(void) {
     case system_state_CONTROL:
       break;
     case system_state_CLEAN:
-      break;  
+      break;
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);

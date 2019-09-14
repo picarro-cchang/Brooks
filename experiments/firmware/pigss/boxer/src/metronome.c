@@ -41,6 +41,9 @@
 // Provides pressure_mpr_trigger_cycle
 #include "pressure.h"
 
+// Provides support for aloha front panel boards
+#include "aloha.h"
+
 #include "metronome.h"
 
 void metronome_init() {
@@ -74,13 +77,9 @@ void metronome_init() {
 uint32_t pressure_reading  = 0;
 
 void test_task() {
-  // logger_msg_p("metronome",log_level_DEBUG,PSTR("Test task"));
-  // mpr_trigger( &cs_manifold_a_sr );
-  pressure_mpr_trigger_cycle();
-
-  // Schedule the read
-  OS_SetTaskState(1, BLOCKED);
-				   
+  // Use this for general-purpose testing
+  uint32_t data = (uint32_t) 1<<28;
+  aloha_write(data);
 }
 
 void offset_task() {
@@ -89,7 +88,6 @@ void offset_task() {
   // Cancel task
   OS_SetTaskState(1, SUSPENDED);
 }
-
 
 // The metronome interrupt -- interrupt for timer 1 compare match C
 ISR(TIMER1_COMPC_vect) {

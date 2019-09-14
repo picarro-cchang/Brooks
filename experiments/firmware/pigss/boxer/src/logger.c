@@ -123,6 +123,10 @@ logger_system_t system_array[] ={
     {"whitfield",
      22
     },
+    // The Aloha board module
+    {"aloha",
+     23
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

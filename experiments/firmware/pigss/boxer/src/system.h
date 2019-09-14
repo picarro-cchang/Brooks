@@ -18,6 +18,8 @@ typedef enum system_state_enum {
 				system_state_CLEAN
 } system_state_value_t;
 
+
+
 // Overall system state structure
 typedef struct system_status_struct {
   // System serial number
@@ -32,6 +34,8 @@ typedef struct system_status_struct {
   uint16_t topaz_b_sernum;
   // Vernon serial number (0 if board not connected)
   uint16_t vernon_sernum;
+  // Aloha front panel value
+  uint32_t fp_led_value;
 } system_state_t;
 
 // The system state structure variable will have global scope, and
@@ -68,6 +72,9 @@ void system_init( void );
 
 //******* Set and get members of the system_state structure ********//
 
+// Get the enumerated state
+system_state_value_t system_state_get_system_state(void);
+
 // Set the Topaz A or B serial number in the system state structure
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum);
 
@@ -82,6 +89,12 @@ uint16_t system_state_get_topaz_sernum(char board);
 
 // Get the Vernon serial number in the system state structure
 uint16_t system_state_get_vernon_sernum(void);
+
+// Set the front panel LED value
+int8_t system_state_set_fp_led_value(uint32_t value);
+
+// Get the front panel LED value
+uint32_t system_state_get_fp_led_value(void);
 
 // Set the system-level serial number
 int8_t system_state_set_system_sernum(uint16_t sernum);
