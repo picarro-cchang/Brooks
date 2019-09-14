@@ -61,7 +61,14 @@ int8_t aloha_init(void) {
   // UBRR is a combination of two 8-bit registers.
   //
   // Baud = fosc / ( 2(UBRR + 1))
-  UBRR2 = 75;
+
+  // |------------+-------+------------|
+  // | fosc (MHz) | UBRR2 | baud (kHz) |
+  // |------------+-------+------------|
+  // |    14.7456 |    75 |         97 |
+  // |    14.7456 |     6 |       1000 |
+  // |------------+-------+------------|
+  UBRR2 = 6;
 
   // Make PH4 an output initialized high for (not) output enable
   PORTH |= _BV(PORTH4);
@@ -211,7 +218,8 @@ int8_t aloha_write( uint32_t data ) {
     while ( !( UCSR2A & (_BV(UDRE2)) ) );
     logger_msg_p("aloha", log_level_DEBUG, PSTR("Wrote 0x%x"),data_union.b[bytenum]);
   }
-
+  // This delay has to stay to prevent cs from coming up early
+  _delay_ms(1);
   // Return chip-select high
   aloha_set_cs(1);
   return retval;
