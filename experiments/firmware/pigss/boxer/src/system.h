@@ -70,6 +70,9 @@ void cmd_clean( command_arg_t *command_arg_ptr );
 // structure with non-volatile values from eeprom.
 void system_init( void );
 
+// Returns true if USB is connected (nRTS is low)
+bool system_usb_is_connected( void );
+
 //******* Set and get members of the system_state structure ********//
 
 // Get the enumerated state

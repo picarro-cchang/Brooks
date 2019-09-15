@@ -11,6 +11,9 @@
 // Watchdog timer
 #include <avr/wdt.h>
 
+// Bit manipulation for AVR
+#include "avr035.h"
+
 #include "usart.h"
 
 // Sets up logging
@@ -75,9 +78,21 @@ void system_init( void ) {
   logger_msg_p("system",log_level_INFO,PSTR("Vernon serial number is %i"),
 	       sernum);
 
+  // Make PF7 an input to detect nRTS
+  DDRF &= ~( _BV(DDF7) );
+
   // Set the OK status on the front panel
   uint32_t led_value = system_state_get_fp_led_value();
   aloha_write( (uint32_t) 1<<STATUS_GREEN | led_value);
+
+  // Check for USB connection.  We only have to do this at startup,
+  // since the system always goes through a reset when a USB channel is opened
+  led_value = system_state_get_fp_led_value();
+  if ( system_usb_is_connected() ) {
+    aloha_write( (uint32_t) 1<<COM_GREEN | led_value);
+  } else {
+    aloha_write( (uint32_t) 1<<COM_RED | led_value);
+  }
 }
 
 void cmd_idn_q( command_arg_t *command_arg_ptr ) {
@@ -341,3 +356,12 @@ uint32_t system_state_get_fp_led_value(void) {
   return system_state.fp_led_value;
 }
 
+bool system_usb_is_connected( void ) {
+  logger_msg_p("system",log_level_DEBUG,PSTR("PINF value is 0x%x"),PINF);
+  if ( CHECKBIT(PINF,PINF7) ) {
+    // nRTS is high, so USB is not connected
+    return false;
+  } else {
+    return true;
+  }
+}
