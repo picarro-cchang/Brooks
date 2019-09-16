@@ -245,6 +245,8 @@ int main(void) {
       break;
     case system_state_CLEAN:
       break;
+    case system_state_SHUTDOWN:
+      break; 
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);

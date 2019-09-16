@@ -12,6 +12,7 @@
 // System states
 typedef enum system_state_enum {
 				system_state_STANDBY,
+				system_state_SHUTDOWN,
 				system_state_INIT,
 				system_state_ID_CHANNELS,
 				system_state_CONTROL,
@@ -63,6 +64,9 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr );
 // Function called by the standby command
 void cmd_standby( command_arg_t *command_arg_ptr );
 
+// Functions called by the shutdown command
+void cmd_shutdown( command_arg_t *command_arg_ptr );
+
 // Function called by the clean command
 void cmd_clean( command_arg_t *command_arg_ptr );
 
@@ -101,6 +105,9 @@ uint32_t system_state_get_fp_led_value(void);
 
 // Set the system-level serial number
 int8_t system_state_set_system_sernum(uint16_t sernum);
+
+// Enter shutdown mode
+int8_t system_enter_shutdown(void);
 
 // Enter standby mode
 int8_t system_enter_standby(void);

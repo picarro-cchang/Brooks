@@ -220,6 +220,11 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_clean},
+  // shutdown -- Enter shutdown state
+  {"shutdown",
+   "none",
+   0,
+   &cmd_shutdown},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

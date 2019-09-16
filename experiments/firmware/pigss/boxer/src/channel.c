@@ -202,8 +202,12 @@ int8_t channel_update() {
     channel_array_index++;
   }
   if (enabled_channels > 0) {
-    // If any channel is enabled, we need to be in control mode
-    retval += system_enter_control();
+    // If any channel is enabled, we need to be in control mode.  This
+    // may not be allowed if we're in a state that can't enter control.
+    if ( system_enter_control() < 0 ) {
+      retval += -1;
+      return retval;
+    }
     // Clear the blue LED bits
     new_led_value = aloha_clear_clean_led_bits(new_led_value);
   } else {
@@ -344,6 +348,7 @@ void cmd_chanoff( command_arg_t *command_arg_ptr ) {
 }
 
 void cmd_chanset( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
   // Word with lower byte containing channel settings
   uint16_t channel_settings = command_arg_ptr -> uint16_arg;
   if (channel_settings > 255) {
@@ -361,7 +366,12 @@ void cmd_chanset( command_arg_t *command_arg_ptr ) {
     }
     channel_array_index++;
   }
-  channel_update();
+  retval = channel_update();
+  if (retval < 0) {
+    // There was a problem setting the channel configuration
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
   // Acknowledge the successful command
   command_ack();
   return;

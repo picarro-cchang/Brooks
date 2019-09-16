@@ -130,6 +130,11 @@ int8_t system_enter_standby(void) {
     // proportional valves.
     channel_set(0);
     break;
+  case system_state_SHUTDOWN:
+    // SHUTDOWN to STANDBY only happens with a reset
+    logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to STANDBY"));
+    retval += -1;
+    break; 
   case system_state_CONTROL:
     // Transition from CONTROL to STANDBY
     //
@@ -168,8 +173,14 @@ int8_t system_enter_control(void) {
   case system_state_CONTROL:
     // Nothing to do here
     break;
+  case system_state_SHUTDOWN:
+    // Transition from SHUTDOWN to CONTROL is forbidden
+    logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to CONTROL"));
+    retval += -1;
+    break;
   case system_state_INIT:
     // Transition from INIT to CONTROL is forbidden
+    retval += -1;
     break;
   case system_state_STANDBY:
     // Transition from STANDBY to CONTROL
@@ -231,10 +242,66 @@ int8_t system_enter_clean(void) {
     logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to CLEAN"));
     set_system_state(system_state_CLEAN);
     break;
-    
+  case system_state_SHUTDOWN:
+    // Transition from SHUTDOWN to CLEAN is not allowed
+    logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to CONTROL"));
+    retval += -1;
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter clean from bad system state %d"),
+		 system_state.state_enum);
+    retval += -1;
+    break;
+  }
+  return retval; 
+}
+
+int8_t system_enter_shutdown(void) {
+  int8_t retval = 0;
+  switch( system_state.state_enum ) {
+  case system_state_SHUTDOWN:
+    // Nothing to do here
+    break;
+  case system_state_INIT:
+    // Transition from INIT to SHUTDOWN is forbidden
+    retval += -1;
+    break;
+  case system_state_STANDBY:
+    // Transition from STANDBY to SHUTDOWN
+    //
+    // All channels --> ON (relaxes solenoids)
+    channel_set(0xff);
+    // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
+    // All LEDs --> OFF
+    aloha_write((uint32_t) 0);
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to SHUTDOWN"));
+    set_system_state(system_state_SHUTDOWN);
+    break;
+  case system_state_CONTROL:
+    // Transition from CONTROL to SHUTDOWN
+    //
+    // All channels --> ON (relaxes solenoids)
+    channel_set(0xff);
+    // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to SHUTDOWN"));
+    set_system_state(system_state_SHUTDOWN);
+    break;
+  case system_state_CLEAN:
+    // Transition from CLEAN to SHUTDOWN
+    //
+    // All channels --> ON (relaxes solenoids)
+    channel_set(0xff);
+    // Clean solenoid --> OFF
+    vernon_set_clean_solenoid(0);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to SHUTDOWN"));
+    set_system_state(system_state_SHUTDOWN);
+    break; 
+    
+  default:
+    logger_msg_p("system", log_level_ERROR,
+		 PSTR("Enter shutdown from bad system state %d"),
 		 system_state.state_enum);
     retval += -1;
     break;
@@ -269,7 +336,12 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "clean",
 		 LINE_TERMINATION_CHARACTERS );
-    break;  
+    break;
+  case system_state_SHUTDOWN:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "shutdown",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",
@@ -286,6 +358,18 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
 void cmd_standby( command_arg_t *command_arg_ptr ) {
   int8_t retval = 0;
   retval = system_enter_standby();
+  if (retval == 0) {
+    command_ack();
+    return;
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+}
+
+void cmd_shutdown( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
+  retval = system_enter_shutdown();
   if (retval == 0) {
     command_ack();
     return;
