@@ -77,6 +77,9 @@ void system_init( void );
 // Returns true if USB is connected (nRTS is low)
 bool system_usb_is_connected( void );
 
+// Set shutdown state if there's no USB communication
+void system_comcheck_task( void );
+
 //******* Set and get members of the system_state structure ********//
 
 // Get the enumerated state

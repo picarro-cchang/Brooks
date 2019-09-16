@@ -228,6 +228,9 @@ int main(void) {
   // Task 1 -- Read all the pressure sensors
   OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
+  // Task 2 -- Check for USB communication
+  OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
+
   // Task 2 -- Test task
   // OS_TaskCreate(&test_task, 500, BLOCKED);
 

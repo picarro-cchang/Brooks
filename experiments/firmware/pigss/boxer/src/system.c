@@ -441,11 +441,21 @@ uint32_t system_state_get_fp_led_value(void) {
 }
 
 bool system_usb_is_connected( void ) {
-  logger_msg_p("system",log_level_DEBUG,PSTR("PINF value is 0x%x"),PINF);
   if ( CHECKBIT(PINF,PINF7) ) {
     // nRTS is high, so USB is not connected
     return false;
   } else {
     return true;
+  }
+}
+
+void system_comcheck_task( void ) {
+  if ( system_usb_is_connected() ) {
+    // Everything is OK
+    return;
+  } else {
+    logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
+    system_enter_shutdown();
+    return;
   }
 }
