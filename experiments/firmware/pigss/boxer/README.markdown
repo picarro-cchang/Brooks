@@ -88,6 +88,7 @@ hardware will be a custom PCB.
         - [Version 1.0.10](#version-1010)
         - [Version 1.1.0](#version-110)
         - [Version 1.1.1](#version-111)
+        - [Version 1.1.2](#version-112)
 
 <!-- markdown-toc end -->
 
@@ -569,3 +570,8 @@ This firmware reads the 10 pressure sensors at about 35 Hz.
 Added the `clean` command and support for the clean solenoid.  Sending
 the `clean` command will disable all sample channels and open the
 clean solenoid.
+
+### Version 1.1.2 ###
+
+Added support for the front panel PCB "Aloha."  There are no new
+remote commands to go with this.
