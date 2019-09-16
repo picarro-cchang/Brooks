@@ -64,6 +64,7 @@
         "x": 0,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 2,
       "links": [],
       "maxPerRow": 4,
@@ -74,7 +75,7 @@
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "2: Bank 1 Ch. 2",
+          "text": "2: Pizza Pineapple",
           "value": "2"
         }
       },
@@ -208,7 +209,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -234,6 +234,7 @@
         "x": 6,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 88,
       "links": [],
       "maxPerRow": 4,
@@ -241,12 +242,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "4: Bank 1 Ch. 4",
+          "text": "4: Pizza Sausage",
           "value": "4"
         }
       },
@@ -380,7 +381,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -406,6 +406,7 @@
         "x": 12,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 89,
       "links": [],
       "maxPerRow": 4,
@@ -413,12 +414,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "6: Bank 1 Ch. 6",
+          "text": "6: Pizza Pepperoni",
           "value": "6"
         }
       },
@@ -552,7 +553,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -578,6 +578,7 @@
         "x": 18,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 90,
       "links": [],
       "maxPerRow": 4,
@@ -585,12 +586,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "8: Bank 1 Ch. 8",
+          "text": "8: Pizza Chicken",
           "value": "8"
         }
       },
@@ -724,7 +725,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -750,6 +750,7 @@
         "x": 0,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 91,
       "links": [],
       "maxPerRow": 4,
@@ -757,12 +758,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "18: Bank 3 Ch. 2",
+          "text": "18: Ice Cream Chocolate",
           "value": "18"
         }
       },
@@ -896,7 +897,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -922,6 +922,7 @@
         "x": 6,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 92,
       "links": [],
       "maxPerRow": 4,
@@ -929,12 +930,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "20: Bank 3 Ch. 4",
+          "text": "20: Ice Cream Coffee",
           "value": "20"
         }
       },
@@ -1068,7 +1069,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1094,6 +1094,7 @@
         "x": 12,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 93,
       "links": [],
       "maxPerRow": 4,
@@ -1101,12 +1102,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "22: Bank 3 Ch. 6",
+          "text": "22: Ice Cream Caramel",
           "value": "22"
         }
       },
@@ -1240,7 +1241,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1266,6 +1266,7 @@
         "x": 18,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 94,
       "links": [],
       "maxPerRow": 4,
@@ -1273,12 +1274,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "24: Bank 3 Ch. 8",
+          "text": "24: Ice Cream Pistachio",
           "value": "24"
         }
       },
@@ -1412,7 +1413,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1438,6 +1438,7 @@
         "x": 0,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 95,
       "links": [],
       "maxPerRow": 4,
@@ -1445,7 +1446,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1584,7 +1585,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1610,6 +1610,7 @@
         "x": 6,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 96,
       "links": [],
       "maxPerRow": 4,
@@ -1617,7 +1618,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1756,7 +1757,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1782,6 +1782,7 @@
         "x": 12,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 97,
       "links": [],
       "maxPerRow": 4,
@@ -1789,7 +1790,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1928,7 +1929,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1954,6 +1954,7 @@
         "x": 18,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 98,
       "links": [],
       "maxPerRow": 4,
@@ -1961,7 +1962,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1568664643112,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -2100,7 +2101,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2256,9 +2256,8 @@
         "name": "avg_time",
         "options": [
           {
-            "selected": false,
-            "text": "1h",
-            "value": "1h"
+            "text": "16m",
+            "value": "16m"
           }
         ],
         "query": "16m",
@@ -2321,5 +2320,5 @@
   "timezone": "",
   "title": "Summary",
   "uid": "1iflIi5Wz",
-  "version": 1
+  "version": 3
 }

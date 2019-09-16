@@ -102,7 +102,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => this.props.ws_sender({element: "plan_insert"})}
-                                    className={"btn btn-block btn-secondary btn-group"} >
+                                    className={"btn btn-block btn-group"}
+                                    style={{backgroundImage: "-webkit-linear-gradient(top, rgb(77, 78, 78), rgb(8, 8, 8)"}}>
                                 Insert
                             </button>
                         </div>
@@ -110,7 +111,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
                                     className={"btn btn-block btn-light btn-group"}
-                                    style={{color: "black"}}>
+                                    style={{backgroundImage: "-webkit-linear-gradient(top, rgb(77, 78, 78), rgb(8, 8, 8)"}}>
                                 Save
                             </button>
                         </div>
@@ -120,7 +121,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
                                     className={"btn btn-block btn-light btn-group"}
-                                    style={{color: "black"}}>
+                                    style={{backgroundImage: "-webkit-linear-gradient(top, rgb(77, 78, 78), rgb(8, 8, 8)"}}>
                             Load
                             </button>
                         </div>
@@ -137,16 +138,16 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
 
                         <div className="col-sm-3">
                             <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_cancel"})}
-                                    className={"btn btn-block btn-danger btn-group"} >
-                                Cancel
+                                    onClick={e => this.props.ws_sender({element: "plan_ok"})}
+                                    className={"btn btn-block btn-success btn-group"}>
+                                OK
                             </button>
                         </div>
                         <div className="col-sm-3">
                             <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_ok"})}
-                                    className={"btn btn-block btn-success btn-group"}>
-                                OK
+                                    onClick={e => this.props.ws_sender({element: "plan_cancel"})}
+                                    className={"btn btn-block btn-danger btn-group"} >
+                                Cancel
                             </button>
                         </div>
                     </div>
