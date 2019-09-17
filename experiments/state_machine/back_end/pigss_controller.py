@@ -159,7 +159,8 @@ class PigssController(Ahsm):
         }
         self.send_queue = None
         self.receive_queue = None
-        self.db_writer = AioInfluxDBWriter()
+        db_config = self.farm.config.get_time_series_database()
+        self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
 
     def set_queues(self, send_queue, receive_queue):
         self.send_queue = send_queue

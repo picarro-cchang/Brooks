@@ -14,3 +14,12 @@ Services:
       alpha: 1
       bravo: 2
       charlie: 3
+  - Name: DBDecimator
+    RPC_Port: 33052
+    Parameters: # These are passed to the constructor
+      db_name: pigss_data
+      rpc_server_name: DBDecimator
+      rpc_server_description: DBDecimator
+      raw_filter_conditions: 
+        - ["valve_stable_time", ">", 15]
+      start: true

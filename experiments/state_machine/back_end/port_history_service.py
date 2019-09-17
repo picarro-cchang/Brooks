@@ -17,7 +17,6 @@ class PortHistoryService:
         self.app.on_shutdown.append(self.on_shutdown)
         self.bank_names = None
         self.end_time = "now"
-        self.db_writer = AioInfluxDBWriter()
         self.default_available_ports = {"1": 255, "2": 255, "3": 255, "4": 255}
         self.default_bank_names = {
             "1": {
@@ -77,7 +76,8 @@ class PortHistoryService:
         self.bank_names = self.default_bank_names
 
     async def on_startup(self, app):
-        pass
+        db_config = self.app['farm'].config.get_time_series_database()
+        self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
 
     async def on_shutdown(self, app):
         print("BankName server is shutting down")
