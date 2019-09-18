@@ -278,7 +278,7 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
-  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   return 0;
 }
 
@@ -293,7 +293,7 @@ int8_t pressure_mpr_outlet_trigger(char board) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
-  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   return 0;
 }
 
@@ -366,7 +366,7 @@ void pressure_mpr_trigger_task(void) {
   pressure_mpr_trigger_cycle();
 
   // Schedule the read
-  OS_SetTaskState(1, BLOCKED);				   
+  OS_SetTaskState(1, BLOCKED);
 }
 
 void pressure_mpr_read_task(void) {
@@ -382,7 +382,7 @@ void pressure_mpr_read_task(void) {
     pressure_inlet_old_pascals[index] =
       pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
     // This delay has to be here to avoid SPI read errors
-    _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   }
   
   // Outlet A
@@ -390,11 +390,11 @@ void pressure_mpr_read_task(void) {
   pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						pressure_outlet_old_counts[0],
 						PRESSURE_EMA_ALPHA);
-  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   pressure_outlet_old_pascals[0] =
     pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
   // This delay has to be here to avoid SPI read errors
-  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
 
   // Outlet B
   pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
@@ -404,7 +404,7 @@ void pressure_mpr_read_task(void) {
   pressure_outlet_old_pascals[1] =
     pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
   // This delay has to be here to avoid SPI read errors
-  _delay_ms(PRESSURE_READ_KLUDGE_DELAY_MS);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
 
   // Cancel the read
   OS_SetTaskState(1, SUSPENDED);
