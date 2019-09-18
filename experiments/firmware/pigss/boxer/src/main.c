@@ -217,13 +217,13 @@ int main(void) {
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
     pressure_read_period_ms = 20;
-    mpr_read_delay_ms = 15;
+    mpr_read_delay_ms = 6;
   }
 
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
 
   // Task 0 -- Trigger all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
+  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, SUSPENDED);
 
   // Task 1 -- Read all the pressure sensors
   OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
@@ -233,6 +233,10 @@ int main(void) {
 
   // Task 2 -- Test task
   // OS_TaskCreate(&test_task, 500, BLOCKED);
+
+  // Start the trigger/read cycle by calling the trigger task.  This
+  // will schedule the read task, which will then schedule the next trigger.
+  pressure_mpr_trigger_task();
 
   // The main loop
   for(;;) {

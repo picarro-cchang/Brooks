@@ -408,6 +408,9 @@ void pressure_mpr_read_task(void) {
 
   // Cancel the read
   OS_SetTaskState(1, SUSPENDED);
+
+  // Schedule the trigger
+  OS_SetTaskState(0, BLOCKED);
 }
 
 void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr ) {

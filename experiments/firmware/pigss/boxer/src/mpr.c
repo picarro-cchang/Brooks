@@ -5,6 +5,9 @@
 // loop_until_bit_is_set.
 #include <avr/io.h>
 
+// Provides sei() and cli() macros
+#include <avr/interrupt.h>
+
 // Provides macros and functions for saving and reading data out of
 // flash.
 #include <avr/pgmspace.h>
