@@ -8,5 +8,9 @@
     "jsx": "react",
     "esModuleInterop": true,
     "moduleResolution": "node"
-  }
+  },
+  "exclude": [
+    "node_modules",
+    "**/*.test.tsx"
+  ]
 }
