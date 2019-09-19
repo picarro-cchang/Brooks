@@ -32,6 +32,7 @@ set usage "usage: [file tail $argv0] \[options]"
 set options {
     {b.arg "mega" "Board name"}
     {o.arg "pscan" "Output file name base"}
+    {n.arg "20" "Number of read cycles"}
 }
 
 try {
@@ -249,7 +250,7 @@ puts [dashline [string length $header]]
 
 set start_time_ms [clock milliseconds]
 
-foreach read_cycle [iterint 1 15] {
+foreach read_cycle [iterint 0 $params(n)] {
     set pressure_channels {1 2 3 4 5 6 7 8}
     foreach pressure_channel $pressure_channels {
 	boxer::sendcmd $channel "prs.in.raw? $pressure_channel"
@@ -269,7 +270,7 @@ foreach read_cycle [iterint 1 15] {
 	lappend row_list [dict get $measurement_dict $key pressure]
 	
     }
-    if {[expr $read_cycle % 10] == 0} {
+    if {([expr $read_cycle % 10] == 0) && ($read_cycle != 0)} {
 	puts ""
 	puts $header
 	puts [dashline [string length $header]]
