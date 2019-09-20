@@ -67,7 +67,8 @@ class DasConfigure(SharedTypes.Singleton):
             # CAVITY_THERMISTOR_CONFIG = 1 for four separate 24-bit cavity thermistor ADC and
             #  a 16-bit hot box heatsink thermistor
             self.cavityThermistorConfig = self.installed.get(
-                "CAVITY_THERMISTOR_CONFIG", 3)
+                "CAVITY_THERMISTOR_CONFIG", 0)
+            self.is_dual_cavity = self.installed.get("DUAL_CAVITY", 0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
             self.extraSchedule = None
@@ -450,18 +451,6 @@ class DasConfigure(SharedTypes.Singleton):
                     status = sender.doOperation(
                         Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
                     self.i2cConfig[ident] = (status >= 0)
-                    if "CAVITY_THERMISTOR_4_ADC" in ident and self.cavityThermistorConfig == 3:
-                        if self.i2cConfig[ident] is True:
-                            # New "RevC" Hardware
-                            print("Hardware: RevC")
-                            self.cavityThermistorConfig = 1
-                        else:
-                            # Legacy "RevB" Hardware
-                            print("Hardware: RevB")
-                            self.cavityThermistorConfig = 0
-                        if "CAVITY2_THERMISTOR_4_ADC" in ident:
-                            print("Hardware: DualCavity")
-                            self.cavityThermistorConfig == 2
 
                     print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
                 if self.cavityThermistorConfig == 0:
@@ -479,6 +468,12 @@ class DasConfigure(SharedTypes.Singleton):
                                   ["I2C_CAVITY_THERMISTOR_1_ADC",
                                    "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
                                    "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
+                    if self.is_dual_cavity != 0:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                  ["I2C_CAVITY2_Tcavity 2HERMISTOR_2_ADC",
+                                   "CAVITY2_RESISTANCE_REGISTER",
+                                   "CAVITY2_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
                 else:
                     # This represents the new mode in which there are four cavity thermistors
                     # with 24-bit ADCs and a hot box heatsink thermistor with a
@@ -512,7 +507,8 @@ class DasConfigure(SharedTypes.Singleton):
                                   ["I2C_HOT_BOX_HEATSINK_THERMISTOR_ADC",
                                    "HOT_BOX_HEATSINK_RESISTANCE_REGISTER",
                                    "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-                    if self.cavityThermistorConfig == 2:
+                    # Handle additional thermistors on a second cavity
+                    if self.is_dual_cavity != 0:
                         self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                             Operation("ACTION_READ_THERMISTOR_RESISTANCE",
                                     ["I2C_CAVITY2_THERMISTOR_1_ADC",
@@ -548,6 +544,14 @@ class DasConfigure(SharedTypes.Singleton):
                                "CONVERSION_CAVITY_THERM_CONSTB_REGISTER",
                                "CONVERSION_CAVITY_THERM_CONSTC_REGISTER",
                                "CAVITY_TEMPERATURE_REGISTER"]))
+                if self.is_dual_cavity != 0:
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                              ["CAVITY2_RESISTANCE_REGISTER",
+                               "CONVERSION_CAVITY2_THERM_CONSTA_REGISTER",
+                               "CONVERSION_CAVITY2_THERM_CONSTB_REGISTER",
+                               "CONVERSION_CAVITY2_THERM_CONSTC_REGISTER",
+                               "CAVITY2_TEMPERATURE_REGISTER"]))
 
             else:
                 # This represents the new mode in which there are four cavity thermistors
@@ -604,8 +608,9 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                               ["STREAM_CavityTemp4", "CAVITY_TEMPERATURE4_REGISTER"]))
 
-                if self.cavityThermistorConfig == 2:
-                    # This represents the new mode in which there are four addtional thermistors for cavity 2
+                if self.is_dual_cavity != 0:
+                    # This represents the new mode in which there are four addtional thermistors
+                    # for a second cavity
                     self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
                         Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
                                 ["CAVITY2_RESISTANCE1_REGISTER",
@@ -815,16 +820,16 @@ class DasConfigure(SharedTypes.Singleton):
                     Operation("ACTION_READ_PRESSURE_ADC",
                               ["I2C_AMBIENT_PRESSURE_ADC",
                                "AMBIENT_PRESSURE_ADC_REGISTER"]))
+                if self.is_dual_cavity:
+                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_PRESSURE_ADC",
+                                ["I2C_CAVITY2_PRESSURE_ADC",
+                                "CAVITY2_PRESSURE_ADC_REGISTER"]))
 
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                    Operation("ACTION_READ_PRESSURE_ADC",
-                              ["I2C_CAVITY2_PRESSURE_ADC",
-                               "CAVITY2_PRESSURE_ADC_REGISTER"]))
-
-                self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                    Operation("ACTION_READ_PRESSURE_ADC",
-                              ["I2C_AMBIENT2_PRESSURE_ADC",
-                               "AMBIENT2_PRESSURE_ADC_REGISTER"]))
+                    self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                        Operation("ACTION_READ_PRESSURE_ADC",
+                                ["I2C_AMBIENT2_PRESSURE_ADC",
+                                "AMBIENT2_PRESSURE_ADC_REGISTER"]))
 
                 self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                     Operation("ACTION_SET_INLET_VALVE",
@@ -851,20 +856,20 @@ class DasConfigure(SharedTypes.Singleton):
                            "CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER",
                            "CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER",
                            "AMBIENT_PRESSURE_REGISTER"]))
+            if self.is_dual_cavity:
+                self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_ADC_TO_PRESSURE",
+                            ["CAVITY2_PRESSURE_ADC_REGISTER",
+                            "CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER",
+                            "CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER",
+                            "CAVITY2_PRESSURE_REGISTER"]))
 
-            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-                Operation("ACTION_ADC_TO_PRESSURE",
-                          ["CAVITY2_PRESSURE_ADC_REGISTER",
-                           "CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER",
-                           "CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER",
-                           "CAVITY2_PRESSURE_REGISTER"]))
-
-            self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
-                Operation("ACTION_ADC_TO_PRESSURE",
-                          ["AMBIENT2_PRESSURE_ADC_REGISTER",
-                           "CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER",
-                           "CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER",
-                           "AMBIENT2_PRESSURE_REGISTER"]))
+                self.opGroups["FAST"]["SENSOR_CONVERT"].addOperation(
+                    Operation("ACTION_ADC_TO_PRESSURE",
+                            ["AMBIENT2_PRESSURE_ADC_REGISTER",
+                            "CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER",
+                            "CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER",
+                            "AMBIENT2_PRESSURE_REGISTER"]))
 
             self.opGroups["FAST"]["STREAMER"].addOperation(
                 Operation("ACTION_STREAM_REGISTER_ASFLOAT",
@@ -919,8 +924,9 @@ class DasConfigure(SharedTypes.Singleton):
         if rddVarGainPresent:
             self.opGroups["FAST"]["CONTROLLER"].addOperation(
                 Operation("ACTION_RDD_CNTRL_STEP"))
-            self.opGroups["FAST"]["CONTROLLER"].addOperation(
-                Operation("ACTION_RDD2_CNTRL_STEP"))
+            if self.is_dual_cavity:
+                self.opGroups["FAST"]["CONTROLLER"].addOperation(
+                    Operation("ACTION_RDD2_CNTRL_STEP"))
         self.opGroups["FAST"]["CONTROLLER"].addOperation(
             Operation("ACTION_SPECTRUM_CNTRL_STEP"))
 
@@ -1030,7 +1036,8 @@ class DasConfigure(SharedTypes.Singleton):
             sender.doOperation(Operation("ACTION_FAN_CNTRL_INIT"))
         if rddVarGainPresent:
             sender.doOperation(Operation("ACTION_RDD_CNTRL_INIT"))
-            sender.doOperation(Operation("ACTION_RDD2_CNTRL_INIT"))
+            if self.is_dual_cavity:
+                sender.doOperation(Operation("ACTION_RDD2_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [
                            0x8000, "FPGA_PWM_WARMBOX", "PWM_PULSE_WIDTH"]))
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [
