@@ -15,6 +15,9 @@
 // Provides strcmp()
 #include <string.h>
 
+// Convenience functions for busy-wait loops
+#include <util/delay.h>
+
 // Functions for working with UART interfaces.
 // Definition of LINE_TERMINATION_CHARACTERS
 #include "usart.h"
@@ -150,18 +153,47 @@ int8_t topaz_connect(char board) {
 
 int8_t topaz_reset(char board) {
   int8_t retval = 0;
-  if (board == 'a') {
+  switch(board) {
+  case 'a':
+    if (strcmp( PCB, "whitfield") == 0) {
+      // We're using the Whitfield board.  This has a TCA9544A I2C mux
+      // in front of the Topaz connectors.
+
+      // Topaz A is on channel 0 (SD0 / SC0)
+      retval += whitfield_set_i2c_mux(0);
+    }
+    if (!topaz_is_connected('a')) {
+	// No Topaz connection
+	return -1;
+    }
+    break;
+  case 'b':
+    if (strcmp( PCB, "whitfield") == 0) {
+      // We're using the Whitfield board.  This has a TCA9544A I2C mux
+      // in front of the Topaz connectors.
+
+      // Topaz B is on channel 1 (SD1 / SC1)
+      retval += whitfield_set_i2c_mux(1);
+    }
+    if (!topaz_is_connected('b')) {
+	// No Topaz connection
+	return -1;
+    }
+    break;
+  default:
+    retval += -1;
+  }
     // Bring the reset line low
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_1_REG,
 		  0);
+    _delay_ms(1);
     // Bring the reset line back up
     tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		  TCA9539_OUTPUT_PORT_1_REG,
 		  _BV(TOPAZ_CLR_SHIFT));
-  } else {
-  }
-  return 0;
+
+  return retval;
 }
 
 int8_t topaz_set_serial_number(char board, uint16_t serial_number) {
