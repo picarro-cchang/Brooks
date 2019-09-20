@@ -78,6 +78,8 @@ package require logger
 source loggerconf.tcl
 ${log}::info [modinfo logger]
 
+set time_format "%Y-%m-%d %H:%M:%S"
+
 proc source_script {file args} {
     # Execute a tcl script by sourcing it.  Note that this will
     # clobber your existing argument list.
@@ -113,6 +115,7 @@ proc dashline {width} {
 }
 
 proc get_time_string {start_time_ms} {
+    global time_format
     set time_now_ms [clock milliseconds]
     set time_now_s [expr double($time_now_ms)/1000]
     # time_delta_s is a millisecond-resolution stopwatch started at
@@ -126,7 +129,7 @@ proc get_time_string {start_time_ms} {
     # 2019-06-29 18:18:15.891
     # ... by tacking milliseconds onto a conventional clock format.
     set time_string [format "%s.%03d" [clock format [expr int($time_now_s)] -format \
-					   "%Y-%m-%d %H:%M:%S"] $ms_remainder]
+					   $time_format] $ms_remainder]
     return $time_string
 }
 
@@ -257,14 +260,18 @@ foreach read_cycle [iterint 0 $params(n)] {
 	set return_value [boxer::readline $channel]
 	dict set measurement_dict $pressure_channel pressure $return_value
 	dict set measurement_dict $pressure_channel time_string [get_time_string $start_time_ms]
+	dict set measurement_dict $pressure_channel unix_time_ms [clock milliseconds]
     }
     foreach [list channel_name pressure_channel] [list "outlet a" 1 "outlet b" 2] {
 	boxer::sendcmd $channel "prs.out.raw? $pressure_channel"
 	set return_value [boxer::readline $channel]
 	dict set measurement_dict $channel_name pressure $return_value
 	dict set measurement_dict $channel_name time_string [get_time_string $start_time_ms]
+	dict set measurement_dict $channel_name unix_time_ms [clock milliseconds]
     }
     set row_list [list]
+    # Create a list of dictionaries for later analysis
+    lappend read_cycle_list $measurement_dict
     foreach key [dict keys $table_dict] {
 	lappend row_list [dict get $table_dict $key width]
 	lappend row_list [dict get $measurement_dict $key pressure]
@@ -282,6 +289,17 @@ foreach read_cycle [iterint 0 $params(n)] {
     puts $fid $file_string
 }
 close $fid
+
+
+set first_dict [lindex $read_cycle_list 0]
+set first_time [dict get $first_dict 1 unix_time_ms]
+
+set last_dict [lindex $read_cycle_list end]
+set last_time [dict get $last_dict "outlet b" unix_time_ms]
+set readings [expr 10 * [llength $read_cycle_list]]
+set duration_ms [expr $last_time - $first_time]
+set read_rate [expr (double($readings) * 1000) / $duration_ms]
+puts "Took $readings readings in $duration_ms ms at [format "%0.2f" $read_rate] Hz"
 
 
 
