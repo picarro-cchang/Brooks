@@ -363,9 +363,6 @@ int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
 }
 
 void pressure_mpr_trigger_task(void) {
-  // Cancel the trigger
-  OS_SetTaskState(0, SUSPENDED);
-  
   volatile int8_t retval = 0;
   retval += pressure_mpr_trigger_cycle();
 
@@ -374,10 +371,8 @@ void pressure_mpr_trigger_task(void) {
 }
 
 void pressure_mpr_read_task(void) {
-
-  // Cancel the read
+  // Cancel the trigger
   OS_SetTaskState(1, SUSPENDED);
-  
   uint8_t index = 0;
 
   // All inlets
@@ -414,10 +409,6 @@ void pressure_mpr_read_task(void) {
   // This delay has to be here to avoid SPI read errors
   _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
 
-
-
-  // Schedule the trigger
-  OS_SetTaskState(0, BLOCKED);
 }
 
 void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr ) {

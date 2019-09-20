@@ -14,7 +14,7 @@
 #define PRESSURE_DAC_INACTIVE_COUNTS 17134
 
 // Pressure read delay
-#define PRESSURE_READ_KLUDGE_DELAY_US 500
+#define PRESSURE_READ_KLUDGE_DELAY_US 1
 
 // Set the voltage output from one of the pressure-control DACs
 //
