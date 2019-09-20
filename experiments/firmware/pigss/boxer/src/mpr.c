@@ -49,6 +49,9 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   // Pull cs low
   (*cs_ptr)(0);
 
+  // MPR devices need at least 2.5us from SS drop to first clock pulse
+  _delay_us(3);
+
   // Write the data starting with bytes[0] (0xaa)
   tries = 1;
   while ((status_byte != 0x40) && (tries < maxtries)) {
@@ -94,6 +97,9 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
 
   // Pull cs low
   (*cs_ptr)(0);
+
+  // MPR devices need at least 2.5us from SS drop to first clock pulse
+  _delay_us(3);
 
   // Read the data MSB first.  The first byte returned will be status
   for (int8_t bytenum = 3; bytenum >= 0; bytenum--) {
