@@ -49,6 +49,12 @@
     style: flex;
     justify-content: center;
 }
+.btn-row-3 {
+    margin-top: 10px;
+    align-items: center;
+    style: flex;
+    justify-content: center;
+}
 .panel-plan {
     height: 640px;
     /*background-color: #888;*/

@@ -11,7 +11,7 @@ class PortHistoryService:
     def __init__(self):
         self.app = web.Application()
         self.app.router.add_route("GET", "/", self.health_check)
-        self.app.router.add_route("GET", "/search", self.search)
+        # self.app.router.add_route("GET", "/search", self.search)
         self.app.router.add_route("POST", "/search", self.search)
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
@@ -87,7 +87,7 @@ class PortHistoryService:
         description: Used to check theat data source exists and works
 
         tags:
-            -   bank name service
+            -   port history service
         summary: Used to check theat data source exists and works
         produces:
             -   application/text
@@ -102,22 +102,50 @@ class PortHistoryService:
         description: Gets the names of the valves available
 
         tags:
-            -   bank name service
+            -   port history service
         summary:  Gets the names of the valves available
+
+        consumes:
+            -   application/json
+        parameters:
+            -   in: body
+                name: query
+                description: Specify what to retrieve
+                required: false
+                schema:
+                    type: object
+                    properties:
+                        target:
+                            type: string
+                            description: search string in JSON format, which can be a time range as an array of an object with type and range keys 
         produces:
             -   application/json
         responses:
             "200":
                 description: successful operation.
         """
-        query = await request.json()
+        # The query can be a range with a list of start and end times in ms since epoch, or a dictionary
+        #  with keys "range" and "type".
+
         # start_ms and end_ms are the Grafana time range for the plots
-        start_ms, end_ms = json.loads(query['target'])
+        result_type = "ports"
+        query = (await request.json()).get('target', None)
+        if query is not None:
+            query = json.loads(query)
+        if isinstance(query, list):
+            start_ms, end_ms = query
+        elif isinstance(query, dict):
+            start_ms, end_ms = query.get("range", (0, int(1000 * time.time())))
+            result_type = query.get("type", "ports")
+        else:
+            start_ms = 0
+            end_ms = int(1000 * time.time())
+
         if end_ms != self.end_time:
             self.bank_names = self.default_bank_names
             self.available_ports = self.default_available_ports
-            data = await self.db_writer.read_data(
-                f"select bank_names, available_ports from port_history where time<{end_ms}ms order by time desc limit 1")
+            influx_query = f"select bank_names, available_ports from port_history where time<{end_ms}ms order by time desc limit 1"
+            data = await self.db_writer.read_data(influx_query)
             result = list(iterpoints(data))
             if result:
                 time_ms = result[0][0] // 1000000
@@ -128,18 +156,21 @@ class PortHistoryService:
                     self.available_ports = json.loads(result[0][2])
         self.end_time = end_ms
 
+        banks = []
         ports = []
         valve_pos = 1
         for bank in [1, 2, 3, 4]:
             available = self.available_ports[str(bank)]
             bank_dict = self.bank_names[str(bank)]
+            if available != 0:
+                banks.append(dict(text=f"{bank_dict['name']}", value=str(1 << (bank - 1))))
             for channel in [1, 2, 3, 4, 5, 6, 7, 8]:
                 chan_dict = bank_dict["channels"]
                 descr = f"{bank_dict['name']} {chan_dict[str(channel)]}"
                 if available & (1 << (channel - 1)):
                     ports.append(dict(text=f"{valve_pos}: {descr}", value=str(valve_pos)))
                 valve_pos += 1
-        return web.json_response(ports)
+        return web.json_response(ports if result_type == "ports" else banks)
 
     # async def query(self, request):
     #     """
@@ -147,7 +178,7 @@ class PortHistoryService:
     #     description: Make a query to the database
 
     #     tags:
-    #         -   bank name service
+    #         -   port history service
     #     summary: make a query to the database
     #     consumes:
     #         -   application/json

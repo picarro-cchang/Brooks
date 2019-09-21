@@ -91,9 +91,14 @@ export interface PlanSavePanelOptions {
   ws_sender: (o: object) => void;
 }
 
+export interface BankConfig {
+  chan_mask: number;
+  clean: number;
+}
+
 export interface PlanStep {
-  bank: number;
-  channel: number;
+  banks: { [key: number]: BankConfig; }
+  reference: number;
   duration: number;
 }
 

@@ -29,12 +29,29 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         let portString = "";
         let durationString = "";
         if (this.props.plan.last_step >= row) {
-            const planRow = this.props.plan.steps[row];
-            if (planRow.bank !== 0) {
-                const bank_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].name;
-                const ch_name = this.props.plan.bank_names[this.props.plan.steps[row].bank].channels[this.props.plan.steps[row].channel];
-                // portString = `Bank ${planRow.bank}, Channel ${planRow.channel}`;
-                portString = bank_name + ", " + ch_name;
+            const planRow = this.props.plan.steps[row] as PlanStep;
+            if (planRow.reference != 0) {
+                portString = "Reference";
+            }
+            else {
+                for (let bank in planRow.banks) {
+                    if (planRow.banks.hasOwnProperty(bank)) {
+                        const bank_name = this.props.plan.bank_names[bank].name;
+                        const bank_config = planRow.banks[bank];
+                        if (bank_config.clean != 0) {
+                            portString = `Clean ${bank_name}`;
+                            break;
+                        }
+                        else if (bank_config.chan_mask != 0) {
+                            const mask = bank_config.chan_mask;
+                            // Find index of first set bit using bit-twiddling hack
+                            const channel = (mask & (-mask)).toString(2).length;     
+                            const ch_name = this.props.plan.bank_names[bank].channels[channel];
+                            portString = bank_name + ", " + ch_name;
+                            break;
+                        }
+                    }
+                }
             }
             if (planRow.duration !== 0) {
                 durationString = `${planRow.duration}`;
@@ -51,7 +68,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:1}})
                            }}
                            style={{ backgroundColor: 'white'}}
-                           value={portString} placeholder="Select port" readOnly/>
+                           value={portString} placeholder="Select port"/>
                 </div>
                 <div className="col-sm-3">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
@@ -150,6 +167,18 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             </button>
                         </div>
                     </div>
+
+                    <div className="row btn-row-3">
+                        <div className="col-sm-8">
+                                <button type="button"
+                                    onClick={e => this.props.ws_sender({element: "reference"})}
+                                    className={"btn btn-block btn-light btn-group"}
+                                    style={{color: "black"}}>
+                                Reference
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         );
