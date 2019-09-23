@@ -12,14 +12,11 @@
 // flash.
 #include <avr/pgmspace.h>
 
-
 // Provides logger_msg and logger_msg_p for log messages tagged with a
 // system and severity.
 #include "logger.h"
 
-
 #include "spi.h"
-
 
 void spi_init() {
   // Set MOSI, SCK, and SS to be outputs.
@@ -41,7 +38,7 @@ void spi_init() {
   // |     1 |    1 |    0 |      32 |
   // |     1 |    1 |    1 |      64 |
   // |-------+------+------+---------|
-  
+
   // SPCR |= _BV(SPR0); // Set fosc / 16 = 1MHz
 
   // MPR sensors have a maximum SPI clock of 800kHz.  Closest divider is 32.

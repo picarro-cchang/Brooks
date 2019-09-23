@@ -16,6 +16,9 @@
 // Convenience functions for busy-wait loops
 #include <util/delay.h>
 
+// Convenience macros for setting and clearing bits
+#include "avr035.h"
+
 // Functions for using the logger
 #include "logger.h"
 
@@ -29,33 +32,77 @@ void cs_init() {
 
   //*************************** Topaz A ****************************//
 
-  // Make PB0 an output initialized high for Topaz A shift register
-  PORTB |= _BV(PORTB0);
-  DDRB |= _BV(DDB0);
+  // Make PB0 an output initialized high for Topaz A shift register CS
+  SETBIT(PORTB,PORTB0);
+  SETBIT(DDRB,DDB0);
 
-  // Make PE3 an output initialized low for Topaz A output enable
-  PORTE &= ~(_BV(PORTE3));
-  DDRE |= _BV(PORTE3);
+  // Make PE3 an output initialized high for Topaz A shift register
+  // output enable
+  SETBIT(PORTE,PORTE3);
+  SETBIT(DDRE,DDE3);
+
+  // Write a safe value to the shift register
+  cs_manifold_a_sr(0);
+  spi_write(0xff);
+  cs_manifold_a_sr(1);
 
   // Make PF0 an output initialized high for Topaz A multiplexed CS
-  PORTF |= _BV(PORTF0);
-  DDRF |= _BV(DDF0);
+  SETBIT(PORTF,PORTF0);
+  SETBIT(DDRF,DDF0);
+
+  // Enable the Topaz A shift register
+  manifold_a_sr_noe(0);
 
   //*************************** Topaz B ****************************//
 
-  // Make PL3 an output initialized high for Topaz B shift register
-  PORTL |= _BV(PORTL3);
-  DDRL |= _BV(DDL3);
+  // Make PL3 an output initialized high for Topaz B shift register CS
+  SETBIT(PORTL,PORTL3);
+  SETBIT(DDRL,DDL3);
 
-  // Make PE4 an output initialized low for Topaz B output enable
-  PORTE &= ~(_BV(PORTE4));
-  DDRE |= _BV(PORTE4);
+  // Make PE4 an output initialized high for Topaz B shift register
+  // output enable
+  SETBIT(PORTE,PORTE4);
+  SETBIT(DDRE,DDE4);
+
+  // Write a safe value to the shift register
+  cs_manifold_b_sr(0);
+  spi_write(0xff);
+  cs_manifold_b_sr(1);
 
   // Make PF1 an output initialized high for Topaz B multiplexed CS
-  PORTF |= _BV(PORTF1);
-  DDRF |= _BV(DDF1);
+  SETBIT(PORTF,PORTF1);
+  SETBIT(DDRF,DDF1);
+
+  // Enable the Topaz B shift register
+  manifold_b_sr_noe(0);
 
   return;
+}
+
+int8_t manifold_a_sr_noe(uint8_t state) {
+  if ( state ) {
+    // Set nOE high to disable shift register
+    SETBIT(PORTE,PORTE3);
+    loop_until_bit_is_set(PORTE, PORTE3);
+  } else {
+    // Set nOE low to enable shift register
+    CLEARBIT(PORTE,PORTE3);
+    loop_until_bit_is_clear(PORTE, PORTE3);
+  }
+  return 0;
+}
+
+int8_t manifold_b_sr_noe(uint8_t state) {
+  if ( state ) {
+    // Set nOE high to disable shift register
+    SETBIT(PORTE,PORTE4);
+    loop_until_bit_is_set(PORTE, PORTE4);
+  } else {
+    // Set nOE low to enable shift register
+    CLEARBIT(PORTE,PORTE4);
+    loop_until_bit_is_clear(PORTE, PORTE4);
+  }
+  return 0;
 }
 
 int8_t cs_manifold_a_sr(uint8_t state) {
@@ -157,7 +204,6 @@ void cs_ne_dac_mux(void) {
   cs_manifold_a_sr(1);
   cs_manifold_b_sr(1);
 }
-
 
 //************************ Pressure sensors ************************//
 

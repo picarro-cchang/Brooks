@@ -10,6 +10,10 @@ void cs_init(void);
 int8_t cs_manifold_a_sr(uint8_t state);
 int8_t cs_manifold_b_sr(uint8_t state);
 
+// Set the state of nOE (not output enable) for the Topaz A and B shift registers
+int8_t manifold_a_sr_noe(uint8_t state);
+int8_t manifold_b_sr_noe(uint8_t state);
+
 // Set the state of the target CS line.  This CS is multiplexed to
 // handle all DACs and pressure sensors.
 //

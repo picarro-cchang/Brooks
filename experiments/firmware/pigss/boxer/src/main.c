@@ -120,11 +120,12 @@ int main(void) {
   // makefile.  Note that nothing can be logged before this line.
   logger_init();
 
+  // Start the SPI module.  We need to do this before the CS module to
+  // allow initializing the Topaz shift registers.
+  spi_init();
+
   // Start the SPI chip-select module
   cs_init();
-
-  // Start the SPI module.
-  spi_init();
 
   /* To configure the logger, first clear the logger enable register
      by disabling it with logger_disable().  Then set individual bits
