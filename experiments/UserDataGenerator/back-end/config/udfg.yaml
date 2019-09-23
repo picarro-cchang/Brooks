@@ -1,0 +1,14 @@
+influxdb:
+  database: pigss_data
+  host: 10.100.3.28
+  port: 8086
+  timeout: 1
+  retries: 1
+
+server:
+  host: 127.0.0.1
+  port: 8010
+  data_dir: "/tmp/udfg"
+  file_type: "csv"
+
+admin_keys: []

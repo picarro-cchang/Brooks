@@ -1,0 +1,18 @@
+.file-item {
+  width: auto;
+  display: block;
+  padding: 8px;
+  margin-bottom: 2px;
+}
+
+.file-item:hover {
+  cursor: pointer;
+  color: #3bd2f8;
+  text-decoration: underline;
+}
+
+/* Fix for grafana panel scrolling issue */
+/* Has to figure out what's wrong with grafana or the panel! */
+.panel-content {
+  overflow: auto;
+}
