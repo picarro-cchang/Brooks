@@ -3,6 +3,11 @@ import ReactList from 'react-list';
 import {Plan, PlanFocus, PlanPanelOptions, PlanStep} from './../types';
 
 class PlanPanel extends PureComponent<PlanPanelOptions> {
+    state = {
+        refVisible: true
+    };
+
+
     focusComponent:any = null;
     focusTimer:any = null;
 
@@ -138,14 +143,20 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
 
                         <div className="col-sm-3">
                             <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_ok"})}
+                                    onClick={e => {
+                                        this.props.ws_sender({element: "plan_ok"})
+                                        this.props.onCancelOkClick();
+                                    }}
                                     className={"btn btn-block btn-success btn-group"}>
                                 OK
                             </button>
                         </div>
                         <div className="col-sm-3">
                             <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "plan_cancel"})}
+                                    onClick={e => {
+                                        this.props.ws_sender({element: "plan_cancel"});
+                                        this.props.onCancelOkClick();
+                                    }}
                                     className={"btn btn-block btn-danger btn-group"} >
                                 Cancel
                             </button>
