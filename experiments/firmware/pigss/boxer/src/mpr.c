@@ -43,9 +43,6 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   uint8_t bytes[3] = {0xaa, 0x00, 0x00};
   uint8_t status_byte = 0;
 
-  uint8_t maxtries = 10;
-  uint8_t tries = 0;
-
   // Pull cs low
   (*cs_ptr)(0);
 
@@ -53,8 +50,8 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   _delay_us(3);
 
   // Write the data starting with bytes[0] (0xaa)
-  tries = 1;
-  while ((status_byte != 0x40) && (tries < maxtries)) {
+  uint8_t tries = 1;
+  while ((status_byte != 0x40) && (tries <= (MPR_MAX_RETRIES + 1))) {
     for (int8_t bytenum = 0; bytenum <= 2; bytenum++) {
       if (bytenum == 0) {
 	// The first 0xaa write will return the status byte
@@ -92,8 +89,6 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
 
   data_union.word = 0;
 
-  uint8_t maxtries = 10;
-  uint8_t tries = 0;
 
   // Pull cs low
   (*cs_ptr)(0);
@@ -101,11 +96,12 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   // MPR devices need at least 2.5us from SS drop to first clock pulse
   _delay_us(3);
 
+  uint8_t tries = 1;
   // Read the data MSB first.  The first byte returned will be status
   for (int8_t bytenum = 3; bytenum >= 0; bytenum--) {
     if (bytenum == 3) {
       tries = 1;
-      while ((status_byte != 0x40) && (tries < maxtries)) {
+      while ((status_byte != 0x40) && (tries <= (MPR_MAX_RETRIES + 1))) {
 	// Write the NOP command first and read sensor status
 	status_byte = spi_write(0xf0);
 	data_union.bytes[bytenum] = 0;

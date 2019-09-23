@@ -10,6 +10,9 @@
 #define MPR_NMAX 0xe66666ul
 #define MPR_PMAX_PASCAL 103421
 
+// Retries for MPR reads and triggers
+#define MPR_MAX_RETRIES 1
+
 // Set initial values
 //
 // Chip-select functions take a 1 or a 0 argument to set the
