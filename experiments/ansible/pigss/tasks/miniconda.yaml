@@ -11,4 +11,5 @@
   shell: /home/picarro/miniconda3/bin/conda env update -f /home/picarro/git/host/experiments/ansible/pigss/tasks/files/pigss_conda_env.yaml
 
 - name: Install async_hsm
-  shell: cd /home/picarro/git/host/experiments/async_hsm/ && gnome-terminal -- /home/picarro/miniconda3/bin/python setup.py -develop
+  shell: cd /home/picarro/git/host/experiments/async_hsm/ && /home/picarro/miniconda3/bin/python setup.py develop
+

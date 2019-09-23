@@ -9,3 +9,4 @@
 
 - name: Launch grafana build menu
   shell: gnome-terminal -- /usr/bin/picarro-build-menu
+  when: headless == "false"

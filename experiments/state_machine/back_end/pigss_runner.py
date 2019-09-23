@@ -8,6 +8,7 @@ from aiohttp_swagger import setup_swagger
 
 from async_hsm import Framework
 from experiments.common.async_helper import log_async_exception
+from experiments.influxdb_retention.time_aggregation_sevice import TimeAggregationService
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.controller_service import \
     ControllerService
@@ -78,6 +79,10 @@ class PigssRunner:
         port_history_service = PortHistoryService()
         port_history_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/port_history/", port_history_service.app)
+
+        time_aggregation_service = TimeAggregationService()
+        time_aggregation_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/time_aggregation/", time_aggregation_service.app)
 
         setup_swagger(self.app)
 

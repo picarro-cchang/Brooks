@@ -12,49 +12,51 @@
                 > db_decimator.start()
 """
 
-import sys
-import math
-import time
-import threading
 import datetime
-from influxdb import InfluxDBClient
+import math
+import sys
+import threading
+import time
 from functools import cmp_to_key
+
+from influxdb import InfluxDBClient
+
+import experiments.influxdb_retention.duration_tools as dt
+import host.experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
+from experiments.influxdb_retention.RT_policy_manager import RT_policy_manager
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from host.experiments.common.rpc_ports import rpc_ports
-import host.experiments.testing.cmd_fifo.CmdFIFO as CmdFIFO
 
-from RT_policy_manager import RT_policy_manager
-import duration_tools as dt
-
-
-influx_comparison_operators = ["=","<>","!=",">",">=","<","<="]
+influx_comparison_operators = ["=", "<>", "!=", ">", ">=", "<", "<="]
 default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
 
-default_settings = {"db_host_address":"localhost",
-                    "db_port":8086,
-                    "db_name":"pigss_sim_data",
-                    "rpc_server_port":rpc_ports["db_decimator"],
-                    "rpc_server_name":"DB Decimator",
-                    "rpc_server_description":"DB Decimator",
-                    "durations":default_durations,
-                    "logger":"DB_Decimator",
-                    "verbose":True,
-                    "master_measurement":"crds",
-                    "time_sleep":5,
-                    "raw_filter_conditions":None,
-                    "start":False,
-                    "retention_policies":{
-                        "autogen":"260w",
-                        "crds_15s":"520w",
-                        "crds_1m":"780w",
-                        "crds_5m":"1040w",
-                        "crds_15m":"1300w",
-                        "crds_1h":"1560w",
-                        "crds_4h":"1820w",
-                        "crds_12h":"2080w",
-                        "crds_1d":"2340w"          
-                        }
-                    }
+default_settings = {
+    "db_host_address": "localhost",
+    "db_port": 8086,
+    "db_name": "pigss_data",
+    "rpc_server_port": rpc_ports["db_decimator"],
+    "rpc_server_name": "DB Decimator",
+    "rpc_server_description": "DB Decimator",
+    "durations": default_durations,
+    "logger": "DB_Decimator",
+    "verbose": True,
+    "master_measurement": "crds",
+    "time_sleep": 5,
+    "raw_filter_conditions": None,
+    "start": False,
+    "retention_policies": {
+        "autogen": "260w",
+        "crds_15s": "520w",
+        "crds_1m": "780w",
+        "crds_5m": "1040w",
+        "crds_15m": "1300w",
+        "crds_1h": "1560w",
+        "crds_4h": "1820w",
+        "crds_12h": "2080w",
+        "crds_1d": "2340w"
+    }
+}
+
 
 class DBDecimatorFactory(object):
     """
@@ -62,7 +64,7 @@ class DBDecimatorFactory(object):
     """
     def create_default_DBDecimator(self):
         """Create DBDecimator with default settings"""
-        return self.create_DBDecimator_with_settings(default_settings) 
+        return self.create_DBDecimator_with_settings(default_settings)
 
     def create_DBDecimator_with_settings(self, settings):
         """Create DBDecimator with provided settings"""
@@ -94,7 +96,7 @@ class DBDecimator(object):
     def __init__(self,
                  db_host_address="localhost",
                  db_port=8086,
-                 db_name="pigss_sim_data",
+                 db_name="pigss_data",
                  rpc_server_port=rpc_ports["db_decimator"],
                  rpc_server_name="DB Decimator",
                  rpc_server_description="DB Decimator",
@@ -105,8 +107,7 @@ class DBDecimator(object):
                  time_sleep=5,
                  raw_filter_conditions=None,
                  retention_policies=None,
-                 start=True
-                 ):
+                 start=True):
         # DB params
         self.db_host_address = db_host_address
         self.db_port = db_port
@@ -130,16 +131,14 @@ class DBDecimator(object):
         # compare passed retention policies to existed and fix existed if needed
         self.rt_policy_manager = RT_policy_manager(client=self.main_client, logger=self.logger)
 
-        ### DELETE THIS SHIT 
+        ### DELETE THIS SHIT
         # self.rt_policy_manager.delete_all_retention_policies()
-
 
         if retention_policies is not None:
             self.rt_policy_manager.compare_and_fix(retention_policies)
 
-
         # how often loop will check for new decimation need
-        if not( isinstance(time_sleep, int) or isinstance(time_sleep, float)) or time_sleep<0:
+        if not (isinstance(time_sleep, int) or isinstance(time_sleep, float)) or time_sleep < 0:
             raise ValueError(f"time_sleep must be an int or float >=0, getting {self.db_name}")
         self.time_sleep = time_sleep
 
@@ -147,7 +146,6 @@ class DBDecimator(object):
         self.rpc_server_port = rpc_server_port
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
-
 
         # durations params
         if durations is None:
@@ -162,10 +160,9 @@ class DBDecimator(object):
         else:
             for condition in raw_filter_conditions:
                 if not check_for_valid_raw_filter_condition(condition):
-                    raise ValueError(f"Bad raw filter condition '{condition}'\n" / 
-                        "Conditions should be a tupple of a form (field, *one of the " / 
-                        "influx comparison operators*, value)"/
-                        "for example ('valve_stable_time', '>', 30)")
+                    raise ValueError(f"Bad raw filter condition '{condition}'\n" /
+                                     "Conditions should be a tupple of a form (field, *one of the " /
+                                     "influx comparison operators*, value)" / "for example ('valve_stable_time', '>', 30)")
             self.raw_filter_conditions = raw_filter_conditions
 
         # concurency stuff
@@ -174,30 +171,32 @@ class DBDecimator(object):
 
         # RPC server
         self.server = CmdFIFO.CmdFIFOServer(("", self.rpc_server_port),
-                                                ServerName=self.rpc_server_name,
-                                                ServerDescription=self.rpc_server_description,
-                                                threaded=True)
+                                            ServerName=self.rpc_server_name,
+                                            ServerDescription=self.rpc_server_description,
+                                            threaded=True)
         self.register_rpc_functions()
 
+        self.auto_start = start
 
-        if start:
+        if self.auto_start:
             self.start()
 
     def get_settings(self):
-        settings = {"db_host_address":self.db_host_address,
-                    "db_port":self.db_port,
-                    "db_name":self.db_name,
-                    "rpc_server_port":self.rpc_server_port,
-                    "rpc_server_name":self.rpc_server_name,
-                    "rpc_server_description":self.rpc_server_description,
-                    "durations":self.durations,
-                    "logger":self.logger.client_name,
-                    "master_measurement":self.master_measurement,
-                    "time_sleep":self.time_sleep,
-                    "raw_filter_conditions":self.get_raw_data_filter(),
-                    "start":False,
-                    "retention_policies":self.rt_policy_manager.get_retention_policies_as_dict()
-                    }
+        settings = {
+            "db_host_address": self.db_host_address,
+            "db_port": self.db_port,
+            "db_name": self.db_name,
+            "rpc_server_port": self.rpc_server_port,
+            "rpc_server_name": self.rpc_server_name,
+            "rpc_server_description": self.rpc_server_description,
+            "durations": self.durations,
+            "logger": self.logger.client_name,
+            "master_measurement": self.master_measurement,
+            "time_sleep": self.time_sleep,
+            "raw_filter_conditions": self.get_raw_data_filter(),
+            "start": self.auto_start,
+            "retention_policies": self.rt_policy_manager.get_retention_policies_as_dict()
+        }
         return settings
 
     def set_settings(self, key, value):
@@ -216,7 +215,7 @@ class DBDecimator(object):
                 return self.add_raw_data_filters(value)
             if key[0] == "retention_policies":
                 return self.rt_policy_manager.create_retention_policy(key[1], value)
-        except Exception as e: #todo specify error
+        except Exception as e:  #todo specify error
             self.logger.error(e)
             return False
         return False
@@ -245,15 +244,16 @@ class DBDecimator(object):
             Method to start thread that will be compressing data
         """
         if not self.thread_created:
-            self.DBDecimatorThread = DBDecimatorThread(parent=self,
-                                                       db_name=self.db_name,
-                                                       db_host_address=self.db_host_address,
-                                                       db_port=self.db_port,
-                                                       master_measurement=self.master_measurement,
-                                                       rt_policy_manager=self.rt_policy_manager,
-                                                       # durations=self.durations,
-                                                       time_sleep = self.time_sleep,
-                                                       logger=self.logger)
+            self.DBDecimatorThread = DBDecimatorThread(
+                parent=self,
+                db_name=self.db_name,
+                db_host_address=self.db_host_address,
+                db_port=self.db_port,
+                master_measurement=self.master_measurement,
+                rt_policy_manager=self.rt_policy_manager,
+                # durations=self.durations,
+                time_sleep=self.time_sleep,
+                logger=self.logger)
             self.thread_created = True
             self.logger.info("DBDecimatorThread loop has started")
         else:
@@ -304,13 +304,12 @@ class DBDecimator(object):
         self.server.register_function(self.get_settings)
         self.server.register_function(self.set_settings)
 
-
     def get_durations(self):
         """Get list of current durations"""
         with self.compression_in_progress_lock:
             durations_return = self.durations.copy()
         return durations_return
-        
+
     def remove_durations(self, durations):
         """
             Remove duration or durations from current decimation process.
@@ -356,14 +355,12 @@ class DBDecimator(object):
         self.logger.info(f"Durations {added_durations} has been added")
         with self.compression_in_progress_lock:
             self.logger.info(f"New durations are {self.durations}")
-        
 
     def get_raw_data_filter(self):
         """Return current filters, which are being applied to a raw data during decimation."""
         with self.compression_in_progress_lock:
             raw_filter_conditions = self.raw_filter_conditions.copy()
         return raw_filter_conditions
-
 
     def remove_all_raw_data_filters(self):
         """Remove all current filters, which are being applied to a raw data during decimation."""
@@ -378,10 +375,9 @@ class DBDecimator(object):
            this method doesn't check for valid field name, potential sql injection here TODO
         """
         if not check_for_valid_raw_filter_condition(condition):
-            raise TypeError(f"Bad raw filter condition '{condition}'\n" / 
-                        "Conditions should be a tupple of a form (field, *one of the " / 
-                        "influx comparison operators*, value)"/
-                        "for example ('valve_stable_time', '>', 30)")
+            raise TypeError(f"Bad raw filter condition '{condition}'\n" /
+                            "Conditions should be a tupple of a form (field, *one of the " /
+                            "influx comparison operators*, value)" / "for example ('valve_stable_time', '>', 30)")
 
         with self.compression_in_progress_lock:
             self.raw_filter_conditions.append(condition)
@@ -393,22 +389,22 @@ class DBDecimator(object):
         if not isinstance(conditions, list):
             conditions = [conditions]
         for condition in conditions:
-           self.add_raw_data_filter(condition)
-        return True 
-
+            self.add_raw_data_filter(condition)
+        return True
 
 
 class DBDecimatorThread(threading.Thread):
-    def __init__(self,
-                 parent,
-                 db_name,
-                 db_host_address,
-                 db_port,
-                 master_measurement,
-                 rt_policy_manager,
-                 # durations,
-                 logger=None,
-                 time_sleep=5):
+    def __init__(
+            self,
+            parent,
+            db_name,
+            db_host_address,
+            db_port,
+            master_measurement,
+            rt_policy_manager,
+            # durations,
+            logger=None,
+            time_sleep=5):
         threading.Thread.__init__(self, name="DBDecimatorThread")
         self.parent = parent
         self.db_name = db_name
@@ -457,7 +453,7 @@ class DBDecimatorThread(threading.Thread):
         if "." in measurement:
             # check if valid
             dot = measurement.index(".")
-            if not measurement[:dor] == measurement[dot+1:]:
+            if not measurement[:dot] == measurement[dot + 1:]:
                 # if '.' is part of the measurement, it means that the part before it - a retentiona policy name
                 # current convention is that retention policy should have same name as measurement in it
                 # only one measurement allowed per retention policy
@@ -487,7 +483,6 @@ class DBDecimatorThread(threading.Thread):
         rs = self.client.query(query)
         return [(row["fieldKey"], row["fieldType"]) for key, row_gen in rs.items() for row in row_gen]
 
-
     def get_last_decimation_timestamp(self, measurement):
         """get the time of the last decimation"""
         query = f"""SELECT last_decimation 
@@ -501,22 +496,16 @@ class DBDecimatorThread(threading.Thread):
 
     def record_decimation_timestamp(self, timestamp, src_meas):
         self.client.write_points([{
-                    "measurement": f"{self.master_measurement}_workspace",
-                    "fields": {
-                        "last_decimation": int(timestamp)
-                    },
-                    "tags": {
-                        "meas_name": src_meas
-                    }
-                }])
+            "measurement": f"{self.master_measurement}_workspace",
+            "fields": {
+                "last_decimation": int(timestamp)
+            },
+            "tags": {
+                "meas_name": src_meas
+            }
+        }])
 
-    def compress_measurement(self,
-                             src_meas,
-                             dest_meas,
-                             field_key,
-                             duration,
-                             start_time_ms,
-                             stop_time_ms):
+    def compress_measurement(self, src_meas, dest_meas, field_key, duration, start_time_ms, stop_time_ms):
         self.rt_policy_manager.make_sure_policy_exists(dest_meas)
 
         src_meas = self.to_rp(src_meas)
@@ -539,7 +528,7 @@ class DBDecimatorThread(threading.Thread):
                         FROM     ({subquery3}) 
                         GROUP BY time({duration}), *"""
         # calculate mean of the big time period and put it in bigger period table
-        subquery1 =f"""SELECT   sum_tot/sum_count AS "mean_{field_key}", 
+        subquery1 = f"""SELECT   sum_tot/sum_count AS "mean_{field_key}", 
                                 sum_count         AS "count_{field_key}", 
                                 min               AS "min_{field_key}", 
                                 max               AS "max_{field_key}" 
@@ -550,7 +539,7 @@ class DBDecimatorThread(threading.Thread):
         return rs.error, time.time() - start
 
     def compress_raw_data(self, start_time_ms, stop_time_ms, src_meas, dest_meas, sort_time):
-        # compress original data, collect Min, Max, Mean and Count from it and 
+        # compress original data, collect Min, Max, Mean and Count from it and
         # store it in the smallest requested resolution
 
         self.rt_policy_manager.make_sure_policy_exists(dest_meas)
@@ -558,7 +547,7 @@ class DBDecimatorThread(threading.Thread):
         src_meas = self.to_rp(src_meas)
         dest_meas = self.to_rp(dest_meas)
         conditions_str = ""
-        if len(self.parent.raw_filter_conditions)>0:
+        if len(self.parent.raw_filter_conditions) > 0:
             for condition in self.parent.raw_filter_conditions:
                 conditions_str = f"{conditions_str} AND {condition[0]}{condition[1]}{condition[2]}"
         query = f"""SELECT   Min(*), 
@@ -585,7 +574,6 @@ class DBDecimatorThread(threading.Thread):
         measurement = f"{self.master_measurement}_workspace"
         query = f"drop {measurement}"
 
-
     def run(self):
         # start the loop
         while True:
@@ -597,14 +585,15 @@ class DBDecimatorThread(threading.Thread):
             if not self._pause_event.is_set():
                 with self.parent.compression_in_progress_lock:
                     dest_duration_ms = self.parent.durations_ms[0]
-                    start_time_ms, stop_time_ms, last_recorded_timestamp = self.get_start_stop_last(self.master_measurement, dest_duration_ms)
+                    start_time_ms, stop_time_ms, last_recorded_timestamp = self.get_start_stop_last(
+                        self.master_measurement, dest_duration_ms)
 
                     if stop_time_ms > start_time_ms:
                         # time to decimate has come
 
                         # first, decimate raw data
-                        self.logger.debug(ghrdm(dest_duration_ms,start_time_ms,stop_time_ms))
-                         # we can do it for all fields at once this way
+                        self.logger.debug(ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
+                        # we can do it for all fields at once this way
                         dest_meas = f"{self.master_measurement}_{self.parent.durations[0]}"
 
                         self.compress_raw_data(start_time_ms=start_time_ms,
@@ -615,21 +604,23 @@ class DBDecimatorThread(threading.Thread):
 
                         # then, in a loop, decimate all smaller resolutions if needed
                         for src_duration, dest_duration, dest_duration_ms in self.parent.durations_map:
-                            src_meas = f"{self.master_measurement}_{src_duration}" 
+                            src_meas = f"{self.master_measurement}_{src_duration}"
                             dest_meas = f"{self.master_measurement}_{dest_duration}"
 
-                            start_time_ms, stop_time_ms, last_recorded_timestamp = self.get_start_stop_last(src_meas, dest_duration_ms)
+                            start_time_ms, stop_time_ms, last_recorded_timestamp = self.get_start_stop_last(
+                                src_meas, dest_duration_ms)
 
                             if last_recorded_timestamp is None or stop_time_ms <= start_time_ms:
                                 break
-                            self.logger.debug(ghrdm(dest_duration_ms,start_time_ms,stop_time_ms))
-                            for field_key, field_type in self.get_field_keys(self.master_measurement):  #here we need to do it for each field
+                            self.logger.debug(ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
+                            for field_key, field_type in self.get_field_keys(
+                                    self.master_measurement):  #here we need to do it for each field
                                 if field_type in ['float', 'integer']:
-                                    err, comp_time = self.compress_measurement(src_meas= src_meas,
-                                                                               dest_meas= dest_meas,
-                                                                               field_key= field_key,
-                                                                               duration= dest_duration,
-                                                                               start_time_ms= start_time_ms,
+                                    err, comp_time = self.compress_measurement(src_meas=src_meas,
+                                                                               dest_meas=dest_meas,
+                                                                               field_key=field_key,
+                                                                               duration=dest_duration,
+                                                                               start_time_ms=start_time_ms,
                                                                                stop_time_ms=stop_time_ms)
 
                             self.record_decimation_timestamp(timestamp=stop_time_ms, src_meas=src_meas)
@@ -638,13 +629,14 @@ class DBDecimatorThread(threading.Thread):
         self.logger.info("DBDecimator loop has ended")
 
 
-def ghrdm(dest_duration_ms, start_time_ms, stop_time_ms): # generate_human_readable_decimation_message
-    dest_duration_ms = dt.generate_duration_literal(int(dest_duration_ms/1000))
+def ghrdm(dest_duration_ms, start_time_ms, stop_time_ms):  # generate_human_readable_decimation_message
+    dest_duration_ms = dt.generate_duration_literal(int(dest_duration_ms / 1000))
     start_time_ms /= 1000
     stop_time_ms /= 1000
     start_time_ms = datetime.datetime.fromtimestamp(start_time_ms).strftime('%Y-%m-%d %H:%M:%S')
     stop_time_ms = datetime.datetime.fromtimestamp(stop_time_ms).strftime('%Y-%m-%d %H:%M:%S')
-    return f'Decimating to: {dest_duration_ms} , from {start_time_ms} ms to {stop_time_ms} ms'
+    return f'Decimating to: {dest_duration_ms} , from {start_time_ms} to {stop_time_ms}'
+
 
 def check_for_valid_raw_filter_condition(condition):
     """
@@ -654,10 +646,8 @@ def check_for_valid_raw_filter_condition(condition):
         return False
     if condition[1] not in influx_comparison_operators:
         return False
-    if not (isinstance(condition[2], int) or 
-            isinstance(condition[2], float) or
-            isinstance(condition[2], str) and condition[2].isdigit()
-            ):
+    if not (isinstance(condition[2], int) or isinstance(condition[2], float)
+            or isinstance(condition[2], str) and condition[2].isdigit()):
         return False
     return True
 
@@ -684,8 +674,8 @@ def parse_arguments():
     parser.add_argument('-a', '--address', help='InfluxDB address', default="localhost")
     parser.add_argument('-p', '--port', help='InfluxDB port', default=8086)
     parser.add_argument('-m', '--measurement', help='Name of the measurement to be decimated', default="crds")
-    parser.add_argument('-n', '--db_name', help='Database name', default="pigss_sim_data")
-    
+    parser.add_argument('-n', '--db_name', help='Database name', default="pigss_data")
+
     # parser.add_argument('-v', '--verbose', help='Verbose', default=False, action="store_true")
 
     args = parser.parse_args()
@@ -716,8 +706,6 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
 
 #todo
 #   test on real data when there will be one

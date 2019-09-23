@@ -28,3 +28,6 @@ class PigssConfig:
 
     def get_services(self):
         return self.config["Services"]
+
+    def get_time_series_database(self):
+        return self.config["Configuration"]["Database"]

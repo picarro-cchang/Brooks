@@ -1,29 +1,35 @@
 import asyncio
-import time
-
-import aiohttp
-import aiohttp_cors
-import attr
-from aiohttp import web
-from aiohttp_swagger import setup_swagger
-
-from calendar import timegm
 from collections import namedtuple
-from datetime import datetime
+
+from aiohttp import web
 from aioinflux import InfluxDBClient, iterpoints
 
-from host.experiments.state_machine.back_end.pigss_config import PigssConfig
+import experiments.influxdb_retention.duration_tools as dt
 
 
-@attr.s
-class HttpHandlers:
-    app = attr.ib(None)
-    runner = attr.ib(None)
-    tasks = attr.ib(factory=list)
-    client = attr.ib(None)
-    durations = attr.ib(factory=lambda: ["15s", "1m", "5m", "15m", "1h"])  #, "4h", "12h", "24h"])
-    durations_ms = attr.ib(
-        factory=lambda: [15000, 1 * 60000, 5 * 60000, 15 * 60000, 1 * 3600000, 4 * 3600000, 12 * 3600000, 24 * 3600000])
+class TimeAggregationService:
+    def __init__(self):
+        self.tasks = []
+        self.app = web.Application()
+        self.app.router.add_route("GET", "/", self.health_check)
+        self.app.router.add_route("GET", "/search", self.search)
+        self.app.router.add_route("POST", "/search", self.search)
+        self.app.router.add_route("GET", "/tag-keys", self.tag_keys)
+        self.app.router.add_route("POST", "/tag-keys", self.tag_keys)
+        self.app.router.add_route("POST", "/tag-values", self.tag_values)
+        self.app.router.add_route("POST", "/query", self.query)
+        self.app.on_startup.append(self.on_startup)
+        self.app.on_shutdown.append(self.on_shutdown)
+        self.default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
+        self.default_durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.default_durations]
+        self.client = None
+
+    async def on_startup(self, app):
+        db_config = self.app['farm'].config.get_time_series_database()
+        self.client = InfluxDBClient(host=db_config["server"], port=db_config["port"], db=db_config["name"])
+
+    async def on_shutdown(self, app):
+        print("Aggregate Source Service is shutting down")
 
     async def health_check(self, request):
         return web.Response(text='This datasource is healthy.')
@@ -34,7 +40,7 @@ class HttpHandlers:
         description: Returns field names in the crds measurement
 
         tags:
-            -   Grafana JSON source from InfluxDB
+            -   Time aggregated data source server
         summary: Get field names in crds measurement
         produces:
             -   application/json
@@ -51,7 +57,7 @@ class HttpHandlers:
         description: Returns tag names in the crds measurement
 
         tags:
-            -   Grafana JSON source from InfluxDB
+            -   Time aggregated data source server
         summary: Get tag names in crds measurement
         produces:
             -   application/json
@@ -68,7 +74,7 @@ class HttpHandlers:
         description: request values associated with a given tag
 
         tags:
-            -   Grafana JSON source from InfluxDB
+            -   Time aggregated data source server
         summary: request values for a given tag
         consumes:
             -   application/json
@@ -104,7 +110,7 @@ class HttpHandlers:
         description: Make a query to the database
 
         tags:
-            -   Grafana JSON source from InfluxDB
+            -   Time aggregated data source server
         summary: make a query to the database
         consumes:
             -   application/json
@@ -176,7 +182,7 @@ class HttpHandlers:
             # interval_ms = int(req['scopedVars']['__interval_ms']['value'])
             range_ms = stop_time_ms - start_time_ms
             # Determine which resolution to use to satisfy the request
-            for which, duration_ms in enumerate(self.durations_ms):
+            for which, duration_ms in enumerate(self.default_durations_ms):
                 if range_ms < max_data_points * duration_ms:
                     break
             # which is probably best, but check all coarser resolutions in case one
@@ -186,16 +192,18 @@ class HttpHandlers:
             #  when these are sorted into ascending order, the first entry with data_points < max_data_points
             #  is the one we use
 
-            Candidate = namedtuple("Candidate", ['start_time_offset', 'duration_ms', 'duration', 'data_points'])
+            # Candidate = namedtuple("Candidate", ['start_time_offset', 'duration_ms', 'duration', 'data_points'])
+            Candidate = namedtuple("Candidate", ['duration_ms', 'duration', 'data_points'])
             candidates = []
-            for duration, duration_ms in zip(self.durations[which:], self.durations_ms[which:]):
+            for duration, duration_ms in zip(self.default_durations[which:], self.default_durations_ms[which:]):
                 rs = await self.client.query(
                     f'SELECT "mean_{target}" FROM crds_{duration}.crds_{duration} '
                     f'WHERE {where_clause} time>={start_time_ms}ms AND time<{stop_time_ms}ms ORDER BY time ASC LIMIT 1',
                     epoch='ms')
                 times = [result[0] for result in iterpoints(rs)]
                 if times:
-                    candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
+                    # candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
+                    candidates.append(Candidate(duration_ms, duration, range_ms // duration_ms))
             if which == 0:
                 # Also need to consider the undecimated data
                 rs = await self.client.query(
@@ -209,7 +217,8 @@ class HttpHandlers:
                     epoch='ms')
                 counts = [result[1] for result in iterpoints(rs)]
                 if times:
-                    candidates.append(Candidate(abs(times[0] - start_time_ms), 0, '0', counts[0] // 2))
+                    # candidates.append(Candidate(abs(times[0] - start_time_ms), 0, '0', counts[0] // 2))
+                    candidates.append(Candidate(0, '0', counts[0] // 2))
             good_candidates = [candidate for candidate in candidates if candidate.data_points <= max_data_points]
             good_candidates.sort()
             best_duration = good_candidates[0].duration
@@ -261,62 +270,3 @@ class HttpHandlers:
                 filt['value'] = value
             result.append('"{key}"{operator}{value}'.format(**filt))
         return ' AND '.join(result).strip()
-
-    async def server_init(self, port):
-        self.client = InfluxDBClient(host='localhost', port=8086, db='pigss_data')  # Host/Port for InfluxDB
-        app = web.Application()
-        self.app = app
-        app.on_shutdown.append(self.on_shutdown)
-        cors = aiohttp_cors.setup(
-            app, defaults={"*": aiohttp_cors.ResourceOptions(
-                allow_credentials=True,
-                expose_headers="*",
-                allow_headers="*",
-            )})
-
-        app.add_routes([
-            web.get('/', self.health_check),
-            web.get('/search', self.search),
-            web.post('/search', self.search),
-            web.get('/tag-keys', self.tag_keys),
-            web.post('/tag-keys', self.tag_keys),
-            web.post('/tag-values', self.tag_values),
-            web.post('/query', self.query)
-        ])
-        setup_swagger(app)
-
-        for route in app.router.routes():
-            cors.add(route)
-
-        self.runner = web.AppRunner(app)
-        await self.runner.setup()
-        site = web.TCPSite(self.runner, '0.0.0.0', port)
-        await site.start()
-        return app
-
-    async def on_shutdown(self, app):
-        return
-
-    async def shutdown(self):
-        for task in self.tasks:
-            task.cancel()
-        await self.app.shutdown()
-        await self.app.cleanup()
-        await self.runner.cleanup()
-
-    async def startup(self):
-        self.tasks.append(asyncio.create_task(self.server_init(5000)))
-
-
-if __name__ == "__main__":
-    handlers = HttpHandlers()
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(handlers.startup())
-    try:
-        loop.run_forever()
-    except KeyboardInterrupt:
-        print('Stop server begin')
-    finally:
-        loop.run_until_complete(handlers.shutdown())
-        loop.close()
-    print('Stop server end')

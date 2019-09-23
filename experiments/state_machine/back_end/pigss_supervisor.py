@@ -13,6 +13,7 @@ from experiments.common.async_helper import log_async_exception
 from experiments.common.rpc_ports import rpc_ports
 from experiments.IDriver.DBWriter.InfluxDBWriter import InfluxDBWriter
 from experiments.IDriver.IDriver import PicarroAnalyzerDriver
+from experiments.influxdb_retention.DB_Decimator import DBDecimatorFactory
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.madmapper.madmapper import MadMapper
 from experiments.mfc_driver.alicat.alicat_driver import AlicatDriver
@@ -271,6 +272,7 @@ class PigssSupervisor(Ahsm):
         return
 
     async def setup_drivers(self, at_start=True):
+        db_config = self.farm.config.get_time_series_database()
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
             if dev_params['Driver'] == 'PigletDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
@@ -323,7 +325,9 @@ class PigssSupervisor(Ahsm):
                                                 ping_interval,
                                                 at_start,
                                                 instrument_ip_address=dev_params['IP'],
-                                                database_writer=InfluxDBWriter(),
+                                                database_writer=InfluxDBWriter(address=db_config["server"],
+                                                                               db_port=db_config["port"],
+                                                                               db_name=db_config["name"]),
                                                 rpc_server_port=dev_params['RPC_Port'],
                                                 rpc_server_name=name,
                                                 start_now=True,
@@ -335,6 +339,7 @@ class PigssSupervisor(Ahsm):
                                                 })
 
     async def setup_services(self, at_start=True):
+        db_config = self.farm.config.get_time_series_database()
         for service in self.service_list:
             name = service["Name"]
             if name == "RpcServer":
@@ -348,6 +353,25 @@ class PigssSupervisor(Ahsm):
                                                 at_start,
                                                 rpc_port=rpc_port,
                                                 **service.get("Parameters", {}))
+            elif name == "DBDecimator":
+                if at_start or not self.wrapped_processes[name].process.is_alive():
+
+                    def DBDecimator(**k):
+                        return DBDecimatorFactory().create_DBDecimator_with_settings(k)
+
+                    rpc_port = service["RPC_Port"]
+                    wrapped_process = ProcessWrapper(DBDecimator, rpc_port, name, dev_name="Service")
+                    params = {
+                        **dict(db_host_address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"]),
+                        **service.get("Parameters", {})
+                    }
+                    await self.register_process(name,
+                                                wrapped_process,
+                                                name,
+                                                ping_interval,
+                                                at_start,
+                                                rpc_server_port=rpc_port,
+                                                **params)
             elif name.startswith("AnalyzerSimulator"):
                 if at_start or not self.wrapped_processes[name].process.is_alive():
                     rpc_port = service["RPC_Port"]

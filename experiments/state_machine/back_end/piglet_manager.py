@@ -74,6 +74,11 @@ class PigletManager(Ahsm):
     def _manager(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            now = time.time()
+            # Call handle_valve_position to establist the valve_pos tag and valve_stable_time field
+            #  in the data
+            for analyzer_rpc_name in self.picarro_analyzers:
+                asyncio.create_task(self.handle_valve_position(ValvePositionPayload(now, 0, 0)))
             self.piglet_status_te.postEvery(self, POLL_PERIOD)
             return self.handled(e)
         elif sig == Signal.EXIT:

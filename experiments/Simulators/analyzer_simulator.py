@@ -29,6 +29,7 @@ class Analyzer:
     source = attr.ib(type=str)
     mode = attr.ib(type=str)
     interval = attr.ib(type=float)
+    seed = attr.ib(type=int, default=98765)
 
 
 SimEvent = namedtuple('SimEvent', ['when', 'seq', 'gen'])
@@ -119,6 +120,7 @@ class Driver:
         self.register_rpc_functions()
         self.sim = sim
         self.analyzer = analyzer
+        np.random.seed(seed=analyzer.seed)
         time_origin = time.time()
         self.sim_meas = {species: SimMeas(species, 32, time_origin) for species in self.analyzer.species}
         self.sim.enqueue_task(time_origin + analyzer.interval, self.calc_data_task(analyzer))
