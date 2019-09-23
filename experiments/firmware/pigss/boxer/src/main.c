@@ -239,6 +239,8 @@ int main(void) {
   // will schedule the read task, which will then schedule the next trigger.
   pressure_mpr_trigger_task();
 
+  
+
   // The main loop
   for(;;) {
 

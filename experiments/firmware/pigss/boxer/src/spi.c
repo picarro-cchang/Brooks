@@ -12,6 +12,9 @@
 // flash.
 #include <avr/pgmspace.h>
 
+// Convenience macros for setting and clearing bits
+#include "avr035.h"
+
 // Provides logger_msg and logger_msg_p for log messages tagged with a
 // system and severity.
 #include "logger.h"
@@ -49,6 +52,8 @@ void spi_init() {
   // The data is sampled on the clock's rising edge (CPHA = 0) by default
 
   // Leave the data sent MSB first
+  CLEARBIT(SPCR,DORD);
+  // SETBIT(SPCR,DORD);
 
   // Set master mode
   SPCR |= _BV(MSTR);

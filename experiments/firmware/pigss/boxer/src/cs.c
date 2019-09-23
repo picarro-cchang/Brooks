@@ -51,7 +51,7 @@ void cs_init() {
   SETBIT(DDRF,DDF0);
 
   // Enable the Topaz A shift register
-  manifold_a_sr_noe(0);
+  cs_manifold_a_sr_noe(0);
 
   //*************************** Topaz B ****************************//
 
@@ -74,12 +74,12 @@ void cs_init() {
   SETBIT(DDRF,DDF1);
 
   // Enable the Topaz B shift register
-  manifold_b_sr_noe(0);
+  cs_manifold_b_sr_noe(0);
 
   return;
 }
 
-int8_t manifold_a_sr_noe(uint8_t state) {
+int8_t cs_manifold_a_sr_noe(uint8_t state) {
   if ( state ) {
     // Set nOE high to disable shift register
     SETBIT(PORTE,PORTE3);
@@ -92,7 +92,7 @@ int8_t manifold_a_sr_noe(uint8_t state) {
   return 0;
 }
 
-int8_t manifold_b_sr_noe(uint8_t state) {
+int8_t cs_manifold_b_sr_noe(uint8_t state) {
   if ( state ) {
     // Set nOE high to disable shift register
     SETBIT(PORTE,PORTE4);

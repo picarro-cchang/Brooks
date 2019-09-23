@@ -36,7 +36,6 @@
 
 #include "mpr.h"
 
-
 int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
   int8_t retval = 0;
   // Write 0xaa, followed by 0x0 and 0x0 to trigger the measurement
@@ -66,14 +65,16 @@ int8_t mpr_trigger( void (*cs_ptr)(uint8_t) ) {
     }
     tries++;
   }
-  if (status_byte != 0x40 && status_byte != 0x60) {
-    // The correct status byte is 0x40, but 0x60 means the MPR is busy
+
+  // Return cs high to release MISO
+  (*cs_ptr)(1);
+
+  if (status_byte != 0x40) {
+    // The correct status byte is 0x40
     logger_msg_p("mpr", log_level_ERROR, PSTR("MPR trigger --> 0x%x after %i tries"),
-		 status_byte, tries);
+    		 status_byte, (tries -1));
     retval += -1;
   }
-  // Return cs high
-  (*cs_ptr)(1);
 
   return retval;
 }
@@ -88,7 +89,6 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
   } data_union;
 
   data_union.word = 0;
-
 
   // Pull cs low
   (*cs_ptr)(0);
@@ -112,22 +112,23 @@ int8_t mpr_read( void (*cs_ptr)(uint8_t), uint32_t *data_ptr ) {
 	tries++;
       }
 
-      if (status_byte != 0x40) {
-	// The correct status byte is 0x40
-	logger_msg_p("mpr", log_level_ERROR, PSTR("MPR read --> 0x%x after %i tries"),
-		     status_byte, tries);
-	retval += -1;
-      }
     } else {
       // The lower 3 bytes will be sensor data
       data_union.bytes[bytenum] = spi_write(0);
     }
   }
-  logger_msg_p("mpr", log_level_DEBUG, PSTR("Pressure code 0x%lx"),data_union.word);
-  *data_ptr = data_union.word;
-
-  // Return cs high
+  // Return cs high to release MISO
   (*cs_ptr)(1);
 
+  *data_ptr = data_union.word;
+
+  if (status_byte != 0x40) {
+    // There was a problem reading, even after all the retries.
+    logger_msg_p("mpr", log_level_ERROR, PSTR("MPR read --> 0x%x after %i tries"),
+		 status_byte, (tries - 1));
+    retval += -1;
+  }
+
+  logger_msg_p("mpr", log_level_DEBUG, PSTR("Pressure code 0x%lx"),data_union.word);
   return retval;
 }
