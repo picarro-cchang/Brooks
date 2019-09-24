@@ -25,6 +25,8 @@ set loglevel debug
 
 set root_directory [file dirname $argv0]
 
+package require math::statistics
+
 # ---------------------- Command line parsing -------------------------
 package require cmdline
 set usage "usage: [file tail $argv0] \[options]"
@@ -132,6 +134,17 @@ proc get_time_string {start_time_ms} {
     set time_string [format "%s.%03d" [clock format [expr int($time_now_s)] -format \
 					   $time_format] $ms_remainder]
     return $time_string
+}
+
+proc lmean  L {
+    expr ([join $L +])/[llength $L].
+}
+
+proc get_channel_list {dict_list channel} {
+    foreach cycle_dict $dict_list {
+	lappend channel_list [dict get $cycle_dict $channel pressure]
+    }
+    return $channel_list
 }
 
 # Testing the logger
@@ -293,6 +306,51 @@ set readings [expr 10 * [llength $read_cycle_list]]
 set duration_ms [expr $last_time - $first_time]
 set read_rate [expr (double($readings) * 1000) / $duration_ms]
 puts "Took $readings readings in $duration_ms ms at [format "%0.2f" $read_rate] Hz"
+
+unset table_dict
+unset format_string
+unset header_list
+set column_width 20
+
+dict set table_dict "channel" width $column_width
+dict set table_dict "channel" description "Channel"
+
+dict set table_dict "mean" width $column_width
+dict set table_dict "mean" description "Mean"
+
+dict set table_dict "std" width $column_width
+dict set table_dict "std" description "Std Dev"
+
+
+
+foreach column [dict keys $table_dict] {
+    append format_string "%-*s "
+    lappend header_list [dict get $table_dict $column width]
+    lappend header_list [dict get $table_dict $column description]
+}
+set format_string [string trim $format_string]
+set header [format $format_string {*}$header_list]
+
+puts ""
+puts $header
+
+puts [dashline [string length $header]]
+
+
+set channel_list [list 1 2 3 4 5 6 7 8 "outlet a" "outlet b"]
+foreach channel $channel_list {
+    unset row_list
+    lappend row_list $column_width
+    lappend row_list $channel
+    lappend row_list $column_width
+    lappend row_list [format "%0.0f" \
+			  [math::statistics::mean [get_channel_list $read_cycle_list $channel]]]
+    lappend row_list $column_width
+    lappend row_list [format "%0.0f" \
+			  [math::statistics::pstdev [get_channel_list $read_cycle_list $channel]]]
+    puts [format $format_string {*}$row_list]
+}
+
 
 
 
