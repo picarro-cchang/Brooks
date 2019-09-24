@@ -17,6 +17,8 @@
 #  2019 0509:  merge AMADS with SADS_DCRDS
 #  2019 0905:  Updated pressure and temperature corrections for HCl measurement
 #           :  remove NH3_update_offset=-0.294 offset since Dual cavity will only run DCRDS, and offset will be set per instrument
+#  2019 0920:  Added -2.8 torr offset to normalized pressure correction to account for SADS true pressure to be 137.2torr
+#              measured on golden SADS2004 20190920
 
 import os
 import sys
@@ -285,7 +287,7 @@ except:
 
 try:
     if "hcl_conc" in _DATA_:  
-        pressureDiff = _DATA_["Cavity2Pressure"] - 140.0
+        pressureDiff = _DATA_["Cavity2Pressure"] - (140.0 - 2.8)
         tempDiff = _DATA_["Cavity2Temp"] - _DATA_["CavityTemp"]
         HCl_P_corr = applyLinear(pressureDiff,HCl_P_correction) 
         H2O_a_P_corr = applyLinear(pressureDiff,H2O_a_P_correction)
