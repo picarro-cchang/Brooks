@@ -69,7 +69,9 @@ export interface PlanPanelOptions {
   setFocus: (row: number, column: number) => void;
   ws_sender: (o: object) => void;
   refVisible: boolean;
-  onCancelOkClick: () => void;
+  onCancelClick: () => void;
+  onOkClick: () => void;
+
 }
 
 export enum PlanPanelTypes {

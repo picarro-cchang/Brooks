@@ -145,7 +145,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_ok"})
-                                        this.props.onCancelOkClick();
+                                        this.props.onOkClick();
                                     }}
                                     className={"btn btn-block btn-success btn-group"}>
                                 OK
@@ -155,7 +155,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_cancel"});
-                                        this.props.onCancelOkClick();
+                                        this.props.onCancelClick();
                                     }}
                                     className={"btn btn-block btn-danger btn-group"} >
                                 Cancel

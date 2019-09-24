@@ -100,7 +100,8 @@ export class Main extends Component<any, any> {
     options: {
       panel_to_show: 0
     },
-    refVisible: this.props.refVisible,
+    refVisible: false,
+    isModal: false
   };
   constructor(props) {
     super(props);
@@ -164,7 +165,7 @@ export class Main extends Component<any, any> {
   }
 
   handleData(data: any) {
-    console.log("Receiving from websocket", data);
+    //console.log("Receiving from websocket", data);
     const o = JSON.parse(data);
     if (this.state.initialized) {
       if ("uistatus" in o) {
@@ -178,26 +179,35 @@ export class Main extends Component<any, any> {
       else if ("modal_info" in o) {
         const modal_info = deepmerge(this.state.modal_info, o.modal_info);
         this.setState({ modal_info });
+        this.setState({isModal: true})
       }
     }
   }
 
   ws_sender = (o: object) => {
-    console.log("Sending to websocket:", o);
+   // console.log("Sending to websocket:", o);
     this.ws.send(JSON.stringify(o));
   };
 
+  shouldComponentUpdate() {
+    return (!this.state.modal_info.show);
+  }
 
-  // switchPanel(value){
-  //   this.setState({plan:{panel_to_show: value}} );
-  //   console.log(this.state.plan.panel_to_show)
-  // }
+  componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>): void {
+    if (prevState.modal_info.show != this.state.modal_info.show ) {
+
+    }
+  }
 
   onEditClick () {
+    event.preventDefault();
     this.setState({refVisible: true})
   }
-  onCancelOkClick () {
+  onCancelClick () {
+    event.preventDefault();
     this.setState({refVisible: false})
+  }
+  onOkClick() {
   }
 
   render() {
@@ -211,8 +221,8 @@ export class Main extends Component<any, any> {
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
-                       ws_sender={this.ws_sender} onCancelOkClick={this.onCancelOkClick.bind(this)}
-            refVisible={this.state.refVisible}/>
+                       ws_sender={this.ws_sender} onCancelClick={this.onCancelClick.bind(this)}
+                       onOkClick={this.onOkClick.bind(this)} refVisible={this.state.refVisible}/>
         );
         break;
       case PlanPanelTypes.LOAD:
@@ -262,7 +272,6 @@ export class Main extends Component<any, any> {
 
     }
 
-    console.log(this.state.refVisible);
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">

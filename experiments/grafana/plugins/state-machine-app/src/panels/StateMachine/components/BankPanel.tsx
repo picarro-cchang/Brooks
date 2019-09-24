@@ -42,7 +42,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         let test = {}
 
         if ("bank" in (this.props.uistatus as any)) {
-            console.log("In bankPanel.render", this.props.uistatus);
+            //console.log("In bankPanel.render", this.props.uistatus);
             const bankStatus: string = (this.props.uistatus.bank as any)[this.props.bank];
             const channelStatus: {[key:number]: string} = (this.props.uistatus.channel as any)[this.props.bank];
             const cleanStatus: string = (this.props.uistatus.clean as any)[this.props.bank];
