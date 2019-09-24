@@ -33,6 +33,7 @@ set options {
     {b.arg "mega" "Board name"}
     {o.arg "pscan" "Output file name base"}
     {n.arg "20" "Number of read cycles"}
+    {r.arg "10" "Read rate (Hz)"}
 }
 
 try {
@@ -143,24 +144,6 @@ ${log}::debug "Debug message"
 ${log}::info "Info message"
 ${log}::warn "Warn message"
 
-############################## tcltest ###############################
-package require tcltest
-tcltest::configure -singleproc true
-
-set skiplist [list]
-# lappend skiplist chanset.*
-# lappend skiplist slotid*
-# lappend skiplist slotid?*
-# lappend skiplist standby*
-
-tcltest::configure -skip $skiplist
-
-# Only run the channel locations test.  Comment this out to run all
-# tests.
-# tcltest::configure -file "channel_locations.test"
-
-# Set verbosity to print output when a test passes
-tcltest::configure -verbose {body pass start error}
 
 source connection.tcl
 source boxer.tcl
@@ -218,6 +201,8 @@ try {
     puts $message
 }
 
+set read_period_ms [expr double(1000)/$params(r)]
+
 # Wait for system to start reading pressures
 after 5000
 
@@ -257,17 +242,25 @@ foreach read_cycle [iterint 0 $params(n)] {
     set pressure_channels {1 2 3 4 5 6 7 8}
     foreach pressure_channel $pressure_channels {
 	boxer::sendcmd $channel "prs.in.raw? $pressure_channel"
+	set cycle_start_time_ms [clock milliseconds]
 	set return_value [boxer::readline $channel]
 	dict set measurement_dict $pressure_channel pressure $return_value
 	dict set measurement_dict $pressure_channel time_string [get_time_string $start_time_ms]
 	dict set measurement_dict $pressure_channel unix_time_ms [clock milliseconds]
+	while {[expr [clock milliseconds] - $cycle_start_time_ms] < $read_period_ms} {
+	    after 1
+	}
     }
     foreach [list channel_name pressure_channel] [list "outlet a" 1 "outlet b" 2] {
 	boxer::sendcmd $channel "prs.out.raw? $pressure_channel"
+	set cycle_start_time_ms [clock milliseconds]
 	set return_value [boxer::readline $channel]
 	dict set measurement_dict $channel_name pressure $return_value
 	dict set measurement_dict $channel_name time_string [get_time_string $start_time_ms]
 	dict set measurement_dict $channel_name unix_time_ms [clock milliseconds]
+	while {[expr [clock milliseconds] - $cycle_start_time_ms] < $read_period_ms} {
+	    after 1
+	}
     }
     set row_list [list]
     # Create a list of dictionaries for later analysis
