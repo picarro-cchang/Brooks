@@ -145,7 +145,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  logger_setsystem( "mpr" );
+  // logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -239,7 +239,7 @@ int main(void) {
   // will schedule the read task, which will then schedule the next trigger.
   pressure_mpr_trigger_task();
 
-  
+  // cs_manifold_a_sr_noe(1);
 
   // The main loop
   for(;;) {
