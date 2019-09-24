@@ -52,6 +52,7 @@
             <fpga_register offset="FPGA_KERNEL">INTRONIX_3</fpga_register>
             <fpga_register offset="FPGA_KERNEL">STATUS_LED</fpga_register>
             <fpga_register offset="FPGA_KERNEL">FAN</fpga_register>
+            <fpga_register offset="FPGA_KERNEL">SEL_DETECTOR_MODE</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 1 Parameters</title>
@@ -484,6 +485,8 @@
             <title>Ringdown Manager Parameters</title>
             <register>RDD_BALANCE_REGISTER</register>
             <register>RDD_GAIN_REGISTER</register>
+            <register>RDD2_BALANCE_REGISTER</register>
+            <register>RDD2_GAIN_REGISTER</register>
             <fpga_register offset="FPGA_RDMAN">CONTROL</fpga_register>
             <!-- <fpga_register offset="FPGA_RDMAN">STATUS</fpga_register> -->
             <fpga_register offset="FPGA_RDMAN">OPTIONS</fpga_register>
