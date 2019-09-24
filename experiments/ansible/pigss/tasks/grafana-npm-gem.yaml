@@ -2,25 +2,25 @@
   npm:
     name: node-gyp
     global: yes
-    state: present
+    state: latest
   become: yes
 
 - name: Install yarn
   npm:
     name: yarn
     global: yes
-    state: present
+    state: latest
   become: yes
 
 - name: Install fpm
   gem:
     name: fpm
-    state: present
+    state: latest
   become: yes
 
 - name: Install wizzy
   npm:
     name: wizzy
     global: yes
-    state: present
+    state: latest
   become: yes

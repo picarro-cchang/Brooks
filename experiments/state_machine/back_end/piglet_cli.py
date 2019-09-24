@@ -114,7 +114,7 @@ class PigletCli:
                 try:
                     if kb.kbhit():
                         c = kb.getch()
-                        if c != "\r":
+                        if c != "\n":
                             print(c, end="", flush=True)
                             command += c
                         else:

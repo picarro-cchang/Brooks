@@ -43,17 +43,19 @@ class PigletManager(Ahsm):
         self.picarro_analyzers = []
         self.comm_lock = asyncio.Lock()
         self.valve_mask = 0
+        self.clean_mask = 0
         self.tasks = []
 
     @state
     def _initial(self, e):
         self.piglet_status_te = TimeEvent("PIGLET_STATUS_TIMER")
+        Framework.subscribe("MFC_SET", self)
         Framework.subscribe("PIGLET_REQUEST", self)
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
+        Framework.subscribe("SET_REFERENCE", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("VALVE_POSITION", self)
-        Framework.subscribe("MFC_SET", self)
         Framework.subscribe("TERMINATE", self)
         return self.tran(self._configure)
 
@@ -77,8 +79,8 @@ class PigletManager(Ahsm):
             now = time.time()
             # Call handle_valve_position to establist the valve_pos tag and valve_stable_time field
             #  in the data
-            for analyzer_rpc_name in self.picarro_analyzers:
-                asyncio.create_task(self.handle_valve_position(ValvePositionPayload(now, 0, 0)))
+            asyncio.create_task(self.handle_valve_position(ValvePositionPayload(time=now, valve_pos=0, valve_mask=0, clean_mask=0)))
+            asyncio.create_task(self.set_reference(0))
             self.piglet_status_te.postEvery(self, POLL_PERIOD)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -86,6 +88,10 @@ class PigletManager(Ahsm):
             return self.handled(e)
         elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
+        elif sig == Signal.SET_REFERENCE:
+            payload = e.value
+            asyncio.create_task(self.set_reference(payload))
+            return self.handled(e)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
             assert isinstance(payload, PigletRequestPayload)
@@ -159,15 +165,20 @@ class PigletManager(Ahsm):
             response = await self.exec_on_banks(self.get_status_of_bank, bank_list)
             now = time.time()
             # Calculate the states of all the solenoid valves
-            mask = 0
+            _valve_mask = 0
+            _clean_mask = 0
             # Get the states of all the valves as a 32 bit integer
             for bank in bank_list:
-                mask += response[bank]['SOLENOID_VALVES'] << (8 * (bank - 1))
-            if mask != self.valve_mask:
-                self.valve_mask = mask
+                _valve_mask += response[bank]['SOLENOID_VALVES'] << (8 * (bank - 1))
+                if response[bank]["STATE"] == "clean":
+                    _clean_mask += (1 << bank - 1)
+            if _valve_mask != self.valve_mask or _clean_mask != self.clean_mask:
+                self.valve_mask = _valve_mask
+                self.clean_mask = _clean_mask
                 # Find index of first set bit using bit-twiddling hack
-                valve_pos = (mask & (-mask)).bit_length()
-                Framework.publish(Event(Signal.VALVE_POSITION, ValvePositionPayload(now, valve_pos, self.valve_mask)))
+                valve_pos = (_valve_mask & (-_valve_mask)).bit_length()
+                Framework.publish(
+                    Event(Signal.VALVE_POSITION, ValvePositionPayload(now, valve_pos, self.valve_mask, self.clean_mask)))
             response["time"] = now
             Framework.publish(Event(Signal.PIGLET_STATUS, response))
         except Exception:
@@ -178,10 +189,17 @@ class PigletManager(Ahsm):
         # We need to add a tag for valve_pos as well as set up the field valve_stable_time
         #  for each analyzer
         for analyzer_rpc_name in self.picarro_analyzers:
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"clean_mask": valve_pos_payload.clean_mask})
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_mask": valve_pos_payload.valve_mask})
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_pos": valve_pos_payload.valve_pos})
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
             # The next line is for the simulator
             await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
+
+    async def set_reference(self, reference_active):
+        for analyzer_rpc_name in self.picarro_analyzers:
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"reference": reference_active})
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time")
 
 
 async def main():

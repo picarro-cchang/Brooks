@@ -15,8 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": 7,
-  "iteration": 1554870224341,
+  "id": 6,
+  "iteration": 1569026210004,
   "links": [],
   "panels": [
     {
@@ -26,6 +26,7 @@
       "dashes": false,
       "datasource": "JSON data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 8,
         "w": 24,
@@ -46,6 +47,9 @@
       "linewidth": 2,
       "links": [],
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 2,
       "points": false,
@@ -123,6 +127,7 @@
       "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "gridPos": {
         "h": 9,
         "w": 24,
@@ -143,6 +148,9 @@
       "linewidth": 3,
       "links": [],
       "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
       "percentage": false,
       "pointradius": 5,
       "points": false,
@@ -152,8 +160,8 @@
       "scopedVars": {
         "Aggregation": {
           "selected": true,
-          "text": "5m",
-          "value": "5m"
+          "text": "15s",
+          "value": "15s"
         }
       },
       "seriesOverrides": [
@@ -189,9 +197,9 @@
               "type": "fill"
             }
           ],
-          "measurement": "/^crds_$Aggregation$/",
+          "measurement": "crds_$Aggregation",
           "orderByTime": "ASC",
-          "policy": "default",
+          "policy": "crds_$Aggregation",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -278,7 +286,7 @@
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 18,
+  "schemaVersion": 19,
   "style": "dark",
   "tags": [],
   "templating": {
@@ -351,7 +359,7 @@
         "name": "Aggregation",
         "options": [
           {
-            "selected": false,
+            "selected": true,
             "text": "15s",
             "value": "15s"
           },
@@ -361,7 +369,7 @@
             "value": "1m"
           },
           {
-            "selected": true,
+            "selected": false,
             "text": "5m",
             "value": "5m"
           },
@@ -429,5 +437,5 @@
   "timezone": "",
   "title": "Aggregation Dashboard",
   "uid": "4gau0Nemz",
-  "version": 5
+  "version": 2
 }
