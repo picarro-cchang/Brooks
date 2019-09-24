@@ -14,6 +14,8 @@
 #  2018 0913:  changed nh3_HC_corrected to include dry parameters using derived PF_peak15
 #              included h2o calibration on PF data for H2O with HC
 #              added in -0.294 offset derived from change to DCRDS release on 3 analyzers (2075,2081,2080)
+#  2019 0904:  updated for use with NH3, HF and HCl, took out -0.294 offset
+
 
 import os
 import sys
@@ -93,7 +95,7 @@ def expAverage(xavg,x,dt,tau):
     else:
         xavg = (1.0-exp(-dt/tau))*x + exp(-dt/tau)*xavg
     return xavg
-	
+    
 def boxAverage(buffer,x,t,tau):
     buffer.append((x,t))
     while t-buffer[0][1] > tau:
@@ -159,36 +161,36 @@ try:
         _NEW_DATA_["NH3_dry"] = dry
         _NEW_DATA_["NH3_raw"] = dry
 
-    	PF_nh3_corrected = _DATA_["PF_nh3_conc_ave"] + C2H2toNH3*_DATA_["PF_c2h2_conc"] + C3H4toNH3*_DATA_["PF_c3h4_conc"]
-    	nh3_cal_HCcorrected_wet = applyLinear(PF_nh3_corrected,NH3_CONC)
-    	#added dry HCcorrected section, and replaced so nh3_cal_HCcorrected is dry
-    	#previous reporting is now known as "_wet"
-    	h2o_HCcorrected = _DATA_["PF_a_h2o_conc"] + C2H2toH2O*_DATA_["PF_c2h2_conc"] + C3H4toH2O*_DATA_["PF_c3h4_conc"]
-    	pf_peak15 = h2o_HCcorrected/0.02
-    	_NEW_DATA_["NH3_HCcorrected_wet"] = nh3_cal_HCcorrected_wet
-    	pf_h2o_actual = Hlin*pf_peak15 + Hquad*pf_peak15**2
-    	pf_str15 = 1.1794*pf_peak15 + 0.001042*pf_peak15**2
-    	pf_corrected = (nh3_cal_HCcorrected_wet + H1*pf_peak15)/(1.0 + A1H1*pf_str15 + A1H2*pf_str15**2)
-    	nh3_cal_HCcorrected = pf_corrected/(1.0-0.01*h2o_actual) + NH3_update_offset
-    	_NEW_DATA_["NH3_HCcorrected"] = nh3_cal_HCcorrected
-    	_NEW_DATA_["H2O"] = applyLinear(pf_h2o_actual,H2O_CONC)
+        PF_nh3_corrected = _DATA_["PF_nh3_conc_ave"] + C2H2toNH3*_DATA_["PF_c2h2_conc"] + C3H4toNH3*_DATA_["PF_c3h4_conc"]
+        nh3_cal_HCcorrected_wet = applyLinear(PF_nh3_corrected,NH3_CONC)
+        #added dry HCcorrected section, and replaced so nh3_cal_HCcorrected is dry
+        #previous reporting is now known as "_wet"
+        h2o_HCcorrected = _DATA_["PF_a_h2o_conc"] + C2H2toH2O*_DATA_["PF_c2h2_conc"] + C3H4toH2O*_DATA_["PF_c3h4_conc"]
+        pf_peak15 = h2o_HCcorrected/0.02
+        _NEW_DATA_["NH3_HCcorrected_wet"] = nh3_cal_HCcorrected_wet
+        pf_h2o_actual = Hlin*pf_peak15 + Hquad*pf_peak15**2
+        pf_str15 = 1.1794*pf_peak15 + 0.001042*pf_peak15**2
+        pf_corrected = (nh3_cal_HCcorrected_wet + H1*pf_peak15)/(1.0 + A1H1*pf_str15 + A1H2*pf_str15**2)
+        nh3_cal_HCcorrected = pf_corrected/(1.0-0.01*h2o_actual) + NH3_update_offset
+        _NEW_DATA_["NH3_HCcorrected"] = nh3_cal_HCcorrected
+        _NEW_DATA_["H2O"] = applyLinear(pf_h2o_actual,H2O_CONC)
     
-    	if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
-        	_PERSISTENT_["NH3_filter"] = nh3_cal_HCcorrected  #  "nh3_cal_HCcorrected" replaced "dry" on 19 July 2018 (5 places)
-        	_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"],_PERSISTENT_["tau_NH3"] = variableExpAverage(_PERSISTENT_["bufferZZ_NH3"],_PERSISTENT_["bufferExpAvg_NH3"],nh3_cal_HCcorrected,now,1100,1,_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"])
-    	_PERSISTENT_["Pressure_save"]=_DATA_["CavityPressure"]
-    	_NEW_DATA_["NH3_sigma"]=_PERSISTENT_["previousNoise_NH3"]*1.5*sqrt(2)
-    	_NEW_DATA_["NH3_ExpAvg"]=_PERSISTENT_["previousS_NH3"]
-    	_NEW_DATA_["NH3_tau"]=_PERSISTENT_["tau_NH3"]
-    	_NEW_DATA_["NH3_filter"] = _PERSISTENT_["NH3_filter"]
-    	_NEW_DATA_["NH3raw-NH3expavg"] = _NEW_DATA_["NH3_filter"] - _NEW_DATA_["NH3_ExpAvg"]
-    	_NEW_DATA_["NH3_ExpAvg_NZ"] = negative_number_filter("NH3",_NEW_DATA_["NH3_ExpAvg"])
-    	_NEW_DATA_["NH3"] =_NEW_DATA_["NH3_ExpAvg_NZ"]
-    	#print "final=",_NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"]
-    	NH330s= boxAverage(_PERSISTENT_["bufferNH330"],nh3_cal_HCcorrected,now,30)
-    	_NEW_DATA_["NH3_30s"] = NH330s
-    	_NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["bufferNH3120"],nh3_cal_HCcorrected,now,120)
-    	_NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["bufferNH3300"],nh3_cal_HCcorrected,now,300)
+        if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
+            _PERSISTENT_["NH3_filter"] = nh3_cal_HCcorrected  #  "nh3_cal_HCcorrected" replaced "dry" on 19 July 2018 (5 places)
+            _PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"],_PERSISTENT_["tau_NH3"] = variableExpAverage(_PERSISTENT_["bufferZZ_NH3"],_PERSISTENT_["bufferExpAvg_NH3"],nh3_cal_HCcorrected,now,1100,1,_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousNoise_NH3"])
+        _PERSISTENT_["Pressure_save"]=_DATA_["CavityPressure"]
+        _NEW_DATA_["NH3_sigma"]=_PERSISTENT_["previousNoise_NH3"]*1.5*sqrt(2)
+        _NEW_DATA_["NH3_ExpAvg"]=_PERSISTENT_["previousS_NH3"]
+        _NEW_DATA_["NH3_tau"]=_PERSISTENT_["tau_NH3"]
+        _NEW_DATA_["NH3_filter"] = _PERSISTENT_["NH3_filter"]
+        _NEW_DATA_["NH3raw-NH3expavg"] = _NEW_DATA_["NH3_filter"] - _NEW_DATA_["NH3_ExpAvg"]
+        _NEW_DATA_["NH3_ExpAvg_NZ"] = negative_number_filter("NH3",_NEW_DATA_["NH3_ExpAvg"])
+        _NEW_DATA_["NH3"] =_NEW_DATA_["NH3_ExpAvg_NZ"]
+        #print "final=",_NEW_DATA_["NH3_ExpAvg"],_PERSISTENT_["bootstrapcounter_NH3"],_PERSISTENT_["previousS_NH3"],_PERSISTENT_["previousY_NH3"]
+        NH330s= boxAverage(_PERSISTENT_["bufferNH330"],nh3_cal_HCcorrected,now,30)
+        _NEW_DATA_["NH3_30s"] = NH330s
+        _NEW_DATA_["NH3_2min"] = boxAverage(_PERSISTENT_["bufferNH3120"],nh3_cal_HCcorrected,now,120)
+        _NEW_DATA_["NH3_5min"] = boxAverage(_PERSISTENT_["bufferNH3300"],nh3_cal_HCcorrected,now,300)
    
 except Exception as e:
     _NEW_DATA_["NH3"] = 0

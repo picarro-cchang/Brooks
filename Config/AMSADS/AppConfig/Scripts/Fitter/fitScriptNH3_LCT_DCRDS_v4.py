@@ -312,7 +312,7 @@ else:
     d.evaluateGroups(["waveNumber", "uncorrectedAbsorbance"])
     d.defineFitData(freq=d.groupMeans["waveNumber"], loss=1000 * d.groupMeans[
                     "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
-    P = d["cavityppessure"]
+    P = d["cavitypressure"]
     T = d["cavitytemperature"]
     current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
     tunerMean = mean(d.tunerValue)

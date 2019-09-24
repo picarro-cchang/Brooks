@@ -78,7 +78,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["tau_HCl"]=0.0
     _PERSISTENT_["HCl_filter"]=0.0
     
-    _PERSISTENT_["Pressure_save"]= 140.0    
+    _PERSISTENT_["Pressure_save"]= 137.0
     _PERSISTENT_["ignore_count"] = 17
     _PERSISTENT_["init"] = False
 
@@ -262,7 +262,8 @@ try:
             _NEW_DATA_["HF_30sec"] = HF30s
             _NEW_DATA_["HF_2min"] = boxAverage(_PERSISTENT_["bufferHF120"],temp,now,120)
             _NEW_DATA_["HF_5min"] = boxAverage(_PERSISTENT_["bufferHF300"],temp,now,300)
-            if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-140.0) < 2.0)):
+            # Changed operating pressure to 137 torr to match baratron reading
+            if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
                 _PERSISTENT_["HF_filter"] = temp
                 _PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"], _PERSISTENT_["tau_HF"] = variableExpAverage(_PERSISTENT_["bufferZZ_HF"],_PERSISTENT_["bufferExpAvg_HF"],temp,now,1100,0,_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"])
             _NEW_DATA_["HF_sigma"]=_PERSISTENT_["previousNoise_HF"]*1.5*sqrt(2)
@@ -287,6 +288,7 @@ except:
 
 try:
     if "hcl_conc" in _DATA_:  
+        # This is the reference pressure for HCl
         pressureDiff = _DATA_["Cavity2Pressure"] - (140.0 - 2.8)
         tempDiff = _DATA_["Cavity2Temp"] - _DATA_["CavityTemp"]
         HCl_P_corr = applyLinear(pressureDiff,HCl_P_correction) 
