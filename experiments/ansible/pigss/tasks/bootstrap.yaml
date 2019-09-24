@@ -49,41 +49,51 @@
 - name: Install scrot package
   apt: name=scrot
   become: yes
+  when: headless == "false"
 
 - name: Install GTK theme
   apt: name=materia-gtk-theme
   become: yes
+  when: headless == "false"
 
 - name: Install gnome-tweaks package
   apt: name=gnome-tweaks
   become: yes
+  when: headless == "false"
 
 - name: Install chrome-gnome-shell package
   apt: name=chrome-gnome-shell
   become: yes
+  when: headless == "false"
 
 - name: Install fira fonts
   apt: name=fonts-firacode
   become: yes
+  when: headless == "false"
 
 - name: Install roboto fonts
   apt: name=fonts-roboto
   become: yes
+  when: headless == "false"
 
 - name: Install gnome-shell-extensions package
   apt: name=gnome-shell-extensions
   become: yes
+  when: headless == "false"
 
 - name: Install Icons
   apt: name=papirus-icon-theme
   become: yes
+  when: headless == "false"
 
 - name: Install chromium-browser
   apt: name=chromium-browser
   become: yes
+  when: headless == "false"
 
 - name: Make chromium default browser
   shell: xdg-settings set default-web-browser chromium-browser.desktop
+  when: headless == "false"
 
 - name: Install curl
   apt: name=curl
@@ -100,10 +110,12 @@
     regexp: 'quiet splash'
     replace: 'quiet'
   become: yes
+  when: headless == "false"
 
 - name: Update grub
   shell: update-grub
   become: yes
+  when: headless == "false"
 
 - name: Install libssl
   apt: name=libssl1.0-dev
