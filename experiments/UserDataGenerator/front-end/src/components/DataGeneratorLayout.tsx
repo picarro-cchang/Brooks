@@ -3,7 +3,9 @@ import { TimeRange, dateTime } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
 
 import { DataGeneratorLayoutProps } from './../types';
-import { DEFAULT_TIME_OPTIONS, KEYS_OPTIONS } from './../constants';
+import { DEFAULT_TIME_OPTIONS, KEYS_OPTIONS, DEFAULT_TIME_RANGE } from './../constants';
+
+import { DataGeneratorService } from '../services/DataGeneratorService';
 
 import './Layout.css';
 
@@ -17,33 +19,66 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     constructor(props: Props) {
         super(props);
         this.state = {
-            timeRange: this.props.options.timeRange
-        }
+            timeRange: DEFAULT_TIME_RANGE,
+            keys: [],
+            files: [],
+        };
+    }
+
+    // Code to download the file
+    downloadData = (blob: any, fileName: string) => {
+        const a = document.createElement("a");
+        // @ts-ignore
+        document.getElementById("file-list").appendChild(a);
+        // @ts-ignore
+        a.style = "display: none";
+
+        const url = window.URL.createObjectURL(blob);
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        window.URL.revokeObjectURL(url);
     }
 
     generateData = () => {
         console.log('generating data...');
+        console.log('Current State for generate', this.state);
+    };
+
+    getFile = (fileName: string) => {
+        DataGeneratorService.getFile(fileName).then(response => {
+            response.blob().then(data => {
+                this.downloadData(data, fileName);
+            });
+        });
     }
 
     onDateChange = (timeRange: TimeRange) => {
-        // this.props.onOptionsChange({ ...this.props.options, timeRange });
         this.setState({ timeRange });
-        console.log(timeRange);
     };
 
-    onKeysChange = (level: any) => {
-        console.log(level);
-        // this.props.onOptionsChange({ ...this.props.options, level: level.value })
+    onKeysChange = (keys: any) => {
+        this.setState({ keys });
     };
 
     componentWillMount() {
-        console.log("Call all bootstrap apis for data");
+        console.log('Call all bootstrap apis for data'); //  KEY_OPTIONS, FILE NAMES
+
+        // Get file names
+        DataGeneratorService.getSavedFiles().then(response => {
+            response.json().then(files => {
+                this.setState(() => {
+                    return files;
+                });
+            })
+        });
+
+        // Get Key Options
     }
 
     render() {
         // @ts-ignore
-        const { keys, fileName } = this.props.options;
-        const { timeRange } = this.state;
+        const { keys, files, timeRange } = this.state;
 
         const styleObj = {
             overflow: 'scroll !important',
@@ -57,7 +92,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             timeRange.to = dateTime(timeRange.to);
         }
 
-        const fileItems = fileName.map((fn, i) => <li key={fn} className="file-item">{fn}</li>);
+        const fileItems = files.map((fn: string) => (
+            <li key={fn} className="file-item" value={fn} onClick={() => this.getFile(fn)}>
+                {fn}
+            </li>
+        ));
 
         return (
             <Fragment>
@@ -90,23 +129,20 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                         </div>
 
                         <div className="gf-form col-md-3 col-sm-12">
-                            <Button size="md" variant="primary" value="Generate" onClick={this.generateData}>Generate</Button>
+                            <Button size="md" variant="primary" value="Generate" onClick={this.generateData}>
+                                Generate
+              </Button>
                         </div>
                     </div>
-
                 </PanelOptionsGroup>
                 <PanelOptionsGroup title="Recently Generated Files">
                     <div className="row" style={styleObj}>
                         <div className="gf-form col-md-12 col-sm-12">
-                            <ul>
-                                {
-                                    fileItems
-                                }
-                            </ul>
+                            <ul id="file-list" style={{ "display": "inherit" }}>{fileItems}</ul>
                         </div>
                     </div>
                 </PanelOptionsGroup>
-            </Fragment>
+            </Fragment >
         );
     }
 }

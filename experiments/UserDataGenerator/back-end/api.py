@@ -32,6 +32,9 @@ async def get_files_meta(request):
             if f.endswith(request.app["config"]["server"]["file_type"])
         ]
     except error as ex:
+        from traceback import format_exc
+
+        format_exc()
         return web.json_response(text="OS Permission Error", status=404)
 
     files.sort(key=lambda name: name.lower())
@@ -46,7 +49,7 @@ def chunks(stream, chunk_size=1024):
         stream {file} -- IO wrapper
     
     Keyword Arguments:
-        chunk_size {int} -- [description] (default: {1024})
+        chunk_size {int} -- (default: {1024})
     """
     while True:
         chunk = stream.read(chunk_size)
@@ -59,7 +62,7 @@ async def send_file(request):
     """ Send file to the user for download
     
     Arguments:
-        request {Request} -- [description]
+        request {Request}
     
     Returns:
         [Response] -- responsds with file if correct format and found
@@ -68,6 +71,7 @@ async def send_file(request):
     query_dict = parse_qs(request.query_string)
     data_dir = request.app["config"]["server"]["data_dir"]
     file_name = query_dict["name"][0]
+    print(file_name)
     file_path = path.join(data_dir, file_name)
     file_type = request.app["config"]["server"]["file_type"]
 
@@ -95,5 +99,13 @@ async def send_file(request):
 async def save_file():
     """ Save the file on data_dir folder
     """
+    # TO DO:    Get data from influx db
+    #           Save the file in tmp/udfg directory
+    #           Download at the client
     pass
 
+
+async def get_user_keys():
+    """ Return the keys to the user which are not in admin_keys config
+    """
+    pass

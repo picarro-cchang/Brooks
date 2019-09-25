@@ -8,7 +8,7 @@ influxdb:
 server:
   host: 127.0.0.1
   port: 8010
-  data_dir: "/tmp/udfg"
+  data_dir: "/usr/udfg"
   file_type: "csv"
 
 admin_keys: []

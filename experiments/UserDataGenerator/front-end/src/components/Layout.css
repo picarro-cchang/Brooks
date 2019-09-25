@@ -9,6 +9,7 @@
   cursor: pointer;
   color: #3bd2f8;
   text-decoration: underline;
+  background-color: #fffdfd14;
 }
 
 /* Fix for grafana panel scrolling issue */

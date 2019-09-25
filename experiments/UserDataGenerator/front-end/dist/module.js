@@ -95,7 +95,7 @@ define(["@grafana/data","@grafana/ui","react"], function(__WEBPACK_EXTERNAL_MODU
 
 exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "../node_modules/css-loader/dist/runtime/api.js")(true);
 // Module
-exports.push([module.i, ".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline; }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n", "",{"version":3,"sources":["Layout.css"],"names":[],"mappings":"AAAA;EACE,WAAW;EACX,cAAc;EACd,YAAY;EACZ,kBAAkB,EAAE;;AAEtB;EACE,eAAe;EACf,cAAc;EACd,0BAA0B,EAAE;;AAE9B,0CAA0C;AAC1C,8DAA8D;AAC9D;EACE,cAAc,EAAE","file":"Layout.css","sourcesContent":[".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline; }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n"]}]);
+exports.push([module.i, ".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: rgba(255,253,253,0.07843); }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n", "",{"version":3,"sources":["Layout.css"],"names":[],"mappings":"AAAA;EACE,WAAW;EACX,cAAc;EACd,YAAY;EACZ,kBAAkB,EAAE;;AAEtB;EACE,eAAe;EACf,cAAc;EACd,0BAA0B;EAC1B,2CAA2B,EAAE;;AAE/B,0CAA0C;AAC1C,8DAA8D;AAC9D;EACE,cAAc,EAAE","file":"Layout.css","sourcesContent":[".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: #fffdfd14; }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n"]}]);
 
 
 /***/ }),
@@ -956,8 +956,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_3__);
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./../constants */ "./constants/index.ts");
-/* harmony import */ var _Layout_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./Layout.css */ "./components/Layout.css");
-/* harmony import */ var _Layout_css__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(_Layout_css__WEBPACK_IMPORTED_MODULE_5__);
+/* harmony import */ var _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../services/DataGeneratorService */ "./services/DataGeneratorService.ts");
+/* harmony import */ var _Layout_css__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./Layout.css */ "./components/Layout.css");
+/* harmony import */ var _Layout_css__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(_Layout_css__WEBPACK_IMPORTED_MODULE_6__);
+
 
 
 
@@ -974,41 +976,78 @@ function (_super) {
   tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"](DataGeneratorLayout, _super);
 
   function DataGeneratorLayout(props) {
-    var _this = _super.call(this, props) || this;
+    var _this = _super.call(this, props) || this; // Code to download the file
+
+
+    _this.downloadData = function (blob, fileName) {
+      var a = document.createElement("a"); // @ts-ignore
+
+      document.getElementById("file-list").appendChild(a); // @ts-ignore
+
+      a.style = "display: none";
+      var url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    };
 
     _this.generateData = function () {
       console.log('generating data...');
+      console.log('Current State for generate', _this.state);
+    };
+
+    _this.getFile = function (fileName) {
+      _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getFile(fileName).then(function (response) {
+        response.blob().then(function (data) {
+          _this.downloadData(data, fileName);
+        });
+      });
     };
 
     _this.onDateChange = function (timeRange) {
-      // this.props.onOptionsChange({ ...this.props.options, timeRange });
       _this.setState({
         timeRange: timeRange
       });
-
-      console.log(timeRange);
     };
 
-    _this.onKeysChange = function (level) {
-      console.log(level); // this.props.onOptionsChange({ ...this.props.options, level: level.value })
+    _this.onKeysChange = function (keys) {
+      _this.setState({
+        keys: keys
+      });
     };
 
     _this.state = {
-      timeRange: _this.props.options.timeRange
+      timeRange: _constants__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_TIME_RANGE"],
+      keys: [],
+      files: []
     };
     return _this;
   }
 
   DataGeneratorLayout.prototype.componentWillMount = function () {
-    console.log("Call all bootstrap apis for data");
+    var _this = this;
+
+    console.log('Call all bootstrap apis for data'); //  KEY_OPTIONS, FILE NAMES
+    // Get file names
+
+    _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getSavedFiles().then(function (response) {
+      response.json().then(function (files) {
+        _this.setState(function () {
+          return files;
+        });
+      });
+    }); // Get Key Options
   };
 
   DataGeneratorLayout.prototype.render = function () {
-    // @ts-ignore
-    var _a = this.props.options,
+    var _this = this; // @ts-ignore
+
+
+    var _a = this.state,
         keys = _a.keys,
-        fileName = _a.fileName;
-    var timeRange = this.state.timeRange;
+        files = _a.files,
+        timeRange = _a.timeRange;
     var styleObj = {
       overflow: 'scroll !important',
       height: 'inherit'
@@ -1022,10 +1061,14 @@ function (_super) {
       timeRange.to = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_2__["dateTime"])(timeRange.to);
     }
 
-    var fileItems = fileName.map(function (fn, i) {
+    var fileItems = files.map(function (fn) {
       return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("li", {
         key: fn,
-        className: "file-item"
+        className: "file-item",
+        value: fn,
+        onClick: function onClick() {
+          return _this.getFile(fn);
+        }
       }, fn);
     });
     return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(react__WEBPACK_IMPORTED_MODULE_1__["Fragment"], null, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("h3", {
@@ -1080,7 +1123,12 @@ function (_super) {
       style: styleObj
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
       className: "gf-form col-md-12 col-sm-12"
-    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("ul", null, fileItems)))));
+    }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("ul", {
+      id: "file-list",
+      style: {
+        "display": "inherit"
+      }
+    }, fileItems)))));
   };
 
   return DataGeneratorLayout;
@@ -1171,18 +1219,19 @@ if(false) {}
 /*!****************************!*\
   !*** ./constants/index.ts ***!
   \****************************/
-/*! exports provided: DEFAULT_TIME_RANGE, DEFAULT_DATA_GENERATOR_PROPS, KEYS_OPTIONS, DEFAULT_TIME_OPTIONS */
+/*! exports provided: DEFAULT_TIME_RANGE, KEYS_OPTIONS, DEFAULT_TIME_OPTIONS, URL */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_RANGE", function() { return DEFAULT_TIME_RANGE; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_DATA_GENERATOR_PROPS", function() { return DEFAULT_DATA_GENERATOR_PROPS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "KEYS_OPTIONS", function() { return KEYS_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_OPTIONS", function() { return DEFAULT_TIME_OPTIONS; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "URL", function() { return URL; });
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_0__);
 // @ts-ignore
+ // import { DataGeneratorPanelProps } from 'types';
 
 var DEFAULT_TIME_RANGE = {
   from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
@@ -1191,22 +1240,34 @@ var DEFAULT_TIME_RANGE = {
     from: 'now-6h',
     to: 'now'
   }
-};
-var DEFAULT_KEYS = ['A', 'B', 'C'];
-var DEFAULT_DATA_GENERATOR_PROPS = {
-  timeRange: DEFAULT_TIME_RANGE,
-  keys: DEFAULT_KEYS,
-  fileName: ["09-12-2019 CO2 H20 NH3 Picarro.txt", "09-13-2019 CO2 H20 NH3 Picarro.txt", "09-14-2019 CO2 H20 NH3 Picarro.txt"]
-};
+}; // const DEFAULT_KEYS: string[] = ['A', 'B', 'C'];
+// export const DEFAULT_DATA_GENERATOR_PROPS: DataGeneratorPanelProps = {
+//   timeRange: DEFAULT_TIME_RANGE,
+//   keys: DEFAULT_KEYS,
+//   fileName: [
+//     "09-12-2019 CO2 H20 NH3 Picarro.txt",
+//     "09-13-2019 CO2 H20 NH3 Picarro.txt",
+//     "09-14-2019 CO2 H20 NH3 Picarro.txt"]
+// };
+
 var KEYS_OPTIONS = [{
-  value: '10',
-  label: '10'
+  value: 'H2O',
+  label: 'H2O'
 }, {
-  value: '20',
-  label: '20'
+  value: 'CO2',
+  label: 'CO2'
 }, {
-  value: '30',
-  label: '30'
+  value: 'NH3',
+  label: 'NH3'
+}, {
+  value: 'CH4',
+  label: 'CH4'
+}, {
+  value: 'HF',
+  label: 'HF'
+}, {
+  value: 'HC',
+  label: 'HC'
 }];
 var DEFAULT_TIME_OPTIONS = [{
   from: 'now-5m',
@@ -1249,6 +1310,10 @@ var DEFAULT_TIME_OPTIONS = [{
   display: 'Last 24 hours',
   section: 3
 }];
+var URL = {
+  GET_SAVED_FILES: "http://localhost:8010/api/getsavedfiles",
+  GET_FILE: "http://localhost:8010/api/getfile"
+};
 
 /***/ }),
 
@@ -1265,12 +1330,50 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/DataGeneratorPanel */ "./components/DataGeneratorPanel.tsx");
-/* harmony import */ var _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./services/DataGeneratorService */ "./services/DataGeneratorService.ts");
 
+ // import { DataGeneratorService } from './services/DataGeneratorService';
 
+var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__["DataGeneratorPanel"]); // plugin.setDefaults(DataGeneratorService.getDefaults());
 
-var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__["DataGeneratorPanel"]);
-plugin.setDefaults(_services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_2__["DataGeneratorService"].getDefaults());
+/***/ }),
+
+/***/ "./services/API.ts":
+/*!*************************!*\
+  !*** ./services/API.ts ***!
+  \*************************/
+/*! exports provided: API */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "API", function() { return API; });
+var API = {
+  get: function get(url) {
+    return fetch(url, {
+      method: 'GET'
+    }).then(function (response) {
+      if (!response.ok) {
+        throw Error('Netwoek GET request failed.');
+      }
+
+      return response;
+    });
+  },
+  getFile: function getFile(url) {
+    return fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/text'
+      }
+    }).then(function (response) {
+      if (!response.ok) {
+        throw Error('Netwoek GET request failed.');
+      }
+
+      return response;
+    });
+  }
+};
 
 /***/ }),
 
@@ -1285,11 +1388,20 @@ plugin.setDefaults(_services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_2__["
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DataGeneratorService", function() { return DataGeneratorService; });
 /* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../constants */ "./constants/index.ts");
+/* harmony import */ var _API__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./API */ "./services/API.ts");
+
 
 var DataGeneratorService = function () {
   return {
     getDefaults: function getDefaults() {
-      return _constants__WEBPACK_IMPORTED_MODULE_0__["DEFAULT_DATA_GENERATOR_PROPS"];
+      return {};
+    },
+    getSavedFiles: function getSavedFiles() {
+      return _API__WEBPACK_IMPORTED_MODULE_1__["API"].get(_constants__WEBPACK_IMPORTED_MODULE_0__["URL"].GET_SAVED_FILES);
+    },
+    getFile: function getFile(fileName) {
+      var url = _constants__WEBPACK_IMPORTED_MODULE_0__["URL"].GET_FILE + '?name=' + fileName;
+      return _API__WEBPACK_IMPORTED_MODULE_1__["API"].getFile(url);
     }
   };
 }();

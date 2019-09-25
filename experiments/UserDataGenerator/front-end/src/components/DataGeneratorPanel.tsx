@@ -5,7 +5,7 @@ import { GrafanaTheme } from '@grafana/ui';
 import { DataGeneratorPanelProps } from './../types';
 import DataGeneratorLayout from './DataGeneratorLayout';
 
-interface Props extends PanelProps<DataGeneratorPanelProps> { }
+interface Props extends PanelProps<DataGeneratorPanelProps> {}
 
 export class DataGeneratorPanel extends PureComponent<Props> {
   constructor(props: Props) {
