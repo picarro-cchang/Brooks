@@ -24,8 +24,6 @@ export interface CommandPanelOptions {
   }
   ws_sender: (o: object)=>void;
   plan: Plan;
-  refVisible: boolean;
-  onEditClick: () => void;
 }
 
 export interface ModalInfo {
@@ -68,9 +66,6 @@ export interface PlanPanelOptions {
   plan: Plan;
   setFocus: (row: number, column: number) => void;
   ws_sender: (o: object) => void;
-  refVisible: boolean;
-  onCancelClick: () => void;
-  onOkClick: () => void;
 
 }
 

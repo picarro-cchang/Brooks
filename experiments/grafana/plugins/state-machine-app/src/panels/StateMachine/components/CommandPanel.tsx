@@ -46,7 +46,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                         <button
                             onClick={e => {
                                 this.props.ws_sender({element: "plan"});
-                                this.props.onEditClick();
                             }}
                             disabled = {this.getDisabled("plan")}
                             value="plan"

@@ -10,15 +10,6 @@ import Modal from 'react-responsive-modal';
 import {ModalInfo, PlanPanelTypes} from './../types';
 import EditPanel from "./EditPanel";
 
-class Reference extends Component<any, any> {
-  render() {
-    return (
-        <div>
-          <button className="btn btn-large btn-command ref-btn">Reference</button>
-        </div>
-    );
-  }
-}
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 export class Main extends Component<any, any> {
@@ -99,9 +90,7 @@ export class Main extends Component<any, any> {
     },
     options: {
       panel_to_show: 0
-    },
-    refVisible: false,
-    isModal: false
+    }
   };
   constructor(props) {
     super(props);
@@ -156,7 +145,7 @@ export class Main extends Component<any, any> {
     );
     Promise.all([p1, p2, p3]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
-      console.log("State after getting uistatus, plan and modal info", this.state);
+      //console.log("State after getting uistatus, plan and modal info", this.state);
     })
   };
 
@@ -179,7 +168,6 @@ export class Main extends Component<any, any> {
       else if ("modal_info" in o) {
         const modal_info = deepmerge(this.state.modal_info, o.modal_info);
         this.setState({ modal_info });
-        this.setState({isModal: true})
       }
     }
   }
@@ -189,41 +177,20 @@ export class Main extends Component<any, any> {
     this.ws.send(JSON.stringify(o));
   };
 
-  shouldComponentUpdate() {
-    return (!this.state.modal_info.show);
-  }
-
-  componentDidUpdate(prevProps: Readonly<any>, prevState: Readonly<any>): void {
-    if (prevState.modal_info.show != this.state.modal_info.show ) {
-
-    }
-  }
-
-  onEditClick () {
-    event.preventDefault();
-    this.setState({refVisible: true})
-  }
-  onCancelClick () {
-    event.preventDefault();
-    this.setState({refVisible: false})
-  }
-  onOkClick() {
-  }
-
   render() {
     let left_panel;
+    let isPlan = false;
     switch (this.state.plan.panel_to_show) {
       case PlanPanelTypes.NONE:
-        left_panel = (<CommandPanel plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} refVisible={this.state.refVisible} onEditClick={this.onEditClick.bind(this)} />);
-        console.log("ref", this.state.refVisible)
+        left_panel = (<CommandPanel plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
         break;
       case PlanPanelTypes.PLAN:
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
-                       ws_sender={this.ws_sender} onCancelClick={this.onCancelClick.bind(this)}
-                       onOkClick={this.onOkClick.bind(this)} refVisible={this.state.refVisible}/>
+                       ws_sender={this.ws_sender}/>
         );
+          isPlan = true;
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
@@ -262,7 +229,7 @@ export class Main extends Component<any, any> {
       for (let i=1; i<=4; i++) {
         if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
           bankPanels.push(
-              <div className="col-sm-2">
+              <div>
                 <BankPanel plan={this.state.plan} bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
               </div>
           )
@@ -276,16 +243,26 @@ export class Main extends Component<any, any> {
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
             <div className="row justify-content-md-center">
-              <div className="col-sm-3">
+              <div className="col-sm-3" style={{height: "100%"}}>
                 {left_panel}
               </div>
+              <div  className="col-sm-9">
+              <div style={{padding: "10px", height: "85%"}}>
               {bankPanels}
+              </div>
+                {
+                  isPlan  ?
+                      <div style={{height: "15%", float: "left", padding: "10px"}}>
+                        <button type="button"
+                                onClick={e => this.ws_sender({element: "reference"})}
+                                className={"btn btn-large ref-btn btn-command"}
+                                style={{color: "black"}}>Reference</button>
+                      </div> :
+                      null
+                }
+              </div>
             </div>
-            <div className="reference-btn">
-              {
-                this.state.refVisible ? <Reference/> : null
-              }
-            </div>
+
           </div>
 
           <Modal styles={{overlay: {color: "black"}}} open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>

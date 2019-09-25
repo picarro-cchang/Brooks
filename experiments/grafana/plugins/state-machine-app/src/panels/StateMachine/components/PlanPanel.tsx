@@ -18,17 +18,17 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         //  only the last component to receive the focus. This prevents
         //  oscillations in which a cycle of components receive focus in
         //  quick succession.
-        console.log("Manage Focus", component);
+       // console.log("Manage Focus", component);
         if (this.focusTimer !== null) {
             clearTimeout(this.focusTimer);
         }
         this.focusComponent = component;
         this.focusTimer = setTimeout(() => {
-            console.log("Setting focus", this.focusComponent)
+          //  console.log("Setting focus", this.focusComponent)
             this.focusComponent.focus();
             this.focusTimer = null;
         }, 200);
-    }
+    };
 
     makePlanRow = (row: number) => {
         let portString = "";
@@ -105,6 +105,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         }
         */
         return (
+            <div>
             <div className="panel-plan" >
                 <h2 style={{color: "#5f5f5f"}}>Schedule</h2>
                 <h6 style={{color: "black"}}>Please click on available channels to set up a schedule,
@@ -162,7 +163,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_ok"})
-                                        this.props.onOkClick();
                                     }}
                                     className={"btn btn-block btn-success btn-group"}>
                                 OK
@@ -172,7 +172,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_cancel"});
-                                        this.props.onCancelClick();
                                     }}
                                     className={"btn btn-block btn-danger btn-group"} >
                                 Cancel
@@ -180,18 +179,10 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                         </div>
                     </div>
 
-                    <div className="row btn-row-3">
-                        <div className="col-sm-8">
-                                <button type="button"
-                                    onClick={e => this.props.ws_sender({element: "reference"})}
-                                    className={"btn btn-block btn-light btn-group"}
-                                    style={{color: "black"}}>
-                                Reference
-                            </button>
-                        </div>
-                    </div>
 
                 </div>
+            </div>
+
             </div>
         );
     }

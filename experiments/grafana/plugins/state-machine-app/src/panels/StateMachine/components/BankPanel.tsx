@@ -94,7 +94,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         const value: string = this.props.plan.bank_names[this.props.bank].name;
         //const value: string = "Bank " + this.props.bank;
         return (
-            <div style={{padding: "10px"}}>
+            <div>
                 <div className="panel-bank" style={bankStyle}>
                     <div style={{width: "100%"}}>
                         <h2 style={{color: "white"}}>{value}</h2>
