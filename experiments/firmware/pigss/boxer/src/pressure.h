@@ -8,13 +8,21 @@
 #define PRESSURE_DAC_REFERENCE_VOLTS 3.0
 
 // Alpha value for pressure moving average
-#define PRESSURE_EMA_ALPHA 1180
+// #define PRESSURE_EMA_ALPHA 1180
+#define PRESSURE_EMA_ALPHA 65535
 
 // Setpoint for bypass DACs when channels are disabled
 #define PRESSURE_DAC_INACTIVE_COUNTS 17134
 
 // Pressure read delay
 #define PRESSURE_READ_KLUDGE_DELAY_US 1
+
+// Pressure configuration structure
+// Overall system state structure
+typedef struct pressure_config_struct {
+  // Exponential moving average alpha value
+  uint16_t ema_alpha;
+} pressure_config_t;
 
 // Set the voltage output from one of the pressure-control DACs
 //
@@ -57,6 +65,9 @@ void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr );
 // Command to return the averaged pressure from an inlet sensor in
 // Pascals
 void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr );
+
+// Command to return the proper sample flow controller value
+void cmd_mfcval_q( command_arg_t *command_arg_ptr );
 
 // Return a calibrated pressure in Pascals for outlet sensors.
 //
@@ -106,5 +117,11 @@ void cmd_pressure_dac_set_8( command_arg_t *command_arg_ptr );
 
 // Query one of the proportional valve DAC values
 void cmd_pressure_dac_query( command_arg_t *command_arg_ptr );
+
+// Set the exponential moving average
+void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr );
+
+// Get the exponential moving average
+void cmd_pressure_get_ema_alpha( command_arg_t *command_arg_ptr );
 
 #endif

@@ -216,6 +216,10 @@ try {
 
 set read_period_ms [expr double(1000)/$params(r)]
 
+# Configure exponential moving average
+boxer::sendcmd $channel "prs.alpha 1180"
+set return_value [boxer::readline $channel]
+
 # Wait for system to start reading pressures
 after 5000
 
@@ -322,7 +326,7 @@ dict set table_dict "std" width $column_width
 dict set table_dict "std" description "Std Dev"
 
 
-
+# Report mean and standard deviation
 foreach column [dict keys $table_dict] {
     append format_string "%-*s "
     lappend header_list [dict get $table_dict $column width]
@@ -351,6 +355,23 @@ foreach channel $channel_list {
     puts [format $format_string {*}$row_list]
 }
 
+package require Tk
+package require Plotchart
+
+canvas .c -background white -width 1000 -height 600
+pack .c -fill both
+tkwait visibility .c
+set data_list [get_channel_list $read_cycle_list 1]
+set number_of_points [llength $data_list]
+set plot_min [math::statistics::min $data_list]
+set plot_max [math::statistics::max $data_list]
+set plot_ytic [expr int(($plot_max - $plot_min)/10)]
+set plot_xtic [expr int($number_of_points / 10)]
+set s [Plotchart::createXYPlot .c [list 0 [llength $data_list] $plot_xtic] \
+	   [list [expr $plot_min - $plot_ytic] [expr $plot_max + $plot_ytic] $plot_ytic]]
+foreach x [iterint 0 [llength $data_list]] y $data_list {
+    $s plot series1 $x $y
+}
 
 
 

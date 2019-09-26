@@ -225,6 +225,21 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_shutdown},
+  // mfcval? -- Query the calculated sample flow controller value
+  {"mfcval?",
+   "none",
+   0,
+   &cmd_mfcval_q},
+  // prs.alpha -- Set the exponential moving average alpha factor for pressure measurements
+  {"prs.alpha",
+   "uint16",
+   5,
+   &cmd_pressure_set_ema_alpha},
+  // prs.alpha? -- Query the exponential moving average alpha factor for pressure measurements
+  {"prs.alpha?",
+   "none",
+   0,
+   &cmd_pressure_get_ema_alpha},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

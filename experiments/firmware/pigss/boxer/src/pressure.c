@@ -34,6 +34,9 @@
 // Functions for maintaining a simple schedule
 #include "OS.h"
 
+// Provides enumerated system states and system state structure accessors
+#include "system.h"
+
 #include "topaz.h"
 
 
@@ -51,6 +54,8 @@
 #include "math.h"
 
 #include "pressure.h"
+
+pressure_config_t pressure_config = { .ema_alpha = 65535 };
 
 //*************** Uncalibrated (counts) data storage ***************//
 
@@ -90,6 +95,8 @@ uint32_t pressure_outlet_new_pascals[2] = {0ul,0ul};
 // first entry.
 uint16_t pressure_dac_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
+
+
 
 
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
@@ -381,7 +388,7 @@ void pressure_mpr_read_task(void) {
     pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
     pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
 						     pressure_inlet_old_counts[index],
-						     PRESSURE_EMA_ALPHA);
+						     pressure_config.ema_alpha);
     pressure_inlet_old_pascals[index] =
       pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
     // This delay has to be here to avoid SPI read errors
@@ -392,7 +399,7 @@ void pressure_mpr_read_task(void) {
   pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
   pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						pressure_outlet_old_counts[0],
-						PRESSURE_EMA_ALPHA);
+						pressure_config.ema_alpha);
   _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   pressure_outlet_old_pascals[0] =
     pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
@@ -403,7 +410,7 @@ void pressure_mpr_read_task(void) {
   pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
   pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
 						pressure_outlet_old_counts[1],
-						PRESSURE_EMA_ALPHA);
+						pressure_config.ema_alpha);
   pressure_outlet_old_pascals[1] =
     pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
   // This delay has to be here to avoid SPI read errors
@@ -473,6 +480,40 @@ void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr ) {
   usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
 		pressure_inlet_old_pascals[index],
 		LINE_TERMINATION_CHARACTERS );
+}
+
+void cmd_mfcval_q( command_arg_t *command_arg_ptr ) {
+  system_state_value_t current_state = system_state_get_system_state();
+  switch( current_state ) {
+  case system_state_INIT:
+    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
+    break;
+  case system_state_STANDBY:
+    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
+    break;
+  case system_state_CONTROL:
+    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 40, LINE_TERMINATION_CHARACTERS );
+    break;
+  case system_state_CLEAN:
+    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 40, LINE_TERMINATION_CHARACTERS );
+    break;
+  default:
+    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
+    break;
+  }
+}
+
+void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr ) {
+  uint16_t alpha = (command_arg_ptr -> uint16_arg);
+  pressure_config.ema_alpha = alpha;
+  command_ack();
+  return;
+}
+
+void cmd_pressure_get_ema_alpha( command_arg_t *command_arg_ptr ){
+  usart_printf(USART_CHANNEL_COMMAND, "%u%s",
+	       pressure_config.ema_alpha,
+	       LINE_TERMINATION_CHARACTERS);
 }
 
 uint32_t pressure_convert_outlet_pascals( char board, uint32_t raw ) {
