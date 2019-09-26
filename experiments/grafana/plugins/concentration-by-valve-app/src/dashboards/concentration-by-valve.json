@@ -209,7 +209,7 @@
         "x": 6,
         "y": 1
       },
-      "id": 132,
+      "id": 119,
       "legend": {
         "avg": false,
         "current": false,
@@ -235,7 +235,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -361,7 +361,7 @@
         "x": 12,
         "y": 1
       },
-      "id": 133,
+      "id": 120,
       "legend": {
         "avg": false,
         "current": false,
@@ -387,7 +387,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -513,7 +513,7 @@
         "x": 18,
         "y": 1
       },
-      "id": 134,
+      "id": 121,
       "legend": {
         "avg": false,
         "current": false,
@@ -539,7 +539,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -665,7 +665,7 @@
         "x": 0,
         "y": 7
       },
-      "id": 135,
+      "id": 122,
       "legend": {
         "avg": false,
         "current": false,
@@ -691,7 +691,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -817,7 +817,7 @@
         "x": 6,
         "y": 7
       },
-      "id": 136,
+      "id": 123,
       "legend": {
         "avg": false,
         "current": false,
@@ -843,7 +843,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -969,7 +969,7 @@
         "x": 12,
         "y": 7
       },
-      "id": 137,
+      "id": 124,
       "legend": {
         "avg": false,
         "current": false,
@@ -995,7 +995,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1121,7 +1121,7 @@
         "x": 18,
         "y": 7
       },
-      "id": 138,
+      "id": 125,
       "legend": {
         "avg": false,
         "current": false,
@@ -1147,7 +1147,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1273,7 +1273,7 @@
         "x": 0,
         "y": 13
       },
-      "id": 139,
+      "id": 126,
       "legend": {
         "avg": false,
         "current": false,
@@ -1299,7 +1299,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1425,7 +1425,7 @@
         "x": 6,
         "y": 13
       },
-      "id": 140,
+      "id": 127,
       "legend": {
         "avg": false,
         "current": false,
@@ -1451,7 +1451,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1577,7 +1577,7 @@
         "x": 12,
         "y": 13
       },
-      "id": 141,
+      "id": 128,
       "legend": {
         "avg": false,
         "current": false,
@@ -1603,7 +1603,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1729,7 +1729,7 @@
         "x": 18,
         "y": 13
       },
-      "id": 142,
+      "id": 129,
       "legend": {
         "avg": false,
         "current": false,
@@ -1755,7 +1755,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568409842296,
+      "repeatIteration": 1569525498172,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1959,7 +1959,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Valve Position",
+      "title": "Current Channel",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -1992,7 +1992,7 @@
         "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Channels",
         "multi": true,
         "name": "ports",
         "options": [],
@@ -2016,7 +2016,7 @@
         },
         "hide": 0,
         "includeAll": false,
-        "label": null,
+        "label": "Species",
         "multi": false,
         "name": "species",
         "options": [
@@ -2052,11 +2052,10 @@
           "value": "15"
         },
         "hide": 0,
-        "label": null,
+        "label": "Stabilization Time",
         "name": "stabilization_time",
         "options": [
           {
-            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -2101,5 +2100,5 @@
   "timezone": "",
   "title": "Concentration By Valve",
   "uid": "GTo10zcZz",
-  "version": 2
+  "version": 3
 }

@@ -331,7 +331,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395104788,
+      "repeatIteration": 1569525554165,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -582,7 +582,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395104788,
+      "repeatIteration": 1569525554165,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -889,7 +889,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Valve Position",
+      "title": "Current Channel",
       "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -923,7 +923,7 @@
         "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Channels",
         "multi": true,
         "name": "ports",
         "options": [],
@@ -950,7 +950,7 @@
         },
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Species",
         "multi": true,
         "name": "species_available",
         "options": [
@@ -990,11 +990,10 @@
           "value": "15"
         },
         "hide": 0,
-        "label": null,
+        "label": "Stabilization Time",
         "name": "stabilization_time",
         "options": [
           {
-            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -1039,5 +1038,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "rHPC-eKZz",
-  "version": 2
+  "version": 3
 }

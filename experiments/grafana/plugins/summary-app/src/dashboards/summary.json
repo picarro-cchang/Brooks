@@ -75,7 +75,7 @@
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "2: Pizza Pineapple",
+          "text": "2: Bank 1 Ch. 2",
           "value": "2"
         }
       },
@@ -242,12 +242,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "4: Pizza Sausage",
+          "text": "4: Bank 1 Ch. 4",
           "value": "4"
         }
       },
@@ -414,12 +414,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "6: Pizza Pepperoni",
+          "text": "6: Bank 1 Ch. 6",
           "value": "6"
         }
       },
@@ -586,12 +586,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "8: Pizza Chicken",
+          "text": "8: Bank 1 Ch. 8",
           "value": "8"
         }
       },
@@ -758,12 +758,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "18: Ice Cream Chocolate",
+          "text": "18: Bank 3 Ch. 2",
           "value": "18"
         }
       },
@@ -930,12 +930,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "20: Ice Cream Coffee",
+          "text": "20: Bank 3 Ch. 4",
           "value": "20"
         }
       },
@@ -1102,12 +1102,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "22: Ice Cream Caramel",
+          "text": "22: Bank 3 Ch. 6",
           "value": "22"
         }
       },
@@ -1274,12 +1274,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
           "selected": false,
-          "text": "24: Ice Cream Pistachio",
+          "text": "24: Bank 3 Ch. 8",
           "value": "24"
         }
       },
@@ -1446,7 +1446,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1618,7 +1618,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1790,7 +1790,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1962,7 +1962,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568664643112,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -2199,7 +2199,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Valve Position",
+      "title": "Current Channel",
       "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -2231,7 +2231,7 @@
         "definition": "[$__from, $__to] ",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Channels",
         "multi": true,
         "name": "port",
         "options": [],
@@ -2271,11 +2271,10 @@
           "value": "15"
         },
         "hide": 0,
-        "label": null,
+        "label": "Stabilization Time",
         "name": "stabilization_time",
         "options": [
           {
-            "selected": true,
             "text": "15",
             "value": "15"
           }
