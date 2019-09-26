@@ -190,7 +190,8 @@ export class Main extends Component<any, any> {
                        setFocus={(row, column) => this.setFocus(row, column)}
                        ws_sender={this.ws_sender}/>
         );
-          isPlan = true;
+      /*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/
+        // isPlan = true;
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
@@ -247,19 +248,21 @@ export class Main extends Component<any, any> {
                 {left_panel}
               </div>
               <div  className="col-sm-9">
-              <div style={{padding: "10px", height: "85%"}}>
+              <div style={{padding: "10px"}}>
               {bankPanels}
-              </div>
-                {
-                  isPlan  ?
-                      <div style={{height: "15%", float: "left", padding: "10px"}}>
-                        <button type="button"
-                                onClick={e => this.ws_sender({element: "reference"})}
-                                className={"btn btn-large ref-btn btn-command"}
-                                style={{color: "black"}}>Reference</button>
-                      </div> :
-                      null
-                }
+                </div>
+                {/*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/}
+
+                {/*{*/}
+                {/*  isPlan  ?*/}
+                {/*      <div style={{height: "15%", float: "left", padding: "10px"}}>*/}
+                {/*        <button type="button"*/}
+                {/*                onClick={e => this.ws_sender({element: "reference"})}*/}
+                {/*                className={"btn btn-large ref-btn btn-command"}*/}
+                {/*                style={{color: "black"}}>Reference</button>*/}
+                {/*      </div> :*/}
+                {/*      null*/}
+                {/*}*/}
               </div>
             </div>
 
