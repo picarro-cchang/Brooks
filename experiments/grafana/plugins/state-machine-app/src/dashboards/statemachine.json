@@ -15,6 +15,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": 1,
   "links": [
     {
       "asDropdown": true,
@@ -77,6 +78,7 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "",
+      "transparent": true,
       "type": "picarro-state-machine"
     }
   ],
@@ -110,7 +112,7 @@
     ]
   },
   "timezone": "",
-  "title": "Sampler Setup",
+  "title": "Flow Setup",
   "uid": "xemz2IvWk",
   "version": 2
 }

@@ -13,9 +13,6 @@ yarn build
 cd ../simpod-json-datasource
 yarn install
 yarn build
-cd ../summary-app
-yarn install
-yarn build
 cd ../current-values-app
 yarn install
 yarn build

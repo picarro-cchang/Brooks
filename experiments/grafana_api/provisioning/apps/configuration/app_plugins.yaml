@@ -11,9 +11,9 @@ path: ../../../grafana/plugins/concentration-by-valve-app/src/plugin.json
 #name: Settings
 #path: ../../../grafana/plugins/settings-app/src/plugin.json
 #---
-name: Summary
-path: ../../../grafana/plugins/summary-app/src/plugin.json
----
+#name: Summary
+#path: ../../../grafana/plugins/summary-app/src/plugin.json
+#---
 name: Current Values
 path: ../../../grafana/plugins/current-values-app/src/plugin.json
 

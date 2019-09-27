@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Current Concentration Values",
+  "name": "Current Values",
   "id": "current-concentration-values",
   "info": {
     "author": {
@@ -14,7 +14,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Current Values - Table",
+      "name": "Current Values",
       "path": "dashboards/CurrentValues-Table.json",
       "addToNav": true,
       "defaultNav": true

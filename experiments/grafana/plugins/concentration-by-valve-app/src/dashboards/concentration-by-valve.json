@@ -29,19 +29,6 @@
   ],
   "panels": [
     {
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 52,
-      "panels": [],
-      "title": "Concentration Graphs",
-      "type": "row"
-    },
-    {
       "aliasColors": {
         "H2S": "green",
         "HCl": "blue"
@@ -57,7 +44,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 1
+        "y": 0
       },
       "id": 2,
       "legend": {
@@ -92,7 +79,24 @@
           "value": "2"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -207,7 +211,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 1
+        "y": 0
       },
       "id": 119,
       "legend": {
@@ -235,7 +239,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -359,7 +363,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 1
+        "y": 0
       },
       "id": 120,
       "legend": {
@@ -387,7 +391,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -511,7 +515,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 0
       },
       "id": 121,
       "legend": {
@@ -539,7 +543,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -663,7 +667,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 7
+        "y": 6
       },
       "id": 122,
       "legend": {
@@ -691,7 +695,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -815,7 +819,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 7
+        "y": 6
       },
       "id": 123,
       "legend": {
@@ -843,7 +847,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -967,7 +971,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 7
+        "y": 6
       },
       "id": 124,
       "legend": {
@@ -995,7 +999,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1119,7 +1123,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 7
+        "y": 6
       },
       "id": 125,
       "legend": {
@@ -1147,7 +1151,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1271,7 +1275,7 @@
         "h": 6,
         "w": 6,
         "x": 0,
-        "y": 13
+        "y": 12
       },
       "id": 126,
       "legend": {
@@ -1299,7 +1303,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1423,7 +1427,7 @@
         "h": 6,
         "w": 6,
         "x": 6,
-        "y": 13
+        "y": 12
       },
       "id": 127,
       "legend": {
@@ -1451,7 +1455,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1575,7 +1579,7 @@
         "h": 6,
         "w": 6,
         "x": 12,
-        "y": 13
+        "y": 12
       },
       "id": 128,
       "legend": {
@@ -1603,7 +1607,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1727,7 +1731,7 @@
         "h": 6,
         "w": 6,
         "x": 18,
-        "y": 13
+        "y": 12
       },
       "id": 129,
       "legend": {
@@ -1755,7 +1759,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569525498172,
+      "repeatIteration": 1569606029242,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1885,7 +1889,7 @@
         "h": 3,
         "w": 4,
         "x": 0,
-        "y": 19
+        "y": 18
       },
       "id": 118,
       "interval": null,
@@ -2047,11 +2051,10 @@
       },
       {
         "current": {
-          "selected": true,
           "text": "15",
           "value": "15"
         },
-        "hide": 0,
+        "hide": 2,
         "label": "Stabilization Time",
         "name": "stabilization_time",
         "options": [
@@ -2098,7 +2101,7 @@
     ]
   },
   "timezone": "",
-  "title": "Concentration By Valve",
+  "title": "Concentration By Channel",
   "uid": "GTo10zcZz",
-  "version": 3
+  "version": 4
 }
