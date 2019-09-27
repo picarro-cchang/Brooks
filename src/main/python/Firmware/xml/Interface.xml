@@ -422,6 +422,8 @@
             <enum_value ident="STREAM_Laser4Current" />
             <enum_value ident="STREAM_CavityPressure" />
             <enum_value ident="STREAM_AmbientPressure" />
+            <enum_value ident="STREAM_Cavity2Pressure" />
+            <enum_value ident="STREAM_Ambient2Pressure" />
             <!-- <enum_value ident="STREAM_InletPressure" />
             <enum_value ident="STREAM_OutletPressure" /> -->
             <enum_value ident="STREAM_Laser1Tec" />
@@ -452,8 +454,13 @@
             <enum_value ident="STREAM_CavityTemp2" />
             <enum_value ident="STREAM_CavityTemp3" />
             <enum_value ident="STREAM_CavityTemp4" />
+            <enum_value ident="STREAM_Cavity2Temp1" />
+            <enum_value ident="STREAM_Cavity2Temp2" />
+            <enum_value ident="STREAM_Cavity2Temp3" />
+            <enum_value ident="STREAM_Cavity2Temp4" />
             <enum_value ident="STREAM_FilterHeaterTemp" />
             <enum_value ident="STREAM_FilterHeater" />
+            <enum_value ident="STREAM_Cavity2Temp" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -2100,6 +2107,110 @@
             <initial>124000</initial>
             <save/>
         </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE1_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 1 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE1_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 1 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE2_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity thermistor 2 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE2_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity temperature 2</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 2 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE3_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 3 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE3_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature 3</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 3 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant A</description>
+            <initial>0.000847030023579</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant B</description>
+            <initial>0.000205610005651</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 constant C</description>
+            <initial>9.26699996739e-008</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_RESISTANCE4_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 thermistor 4 resistance</description>
+        </register>
+        <register ident="CAVITY2_TEMPERATURE4_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
+        <register ident="CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 thermistor 4 series resistance</description>
+            <initial>124000</initial>
+            <save/>
+        </register>
         <register ident="CAVITY_TEC_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity TEC value</description>
             <initial>32768.0</initial>
@@ -2641,6 +2752,40 @@
         <register ident="AMBIENT_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Ambient pressure</description>
         </register>
+        <register ident="CAVITY2_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
+            <description>Cavity2 pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
+       <register ident="CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 pressure scaling</description>
+            <initial>1.5258789E-2</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Cavity2 pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="CAVITY2_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 pressure</description>
+        </register>
+        <register ident="AMBIENT2_PRESSURE_ADC_REGISTER" type="int32" minver="1.0" access="r">
+            <description>Ambient2 pressure ADC register</description>
+            <initial>32768</initial>
+        </register>
+        <register ident="CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient2 pressure scaling</description>
+            <initial>1.5258789E-2</initial>
+            <save/>
+        </register>
+        <register ident="CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Ambient2 pressure offset</description>
+            <initial>0.0</initial>
+            <save/>
+        </register>
+        <register ident="AMBIENT2_PRESSURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Ambient pressure</description>
+        </register>
         <register ident="ANALYZER_TUNING_MODE_REGISTER" type="ANALYZER_TUNING_ModeType" minver="1.0" access="rw">
             <description>Analyzer tuning mode register</description>
             <initial>ANALYZER_TUNING_CavityLengthTuningMode</initial>
@@ -2931,6 +3076,60 @@
             <initial>0</initial>
             <save/>
             <display format="%.3f">Virtual laser 8 scheme temperature offset</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 1</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 1 scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER2" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 2</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 2 Scheme threshold factort</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER3" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 3</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 3 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER4" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 4</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 4 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER5" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 5</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 5 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER6" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 6</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 6 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER7" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 7</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 7 Scheme threshold factor</display>
+        </register>
+        <register ident="THRESHOLD_FACTOR_VIRTUAL_LASER8" type="float" minver="1.0" access="rw">
+            <description>Scheme threshold factor for virtual laser 8</description>
+            <initial>1.0</initial>
+            <save/>
+            <display format="%.3f">Virtual laser 8 Scheme threshold factor</display>
+        </register>
+        <register ident="SCHEME_THRESHOLD_BASE" type="uint32" minver="1.0" access="rw">
+            <description>Scheme threshold base</description>
+            <initial>3000</initial>
+            <save/>
+            <display format="%d">Scheme threshold base</display>
         </register>
         <register ident="VALVE_CNTRL_STATE_REGISTER" type="VALVE_CNTRL_StateType" minver="1.0" access="rw">
             <description>Valve control app state register</description>
@@ -3674,6 +3873,21 @@
         <register ident="ACCELEROMETER_Z_REGISTER" type="float" minver="1.0" access="rw">
             <description>Accelerometer Z register</description>
         </register>
+        <register ident="CAVITY2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
+            <description>Cavity2 temperature</description>
+        </register>
+        <register ident="RDD2_BALANCE_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector 2 balance register</description>
+            <initial>0</initial>
+            <display format="%d">Ringdown 2 detector balance</display>
+            <save/>
+        </register>
+        <register ident="RDD2_GAIN_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Ringdown detector 2 gain register</description>
+            <initial>128</initial>
+            <display format="%d">Ringdown 2 detector gain</display>
+            <save/>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -3704,8 +3918,16 @@
         <i2c ident="CAVITY_THERMISTOR_4_ADC" chain="0" mux="7" address="0x15" />
         <i2c ident="FILTER_HEATER_THERMISTOR_ADC" chain="0" mux="5" address="0x26" />
 
+        <i2c ident="CAVITY2_THERMISTOR_1_ADC" chain="1" mux="4" address="0x27" />
+        <i2c ident="CAVITY2_THERMISTOR_2_ADC" chain="1" mux="4" address="0x26" />
+        <i2c ident="CAVITY2_THERMISTOR_3_ADC" chain="1" mux="4" address="0x14" />
+        <i2c ident="CAVITY2_THERMISTOR_4_ADC" chain="1" mux="4" address="0x15" />
+        <i2c ident="CAVITY2_PRESSURE_ADC" chain="1" mux="4" address="0x24" />
+        <i2c ident="AMBIENT2_PRESSURE_ADC" chain="1" mux="4" address="0x17" />
+
         <i2c ident="HOT_BOX_HEATSINK_THERMISTOR_ADC" chain="0" mux="7" address="0x54" />
         <i2c ident="RDD_POTENTIOMETERS" chain="0" mux="7" address="0x2C" />
+        <i2c ident="RDD2_POTENTIOMETERS" chain="1" mux="4" address="0x2C" />
         <i2c ident="FLOW1_SENSOR" chain="0" mux="7" address="0x49" />
 
         <i2c ident="DAS_TEMP_SENSOR" chain="0" address="0x4E" />
@@ -3918,6 +4140,27 @@
                 <bitfield ident="FAN2" description="State of fan2" lsb="1" width="1">
                     <fielddef value="0">Fan2 OFF</fielddef>
                     <fielddef value="1">Fan2 ON</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="mask" ident="SEL_DETECTOR_MODE" description="Select Detector Mode" access="rw">
+                <save />
+                <bitfield ident="MODE" description="Select Detector" lsb="0" width="4">
+                    <fielddef value="0">All lasers on first detector</fielddef>
+                    <fielddef value="14">Laser  1 on first detector</fielddef>
+                    <fielddef value="12">Lasers 1, 2 on first detector</fielddef>
+                    <fielddef value="8">Lasers 1, 2, 3 on first detector</fielddef>
+                    <fielddef value="15">All lasers on second detector</fielddef>
+                    <fielddef value="1">Lasers 2, 3, 4 on first detector</fielddef>
+                    <fielddef value="2">Lasers 1, 3, 4 on first detector</fielddef>
+                    <fielddef value="3">Lasers 3, 4 on first detector</fielddef>
+                    <fielddef value="4">Lasers 1, 2, 4 on first detector</fielddef>
+                    <fielddef value="5">Lasers 2, 4 on first detector</fielddef>
+                    <fielddef value="6">Lasers 1, 4 on first detector</fielddef>
+                    <fielddef value="7">Laser  4 on first detector</fielddef>
+                    <fielddef value="9">Lasers 2, 3 on first detector</fielddef>
+                    <fielddef value="10">Lasers 1, 3 on first detector</fielddef>
+                    <fielddef value="11">Laser  3 on first detector</fielddef>
+                    <fielddef value="13">Laser  2 on first detector</fielddef>
                 </bitfield>
             </reg>
         </fpga_block>
@@ -4819,6 +5062,9 @@
         <action ident="ACTION_RDD_CNTRL_INIT">r_rdd_cntrl_init</action>
         <action ident="ACTION_RDD_CNTRL_STEP">r_rdd_cntrl_step</action>
         <action ident="ACTION_RDD_CNTRL_DO_COMMAND">r_rdd_cntrl_do_command</action>
+        <action ident="ACTION_RDD2_CNTRL_INIT">r_rdd2_cntrl_init</action>
+        <action ident="ACTION_RDD2_CNTRL_STEP">r_rdd2_cntrl_step</action>
+        <action ident="ACTION_RDD2_CNTRL_DO_COMMAND">r_rdd2_cntrl_do_command</action>
         <action ident="ACTION_BATTERY_MONITOR_WRITE_BYTE">r_batt_mon_write_byte</action>
         <action ident="ACTION_BATTERY_MONITOR_READ_REGS">r_batt_mon_read_regs</action>
         <action ident="ACTION_ACC_READ_REG">r_acc_read_reg</action>

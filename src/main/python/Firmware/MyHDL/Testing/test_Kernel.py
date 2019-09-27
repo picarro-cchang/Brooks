@@ -26,6 +26,7 @@ from Host.autogen.interface import KERNEL_INTRONIX_3, KERNEL_OVERLOAD
 from Host.autogen.interface import KERNEL_DOUT_HI, KERNEL_DOUT_LO
 from Host.autogen.interface import KERNEL_DIN, KERNEL_STATUS_LED
 from Host.autogen.interface import KERNEL_FAN
+from Host.autogen.interface import KERNEL_FAN, KERNEL_SEL_DETECTOR_MODE
 
 from Host.autogen.interface import KERNEL_CONTROL_CYPRESS_RESET_B, KERNEL_CONTROL_CYPRESS_RESET_W
 from Host.autogen.interface import KERNEL_CONTROL_OVERLOAD_RESET_B, KERNEL_CONTROL_OVERLOAD_RESET_W
@@ -39,6 +40,7 @@ from Host.autogen.interface import KERNEL_STATUS_LED_RED_B, KERNEL_STATUS_LED_RE
 from Host.autogen.interface import KERNEL_STATUS_LED_GREEN_B, KERNEL_STATUS_LED_GREEN_W
 from Host.autogen.interface import KERNEL_FAN_FAN1_B, KERNEL_FAN_FAN1_W
 from Host.autogen.interface import KERNEL_FAN_FAN2_B, KERNEL_FAN_FAN2_W
+from Host.autogen.interface import KERNEL_SEL_DETECTOR_MODE_MODE_B, KERNEL_SEL_DETECTOR_MODE_MODE_W
 
 from MyHDL.Common.Kernel import Kernel
 
@@ -49,8 +51,10 @@ dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
 dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_wr = Signal(LOW)
+sel_laser_in = Signal(intbv(0)[2:])
 usb_connected = Signal(LOW)
 cyp_reset = Signal(LOW)
+sel_detector_out = Signal(LOW)
 diag_1_out = Signal(intbv(0)[8:])
 config_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 intronix_clksel_out = Signal(intbv(0)[5:])
@@ -129,9 +133,10 @@ def bench():
     #  derived as the OR of the data buses from the individual blocks.
     kernel = Kernel( clk=clk, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
-                     dsp_wr=dsp_wr, usb_connected=usb_connected,
-                     cyp_reset=cyp_reset, diag_1_out=diag_1_out,
-                     config_out=config_out,
+                     dsp_wr=dsp_wr, sel_laser_in=sel_laser_in,
+                     usb_connected=usb_connected, cyp_reset=cyp_reset,
+                     sel_detector_out=sel_detector_out,
+                     diag_1_out=diag_1_out, config_out=config_out,
                      intronix_clksel_out=intronix_clksel_out,
                      intronix_1_out=intronix_1_out,
                      intronix_2_out=intronix_2_out,
@@ -170,6 +175,13 @@ def bench():
         yield writeFPGA(FPGA_KERNEL+KERNEL_CONTROL,1<<KERNEL_CONTROL_DOUT_MAN_B)
         yield writeFPGA(FPGA_KERNEL+KERNEL_DOUT_HI,0xFE)
         yield writeFPGA(FPGA_KERNEL+KERNEL_DOUT_LO,0xDCBA9876)
+        # Test detector selection
+        yield writeFPGA(FPGA_KERNEL+KERNEL_SEL_DETECTOR_MODE, 0x7)
+        for i in range(4):
+            sel_laser_in.next = i
+            yield clk.posedge
+            yield delay(20*PERIOD)
+
         yield delay(20*PERIOD)
         raise StopSimulation
     return instances()

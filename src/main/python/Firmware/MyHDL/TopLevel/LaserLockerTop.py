@@ -170,6 +170,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
     sel_laser = Signal(intbv(0)[2:])
     sel_coarse_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sel_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    sel_detector = Signal(LOW)
 
     meta0 = ratio1
     meta1 = ratio2
@@ -299,8 +300,10 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
 
     kernel = Kernel( clk=clk0, reset=reset, dsp_addr=dsp_addr,
                      dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in_kernel,
-                     dsp_wr=dsp_wr, usb_connected=usb_rear_connected,
-                     cyp_reset=cyp_reset, diag_1_out=diag_1,
+                     dsp_wr=dsp_wr, sel_laser_in=sel_laser,
+                     usb_connected=usb_rear_connected,
+                     cyp_reset=cyp_reset, sel_detector_out=sel_detector,
+                     diag_1_out=diag_1,
                      config_out=config,
                      intronix_clksel_out=intronix_clksel,
                      intronix_1_out=intronix_1,
@@ -862,6 +865,7 @@ def main(clk0,clk180,clk3f,clk3f180,clk_locked,
         fp_lcd.next = 0
         fp_lcd[1].next = filter_heater_pwm_out
         fp_lcd[2].next = fan[0]
+        fp_lcd[3].next = sel_detector
 
         fpga_program_enable.next = 1
         ## Do not reset Cypress

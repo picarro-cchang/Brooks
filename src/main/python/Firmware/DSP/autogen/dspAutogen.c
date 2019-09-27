@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2018 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[538];
+RegTypes regTypes[582];
 
 /* I2C devices */
-I2C_device i2c_devices[34] = {
+I2C_device i2c_devices[41] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -45,8 +45,15 @@ I2C_device i2c_devices[34] = {
     {0, 7, 0x14},
     {0, 7, 0x15},
     {0, 5, 0x26},
+    {1, 4, 0x27},
+    {1, 4, 0x26},
+    {1, 4, 0x14},
+    {1, 4, 0x15},
+    {1, 4, 0x24},
+    {1, 4, 0x17},
     {0, 7, 0x54},
     {0, 7, 0x2c},
+    {1, 4, 0x2c},
     {0, 7, 0x49},
     {0, -1, 0x4e},
     {1, 4, 0x70},
@@ -534,6 +541,38 @@ void initRegisters()
     writeRegister(CONVERSION_CAVITY_THERM4_CONSTC_REGISTER,d);
     d.asFloat = 124000;
     writeRegister(CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER,d);
+    d.asFloat = 0.000847030023579;
+    writeRegister(CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER,d);
+    d.asFloat = 0.000205610005651;
+    writeRegister(CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER,d);
+    d.asFloat = 9.26699996739e-008;
+    writeRegister(CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER,d);
+    d.asFloat = 124000;
+    writeRegister(CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER,d);
     d.asFloat = 32768.0;
     writeRegister(CAVITY_TEC_REGISTER,d);
     d.asFloat = 32768.0;
@@ -702,6 +741,18 @@ void initRegisters()
     writeRegister(CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER,d);
+    d.asInt = 32768;
+    writeRegister(CAVITY2_PRESSURE_ADC_REGISTER,d);
+    d.asFloat = 1.5258789E-2;
+    writeRegister(CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER,d);
+    d.asInt = 32768;
+    writeRegister(AMBIENT2_PRESSURE_ADC_REGISTER,d);
+    d.asFloat = 1.5258789E-2;
+    writeRegister(CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER,d);
     d.asUint = ANALYZER_TUNING_CavityLengthTuningMode;
     writeRegister(ANALYZER_TUNING_MODE_REGISTER,d);
     d.asFloat = 50000.0;
@@ -800,6 +851,24 @@ void initRegisters()
     writeRegister(SCHEME_OFFSET_VIRTUAL_LASER7,d);
     d.asFloat = 0;
     writeRegister(SCHEME_OFFSET_VIRTUAL_LASER8,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER1,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER2,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER3,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER4,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER5,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER6,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER7,d);
+    d.asFloat = 1.0;
+    writeRegister(THRESHOLD_FACTOR_VIRTUAL_LASER8,d);
+    d.asUint = 3000;
+    writeRegister(SCHEME_THRESHOLD_BASE,d);
     d.asUint = VALVE_CNTRL_DisabledState;
     writeRegister(VALVE_CNTRL_STATE_REGISTER,d);
     d.asFloat = 140.0;
@@ -1058,6 +1127,10 @@ void initRegisters()
     writeRegister(BATTERY_MONITOR_CURRENT_REGISTER,d);
     d.asFloat = 0;
     writeRegister(BATTERY_MONITOR_TEMPERATURE_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(RDD2_BALANCE_REGISTER,d);
+    d.asUint = 128;
+    writeRegister(RDD2_GAIN_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1325,6 +1398,30 @@ void initRegisters()
     regTypes[CAVITY_RESISTANCE4_REGISTER] = float_type;
     regTypes[CAVITY_TEMPERATURE4_REGISTER] = float_type;
     regTypes[CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY2_RESISTANCE1_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE1_REGISTER] = float_type;
+    regTypes[CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY2_RESISTANCE2_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE2_REGISTER] = float_type;
+    regTypes[CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY2_RESISTANCE3_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE3_REGISTER] = float_type;
+    regTypes[CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER] = float_type;
+    regTypes[CAVITY2_RESISTANCE4_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE4_REGISTER] = float_type;
+    regTypes[CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER] = float_type;
     regTypes[CAVITY_TEC_REGISTER] = float_type;
     regTypes[CAVITY_MANUAL_TEC_REGISTER] = float_type;
     regTypes[CAVITY_TEMP_CNTRL_STATE_REGISTER] = uint_type;
@@ -1413,6 +1510,14 @@ void initRegisters()
     regTypes[CONVERSION_AMBIENT_PRESSURE_SCALING_REGISTER] = float_type;
     regTypes[CONVERSION_AMBIENT_PRESSURE_OFFSET_REGISTER] = float_type;
     regTypes[AMBIENT_PRESSURE_REGISTER] = float_type;
+    regTypes[CAVITY2_PRESSURE_ADC_REGISTER] = int_type;
+    regTypes[CONVERSION_CAVITY2_PRESSURE_SCALING_REGISTER] = float_type;
+    regTypes[CONVERSION_CAVITY2_PRESSURE_OFFSET_REGISTER] = float_type;
+    regTypes[CAVITY2_PRESSURE_REGISTER] = float_type;
+    regTypes[AMBIENT2_PRESSURE_ADC_REGISTER] = int_type;
+    regTypes[CONVERSION_AMBIENT2_PRESSURE_SCALING_REGISTER] = float_type;
+    regTypes[CONVERSION_AMBIENT2_PRESSURE_OFFSET_REGISTER] = float_type;
+    regTypes[AMBIENT2_PRESSURE_REGISTER] = float_type;
     regTypes[ANALYZER_TUNING_MODE_REGISTER] = uint_type;
     regTypes[TUNER_SWEEP_RAMP_HIGH_REGISTER] = float_type;
     regTypes[TUNER_SWEEP_RAMP_LOW_REGISTER] = float_type;
@@ -1463,6 +1568,15 @@ void initRegisters()
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER6] = float_type;
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER7] = float_type;
     regTypes[SCHEME_OFFSET_VIRTUAL_LASER8] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER1] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER2] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER3] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER4] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER5] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER6] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER7] = float_type;
+    regTypes[THRESHOLD_FACTOR_VIRTUAL_LASER8] = float_type;
+    regTypes[SCHEME_THRESHOLD_BASE] = uint_type;
     regTypes[VALVE_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER] = float_type;
     regTypes[VALVE_CNTRL_USER_INLET_VALVE_REGISTER] = float_type;
@@ -1596,6 +1710,9 @@ void initRegisters()
     regTypes[ACCELEROMETER_X_REGISTER] = float_type;
     regTypes[ACCELEROMETER_Y_REGISTER] = float_type;
     regTypes[ACCELEROMETER_Z_REGISTER] = float_type;
+    regTypes[CAVITY2_TEMPERATURE_REGISTER] = float_type;
+    regTypes[RDD2_BALANCE_REGISTER] = uint_type;
+    regTypes[RDD2_GAIN_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1761,6 +1878,12 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_rdd_cntrl_step(numInt,params,env);
         case ACTION_RDD_CNTRL_DO_COMMAND:
             return r_rdd_cntrl_do_command(numInt,params,env);
+        case ACTION_RDD2_CNTRL_INIT:
+            return r_rdd2_cntrl_init(numInt,params,env);
+        case ACTION_RDD2_CNTRL_STEP:
+            return r_rdd2_cntrl_step(numInt,params,env);
+        case ACTION_RDD2_CNTRL_DO_COMMAND:
+            return r_rdd2_cntrl_do_command(numInt,params,env);
         case ACTION_BATTERY_MONITOR_WRITE_BYTE:
             return r_batt_mon_write_byte(numInt,params,env);
         case ACTION_BATTERY_MONITOR_READ_REGS:
