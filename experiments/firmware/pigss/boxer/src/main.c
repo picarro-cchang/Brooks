@@ -145,7 +145,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  // logger_setsystem( "mpr" );
+  logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -171,7 +171,7 @@ int main(void) {
   logger_setsystem( "lm75" );
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
-  // logger_setsystem( "pressure" );
+  logger_setsystem( "pressure" );
   logger_setsystem( "vernon" );
   logger_setsystem( "whitfield" );
   logger_setsystem( "aloha" );
@@ -224,10 +224,10 @@ int main(void) {
   // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
 
   // Task 0 -- Trigger all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
+  // OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+  // OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
   // Task 2 -- Check for USB communication
   OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
@@ -237,7 +237,7 @@ int main(void) {
 
   // Start the trigger/read cycle by calling the trigger task.  This
   // will schedule the read task, which will then schedule the next trigger.
-  pressure_mpr_trigger_task();
+  // pressure_mpr_trigger_task();
 
   // cs_manifold_a_sr_noe(1);
 

@@ -575,3 +575,12 @@ clean solenoid.
 
 Added support for the front panel PCB "Aloha."  There are no new
 remote commands to go with this.
+
+### Version 1.1.3 ###
+
+This version **does not read the pressure sensors**.  All `prs.*`
+commands will return 0.  This will be an interim release while we fix
+the pressure sensors.
+
+Added the `mfcval?` query to get the Mass Flow Controller (MFC)
+setting contribution required for a piglet.  

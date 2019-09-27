@@ -217,7 +217,7 @@ try {
 set read_period_ms [expr double(1000)/$params(r)]
 
 # Configure exponential moving average
-boxer::sendcmd $channel "prs.alpha 1180"
+boxer::sendcmd $channel "prs.alpha 65535"
 set return_value [boxer::readline $channel]
 
 # Wait for system to start reading pressures
@@ -358,7 +358,12 @@ foreach channel $channel_list {
 package require Tk
 package require Plotchart
 
-canvas .c -background white -width 1000 -height 600
+# Set the dimensions of the canvas.  The plot will be scaled to fit
+# the canvas...though the axis labels don't seem to participate in this.
+set canvas_width 1000
+set canvas_height 600
+
+canvas .c -background white -width $canvas_width -height $canvas_height
 pack .c -fill both
 tkwait visibility .c
 set data_list [get_channel_list $read_cycle_list 1]
@@ -367,11 +372,21 @@ set plot_min [math::statistics::min $data_list]
 set plot_max [math::statistics::max $data_list]
 set plot_ytic [expr int(($plot_max - $plot_min)/10)]
 set plot_xtic [expr int($number_of_points / 10)]
-set s [Plotchart::createXYPlot .c [list 0 [llength $data_list] $plot_xtic] \
-	   [list [expr $plot_min - $plot_ytic] [expr $plot_max + $plot_ytic] $plot_ytic]]
+set s [Plotchart::createXYPlot .c \
+	   [list 0 [llength $data_list] $plot_xtic] \
+	   [list [expr $plot_min - $plot_ytic] [expr $plot_max + $plot_ytic] $plot_ytic] \
+	   -box [list 0 0 $canvas_width [expr 0.95 * $canvas_height]]]
+$s dataconfig "channel 1" -color "red"
+$s xtext "Reading number"
+$s ytext "Raw MPR output"
+
+
 foreach x [iterint 0 [llength $data_list]] y $data_list {
-    $s plot series1 $x $y
+    $s plot "channel 1" $x $y
 }
+# Legendconfig has to come before the legend command
+$s legendconfig -position top-right -border ""
+$s legend "channel 1" "Channel 1"
 
 
 

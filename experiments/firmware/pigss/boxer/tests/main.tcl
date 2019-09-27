@@ -101,13 +101,8 @@ ${log}::warn "Warn message"
 package require tcltest
 tcltest::configure -singleproc true
 
-set skiplist [list]
-# lappend skiplist chanset.*
-# lappend skiplist slotid*
-# lappend skiplist slotid?*
-# lappend skiplist standby*
-
-tcltest::configure -skip $skiplist
+# Skip pressure commands
+tcltest::configure -notfile "pressure.test"
 
 # Only run the channel locations test.  Comment this out to run all
 # tests.

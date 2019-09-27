@@ -251,6 +251,7 @@ void cmd_pressure_dac_query( command_arg_t *command_arg_ptr ) {
 }
 
 int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Triggering channel %u inlet"),channel);
   switch(channel) {
   case 1 :
     cs_ne_mpr_mux();
@@ -290,6 +291,7 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
 }
 
 int8_t pressure_mpr_outlet_trigger(char board) {
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Triggering Topaz %s outlet"),board);
   switch(board) {
   case 'a' :
     cs_outlet_mpr_mux();
@@ -306,17 +308,24 @@ int8_t pressure_mpr_outlet_trigger(char board) {
 
 int8_t pressure_mpr_trigger_cycle( void ) {
   uint8_t retval = 0;
-  // Trigger all the inlet channels
-  for (uint8_t channel = 1; channel < 9; channel++) {
+  // Trigger Topaz A inlets
+  for (uint8_t channel = 1; channel <= 5; channel++) {
     retval += pressure_mpr_inlet_trigger(channel);
   }
-  // Trigger the outlet channels
+  // Trigger Topaz A outlet
   retval += pressure_mpr_outlet_trigger('a');
+  
+  // Trigger Topaz B inlets
+  for (uint8_t channel = 5; channel <= 8; channel++) {
+    retval += pressure_mpr_inlet_trigger(channel);
+  }
+  // Trigger Topaz B outlet
   retval += pressure_mpr_outlet_trigger('b');
   return retval;
 }
 
 int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Reading channel %u inlet"),channel);
   switch(channel) {
   case 1 :
     cs_ne_mpr_mux();
@@ -356,6 +365,7 @@ int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
 }
 
 int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Reading Topaz %s outlet"),board);
   switch(board) {
   case 'a' :
     cs_outlet_mpr_mux();
@@ -382,8 +392,30 @@ void pressure_mpr_read_task(void) {
   OS_SetTaskState(1, SUSPENDED);
   uint8_t index = 0;
 
-  // All inlets
-  for (uint8_t channel = 1; channel < 9; channel++) {
+  // Topaz A inlets
+  for (uint8_t channel = 1; channel <= 4; channel++) {
+    index = channel - 1;
+    pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
+    pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
+						     pressure_inlet_old_counts[index],
+						     pressure_config.ema_alpha);
+    pressure_inlet_old_pascals[index] =
+      pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+    // This delay has to be here to avoid SPI read errors
+    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US); 
+  }
+
+  // Topaz A outlet
+  pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
+  pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
+  						pressure_outlet_old_counts[0],
+  						pressure_config.ema_alpha);
+  pressure_outlet_old_pascals[0] =
+    pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
+  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+
+  // Topaz B inlets
+  for (uint8_t channel = 5; channel <= 8; channel++) {
     index = channel - 1;
     pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
     pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
@@ -394,19 +426,8 @@ void pressure_mpr_read_task(void) {
     // This delay has to be here to avoid SPI read errors
     _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   }
-  
-  // Outlet A
-  pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
-  pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
-						pressure_outlet_old_counts[0],
-						pressure_config.ema_alpha);
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
-  pressure_outlet_old_pascals[0] =
-    pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
-  // This delay has to be here to avoid SPI read errors
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
 
-  // Outlet B
+  // Topaz B outlet
   pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
   pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
 						pressure_outlet_old_counts[1],

@@ -1,0 +1,78 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the mfcval? command
+
+tcltest::test mfcval.recognize {
+    Test recognizing the mfcval command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "mfcval?"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+
+} -match regexp -result 1
+
+tcltest::test mfcval.standby {
+    Test MFC value in standby mode.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Put the system in standby mode
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "mfcval?"
+    set return_string [boxer::readline $channel]
+    # If this piglet is in standby, it won't need any flow from the
+    # MFC.  So the mfcval should be 0.
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 0
+
+tcltest::test mfcval.clean {
+    Test MFC value in clean mode.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Put the system in clean mode
+    boxer::sendcmd $channel "clean"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "mfcval?"
+    set return_string [boxer::readline $channel]
+    # If this piglet is in clean mode, it will be flowing clean sample
+    # gas.  Jeff has told me that a MFC value of 40 should be ok for this.
+    return $return_string
+} -cleanup {
+    # Go back to standby
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -match regexp -result 40.0
+
+# tcltest::test shutdown.forbidden_transitions {
+#     Make sure transitions from shutdown to control are forbidden.
+# } -setup {
+#     set garbage_string [boxer::readline $channel]
+#     boxer::sendcmd $channel "shutdown"
+#     set garbage_string [boxer::readline $channel]
+# } -body {
+#     boxer::sendcmd $channel "chanset 1"
+#     # This should return -3
+#     set return_sum [boxer::readline $channel]
+#     boxer::sendcmd $channel "clean"
+#     # This should return -3, so the return_sum should now be -6
+#     set return_sum [expr $return_sum + [boxer::readline $channel]]
+#     boxer::sendcmd $channel "standby"
+#     # This should return -3, so the return sum should now be -9
+#     set return_sum [expr $return_sum + [boxer::readline $channel]]
+#     return $return_sum
+# } -cleanup {
+#     # The only way out of the shutdown state is a reset
+#     boxer::sendcmd $channel "*rst"
+#     # Now we need to wait for a reboot
+#     after 5000    
+# } -match regexp -result -9
+
