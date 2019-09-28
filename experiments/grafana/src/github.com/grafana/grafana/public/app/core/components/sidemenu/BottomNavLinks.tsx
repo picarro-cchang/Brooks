@@ -35,11 +35,11 @@ class BottomNavLinks extends PureComponent<Props> {
           </span>
         </a>
         <ul className="dropdown-menu dropdown-menu--sidemenu" role="menu">
-          {link.subTitle && (
-            <li className="sidemenu-subtitle">
-              <span className="sidemenu-item-text">{link.subTitle}</span>
-            </li>
-          )}
+          {/*{link.subTitle && (*/}
+          {/*  <li className="sidemenu-subtitle">*/}
+          {/*    <span className="sidemenu-item-text">{link.subTitle}</span>*/}
+          {/*  </li>*/}
+          {/*)}*/}
           {link.showOrgSwitcher && (
             <li className="sidemenu-org-switcher">
               <a onClick={this.switchOrg}>

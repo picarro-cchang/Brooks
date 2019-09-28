@@ -193,8 +193,9 @@ class GraphElement {
       },
     ];
 
-    return item
-      ? [
+    if (this.dashboard.meta.canEdit) {
+      return item
+        ? [
           ...items,
           {
             items: [
@@ -213,7 +214,10 @@ class GraphElement {
             ],
           },
         ]
-      : items;
+        : items;
+    } else {
+      return null;
+    }
   };
 
   onPlotClick(event: JQueryEventObject, pos: any, item: any) {
