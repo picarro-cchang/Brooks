@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.1.2"
+set firmware_version "1.1.3"
 
 ############################### *idn? ################################
 
@@ -370,42 +370,4 @@ tcltest::test tzb.sn_set {
     set return_string [boxer::readline $channel]
 } -match regexp -result [expr $tzb_old_serial_number + 1]
 
-
-
-############################ chx.byp.dac #############################
-
-# This will just test the set commands.  The correct return should be 0.
-set ok_result 0
-set dac_setting 100
-
-
-foreach inlet_channel $inlet_channel_list {
-    set command "ch${inlet_channel}.byp.dac"
-    set description "Set proportional valve bypass DAC for channel $inlet_channel"
-    tcltest::test "[string tolower $command] $dac_setting" "$description" -body {
-	boxer::sendcmd $channel "[string tolower $command] $dac_setting"
-	set return_string [boxer::readline $channel]
-	return $return_string
-    } -match regexp -result $ok_result
-}
-
-############################## byp.dac? ##############################
-
-# Query bypass DAC settings for disabled channels
-set ok_result 17134
-
-# Disable all channels
-boxer::sendcmd $channel "chanset 0"
-# Read the result to clear the input queue
-set return_string [boxer::readline $channel]
-
-foreach inlet_channel $inlet_channel_list {
-    set command "byp.dac? $inlet_channel"
-    set description "Query proportional valve bypass DAC for channel $inlet_channel"
-    tcltest::test "[string tolower $command]" "$description" -body {
-	boxer::sendcmd $channel "[string tolower $command]"
-	set return_string [boxer::readline $channel]
-	return $return_string
-    } -match regexp -result $ok_result
-}
 

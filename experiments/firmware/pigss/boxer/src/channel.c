@@ -131,6 +131,10 @@ int8_t channel_update() {
     if (channel_array[channel_array_index].enabled == true) {
       // Channel is enabled for sampling
       enabled_channels += 1;
+
+      // Set the bypass DAC for minimum flow
+      retval = pressure_dac_set(channel, 0);
+      
       // Set hardware byte for configuring solenoid valves.  Solenoid
       // valves are energized when a channel is disabled, so enabled
       // channel bits are cleared in the hardware byte.
@@ -215,7 +219,7 @@ int8_t channel_update() {
     set_system_state(system_state_STANDBY);
   }
 
-  // Update hardware.  Disabled channels are energized.
+  // Update hardware solenoids.  Disabled channels are energized.
   uint8_t topaz_a_byte = channel_hardware_byte;
   uint8_t topaz_b_byte = channel_hardware_byte >> 4;
 
