@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: async-hsm
-Version: 0.2.0
+Version: 0.2.1
 Summary: Asyncio based Hierarchical State Machines
 Home-page: UNKNOWN
 Author: Dean Hall, Sze Tan
@@ -33,7 +33,7 @@ Description: # async_hsm
         
         ## Release History
         
-        2018/07/11  0.2.0
+        2019/07/11  0.2.0
         - Renamed package as async_hsm. 
         
         - The algorithm for traversing the hierarchical state machine has been 

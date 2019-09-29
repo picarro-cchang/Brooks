@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
-
 import asyncio
 
 import async_hsm
 
 
 class Mississippi(async_hsm.Ahsm):
-
     @async_hsm.state
     def _initial(self, event):
         print("_initial")
         self.teCount = async_hsm.TimeEvent("COUNT")
         self.tePrint = async_hsm.TimeEvent("PRINT")
         return self.tran(self._counting)
-
 
     @async_hsm.state
     def _counting(self, event):
@@ -37,9 +34,12 @@ class Mississippi(async_hsm.Ahsm):
         return self.super(self.top)
 
 
-if __name__ == "__main__":
+async def main():
     print("Check to see how much CPU% a simple 1ms periodic function uses.")
     ms = Mississippi()
     ms.start(0)
+    await async_hsm.Framework.done()
 
-    async_hsm.run_forever()
+
+if __name__ == "__main__":
+    asyncio.run(main())

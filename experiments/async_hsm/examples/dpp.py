@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """
 Copyright 2018 Dean Hall.  See LICENSE for details.
 
@@ -13,7 +12,6 @@ import random
 
 import async_hsm
 
-
 N_PHILO = 10
 
 async_hsm.Signal.register("EAT")
@@ -21,27 +19,37 @@ async_hsm.Signal.register("DONE")
 async_hsm.Signal.register("TERMINATE")
 async_hsm.Signal.register("HUNGRY")
 
+
 def PHILO_ID(act):
     global philo
     return philo.index(act)
 
+
 def RIGHT(n):
     return (n + N_PHILO - 1) % N_PHILO
+
 
 def LEFT(n):
     return (n + 1) % N_PHILO
 
+
 def THINK_TIME():
     return random.randrange(1, 9)
+
 
 def EAT_TIME():
     return random.randrange(1, 9)
 
+
 class Table(async_hsm.Ahsm):
-    def __init__(self,):
+    def __init__(self, ):
         super().__init__()
-        self.fork = ["FREE",] * N_PHILO
-        self.isHungry = [False,] * N_PHILO
+        self.fork = [
+            "FREE",
+        ] * N_PHILO
+        self.isHungry = [
+            False,
+        ] * N_PHILO
 
     @async_hsm.state
     def _initial(self, event):
@@ -103,7 +111,6 @@ class Table(async_hsm.Ahsm):
 
 
 class Philo(async_hsm.Ahsm):
-
     @async_hsm.state
     def _initial(self, event):
         self.timeEvt = async_hsm.TimeEvent("TIMEOUT")
@@ -140,7 +147,7 @@ class Philo(async_hsm.Ahsm):
             if event.value == PHILO_ID(self):
                 status = self.tran(self._eating)
             else:
-                status = self.super(self.top) # UNHANDLED
+                status = self.super(self.top)  # UNHANDLED
 
         elif sig == async_hsm.Signal.DONE:
             assert event.value != PHILO_ID(self)
@@ -174,7 +181,7 @@ class Philo(async_hsm.Ahsm):
         return status
 
 
-def main():
+async def main():
     global philo
 
     table = Table()
@@ -183,11 +190,11 @@ def main():
     philo = []
     for n in range(N_PHILO):
         p = Philo()
-        p.start(n+1)
+        p.start(n + 1)
         philo.append(p)
 
-    async_hsm.run_forever()
+    await async_hsm.Framework.done()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
