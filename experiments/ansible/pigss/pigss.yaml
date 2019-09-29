@@ -1,25 +1,39 @@
 - hosts: localhost
-  vars_prompt:
-  - name: "update"
-    prompt: "Are you performing an update on previously provisioned device?\n0 - No\n1 - Yes\n"
-    private: no
-  - name: "githubuser"
-    prompt: "Enter your github username"
-    private: no
-    when: update == "0"
-  - name: "githubemail"
-    prompt: "Enter your github email"
-    private: no
-    when: update == "0"
-  - name: "grafanauser"
-    prompt: "Enter the default grafana username"
-    private: no
-    when: update == "0"
-  - name: "grafanapass"
-    prompt: "Enter the default grafana password"
-    private: yes
-    when: update == "0"
   pre_tasks:
+    # Github Username
+    - pause:
+        prompt: "Enter your github username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubuser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Github Email
+    - pause:
+        prompt: "Enter your github email"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubemail: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Username
+    - pause:
+        prompt: "Enter the default Grafana username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanauser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Password
+    - pause:
+        prompt: "Enter the default Grafana password"
+        echo: no
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanapass: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Bootstrap
     - include: tasks/bootstrap.yaml
   tasks:
     - name: Set playbook vars
