@@ -30,6 +30,7 @@ class PigssRunner:
         self.runner = None
         self.port = None
         self.addr = None
+        self.terminate_event = asyncio.Event()
 
     def set_host(self, port, addr='0.0.0.0'):
         self.port = port
@@ -37,6 +38,7 @@ class PigssRunner:
 
     async def on_startup(self, app):
         await app['farm'].startup()
+        return
 
     async def on_shutdown(self, app):
         for task in self.tasks:
@@ -44,8 +46,8 @@ class PigssRunner:
         await app['farm'].shutdown()
 
     async def on_cleanup(self, app):
-        print("Top level server is cleaning up")
-        pass
+        print("PigssRunner is cleaning up")
+        self.terminate_event.set()
 
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def server_init(self, config_filename):
@@ -95,9 +97,6 @@ class PigssRunner:
         await site.start()
         print(f"======== Running on http://{site._host}:{site._port} ========")
 
-    async def startup(self, config_filename):
-        self.tasks.append(asyncio.create_task(self.server_init(config_filename)))
-
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
         log.error(f"Unhandled exception:\n{msg}\n{traceback.format_exc()}")
@@ -132,24 +131,28 @@ async def setup_dummy_interfaces(num_interfaces):
         # retcode, out, err = await run_and_raise(f'sudo ip link set dummy{i} up')
 
 
-@click.command()
-@click.option('--config', '-c', 'config_filename', default='pigss_config.yaml', help='Name of configuration file in yaml format')
-def main(config_filename):
+async def async_main(config_filename):
     try:
         config_filename = os.path.normpath(os.path.join(my_path, config_filename))
         log.info(f"Starting PigssRunner with configuration file {config_filename}")
         service = PigssRunner()
-        loop = asyncio.get_event_loop()
-        loop.set_exception_handler(service.handle_exception)
-        loop.run_until_complete(asyncio.gather(service.startup(config_filename)))
-        loop.run_forever()
+        #loop = asyncio.get_event_loop()
+        #loop.set_exception_handler(service.handle_exception)
+        await service.server_init(config_filename)
+        await Framework.done()
     except Exception as e:
         log.error(f"Exception in main()\n{e}\n{traceback.format_exc()}")
     finally:
         if service.runner is not None:
-            loop.run_until_complete(asyncio.gather(service.runner.cleanup()))
-        Framework.stop()
+            await service.runner.cleanup()
+            await service.terminate_event.wait()
     log.info('PigssRunner stopped')
+
+
+@click.command()
+@click.option('--config', '-c', 'config_filename', default='pigss_config.yaml', help='Name of configuration file in yaml format')
+def main(config_filename):
+    asyncio.run(async_main(config_filename))
 
 
 if __name__ == "__main__":

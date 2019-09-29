@@ -157,6 +157,7 @@ class DummySupervisor(Ahsm):
     def _exit(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.terminated = True
             for task in self.tasks:
                 task.cancel()
             self.tasks = []
@@ -178,7 +179,7 @@ class DummySupervisor(Ahsm):
     def _mapping(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.tasks.append(asyncio.create_task(self.dummy_mapper()))
+            self.tasks.append(self.run_async(self.dummy_mapper()))
             return self.handled(e)
         elif sig == Signal.MADMAPPER_DONE:
             payload = e.value
@@ -187,7 +188,7 @@ class DummySupervisor(Ahsm):
             for name, descr in payload["Devices"]["Serial_Devices"].items():
                 if descr["Driver"] == "PigletDriver":
                     self.bank_list.append(descr["Bank_ID"])
-            self.tasks.append(asyncio.create_task(self.start_processes()))
+            self.tasks.append(self.run_async(self.start_processes()))
             return self.handled(e)
         elif sig == Signal.PROCESSES_STARTED:
             Framework.publish(
@@ -211,7 +212,7 @@ class DummySupervisor(Ahsm):
             return self.handled(e)
         elif sig == Signal.MONITOR_PROCESSES:
             print(f"STARTING MONITOR PROCESSES {time.time()}")
-            self.mon_task = asyncio.create_task(self.monitor_processes())
+            self.mon_task = self.run_async(self.monitor_processes())
             self.tasks.append(self.mon_task)
             return self.handled(e)
         elif sig == Signal.PROCESSES_MONITORED:
@@ -249,7 +250,7 @@ class DummySupervisor(Ahsm):
         self.wrapped_processes[key] = wrapped_process
         self.farm.RPC[rpc_name] = await wrapped_process.start(**process_kwargs)
         if at_start:
-            self.tasks.append(asyncio.create_task(wrapped_process.pinger(ping_period)))
+            self.tasks.append(self.run_async(wrapped_process.pinger(ping_period)))
         else:
             log.info(f"Restarted {wrapped_process.driver.__name__} at {key}")
         return
@@ -264,7 +265,7 @@ class DummySupervisor(Ahsm):
         #     self.device_dict = await self.farm.RPC["MadMapper"].map_devices(True)
         #     log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
         #     if at_start:
-        #         self.tasks.append(asyncio.create_task(wrapped_process.pinger(5)))
+        #         self.tasks.append(self.run_async(wrapped_process.pinger(5)))
         #     else:
         #         log.info(f"Restarted Madmapper")
 
@@ -294,7 +295,7 @@ class DummySupervisor(Ahsm):
         #                                                          rpc_port=dev_params['RPC_Port'],
         #                                                          baudrate=dev_params['Baudrate'])
         #             if at_start:
-        #                 self.tasks.append(asyncio.create_task(wrapped_process.pinger(2)))
+        #                 self.tasks.append(self.run_async(wrapped_process.pinger(2)))
         #             else:
         #                 log.info(f"Restarted piglet driver: {key}")
         # elif dev_params['Driver'] == 'AlicatDriver':
@@ -306,7 +307,7 @@ class DummySupervisor(Ahsm):
         #                                                           rpc_port=dev_params['RPC_Port'],
         #                                                           baudrate=dev_params['Baudrate'])
         #         if at_start:
-        #             self.tasks.append(asyncio.create_task(wrapped_process.pinger(2)))
+        #             self.tasks.append(self.run_async(wrapped_process.pinger(2)))
         #         else:
         #             log.info(f"Restarted Alicat driver: {key}")
         # elif dev_params['Driver'] == 'NumatoDriver':
@@ -318,7 +319,7 @@ class DummySupervisor(Ahsm):
         #         self.farm.RPC[name] = await wrapped_process.start(device_port_name=dev_params['Path'],
         #                                                           rpc_server_port=dev_params['RPC_Port'])
         #         if at_start:
-        #             self.tasks.append(asyncio.create_task(wrapped_process.pinger(2)))
+        #             self.tasks.append(self.run_async(wrapped_process.pinger(2)))
         #         else:
         #             log.info(f"Restarted Numato driver: {key}")
 

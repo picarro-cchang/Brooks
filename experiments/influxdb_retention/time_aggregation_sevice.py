@@ -5,12 +5,14 @@ from aiohttp import web
 from aioinflux import InfluxDBClient, iterpoints
 
 import experiments.influxdb_retention.duration_tools as dt
+from experiments.common.service_template import ServiceTemplate
 
 
-class TimeAggregationService:
+class TimeAggregationService(ServiceTemplate):
     def __init__(self):
-        self.tasks = []
-        self.app = web.Application()
+        super().__init__()
+
+    def setup_routes(self):
         self.app.router.add_route("GET", "/", self.health_check)
         self.app.router.add_route("GET", "/search", self.search)
         self.app.router.add_route("POST", "/search", self.search)
@@ -18,18 +20,15 @@ class TimeAggregationService:
         self.app.router.add_route("POST", "/tag-keys", self.tag_keys)
         self.app.router.add_route("POST", "/tag-values", self.tag_values)
         self.app.router.add_route("POST", "/query", self.query)
-        self.app.on_startup.append(self.on_startup)
-        self.app.on_shutdown.append(self.on_shutdown)
-        self.default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
-        self.default_durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.default_durations]
-        self.client = None
 
     async def on_startup(self, app):
         db_config = self.app['farm'].config.get_time_series_database()
         self.client = InfluxDBClient(host=db_config["server"], port=db_config["port"], db=db_config["name"])
+        self.default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
+        self.default_durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.default_durations]
 
     async def on_shutdown(self, app):
-        print("Aggregate Source Service is shutting down")
+        print("Time Aggregation Service is shutting down")
 
     async def health_check(self, request):
         return web.Response(text='This datasource is healthy.')

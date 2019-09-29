@@ -48,6 +48,7 @@ class PigletManager(Ahsm):
 
     @state
     def _initial(self, e):
+        self.publish_errors = True
         self.piglet_status_te = TimeEvent("PIGLET_STATUS_TIMER")
         Framework.subscribe("MFC_SET", self)
         Framework.subscribe("PIGLET_REQUEST", self)
@@ -77,10 +78,10 @@ class PigletManager(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             now = time.time()
-            # Call handle_valve_position to establist the valve_pos tag and valve_stable_time field
+            # Call handle_valve_position to establish the valve_pos tag and valve_stable_time field
             #  in the data
-            asyncio.create_task(self.handle_valve_position(ValvePositionPayload(time=now, valve_pos=0, valve_mask=0, clean_mask=0)))
-            asyncio.create_task(self.set_reference(0))
+            self.run_async(self.handle_valve_position(ValvePositionPayload(time=now, valve_pos=0, valve_mask=0, clean_mask=0)))
+            self.run_async(self.set_reference(0))
             self.piglet_status_te.postEvery(self, POLL_PERIOD)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -90,15 +91,15 @@ class PigletManager(Ahsm):
             return self.tran(self._exit)
         elif sig == Signal.SET_REFERENCE:
             payload = e.value
-            asyncio.create_task(self.set_reference(payload))
+            self.run_async(self.set_reference(payload))
             return self.handled(e)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
             assert isinstance(payload, PigletRequestPayload)
-            asyncio.create_task(self.send_to_piglets(payload.command, payload.bank_list))
+            self.run_async(self.send_to_piglets(payload.command, payload.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS_TIMER:
-            asyncio.create_task(self.get_status(self.bank_list))
+            self.run_async(self.get_status(self.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
             # print(f"Received PIGLET_STATUS, {e.value}; ", end="")
@@ -116,7 +117,7 @@ class PigletManager(Ahsm):
             return self.handled(e)
         elif sig == Signal.VALVE_POSITION:
             print(f"\n\nReceived VALVE_POSITION: {e.value}\n")
-            asyncio.create_task(self.handle_valve_position(e.value))
+            self.run_async(self.handle_valve_position(e.value))
             return self.handled(e)
         return self.super(self._configure)
 
@@ -124,6 +125,7 @@ class PigletManager(Ahsm):
     def _exit(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.terminated = True
             for task in self.tasks:
                 task.cancel()
             self.tasks = []

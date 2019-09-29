@@ -6,25 +6,22 @@ from aiohttp import web
 from async_hsm import Event, Framework, Signal
 from experiments.common.async_helper import log_async_exception
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.common.service_template import ServiceTemplate
 
 log = LOLoggerClient(client_name="ControllerService", verbose=True)
 
 
-class ControllerService:
+class ControllerService(ServiceTemplate):
     def __init__(self):
-        self.tasks = []
-        self.app = web.Application()
+        super().__init__()
+
+    def setup_routes(self):
         self.app.router.add_route('POST', '/event', self.handle_event)
         self.app.router.add_route('GET', '/modal_info', self.handle_modal_info)
         self.app.router.add_route('GET', '/plan', self.handle_plan)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
         self.app.router.add_route('GET', '/uistatus', self.handle_uistatus)
         self.app.router.add_route('GET', '/ws', self.websocket_handler)
-        self.app.on_startup.append(self.on_startup)
-        self.app.on_shutdown.append(self.on_shutdown)
-        self.app.on_cleanup.append(self.on_cleanup)
-        self.app['websockets'] = []
-        self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
 
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def websocket_send_task(self, app):
@@ -46,6 +43,9 @@ class ControllerService:
                     pass
 
     async def on_startup(self, app):
+        self.tasks = []
+        self.app['websockets'] = []
+        self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
 
     async def on_shutdown(self, app):

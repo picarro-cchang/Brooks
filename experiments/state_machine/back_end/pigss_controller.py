@@ -14,7 +14,7 @@ from enum import Enum, IntEnum
 
 import ntpath
 
-from async_hsm import (Ahsm, Event, Framework, Signal, TimeEvent, run_forever, state)
+from async_hsm import (Ahsm, Event, Framework, Signal, TimeEvent, state)
 from experiments.IDriver.DBWriter.AioInfluxDBWriter import AioInfluxDBWriter
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.pigss_payloads import (PigletRequestPayload, PlanError, SystemConfiguration)
@@ -61,7 +61,6 @@ class PigssController(Ahsm):
     def __init__(self, farm=None):
         super().__init__()
         self.farm = farm
-        self.simulation = self.farm.config.get_simulation_enabled()
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
         self.all_banks = []
@@ -304,7 +303,7 @@ class PigssController(Ahsm):
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
         # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
-        asyncio.ensure_future(self.send_queue.put(json.dumps({"modal_info": shadow})))
+        self.run_async(self.send_queue.put(json.dumps({"modal_info": shadow})))
 
     def set_plan(self, path, value):
         """Set the portion of self.plan specified by `path` to the given `value`.
@@ -313,7 +312,7 @@ class PigssController(Ahsm):
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
         # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
-        asyncio.ensure_future(self.send_queue.put(json.dumps({"plan": shadow})))
+        self.run_async(self.send_queue.put(json.dumps({"plan": shadow})))
 
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
@@ -322,7 +321,7 @@ class PigssController(Ahsm):
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
         # log.info(f"Setting status of {path} to {value}, shadow is {shadow}")
-        asyncio.ensure_future(self.send_queue.put(json.dumps({"uistatus": shadow})))
+        self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
     def set_reference(self, value):
         if self.reference_active != value:
@@ -540,6 +539,7 @@ class PigssController(Ahsm):
 
     @state
     def _initial(self, e):
+        self.publish_errors = True
         self.bank = None
         self.bank_to_update = None
         self.banks_to_process = []
@@ -604,21 +604,15 @@ class PigssController(Ahsm):
         return self.tran(self._operational)
 
     @state
-    def _exit(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            return self.handled(e)
-        return self.super(self.top)
-
-    @state
     def _configure(self, e):
         sig = e.signal
         if sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
-            asyncio.ensure_future(self.save_port_history())
+            self.run_async(self.save_port_history())
             return self.tran(self._operational)
         elif sig == Signal.TERMINATE:
+            self.run_async(self.db_writer.close_connection())
             return self.tran(self._exit)
         return self.super(self.top)
 
@@ -870,7 +864,7 @@ class PigssController(Ahsm):
                 self.set_status(["run"], UiStatus.READY)
                 self.set_status(["plan"], UiStatus.READY)
                 # Write out bank name and port availability information to database
-                asyncio.ensure_future(self.save_port_history())
+                self.run_async(self.save_port_history())
                 return self.tran(self._operational)
         return self.super(self._identify)
 
@@ -1013,7 +1007,7 @@ class PigssController(Ahsm):
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, traceback.format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
-            asyncio.ensure_future(self.save_port_history())
+            self.run_async(self.save_port_history())
             return self.tran(self._plan)
         elif sig == Signal.PLAN_LOAD_FAILED:
             self.plan_error = PlanError(True, f'<pre>{html.escape(e.value)}</pre>')
@@ -1591,7 +1585,7 @@ class PigssController(Ahsm):
             return self.tran(self._operational)
         elif sig == Signal.EDIT_SAVE:
             self.change_name_bank(e.value)
-            asyncio.ensure_future(self.save_port_history())
+            self.run_async(self.save_port_history())
             self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         return self.super(self._edit)

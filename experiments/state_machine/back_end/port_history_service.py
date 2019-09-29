@@ -5,16 +5,20 @@ from aiohttp import web
 from aioinflux import iterpoints
 
 from experiments.IDriver.DBWriter.AioInfluxDBWriter import AioInfluxDBWriter
+from experiments.common.service_template import ServiceTemplate
 
 
-class PortHistoryService:
+class PortHistoryService(ServiceTemplate):
     def __init__(self):
-        self.app = web.Application()
+        super().__init__()
+
+    def setup_routes(self):
         self.app.router.add_route("GET", "/", self.health_check)
-        # self.app.router.add_route("GET", "/search", self.search)
         self.app.router.add_route("POST", "/search", self.search)
-        self.app.on_startup.append(self.on_startup)
-        self.app.on_shutdown.append(self.on_shutdown)
+
+    async def on_startup(self, app):
+        db_config = self.app['farm'].config.get_time_series_database()
+        self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
         self.bank_names = None
         self.end_time = "now"
         self.default_available_ports = {"1": 255, "2": 255, "3": 255, "4": 255}
@@ -75,12 +79,9 @@ class PortHistoryService:
         self.available_ports = self.default_available_ports
         self.bank_names = self.default_bank_names
 
-    async def on_startup(self, app):
-        db_config = self.app['farm'].config.get_time_series_database()
-        self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
-
     async def on_shutdown(self, app):
-        print("BankName server is shutting down")
+        await self.db_writer.close_connection()
+        print("port history service is shutting down")
 
     async def health_check(self, request):
         """

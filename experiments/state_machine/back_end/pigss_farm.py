@@ -2,8 +2,6 @@
 import asyncio
 import traceback
 
-import attr
-
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.piglet_manager import PigletManager
 from experiments.state_machine.back_end.pigss_controller import PigssController

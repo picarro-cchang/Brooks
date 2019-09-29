@@ -36,8 +36,8 @@ class AioInfluxDBWriter:
         await self.ensure_database_present()
         return await self._client.query(query)
 
-    def close_connection(self):
-        pass
+    async def close_connection(self):
+        await self._client.close()
 
     def get_db_address(self):
         return self.address

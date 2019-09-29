@@ -2,10 +2,11 @@ import asyncio
 import json
 import os
 import time
+import traceback
 from collections import deque
 
 import attr
-from aiomultiprocess import Process
+from aiomultiprocess import Process, set_context
 from setproctitle import setproctitle
 
 from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
@@ -59,21 +60,22 @@ class ProcessWrapper:
     stop_reason = attr.ib("")
     daemonic = attr.ib(True)
 
-    async def start(self, *args, **kwargs):
-        async def start_driver():
-            setproctitle(f"python Supervised {self.name}")
-            d = self.driver(*args, **kwargs)
-            if hasattr(d, "rpc_serve_forever"):
-                d.rpc_serve_forever()
+    async def start_driver(self, *args, **kwargs):
+        setproctitle(f"python Supervised {self.name}")
+        d = self.driver(*args, **kwargs)
+        if hasattr(d, "rpc_serve_forever"):
+            d.rpc_serve_forever()
 
+    async def start(self, *args, **kwargs):
         if self.process is not None and self.process.is_alive():
             self.process.kill()
             await self.process.join()
         log.info(f"Starting process {self.name}.")
         self.start_time = time.time()
-        self.process = Process(target=start_driver)
+        self.process = Process(target=self.start_driver, args=args, kwargs=kwargs)
         self.process.daemon = self.daemonic
         self.process.start()
+        setproctitle("python aiomultiprocess support")
         self.rpc_raw = CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{self.rpc_port}", "PigssSupervisor")
         self.rpc_wrapper = AsyncWrapper(self.rpc_raw)
         await asyncio.sleep(0.1)
@@ -151,6 +153,7 @@ class PigssSupervisor(Ahsm):
 
     @state
     def _initial(self, e):
+        self.publish_errors = True
         Framework.subscribe("SERVICES_STARTED", self)
         Framework.subscribe("MADMAPPER_DONE", self)
         Framework.subscribe("DRIVERS_STARTED", self)
@@ -163,11 +166,15 @@ class PigssSupervisor(Ahsm):
     def _exit(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.terminated = True
             for task in self.tasks:
                 task.cancel()
             self.tasks = []
             for wrapper in self.wrapped_processes.values():
-                wrapper.process.kill()
+                if wrapper.process is not None:
+                    wrapper.process.kill()
+            return self.handled(e)
+        elif sig == Signal.TERMINATE:
             return self.handled(e)
         return self.super(self.top)
 
@@ -194,10 +201,10 @@ class PigssSupervisor(Ahsm):
                             "analyzer": simulator
                         }
                     })
-            self.tasks.append(asyncio.create_task(self.startup_services()))
+            self.tasks.append(self.run_async(self.startup_services()))
             return self.handled(e)
         elif sig == Signal.SERVICES_STARTED:
-            self.tasks.append(asyncio.create_task(self.perform_mapping()))
+            self.tasks.append(self.run_async(self.perform_mapping()))
             return self.handled(e)
         elif sig == Signal.MADMAPPER_DONE:
             payload = e.value
@@ -206,7 +213,7 @@ class PigssSupervisor(Ahsm):
             for name, descr in payload["Devices"]["Serial_Devices"].items():
                 if descr["Driver"] == "PigletDriver":
                     self.bank_list.append(descr["Bank_ID"])
-            self.tasks.append(asyncio.create_task(self.startup_drivers()))
+            self.tasks.append(self.run_async(self.startup_drivers()))
             return self.handled(e)
         elif sig == Signal.DRIVERS_STARTED:
             Framework.publish(
@@ -229,7 +236,7 @@ class PigssSupervisor(Ahsm):
             log.info(f"System config: {e.value}")
             return self.handled(e)
         elif sig == Signal.MONITOR_PROCESSES:
-            self.mon_task = asyncio.create_task(self.monitor_processes())
+            self.mon_task = self.run_async(self.monitor_processes())
             self.tasks.append(self.mon_task)
             return self.handled(e)
         elif sig == Signal.PROCESSES_MONITORED:
@@ -266,7 +273,7 @@ class PigssSupervisor(Ahsm):
         self.wrapped_processes[key] = wrapped_process
         self.farm.RPC[rpc_name] = await wrapped_process.start(**process_kwargs)
         if at_start:
-            self.tasks.append(asyncio.create_task(wrapped_process.pinger(ping_interval)))
+            self.tasks.append(self.run_async(wrapped_process.pinger(ping_interval)))
         else:
             log.info(f"Restarted {wrapped_process.driver.__name__} at {key}")
         return

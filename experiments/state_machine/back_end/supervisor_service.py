@@ -6,22 +6,21 @@ from aiohttp import web
 from async_hsm import Event, Framework, Signal
 from experiments.common.async_helper import log_async_exception
 from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+from experiments.common.service_template import ServiceTemplate
 
 log = LOLoggerClient(client_name="SupervisorService", verbose=True)
 
 
-class SupervisorService:
+class SupervisorService(ServiceTemplate):
     def __init__(self):
-        self.tasks = []
-        self.app = web.Application()
+        super().__init__()
+
+    def setup_routes(self):
         self.app.router.add_route('GET', '/device_map', self.handle_device_map)
         self.app.router.add_route('GET', '/processes', self.handle_processes)
-        self.app.on_startup.append(self.on_startup)
-        self.app.on_shutdown.append(self.on_shutdown)
-        self.app.on_cleanup.append(self.on_cleanup)
 
     async def on_startup(self, app):
-        pass
+        self.tasks = []
 
     async def on_shutdown(self, app):
         for task in self.tasks:
