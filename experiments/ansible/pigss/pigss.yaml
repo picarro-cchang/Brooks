@@ -1,17 +1,24 @@
 - hosts: localhost
   vars_prompt:
+  - name: "update"
+    prompt: "Are you performing an update on previously provisioned device?\n0 - No\n1 - Yes\n"
+    private: no
   - name: "githubuser"
     prompt: "Enter your github username"
     private: no
+    when: update == "0"
   - name: "githubemail"
     prompt: "Enter your github email"
     private: no
+    when: update == "0"
   - name: "grafanauser"
     prompt: "Enter the default grafana username"
     private: no
+    when: update == "0"
   - name: "grafanapass"
     prompt: "Enter the default grafana password"
     private: yes
+    when: update == "0"
   pre_tasks:
     - include: tasks/bootstrap.yaml
   tasks:
