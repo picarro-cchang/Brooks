@@ -51,6 +51,11 @@
   become: yes
   when: headless == "false"
 
+- name: Install sqlitebrowser
+  apt: name=sqlitebrowser
+  become: yes
+  when: headless == "false"
+
 - name: Install GTK theme
   apt: name=materia-gtk-theme
   become: yes
