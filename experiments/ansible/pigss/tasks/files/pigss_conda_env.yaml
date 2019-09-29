@@ -137,8 +137,13 @@ dependencies:
     - python-socketio==4.3.0
     - pytz==2019.1
     - pyyaml==5.1.1
-    - ruamel-yaml==0.16.5
-    - ruamel-yaml-clib==0.1.2
+# ruamel-yaml needs to be overridden to ruamel.yaml
+# when updating the conda env - This will likely need to be manually done
+# every time we export the conda env yaml file, or until conda fixes this issue
+# See the bug report here:
+#           https://bitbucket.org/ruamel/yaml/issues/217/cannot-uninstall-ruamel_yaml
+    - ruamel.yaml==0.16.5
+    - ruamel.yaml-clib==0.1.2
     - setproctitle==1.1.10
     - werkzeug==0.15.5
 prefix: /home/picarro/miniconda3

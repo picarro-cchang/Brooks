@@ -3,14 +3,14 @@
     url: https://github.com/sharkdp/bat/releases/download/v0.11.0/bat_0.11.0_amd64.deb
     dest: /tmp/
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Download influxdb
   get_url:
     url: https://dl.influxdata.com/influxdb/releases/influxdb_1.7.7_amd64.deb
     dest: /tmp/
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Install downloaded debian packages
   apt:
@@ -20,34 +20,34 @@
     - /tmp/bat_0.11.0_amd64.deb
     - /tmp/influxdb_1.7.7_amd64.deb
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Start InfluxDB Service
   shell: systemctl start influxdb.service
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Enable InfluxDB Service
   shell: systemctl enable influxdb.service
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Create pigss_data database
   shell: influx -execute 'show databases' | grep pigss_data || influx -execute 'create database pigss_data'
-  when: update == "0"
+  when: update == "false"
 
 - name: Create telegraf database
   shell: influx -execute 'show databases' | grep telegraf || influx -execute 'create database telegraf'
-  when: update == "0"
+  when: update == "false"
 
 - name: Download go
   get_url:
     url: https://dl.google.com/go/go1.12.1.linux-amd64.tar.gz
     dest: /tmp/
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Install go
   shell: tar -C /usr/local -xzf /tmp/go*.tar.gz warn=False
   become: yes
-  when: update == "0"
+  when: update == "false"

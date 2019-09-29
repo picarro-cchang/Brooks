@@ -12,11 +12,15 @@
     state: latest
   become: yes
 
+# fpm fails when installing using the gem ansible module
+# We'll use a shell command instead
 - name: Install fpm
-  gem:
-    name: fpm
-    state: latest
+  shell: gem install fpm
   become: yes
+#   gem:
+#     name: fpm
+#     state: latest
+#   become: yes
 
 - name: Install wizzy
   npm:

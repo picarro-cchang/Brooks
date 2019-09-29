@@ -1,7 +1,7 @@
 - name: Set github username
   shell: git config --global user.name {{ githubuser }}
-  when: update == "0"
+  when: update == "false"
 
 - name: set github email
   shell: git config --global user.email {{ githubemail }}
-  when: update == "0"
+  when: update == "false"

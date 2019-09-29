@@ -10,7 +10,7 @@
     regexp: '[1]'
     replace: '0'
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Add user to dialout group
   user:
@@ -18,7 +18,7 @@
     comment: picarro
     group: dialout
   become: yes
-  when: update == "0"
+  when: update == "false"
 
 - name: Remove ubuntu-software
   apt:

@@ -175,6 +175,7 @@
     key: "/org/gnome/desktop/a11y/applications/screen-keyboard-enabled"
     value: 'true'
     state: present
+  when: dev == "false"
 
 - name: Disable geolocation
   dconf:
