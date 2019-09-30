@@ -69,6 +69,7 @@ $panel-header-no-title-zindex: 1;
   white-space: nowrap;
   max-width: calc(100% - 38px);
   font-weight: $font-weight-semi-bold;
+  font-size: 19px;
 
   .panel-has-alert & {
     max-width: calc(100% - 54px);
