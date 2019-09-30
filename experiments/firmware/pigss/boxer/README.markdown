@@ -74,6 +74,9 @@ hardware will be a custom PCB.
             - [BYP.DAC? n](#bypdac-n)
                 - [Parameter (n)](#parameter-n-10)
                 - [Typical return](#typical-return-1)
+        - [Channel identification commands](#channel-identification-commands)
+            - [MFCVAL?](#mfcval)
+                - [Typical Return](#typical-return-19)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -89,6 +92,7 @@ hardware will be a custom PCB.
         - [Version 1.1.0](#version-110)
         - [Version 1.1.1](#version-111)
         - [Version 1.1.2](#version-112)
+        - [Version 1.1.3](#version-113)
 
 <!-- markdown-toc end -->
 
@@ -462,6 +466,23 @@ Query the bypass DAC setting for channel `n`.  Returns a value in counts.
 
 17134
 
+### Channel identification commands ###
+
+#### MFCVAL? ####
+
+Query this piglet's required Mass Flow Controller (MFC) setting
+contribution.  The sample lines coming from each piglet will flow
+through a single MFC, and the piglet firmware has no idea if other
+piglets are present.  This number thus represents the number that
+needs to be added to all the other `MFCVAL?` outputs to form the
+ultimate MFC setting.
+
+The output will be a floating-point number.
+
+##### Typical Return #####
+
+40.0
+
 ## Release history ##
 
 ### Version 1.0.0 ###
@@ -584,3 +605,5 @@ the pressure sensors.
 
 Added the `mfcval?` query to get the Mass Flow Controller (MFC)
 setting contribution required for a piglet.  
+
+Bypass valves for enabled channels now get set to zero.
