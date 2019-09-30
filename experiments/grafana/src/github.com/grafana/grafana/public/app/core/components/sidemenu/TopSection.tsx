@@ -6,10 +6,15 @@ import config from '../../config';
 const TopSection: FC<any> = () => {
   const navTree = _.cloneDeep(config.bootData.navTree);
   const mainLinks = _.filter(navTree, item => !item.hideFromMenu);
+  const mainLinks2 = _.orderBy(mainLinks, ['text'], ['desc']);
+  // mainLinks2.map((link, index) => {
+  //   console.log(link['text'], "LINK");
+  //   console.log("index", index);
+  // });
 
   return (
     <div className="sidemenu__top">
-      {mainLinks.map((link, index) => {
+      {mainLinks2.map((link, index) => {
         return <TopSectionItem link={link} key={`${link.id}-${index}`} />;
       })}
     </div>
