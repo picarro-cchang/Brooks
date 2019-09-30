@@ -1,0 +1,10 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eno1:
+      dhcp4: true
+      dhcp6: false
+    enp3s0:
+      dhcp4: true
+      dhcp6: false
