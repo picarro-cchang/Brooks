@@ -1,21 +1,21 @@
 {
   "type": "app",
-  "name": "Current Concentration Values",
+  "name": "Current Values",
   "id": "current-concentration-values",
   "info": {
     "author": {
       "name": "Picarro, Inc."
     },
     "logos": {
-      "small": "img/visualization.svg",
-      "large": "img/visualization.svg"
+      "small": "img/tables_icon_dark.svg",
+      "large": "img/tables_icon_dark.svg"
     }
   },
   "includes": [
     {
       "type": "dashboard",
       "name": "Current Values",
-      "path": "dashboards/.json",
+      "path": "dashboards/CurrentValues-Table.json",
       "addToNav": true,
       "defaultNav": true
     }

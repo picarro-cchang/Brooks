@@ -10,7 +10,6 @@ import Modal from 'react-responsive-modal';
 import {ModalInfo, PlanPanelTypes} from './../types';
 import EditPanel from "./EditPanel";
 
-
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 export class Main extends Component<any, any> {
@@ -22,7 +21,7 @@ export class Main extends Component<any, any> {
       html: "",
       num_buttons: 0,
       buttons: {}
-    },
+},
     uistatus: {},
     plan: {
       max_steps: 10,
@@ -146,7 +145,7 @@ export class Main extends Component<any, any> {
     );
     Promise.all([p1, p2, p3]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
-      console.log("State after getting uistatus, plan and modal info", this.state);
+      //console.log("State after getting uistatus, plan and modal info", this.state);
     })
   };
 
@@ -155,7 +154,7 @@ export class Main extends Component<any, any> {
   }
 
   handleData(data: any) {
-    console.log("Receiving from websocket", data);
+    //console.log("Receiving from websocket", data);
     const o = JSON.parse(data);
     if (this.state.initialized) {
       if ("uistatus" in o) {
@@ -174,19 +173,13 @@ export class Main extends Component<any, any> {
   }
 
   ws_sender = (o: object) => {
-    console.log("Sending to websocket:", o);
+   // console.log("Sending to websocket:", o);
     this.ws.send(JSON.stringify(o));
   };
 
-
-  // switchPanel(value){
-  //   this.setState({plan:{panel_to_show: value}} );
-  //   console.log(this.state.plan.panel_to_show)
-  // }
-
-
   render() {
     let left_panel;
+    let isPlan = false;
     switch (this.state.plan.panel_to_show) {
       case PlanPanelTypes.NONE:
         left_panel = (<CommandPanel plan={this.state.plan} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />);
@@ -195,8 +188,10 @@ export class Main extends Component<any, any> {
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
-                       ws_sender={this.ws_sender} />
+                       ws_sender={this.ws_sender}/>
         );
+      /*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/
+        // isPlan = true;
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
@@ -235,7 +230,7 @@ export class Main extends Component<any, any> {
       for (let i=1; i<=4; i++) {
         if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
           bankPanels.push(
-              <div className="col-sm-2">
+              <div>
                 <BankPanel plan={this.state.plan} bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
               </div>
           )
@@ -249,14 +244,28 @@ export class Main extends Component<any, any> {
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
             <div className="row justify-content-md-center">
-              <div className="col-sm-3">
+              <div className="col-sm-3" style={{height: "100%"}}>
                 {left_panel}
               </div>
+              <div  className="col-sm-9">
+              <div style={{padding: "10px"}}>
               {bankPanels}
+                </div>
+                {/*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/}
+
+                {/*{*/}
+                {/*  isPlan  ?*/}
+                {/*      <div style={{height: "15%", float: "left", padding: "10px"}}>*/}
+                {/*        <button type="button"*/}
+                {/*                onClick={e => this.ws_sender({element: "reference"})}*/}
+                {/*                className={"btn btn-large ref-btn btn-command"}*/}
+                {/*                style={{color: "black"}}>Reference</button>*/}
+                {/*      </div> :*/}
+                {/*      null*/}
+                {/*}*/}
+              </div>
             </div>
-            {/*<div className="row" >*/}
-            {/*  /!*<OptionsPanel uistatus={this.state.uistatus} ws_sender={this.ws_sender} plan={this.state.plan}/>*!/*/}
-            {/*</div>*/}
+
           </div>
 
           <Modal styles={{overlay: {color: "black"}}} open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>

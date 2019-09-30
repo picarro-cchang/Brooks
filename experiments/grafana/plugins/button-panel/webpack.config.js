@@ -43,7 +43,9 @@ module.exports = {
           },
           "ts-loader"
         ],
-        exclude: /(node_modules)/
+        exclude: [
+          path.resolve(__dirname, '/node_modules')
+        ]
       },
       {
         test: /\.css$/i,

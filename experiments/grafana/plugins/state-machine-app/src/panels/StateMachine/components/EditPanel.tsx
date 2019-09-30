@@ -148,7 +148,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                                 />
 
                         </div>
-                    <div className="row text-center" style={{marginTop: "10px", marginBottom: "10px"}}>
+                    <div className="row text-center button-edit" style={{marginTop: "10px", marginBottom: "10px", alignContent: "center"}}>
                         <div className="col-sm-4">
                             <button type="submit"
                                 //onClick = {this.handleClick}

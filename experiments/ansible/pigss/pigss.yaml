@@ -1,18 +1,39 @@
 - hosts: localhost
-  vars_prompt:
-  - name: "githubuser"
-    prompt: "Enter your github username"
-    private: no
-  - name: "githubemail"
-    prompt: "Enter your github email"
-    private: no
-  - name: "grafanauser"
-    prompt: "Enter the default grafana username"
-    private: no
-  - name: "grafanapass"
-    prompt: "Enter the default grafana password"
-    private: yes
   pre_tasks:
+    # Github Username
+    - pause:
+        prompt: "Enter your github username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubuser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Github Email
+    - pause:
+        prompt: "Enter your github email"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubemail: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Username
+    - pause:
+        prompt: "Enter the default Grafana username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanauser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Password
+    - pause:
+        prompt: "Enter the default Grafana password"
+        echo: no
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanapass: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Bootstrap
     - include: tasks/bootstrap.yaml
   tasks:
     - name: Set playbook vars

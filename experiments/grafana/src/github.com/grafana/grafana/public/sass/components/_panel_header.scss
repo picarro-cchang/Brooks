@@ -7,6 +7,10 @@ $panel-header-no-title-zindex: 1;
   }
 }
 
+.panel-header-viewer {
+
+}
+
 .panel-container--no-title {
   .panel-header {
     position: absolute;
@@ -23,6 +27,12 @@ $panel-header-no-title-zindex: 1;
   word-wrap: break-word;
   display: block;
 }
+
+.panel-title-container-viewer {
+  word-wrap: break-word;
+  display: block;
+}
+
 
 .panel-title {
   border: 0px;
@@ -47,6 +57,18 @@ $panel-header-no-title-zindex: 1;
   &:hover {
     color: $link-hover-color;
   }
+  .panel-has-alert & {
+    max-width: calc(100% - 54px);
+  }
+}
+
+.panel-title-text-viewer {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  max-width: calc(100% - 38px);
+  font-weight: $font-weight-semi-bold;
+
   .panel-has-alert & {
     max-width: calc(100% - 54px);
   }

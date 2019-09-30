@@ -26,16 +26,6 @@ export interface CommandPanelOptions {
   plan: Plan;
 }
 
-export interface OptionsPanelOptions {
-  uistatus: {
-    [key: string]: string;
-  }
-  ws_sender: (o: object)=>void;
-  //options: Options;
-  //switches: (v: any) => void;
-  plan: Plan
-}
-
 export interface ModalInfo {
   show: boolean,
   html: string,
@@ -76,6 +66,7 @@ export interface PlanPanelOptions {
   plan: Plan;
   setFocus: (row: number, column: number) => void;
   ws_sender: (o: object) => void;
+
 }
 
 export enum PlanPanelTypes {

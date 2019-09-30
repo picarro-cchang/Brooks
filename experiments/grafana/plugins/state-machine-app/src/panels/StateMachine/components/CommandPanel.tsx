@@ -23,7 +23,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
     }
 
     render() {
-        console.log("lame", this.props.plan)
 
         return (
             <div className="panel-command" >
@@ -45,7 +44,9 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
                         </button>
 
                         <button
-                            onClick={e => this.props.ws_sender({element: "plan"})}
+                            onClick={e => {
+                                this.props.ws_sender({element: "plan"});
+                            }}
                             disabled = {this.getDisabled("plan")}
                             value="plan"
                             className={"btn btn-large btn-command btn-1-3 " + this.getClassNameOpt("plan")} >

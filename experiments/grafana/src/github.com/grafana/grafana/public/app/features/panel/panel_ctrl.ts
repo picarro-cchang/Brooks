@@ -121,12 +121,14 @@ export class PanelCtrl {
 
   getMenu() {
     const menu = [];
+    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'View',
       click: 'ctrl.viewPanel();',
       icon: 'gicon gicon-viewer',
       shortcut: 'v',
     });
+    // }
 
     if (this.dashboard.meta.canEdit) {
       menu.push({
@@ -138,23 +140,28 @@ export class PanelCtrl {
       });
     }
 
+    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'Share',
       click: 'ctrl.sharePanel();',
       icon: 'fa fa-fw fa-share',
       shortcut: 'p s',
     });
+    // }
 
     // Additional items from sub-class
     menu.push(...this.getAdditionalMenuItems());
 
     const extendedMenu = this.getExtendedMenu();
+
+    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'More ...',
       click: '',
       icon: 'fa fa-fw fa-cube',
       submenu: extendedMenu,
     });
+    // }
 
     if (this.dashboard.meta.canEdit) {
       menu.push({ divider: true, role: 'Editor' });
@@ -187,10 +194,12 @@ export class PanelCtrl {
       });
     }
 
-    menu.push({
-      text: 'Panel JSON',
-      click: 'ctrl.editPanelJson(); dismiss();',
-    });
+    if (this.dashboard.meta.canEdit) {
+      menu.push({
+        text: 'Panel JSON',
+        click: 'ctrl.editPanelJson(); dismiss();',
+      });
+    }
 
     this.events.emit('init-panel-actions', menu);
     return menu;

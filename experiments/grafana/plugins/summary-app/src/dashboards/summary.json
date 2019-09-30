@@ -64,6 +64,7 @@
         "x": 0,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 2,
       "links": [],
       "maxPerRow": 4,
@@ -208,7 +209,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -234,6 +234,7 @@
         "x": 6,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 88,
       "links": [],
       "maxPerRow": 4,
@@ -241,7 +242,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -380,7 +381,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -406,6 +406,7 @@
         "x": 12,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 89,
       "links": [],
       "maxPerRow": 4,
@@ -413,7 +414,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -552,7 +553,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -578,6 +578,7 @@
         "x": 18,
         "y": 1
       },
+      "hideTimeOverride": true,
       "id": 90,
       "links": [],
       "maxPerRow": 4,
@@ -585,7 +586,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -724,7 +725,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -750,6 +750,7 @@
         "x": 0,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 91,
       "links": [],
       "maxPerRow": 4,
@@ -757,7 +758,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -896,7 +897,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -922,6 +922,7 @@
         "x": 6,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 92,
       "links": [],
       "maxPerRow": 4,
@@ -929,7 +930,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1068,7 +1069,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1094,6 +1094,7 @@
         "x": 12,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 93,
       "links": [],
       "maxPerRow": 4,
@@ -1101,7 +1102,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1240,7 +1241,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1266,6 +1266,7 @@
         "x": 18,
         "y": 9
       },
+      "hideTimeOverride": true,
       "id": 94,
       "links": [],
       "maxPerRow": 4,
@@ -1273,7 +1274,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1412,7 +1413,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1438,6 +1438,7 @@
         "x": 0,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 95,
       "links": [],
       "maxPerRow": 4,
@@ -1445,7 +1446,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1584,7 +1585,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1610,6 +1610,7 @@
         "x": 6,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 96,
       "links": [],
       "maxPerRow": 4,
@@ -1617,7 +1618,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1756,7 +1757,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1782,6 +1782,7 @@
         "x": 12,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 97,
       "links": [],
       "maxPerRow": 4,
@@ -1789,7 +1790,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -1928,7 +1929,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -1954,6 +1954,7 @@
         "x": 18,
         "y": 17
       },
+      "hideTimeOverride": true,
       "id": 98,
       "links": [],
       "maxPerRow": 4,
@@ -1961,7 +1962,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1568395374304,
+      "repeatIteration": 1569525431014,
       "repeatPanelId": 2,
       "scopedVars": {
         "port": {
@@ -2100,7 +2101,6 @@
       "timeShift": null,
       "title": "$port",
       "transform": "timeseries_aggregations",
-      "transparent": true,
       "type": "table"
     },
     {
@@ -2199,7 +2199,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Valve Position",
+      "title": "Current Channel",
       "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -2231,7 +2231,7 @@
         "definition": "[$__from, $__to] ",
         "hide": 0,
         "includeAll": true,
-        "label": null,
+        "label": "Channels",
         "multi": true,
         "name": "port",
         "options": [],
@@ -2256,9 +2256,8 @@
         "name": "avg_time",
         "options": [
           {
-            "selected": false,
-            "text": "1h",
-            "value": "1h"
+            "text": "16m",
+            "value": "16m"
           }
         ],
         "query": "16m",
@@ -2272,11 +2271,10 @@
           "value": "15"
         },
         "hide": 0,
-        "label": null,
+        "label": "Stabilization Time",
         "name": "stabilization_time",
         "options": [
           {
-            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -2321,5 +2319,5 @@
   "timezone": "",
   "title": "Summary",
   "uid": "1iflIi5Wz",
-  "version": 1
+  "version": 3
 }

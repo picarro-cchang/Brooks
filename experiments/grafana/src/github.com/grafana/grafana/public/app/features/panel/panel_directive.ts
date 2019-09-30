@@ -4,8 +4,7 @@ import Drop from 'tether-drop';
 import baron from 'baron';
 
 const module = angular.module('grafana.directives');
-
-const panelTemplate = `
+const panelTemplateEditor = `
   <div class="panel-container" ng-class="{'panel-container--no-title': !ctrl.panel.title.length}">
       <div class="panel-header" ng-class="{'grid-drag-handle': !ctrl.panel.fullscreen}">
         <span class="panel-info-corner">
@@ -27,7 +26,35 @@ const panelTemplate = `
   </div>
 `;
 
+const panelTemplateViewer = `
+  <div class="panel-container" ng-class="{'panel-container--no-title': !ctrl.panel.title.length}">
+      <div class="panel-header-viewer">
+        <span class="panel-info-corner">
+          <i class="fa"></i>
+          <span class="panel-info-corner-inner"></span>
+        </span>
+
+        <span class="panel-loading" ng-show="ctrl.loading">
+          <i class="fa fa-spinner fa-spin"></i>
+        </span>
+
+        <panel-header class="panel-title-container-viewer" panel-ctrl="ctrl" aria-label="Panel Title"></panel-header>
+      </div>
+
+      <div class="panel-content">
+        <ng-transclude class="panel-height-helper"></ng-transclude>
+      </div>
+    </div>
+  </div>
+`;
+let panelTemplate = '';
+
 module.directive('grafanaPanel', ($rootScope, $document, $timeout) => {
+  if ($rootScope.contextSrv.isEditor) {
+    panelTemplate = panelTemplateEditor;
+  } else {
+    panelTemplate = panelTemplateViewer;
+  }
   return {
     restrict: 'E',
     template: panelTemplate,
@@ -49,13 +76,17 @@ module.directive('grafanaPanel', ($rootScope, $document, $timeout) => {
       let hasAlertRule;
 
       function mouseEnter() {
-        panelContainer.toggleClass('panel-hover-highlight', true);
-        ctrl.dashboard.setPanelFocus(ctrl.panel.id);
+        if ($rootScope.contextSrv.isEditor) {
+          panelContainer.toggleClass('panel-hover-highlight', true);
+          ctrl.dashboard.setPanelFocus(ctrl.panel.id);
+        }
       }
 
       function mouseLeave() {
-        panelContainer.toggleClass('panel-hover-highlight', false);
-        ctrl.dashboard.setPanelFocus(0);
+        if ($rootScope.contextSrv.isEditor) {
+          panelContainer.toggleClass('panel-hover-highlight', false);
+          ctrl.dashboard.setPanelFocus(0);
+        }
       }
 
       function resizeScrollableContent() {
