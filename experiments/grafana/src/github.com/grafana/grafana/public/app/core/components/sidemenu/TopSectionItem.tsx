@@ -12,7 +12,7 @@ const TopSectionItem: FC<Props> = props => {
       <a className="sidemenu-link" href={link.url} target={link.target}>
         <span className="icon-circle sidemenu-icon">
           <i className={link.icon} style={{width: "50px", height: "50px", paddingTop: "5px"}}/>
-          {link.img && <img src={link.img} style={{width: "50px", height: "50px"}} />}
+          {link.img && <img src={link.img} style={{width: "75px", height: "75px"}} />}
         </span>
       </a>
       <SideMenuDropDown link={link} />
