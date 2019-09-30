@@ -37,7 +37,6 @@ class PigletManager(Ahsm):
     def __init__(self, farm):
         super().__init__()
         self.farm = farm
-        self.simulation = self.farm.config.get_simulation_enabled()
         self.bank_list = None
         self.mad_mapper_result = None
         self.picarro_analyzers = []

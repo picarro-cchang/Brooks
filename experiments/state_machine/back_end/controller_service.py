@@ -16,6 +16,7 @@ class ControllerService(ServiceTemplate):
         super().__init__()
 
     def setup_routes(self):
+        self.app.router.add_route('GET', '/errors', self.handle_errors)
         self.app.router.add_route('POST', '/event', self.handle_event)
         self.app.router.add_route('GET', '/modal_info', self.handle_modal_info)
         self.app.router.add_route('GET', '/plan', self.handle_plan)
@@ -56,6 +57,23 @@ class ControllerService(ServiceTemplate):
 
     async def on_cleanup(self, app):
         print("ControllerService is cleaning up")
+
+    async def handle_errors(self, request):
+        """
+        description: Retrieve recent errors from PigssErrorManager
+
+        tags:
+            -   Controller
+        summary: Retrieve recent errors from PigssErrorManager
+        produces:
+            -   text/plain
+        responses:
+            "200":
+                description: successful operation."
+        """
+        farm = request.app['farm']
+        errors = farm.pigss_error_manager.error_deque
+        return web.Response(text="\n\n".join(errors))
 
     async def handle_event(self, request):
         """
