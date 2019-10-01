@@ -1,7 +1,10 @@
 // @ts-ignore
 import { GrafanaTheme } from '@grafana/ui';
+import { TimeRange } from '@grafana/data';
 
-export interface DataGeneratorPanelProps {}
+export interface DataGeneratorPanelProps {
+  timeRange: TimeRange;
+}
 
 export interface DataGeneratorLayoutProps {
   theme: GrafanaTheme;

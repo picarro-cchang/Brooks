@@ -1,23 +1,18 @@
 // @ts-ignore
 import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
-// import { DataGeneratorPanelProps } from 'types';
+import { DataGeneratorPanelProps } from 'types';
+
+console.log('dateTime here', dateTime());
 
 export const DEFAULT_TIME_RANGE: TimeRange = {
-  from: dateTime(),
+  from: dateTime().subtract(6, "h"),
   to: dateTime(),
   raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment },
 };
 
-// const DEFAULT_KEYS: string[] = ['A', 'B', 'C'];
-
-// export const DEFAULT_DATA_GENERATOR_PROPS: DataGeneratorPanelProps = {
-//   timeRange: DEFAULT_TIME_RANGE,
-//   keys: DEFAULT_KEYS,
-//   fileName: [
-//     "09-12-2019 CO2 H20 NH3 Picarro.txt",
-//     "09-13-2019 CO2 H20 NH3 Picarro.txt",
-//     "09-14-2019 CO2 H20 NH3 Picarro.txt"]
-// };
+export const DEFAULT_DATA_GENERATOR_PROPS: DataGeneratorPanelProps = {
+  timeRange: DEFAULT_TIME_RANGE,
+};
 
 export const KEYS_OPTIONS = [
   { value: 'H2O', label: 'H2O' },
@@ -25,7 +20,7 @@ export const KEYS_OPTIONS = [
   { value: 'NH3', label: 'NH3' },
   { value: 'CH4', label: 'CH4' },
   { value: 'HF', label: 'HF' },
-  { value: 'HC', label: 'HC' },
+  { value: 'HCl', label: 'HCl' },
 ];
 
 export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
@@ -40,6 +35,8 @@ export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
 ];
 
 export const URL = {
-  GET_SAVED_FILES: "http://localhost:8010/api/getsavedfiles",
-  GET_FILE: "http://localhost:8010/api/getfile"
-}
+  GET_SAVED_FILES: 'http://localhost:8010/api/getsavedfiles',
+  GET_FIELD_KEYS: 'http://localhost:8010/api/getkeys',
+  GET_FILE: 'http://localhost:8010/api/getfile',
+  GENERATE_FILE: 'http://localhost:8010/api/generatefile',
+};

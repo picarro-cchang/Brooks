@@ -1,14 +1,16 @@
 influxdb:
   database: pigss_data
+  measurements: ["crds", "port_history"]
   host: 10.100.3.28
   port: 8086
-  timeout: 1
+  timeout: 300
   retries: 1
 
+# Config for server
 server:
   host: 127.0.0.1
   port: 8010
-  data_dir: "/usr/udfg"
+  data_dir: "/tmp"
   file_type: "csv"
 
-admin_keys: []
+user_keys: ["H20", "CO2", "NH3", "CH4", "HF", "HCl"]

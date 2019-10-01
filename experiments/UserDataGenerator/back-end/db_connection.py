@@ -1,5 +1,14 @@
 from influxdb import InfluxDBClient
 
+
+class DBInitError(Exception):
+    """ DB initialization error
+    
+    """
+
+    pass
+
+
 class DBInstance:
 
     """
@@ -9,9 +18,15 @@ class DBInstance:
     __instance = None
 
     @classmethod
-    def get_instance(cls, app):
+    def get_instance(cls, app=None):
         if DBInstance.__instance is None:
-            DBInstance.init_influxdb(app)
+            try:
+                if app is None:
+                    raise DBInitError("")
+                DBInstance.init_influxdb(app)
+            except DBInitError:
+                print("App is not initialized")
+                raise
         return DBInstance.__instance
 
     @classmethod
@@ -33,7 +48,11 @@ class DBInstance:
     @classmethod
     async def close_influxdb(cls, app):
         """
-        TO DO
+        TODO
         """
-        print("TO DO: close db connection")
-        return {}
+        try:
+            DBInstance.get_instance().close()
+            return True
+        except Exception as ex:
+            raise
+
