@@ -95,7 +95,7 @@ define(["@grafana/data","@grafana/ui","react"], function(__WEBPACK_EXTERNAL_MODU
 
 exports = module.exports = __webpack_require__(/*! ../../node_modules/css-loader/dist/runtime/api.js */ "../node_modules/css-loader/dist/runtime/api.js")(true);
 // Module
-exports.push([module.i, ".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: rgba(255,253,253,0.07843); }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n", "",{"version":3,"sources":["Layout.css"],"names":[],"mappings":"AAAA;EACE,WAAW;EACX,cAAc;EACd,YAAY;EACZ,kBAAkB,EAAE;;AAEtB;EACE,eAAe;EACf,cAAc;EACd,0BAA0B;EAC1B,2CAA2B,EAAE;;AAE/B,0CAA0C;AAC1C,8DAA8D;AAC9D;EACE,cAAc,EAAE","file":"Layout.css","sourcesContent":[".file-item {\n  width: auto;\n  display: block;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: #fffdfd14; }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n"]}]);
+exports.push([module.i, ".file-item {\n  width: auto;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: rgba(255,253,253,0.07843); }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n\n.time-picker-container .navbar-button--zoom {\n  display: none; }\n", "",{"version":3,"sources":["Layout.css"],"names":[],"mappings":"AAAA;EACE,WAAW;EACX,YAAY;EACZ,kBAAkB,EAAE;;AAEtB;EACE,eAAe;EACf,cAAc;EACd,0BAA0B;EAC1B,2CAA2B,EAAE;;AAE/B,0CAA0C;AAC1C,8DAA8D;AAC9D;EACE,cAAc,EAAE;;AAElB;EACE,aAAa,EAAE","file":"Layout.css","sourcesContent":[".file-item {\n  width: auto;\n  padding: 8px;\n  margin-bottom: 2px; }\n\n.file-item:hover {\n  cursor: pointer;\n  color: #3bd2f8;\n  text-decoration: underline;\n  background-color: #fffdfd14; }\n\n/* Fix for grafana panel scrolling issue */\n/* Has to figure out what's wrong with grafana or the panel! */\n.panel-content {\n  overflow: auto; }\n\n.time-picker-container .navbar-button--zoom {\n  display: none; }\n"]}]);
 
 
 /***/ }),
@@ -980,11 +980,11 @@ function (_super) {
 
 
     _this.downloadData = function (blob, fileName) {
-      var a = document.createElement("a"); // @ts-ignore
+      var a = document.createElement('a'); // @ts-ignore
 
-      document.getElementById("file-list").appendChild(a); // @ts-ignore
+      document.getElementById('file-list').appendChild(a); // @ts-ignore
 
-      a.style = "display: none";
+      a.style = 'display: none';
       var url = window.URL.createObjectURL(blob);
       a.href = url;
       a.download = fileName;
@@ -992,15 +992,51 @@ function (_super) {
       window.URL.revokeObjectURL(url);
     };
 
-    _this.generateData = function () {
-      console.log('generating data...');
-      console.log('Current State for generate', _this.state);
+    _this.generateFile = function () {
+      var _a = _this.state,
+          timeRange = _a.timeRange,
+          keys = _a.keys;
+
+      if (timeRange.from._d.getTime() === timeRange.to._d.getTime() || keys.length === 0) {
+        console.log('Invalid Query parameters');
+        return;
+      }
+
+      var queryParams = {
+        from: timeRange.from._d.getTime() * 1000000,
+        to: timeRange.to._d.getTime() * 1000000,
+        keys: keys
+      }; // Call generate file api
+
+      _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].generateFile(queryParams).then(function (response) {
+        response.json().then(function (data) {
+          // call getFile to download the data
+          if (data.filename !== undefined) {
+            _this.getFileNames();
+
+            _this.getFile(data.filename);
+          } else {
+            console.log('response', data);
+          }
+        });
+      });
     };
 
     _this.getFile = function (fileName) {
       _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getFile(fileName).then(function (response) {
         response.blob().then(function (data) {
           _this.downloadData(data, fileName);
+        });
+      });
+    };
+
+    _this.getFileNames = function () {
+      // Get file names
+      _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getSavedFiles().then(function (response) {
+        response.json().then(function (files) {
+          _this.setState(function () {
+            return files;
+          });
         });
       });
     };
@@ -1012,32 +1048,42 @@ function (_super) {
     };
 
     _this.onKeysChange = function (keys) {
-      _this.setState({
-        keys: keys
+      _this.setState(function () {
+        return {
+          keys: keys
+        };
       });
     };
 
     _this.state = {
-      timeRange: _constants__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_TIME_RANGE"],
+      timeRange: _this.props.options.timeRange,
       keys: [],
+      keyOptions: [],
       files: []
     };
     return _this;
   }
 
   DataGeneratorLayout.prototype.componentWillMount = function () {
-    var _this = this;
+    var _this = this; // Get file names
 
-    console.log('Call all bootstrap apis for data'); //  KEY_OPTIONS, FILE NAMES
-    // Get file names
 
-    _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getSavedFiles().then(function (response) {
-      response.json().then(function (files) {
-        _this.setState(function () {
-          return files;
+    this.getFileNames(); // Get Key Options
+
+    _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_5__["DataGeneratorService"].getKeys().then(function (response) {
+      response.json().then(function (data) {
+        var keyOptions = data.keys.map(function (x) {
+          return {
+            value: x,
+            label: x
+          };
+        });
+
+        _this.setState({
+          keyOptions: keyOptions
         });
       });
-    }); // Get Key Options
+    });
   };
 
   DataGeneratorLayout.prototype.render = function () {
@@ -1047,7 +1093,8 @@ function (_super) {
     var _a = this.state,
         keys = _a.keys,
         files = _a.files,
-        timeRange = _a.timeRange;
+        timeRange = _a.timeRange,
+        keyOptions = _a.keyOptions;
     var styleObj = {
       overflow: 'scroll !important',
       height: 'inherit'
@@ -1061,7 +1108,7 @@ function (_super) {
       timeRange.to = Object(_grafana_data__WEBPACK_IMPORTED_MODULE_2__["dateTime"])(timeRange.to);
     }
 
-    var fileItems = files.map(function (fn) {
+    var fileItems = files.map(function (fn, i) {
       return react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("li", {
         key: fn,
         className: "file-item",
@@ -1083,16 +1130,16 @@ function (_super) {
       width: labelWidth
     }, "Keys"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_3__["Select"], {
       width: selectWidth,
-      options: _constants__WEBPACK_IMPORTED_MODULE_4__["KEYS_OPTIONS"],
+      options: keyOptions,
       onChange: this.onKeysChange,
-      value: _constants__WEBPACK_IMPORTED_MODULE_4__["KEYS_OPTIONS"].find(function (option) {
+      value: keyOptions.find(function (option) {
         return option.value === 'key';
       }),
       isMulti: true,
       backspaceRemovesValue: true,
       isLoading: true
     })), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
-      className: "gf-form col-md-6 col-sm-12"
+      className: "gf-form col-md-6 col-sm-12 time-picker-container"
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_3__["FormLabel"], {
       width: labelWidth
     }, "Date"), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_3__["TimePicker"], {
@@ -1115,7 +1162,8 @@ function (_super) {
       size: "md",
       variant: "primary",
       value: "Generate",
-      onClick: this.generateData
+      onClick: this.generateFile,
+      disabled: !this.state.keys.length
     }, "Generate")))), react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement(_grafana_ui__WEBPACK_IMPORTED_MODULE_3__["PanelOptionsGroup"], {
       title: "Recently Generated Files"
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("div", {
@@ -1126,7 +1174,7 @@ function (_super) {
     }, react__WEBPACK_IMPORTED_MODULE_1___default.a.createElement("ul", {
       id: "file-list",
       style: {
-        "display": "inherit"
+        listStyle: 'none'
       }
     }, fileItems)))));
   };
@@ -1219,37 +1267,32 @@ if(false) {}
 /*!****************************!*\
   !*** ./constants/index.ts ***!
   \****************************/
-/*! exports provided: DEFAULT_TIME_RANGE, KEYS_OPTIONS, DEFAULT_TIME_OPTIONS, URL */
+/*! exports provided: DEFAULT_TIME_RANGE, DEFAULT_DATA_GENERATOR_PROPS, KEYS_OPTIONS, DEFAULT_TIME_OPTIONS, URL */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_RANGE", function() { return DEFAULT_TIME_RANGE; });
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_DATA_GENERATOR_PROPS", function() { return DEFAULT_DATA_GENERATOR_PROPS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "KEYS_OPTIONS", function() { return KEYS_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_OPTIONS", function() { return DEFAULT_TIME_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "URL", function() { return URL; });
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_0__);
 // @ts-ignore
- // import { DataGeneratorPanelProps } from 'types';
 
+console.log('dateTime here', Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])());
 var DEFAULT_TIME_RANGE = {
-  from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
+  from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])().subtract(6, "h"),
   to: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])(),
   raw: {
     from: 'now-6h',
     to: 'now'
   }
-}; // const DEFAULT_KEYS: string[] = ['A', 'B', 'C'];
-// export const DEFAULT_DATA_GENERATOR_PROPS: DataGeneratorPanelProps = {
-//   timeRange: DEFAULT_TIME_RANGE,
-//   keys: DEFAULT_KEYS,
-//   fileName: [
-//     "09-12-2019 CO2 H20 NH3 Picarro.txt",
-//     "09-13-2019 CO2 H20 NH3 Picarro.txt",
-//     "09-14-2019 CO2 H20 NH3 Picarro.txt"]
-// };
-
+};
+var DEFAULT_DATA_GENERATOR_PROPS = {
+  timeRange: DEFAULT_TIME_RANGE
+};
 var KEYS_OPTIONS = [{
   value: 'H2O',
   label: 'H2O'
@@ -1266,8 +1309,8 @@ var KEYS_OPTIONS = [{
   value: 'HF',
   label: 'HF'
 }, {
-  value: 'HC',
-  label: 'HC'
+  value: 'HCl',
+  label: 'HCl'
 }];
 var DEFAULT_TIME_OPTIONS = [{
   from: 'now-5m',
@@ -1311,8 +1354,10 @@ var DEFAULT_TIME_OPTIONS = [{
   section: 3
 }];
 var URL = {
-  GET_SAVED_FILES: "http://localhost:8010/api/getsavedfiles",
-  GET_FILE: "http://localhost:8010/api/getfile"
+  GET_SAVED_FILES: 'http://localhost:8010/api/getsavedfiles',
+  GET_FIELD_KEYS: 'http://localhost:8010/api/getkeys',
+  GET_FILE: 'http://localhost:8010/api/getfile',
+  GENERATE_FILE: 'http://localhost:8010/api/generatefile'
 };
 
 /***/ }),
@@ -1330,10 +1375,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/ui */ "@grafana/ui");
 /* harmony import */ var _grafana_ui__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_ui__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var _components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./components/DataGeneratorPanel */ "./components/DataGeneratorPanel.tsx");
+/* harmony import */ var _services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./services/DataGeneratorService */ "./services/DataGeneratorService.ts");
 
- // import { DataGeneratorService } from './services/DataGeneratorService';
 
-var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__["DataGeneratorPanel"]); // plugin.setDefaults(DataGeneratorService.getDefaults());
+
+var plugin = new _grafana_ui__WEBPACK_IMPORTED_MODULE_0__["PanelPlugin"](_components_DataGeneratorPanel__WEBPACK_IMPORTED_MODULE_1__["DataGeneratorPanel"]);
+plugin.setDefaults(_services_DataGeneratorService__WEBPACK_IMPORTED_MODULE_2__["DataGeneratorService"].getDefaults());
 
 /***/ }),
 
@@ -1358,20 +1405,6 @@ var API = {
 
       return response;
     });
-  },
-  getFile: function getFile(url) {
-    return fetch(url, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/text'
-      }
-    }).then(function (response) {
-      if (!response.ok) {
-        throw Error('Netwoek GET request failed.');
-      }
-
-      return response;
-    });
   }
 };
 
@@ -1387,21 +1420,58 @@ var API = {
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DataGeneratorService", function() { return DataGeneratorService; });
-/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../constants */ "./constants/index.ts");
-/* harmony import */ var _API__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./API */ "./services/API.ts");
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! tslib */ "../node_modules/tslib/tslib.es6.js");
+/* harmony import */ var _constants__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../constants */ "./constants/index.ts");
+/* harmony import */ var _API__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./API */ "./services/API.ts");
+
 
 
 var DataGeneratorService = function () {
   return {
     getDefaults: function getDefaults() {
-      return {};
+      return _constants__WEBPACK_IMPORTED_MODULE_1__["DEFAULT_DATA_GENERATOR_PROPS"];
     },
     getSavedFiles: function getSavedFiles() {
-      return _API__WEBPACK_IMPORTED_MODULE_1__["API"].get(_constants__WEBPACK_IMPORTED_MODULE_0__["URL"].GET_SAVED_FILES);
+      return _API__WEBPACK_IMPORTED_MODULE_2__["API"].get(_constants__WEBPACK_IMPORTED_MODULE_1__["URL"].GET_SAVED_FILES);
+    },
+    getKeys: function getKeys() {
+      return _API__WEBPACK_IMPORTED_MODULE_2__["API"].get(_constants__WEBPACK_IMPORTED_MODULE_1__["URL"].GET_FIELD_KEYS);
     },
     getFile: function getFile(fileName) {
-      var url = _constants__WEBPACK_IMPORTED_MODULE_0__["URL"].GET_FILE + '?name=' + fileName;
-      return _API__WEBPACK_IMPORTED_MODULE_1__["API"].getFile(url);
+      var url = _constants__WEBPACK_IMPORTED_MODULE_1__["URL"].GET_FILE + '?name=' + fileName;
+      return _API__WEBPACK_IMPORTED_MODULE_2__["API"].get(url);
+    },
+    generateFile: function generateFile(params) {
+      var e_1, _a; // http://localhost:8010/api/generatefile
+      // url eg http://localhost:8010/api/generatefile?keys=CO2&keys=NH3&keys=H2O&keys=CH4&from=1569609759914&to=1569619183402
+
+
+      var url = _constants__WEBPACK_IMPORTED_MODULE_1__["URL"].GENERATE_FILE + '?';
+      var from = params.from,
+          to = params.to,
+          keys = params.keys;
+
+      try {
+        for (var keys_1 = tslib__WEBPACK_IMPORTED_MODULE_0__["__values"](keys), keys_1_1 = keys_1.next(); !keys_1_1.done; keys_1_1 = keys_1.next()) {
+          var key = keys_1_1.value;
+          url += "keys=" + key['value'] + "&";
+        }
+      } catch (e_1_1) {
+        e_1 = {
+          error: e_1_1
+        };
+      } finally {
+        try {
+          if (keys_1_1 && !keys_1_1.done && (_a = keys_1["return"])) _a.call(keys_1);
+        } finally {
+          if (e_1) throw e_1.error;
+        }
+      }
+
+      url += "from=" + from;
+      url += "&to=" + to;
+      console.log('url', url);
+      return _API__WEBPACK_IMPORTED_MODULE_2__["API"].get(url);
     }
   };
 }();

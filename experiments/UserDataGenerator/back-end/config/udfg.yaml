@@ -1,5 +1,5 @@
 influxdb:
-  database: pigss_data
+  database: "pigss_data"
   measurements: ["crds", "port_history"]
   host: 10.100.3.28
   port: 8086

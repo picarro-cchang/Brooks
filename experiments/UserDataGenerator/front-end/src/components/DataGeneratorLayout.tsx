@@ -154,7 +154,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 isLoading
               />
             </div>
-            <div className="gf-form col-md-6 col-sm-12">
+            <div className="gf-form col-md-6 col-sm-12 time-picker-container">
               <FormLabel width={labelWidth}>Date</FormLabel>
               <TimePicker
                 timeZone="browser"

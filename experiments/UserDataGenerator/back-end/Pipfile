@@ -6,11 +6,11 @@ name = "pypi"
 [packages]
 asyncio = "*"
 aiohttp = "*"
-aiohttp-cors = "*"
-trafaret = "*"
-trafaret-config = "*"
+aiohttp_cors = "*"
 influxdb = "*"
 multidict = "*"
+"ruamel.yaml" = "*"
+yamale = "*"
 
 [dev-packages]
 black = "*"

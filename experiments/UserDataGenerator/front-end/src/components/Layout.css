@@ -16,3 +16,7 @@
 .panel-content {
   overflow: auto;
 }
+
+.time-picker-container .navbar-button--zoom {
+  display: none;
+}
