@@ -171,7 +171,7 @@ int8_t channel_update() {
       // Channel has been disabled.  Set the bypass DAC to get the
       // inactive flow level.
       retval = pressure_dac_set(channel, PRESSURE_DAC_INACTIVE_COUNTS);
-      // Clear the bit in the hardware byte
+      // Set the bit in the hardware byte
       channel_hardware_byte |= _BV(channel_array[channel_array_index].bitshift);
 
       // Remove lit LEDs
@@ -225,8 +225,20 @@ int8_t channel_update() {
   }
 
   // Update hardware solenoids.  Disabled channels are energized.
-  uint8_t topaz_a_byte = channel_hardware_byte;
-  uint8_t topaz_b_byte = channel_hardware_byte >> 4;
+  retval += channel_set_solenoids( channel_hardware_byte );
+
+  // Handle the front panel
+  aloha_write(new_led_value);
+
+
+  return retval;
+}
+
+int8_t channel_set_solenoids( uint8_t setting ) {
+  int8_t retval = 0;
+  // Update hardware solenoids.  Disabled channels are energized.
+  uint8_t topaz_a_byte = setting;
+  uint8_t topaz_b_byte = setting >> 4;
 
   // Handle Topaz A hardware
   if (topaz_is_connected('a')) {
@@ -262,10 +274,6 @@ int8_t channel_update() {
     logger_msg_p("topaz", log_level_ERROR, PSTR("Topaz %c is not connected"),'b');
     retval += -1;
   }
-  // Handle the front panel
-  aloha_write(new_led_value);
-
-
   return retval;
 }
 

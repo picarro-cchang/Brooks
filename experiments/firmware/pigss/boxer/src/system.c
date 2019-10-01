@@ -347,8 +347,10 @@ int8_t system_enter_shutdown(void) {
   case system_state_STANDBY:
     // Transition from STANDBY to SHUTDOWN
     //
-    // All channels --> ON (relaxes solenoids)
-    channel_set(0xff);
+    // All channels --> ON (relaxes solenoids).  This will actually
+    // set the system state to CONTROL, but
+    // channel_set(0xff);
+    channel_set_solenoids(0);
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
     // All LEDs --> OFF
