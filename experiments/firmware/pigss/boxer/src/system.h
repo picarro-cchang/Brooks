@@ -72,6 +72,9 @@ void cmd_shutdown( command_arg_t *command_arg_ptr );
 // Function called by the clean command
 void cmd_clean( command_arg_t *command_arg_ptr );
 
+// Funciton called by the identify command
+void cmd_identify( command_arg_t *command_arg_ptr );
+
 // Initialize the system state structure.  This populates the
 // structure with non-volatile values from eeprom.
 void system_init( void );

@@ -93,6 +93,9 @@
 // Provides watchdog_init()
 #include "watchdog.h"
 
+// Provides channel identification states and functions
+#include "identify.h"
+
 // Define a pointer to the received command state
 recv_cmd_state_t  recv_cmd_state;
 recv_cmd_state_t *recv_cmd_state_ptr = &recv_cmd_state;
@@ -158,7 +161,9 @@ int main(void) {
   // logger_setsystem( "mb85rc256v" );
 
   logger_setsystem( "eeprom" );
-  logger_setsystem( "cal" );
+
+  // Enable channel identify logging
+  logger_setsystem( "identify" );
 
   // Enable logging the TCA9539 I2C GPIO system
   // logger_setsystem( "tca9539" );
@@ -221,7 +226,11 @@ int main(void) {
     mpr_read_delay_ms = 5;
   }
 
-  // OS_TaskCreate(function pointer, interval (ms), BLOCKED or SUSPENDED)
+  // OS_TaskCreate(function pointer, interval (ms), READY, BLOCKED or SUSPENDED)
+  //
+  // READY tasks will execute ASAP and then switch to BLOCKED
+  // BLOCKED tasks will wait for their interval to expire and then become READY
+  // SUSPENDED tasks will never execute
 
   // Task 0 -- Trigger all the pressure sensors
   // OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
@@ -231,6 +240,9 @@ int main(void) {
 
   // Task 2 -- Check for USB communication
   OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
+
+  // Task 3 -- Exit identify state
+  OS_TaskCreate(&identify_exit_task, 5000, SUSPENDED);
 
   // Task 2 -- Test task
   // OS_TaskCreate(&test_task, 500, BLOCKED);
@@ -256,7 +268,9 @@ int main(void) {
     case system_state_CLEAN:
       break;
     case system_state_SHUTDOWN:
-      break; 
+      break;
+    case system_state_IDENTIFY:
+      break;
     default:
       logger_msg_p("main", log_level_ERROR, PSTR("Bad system state %d"),
 		   system_state_ptr -> state_enum);

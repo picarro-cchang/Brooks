@@ -127,6 +127,10 @@ logger_system_t system_array[] ={
     {"aloha",
      23
     },
+    // The channel identify module
+    {"identify",
+    24
+    },
     // End of table indicator.  Must be last.
     {"",0}
 };

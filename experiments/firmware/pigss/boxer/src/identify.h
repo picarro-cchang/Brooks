@@ -17,7 +17,15 @@ typedef enum identify_state_enum {
 typedef struct identify_state_struct {
   identify_state_enum_t state_enum;
   float mfc_value;
+  // Active channels will be set in the active channel byte
+  uint8_t active_channel_byte;
 } identify_state_t;
+
+// Do whatever we need to do to figure out which channels are active
+int8_t identify_find_active_channels(void);
+
+// Exit identify mode
+void identify_exit_task(void);
 
 // Command to return the proper sample flow controller value
 void cmd_mfcval_q( command_arg_t *command_arg_ptr );
@@ -28,5 +36,9 @@ void cmd_mfcval_q( command_arg_t *command_arg_ptr );
 int8_t identify_state_set_mfc_value(float mfc_value);
 
 float identify_state_get_mfc_value(void);
+
+int8_t identify_state_set_state_enum(identify_state_enum_t state);
+
+identify_state_enum_t identify_state_get_state_enum(void);
 
 #endif // End the include guard

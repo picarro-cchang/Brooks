@@ -28,14 +28,17 @@
 
 typedef void (*fncPtr)(void);           /**< Function pointer for registering tasks. */
 
-/**
- * States of the tasks.
- */
-typedef enum
-{
-    BLOCKED = 0,                        /**< In the BLOCKED state the task waits for the timer to put it into READY state. */
-    READY,                              /**< In the READY state the task is ready to be called and executed in the main function. */
-    SUSPENDED                           /**< In the SUSPENDED state the task is ignored by the timer and executer. */
+// Task states
+typedef enum {
+	      // In the BLOCKED state the task waits for the timer to
+	      // put it into READY state.
+	      BLOCKED = 0,
+	      // In the READY state the task is ready to be called and
+	      // executed in the main function.
+	      READY,
+	      // In the SUSPENDED state the task is ignored by the
+	      // timer and executer.
+	      SUSPENDED                           
 } OS_state;
 
 /**
@@ -71,10 +74,17 @@ typedef enum
 /**
  * Functions.
  */
+
+// Get the number of registered tasks
+uint8_t OS_get_total_tasks(void);
+
+// Find the task number of a task with the given function pointer
+int8_t OS_get_task_number(fncPtr);
+
 OS_feedback OS_TaskCreate(fncPtr task, uint16_t default_time_burst, OS_state default_state);
 void OS_TaskTimer(void);
 void OS_TaskExecution(void);
-OS_state OS_GetTaskSate(uint8_t task_number);
+OS_state OS_GetTaskState(uint8_t task_number);
 uint16_t OS_GetTaskBurstTime(uint8_t task_number);
 uint16_t OS_GetTaskCntTime(uint8_t task_number);
 void OS_SetTaskState(uint8_t task_number, OS_state new_state);

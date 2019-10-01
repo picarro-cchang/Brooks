@@ -206,12 +206,17 @@ int8_t channel_update() {
     channel_array_index++;
   }
   if (enabled_channels > 0) {
-    // If any channel is enabled, we need to be in control mode.  This
-    // may not be allowed if we're in a state that can't enter control.
-    if ( system_enter_control() < 0 ) {
-      retval += -1;
-      return retval;
+    // If any channel is enabled outside of identify state, we need to
+    // be in control mode.  This may not be allowed if we're in a
+    // state that can't enter control.
+    if (system_state_get_system_state() != system_state_IDENTIFY) {
+      // If we're not in identify, we need to go into control
+      if ( system_enter_control() < 0 ) {
+	retval += -1;
+	return retval;
+      }
     }
+
     // Clear the blue LED bits
     new_led_value = aloha_clear_clean_led_bits(new_led_value);
   } else {

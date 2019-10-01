@@ -183,3 +183,18 @@ void OS_SetTaskCntTime(uint8_t task_number, uint16_t new_time_cnt)
 {
     task_array[task_number].time_cnt = new_time_cnt; 
 }
+
+uint8_t OS_get_total_tasks(void) {
+  return task_number;
+}
+
+int8_t OS_get_task_number(fncPtr function) {
+  for (uint8_t i = 0; i < task_number; i++) {
+    if (task_array[i].function == function) {
+      // We've found the matching task
+      return (int8_t) i;
+    }
+  }
+  // If we've made it this far, we didn't find a match
+  return -1;
+}

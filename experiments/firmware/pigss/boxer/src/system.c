@@ -40,6 +40,10 @@
 // Provides definitions and functions for working with the Aloha front panel
 #include "aloha.h"
 
+// Provides definitions and functions for working with the channel
+// identification module
+#include "identify.h"
+
 #include "system.h"
 
 // ----------------------- Globals ------------------------------------
@@ -162,7 +166,18 @@ int8_t system_enter_standby(void) {
     // Actually set the system state
     set_system_state(system_state_STANDBY);
     logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to STANDBY"));
-    break;    
+    break;
+  case system_state_IDENTIFY:
+    // Transition from IDENTIFY to STANDBY
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // MFC value --> 0
+    identify_state_set_mfc_value(0.0);
+    // Actually set the system state
+    set_system_state(system_state_STANDBY);
+    logger_msg_p("system",log_level_INFO,PSTR("State change IDENTIFY to STANDBY"));
+    break;
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter standby from bad system state %d"),
@@ -289,33 +304,29 @@ int8_t system_enter_identify(void) {
     retval += -1;
     break;
   case system_state_STANDBY:
-    // Transition from STANDBY to IDENTIFY
+    // Transition from STANDBY to IDENTIFY.AMBIENT
     //
-    
-    // Turn blue LEDs on
-    aloha_show_clean_leds();
-    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CLEAN"));
-    set_system_state(system_state_CLEAN);
+    // In this interim release, we'll just kick off a delay
+
+    // Set the overall system state
+    set_system_state(system_state_IDENTIFY);
+    // Set the identify substate
+    identify_state_set_state_enum(identify_state_AMBIENT);
+    // Kick off the channel identification procedure
+    identify_find_active_channels();
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to IDENTIFY.AMBIENT"));
     break;
   case system_state_CONTROL:
-    // Transition from CONTROL to CLEAN
-    //
-    // All channels --> OFF
-    channel_set(0);
-    // Clean solenoid --> ON
-    vernon_set_clean_solenoid(1);
-    // Turn blue LEDs on
-    aloha_show_clean_leds();
-    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to CLEAN"));
-    set_system_state(system_state_CLEAN);
+    // Transition from CONTROL to IDENTIFY is forbidden
+    retval += -1;
     break;
   case system_state_SHUTDOWN:
-    // Transition from SHUTDOWN to CLEAN is not allowed
-    logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to CONTROL"));
+    // Transition from SHUTDOWN to IDENTIFY is forbidden
     retval += -1;
+    break;
   default:
     logger_msg_p("system", log_level_ERROR,
-		 PSTR("Enter clean from bad system state %d"),
+		 PSTR("Enter IDENTIFY from bad system state %d"),
 		 system_state.state_enum);
     retval += -1;
     break;
@@ -409,6 +420,11 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
 		 "shutdown",
 		 LINE_TERMINATION_CHARACTERS );
     break;
+  case system_state_IDENTIFY:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "identify",
+		 LINE_TERMINATION_CHARACTERS );
+    break; 
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",
@@ -425,6 +441,18 @@ void cmd_slotid_q( command_arg_t *command_arg_ptr ) {
 void cmd_standby( command_arg_t *command_arg_ptr ) {
   int8_t retval = 0;
   retval = system_enter_standby();
+  if (retval == 0) {
+    command_ack();
+    return;
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+}
+
+void cmd_identify( command_arg_t *command_arg_ptr ) {
+  int8_t retval = 0;
+  retval = system_enter_identify();
   if (retval == 0) {
     command_ack();
     return;

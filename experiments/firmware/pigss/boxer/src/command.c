@@ -243,6 +243,11 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_pressure_get_ema_alpha},
+  // identify -- Start the channel identification procedure
+  {"identify",
+   "none",
+   0,
+   &cmd_identify},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
