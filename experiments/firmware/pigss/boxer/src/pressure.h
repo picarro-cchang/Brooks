@@ -66,8 +66,7 @@ void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr );
 // Pascals
 void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr );
 
-// Command to return the proper sample flow controller value
-void cmd_mfcval_q( command_arg_t *command_arg_ptr );
+
 
 // Return a calibrated pressure in Pascals for outlet sensors.
 //

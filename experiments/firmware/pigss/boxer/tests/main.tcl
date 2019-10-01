@@ -30,11 +30,12 @@ package require cmdline
 set usage "usage: [file tail $argv0] \[options]"
 
 set options {
-    {b.arg "Board name" "mega"}
+    {b.arg "mega" "Board name"}
+    {o.arg "all" "Single test file to run"}
 }
 
 try {
-    array set params [::cmdline::getoptions argv $options $usage]
+    array set params [cmdline::getoptions argv $options $usage]
 } trap {CMDLINE USAGE} {msg o} {
     # Trap the usage signal, print the message, and exit the application.
     # Note: Other errors are not caught and passed through to higher levels!
@@ -100,6 +101,11 @@ ${log}::warn "Warn message"
 ############################## tcltest ###############################
 package require tcltest
 tcltest::configure -singleproc true
+
+if {$params(o) != "all"} {
+    # Only run tests in the file specified from the command line
+    tcltest::configure -file "$params(o)"
+}
 
 # Skip pressure commands
 tcltest::configure -notfile "pressure.test"

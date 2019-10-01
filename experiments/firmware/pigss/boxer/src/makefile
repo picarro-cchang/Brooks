@@ -147,6 +147,9 @@ SRC += whitfield.c
 # Aloha (front panel) board
 SRC += aloha.c
 
+# Identify module to help with channel identification
+SRC += identify.c
+
 
 # List C++ source files here. (C dependencies are automatically generated.)
 CPPSRC =

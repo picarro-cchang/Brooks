@@ -52,4 +52,24 @@ tcltest::test mfcval.clean {
     set garbage_string [boxer::readline $channel]
 } -match regexp -result 40.0
 
+tcltest::test mfcval.control {
+    Test MFC value in control mode.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Put the system in control mode
+    boxer::sendcmd $channel "chanset 1"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "mfcval?"
+    set return_string [boxer::readline $channel]
+    # If this piglet is in control mode, it will be flowing sample
+    # gas.  Jeff has told me that a MFC value of 40 should be ok for
+    # this.
+    return $return_string
+} -cleanup {
+    # Go back to standby
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -match regexp -result 40.0
+
 

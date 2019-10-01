@@ -503,26 +503,7 @@ void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr ) {
 		LINE_TERMINATION_CHARACTERS );
 }
 
-void cmd_mfcval_q( command_arg_t *command_arg_ptr ) {
-  system_state_value_t current_state = system_state_get_system_state();
-  switch( current_state ) {
-  case system_state_INIT:
-    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
-    break;
-  case system_state_STANDBY:
-    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
-    break;
-  case system_state_CONTROL:
-    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 40, LINE_TERMINATION_CHARACTERS );
-    break;
-  case system_state_CLEAN:
-    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 40, LINE_TERMINATION_CHARACTERS );
-    break;
-  default:
-    usart_printf( USART_CHANNEL_COMMAND, "%0.1f%s", (float) 0, LINE_TERMINATION_CHARACTERS );
-    break;
-  }
-}
+
 
 void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr ) {
   uint16_t alpha = (command_arg_ptr -> uint16_arg);

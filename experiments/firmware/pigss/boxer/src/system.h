@@ -16,7 +16,8 @@ typedef enum system_state_enum {
 				system_state_INIT,
 				system_state_ID_CHANNELS,
 				system_state_CONTROL,
-				system_state_CLEAN
+				system_state_CLEAN,
+				system_state_IDENTIFY
 } system_state_value_t;
 
 
@@ -38,6 +39,7 @@ typedef struct system_status_struct {
   // Aloha front panel value
   uint32_t fp_led_value;
 } system_state_t;
+
 
 // The system state structure variable will have global scope, and
 // will be defined in functions.c
@@ -80,6 +82,21 @@ bool system_usb_is_connected( void );
 // Set shutdown state if there's no USB communication
 void system_comcheck_task( void );
 
+// Enter shutdown mode
+int8_t system_enter_shutdown(void);
+
+// Enter standby mode
+int8_t system_enter_standby(void);
+
+// Enter control mode
+int8_t system_enter_control(void);
+
+// Enter clean mode
+int8_t system_enter_clean(void);
+
+// Enter identify mode
+int8_t system_enter_identify(void);
+
 //******* Set and get members of the system_state structure ********//
 
 // Get the enumerated state
@@ -109,16 +126,5 @@ uint32_t system_state_get_fp_led_value(void);
 // Set the system-level serial number
 int8_t system_state_set_system_sernum(uint16_t sernum);
 
-// Enter shutdown mode
-int8_t system_enter_shutdown(void);
-
-// Enter standby mode
-int8_t system_enter_standby(void);
-
-// Enter control mode
-int8_t system_enter_control(void);
-
-// Enter clean mode
-int8_t system_enter_clean(void);
 
 #endif // End the include guard

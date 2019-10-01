@@ -51,6 +51,9 @@
 // Provides commands to work with pressure sensors
 #include "pressure.h"
 
+// Provides system identification commands
+#include "identify.h"
+
 
 /* Define the remote commands recognized by the system.
  */

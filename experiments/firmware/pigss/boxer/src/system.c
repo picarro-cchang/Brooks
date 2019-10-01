@@ -142,8 +142,11 @@ int8_t system_enter_standby(void) {
     channel_set(0);
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
-    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to STANDBY"));
+    // MFC value --> 0
+    identify_state_set_mfc_value(0.0);
+    // Actually set the system state
     set_system_state(system_state_STANDBY);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to STANDBY"));
     break;
   case system_state_CLEAN:
     // Transition from CLEAN to STANDBY
@@ -152,10 +155,13 @@ int8_t system_enter_standby(void) {
     channel_set(0);
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
+    // MFC value --> 0
+    identify_state_set_mfc_value(0.0);
     // Blue LEDs --> OFF
     aloha_clear_clean_leds();
-    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to STANDBY"));
+    // Actually set the system state
     set_system_state(system_state_STANDBY);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to STANDBY"));
     break;    
   default:
     logger_msg_p("system", log_level_ERROR,
@@ -184,8 +190,11 @@ int8_t system_enter_control(void) {
     break;
   case system_state_STANDBY:
     // Transition from STANDBY to CONTROL
-    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));
+    // MFC value --> 40
+    identify_state_set_mfc_value(40.0);
+    // Actually set the system state
     set_system_state(system_state_CONTROL);
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));    
     break;
   case system_state_CLEAN:
     // Transition from CLEAN to CONTROL
@@ -194,8 +203,11 @@ int8_t system_enter_control(void) {
     vernon_set_clean_solenoid(0);
     // Turn off blue LEDs
     aloha_clear_clean_leds();
-    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
+    // MFC value --> 40
+    identify_state_set_mfc_value(40.0);
+    // Actually set the system state
     set_system_state(system_state_CONTROL);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
     break; 
   
     
@@ -225,6 +237,61 @@ int8_t system_enter_clean(void) {
     channel_set(0);
     // Clean solenoid --> ON
     vernon_set_clean_solenoid(1);
+    // Turn blue LEDs on
+    aloha_show_clean_leds();
+    // MFC value --> 40
+    identify_state_set_mfc_value(40.0);
+    // Actually set the system state
+    set_system_state(system_state_CLEAN);
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CLEAN"));
+    break;
+  case system_state_CONTROL:
+    // Transition from CONTROL to CLEAN
+    //
+    // All channels --> OFF
+    channel_set(0);
+    // Clean solenoid --> ON
+    vernon_set_clean_solenoid(1);
+    // Turn blue LEDs on
+    aloha_show_clean_leds();
+    // MFC value --> 40
+    identify_state_set_mfc_value(40.0);
+    // Actually set the system state
+    set_system_state(system_state_CLEAN);
+    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to CLEAN"));
+    break;
+  case system_state_SHUTDOWN:
+    // Transition from SHUTDOWN to CLEAN is not allowed
+    logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to CONTROL"));
+    retval += -1;
+  default:
+    logger_msg_p("system", log_level_ERROR,
+		 PSTR("Enter clean from bad system state %d"),
+		 system_state.state_enum);
+    retval += -1;
+    break;
+  }
+  return retval; 
+}
+
+int8_t system_enter_identify(void) {
+  int8_t retval = 0;
+  switch( system_state.state_enum ) {
+  case system_state_IDENTIFY:
+    // Nothing to do here
+    break;
+  case system_state_CLEAN:
+    // Transition from CLEAN to IDENTIFY is forbidden
+    retval += -1;
+    break;
+  case system_state_INIT:
+    // Transition from INIT to IDENTIFY is forbidden
+    retval += -1;
+    break;
+  case system_state_STANDBY:
+    // Transition from STANDBY to IDENTIFY
+    //
+    
     // Turn blue LEDs on
     aloha_show_clean_leds();
     logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CLEAN"));
@@ -459,3 +526,4 @@ void system_comcheck_task( void ) {
     return;
   }
 }
+
