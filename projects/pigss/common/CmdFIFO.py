@@ -55,7 +55,7 @@ CMD_TYPE_ERROR = "E"  # -1
 CMD_Types = [CMD_TYPE_Default, CMD_TYPE_Blocking,
              CMD_TYPE_VerifyOnly, CMD_TYPE_Callback, CMD_TYPE_ERROR]
 
-uriRegex = re.compile("http://(.*):(\d+)")
+uriRegex = re.compile("http://(.*):(\d+)") # noqa
 Pyro4.config.SERIALIZER = 'pickle'
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
 Pyro4.config.PICKLE_PROTOCOL_VERSION = 2
@@ -69,7 +69,7 @@ def rpc_wrap(func):
     def wrapper(*a, **k):
         try:
             return func(*a, **k)
-        except:
+        except: # noqa
             raise RemoteException(traceback.format_exc())
 
     wrapper.__wrapped_co_argcount = func.__code__.co_argcount
@@ -258,7 +258,7 @@ class CmdFIFOServer(object):
                 if self.instance is not None:
                     # check for a __dispatch__ method
                     if hasattr(self.instance, '__dispatch__'):
-                        func = lambda *a, **k: self.instance.__dispatch__(
+                        func = lambda *a, **k: self.instance.__dispatch__( # noqa
                             method, a, k)
                     else:
                         # call instance method directly
@@ -271,7 +271,7 @@ class CmdFIFOServer(object):
             if func is None:
                 raise CmdFIFOError('Method "%s" is not supported' % method)
 
-            if self.server.logRequests and self.server.logger != None:
+            if self.server.logRequests and self.server.logger is not None:
                 # Write the arguments in standard form, positional arguments followed by keyword arguments
                 argStr = ",".join(["%r" % (arg, ) for arg in a] +
                                   ["%s=%r" % (key, k[key]) for key in k])
@@ -333,7 +333,7 @@ class CmdFIFOServer(object):
 
             # Execute Callback mode functions in VerifyOnly mode, if no callback
             #  info is available
-            elif funcMode == CMD_TYPE_VerifyOnly or callbackInfo == None:
+            elif funcMode == CMD_TYPE_VerifyOnly or callbackInfo is None:
 
                 def __waitAndDispatch():
                     """This function is executed within a daemonic thread at the
@@ -435,12 +435,12 @@ class CmdFIFOServer(object):
         #  Use the Python logging module with a unique logger name for each
         #  CmdFIFOServer instance
         self.logger = None
-        if DumpToStdout or LogFunc != None:
+        if DumpToStdout or LogFunc is not None:
             self.logger = logging.getLogger("%d" % CmdFIFOServer.loggerInst)
             self.logger.setLevel(level=logging.INFO)
             CmdFIFOServer.loggerInst += 1
 
-        if LogFunc != None:
+        if LogFunc is not None:
             # If a LogFunc is specified, entries to a stream object have to be passed
             #  to this function. The following class provides this feature.
             class LogStream(object):
@@ -513,7 +513,7 @@ class CmdFIFOServer(object):
     def Stop(self):
         """Stops the thread running the server main loop, and wait for it to terminate"""
         self.stop_server()
-        if self.thread != None:
+        if self.thread is not None:
             self.thread.join()
             self.thread = None
 
@@ -800,7 +800,7 @@ class CmdFIFOSimpleCallbackServer(object):
         self.server = CmdFIFOServer(
             addr, "CBServer", threaded=threaded, DumpToStdout=DumpToStdout, **kwargs)
         self.Server = self.server  # Legacy name for compatibility
-        if CallbackList != None:
+        if CallbackList is not None:
             assert isinstance(
                 CallbackList, tuple), "Contrary to the name, this arg should be a tuple"
             for func in CallbackList:
@@ -819,7 +819,7 @@ class CmdFIFOSimpleCallbackServer(object):
 
     def Stop(self):
         self.server.stop_server()
-        if self.thread != None:
+        if self.thread is not None:
             self.thread.join()
             self.thread = None
 
@@ -906,7 +906,7 @@ class CmdFIFOServerProxy(object):
                     try:
                         self.remoteObject.__dispatch__(
                             dottedMethodName, client, modeOverride, callbackInfo, a, k)
-                    except:
+                    except: # noqa
                         self.setup = False
 
                 DaemonicThread(target=curried).start()
@@ -944,7 +944,7 @@ class CmdFIFOServerProxy(object):
         on the server being alive, which may not be the case and we don't want
         the client to be brought down unnecessarily.
         """
-        if not FuncMode in CMD_Types:
+        if FuncMode not in CMD_Types:
             raise CmdFIFOError("CMD_Type '%s' does not exist." % FuncMode)
         else:
             self._FuncModes[FuncName] = FuncMode
@@ -955,7 +955,7 @@ class CmdFIFOServerProxy(object):
                 raise CmdFIFOError(
                     "Callback argument must be a callable function (not just the name).")
         else:
-            if Callback != None:
+            if Callback is not None:
                 raise CmdFIFOError(
                     "Unexpected Callback argument since FuncMode != CMD_Type_Callback.")
 
@@ -992,7 +992,7 @@ class _Method:
 
 class CmdFIFOServerTunnel(CmdFIFOServer):
     """
-    Subclass of CmdFIFO, that allows tunneling RPC functions 
+    Subclass of CmdFIFO, that allows tunneling RPC functions
     from multiple CmdFIFOProxys into one common RPC server
     """
 
@@ -1014,7 +1014,7 @@ class CmdFIFOServerTunnel(CmdFIFOServer):
 
         if argument proxy is not supplied - we consider the registered
         function to be a direct function of this server.
-        if argument proxy is supplied - we consider the registered function 
+        if argument proxy is supplied - we consider the registered function
         to be a function from a proxy server and we apply tunneling to it
         also if proxy is supplied - name and original_name is not longer optional variables
         """
@@ -1060,7 +1060,7 @@ class CmdFIFOServerTunnel(CmdFIFOServer):
 
 def register_proxy_rpcs_from_configs(rpc_tunnel_configs, RpcTunnelServer, master_ip=None):
     """
-    takes a config object and a server object and registered 
+    takes a config object and a server object and registered
     functions and proxys against supplied server
     example of the config object:
     [

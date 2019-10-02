@@ -431,7 +431,7 @@ def main():
     args = parse_arguments()
     print(f"LOLogger is about to start.")
     print(f"RPC server will be available at {args.rpc_port} in a sec.")
-    lologger = LOLogger(db_folder_path=args.db_path,
+    lologger = LOLogger(db_folder_path=args.db_path,  # noqa
                         db_filename_prefix=args.db_filename_prefix,
                         rpc_port=args.rpc_port,
                         move_to_new_file_every_month=args.move_to_new_file_every_month,
