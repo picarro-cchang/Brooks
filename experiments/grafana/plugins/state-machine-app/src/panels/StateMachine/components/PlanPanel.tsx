@@ -87,11 +87,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            onFocus={(e) => {
                                this.props.ws_sender({element: "plan_panel", focus:{row, column:2}})
                            }}
-
+                           maxLength={8}
+                           minLength={1}
                            type="text" className="form-control input-small plan-input" id={"plan-duration-" + row}
                            style = {{ maxWidth: "100%"}}
                            value={durationString} placeholder="Duration" />
                 </div>
+                <label style={{color: "black", marginLeft: "-15px", paddingRight: "5px"}}>s</label>
                 <label className="col-sm-1 radio-btn">
                     <input type="radio" id={"plan-row-" + row} checked={row == this.props.plan.current_step}
                      onChange={e => this.props.ws_sender({element: "plan_panel", current_step: row})}

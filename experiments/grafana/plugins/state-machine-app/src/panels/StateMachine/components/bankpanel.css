@@ -96,6 +96,9 @@
     grid-template-columns: 1fr 1fr;
     padding-bottom: 10px;
 }
+.btn-green {
+    background-color:  rgb(86, 166, 75);
+}
 .btn-1-3 {
     grid-column-start: 1;
     grid-column-end: 4;
@@ -156,11 +159,13 @@
     opacity: .9;
 }
 .btn-success {
-    background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);
+    /*background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);*/
+    background-color: green;
 }
 
 .btn-success:active, .btn-success:focus {
-    background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);
+    /*background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);*/
+    background-color: green;
 
 }
 .btn-run-active {
@@ -170,7 +175,7 @@
     background-color: #716e6e;
 }
 .btn-chann {
-     background-color: #499c49;
+     background-color:  rgb(86, 166, 75);
  }
 .col-bank-name {
     /*max-width: 45%;*/
@@ -180,7 +185,8 @@
     padding-right: 5px;
 }
 .input-small {
-    width: 80px;
+    width: 70px;
+    margin-left: -10px;
 }
 
 .radio-btn {
@@ -217,7 +223,7 @@
 }
 
 .radio-btn input:checked ~ .checkmark {
-    background-color: #3274d9a8;
+    background-color: rgb(31, 96, 196);
 }
 
 
