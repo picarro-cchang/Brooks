@@ -29,7 +29,6 @@ export const DataGeneratorService = (() => {
 
       url += `from=${from}`;
       url += `&to=${to}`;
-      console.log('url', url);
       return API.get(url);
     },
   };

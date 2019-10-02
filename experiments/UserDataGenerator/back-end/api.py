@@ -8,14 +8,11 @@ from datetime import datetime
 from traceback import format_exc, print_exc
 
 
-def validate_request():
-    """ Validation for request for pre-defined constraints
-    """
-    pass
-
-
 async def get_files_meta(request):
     """ Get files meta to be returned to frontend
+    
+    Returns:
+        json response -- returns list of csv files present in data_dir
     """
     data_dir = request.app["config"]["server"]["data_dir"]
 
@@ -26,14 +23,10 @@ async def get_files_meta(request):
             for f in listdir(data_dir)
             if f.endswith(request.app["config"]["server"]["file_type"])
         ]
-    except error as ex:
-        from traceback import format_exc
-
-        format_exc()
+    except PermissionError as ex:
         return web.json_response(text="OS Permission Error", status=404)
 
     files.sort(key=lambda name: name.lower())
-
     return web.json_response({"files": files})
 
 
@@ -92,14 +85,23 @@ async def send_file(request):
 
 
 async def write_csv_file(result, data_dir, file_name):
+    """ Writes result into csv file
+    
+    Arguments:
+        result {list} -- list of points
+        data_dir {str} -- destination directory where file needs to be saved
+        file_name {str} -- name of the file
+    
+    Returns:
+        boolean -- True if successfully saved, else False
+    """
     file_path = f"{data_dir}/{file_name}"
-    print("file_path", file_path)
 
-    # TODO: Uncomment for production
-    # if path.exists(file_path) and path.isfile(file_name):
-    #     return web.json_response(
-    #         {"message": "File already exist for such query. Try downloading it."}
-    #     )
+    if path.exists(file_path) and path.isfile(file_name):
+        return web.json_response(
+            {"message": "File already exist for such query. Try downloading it."}
+        )
+
     keys = result[0].keys()
     try:
         with open(file_path, "w+") as output_file:
@@ -108,9 +110,11 @@ async def write_csv_file(result, data_dir, file_name):
             dict_writer.writerows(result)
         return True
     except IOError as ioe:
-        print_exc()
-    except Exception as e:
-        print_exc()
+        return web.json_response(text="IO Error while writing the file.", status=503)
+    except PermissionError as pe:
+        return web.json_response(
+            text="Permission error occured while writing the file.", status=403
+        )
     return False
 
 
@@ -131,7 +135,7 @@ async def generate_file(request):
     result = await get_points(query_params, measurements)
 
     if len(result) == 0:
-        return web.json_response({"message": "No observation in the measurements"})
+        return web.json_response(text="No observation in measurements", status=200)
 
     try:
         host_name = environ["HOSTNAME"]
@@ -150,21 +154,18 @@ async def generate_file(request):
         success = await write_csv_file(result, data_dir, file_name)
     except KeyError as ke:
         print("HOSTNAME enveironment variable is not defined.")
-    except Exception as ex:
-        print_exc()
-        return web.json_response({"message": "Error in generating file"})
     if success:
         return web.json_response({"filename": file_name})
 
 
 async def get_user_keys(request):
     """ Return the keys to the user which are not in admin_keys config
+    
+    Returns:
+        json -- list of permissible user_keys
     """
     field_keys = await get_field_keys()
     user_keys = request.app["config"]["user_keys"]
-    print(field_keys[:5])
-    # {"keys": list(filter(lambda x: x in field_keys, user_keys))}
-    # return web.json_response({"keys": field_keys})
     return web.json_response(
         {"keys": list(filter(lambda x: x in field_keys, user_keys))}
     )

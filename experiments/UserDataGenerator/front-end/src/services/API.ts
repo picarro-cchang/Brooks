@@ -1,3 +1,5 @@
+import { notifyError } from './../utils/Notifications';
+
 export const API = {
   get(url: string) {
     return fetch(url, { method: 'GET' }).then(response => {
@@ -5,6 +7,10 @@ export const API = {
         throw Error('Netwoek GET request failed.');
       }
       return response;
-    });
+    })
+      .catch((err) => {
+        notifyError(err.message);
+        throw Error('Netwoek GET request failed.');
+      });
   },
 };

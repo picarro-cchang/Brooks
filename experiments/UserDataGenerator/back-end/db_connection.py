@@ -2,8 +2,7 @@ from influxdb import InfluxDBClient
 
 
 class DBInitError(Exception):
-    """ DB initialization error
-    
+    """Raised when there is an issue in DB initialization
     """
 
     pass
@@ -26,7 +25,6 @@ class DBInstance:
                 DBInstance.init_influxdb(app)
             except DBInitError:
                 print("App is not initialized")
-                raise
         return DBInstance.__instance
 
     @classmethod

@@ -2,9 +2,9 @@ import React, { PureComponent, Fragment } from 'react';
 import { TimeRange, dateTime } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
 
+import { notifyError, notifySuccess } from './../utils/Notifications';
 import { DataGeneratorLayoutProps } from './../types';
 import { DEFAULT_TIME_OPTIONS } from './../constants';
-
 import { DataGeneratorService } from '../services/DataGeneratorService';
 
 import './Layout.css';
@@ -38,6 +38,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     a.href = url;
     a.download = fileName;
     a.click();
+    notifySuccess(`File succefully downloaded in Downloads folder.`);
     window.URL.revokeObjectURL(url);
   };
 
@@ -45,6 +46,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     const { timeRange, keys } = this.state;
     if (timeRange.from._d.getTime() === timeRange.to._d.getTime() || keys.length === 0) {
       console.log('Invalid Query parameters');
+      notifyError('Invalid Query parameters');
       return;
     }
 
@@ -55,22 +57,24 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     };
 
     // Call generate file api
-    DataGeneratorService.generateFile(queryParams).then(response => {
-      response.json().then(data => {
+    DataGeneratorService.generateFile(queryParams).then((response: any) => {
+      response.json().then((data: any) => {
         // call getFile to download the data
         if (data.filename !== undefined) {
           this.getFileNames();
           this.getFile(data.filename);
         } else {
-          console.log('response', data);
+          if (data !== undefined && data.hasOwnProperty('message')) {
+            notifyError(data.message);
+          }
         }
       });
     });
   };
 
   getFile = (fileName: string) => {
-    DataGeneratorService.getFile(fileName).then(response => {
-      response.blob().then(data => {
+    DataGeneratorService.getFile(fileName).then((response: any) => {
+      response.blob().then((data: any) => {
         this.downloadData(data, fileName);
       });
     });
@@ -78,8 +82,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
 
   getFileNames = () => {
     // Get file names
-    DataGeneratorService.getSavedFiles().then(response => {
-      response.json().then(files => {
+    DataGeneratorService.getSavedFiles().then((response: any) => {
+      response.json().then((files: any) => {
         this.setState(() => {
           return files;
         });
@@ -100,8 +104,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     this.getFileNames();
 
     // Get Key Options
-    DataGeneratorService.getKeys().then(response => {
-      response.json().then(data => {
+    DataGeneratorService.getKeys().then((response: any) => {
+      response.json().then((data: any) => {
         const keyOptions = data.keys.map((x: string) => {
           return {
             value: x,

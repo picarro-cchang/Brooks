@@ -21,22 +21,19 @@ async def get_points(query_params, measurements):
         keys = [f"last({key})" for key in keys]
         keys = ",".join(keys)
 
-        query = f"SELECT {query_params['keys']} FROM {measurements} where time > {time_from} AND time <= {time_to} fill(previous)"
-
-        # query = f"SELECT {keys} FROM {measurements} where time > {time_from} AND time <= {time_to} group by time(1s) fill(previous) order by time desc "
-        print(query)
-
-        start_time = time.time()
+        query = (
+            f"SELECT {query_params['keys']} FROM {measurements} "
+            f"WHERE time > {time_from} AND time <= {time_to} fill(previous) "
+            f"ORDER BY time DESC"
+        )
 
         data_generator = client.query(query=query, epoch="ms").get_points()
         result = []
         for datum in data_generator:
             result.append(datum)
 
-        print(f"-> Execution time in seconds {time.time() - start_time}")
         return result
     except ConnectionError as ex:
-
         format_exc(ex)
 
 
