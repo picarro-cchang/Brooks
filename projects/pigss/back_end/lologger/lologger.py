@@ -4,7 +4,6 @@ import json
 import queue
 import signal
 import sqlite3
-import inspect
 import threading
 from datetime import datetime
 
@@ -12,31 +11,33 @@ import pigss.common.CmdFIFO as CmdFIFO
 import pigss.common.timeutils as timeutils
 from pigss.common.rpc_ports import rpc_ports
 """
-    LOLogger: a logging service with RPC server capabilities. At current implementation it 
+    LOLogger: a logging service with RPC server capabilities. At current implementation it
     accepts logs using RPC function LogEvent() with multiple optional arguments. It is
     encoraged that function caller would supply as many of those arguments as possible.
-    Passed log messages would be passed to an SQLite database. Each month SQLite dile will 
-    be changed to prevent creating huge log files and add convinience for when costumer has 
+    Passed log messages would be passed to an SQLite database. Each month SQLite dile will
+    be changed to prevent creating huge log files and add convinience for when costumer has
     to give us logs files for some bugs.
 
     RACE CONDITION:
     Service contains 3 threads: main, CMDFIFOserver and looping thread. Loop thread is daemonic,
     CMDFifo - no. CMDFifo accepts RPC requests and passes data to the queuq, Loop thread reads
-    from queue and flushes data to db.When SIGINT recieved, main thread is meant to kill 
+    from queue and flushes data to db.When SIGINT recieved, main thread is meant to kill
     CMDFifo and then wait for Loop thread to dieSince it might still have some data to flush
-    to DB before dying.Problem is that CMDFifo thread is not properly dying and keeps 
+    to DB before dying.Problem is that CMDFifo thread is not properly dying and keeps
     supplying data to queue even after Loop thread is dead,Therefore it creates a 0.2 second
     window, during which CMDFifo still accepts logs, but thos logs will be lost. Assuming use
     case when LOLogger would be the last service to recieve a SIGINT during a Shutdown sequance
-    - no logs are expected during that 0.2 second and explained race condition should not be an 
+    - no logs are expected during that 0.2 second and explained race condition should not be an
     issue.
 """
 
 # DB table scheme stuff
 db_table_name = "Events"
-db_fields = [("ClientTimestamp", str), ("ClientName", str), ("EpochTime", int), ("LogMessage", str), ("Level", int), ("IP", str)]
+db_fields = [("ClientTimestamp", str), ("ClientName", str),
+             ("EpochTime", int), ("LogMessage", str), ("Level", int), ("IP", str)]
 
-python_to_sqlite_types_cast_map = {"<class 'str'>": "text", "<class 'int'>": "int"}
+python_to_sqlite_types_cast_map = {
+    "<class 'str'>": "text", "<class 'int'>": "int"}
 
 # database flushing stuff:
 FLUSHING_MODES = ["BATCHING", "TIMED"]
@@ -47,7 +48,8 @@ DEFAULT_FLUSHING_BATCHING_TIMEOUT = 60
 DEFAULT_FLUSHING_TIMEOUT = 1
 
 LOG_LEVELS_RANGE = range(0, 51)
-LOG_LEVELS = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
+LOG_LEVELS = {"CRITICAL": 50, "ERROR": 40,
+              "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
 
 MOVE_TO_NEW_FILE_EVERY_MONTH = True
 ZIP_OLD_FILE = False  # not emplemented yet, might be not necessary
@@ -128,7 +130,8 @@ class LOLogger(object):
                 client_timestamp = str(timeutils.get_local_timestamp())
             EpochTime = int(1000 * timeutils.get_epoch_timestamp())
 
-            values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
+            values = [client_timestamp, client_name,
+                      EpochTime, log_message, level, ip]
             self.queue.put_nowait(values)
             self.logs_passed_to_queue += 1
             if self.verbose:
@@ -152,7 +155,7 @@ class LOLogger(object):
 
     def set_log_level(self, Level):
         """
-            Set log level for the server, so all the log 
+            Set log level for the server, so all the log
             messages below that level will be ignorred
         """
         if Level in LOG_LEVELS_RANGE:
@@ -172,7 +175,7 @@ class LOLogger(object):
     def _signal_handler(self, sig, frame):
         """
             This function will be called when SIGINT recieved.
-            It should first stop the RPC server, then notify 
+            It should first stop the RPC server, then notify
             the looping thread and wait until it will complete
             itss shutdown sequance and die gracefully.
         """
@@ -185,6 +188,7 @@ class LOLoggerThread(threading.Thread):
     """
         Thread that will be dealing with sqlite database.
     """
+
     def __init__(self,
                  db_folder_path,
                  db_filename_prefix,
@@ -200,7 +204,8 @@ class LOLoggerThread(threading.Thread):
         threading.Thread.__init__(self, name="LOLoggerThread")
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
-        self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix)
+        self.db_path = self._create_database_file_path(
+            self.db_folder_path, self.db_filename_prefix)
         self.queue = queue
         self.parent = parent
         self.move_to_new_file_every_month = move_to_new_file_every_month
@@ -225,7 +230,8 @@ class LOLoggerThread(threading.Thread):
 
     def get_rowid_from_db_connection(self, connection):
         """Get last ROWID from connected database"""
-        last_row_id = connection.execute(f"select max(rowid) from {db_table_name}").fetchone()[0]
+        last_row_id = connection.execute(
+            f"select max(rowid) from {db_table_name}").fetchone()[0]
         if last_row_id is None:
             return 0
         else:
@@ -238,18 +244,21 @@ class LOLoggerThread(threading.Thread):
 
     def _create_new_databade_table(self):
         """Create table."""
-        query_arguments = ",".join(["{} {}".format(t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields])
+        query_arguments = ",".join(["{} {}".format(
+            t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields])
         query = f"CREATE TABLE {db_table_name} ({query_arguments})"
         self.connection.execute(query)
 
     def _check_tupple_types(self, t):
         """Check if a content of the passed tupple corresponds to the db fields types."""
         if len(t) != len(db_fields):
-            raise ValueError(f"Tupple value is {len(t)}, should be {len(db_fields)}")
+            raise ValueError(
+                f"Tupple value is {len(t)}, should be {len(db_fields)}")
             return False
         for obj in zip(t, db_fields):
             if not isinstance(obj[0], obj[1][1]):
-                raise ValueError(f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
+                raise ValueError(
+                    f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
                 return False
         return True
 
@@ -276,7 +285,7 @@ class LOLoggerThread(threading.Thread):
 
     def archive_old_file(self, filepath):
         """
-            TODO, spawn a subprocess to zip filepath and then delete original, 
+            TODO, spawn a subprocess to zip filepath and then delete original,
             obv make sure it's safe and we are not loosing anything
         """
         pass
@@ -328,18 +337,19 @@ class LOLoggerThread(threading.Thread):
                         # if batch been waiting for too long
                     (self.flushing_mode == BATCHING and time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
                         # if it is time bit.ly/30RJTbw
-                    (self.flushing_mode == TIMED and time_since_last_flush + self.flushing_timeout <= time.time())):
+                        (self.flushing_mode == TIMED and time_since_last_flush + self.flushing_timeout <= time.time())):
                     gonna_flush_now = True
 
                 if gonna_flush_now and len(data_to_flush) > 0:
                     placeholders = f'({",".join("?"*len(db_fields))})'
-                    self.connection.executemany(f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
+                    self.connection.executemany(
+                        f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
                     self.connection.commit()
                     if self.redundant_json:
                         string_to_flush = ""
                         for data in data_to_flush:
-                            #[client_timestamp, client_name, EpochTime, log_message, level, ip]
-                            obj_for_json = {col_name[0]: value for col_name, value in zip(db_fields, data)}
+                            obj_for_json = {
+                                col_name[0]: value for col_name, value in zip(db_fields, data)}
                             obj_for_json["rowid"] = self.rowid
                             self.rowid += 1
                             string_row = json.dumps(obj_for_json)
@@ -362,7 +372,8 @@ class LOLoggerThread(threading.Thread):
                                 self.transition_to_new_database(self.db_path)
                             if self.redundant_json:
                                 self.json_file.close()
-                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix)
+                            self.db_path = self._create_database_file_path(
+                                self.db_folder_path, self.db_filename_prefix)
                             self.get_connection(self.db_path)
 
                         if self._sigint_event.is_set():
@@ -372,7 +383,8 @@ class LOLoggerThread(threading.Thread):
                 import traceback
                 print(traceback.format_exc())
                 if not os.path.exists(self.db_path):
-                    print("Seems like the database file has been deleted, don't worry, gonna create new one")
+                    print(
+                        "Seems like the database file has been deleted, don't worry, gonna create new one")
                     self.get_connection(self.db_path)
 
             except Exception:
@@ -387,10 +399,13 @@ def parse_arguments():
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
+    parser.add_argument('-r', '--rpc_port',
+                        help='Piglet RPC Port', default=rpc_ports["logger"])
     parser.add_argument('-l', '--log_level', help='LogLevel', default=20)
-    parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=".")
-    parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
+    parser.add_argument(
+        '-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=".")
+    parser.add_argument('-pr', '--db_filename_prefix',
+                        help='SQLite filename will be started with that prefix', default="")
     parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file',
                         default=True)  # this is kinda wrong
     parser.add_argument('-z',
@@ -403,8 +418,10 @@ def parse_arguments():
                         help='Do a smooth DB file transition, not implemented yet',
                         default=False,
                         action="store_true")
-    parser.add_argument('-v', '--verbose', help='Print all recieved logs', default=False, action="store_true")
-    parser.add_argument('-j', '--json', help='Write redundunt logs to json file', default=False, action="store_true")
+    parser.add_argument('-v', '--verbose', help='Print all recieved logs',
+                        default=False, action="store_true")
+    parser.add_argument('-j', '--json', help='Write redundunt logs to json file',
+                        default=False, action="store_true")
 
     args = parser.parse_args()
     return args

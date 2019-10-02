@@ -14,13 +14,14 @@ class LOLoggerClient():
         self.ip = ip
         self.verbose = verbose
         self.connected = False
-        server_path = f"http://{self.logger_address}:{self.port}"
+        self.server_path = f"http://{self.logger_address}:{self.port}"
         try:
-            self.lologger = CmdFIFO.CmdFIFOServerProxy(server_path, ClientName=self.client_name)
+            self.lologger = CmdFIFO.CmdFIFOServerProxy(self.server_path, ClientName=self.client_name)
             self.debug(f"{self.client_name} got connected to LOLogger at {self.logger_address}:{self.port}")
             self.connected = True
-        except:
-            print(f"WARNING!!! Failed to connect to LOLogger RPC on {server_path}! Forcing local verbose")
+        except Exception as e:
+            print(f"{e}")
+            print(f"WARNING!!! Failed to connect to LOLogger RPC on {self.server_path}! Forcing local verbose")
             self.verbose = True
 
     def Log(self, message, level=0):
@@ -34,8 +35,9 @@ class LOLoggerClient():
                                        client_name=self.client_name,
                                        ip=self.ip,
                                        client_timestamp=ClientTimestamp)
-            except:
-                print(f"{ClientTimestamp}:WARNING!!! Failed to connect to LOLogger RPC on {server_path}! Forcing local verbose")
+            except Exception as e:
+                print(f"{e}")
+                print(f"{ClientTimestamp}:WARNING!!! Failed to connect to LOLogger RPC on {self.server_path}! Forcing local verbose")
                 self.verbose = True
                 self.connected = False
 
