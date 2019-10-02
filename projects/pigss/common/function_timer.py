@@ -13,7 +13,7 @@ class FunctionTimer(object):
     def __exit__(self, type, value, traceback):
         self.end = time.time()
         if self.time_unit == 'ms':
-            total_time = 1000*(self.end - self.start)
+            total_time = 1000 * (self.end - self.start)
         elif self.time_unit == 's':
             total_time = self.end - self.start
         else:

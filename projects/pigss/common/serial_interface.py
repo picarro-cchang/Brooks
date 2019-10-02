@@ -6,8 +6,15 @@ class SerialInterface(object):
         """ Initializes Serial Interface """
         self.serial = None
 
-    def config(self, port=None, baudrate=9600, bytesize=serial.EIGHTBITS, parity=serial.PARITY_NONE,
-               stopbits=serial.STOPBITS_ONE, timeout=None, xonxoff=0, rtscts=0):
+    def config(self,
+               port=None,
+               baudrate=9600,
+               bytesize=serial.EIGHTBITS,
+               parity=serial.PARITY_NONE,
+               stopbits=serial.STOPBITS_ONE,
+               timeout=None,
+               xonxoff=0,
+               rtscts=0):
         """
         :param port: number of device, numbering starts at zero. if everything fails, the user can specify a
                     device string, note that this isn't portable anymore if no port is specified an unconfigured an
@@ -45,10 +52,7 @@ class SerialInterface(object):
 if __name__ == "__main__":
     import time
     s = SerialInterface()
-    s.config(
-        port='/dev/ttyUSB0',
-        baudrate=19200
-    )
+    s.config(port='/dev/ttyUSB0', baudrate=19200)
     try:
         s.open()
         s.write("A\r")
