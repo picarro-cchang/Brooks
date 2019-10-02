@@ -213,12 +213,13 @@
 }
 
 .radio-btn:hover input ~ .checkmark {
-    background-color: #ccc;
+    background-color: #565657;
 }
 
 .radio-btn input:checked ~ .checkmark {
     background-color: #3274d9a8;
 }
+
 
 .checkmark:after {
     content: "";
