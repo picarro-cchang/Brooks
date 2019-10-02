@@ -7,9 +7,9 @@ import sqlite3
 import threading
 from datetime import datetime
 
-import pigss.common.CmdFIFO as CmdFIFO
-import pigss.common.timeutils as timeutils
-from pigss.common.rpc_ports import rpc_ports
+import common.CmdFIFO as CmdFIFO
+import common.timeutils as timeutils
+from common.rpc_ports import rpc_ports
 """
     LOLogger: a logging service with RPC server capabilities. At current implementation it
     accepts logs using RPC function LogEvent() with multiple optional arguments. It is

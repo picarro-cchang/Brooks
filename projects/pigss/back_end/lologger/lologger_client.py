@@ -1,6 +1,6 @@
-import pigss.common.CmdFIFO as CmdFIFO
-import pigss.common.timeutils as timeutils
-from pigss.common.rpc_ports import rpc_ports
+import common.CmdFIFO as CmdFIFO
+import common.timeutils as timeutils
+from common.rpc_ports import rpc_ports
 
 
 class LOLoggerClient():
