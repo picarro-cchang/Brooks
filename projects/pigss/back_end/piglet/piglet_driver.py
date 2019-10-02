@@ -13,6 +13,7 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
+
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', **kwargs):
         self.serial = None
         self.terminate = False
@@ -372,9 +373,7 @@ def main():
     baudrate = cli_args.baudrate
     rpc_port = cli_args.rpc_port
     if __debug__:
-        print(f'\nPiglet Port: {port}'
-              f'\nPiglet Baudrate: {baudrate}'
-              f'\nPiglet RPC Port: {rpc_port}\n')
+        print(f'\nPiglet Port: {port}' f'\nPiglet Baudrate: {baudrate}' f'\nPiglet RPC Port: {rpc_port}\n')
     # Instantiate the object and serve the RPC Port forever
     PigletDriver(port=port, baudrate=baudrate, rpc_port=int(rpc_port))
     if __debug__:
