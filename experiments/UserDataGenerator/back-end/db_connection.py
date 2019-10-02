@@ -8,6 +8,13 @@ class DBInitError(Exception):
     pass
 
 
+class DBCloseError(Exception):
+    """Raised when there is an issue in closing the db connection
+    """
+
+    pass
+
+
 class DBInstance:
 
     """
@@ -38,18 +45,22 @@ class DBInstance:
                 retries=db["retries"],
                 database=db["database"],
             )
-            # client.switch_database(db["database"])
             DBInstance.__instance = client
         except ConnectionError as ex:
             print(ex)
 
     @classmethod
     async def close_influxdb(cls, app):
-        """
-        TODO
+        """[summary]
+        
+        Arguments:
+            app {[type]} -- [description]
+        
+        Returns:
+            [type] -- [description]
         """
         try:
             DBInstance.get_instance().close()
             return True
-        except Exception as ex:
-            raise
+        except DBCloseError:
+            print("Could not close the DB connection.")

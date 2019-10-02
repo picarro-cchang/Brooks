@@ -10,7 +10,6 @@ async def get_points(query_params, measurements):
     Arguments:
         query_params {[dict]} -- [ dictionary of all the paramters ]
     """
-    print(query_params)
     try:
         client = DBInstance.get_instance()
 

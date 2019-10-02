@@ -45,7 +45,6 @@ def main(argv):
     """
     Server entry point
     """
-    # logging.basicConfig(level=logging.INFO)
     config = get_config(argv)
     app = init_app(argv)
     web.run_app(app, host=config["server"]["host"], port=config["server"]["port"])
