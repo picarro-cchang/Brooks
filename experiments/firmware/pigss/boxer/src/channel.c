@@ -50,8 +50,6 @@
 // Provides commands for working with the TCA954xA I2C multiplexers
 #include "tca954xa.h"
 
-
-
 #include "channel.h"
 
 // Initialize the channel array
@@ -134,7 +132,7 @@ int8_t channel_update() {
 
       // Set the bypass DAC for minimum flow
       retval = pressure_dac_set(channel, 0);
-      
+
       // Set hardware byte for configuring solenoid valves.  Solenoid
       // valves are energized when a channel is disabled, so enabled
       // channel bits are cleared in the hardware byte.
@@ -165,7 +163,7 @@ int8_t channel_update() {
 	break;
       case 8:
 	new_led_value |= (uint32_t) 1<<CH8_GREEN;
-	break;	
+	break;
       }
     } else {
       // Channel has been disabled.  Set the bypass DAC to get the
@@ -200,7 +198,7 @@ int8_t channel_update() {
       case 8:
       	new_led_value &= ~( (uint32_t) 1<<CH8_GREEN);
       	break;
-	
+
       }
     }
     channel_array_index++;
@@ -229,7 +227,6 @@ int8_t channel_update() {
 
   // Handle the front panel
   aloha_write(new_led_value);
-
 
   return retval;
 }

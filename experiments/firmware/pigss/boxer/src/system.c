@@ -335,7 +335,9 @@ int8_t system_enter_identify(void) {
 }
 
 int8_t system_enter_shutdown(void) {
+
   int8_t retval = 0;
+ begin:  
   switch( system_state.state_enum ) {
   case system_state_SHUTDOWN:
     // Nothing to do here
@@ -347,9 +349,7 @@ int8_t system_enter_shutdown(void) {
   case system_state_STANDBY:
     // Transition from STANDBY to SHUTDOWN
     //
-    // All channels --> ON (relaxes solenoids).  This will actually
-    // set the system state to CONTROL, but
-    // channel_set(0xff);
+    // Relax all channel solenoids
     channel_set_solenoids(0);
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
@@ -361,24 +361,17 @@ int8_t system_enter_shutdown(void) {
   case system_state_CONTROL:
     // Transition from CONTROL to SHUTDOWN
     //
-    // All channels --> ON (relaxes solenoids)
-    channel_set(0xff);
-    // Clean solenoid --> OFF
-    vernon_set_clean_solenoid(0);
-    logger_msg_p("system",log_level_INFO,PSTR("State change CONTROL to SHUTDOWN"));
-    set_system_state(system_state_SHUTDOWN);
+    // Enter standby, then enter shutdown from there
+    retval = system_enter_standby();
+    goto begin;
     break;
   case system_state_CLEAN:
     // Transition from CLEAN to SHUTDOWN
     //
-    // All channels --> ON (relaxes solenoids)
-    channel_set(0xff);
-    // Clean solenoid --> OFF
-    vernon_set_clean_solenoid(0);
-    logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to SHUTDOWN"));
-    set_system_state(system_state_SHUTDOWN);
+    // Enter standby, then enter shutdown from there
+    retval = system_enter_standby();
+    goto begin;
     break; 
-    
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter shutdown from bad system state %d"),
