@@ -18,8 +18,6 @@ export const DataGeneratorService = (() => {
       return API.get(url);
     },
     generateFile: (params: any) => {
-      // http://localhost:8010/api/generatefile
-      // url eg http://localhost:8010/api/generatefile?keys=CO2&keys=NH3&keys=H2O&keys=CH4&from=1569609759914&to=1569619183402
       let url = URL.GENERATE_FILE + '?';
       const { from, to, keys } = params;
 

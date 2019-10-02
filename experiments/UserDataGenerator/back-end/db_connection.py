@@ -53,4 +53,3 @@ class DBInstance:
             return True
         except Exception as ex:
             raise
-

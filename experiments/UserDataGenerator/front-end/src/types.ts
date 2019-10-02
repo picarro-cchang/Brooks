@@ -1,4 +1,3 @@
-// @ts-ignore
 import { GrafanaTheme } from '@grafana/ui';
 import { TimeRange } from '@grafana/data';
 

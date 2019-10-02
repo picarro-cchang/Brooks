@@ -11,6 +11,7 @@ if __name__ == "__main__":
     except RuntimeError:
         print("Server closed unexpectedly")
         from traceback import format_exc
+
         print(format_exc())
     finally:
         print("Server Stopping...\n")

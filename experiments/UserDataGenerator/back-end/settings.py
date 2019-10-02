@@ -14,6 +14,6 @@ def get_config(argv=None):
     try:
         config = yamale.validate(schema, data)
     except ValueError as ve:
-        raise
+        print("Not a valid configuration for User Data File Generator", ve)
 
     return config[0][0]

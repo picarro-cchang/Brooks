@@ -1,4 +1,3 @@
-// @ts-ignore
 import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
 import { DataGeneratorPanelProps } from 'types';
 
@@ -12,15 +11,6 @@ export const DEFAULT_DATA_GENERATOR_PROPS: DataGeneratorPanelProps = {
   timeRange: DEFAULT_TIME_RANGE,
 };
 
-export const KEYS_OPTIONS = [
-  { value: 'H2O', label: 'H2O' },
-  { value: 'CO2', label: 'CO2' },
-  { value: 'NH3', label: 'NH3' },
-  { value: 'CH4', label: 'CH4' },
-  { value: 'HF', label: 'HF' },
-  { value: 'HCl', label: 'HCl' },
-];
-
 export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
   { from: 'now-5m', to: 'now', display: 'Last 5 minutes', section: 3 },
   { from: 'now-15m', to: 'now', display: 'Last 15 minutes', section: 3 },
@@ -33,8 +23,8 @@ export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
 ];
 
 export const URL = {
-  GET_SAVED_FILES: 'http://localhost:8010/api/getsavedfiles',
-  GET_FIELD_KEYS: 'http://localhost:8010/api/getkeys',
-  GET_FILE: 'http://localhost:8010/api/getfile',
-  GENERATE_FILE: 'http://localhost:8010/api/generatefile',
+  GET_SAVED_FILES: `http://${window.location.hostname}:8010/api/getsavedfiles`,
+  GET_FIELD_KEYS: `http://${window.location.hostname}:8010/api/getkeys`,
+  GET_FILE: `http://${window.location.hostname}:8010/api/getfile`,
+  GENERATE_FILE: `http://${window.location.hostname}:8010/api/generatefile`
 };

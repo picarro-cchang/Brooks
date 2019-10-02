@@ -4738,8 +4738,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-var labelWidth = 6; // @ts-ignore
-
+var labelWidth = 6;
 var selectWidth = 12;
 
 var DataGeneratorLayout =
@@ -4863,11 +4862,9 @@ function (_super) {
   };
 
   DataGeneratorLayout.prototype.render = function () {
-    var _this = this; // @ts-ignore
-
+    var _this = this;
 
     var _a = this.state,
-        keys = _a.keys,
         files = _a.files,
         timeRange = _a.timeRange,
         keyOptions = _a.keyOptions;
@@ -5048,19 +5045,17 @@ if(false) {}
 /*!****************************!*\
   !*** ./constants/index.ts ***!
   \****************************/
-/*! exports provided: DEFAULT_TIME_RANGE, DEFAULT_DATA_GENERATOR_PROPS, KEYS_OPTIONS, DEFAULT_TIME_OPTIONS, URL */
+/*! exports provided: DEFAULT_TIME_RANGE, DEFAULT_DATA_GENERATOR_PROPS, DEFAULT_TIME_OPTIONS, URL */
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_RANGE", function() { return DEFAULT_TIME_RANGE; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_DATA_GENERATOR_PROPS", function() { return DEFAULT_DATA_GENERATOR_PROPS; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "KEYS_OPTIONS", function() { return KEYS_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_TIME_OPTIONS", function() { return DEFAULT_TIME_OPTIONS; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "URL", function() { return URL; });
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @grafana/data */ "@grafana/data");
 /* harmony import */ var _grafana_data__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_grafana_data__WEBPACK_IMPORTED_MODULE_0__);
-// @ts-ignore
 
 var DEFAULT_TIME_RANGE = {
   from: Object(_grafana_data__WEBPACK_IMPORTED_MODULE_0__["dateTime"])().subtract(6, "h"),
@@ -5073,25 +5068,6 @@ var DEFAULT_TIME_RANGE = {
 var DEFAULT_DATA_GENERATOR_PROPS = {
   timeRange: DEFAULT_TIME_RANGE
 };
-var KEYS_OPTIONS = [{
-  value: 'H2O',
-  label: 'H2O'
-}, {
-  value: 'CO2',
-  label: 'CO2'
-}, {
-  value: 'NH3',
-  label: 'NH3'
-}, {
-  value: 'CH4',
-  label: 'CH4'
-}, {
-  value: 'HF',
-  label: 'HF'
-}, {
-  value: 'HCl',
-  label: 'HCl'
-}];
 var DEFAULT_TIME_OPTIONS = [{
   from: 'now-5m',
   to: 'now',
@@ -5134,10 +5110,10 @@ var DEFAULT_TIME_OPTIONS = [{
   section: 3
 }];
 var URL = {
-  GET_SAVED_FILES: 'http://localhost:8010/api/getsavedfiles',
-  GET_FIELD_KEYS: 'http://localhost:8010/api/getkeys',
-  GET_FILE: 'http://localhost:8010/api/getfile',
-  GENERATE_FILE: 'http://localhost:8010/api/generatefile'
+  GET_SAVED_FILES: "http://" + window.location.hostname + ":8010/api/getsavedfiles",
+  GET_FIELD_KEYS: "http://" + window.location.hostname + ":8010/api/getkeys",
+  GET_FILE: "http://" + window.location.hostname + ":8010/api/getfile",
+  GENERATE_FILE: "http://" + window.location.hostname + ":8010/api/generatefile"
 };
 
 /***/ }),
@@ -5178,6 +5154,7 @@ __webpack_require__.r(__webpack_exports__);
 
 var API = {
   get: function get(url) {
+    console.log(url);
     return fetch(url, {
       method: 'GET'
     }).then(function (response) {
@@ -5227,9 +5204,7 @@ var DataGeneratorService = function () {
       return _API__WEBPACK_IMPORTED_MODULE_2__["API"].get(url);
     },
     generateFile: function generateFile(params) {
-      var e_1, _a; // http://localhost:8010/api/generatefile
-      // url eg http://localhost:8010/api/generatefile?keys=CO2&keys=NH3&keys=H2O&keys=CH4&from=1569609759914&to=1569619183402
-
+      var e_1, _a;
 
       var url = _constants__WEBPACK_IMPORTED_MODULE_1__["URL"].GENERATE_FILE + '?';
       var from = params.from,

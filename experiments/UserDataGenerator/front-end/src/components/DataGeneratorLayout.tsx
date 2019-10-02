@@ -12,7 +12,6 @@ import './Layout.css';
 interface Props extends DataGeneratorLayoutProps { }
 
 const labelWidth = 6;
-// @ts-ignore
 const selectWidth = 12;
 
 export default class DataGeneratorLayout extends PureComponent<Props, any> {
@@ -118,8 +117,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   }
 
   render() {
-    // @ts-ignore
-    const { keys, files, timeRange, keyOptions } = this.state;
+
+    const { files, timeRange, keyOptions } = this.state;
 
     const styleObj = {
       overflow: 'scroll !important',

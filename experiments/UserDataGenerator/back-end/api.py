@@ -59,7 +59,6 @@ async def send_file(request):
     query_dict = parse_qs(request.query_string)
     data_dir = request.app["config"]["server"]["data_dir"]
     file_name = query_dict["name"][0]
-    print(file_name)
     file_path = path.join(data_dir, file_name)
     file_type = request.app["config"]["server"]["file_type"]
 
@@ -99,7 +98,7 @@ async def write_csv_file(result, data_dir, file_name):
 
     if path.exists(file_path) and path.isfile(file_name):
         return web.json_response(
-            {"message": "File already exist for such query. Try downloading it."}
+            {"message": "File already exists, try downloading it."}
         )
 
     keys = result[0].keys()
@@ -109,9 +108,9 @@ async def write_csv_file(result, data_dir, file_name):
             dict_writer.writeheader()
             dict_writer.writerows(result)
         return True
-    except IOError as ioe:
+    except IOError:
         return web.json_response(text="IO Error while writing the file.", status=503)
-    except PermissionError as pe:
+    except PermissionError:
         return web.json_response(
             text="Permission error occured while writing the file.", status=403
         )
@@ -140,7 +139,6 @@ async def generate_file(request):
     try:
         host_name = environ["HOSTNAME"]
         data_dir = request.app["config"]["server"]["data_dir"]
-        print(query_params["from"], query_params["to"])
 
         # python's epoch time is in seconds
         time_from = datetime.fromtimestamp(query_params["from"] / 1000000000)
@@ -153,7 +151,7 @@ async def generate_file(request):
 
         success = await write_csv_file(result, data_dir, file_name)
     except KeyError as ke:
-        print("HOSTNAME enveironment variable is not defined.")
+        print("HOSTNAME enveironment variable is not defined.", ke)
     if success:
         return web.json_response({"filename": file_name})
 

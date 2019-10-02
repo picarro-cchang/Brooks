@@ -1,27 +1,26 @@
 {
-    "type": "panel",
-    "name": "UserDataGenerator",
-    "id": "user-data-generator",
-  
-    "info": {
-      "description": "User Data Generator - Grafana Plugin",
-      "author": {
-        "name": "Dileep Pandey"
-      },
-      "keywords": ["Simple"],
-      "logos": {
-        "small": "img/logo.svg",
-        "large": "img/logo.svg"
-      },
-      "links": [
-      ],
-      "screenshots": [],
-      "version": "1.0.0",
-      "updated": "2019-10-01"
+  "type": "panel",
+  "name": "UserDataGenerator",
+  "id": "user-data-generator",
+  "info": {
+    "description": "User Data Generator - Grafana Plugin",
+    "author": {
+      "name": "Dileep Pandey"
     },
-  
-    "dependencies": {
-      "grafanaVersion": "6.3.x",
-      "plugins": []
-    }
+    "keywords": [
+      "Simple"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "1.0.0",
+    "updated": "2019-10-02"
+  },
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
   }
+}

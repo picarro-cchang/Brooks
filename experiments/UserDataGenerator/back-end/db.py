@@ -49,4 +49,3 @@ async def get_field_keys():
     for datum in data_generator:
         result = datum
     return [field["fieldKey"] for field in result] if result is not None else []
-

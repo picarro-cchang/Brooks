@@ -2,6 +2,8 @@ import { notifyError } from './../utils/Notifications';
 
 export const API = {
   get(url: string) {
+    console.log(url);
+
     return fetch(url, { method: 'GET' }).then(response => {
       if (!response.ok) {
         throw Error('Netwoek GET request failed.');
