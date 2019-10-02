@@ -1,0 +1,80 @@
+#!/usr/bin/env python3
+import argparse
+import subprocess
+from sys import exit
+from os import devnull as DEVNULL
+from os import path
+
+
+def get_cli_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--major', help='Major build number', default=1)
+    parser.add_argument('--minor', help='Minor build number', default=0)
+    parser.add_argument('--revision', help='Revision number', default=0)
+    args = parser.parse_args()
+    return args
+
+
+def get_current_version(file_name):
+    with open(file_name) as input_file:
+        for line in input_file:
+            if line.startswith('Version'):
+                current_version_line = line
+                break
+    current_version = current_version_line.split()[1]
+    return current_version
+
+
+def update_version(file_name, old, new):
+    with open(file_name) as output_file:
+        file_contents = output_file.read()
+        updated_file_contents = file_contents.replace(old, new)
+    with open(file_name, 'w') as output_file:
+        output_file.write(updated_file_contents)
+
+
+def build_package(file_name):
+    devnull = open(DEVNULL, 'w')
+    # Clean the directory (it should always be clean)
+    subprocess.Popen('rm -rf *.deb',
+                     shell=True,
+                     stdout=devnull,
+                     stderr=subprocess.STDOUT)
+    # Build the package
+    return_value = subprocess.call(['equivs-build', file_name],
+                                   stdout=devnull,
+                                   stderr=subprocess.STDOUT)
+    if return_value != 0:
+        devnull.close()
+        exit(1)
+    else:
+        # Move the package into /tmp
+        subprocess.Popen('mv *.deb /tmp',
+                         shell=True,
+                         stdout=devnull,
+                         stderr=subprocess.STDOUT)
+        devnull.close()
+
+
+def main(file_name):
+    args = get_cli_args()
+    current_version = get_current_version(file_name)
+    print(f'Current Version: {current_version}')
+    new_version = f'{args.major}.{args.minor}.{args.revision}'
+    print(f'New Version:     {new_version}')
+    update_version(file_name, f'Version: {current_version}',
+                   f'Version: {new_version}')
+    build_package(file_name)
+
+
+if __name__ == '__main__':
+    devnull = open(DEVNULL, 'w')
+    return_value = subprocess.call(['dpkg', '-s', 'equivs'],
+                                   stdout=devnull,
+                                   stderr=subprocess.STDOUT)
+    devnull.close()
+    if return_value != 0:
+        print('equivs dependency not installed!')
+        exit(1)
+    file_name = path.join(path.dirname(path.abspath(__file__)), 'pigss-meta')
+    main(file_name)

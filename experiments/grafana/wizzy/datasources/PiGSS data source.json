@@ -10,9 +10,6 @@
   "database": "pigss_data",
   "basicAuth": false,
   "isDefault": true,
-  "jsonData": {
-    "keepCookies": [],
-    "timeInterval": "0.1s"
-  },
+  "jsonData": {},
   "readOnly": false
 }

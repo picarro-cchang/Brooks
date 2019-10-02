@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="async_hsm",
-    version="0.2.0",
+    version="0.2.1",
     author="Dean Hall, Sze Tan",
     author_email="dwhall256@gmail.com, stan@picarro.com",
     description="Asyncio based Hierarchical State Machines",

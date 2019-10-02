@@ -1,16 +1,17 @@
 import React, { PureComponent } from 'react';
 import { hot } from 'react-hot-loader';
 import { connect } from 'react-redux';
-import Remarkable from 'remarkable';
+import { renderMarkdown } from '@grafana/data';
 import Page from 'app/core/components/Page/Page';
 import UsersActionBar from './UsersActionBar';
 import UsersTable from './UsersTable';
 import InviteesTable from './InviteesTable';
-import { Invitee, NavModel, OrgUser } from 'app/types';
+import { Invitee, OrgUser } from 'app/types';
 import appEvents from 'app/core/app_events';
 import { loadUsers, loadInvitees, setUsersSearchQuery, updateUser, removeUser } from './state/actions';
 import { getNavModel } from 'app/core/selectors/navModel';
 import { getInvitees, getUsers, getUsersSearchQuery } from './state/selectors';
+import { NavModel } from '@grafana/data';
 
 export interface Props {
   navModel: NavModel;
@@ -37,8 +38,7 @@ export class UsersListPage extends PureComponent<Props, State> {
     super(props);
 
     if (this.props.externalUserMngInfo) {
-      const markdownRenderer = new Remarkable();
-      this.externalUserMngInfoHtml = markdownRenderer.render(this.props.externalUserMngInfo);
+      this.externalUserMngInfoHtml = renderMarkdown(this.props.externalUserMngInfo);
     }
 
     this.state = {

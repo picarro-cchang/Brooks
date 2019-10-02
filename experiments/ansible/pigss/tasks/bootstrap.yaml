@@ -1,0 +1,145 @@
+- name: update repositories
+  apt:
+    update_cache: yes
+  become: yes
+
+- name: Disable auto package updates and unattended upgrades
+  replace:
+    path: /etc/apt/apt.conf.d/20auto-upgrades
+    after: 'APT::Periodic'
+    regexp: '[1]'
+    replace: '0'
+  become: yes
+  when: update == "false"
+
+- name: Add user to dialout group
+  user:
+    name: picarro
+    comment: picarro
+    group: dialout
+  become: yes
+  when: update == "false"
+
+- name: Remove ubuntu-software
+  apt:
+    pkg: ubuntu-software
+    state: absent
+  become: yes
+
+- name: Remove gnome-sfotware
+  apt:
+    pkg: gnome-software
+    state: absent
+  become: yes
+
+- name: Remove update-notifier
+  apt:
+    pkg: update-notifier
+    state: absent
+  become: yes
+
+- name: Remove CUPS
+  apt:
+    pkg: cups
+    state: absent
+  become: yes
+
+- name: Install python-psutil package
+  apt: name=python-psutil
+  become: yes
+
+- name: Install scrot package
+  apt: name=scrot
+  become: yes
+  when: headless == "false"
+
+- name: Install sqlitebrowser
+  apt: name=sqlitebrowser
+  become: yes
+  when: headless == "false"
+
+- name: Install GTK theme
+  apt: name=materia-gtk-theme
+  become: yes
+  when: headless == "false"
+
+- name: Install gnome-tweaks package
+  apt: name=gnome-tweaks
+  become: yes
+  when: headless == "false"
+
+- name: Install chrome-gnome-shell package
+  apt: name=chrome-gnome-shell
+  become: yes
+  when: headless == "false"
+
+- name: Install fira fonts
+  apt: name=fonts-firacode
+  become: yes
+  when: headless == "false"
+
+- name: Install roboto fonts
+  apt: name=fonts-roboto
+  become: yes
+  when: headless == "false"
+
+- name: Install gnome-shell-extensions package
+  apt: name=gnome-shell-extensions
+  become: yes
+  when: headless == "false"
+
+- name: Install Icons
+  apt: name=papirus-icon-theme
+  become: yes
+  when: headless == "false"
+
+- name: Install chromium-browser
+  apt: name=chromium-browser
+  become: yes
+  when: headless == "false"
+
+- name: Make chromium default browser
+  shell: xdg-settings set default-web-browser chromium-browser.desktop
+  when: headless == "false"
+
+- name: Install curl
+  apt: name=curl
+  become: yes
+
+- name: Install git
+  apt: name=git
+  become: yes
+
+- name: Disable splash at boot
+  replace:
+    path: /etc/default/grub
+    after: 'GRUB_CMDLINE_LINUX_DEFAULT'
+    regexp: 'quiet splash'
+    replace: 'quiet'
+  become: yes
+  when: headless == "false"
+
+- name: Update grub
+  shell: update-grub
+  become: yes
+  when: headless == "false"
+
+- name: Install libssl
+  apt: name=libssl1.0-dev
+  become: yes
+
+- name: Install node-gyp
+  apt: name=node-gyp
+  become: yes
+
+- name: Install equivs
+  apt: name=equivs
+  become: yes
+
+- name: Install dconf-editor
+  apt: name=dconf-editor
+  become: yes
+
+- name: Upgrade all packages to the latest version
+  shell: apt upgrade -y
+  become: yes

@@ -1,21 +1,19 @@
 #!/usr/bin/env python3
 
-
 import asyncio
 import async_hsm
+
 
 class Countdown(async_hsm.Ahsm):
     def __init__(self, count=3):
         super().__init__()
         self.count = count
 
-
     @async_hsm.state
     def _initial(self, event):
         print("_initial")
         self.te = async_hsm.TimeEvent("TIME_TICK")
         return self.tran(self._counting)
-
 
     @async_hsm.state
     def _counting(self, event):
@@ -37,7 +35,6 @@ class Countdown(async_hsm.Ahsm):
 
         return self.super(self.top)
 
-
     @async_hsm.state
     def _exiting(self, event):
         sig = event.signal
@@ -49,10 +46,13 @@ class Countdown(async_hsm.Ahsm):
         return self.super(self.top)
 
 
+async def main():
+    sl = Countdown(10)
+    sl.start(0)
+    await async_hsm.Framework.done()
+
+
 if __name__ == "__main__":
     # from SelectiveSpy import SelectiveSpy as Spy
     # async_hsm.Spy.enable_spy(Spy)
-    sl = Countdown(10)
-    sl.start(0)
-
-    async_hsm.run_forever()
+    asyncio.run(main())

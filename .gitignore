@@ -3,7 +3,9 @@
 *.pyd
 *.bak
 *.so
+*.db
 *~
+*.retry
 target/
 build/
 attic/

@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 
+import asyncio
 
-from async_hsm import Ahsm, Event, Framework, run_forever, Spy, Signal, state
+from async_hsm import Ahsm, Event, Framework, Signal, Spy, state
 from async_hsm.SimpleSpy import SimpleSpy
 
 
@@ -10,7 +11,6 @@ class HsmTest(Ahsm):
         super().__init__()
         # Define signals that this chart subscribes to
         self.foo = None
-        self.running = None
 
     @state
     def _initial(self, event):
@@ -24,7 +24,6 @@ class HsmTest(Ahsm):
         Signal.register("h")
         Signal.register("i")
         Signal.register("t")
-        self.running = True
         self.foo = 0
         # print(f"foo={self.foo}")
         return self.tran(self._s2)
@@ -46,7 +45,7 @@ class HsmTest(Ahsm):
         elif sig == Signal.e:
             return self.tran(self._s11)
         elif sig == Signal.t:
-            return self.tran(self._exiting)
+            return self.tran(self._exit)
         return self.super(self.top)
 
     @state
@@ -143,27 +142,17 @@ class HsmTest(Ahsm):
             return self.tran(self._s)
         return self.super(self._s21)
 
-    @state
-    def _exiting(self, event):
-        sig = event.signal
-        if sig == Signal.ENTRY:
-            self.running = False
-            Framework.stop()
-            return self.handled(event)
-        elif sig == Signal.EXIT:
-            return self.handled(event)
 
-        return self.super(self.top)
-
-
-if __name__ == "__main__":
+async def main():
+    import signal
     Spy.enable_spy(SimpleSpy)
     s1 = HsmTest()
     SimpleSpy.on_framework_add(s1)
-    interactive = True
+    interactive = False
     if interactive:
+        signal.signal(signal.SIGINT, signal.SIG_DFL)
         s1.init()
-        while s1.running:
+        while not s1.terminated:
             sig_name = input('\tEvent --> ')
             try:
                 sig = getattr(Signal, sig_name)
@@ -175,10 +164,14 @@ if __name__ == "__main__":
 
         print("\nTerminated")
     else:
-        # seq = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'h', 'g', 'f', 'e', 'd', 'c', 'b', 'a', 't']
-        seq = ['g', 'i', 'a', 'd', 'd', 'c', 'e', 'e', 'g', 'i', 'i', 't']
+        seq = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'h', 'g', 'f', 'e', 'd', 'c', 'b', 'a', 't']
+        # seq = ['g', 'i', 'a', 'd', 'd', 'c', 'e', 'e', 'g', 'i', 'i', 't']
         s1.start(0)
         for sig in seq:
             event = Event(getattr(Signal, sig), None)
             s1.postFIFO(event)
-        run_forever()
+        await Framework.done()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
