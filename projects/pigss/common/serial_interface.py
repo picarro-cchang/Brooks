@@ -58,7 +58,7 @@ if __name__ == "__main__":
         s.write("A\r")
         time.sleep(0.2)
         print(s.read())
-    except Exception as e:
+    except Exception:
         raise
     finally:
         s.close()
