@@ -77,6 +77,12 @@ hardware will be a custom PCB.
         - [Channel identification commands](#channel-identification-commands)
             - [MFCVAL?](#mfcval)
                 - [Typical Return](#typical-return-19)
+            - [IDENTIFY](#identify)
+                - [Typical Return](#typical-return-20)
+            - [IDSTATE?](#idstate)
+                - [Typical Return](#typical-return-21)
+            - [ACTIVECH?](#activech)
+                - [Typical Return](#typical-return-22)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -96,8 +102,6 @@ hardware will be a custom PCB.
 
 <!-- markdown-toc end -->
 
-
-
 ## Serial connection details ##
 
 ### Command interface ###
@@ -111,7 +115,6 @@ settings:
 | OFF      | 38400  | 8         | 1         | None            |
 | IFF      | 230400 | 8         | 1         | None            |
 
-
 ### Debug interface ###
 
 The debug interface is via USB, but the hardware will enumerate as a
@@ -122,7 +125,6 @@ settings:
 |----------|--------|-----------|-----------|-----------------|
 | OFF      | 38400  | 8         | 1         | None            |
 | IFF      | 230400 | 8         | 1         | None            |
-
 
 ## Uploading new firmware ##
 
@@ -145,12 +147,10 @@ For Windows, VCP examples are `com5`, `com23`, etc.  For Linux, VCP
 examples are `/dev/ttyUSB0`, `/dev/ttyUSB1`, etc.  Baud rates for our
 two platforms are shown below.
 
-
 | Platform                  | Baud   |
 |---------------------------|--------|
 | OFF (Arduino Mega)        | 38400  |
 | IFF (Picarro's Whitfield) | 230400 |
-
 
 ## Command reference ##
 
@@ -483,6 +483,44 @@ The output will be a floating-point number.
 
 40.0
 
+#### IDENTIFY ####
+
+Start the channel identification process.  This can only be invoked in `standby` mode.
+
+##### Typical Return #####
+
+0
+
+#### IDSTATE? ####
+
+Query the channel identification substate.
+
+| Substate             | Returned string |
+|----------------------|-----------------|
+| Ambient              | ambient         |
+| Calculate            | calculate       |
+| Not in identify mode | none            |
+
+##### Typical Return #####
+
+none
+
+#### ACTIVECH? ####
+
+Return a number corresponding to the active channels discovered during
+channel identification.  Each bit in the 8-bit number corresponds to a
+channel, and bits are set when the channel is active.
+
+| Active channels | ACTIVECH? |
+|-----------------|-----------|
+| none            | 0         |
+| all             | 255       |
+| 3               | 4         |
+
+##### Typical Return #####
+
+255
+
 ## Release history ##
 
 ### Version 1.0.0 ###
@@ -494,7 +532,7 @@ device.
 **The `SERNUM` command will likely go away!**  You can use this
    command to test writing the serial number, but the command will
    likely change in the next version.
-   
+
 ### Version 1.0.1 ###
 
 This version is for testing the channel enable commands with the
@@ -505,7 +543,7 @@ bargraph LEDs.
 Added `SLOTID` command and its query.  This will help us keep track of
 where the manifold box is in the rack, and thus to number its
 channels.
-   
+
 ### Version 1.0.3 ###
 
 Added default log level setting to makefile.  This allows producing
@@ -567,7 +605,7 @@ Pressures are now sampled at 100Hz when the log level is set to "error."
 Increased pressure sensor read frequency to 100Hz.  The delay between
 pressure sensor triggers and reads is now 6ms.  The minimum value here
 is 5ms, but I worry about timing variations at that level violating
-this 5ms limit.  100Hz is a safe reading frequency.  
+this 5ms limit.  100Hz is a safe reading frequency.
 
 Hex file releases now have an extra attribute: `_mega` or
 `_whitfield`.  Use `_mega` releases for the Arduino Mega, and
@@ -603,7 +641,17 @@ This version **does not read the pressure sensors**.  All `prs.*`
 commands will return 0.  This will be an interim release while we fix
 the pressure sensors.
 
-Added the `mfcval?` query to get the Mass Flow Controller (MFC)
-setting contribution required for a piglet.  
+Added the [MFCVAL?](#mfcval) query to get the Mass Flow Controller (MFC)
+setting contribution required for a piglet.
 
 Bypass valves for enabled channels now get set to zero.
+
+Added the [IDENTIFY](#identify) command to kick off the channel
+identification process.
+
+Added the [IDSTATE?](#idstate) query to get the channel identification
+substate.  The [OPSTATE?](#opstate) query will return the `identify`
+parent state ID during channel identification.
+
+Added the [ACTIVECH?](#activech) query to return the active channels
+discovered during channel identification.

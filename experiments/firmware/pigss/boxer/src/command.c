@@ -248,6 +248,16 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_identify},
+  // idstate? -- Query the channel ID state
+  {"idstate?",
+   "none",
+   0,
+   &cmd_idstate_q},
+  // activech? -- Query the active channels
+  {"activech?",
+   "none",
+   0,
+   &cmd_activech_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };

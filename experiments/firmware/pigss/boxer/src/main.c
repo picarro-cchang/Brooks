@@ -193,6 +193,8 @@ int main(void) {
   // Start the power board
   vernon_init();
 
+  
+
   // Start the metronome
   metronome_init();
 
@@ -246,6 +248,10 @@ int main(void) {
 
   // Task 2 -- Test task
   // OS_TaskCreate(&test_task, 500, BLOCKED);
+
+  // Set up the identify module.  This has to be done after
+  // registering tasks so it can populate task IDs.
+  identify_init();
 
   // Start the trigger/read cycle by calling the trigger task.  This
   // will schedule the read task, which will then schedule the next trigger.

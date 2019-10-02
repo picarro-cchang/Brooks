@@ -22,7 +22,9 @@ tcltest::test identify.recognize {
     while {![string equal -nocase "standby" $opstate]} {
 	boxer::sendcmd $channel "opstate?"
 	set opstate [boxer::readline $channel]
-	puts $opstate
+	boxer::sendcmd $channel "idstate?"
+	set idstate [boxer::readline $channel]
+	puts $opstate.$idstate
 	after 500
     }
 } -match regexp -result 1
