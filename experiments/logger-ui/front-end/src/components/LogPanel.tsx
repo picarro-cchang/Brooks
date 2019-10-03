@@ -1,13 +1,16 @@
-import React, { PureComponent } from 'react';
+import React, { PureComponent, Fragment } from 'react';
 import { PanelProps, ThemeContext } from '@grafana/ui';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import { notifyError, notifySuccess } from './../utils/Notifications';
 
 import { LogProps } from './types';
 import { LogLayout } from './LogLayout';
-import { LOG_LIMIT } from './../constants';
+import { LOG_LIMIT, REFRESH_INTERVAL } from './../constants';
 
 // @ts-ignore
 import { SocketURL } from '../constants';
-import { LogService } from './../services/LogService';
 // @ts-ignore
 import console = require('console');
 
@@ -25,16 +28,16 @@ export class LogPanel extends PureComponent<Props, State> {
     this.state = {
       data: [],
       query: {},
-      interval: parseInt(this.props.replaceVariables('$interval')) || 1
+      interval: parseInt(this.props.replaceVariables('$interval')) || REFRESH_INTERVAL
     };
   }
 
   ws: WebSocket = new WebSocket(SocketURL);
   componentDidMount() {
     this.ws.onopen = () => {
-      console.log('web socket connected');
-      console.log(this.ws);
-      this.updateLogsData(this.state.query);
+      notifySuccess('Web socket connected');
+      const queryObj = this.getQueryObj(this.props);
+      this.updateLogsData(queryObj);
     };
 
     this.ws.onmessage = evt => {
@@ -49,8 +52,10 @@ export class LogPanel extends PureComponent<Props, State> {
 
     this.ws.onclose = () => {
       console.log('web socket disconnected');
+      notifyError('Web socket connection closed.');
       this.ws = new WebSocket(SocketURL);
-      this.updateLogsData(this.state.query);
+      const queryObj = this.getQueryObj(this.props);
+      this.updateLogsData(queryObj);
     };
   }
 
@@ -74,8 +79,6 @@ export class LogPanel extends PureComponent<Props, State> {
       isDateTimeToChanged
     ) {
       this.setState(() => ({ interval }));
-
-      console.log("Intrerval Now ", interval, isDateTimeFromChanged, isDateTimeToChanged, isIntervalChanged);
       const queryObj = this.getQueryObj(this.props);
       this.updateLogsData(queryObj);
     }
@@ -99,14 +102,6 @@ export class LogPanel extends PureComponent<Props, State> {
     return query;
   }
 
-  getLogsData = (query: any) => {
-    LogService.getLogs(query).then(response => {
-      response.json().then(logArr => {
-        this.setState({ data: [...this.state.data, ...logArr] });
-      });
-    });
-  };
-
   updateLogsData = (query: Object) => {
     if (this.ws.readyState) {
       this.ws.send(JSON.stringify(query));
@@ -124,7 +119,12 @@ export class LogPanel extends PureComponent<Props, State> {
     return (
       <ThemeContext.Consumer>
         {theme => {
-          return <LogLayout options={{ ...options, data: this.state.data }} theme={theme} />;
+          return (
+            <Fragment>
+              <LogLayout options={{ ...options, data: this.state.data }} theme={theme} />;
+              <ToastContainer />
+            </Fragment>
+          )
         }}
       </ThemeContext.Consumer>
     );

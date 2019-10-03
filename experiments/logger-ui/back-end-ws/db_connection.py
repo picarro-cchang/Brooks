@@ -1,6 +1,7 @@
 import os
 import sqlite3
 
+
 class DBInstance:
     """
     Singleton class for creating DB connection
@@ -21,4 +22,5 @@ class DBInstance:
 
     @classmethod
     def close_db_connection(cls):
-        __instance.close()
+        if DBInstance.__instance is not None:
+            DBInstance.__instance.close()

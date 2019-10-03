@@ -2,7 +2,6 @@ import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
 import { LogProps } from 'components/types';
 
 // Constants for LogService
-export const LoggerGetLogsAPI = `http://${window.location.hostname}:8004/api_ws/getlogs`;
 export const SocketURL = `ws://${window.location.hostname}:8004/api_ws/ws`;
 export const DEFAULT_TIME_RANGE: TimeRange = {
   from: dateTime(),
@@ -19,6 +18,7 @@ export const DEFAULT_LOG_PROPS: LogProps = {
 
 // Constants for LogPanel
 export const LOG_LIMIT = 100;
+export const REFRESH_INTERVAL = 1;
 
 // Constants for LogPanelEditor
 export const LEVEL_OPTIONS = [{ value: '10', label: '10' }, { value: '20', label: '20' }, { value: '30', label: '30' }];

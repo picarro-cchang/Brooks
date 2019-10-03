@@ -2,33 +2,10 @@ from db_connection import DBInstance
 import sqlite3
 
 
-class QueryParser:
-    """
-    Parsing query parameters in the url
-    """
-    @classmethod
-    def parse(cls, query):
-        """
-        Parse query string, and return a dict of key value pairs
-        params:
-            query: string
-        return:
-            query_dict: dict
-        """
-        query_arr = query.split("&")
-        query_dict = {}
-        for item in query_arr:
-            key, value = item.split("=")
-            query_dict[key] = value
-        return query_dict
-
-
 class EventsModel:
 
-    table_name = "Events"
-
     @classmethod
-    def build_sql_select_query(cls, query_params):
+    def build_sql_select_query(cls, query_params, table_name):
         """
         description: Given a query dictionary, create a sql statement
         params:
@@ -66,7 +43,6 @@ class EventsModel:
             if client:
                 constraints.append(f'ClientName = "{client}"')
             if level:
-                print("\nLevel:", level, "\n")
                 constraints.append(f'Level in ({", ".join(level)})')
             if start_date:
                 constraints.append(f'EpochTime >= {start_date}')
@@ -76,7 +52,7 @@ class EventsModel:
                 limit_tpl = (f'LIMIT {limit}')
 
             # Respect the space between constraints
-            query += f'SELECT {columns_tpl} FROM {EventsModel.table_name} '
+            query += f'SELECT {columns_tpl} FROM {table_name} '
             if len(constraints) > 0:
                 query += f'WHERE {" AND ".join(constraints)} '
             query += f'ORDER BY rowid ASC '
@@ -84,17 +60,18 @@ class EventsModel:
                 query += f'{limit_tpl}'
             query += ';'
         except Exception as ex:
-            print("Exception in query")
             print("Exception", ex)
             return None
         return query
 
     @classmethod
-    def build_select_default(cls):
-        return f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level FROM {EventsModel.table_name} ORDER BY rowid ASC LIMIT 20"
+    def build_select_default(cls, table_name):
+        return (f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level"
+                f"FROM {table_name} ORDER BY rowid ASC LIMIT 20"
+                )
 
     @classmethod
-    def execute_query(cls, query):
+    def execute_query(cls, query, table_name):
         """
         Return rows of logs after applying query if query is not None, else 
         returns all of the logs
