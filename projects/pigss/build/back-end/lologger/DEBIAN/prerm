@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo rm -rf /usr/bin/lologger*
+sudo -H -u ${SUDO_USER} bash -c 'systemctl --user stop lologger.service'
+sudo -H -u ${SUDO_USER} bash -c 'systemctl --user disable lologger.service'
+sudo rm -rf /etc/systemd/user/lologger.service

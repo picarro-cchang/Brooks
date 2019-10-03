@@ -1,0 +1,6 @@
+#!/bin/bash
+
+sudo chown -R ${SUDO_USER}:${SUDO_USER} /var/log/${SUDO_USER}
+sudo systemctl daemon-reload
+sudo -H -u ${SUDO_USER} bash -c 'systemctl --user enable lologger.service'
+sudo -H -u ${SUDO_USER} bash -c 'systemctl --user start lologger.service'
