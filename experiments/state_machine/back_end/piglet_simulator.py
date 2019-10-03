@@ -12,14 +12,15 @@ import attr
 from experiments.common.async_helper import log_async_exception
 # from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.state_machine.back_end.dummy_logger import DummyLoggerClient as LOLoggerClient
-
-opstates = {"standby", "ident", "ident_2", "control", "clean", "shutdown"}
+idstates = {"ambient", "flow_1", "flow_2", "flow_3", "calculate"}
+opstates = {"standby", "identify", "control", "clean", "shutdown"}
 log = LOLoggerClient(client_name=f"PigletSimulator", verbose=True)
 
 
 @attr.s
 class PigletSimulator:
     bank = attr.ib(1)
+    idstate = attr.ib("none")
     opstate = attr.ib("standby")
     sernum = attr.ib(65000)
     version = attr.ib("1.1.2")
@@ -44,7 +45,7 @@ class PigletSimulator:
                 result = "0"
                 if atoms[0] == "*IDN?":
                     result = f"Picarro,Boxer,SN{self.sernum},{self.version}"
-                elif atoms[0] == "CHANAVAIL?":
+                elif atoms[0] == "ACTIVECH?":
                     code = int("".join([f"{i}" for i in reversed(self.active_chan)]), 2)
                     result = f"{code}"
                 elif atoms[0] == "CHANENA":
@@ -60,24 +61,36 @@ class PigletSimulator:
                     assert 0 <= sel < 8
                     self.solenoid_state[sel] = 0
                 elif atoms[0] == "CHANSET":
-                    self.solenoid_state = [1 if int(c) else 0 for c in reversed(format(int(atoms[1]), '08b'))]
-                    if self.opstate in ["standby", "clean"] and self.solenoid_state != 0:
+                    code = int(atoms[1])
+                    self.solenoid_state = [1 if int(c) else 0 for c in reversed(format(code, '08b'))]
+                    if self.opstate in ["standby", "clean"] and code != 0:
                         self.opstate = "control"
                         self.opstate_changed.set()
-                    elif self.opstate in ["control"] and self.solenoid_state == 0:
+                    elif self.opstate in ["control"] and code == 0:
                         self.opstate = "standby"
                         self.opstate_changed.set()
                 elif atoms[0] == "CHANSET?":
                     code = int("".join([f"{i}" for i in reversed(self.solenoid_state)]), 2)
                     result = f"{code}"
-                elif atoms[0] == "MFC?":
-                    if self.opstate in ["ident", "ident_2", "sampling", "clean", "reference"]:
+                elif atoms[0] == "MFCVAL?":
+                    if (self.opstate in ["control", "clean", "reference"]):
                         self.mfc_value = random.randrange(10, 100)
+                    elif self.opstate in ["identify"]:
+                        if self.idstate in ["ambient", "calculate"]:
+                            self.mfc_value = 0
+                        elif self.idstate in ["flow_1"]:
+                            self.mfc_value = 20
+                        elif self.idstate in ["flow_2"]:
+                            self.mfc_value = 30
+                        elif self.idstate in ["flow_3"]:
+                            self.mfc_value = 40
                     else:
                         self.mfc_value = 0
                     result = f"{self.mfc_value}"
                 elif atoms[0] == "OPSTATE?":
                     result = f"{self.opstate}"
+                elif atoms[0] == "IDSTATE?":
+                    result = f"{self.idstate}"
                 elif atoms[0] == "SERNUM":
                     self.sernum = int(atoms[1])
                 elif atoms[0] == "SLOTID":
@@ -85,29 +98,29 @@ class PigletSimulator:
                 elif atoms[0] == "SLOTID?":
                     result = f"{self.bank}"
                 elif atoms[0] == "STANDBY":
-                    if self.opstate in ("control", "clean", "ident", "ident_2"):
+                    if self.opstate in ("control", "clean"):
                         self.opstate = "standby"
                         self.opstate_changed.set()
                     else:
-                        result = "-1"
-                elif atoms[0] == "IDENT":
+                        result = "-2"
+                elif atoms[0] == "IDENTIFY":
                     if self.opstate in ("standby"):
-                        self.opstate = "ident"
+                        self.opstate = "identify"
                         self.opstate_changed.set()
                     else:
-                        result = "-1"
+                        result = "-2"
                 elif atoms[0] == "CLEAN":
                     if self.opstate in ("control", "standby"):
                         self.opstate = "clean"
                         self.opstate_changed.set()
                     else:
-                        result = "-1"
+                        result = "-2"
                 elif atoms[0] == "SHUTDOWN":
-                    if self.opstate in ("standby", "control", "clean", "ident", "ident_2"):
+                    if self.opstate in ("standby", "control", "clean", "identify"):
                         self.opstate = "shutdown"
                         self.opstate_changed.set()
                     else:
-                        result = "-1"
+                        result = "-2"
                 else:
                     result = "-1"
         except Exception:
@@ -130,39 +143,28 @@ class PigletSimulator:
                 for i, _ in enumerate(self.bypass_values):
                     self.bypass_values[i] = self.BYPASS_ACTIVE
                 self.clean_solenoid_state = 0
-            elif self.opstate == "ident":
+            elif self.opstate == "identify":
+                self.idstate = "ambient"
                 for i, _ in enumerate(self.solenoid_state):
                     self.solenoid_state[i] = 0
                 for i, _ in enumerate(self.bypass_values):
                     self.bypass_values[i] = 0.0
                 self.clean_solenoid_state = 0
-                start = time.time()
-                while time.time() < start + 1.0:
-                    if self.opstate != "ident":
-                        break
-                    await asyncio.sleep(0.1)
-                else:
-                    self.opstate = "ident_2"
-                    self.opstate_changed.set()
-            elif self.opstate == "ident_2":
+                await asyncio.sleep(1.0)
+                self.idstate = "flow_1"
+                await asyncio.sleep(1.5)
+                self.idstate = "calculate"
                 for i, _ in enumerate(self.solenoid_state):
                     self.solenoid_state[i] = 1
-                for i, _ in enumerate(self.bypass_values):
-                    self.bypass_values[i] = 0.0
-                start = time.time()
-                while time.time() < start + 1.0:
-                    if self.opstate != "ident_2":
-                        break
-                    await asyncio.sleep(0.1)
-                else:
-                    self.opstate = "standby"
-                    for i, _ in enumerate(self.active_chan):
-                        if self.random_ids:
-                            self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
-                        else:
-                            self.active_chan[i] = i % 2
-                    # print(self.active_chan)
-                    self.opstate_changed.set()
+                await asyncio.sleep(0.5)
+                self.idstate = "none"
+                self.opstate = "standby"
+                for i, _ in enumerate(self.active_chan):
+                    if self.random_ids:
+                        self.active_chan[i] = 1 if random.uniform(0.0, 1.0) > 0.5 else 0
+                    else:
+                        self.active_chan[i] = i % 2
+                self.opstate_changed.set()
             elif self.opstate == "clean":
                 for i, _ in enumerate(self.solenoid_state):
                     self.solenoid_state[i] = 0

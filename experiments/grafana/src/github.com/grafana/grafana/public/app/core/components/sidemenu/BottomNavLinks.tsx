@@ -30,8 +30,8 @@ class BottomNavLinks extends PureComponent<Props> {
       <div className="sidemenu-item dropdown dropup">
         <a href={link.url} className="sidemenu-link" target={link.target}>
           <span className="icon-circle sidemenu-icon">
-            {link.icon && <i className={link.icon} />}
-            {link.img && <img src={link.img} />}
+            {link.icon && <i className={link.icon} style={{width: "65px", height: "65px"}} />}
+            {link.img && <img src={link.img} style={{width: "65px", height: "65px"}} />}
           </span>
         </a>
         <ul className="dropdown-menu dropdown-menu--sidemenu" role="menu">

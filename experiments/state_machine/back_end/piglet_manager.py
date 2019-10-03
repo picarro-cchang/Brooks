@@ -44,6 +44,7 @@ class PigletManager(Ahsm):
         self.valve_mask = 0
         self.clean_mask = 0
         self.tasks = []
+        self.piglet_fp = open("/tmp/piglets", "w")
 
     @state
     def _initial(self, e):
@@ -53,10 +54,15 @@ class PigletManager(Ahsm):
         Framework.subscribe("PIGLET_REQUEST", self)
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
+        Framework.subscribe("SET_EXHAUST_VALVE", self)
         Framework.subscribe("SET_REFERENCE", self)
+        Framework.subscribe("SET_REFERENCE_VALVE", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("VALVE_POSITION", self)
         Framework.subscribe("TERMINATE", self)
+        self.exhaust_open = False
+        self.reference_open = False
+        self.pending = False
         return self.tran(self._configure)
 
     @state
@@ -90,7 +96,12 @@ class PigletManager(Ahsm):
             return self.tran(self._exit)
         elif sig == Signal.SET_REFERENCE:
             payload = e.value
+            Framework.publish(Event(Signal.SET_REFERENCE_VALVE, {"time": time.time(), "value": "open" if payload else "close"}))
+            self.reference_open = (payload != 0)
             self.run_async(self.set_reference(payload))
+            return self.handled(e)
+        elif sig == Signal.SET_REFERENCE_VALVE:
+            print(f'Reference value set: {e.value}', file=self.piglet_fp, flush=True)
             return self.handled(e)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
@@ -101,18 +112,36 @@ class PigletManager(Ahsm):
             self.run_async(self.get_status(self.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            # print(f"Received PIGLET_STATUS, {e.value}; ", end="")
+            #for bank in self.bank_list:
+            #    print(f'{bank} {e.value[bank]["OPSTATE"]} {e.value[bank]["IDSTATE"]} {e.value[bank]["MFCVAL"]}', file=self.piglet_fp, flush=True)
+            print(file=self.piglet_fp)
             piglet_status = e.value
             mfc_total = 0
             for bank in self.bank_list:
-                mfc_total += piglet_status[bank]["MFC"]
-            Framework.publish(Event(Signal.MFC_SET, {"time": piglet_status["time"], "mfc_setpoint": mfc_total}))
+                mfc_total += piglet_status[bank]["MFCVAL"]
+            if self.reference_open:
+                mfc_total = self.farm.config.get_reference_mfc_flow()
+            if mfc_total == 0:
+                if not self.exhaust_open and not self.pending:
+                    self.pending = True
+                    self.run_async(self.open_exhaust_then_set_mfc(mfc_total, delay=self.farm.config.get_flow_settle_delay()))
+                else:
+                    Framework.publish(Event(Signal.MFC_SET, {"time": e.value["time"], "mfc_setpoint": mfc_total}))
+            elif mfc_total > 0:
+                if self.exhaust_open and not self.pending:
+                    self.pending = True
+                    self.run_async(self.set_mfc_then_close_exhaust(mfc_total, delay=self.farm.config.get_flow_settle_delay()))
+                else:
+                    Framework.publish(Event(Signal.MFC_SET, {"time": e.value["time"], "mfc_setpoint": mfc_total}))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             # print(f"Received PIGLET_RESPONSE, {e.value}")
             return self.handled(e)
         elif sig == Signal.MFC_SET:
-            print(f"Setting MFC, {e.value}; ", end="")
+            print(f"MFC setting: {e.value}", file=self.piglet_fp, flush=True)
+            return self.handled(e)
+        elif sig == Signal.SET_EXHAUST_VALVE:
+            print(f"Exhaust valve: {e.value}", file=self.piglet_fp, flush=True)
             return self.handled(e)
         elif sig == Signal.VALVE_POSITION:
             print(f"\n\nReceived VALVE_POSITION: {e.value}\n")
@@ -131,6 +160,22 @@ class PigletManager(Ahsm):
             return self.handled(e)
         return self.super(self.top)
 
+    async def open_exhaust_then_set_mfc(self, mfc_total, delay):
+        Framework.publish(Event(Signal.SET_EXHAUST_VALVE, {"time": time.time(), "value": "open"}))
+        self.exhaust_open = True
+        await asyncio.sleep(delay)
+        Framework.publish(Event(Signal.MFC_SET, {"time": time.time(), "mfc_setpoint": mfc_total}))
+        await asyncio.sleep(delay)
+        self.pending = False
+
+    async def set_mfc_then_close_exhaust(self, mfc_total, delay):
+        Framework.publish(Event(Signal.MFC_SET, {"time": time.time(), "mfc_setpoint": mfc_total}))
+        await asyncio.sleep(delay)
+        Framework.publish(Event(Signal.SET_EXHAUST_VALVE, {"time": time.time(), "value": "close"}))
+        self.exhaust_open = False
+        await asyncio.sleep(delay)
+        self.pending = False
+
     async def command_handler(self, command, bank):
         # piglet = self.piglets[bank]
         # return await piglet.cli(command)
@@ -139,11 +184,12 @@ class PigletManager(Ahsm):
     async def get_status_of_bank(self, bank):
         status = {}
         # piglet = self.piglets[bank]
-        # status["STATE"] = await piglet.cli("OPSTATE?")
-        # status["MFC"] = float(await piglet.cli("MFC?"))
+        # status["OPSTATE"] = await piglet.cli("OPSTATE?")
+        # status["MFCVAL"] = float(await piglet.cli("MFCVAL?"))
         # status["SOLENOID_VALVES"] = int(await piglet.cli("CHANSET?"))
-        status["STATE"] = await self.farm.RPC[f"Piglet_{bank}"].send("OPSTATE?")
-        status["MFC"] = float(await self.farm.RPC[f"Piglet_{bank}"].send("MFC?"))
+        status["OPSTATE"] = await self.farm.RPC[f"Piglet_{bank}"].send("OPSTATE?")
+        status["IDSTATE"] = await self.farm.RPC[f"Piglet_{bank}"].send("IDSTATE?")
+        status["MFCVAL"] = float(await self.farm.RPC[f"Piglet_{bank}"].send("MFCVAL?"))
         status["SOLENOID_VALVES"] = int(await self.farm.RPC[f"Piglet_{bank}"].send("CHANSET?"))
         return status
 
@@ -171,7 +217,7 @@ class PigletManager(Ahsm):
             # Get the states of all the valves as a 32 bit integer
             for bank in bank_list:
                 _valve_mask += response[bank]['SOLENOID_VALVES'] << (8 * (bank - 1))
-                if response[bank]["STATE"] == "clean":
+                if response[bank]["OPSTATE"] == "clean":
                     _clean_mask += (1 << bank - 1)
             if _valve_mask != self.valve_mask or _clean_mask != self.clean_mask:
                 self.valve_mask = _valve_mask
