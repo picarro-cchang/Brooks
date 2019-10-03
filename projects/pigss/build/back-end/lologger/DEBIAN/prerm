@@ -1,6 +1,15 @@
 #!/bin/bash
 
-sudo rm -rf /usr/bin/lologger*
-sudo -H -u ${SUDO_USER} bash -c 'systemctl --user stop lologger.service'
-sudo -H -u ${SUDO_USER} bash -c 'systemctl --user disable lologger.service'
-sudo rm -rf /etc/systemd/user/lologger.service
+export XDG_RUNTIME_DIR="/run/user/$UID"
+export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+
+START_USER=$SUDO_USER
+
+echo $START_USER
+
+sudo rm -rf /usr/bin/lologger* || echo "Nothing here"
+# sudo su $START_USER
+# systemctl --user stop lologger.service
+# systemctl --user disable lologger.service
+# exit
+sudo rm -rf /etc/systemd/user/lologger.service || echo "Nothing here"

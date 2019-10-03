@@ -63,25 +63,12 @@ control:
 prerm:
 	@ mkdir -p ${DEB_BUILD_DIR}/DEBIAN
 	@ cp -r DEBIAN/prerm ${DEB_BUILD_DIR}/DEBIAN/prerm
-	# @ printf '#!/bin/bash\n\
-	# sudo rm -rf $${INSTALL_DIR}/lologger\n\
-	# systemctl --user stop lologger.service\n\
-	# systemctl --user disable lologger.service\n\
-	# sudo rm -rf $${SERVICE_INSTALL_DIR}/lologger.service' > ${DEB_BUILD_DIR}/DEBIAN/prerm
-	# @ chmod +x ${DEB_BUILD_DIR}/DEBIAN/prerm
 
 # Write postinst script
 .PHONY: postinst
 postinst:
 	@ mkdir -p ${DEB_BUILD_DIR}/DEBIAN
 	@ cp -r DEBIAN/postinst ${DEB_BUILD_DIR}/DEBIAN/postinst
-	# @ printf '#!/bin/bash\n\
-	# mkdir -p /var/log/$${SUDO_USER}\n\
-	# sudo chown -R $${SUDO_USER}:$${SUDO_USER} /var/log/$${SUDO_USER}\n\
-	# sudo systemctl daemon-reload\n\
-	# systemctl --user enable lologger.service\n\
-	# systemctl --user start lologger.service' > ${DEB_BUILD_DIR}/DEBIAN/postinst
-	# @ chmod +x ${DEB_BUILD_DIR}/DEBIAN/postinst
 
 # Write lologger start script since systemd services are awful
 # and won't let us pass environmental variables into ExecStart
