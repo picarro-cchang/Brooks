@@ -1,0 +1,4 @@
+#!/bin/bash
+
+sudo rm -rf /usr/bin/lologger* || echo "Nothing here"
+sudo rm -rf /etc/systemd/user/lologger.service || echo "Nothing here"

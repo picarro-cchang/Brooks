@@ -1,0 +1,14 @@
+[Unit]
+Description=Lologger Service
+After = network.target network-online.target
+Wants = network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/lologger.sh
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -HUP $MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

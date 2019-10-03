@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# export XDG_RUNTIME_DIR="/run/user/$UID"
+# export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
+
+# START_USER=$SUDO_USER
+
+# echo $START_USER
+
+sudo mkdir -p /var/log/$SUDO_USER
+sudo chown -R $SUDO_USER:$SUDO_USER /var/log/$SUDO_USER
+sudo systemctl daemon-reload
+
+# systemctl --user enable lologger.service
+# systemctl --user start lologger.service
+# systemctl --user status lologger.service
+
+echo ""
+echo "Please enter the following commands to start the service:"
+echo ""
+echo "systemctl --user enable lologger.service"
+echo "systemctl --user start lologger.service"
+echo ""
+echo "Verify the service is running with the following command:"
+echo ""
+echo "systemctl --user status lologger.service"
+echo ""

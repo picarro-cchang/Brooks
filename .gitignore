@@ -7,8 +7,8 @@
 *~
 *.retry
 target/
-build/
 attic/
+dist/
 .doit.db.*
 .vscode/
 .idea
