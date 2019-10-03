@@ -2,62 +2,57 @@
 import React, { PureComponent } from 'react';
 
 // Services & Utils
-import { processTimeSeries, ThemeContext } from '@grafana/ui';
+import { config } from 'app/core/config';
 
 // Components
-import { Gauge } from '@grafana/ui';
+import { Gauge, FieldDisplay, getFieldDisplayValues, VizOrientation } from '@grafana/ui';
 
 // Types
 import { GaugeOptions } from './types';
-import { PanelProps, NullValueMode, TimeSeriesValue } from '@grafana/ui/src/types';
+import { PanelProps, VizRepeater } from '@grafana/ui';
 
-interface Props extends PanelProps<GaugeOptions> {}
-
-export class GaugePanel extends PureComponent<Props> {
-  render() {
-    const { panelData, width, height, onInterpolate, options } = this.props;
-    const { valueOptions } = options;
-
-    const prefix = onInterpolate(valueOptions.prefix);
-    const suffix = onInterpolate(valueOptions.suffix);
-    let value: TimeSeriesValue;
-
-    if (panelData.timeSeries) {
-      const vmSeries = processTimeSeries({
-        timeSeries: panelData.timeSeries,
-        nullValueMode: NullValueMode.Null,
-      });
-
-      if (vmSeries[0]) {
-        value = vmSeries[0].stats[valueOptions.stat];
-      } else {
-        value = null;
-      }
-    } else if (panelData.tableData) {
-      value = panelData.tableData.rows[0].find(prop => prop > 0);
-    }
+export class GaugePanel extends PureComponent<PanelProps<GaugeOptions>> {
+  renderValue = (value: FieldDisplay, width: number, height: number): JSX.Element => {
+    const { options } = this.props;
+    const { field, display } = value;
 
     return (
-      <ThemeContext.Consumer>
-        {theme => (
-          <Gauge
-            value={value}
-            width={width}
-            height={height}
-            prefix={prefix}
-            suffix={suffix}
-            unit={valueOptions.unit}
-            decimals={valueOptions.decimals}
-            thresholds={options.thresholds}
-            valueMappings={options.valueMappings}
-            showThresholdLabels={options.showThresholdLabels}
-            showThresholdMarkers={options.showThresholdMarkers}
-            minValue={options.minValue}
-            maxValue={options.maxValue}
-            theme={theme}
-          />
-        )}
-      </ThemeContext.Consumer>
+      <Gauge
+        value={display}
+        width={width}
+        height={height}
+        thresholds={field.thresholds}
+        showThresholdLabels={options.showThresholdLabels}
+        showThresholdMarkers={options.showThresholdMarkers}
+        minValue={field.min}
+        maxValue={field.max}
+        theme={config.theme}
+      />
+    );
+  };
+
+  getValues = (): FieldDisplay[] => {
+    const { data, options, replaceVariables } = this.props;
+    return getFieldDisplayValues({
+      fieldOptions: options.fieldOptions,
+      replaceVariables,
+      theme: config.theme,
+      data: data.series,
+    });
+  };
+
+  render() {
+    const { height, width, data, renderCounter } = this.props;
+    return (
+      <VizRepeater
+        getValues={this.getValues}
+        renderValue={this.renderValue}
+        width={width}
+        height={height}
+        source={data}
+        renderCounter={renderCounter}
+        orientation={VizOrientation.Auto}
+      />
     );
   }
 }

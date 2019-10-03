@@ -1,14 +1,15 @@
 import React, { PureComponent } from 'react';
 import appEvents from '../../app_events';
 import { User } from '../../services/context_srv';
+import { NavModelItem } from '@grafana/data';
 
 export interface Props {
-  link: any;
+  link: NavModelItem;
   user: User;
 }
 
 class BottomNavLinks extends PureComponent<Props> {
-  itemClicked = (event, child) => {
+  itemClicked = (event: React.SyntheticEvent, child: NavModelItem) => {
     if (child.url === '/shortcuts') {
       event.preventDefault();
       appEvents.emit('show-modal', {
@@ -29,16 +30,16 @@ class BottomNavLinks extends PureComponent<Props> {
       <div className="sidemenu-item dropdown dropup">
         <a href={link.url} className="sidemenu-link" target={link.target}>
           <span className="icon-circle sidemenu-icon">
-            {link.icon && <i className={link.icon} />}
-            {link.img && <img src={link.img} />}
+            {link.icon && <i className={link.icon} style={{width: "65px", height: "65px"}} />}
+            {link.img && <img src={link.img} style={{width: "65px", height: "65px"}} />}
           </span>
         </a>
         <ul className="dropdown-menu dropdown-menu--sidemenu" role="menu">
-          {link.subTitle && (
-            <li className="sidemenu-subtitle">
-              <span className="sidemenu-item-text">{link.subTitle}</span>
-            </li>
-          )}
+          {/*{link.subTitle && (*/}
+          {/*  <li className="sidemenu-subtitle">*/}
+          {/*    <span className="sidemenu-item-text">{link.subTitle}</span>*/}
+          {/*  </li>*/}
+          {/*)}*/}
           {link.showOrgSwitcher && (
             <li className="sidemenu-org-switcher">
               <a onClick={this.switchOrg}>
@@ -57,7 +58,7 @@ class BottomNavLinks extends PureComponent<Props> {
             link.children.map((child, index) => {
               if (!child.hideFromMenu) {
                 return (
-                  <li className={child.divider} key={`${child.text}-${index}`}>
+                  <li key={`${child.text}-${index}`}>
                     <a href={child.url} target={child.target} onClick={event => this.itemClicked(event, child)}>
                       {child.icon && <i className={child.icon} />}
                       {child.text}

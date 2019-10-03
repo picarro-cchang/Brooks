@@ -9,7 +9,9 @@ import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import { ModalInfo, PlanPanelTypes } from './Types';
 
-const socketURL = `ws://${window.location.hostname}:8000/ws`
+const apiLoc = `${window.location.hostname}:8000/controller`;
+// const apiLoc = `${window.location.hostname}:8000`;
+const socketURL = `ws://${apiLoc}/ws`;
 class Main extends Component<any, any> {
     state = {
         initialized: false,
@@ -55,7 +57,7 @@ class Main extends Component<any, any> {
     }
 
     getDataViaApi = () => {
-        let p1 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/uistatus`).then(
+        let p1 = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -63,7 +65,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p2 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/plan`).then(
+        let p2 = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -71,7 +73,7 @@ class Main extends Component<any, any> {
                 })
             }
         );
-        let p3 = PicarroAPI.getRequest(`http://${window.location.hostname}:8000/modal_info`).then(
+        let p3 = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
             response => {
                 response.json().then(obj => {
                     // this.refWebSocket.sendMessage("message via websocket");
@@ -152,6 +154,21 @@ class Main extends Component<any, any> {
             )
         }
 
+        let bankPanels = [];
+        if ("bank" in this.state.uistatus as any) {
+            for (let i=1; i<=4; i++) {
+                if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
+                    bankPanels.push(
+                        <div className="col-sm-2">
+                            <BankPanel bank={i} key={i} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
+                        </div>
+                    )
+                }
+    
+            }
+
+        }
+
         return (
             <div>
                 <div className="container-fluid">
@@ -159,18 +176,7 @@ class Main extends Component<any, any> {
                         <div className="col-sm-3">
                             {left_panel}
                         </div>
-                        <div className="col-sm-2">
-                            <BankPanel bank={1} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-                        </div>
-                        <div className="col-sm-2">
-                            <BankPanel bank={2} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-                        </div>
-                        <div className="col-sm-2">
-                            <BankPanel bank={3} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-                        </div>
-                        <div className="col-sm-2">
-                            <BankPanel bank={4} uistatus={this.state.uistatus} ws_sender={this.ws_sender} />
-                        </div>
+                        {bankPanels}
                     </div>
                 </div>
                 <Modal open={this.state.modal_info.show} onClose={() => this.ws_sender({ element: "modal_close" })} center>

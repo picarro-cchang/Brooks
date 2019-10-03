@@ -1,6 +1,6 @@
-import { coreModule } from 'app/core/core';
-
-const template = `
+import { contextSrv, coreModule } from 'app/core/core';
+let template = '';
+const templateEditor = `
 <span class="panel-title">
   <span class="icon-gf panel-alert-icon"></span>
   <span class="panel-title-text">{{ctrl.panel.title | interpolateTemplateVars:this}}</span>
@@ -11,7 +11,14 @@ const template = `
   </span>
   <span class="panel-time-info" ng-if="ctrl.timeInfo"><i class="fa fa-clock-o"></i> {{ctrl.timeInfo}}</span>
 </span>`;
+const templateViewer = `
+<span class="panel-title">
+  <span class="icon-gf panel-alert-icon"></span>
+  <span class="panel-title-text-viewer">{{ctrl.panel.title | interpolateTemplateVars:this}}</span>
+  <span class="panel-time-info" ng-if="ctrl.timeInfo"><i class="fa fa-clock-o"></i> {{ctrl.timeInfo}}</span>
+</span>`;
 
+console.log(contextSrv.isEditor, 'UGH');
 function renderMenuItem(item, ctrl) {
   let html = '';
   let listItemClass = '';
@@ -34,7 +41,7 @@ function renderMenuItem(item, ctrl) {
   }
 
   html += `><i class="${item.icon}"></i>`;
-  html += `<span class="dropdown-item-text">${item.text}</span>`;
+  html += `<span class="dropdown-item-text" aria-label="${item.text} panel menu item">${item.text}</span>`;
 
   if (item.shortcut) {
     html += `<span class="dropdown-menu-item-shortcut">${item.shortcut}</span>`;
@@ -66,6 +73,11 @@ function createMenuTemplate(ctrl) {
 
 /** @ngInject */
 function panelHeader($compile) {
+  if (contextSrv.isEditor) {
+    template = templateEditor;
+  } else {
+    template = templateViewer;
+  }
   return {
     restrict: 'E',
     template: template,

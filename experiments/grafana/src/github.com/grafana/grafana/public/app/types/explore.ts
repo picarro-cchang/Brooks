@@ -1,18 +1,30 @@
 import { ComponentClass } from 'react';
-import { Value } from 'slate';
 import {
-  RawTimeRange,
-  TimeRange,
   DataQuery,
   DataSourceSelectItem,
   DataSourceApi,
   QueryHint,
   ExploreStartPageProps,
+  DataQueryError,
 } from '@grafana/ui';
 
+import {
+  RawTimeRange,
+  LogLevel,
+  TimeRange,
+  LogsModel,
+  LogsDedupStrategy,
+  LoadingState,
+  AbsoluteTimeRange,
+} from '@grafana/data';
+
 import { Emitter } from 'app/core/core';
-import { LogsModel, LogsDedupStrategy, LogLevel } from 'app/core/logs_model';
 import TableModel from 'app/core/table_model';
+
+export enum ExploreMode {
+  Metrics = 'Metrics',
+  Logs = 'Logs',
+}
 
 export interface CompletionItem {
   /**
@@ -171,27 +183,18 @@ export interface ExploreItemState {
    * Log query result to be displayed in the logs result viewer.
    */
   logsResult?: LogsModel;
+
   /**
    * Query intervals for graph queries to determine how many datapoints to return.
    * Needs to be updated when `datasourceInstance` or `containerWidth` is changed.
    */
   queryIntervals: QueryIntervals;
   /**
-   * List of query transaction to track query duration and query result.
-   * Graph/Logs/Table results are calculated on the fly from the transaction,
-   * based on the transaction's result types. Transaction also holds the row index
-   * so that results can be dropped and re-computed without running queries again
-   * when query rows are removed.
-   */
-  queryTransactions: QueryTransaction[];
-  /**
    * Time range for this Explore. Managed by the time picker and used by all query runs.
    */
-  range: TimeRange | RawTimeRange;
-  /**
-   * Scanner function that calculates a new range, triggers a query run, and returns the new range.
-   */
-  scanner?: RangeScanner;
+  range: TimeRange;
+
+  absoluteRange: AbsoluteTimeRange;
   /**
    * True if scanning for more results is active.
    */
@@ -205,10 +208,6 @@ export interface ExploreItemState {
    */
   showingGraph: boolean;
   /**
-   * True if logs result viewer is expanded. Query runs will contain logs queries.
-   */
-  showingLogs: boolean;
-  /**
    * True StartPage needs to be shown. Typically set to `false` once queries have been run.
    */
   showingStartPage?: boolean;
@@ -216,18 +215,8 @@ export interface ExploreItemState {
    * True if table result viewer is expanded. Query runs will contain table queries.
    */
   showingTable: boolean;
-  /**
-   * True if `datasourceInstance` supports graph queries.
-   */
-  supportsGraph: boolean | null;
-  /**
-   * True if `datasourceInstance` supports logs queries.
-   */
-  supportsLogs: boolean | null;
-  /**
-   * True if `datasourceInstance` supports table queries.
-   */
-  supportsTable: boolean | null;
+
+  loadingState: LoadingState;
   /**
    * Table model that combines all query table results into a single table.
    */
@@ -247,6 +236,32 @@ export interface ExploreItemState {
    * Currently hidden log series
    */
   hiddenLogLevels?: LogLevel[];
+
+  /**
+   * How often query should be refreshed
+   */
+  refreshInterval?: string;
+
+  urlState: ExploreUrlState;
+
+  update: ExploreUpdateState;
+
+  queryErrors: DataQueryError[];
+
+  latency: number;
+  supportedModes: ExploreMode[];
+  mode: ExploreMode;
+
+  isLive: boolean;
+  urlReplaced: boolean;
+}
+
+export interface ExploreUpdateState {
+  datasource: boolean;
+  queries: boolean;
+  range: boolean;
+  mode: boolean;
+  ui: boolean;
 }
 
 export interface ExploreUIState {
@@ -259,6 +274,7 @@ export interface ExploreUIState {
 export interface ExploreUrlState {
   datasource: string;
   queries: any[]; // Should be a DataQuery, but we're going to strip refIds, so typing makes less sense
+  mode: ExploreMode;
   range: RawTimeRange;
   ui: ExploreUIState;
 }
@@ -270,7 +286,7 @@ export interface HistoryItem<TQuery extends DataQuery = DataQuery> {
 
 export abstract class LanguageProvider {
   datasource: any;
-  request: (url) => Promise<any>;
+  request: (url: string, params?: any) => Promise<any>;
   /**
    * Returns startTask that resolves with a task list when main syntax is loaded.
    * Task list consists of secondary promises that load more detailed language features.
@@ -284,7 +300,8 @@ export interface TypeaheadInput {
   prefix: string;
   wrapperClasses: string[];
   labelKey?: string;
-  value?: Value;
+  //Should be Value from slate
+  value?: any;
 }
 
 export interface TypeaheadOutput {
@@ -300,10 +317,8 @@ export interface QueryIntervals {
 
 export interface QueryOptions {
   interval: string;
-  format: string;
-  hinting?: boolean;
-  instant?: boolean;
-  valueWithRefId?: boolean;
+  maxDataPoints?: number;
+  live?: boolean;
 }
 
 export interface QueryTransaction {
@@ -313,14 +328,10 @@ export interface QueryTransaction {
   hints?: QueryHint[];
   latency: number;
   options: any;
-  query: DataQuery;
+  queries: DataQuery[];
   result?: any; // Table model / Timeseries[] / Logs
-  resultType: ResultType;
-  rowIndex: number;
   scanning?: boolean;
 }
-
-export type RangeScanner = () => RawTimeRange;
 
 export interface TextMatch {
   text: string;
@@ -328,5 +339,3 @@ export interface TextMatch {
   length: number;
   end: number;
 }
-
-export type ResultType = 'Graph' | 'Logs' | 'Table';

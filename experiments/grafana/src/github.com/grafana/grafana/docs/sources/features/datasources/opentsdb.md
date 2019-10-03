@@ -7,7 +7,7 @@ aliases = ["/datasources/opentsdb",	"docs/features/opentsdb"]
 [menu.docs]
 name = "OpenTSDB"
 parent = "datasources"
-weight = 5
+weight = 19
 +++
 
 # Using OpenTSDB in Grafana
@@ -53,7 +53,7 @@ Instead of hard-coding things like server, application and sensor name in you me
 Variables are shown as dropdown select boxes at the top of the dashboard. These dropdowns makes it easy to change the data
 being displayed in your dashboard.
 
-Checkout the [Templating]({{< relref "reference/templating.md" >}}) documentation for an introduction to the templating feature and the different
+Checkout the [Templating]({{< relref "../../reference/templating.md" >}}) documentation for an introduction to the templating feature and the different
 types of template variables.
 
 ### Query variable

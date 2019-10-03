@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import asyncio
-from async_hsm import Ahsm, Event, Framework, Signal, Spy, run_forever, state, TimeEvent
+from async_hsm import Ahsm, Event, Framework, Signal, Spy, state, TimeEvent
 from pigss_payloads import PcSendPayload, PcResponsePayload
+
 
 class PigssComms(Ahsm):
     # State machine for communications with piglet
@@ -77,6 +78,7 @@ class PigssComms(Ahsm):
                 Framework.publish(Event(Signal.PC_RESPONSE, PcResponsePayload(e.value.message)))
             return self.tran(self._ready_for_message)
         return self.super(self._ready_for_message)
+
 
 if __name__ == "__main__":
     # Uncomment this line to get a visual execution trace (to demonstrate debugging)

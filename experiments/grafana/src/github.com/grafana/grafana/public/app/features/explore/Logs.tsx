@@ -1,17 +1,26 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
 
-import * as rangeUtil from 'app/core/utils/rangeutil';
-import { RawTimeRange, Switch } from '@grafana/ui';
+import { rangeUtil } from '@grafana/data';
+import { Switch } from '@grafana/ui';
+import {
+  RawTimeRange,
+  LogLevel,
+  TimeZone,
+  AbsoluteTimeRange,
+  LogsMetaKind,
+  LogsModel,
+  LogsDedupStrategy,
+  LogRowModel,
+} from '@grafana/data';
 import TimeSeries from 'app/core/time_series2';
-
-import { LogsDedupDescription, LogsDedupStrategy, LogsModel, LogLevel, LogsMetaKind } from 'app/core/logs_model';
 
 import ToggleButtonGroup, { ToggleButton } from 'app/core/components/ToggleButtonGroup/ToggleButtonGroup';
 
 import Graph from './Graph';
 import { LogLabels } from './LogLabels';
 import { LogRow } from './LogRow';
+import { LogsDedupDescription } from 'app/core/logs_model';
 
 const PREVIEW_LIMIT = 100;
 
@@ -48,25 +57,26 @@ interface Props {
   exploreId: string;
   highlighterExpressions: string[];
   loading: boolean;
-  range?: RawTimeRange;
+  absoluteRange: AbsoluteTimeRange;
+  timeZone: TimeZone;
   scanning?: boolean;
   scanRange?: RawTimeRange;
   dedupStrategy: LogsDedupStrategy;
   hiddenLogLevels: Set<LogLevel>;
-  onChangeTime?: (range: RawTimeRange) => void;
+  onChangeTime?: (range: AbsoluteTimeRange) => void;
   onClickLabel?: (label: string, value: string) => void;
   onStartScanning?: () => void;
   onStopScanning?: () => void;
   onDedupStrategyChange: (dedupStrategy: LogsDedupStrategy) => void;
-  onToggleLogLevel: (hiddenLogLevels: Set<LogLevel>) => void;
+  onToggleLogLevel: (hiddenLogLevels: LogLevel[]) => void;
+  getRowContext?: (row: LogRowModel, options?: any) => Promise<any>;
 }
 
 interface State {
   deferLogs: boolean;
   renderAll: boolean;
-  showLabels: boolean | null; // Tristate: null means auto
-  showLocalTime: boolean;
-  showUtc: boolean;
+  showLabels: boolean;
+  showTime: boolean;
 }
 
 export default class Logs extends PureComponent<Props, State> {
@@ -76,9 +86,8 @@ export default class Logs extends PureComponent<Props, State> {
   state = {
     deferLogs: true,
     renderAll: false,
-    showLabels: null,
-    showLocalTime: true,
-    showUtc: false,
+    showLabels: false,
+    showTime: true,
   };
 
   componentDidMount() {
@@ -92,7 +101,7 @@ export default class Logs extends PureComponent<Props, State> {
     }
   }
 
-  componentDidUpdate(prevProps, prevState) {
+  componentDidUpdate(prevProps: Props, prevState: State) {
     // Staged rendering
     if (prevState.deferLogs && !this.state.deferLogs && !this.state.renderAll) {
       this.renderAllTimer = setTimeout(() => this.setState({ renderAll: true }), 2000);
@@ -119,22 +128,15 @@ export default class Logs extends PureComponent<Props, State> {
     });
   };
 
-  onChangeLocalTime = (event: React.SyntheticEvent) => {
+  onChangeTime = (event: React.SyntheticEvent) => {
     const target = event.target as HTMLInputElement;
     this.setState({
-      showLocalTime: target.checked,
+      showTime: target.checked,
     });
   };
 
-  onChangeUtc = (event: React.SyntheticEvent) => {
-    const target = event.target as HTMLInputElement;
-    this.setState({
-      showUtc: target.checked,
-    });
-  };
-
-  onToggleLogLevel = (rawLevel: string, hiddenRawLevels: Set<string>) => {
-    const hiddenLogLevels: Set<LogLevel> = new Set(Array.from(hiddenRawLevels).map(level => LogLevel[level]));
+  onToggleLogLevel = (rawLevel: string, hiddenRawLevels: string[]) => {
+    const hiddenLogLevels: LogLevel[] = hiddenRawLevels.map(level => LogLevel[level]);
     this.props.onToggleLogLevel(hiddenLogLevels);
   };
 
@@ -155,7 +157,8 @@ export default class Logs extends PureComponent<Props, State> {
       highlighterExpressions,
       loading = false,
       onClickLabel,
-      range,
+      absoluteRange,
+      timeZone,
       scanning,
       scanRange,
       width,
@@ -166,13 +169,13 @@ export default class Logs extends PureComponent<Props, State> {
       return null;
     }
 
-    const { deferLogs, renderAll, showLocalTime, showUtc } = this.state;
-    let { showLabels } = this.state;
+    const { deferLogs, renderAll, showLabels, showTime } = this.state;
     const { dedupStrategy } = this.props;
     const hasData = data && data.rows && data.rows.length > 0;
-    const showDuplicates = dedupStrategy !== LogsDedupStrategy.none;
+    const hasLabel = hasData && dedupedData.hasUniqueLabels;
     const dedupCount = dedupedData.rows.reduce((sum, row) => sum + row.duplicates, 0);
-    const meta = [...data.meta];
+    const showDuplicates = dedupStrategy !== LogsDedupStrategy.none && dedupCount > 0;
+    const meta = data.meta ? [...data.meta] : [];
 
     if (dedupStrategy !== LogsDedupStrategy.none) {
       meta.push({
@@ -186,21 +189,13 @@ export default class Logs extends PureComponent<Props, State> {
     const processedRows = dedupedData.rows;
     const firstRows = processedRows.slice(0, PREVIEW_LIMIT);
     const lastRows = processedRows.slice(PREVIEW_LIMIT);
-
-    // Check for labels
-    if (showLabels === null) {
-      if (hasData) {
-        showLabels = data.rows.some(row => _.size(row.uniqueLabels) > 0);
-      } else {
-        showLabels = true;
-      }
-    }
-
     const scanText = scanRange ? `Scanning ${rangeUtil.describeTimeRange(scanRange)}` : 'Scanning...';
 
     // React profiler becomes unusable if we pass all rows to all rows and their labels, using getter instead
     const getRows = () => processedRows;
-    const timeSeries = data.series.map(series => new TimeSeries(series));
+    const timeSeries = data.series
+      ? data.series.map(series => new TimeSeries(series))
+      : [new TimeSeries({ datapoints: [] })];
 
     return (
       <div className="logs-panel">
@@ -209,7 +204,8 @@ export default class Logs extends PureComponent<Props, State> {
             data={timeSeries}
             height={100}
             width={width}
-            range={range}
+            range={absoluteRange}
+            timeZone={timeZone}
             id={`explore-logs-graph-${exploreId}`}
             onChangeTime={this.props.onChangeTime}
             onToggleSeries={this.onToggleLogLevel}
@@ -218,8 +214,7 @@ export default class Logs extends PureComponent<Props, State> {
         </div>
         <div className="logs-panel-options">
           <div className="logs-panel-controls">
-            <Switch label="Timestamp" checked={showUtc} onChange={this.onChangeUtc} transparent />
-            <Switch label="Local time" checked={showLocalTime} onChange={this.onChangeLocalTime} transparent />
+            <Switch label="Time" checked={showTime} onChange={this.onChangeTime} transparent />
             <Switch label="Labels" checked={showLabels} onChange={this.onChangeLabels} transparent />
             <ToggleButtonGroup label="Dedup" transparent={true}>
               {Object.keys(LogsDedupStrategy).map((dedupType, i) => (
@@ -251,31 +246,33 @@ export default class Logs extends PureComponent<Props, State> {
         <div className="logs-rows">
           {hasData &&
           !deferLogs && // Only inject highlighterExpression in the first set for performance reasons
-            firstRows.map(row => (
+            firstRows.map((row, index) => (
               <LogRow
-                key={row.key + row.duplicates}
+                key={index}
                 getRows={getRows}
+                getRowContext={this.props.getRowContext}
                 highlighterExpressions={highlighterExpressions}
                 row={row}
                 showDuplicates={showDuplicates}
-                showLabels={showLabels}
-                showLocalTime={showLocalTime}
-                showUtc={showUtc}
+                showLabels={showLabels && hasLabel}
+                showTime={showTime}
+                timeZone={timeZone}
                 onClickLabel={onClickLabel}
               />
             ))}
           {hasData &&
             !deferLogs &&
             renderAll &&
-            lastRows.map(row => (
+            lastRows.map((row, index) => (
               <LogRow
-                key={row.key + row.duplicates}
+                key={PREVIEW_LIMIT + index}
                 getRows={getRows}
+                getRowContext={this.props.getRowContext}
                 row={row}
                 showDuplicates={showDuplicates}
-                showLabels={showLabels}
-                showLocalTime={showLocalTime}
-                showUtc={showUtc}
+                showLabels={showLabels && hasLabel}
+                showTime={showTime}
+                timeZone={timeZone}
                 onClickLabel={onClickLabel}
               />
             ))}

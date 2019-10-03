@@ -1,0 +1,13 @@
+# Config for database
+sqlite:
+  database: str()
+  db_dir: str()
+  table: str()
+  columns: list(str())
+  limit: int()
+  interval: int()
+
+# Config for server
+server:
+  host: ip()
+  port: int()

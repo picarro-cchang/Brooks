@@ -1,0 +1,50 @@
+{
+  "name": "button-panel",
+  "version": "0.0.1",
+  "description": "Button Panel",
+  "author": "Emma Peatfield",
+  "license": "MIT",
+  "scripts": {
+    "build": "webpack --config webpack.config.prod.js",
+    "dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "test": "jest --config jest.config.js"
+  },
+  "dependencies": {
+    "@grafana/data": "6.3.0-alpha.0",
+    "@grafana/ui": "6.3.0-alpha.32",
+    "@types/mocha": "^5.2.7",
+    "deepmerge": "^4.0.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6",
+    "react-list": "^0.8.11",
+    "react-responsive-modal": "^4.0.1",
+    "url-loader": "^2.1.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.6.0",
+    "@babel/preset-react": "^7.0.0",
+    "@testing-library/react": "^9.1.4",
+    "@types/enzyme": "^3.1.18",
+    "@types/jest": "^22.2.3",
+    "babel-jest": "^24.9.0",
+    "babel-loader": "^8.0.5",
+    "babel-preset-env": "^1.7.0",
+    "clean-webpack-plugin": "^2.0.1",
+    "copy-webpack-plugin": "^5.0.2",
+    "css-loader": "^3.2.0",
+    "enzyme": "^3.8.0",
+    "enzyme-adapter-react-16": "^1.9.1",
+    "enzyme-to-json": "^3.3.5",
+    "jest": "^24.9.0",
+    "react-test-renderer": "^16.9.0",
+    "style-loader": "^1.0.0",
+    "ts-jest": "^23.10.4",
+    "ts-loader": "^5.3.3",
+    "typescript": "^3.4.1",
+    "uglifyjs-webpack-plugin": "^2.1.2",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
+  }
+}

@@ -1,6 +1,7 @@
 // Libraries
 import React, { ComponentClass } from 'react';
 import { hot } from 'react-hot-loader';
+// @ts-ignore
 import { connect } from 'react-redux';
 import _ from 'lodash';
 import { AutoSizer } from 'react-virtualized';
@@ -15,34 +16,61 @@ import GraphContainer from './GraphContainer';
 import LogsContainer from './LogsContainer';
 import QueryRows from './QueryRows';
 import TableContainer from './TableContainer';
-import TimePicker, { parseTime } from './TimePicker';
 
 // Actions
-import { changeSize, changeTime, initializeExplore, modifyQueries, scanStart, setQueries } from './state/actions';
+import {
+  changeSize,
+  initializeExplore,
+  modifyQueries,
+  scanStart,
+  setQueries,
+  refreshExplore,
+  reconnectDatasource,
+  updateTimeRange,
+} from './state/actions';
 
 // Types
-import { RawTimeRange, TimeRange, DataQuery, ExploreStartPageProps, ExploreDataSourceApi } from '@grafana/ui';
-import { ExploreItemState, ExploreUrlState, RangeScanner, ExploreId } from 'app/types/explore';
+import { RawTimeRange } from '@grafana/data';
+
+import { DataQuery, ExploreStartPageProps, DataSourceApi, DataQueryError } from '@grafana/ui';
+import {
+  ExploreItemState,
+  ExploreUrlState,
+  ExploreId,
+  ExploreUpdateState,
+  ExploreUIState,
+  ExploreMode,
+} from 'app/types/explore';
 import { StoreState } from 'app/types';
-import { LAST_USED_DATASOURCE_KEY, ensureQueries, DEFAULT_RANGE, DEFAULT_UI_STATE } from 'app/core/utils/explore';
+import {
+  ensureQueries,
+  DEFAULT_RANGE,
+  DEFAULT_UI_STATE,
+  getTimeRangeFromUrl,
+  lastUsedDatasourceKeyForOrgId,
+} from 'app/core/utils/explore';
 import { Emitter } from 'app/core/utils/emitter';
 import { ExploreToolbar } from './ExploreToolbar';
+import { NoDataSourceCallToAction } from './NoDataSourceCallToAction';
+import { FadeIn } from 'app/core/components/Animations/FadeIn';
+import { getTimeZone } from '../profile/state/selectors';
+import { ErrorContainer } from './ErrorContainer';
 import { scanStopAction } from './state/actionTypes';
 
 interface ExploreProps {
   StartPage?: ComponentClass<ExploreStartPageProps>;
   changeSize: typeof changeSize;
-  changeTime: typeof changeTime;
   datasourceError: string;
-  datasourceInstance: ExploreDataSourceApi;
+  datasourceInstance: DataSourceApi;
   datasourceLoading: boolean | null;
   datasourceMissing: boolean;
   exploreId: ExploreId;
   initializeExplore: typeof initializeExplore;
   initialized: boolean;
   modifyQueries: typeof modifyQueries;
-  range: RawTimeRange;
-  scanner?: RangeScanner;
+  update: ExploreUpdateState;
+  reconnectDatasource: typeof reconnectDatasource;
+  refreshExplore: typeof refreshExplore;
   scanning?: boolean;
   scanRange?: RawTimeRange;
   scanStart: typeof scanStart;
@@ -50,11 +78,15 @@ interface ExploreProps {
   setQueries: typeof setQueries;
   split: boolean;
   showingStartPage?: boolean;
-  supportsGraph: boolean | null;
-  supportsLogs: boolean | null;
-  supportsTable: boolean | null;
-  urlState: ExploreUrlState;
   queryKeys: string[];
+  initialDatasource: string;
+  initialQueries: DataQuery[];
+  initialRange: RawTimeRange;
+  mode: ExploreMode;
+  initialUI: ExploreUIState;
+  queryErrors: DataQueryError[];
+  isLive: boolean;
+  updateTimeRange: typeof updateTimeRange;
 }
 
 /**
@@ -84,36 +116,27 @@ interface ExploreProps {
 export class Explore extends React.PureComponent<ExploreProps> {
   el: any;
   exploreEvents: Emitter;
-  /**
-   * Timepicker to control scanning
-   */
-  timepickerRef: React.RefObject<TimePicker>;
 
-  constructor(props) {
+  constructor(props: ExploreProps) {
     super(props);
     this.exploreEvents = new Emitter();
-    this.timepickerRef = React.createRef();
   }
 
-  async componentDidMount() {
-    const { exploreId, initialized, urlState } = this.props;
-    // Don't initialize on split, but need to initialize urlparameters when present
-    if (!initialized) {
-      // Load URL state and parse range
-      const { datasource, queries, range = DEFAULT_RANGE, ui = DEFAULT_UI_STATE } = (urlState || {}) as ExploreUrlState;
-      const initialDatasource = datasource || store.get(LAST_USED_DATASOURCE_KEY);
-      const initialQueries: DataQuery[] = ensureQueries(queries);
-      const initialRange = { from: parseTime(range.from), to: parseTime(range.to) };
-      const width = this.el ? this.el.offsetWidth : 0;
+  componentDidMount() {
+    const { initialized, exploreId, initialDatasource, initialQueries, initialRange, mode, initialUI } = this.props;
+    const width = this.el ? this.el.offsetWidth : 0;
 
+    // initialize the whole explore first time we mount and if browser history contains a change in datasource
+    if (!initialized) {
       this.props.initializeExplore(
         exploreId,
         initialDatasource,
         initialQueries,
         initialRange,
+        mode,
         width,
         this.exploreEvents,
-        ui
+        initialUI
       );
     }
   }
@@ -122,15 +145,18 @@ export class Explore extends React.PureComponent<ExploreProps> {
     this.exploreEvents.removeAllListeners();
   }
 
-  getRef = el => {
+  componentDidUpdate(prevProps: ExploreProps) {
+    this.refreshExplore();
+  }
+
+  getRef = (el: any) => {
     this.el = el;
   };
 
-  onChangeTime = (range: TimeRange, changedByScanner?: boolean) => {
-    if (this.props.scanning && !changedByScanner) {
-      this.onStopScanning();
-    }
-    this.props.changeTime(this.props.exploreId, range);
+  onChangeTime = (rawRange: RawTimeRange) => {
+    const { updateTimeRange, exploreId } = this.props;
+
+    updateTimeRange({ exploreId, rawRange });
   };
 
   // Use this in help pages to set page to a single query
@@ -142,7 +168,7 @@ export class Explore extends React.PureComponent<ExploreProps> {
     this.onModifyQueries({ type: 'ADD_FILTER', key, value });
   };
 
-  onModifyQueries = (action, index?: number) => {
+  onModifyQueries = (action: any, index?: number) => {
     const { datasourceInstance } = this.props;
     if (datasourceInstance && datasourceInstance.modifyQuery) {
       const modifier = (queries: DataQuery, modification: any) => datasourceInstance.modifyQuery(queries, modification);
@@ -156,17 +182,34 @@ export class Explore extends React.PureComponent<ExploreProps> {
 
   onStartScanning = () => {
     // Scanner will trigger a query
-    const scanner = this.scanPreviousRange;
-    this.props.scanStart(this.props.exploreId, scanner);
-  };
-
-  scanPreviousRange = (): RawTimeRange => {
-    // Calling move() on the timepicker will trigger this.onChangeTime()
-    return this.timepickerRef.current.move(-1, true);
+    this.props.scanStart(this.props.exploreId);
   };
 
   onStopScanning = () => {
     this.props.scanStopAction({ exploreId: this.props.exploreId });
+  };
+
+  refreshExplore = () => {
+    const { exploreId, update } = this.props;
+
+    if (update.queries || update.ui || update.range || update.datasource) {
+      this.props.refreshExplore(exploreId);
+    }
+  };
+
+  renderEmptyState = () => {
+    return (
+      <div className="explore-container">
+        <NoDataSourceCallToAction />
+      </div>
+    );
+  };
+
+  onReconnect = (event: React.MouseEvent<HTMLButtonElement>) => {
+    const { exploreId, reconnectDatasource } = this.props;
+
+    event.preventDefault();
+    reconnectDatasource(exploreId);
   };
 
   render() {
@@ -179,30 +222,31 @@ export class Explore extends React.PureComponent<ExploreProps> {
       exploreId,
       showingStartPage,
       split,
-      supportsGraph,
-      supportsLogs,
-      supportsTable,
       queryKeys,
+      queryErrors,
+      mode,
     } = this.props;
     const exploreClass = split ? 'explore explore-split' : 'explore';
 
     return (
       <div className={exploreClass} ref={this.getRef}>
-        <ExploreToolbar exploreId={exploreId} timepickerRef={this.timepickerRef} onChangeTime={this.onChangeTime} />
+        <ExploreToolbar exploreId={exploreId} onChangeTime={this.onChangeTime} />
         {datasourceLoading ? <div className="explore-container">Loading datasource...</div> : null}
-        {datasourceMissing ? (
-          <div className="explore-container">Please add a datasource that supports Explore (e.g., Prometheus).</div>
-        ) : null}
+        {datasourceMissing ? this.renderEmptyState() : null}
 
-        {datasourceError && (
+        <FadeIn duration={datasourceError ? 150 : 5} in={datasourceError ? true : false}>
           <div className="explore-container">
-            <Alert message={`Error connecting to datasource: ${datasourceError}`} />
+            <Alert
+              message={`Error connecting to datasource: ${datasourceError}`}
+              button={{ text: 'Reconnect', onClick: this.onReconnect }}
+            />
           </div>
-        )}
+        </FadeIn>
 
-        {datasourceInstance && !datasourceError && (
+        {datasourceInstance && (
           <div className="explore-container">
             <QueryRows exploreEvents={this.exploreEvents} exploreId={exploreId} queryKeys={queryKeys} />
+            <ErrorContainer queryErrors={queryErrors} />
             <AutoSizer onResize={this.onResize} disableHeight>
               {({ width }) => {
                 if (width === 0) {
@@ -215,13 +259,14 @@ export class Explore extends React.PureComponent<ExploreProps> {
                       {showingStartPage && <StartPage onClickExample={this.onClickExample} />}
                       {!showingStartPage && (
                         <>
-                          {supportsGraph && !supportsLogs && <GraphContainer width={width} exploreId={exploreId} />}
-                          {supportsTable && <TableContainer exploreId={exploreId} onClickCell={this.onClickLabel} />}
-                          {supportsLogs && (
+                          {mode === ExploreMode.Metrics && <GraphContainer width={width} exploreId={exploreId} />}
+                          {mode === ExploreMode.Metrics && (
+                            <TableContainer exploreId={exploreId} onClickCell={this.onClickLabel} />
+                          )}
+                          {mode === ExploreMode.Logs && (
                             <LogsContainer
                               width={width}
                               exploreId={exploreId}
-                              onChangeTime={this.onChangeTime}
                               onClickLabel={this.onClickLabel}
                               onStartScanning={this.onStartScanning}
                               onStopScanning={this.onStopScanning}
@@ -241,10 +286,11 @@ export class Explore extends React.PureComponent<ExploreProps> {
   }
 }
 
-function mapStateToProps(state: StoreState, { exploreId }) {
+function mapStateToProps(state: StoreState, { exploreId }: ExploreProps) {
   const explore = state.explore;
   const { split } = explore;
   const item: ExploreItemState = explore[exploreId];
+  const timeZone = getTimeZone(state.user);
   const {
     StartPage,
     datasourceError,
@@ -252,13 +298,39 @@ function mapStateToProps(state: StoreState, { exploreId }) {
     datasourceLoading,
     datasourceMissing,
     initialized,
-    range,
     showingStartPage,
-    supportsGraph,
-    supportsLogs,
-    supportsTable,
     queryKeys,
+    urlState,
+    update,
+    queryErrors,
+    isLive,
+    supportedModes,
+    mode,
   } = item;
+
+  const { datasource, queries, range: urlRange, mode: urlMode, ui } = (urlState || {}) as ExploreUrlState;
+  const initialDatasource = datasource || store.get(lastUsedDatasourceKeyForOrgId(state.user.orgId));
+  const initialQueries: DataQuery[] = ensureQueries(queries);
+  const initialRange = urlRange ? getTimeRangeFromUrl(urlRange, timeZone).raw : DEFAULT_RANGE;
+
+  let newMode: ExploreMode;
+  if (supportedModes.length) {
+    const urlModeIsValid = supportedModes.includes(urlMode);
+    const modeStateIsValid = supportedModes.includes(mode);
+
+    if (urlModeIsValid) {
+      newMode = urlMode;
+    } else if (modeStateIsValid) {
+      newMode = mode;
+    } else {
+      newMode = supportedModes[0];
+    }
+  } else {
+    newMode = [ExploreMode.Metrics, ExploreMode.Logs].includes(urlMode) ? urlMode : ExploreMode.Metrics;
+  }
+
+  const initialUI = ui || DEFAULT_UI_STATE;
+
   return {
     StartPage,
     datasourceError,
@@ -266,24 +338,30 @@ function mapStateToProps(state: StoreState, { exploreId }) {
     datasourceLoading,
     datasourceMissing,
     initialized,
-    range,
     showingStartPage,
     split,
-    supportsGraph,
-    supportsLogs,
-    supportsTable,
     queryKeys,
+    update,
+    initialDatasource,
+    initialQueries,
+    initialRange,
+    mode: newMode,
+    initialUI,
+    queryErrors,
+    isLive,
   };
 }
 
 const mapDispatchToProps = {
   changeSize,
-  changeTime,
   initializeExplore,
   modifyQueries,
+  reconnectDatasource,
+  refreshExplore,
   scanStart,
   scanStopAction,
   setQueries,
+  updateTimeRange,
 };
 
 export default hot(module)(
@@ -291,4 +369,4 @@ export default hot(module)(
     mapStateToProps,
     mapDispatchToProps
   )(Explore)
-);
+) as React.ComponentType<{ exploreId: ExploreId }>;
