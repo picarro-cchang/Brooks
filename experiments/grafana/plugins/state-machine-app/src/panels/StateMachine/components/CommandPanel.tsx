@@ -2,7 +2,7 @@ import React, {Component, PureComponent} from 'react';
 import {CommandPanelOptions} from './../types';
 
 class CommandPanel extends PureComponent<CommandPanelOptions> {
-    classNameOpt = { DISABLED:"btn-inverse disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-success" }
+    classNameOpt = { DISABLED:"btn-inverse disabled command-disabled", READY: "btn-outline-success", ACTIVE:"btn-green" }
 
     getDisabled = (element: string): boolean => {
         let disabled = true;

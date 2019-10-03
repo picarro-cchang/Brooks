@@ -37,7 +37,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
                         <div className="col-sm-12">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load_cancel"})}
-                                    className={"btn btn-block btn-xlarge btn-danger"}>
+                                    className={"btn btn-block btn-xlarge btn-cancel"}>
                                 Cancel
                             </button>
                         </div>
