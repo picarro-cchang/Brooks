@@ -44,6 +44,7 @@ class ControllerService(ServiceTemplate):
                     pass
 
     async def on_startup(self, app):
+        log.info("controller service is starting up")
         self.tasks = []
         self.app['websockets'] = []
         self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
@@ -54,9 +55,7 @@ class ControllerService(ServiceTemplate):
             task.cancel()
         for ws in app['websockets']:
             await ws.close(code=1001, message='Server shutdown')
-
-    async def on_cleanup(self, app):
-        print("ControllerService is cleaning up")
+        log.info("controller service is shutting down")
 
     async def handle_errors(self, request):
         """

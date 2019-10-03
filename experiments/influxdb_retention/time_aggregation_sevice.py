@@ -5,8 +5,10 @@ from aiohttp import web
 from aioinflux import InfluxDBClient, iterpoints
 
 import experiments.influxdb_retention.duration_tools as dt
+from experiments.LOLogger.LOLoggerClient import LOLoggerClient
 from experiments.common.service_template import ServiceTemplate
 
+log = LOLoggerClient(client_name="TimeAggregationService", verbose=True)
 
 class TimeAggregationService(ServiceTemplate):
     def __init__(self):
@@ -22,13 +24,14 @@ class TimeAggregationService(ServiceTemplate):
         self.app.router.add_route("POST", "/query", self.query)
 
     async def on_startup(self, app):
+        log.info("time aggregation service is starting up")
         db_config = self.app['farm'].config.get_time_series_database()
         self.client = InfluxDBClient(host=db_config["server"], port=db_config["port"], db=db_config["name"])
         self.default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
         self.default_durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.default_durations]
 
     async def on_shutdown(self, app):
-        print("Time Aggregation Service is shutting down")
+        log.info("time aggregation service is shutting down")
 
     async def health_check(self, request):
         return web.Response(text='This datasource is healthy.')

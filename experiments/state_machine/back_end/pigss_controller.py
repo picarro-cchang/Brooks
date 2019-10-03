@@ -795,13 +795,26 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["identify"], UiStatus.ACTIVE)
+            self.set_status(["standby"], UiStatus.DISABLED)
+            self.set_status(["run"], UiStatus.DISABLED)
+            self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["plan_run"], UiStatus.DISABLED)
+            self.set_status(["plan_loop"], UiStatus.DISABLED)
+            self.set_status(["reference"], UiStatus.DISABLED)
+            for bank in self.all_banks:
+                self.set_status(["clean", bank], UiStatus.DISABLED)
             self.banks_to_process = self.all_banks.copy()
             self.bank = self.banks_to_process.pop(0)
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["identify"], UiStatus.READY)
+            self.set_status(["standby"], UiStatus.READY)
+            self.set_status(["run"], UiStatus.READY)
+            self.set_status(["plan"], UiStatus.READY)
+            self.set_status(["reference"], UiStatus.READY)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
+                self.set_status(["clean", bank], UiStatus.READY)
                 self.set_status(["bank", bank], UiStatus.READY)
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -814,7 +827,7 @@ class PigssController(Ahsm):
     def _identify1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("IDENT", [self.bank])))
+            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("IDENTIFY", [self.bank])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             return self.tran(self._identify2)
@@ -827,8 +840,8 @@ class PigssController(Ahsm):
             self.set_status(["bank", self.bank], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            # log.info(f"In identify2: {msg['status'][self.bank-1]['STATE']}")
-            if e.value[self.bank]['STATE'].startswith('ident'):
+            # log.info(f"In identify2: {msg['status'][self.bank-1]['OPSTATE']}")
+            if e.value[self.bank]['OPSTATE'].startswith('ident'):
                 return self.tran(self._identify3)
         return self.super(self._identify)
 
@@ -836,8 +849,8 @@ class PigssController(Ahsm):
     def _identify3(self, e):
         sig = e.signal
         if sig == Signal.PIGLET_STATUS:
-            # log.info(f"In identify3: {msg['status'][self.bank-1]['STATE']}")
-            if e.value[self.bank]['STATE'] == 'standby':
+            # log.info(f"In identify3: {msg['status'][self.bank-1]['OPSTATE']}")
+            if e.value[self.bank]['OPSTATE'] == 'standby':
                 return self.tran(self._identify4)
         return self.super(self._identify)
 
@@ -845,7 +858,7 @@ class PigssController(Ahsm):
     def _identify4(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CHANAVAIL?", [self.bank])))
+            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("ACTIVECH?", [self.bank])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             msg = int(e.value[self.bank])  # Integer representing available channels
@@ -1383,7 +1396,7 @@ class PigssController(Ahsm):
                 if self.reference_active:
                     self.set_status(["clean", bank], UiStatus.READY)
                     self.set_status(["bank", bank], UiStatus.REFERENCE)
-                elif e.value[bank]['STATE'] == "clean":
+                elif e.value[bank]['OPSTATE'] == "clean":
                     self.set_status(["clean", bank], UiStatus.CLEAN)
                     self.set_status(["bank", bank], UiStatus.CLEAN)
                 else:
@@ -1517,7 +1530,7 @@ class PigssController(Ahsm):
                 if self.reference_active:
                     self.set_status(["clean", bank], UiStatus.READY)
                     self.set_status(["bank", bank], UiStatus.REFERENCE)
-                elif e.value[bank]['STATE'] == "clean":
+                elif e.value[bank]['OPSTATE'] == "clean":
                     self.set_status(["clean", bank], UiStatus.CLEAN)
                     self.set_status(["bank", bank], UiStatus.CLEAN)
                 else:
