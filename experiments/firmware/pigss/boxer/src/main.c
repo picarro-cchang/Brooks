@@ -173,7 +173,9 @@ int main(void) {
 
   logger_setsystem( "ltc2607" );
 
-  logger_setsystem( "lm75" );
+  // Enable temperature sensor logging
+  logger_setsystem( "lm75a" );
+  
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
   logger_setsystem( "pressure" );
@@ -258,6 +260,7 @@ int main(void) {
   // pressure_mpr_trigger_task();
 
   // cs_manifold_a_sr_noe(1);
+  
 
   // The main loop
   for(;;) {

@@ -15,7 +15,7 @@ REVCODE = 1.1.3
 #   error -- You want to know about this
 #
 # LOG_LEVEL = debug
-LOG_LEVEL = error
+LOG_LEVEL = debug
 
 # MCU name
 #
@@ -149,6 +149,9 @@ SRC += aloha.c
 
 # Identify module to help with channel identification
 SRC += identify.c
+
+# LM75A temperature sensor
+SRC += lm75a.c
 
 
 # List C++ source files here. (C dependencies are automatically generated.)

@@ -29,7 +29,8 @@
 // Provides functions for working with the TCA9548 I2C switch
 #include "tca954xa.h"
 
-
+// Provides functions for working with the LM75A temperature sensor
+#include "lm75a.h"
 
 // Provides setter and getter functions for the system state structure
 #include "system.h"
@@ -74,7 +75,9 @@ int8_t vernon_init(void) {
     logger_msg_p("vernon", log_level_ERROR, PSTR("Vernon is not connected"));
     retval += -1;
   }
-  
+
+  uint8_t temp_reading = lm75a_get_temperature(VERNON_I2C_TSENSOR_ADDRESS);
+  logger_msg_p("vernon", log_level_DEBUG, PSTR("Vernon temp is %i C"), temp_reading);
 
   return retval;
 }

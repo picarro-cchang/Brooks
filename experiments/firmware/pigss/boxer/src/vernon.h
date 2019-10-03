@@ -10,6 +10,8 @@
 
 #define VERNON_I2C_GPIO_ADDRESS 0x74
 
+#define VERNON_I2C_TSENSOR_ADDRESS 0x48
+
 // Valve bitshifts in the GPIO register
 #define VERNON_CLEAN_SOLENOID_SHIFT 0
 #define VERNON_SPARE_SOLENOID_SHIFT 1

@@ -92,7 +92,7 @@ logger_system_t system_array[] ={
      14
     },
     // The temperature sensor
-    {"lm75",
+    {"lm75a",
      15
     },
     // The main loop
