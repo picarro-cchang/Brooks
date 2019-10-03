@@ -175,7 +175,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                         this.props.ws_sender({element: "plan_delete"});
                                         this.setState({isChanged: true});
                                     }}
-                                    className={"btn btn-block btn-danger btn-group"}>
+                                    className={"btn btn-block btn-cancel btn-group"}>
                                 Delete
                             </button>
                         </div>
@@ -185,7 +185,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_ok"})
                                     }}
-                                    className={"btn btn-block btn-success btn-group"}>
+                                    className={"btn btn-block btn-green btn-group"}>
                                 OK
                             </button>
                         </div>
@@ -194,7 +194,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_cancel"});
                                     }}
-                                    className={"btn btn-block btn-danger btn-group"} >
+                                    className={"btn btn-block btn-cancel btn-group"} >
                                 Cancel
                             </button>
                         </div>

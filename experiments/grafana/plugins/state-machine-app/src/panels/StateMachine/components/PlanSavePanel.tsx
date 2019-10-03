@@ -53,14 +53,14 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
                         <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save_cancel"})}
-                                    className={"btn btn-block btn-med btn-danger"}>
+                                    className={"btn btn-block btn-med btn-cancel"}>
                                 Cancel
                             </button>
                         </div>
                         <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save_ok"})}
-                                    className={"btn btn-block btn-med btn-success"}>
+                                    className={"btn btn-block btn-med btn-green"}>
                                 OK
                             </button>
                         </div>

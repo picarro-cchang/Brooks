@@ -168,7 +168,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                     <div className="row text-center button-edit" style={{marginTop: "10px", marginBottom: "10px", alignContent: "center"}}>
                         <div className="col-sm-4">
                             <button type="submit"
-                                    className={"btn btn-block btn-success btn-edit-panel"}  >
+                                    className={"btn btn-block btn-green btn-edit-panel"}  >
 
                                 Ok
                             </button>
@@ -178,7 +178,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                                     onClick={e => {
                                         this.props.ws_sender({element: "edit_cancel"});
                                     }}
-                                    className={"btn btn-block btn-danger btn-edit-panel"}>
+                                    className={"btn btn-block btn-cancel btn-edit-panel"}>
                                 Cancel
                             </button>
                         </div>
