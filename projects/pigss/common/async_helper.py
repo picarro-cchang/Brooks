@@ -10,7 +10,7 @@
 #   Specify any related information.
 #
 # HISTORY:
-#   3-Oct-2019  sze  Initial check-in from experiments
+#   3-Oct-2019  sze  Initial check in from experiments
 #
 #  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
 #

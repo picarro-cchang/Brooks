@@ -53,12 +53,6 @@ Settings:
   madmapper_startup_delay: 30
 
 Services:
-  - Name: RpcServer
-    RPC_Port: 32769
-    Parameters: # These are passed to the constructor
-      alpha: 1
-      bravo: 2
-      charlie: 3
   - Name: DBDecimator
     RPC_Port: 33052
     Parameters: # These are passed to the constructor

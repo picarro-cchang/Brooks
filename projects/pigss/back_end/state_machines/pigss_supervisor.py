@@ -33,22 +33,18 @@ from back_end.database_access.influx_database import InfluxDBWriter
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.madmapper.madmapper import MadMapper
 from back_end.mfc_driver.alicat.alicat_driver import AlicatDriver
-# from back_end.piglet.piglet_driver import PigletDriver
+from back_end.piglet.piglet_driver import PigletDriver
 from simulation.analyzer_simulator import AnalyzerSimulator
 from back_end.state_machines.pigss_payloads import SystemConfiguration
 from common import CmdFIFO
 from common.async_helper import log_async_exception
 from common.rpc_ports import rpc_ports
-from experiments.IDriver.IDriver import \
-    PicarroAnalyzerDriver  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
+from back_end.analyzer_driver.picarro_analyzer_driver import PicarroAnalyzerDriver
 from experiments.influxdb_retention.DB_Decimator import \
     DBDecimatorFactory  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
 from experiments.relay_driver.numato.numato_driver import \
     NumatoDriver  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
-from experiments.RemoteAsync.RpcServer import \
-    RpcServer  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
-from experiments.state_machine.back_end.dummy_piglet_driver import \
-    PigletDriver  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
+from simulation.sim_piglet_driver import SimPigletDriver
 
 port = rpc_ports.get('madmapper')
 ping_interval = 2.0
@@ -309,7 +305,8 @@ class PigssSupervisor(Ahsm):
             if dev_params['Driver'] == 'PigletDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = f"Piglet_{dev_params['Bank_ID']}"
-                    wrapped_process = ProcessWrapper(PigletDriver, dev_params['RPC_Port'], name, dev_name=key)
+                    DriverClass = SimPigletDriver if self.simulation else PigletDriver
+                    wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
                                                 name,
@@ -374,18 +371,7 @@ class PigssSupervisor(Ahsm):
         db_config = self.farm.config.get_time_series_database()
         for service in self.service_list:
             name = service["Name"]
-            if name == "RpcServer":
-                if at_start or not self.wrapped_processes[name].process.is_alive():
-                    rpc_port = service["RPC_Port"]
-                    wrapped_process = ProcessWrapper(RpcServer, rpc_port, name, dev_name="Service")
-                    await self.register_process(name,
-                                                wrapped_process,
-                                                name,
-                                                ping_interval,
-                                                at_start,
-                                                rpc_port=rpc_port,
-                                                **service.get("Parameters", {}))
-            elif name == "DBDecimator":
+            if name == "DBDecimator":
                 if at_start or not self.wrapped_processes[name].process.is_alive():
 
                     def DBDecimator(**k):
