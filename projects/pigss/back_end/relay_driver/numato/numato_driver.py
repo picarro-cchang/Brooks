@@ -6,7 +6,7 @@ import time
 import serial
 
 import common.CmdFIFO as CmdFIFO
-from lologger.lologger_client import LOLoggerClient
+from back_end.lologger.lologger_client import LOLoggerClient
 from common.rpc_ports import rpc_ports
 
 GPIO_MODES = ["D_IN", "D_OUT", "A_IN"]
@@ -17,13 +17,13 @@ class UsbRelay:
 
     def __init__(self, port_name, relay_count=4, gpio_count=4, debug=False, logger=None):
         """Init function."""
-        self.portName = port_name
+        self.port_name = port_name
         self.debug = debug
-        self.relayCount = relay_count
-        self.gpioCount = gpio_count
-        self.gpioModes = []
-        self.gpioOutputStatus = []
-        self.serPort = serial.Serial(port=self.portName,
+        self.relay_count = relay_count
+        self.gpio_count = gpio_count
+        self.gpio_modes = []
+        self.gpio_output_status = []
+        self.serial_port = serial.Serial(port=self.port_name,
                                      baudrate=19200,
                                      bytesize=serial.EIGHTBITS,
                                      parity=serial.PARITY_NONE,
@@ -43,55 +43,55 @@ class UsbRelay:
             Start by calling this method, it sets relays off and GPIO to Digital Out LOW.
         """
         # set all relays off
-        for i in range(self.relayCount):
+        for i in range(self.relay_count):
             self.set_relay(i, False)
         # set all gpio off
-        for i in range(self.gpioCount):
-            self.gpioModes.append("D_OUT")
-            self.gpioOutputStatus.append(False)
+        for i in range(self.gpio_count):
+            self.gpio_modes.append("D_OUT")
+            self.gpio_output_status.append(False)
             self.set_gpio_status(i, False)
 
     def __wait_for_echo(self, command):
-        while self.serPort.readline().decode().strip().replace(">", "") != command:
+        while self.serial_port.readline().decode().strip().replace(">", "") != command:
             time.sleep(0.001)
 
     def __send(self, command, answer_needed=False, wait_after=0.01):
-        self.serPort.write(str.encode("{}\r".format(command)))
+        self.serial_port.write(str.encode("{}\r".format(command)))
         self.__wait_for_echo(command)
         time.sleep(wait_after)
 
         if answer_needed:
-            answer_line = self.serPort.readline().decode().strip()
+            answer_line = self.serial_port.readline().decode().strip()
             time.sleep(wait_after)
             return answer_line
 
-    def get_relay_status(self, relayNum):
+    def get_relay_status(self, relay_num):
         """
             Returns relay status as boolean.
-            relayNum (int)
+            relay_num (int)
         """
-        if relayNum >= self.relayCount:
-            raise ValueError("relayNum is bigger than relayCount")
-        responce = self.__send("relay read {}".format(relayNum), True)
+        if relay_num >= self.relay_count:
+            raise ValueError("relay_num is bigger than relay_count")
+        responce = self.__send("relay read {}".format(relay_num), True)
         return responce == "on"
 
-    def set_relay(self, relayNum, status):
+    def set_relay(self, relay_num, status):
         """
             Sets relay on or off.
-            relayNum (int)
+            relay_num (int)
             status (bool)
         """
-        if relayNum >= self.relayCount:
-            raise ValueError("relayNum is bigger than relayCount")
+        if relay_num >= self.relay_count:
+            raise ValueError("relay_num is bigger than relay_count")
         key = "on" if status else "off"
-        self.__send("relay {} {}".format(key, relayNum))
+        self.__send("relay {} {}".format(key, relay_num))
 
-    def flip_relay(self, relayNum):
+    def flip_relay(self, relay_num):
         """
             Flips relay to an opposite state from current
-            relayNum (int)
+            relay_num (int)
         """
-        self.set_relay(relayNum, not self.get_relay_status(relayNum))
+        self.set_relay(relay_num, not self.get_relay_status(relay_num))
 
     def set_id(self, newId):
         """
@@ -108,90 +108,90 @@ class UsbRelay:
         """
         return self.__send("id get", True)
 
-    def do_disco(self, relayNum=0, times=8, delay=0.05):
+    def do_disco(self, relay_num=0, times=8, delay=0.05):
         """
             Disco
         """
         for i in range(times):
-            self.flip_relay(relayNum)
+            self.flip_relay(relay_num)
             time.sleep(delay)
 
     def do_full_disco(self, cycles):
         for k in range(cycles):
             self.logger.info(f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
-            for i in range(self.relayCount):
+            for i in range(self.relay_count):
                 self.do_disco(i)
 
-    def __gpio_check(self, gpioNum, required_mode=None):
+    def __gpio_check(self, gpio_num, required_mode=None):
         """
             Checks if GPIO requested GPIO exists and is in the right state.
-            gpioNum (int)
+            gpio_num (int)
             required_mode [GPIO_MODES]
         """
-        if gpioNum >= self.gpioCount:
-            raise ValueError("gpioNum is bigger than gpioCount")
+        if gpio_num >= self.gpio_count:
+            raise ValueError("gpio_num is bigger than gpio_count")
         if required_mode is not None:
-            if self.gpioModes[gpioNum] != required_mode:
+            if self.gpio_modes[gpio_num] != required_mode:
                 raise ValueError("current gpio mode is wrong, should be {}".format(required_mode))
 
-    def get_gpio_mode(self, gpioNum):
+    def get_gpio_mode(self, gpio_num):
         """
             Returns current mode of the requested GPIO.
-            gpioNum (int)
+            gpio_num (int)
         """
-        self.__gpio_check(gpioNum)
-        return self.gpioModes[gpioNum]
+        self.__gpio_check(gpio_num)
+        return self.gpio_modes[gpio_num]
 
-    def set_gpio_mode(self, gpioNum, mode):
+    def set_gpio_mode(self, gpio_num, mode):
         """
             Sets requested GPIO to a requested mocde.
-            gpioNum (int)
+            gpio_num (int)
             mode [GPIO_MODES]
         """
-        self.__gpio_check(gpioNum)
+        self.__gpio_check(gpio_num)
         if mode not in GPIO_MODES:
             raise ValueError("mode not supported")
         if mode in ["D_IN", "A_IN"]:
-            self.gpioOutputStatus[gpioNum] = False
-        self.gpioModes[gpioNum] = mode
+            self.gpio_output_status[gpio_num] = False
+        self.gpio_modes[gpio_num] = mode
 
-    def set_gpio_status(self, gpioNum, status):
+    def set_gpio_status(self, gpio_num, status):
         """
             If GPIO is in D_OUT mode - sets it to HIGH or LOW.
-            gpioNum (int)
+            gpio_num (int)
             status (bool)
         """
-        self.__gpio_check(gpioNum, required_mode="D_OUT")
+        self.__gpio_check(gpio_num, required_mode="D_OUT")
         if not isinstance(status, bool):
             raise ValueError("status should be boolean")
         key = "set" if status else "clear"
-        self.__send("gpio {} {}".format(key, gpioNum))
-        self.gpioOutputStatus[gpioNum] = status
+        self.__send("gpio {} {}".format(key, gpio_num))
+        self.gpio_output_status[gpio_num] = status
 
-    def get_gpio_status(self, gpioNum):
+    def get_gpio_status(self, gpio_num):
         """
             If GPIO is in D_OUT mode - returns it's status as bool, which has been previously set.
-            gpioNum (int)
+            gpio_num (int)
         """
-        self.__gpio_check(gpioNum, required_mode="D_OUT")
-        return self.gpioOutputStatus[gpioNum]
+        self.__gpio_check(gpio_num, required_mode="D_OUT")
+        return self.gpio_output_status[gpio_num]
 
-    def get_gpio_reading(self, gpioNum):
+    def get_gpio_reading(self, gpio_num):
         """
             If GPIO is in D_IN mode - returns it's reading.
-            gpioNum (int)
+            gpio_num (int)
         """
-        self.__gpio_check(gpioNum, required_mode="D_IN")
-        responce = self.__send("gpio read {}".format(gpioNum), True)
+        self.__gpio_check(gpio_num, required_mode="D_IN")
+        responce = self.__send("gpio read {}".format(gpio_num), True)
         return responce == "on"
 
-    def get_gpio_analog_reading(self, gpioNum):
+    def get_gpio_analog_reading(self, gpio_num):
         """
             If GPIO is in A_IN mode - returns it's reading.
-            gpioNum (int)
+            gpio_num (int)
         """
-        self.__gpio_check(gpioNum, required_mode="A_IN")
-        return self.__send("adc read {}".format(gpioNum), True)
+        self.__gpio_check(gpio_num, required_mode="A_IN")
+        return self.__send("adc read {}".format(gpio_num), True)
 
 
 class NumatoDriver(object):

@@ -16,14 +16,16 @@ import sys
 import time
 import math
 import datetime
+import traceback
 import threading
 from influxdb import InfluxDBClient
 
-import duration_tools as dt
+import common.duration_tools as dt
 import common.CmdFIFO as CmdFIFO
-from rt_policy_manager import RT_policy_manager
-from lologger.lologger_client import LOLoggerClient
 from common.rpc_ports import rpc_ports
+from back_end.influxdb_retention.rt_policy_manager import RTPolicyManager
+from back_end.lologger.lologger_client import LOLoggerClient
+
 
 influx_comparison_operators = ["=", "<>", "!=", ">", ">=", "<", "<="]
 default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
@@ -75,8 +77,9 @@ class DBDecimatorFactory(object):
 
         try:
             db_decimator = DBDecimator(**settings)
-        except Exception as e:
-            print(e)
+        # if creating a DBDecimator failed for any possible reason - return False
+        except Exception:
+            print(traceback.format_exc()) # this cant be a log message since lologger_client is not initiated yet
             return False
         return db_decimator
 
@@ -87,7 +90,7 @@ class DBDecimator(object):
         astronomer and linguist.
         It's purpose is to compress raw data from influxDB into data points with lower resolution, like
         instead of having data points for each second - data point for each 15 seconds, 1,5 or 15 minutes, etc.
-        mulitple data resolutions allows more flixible data retention policies, for example:
+        mulitple data resolutions allows more flexible data retention policies, for example:
            delete raw data after 5 years,
            delete 15s resolution data after 10 years,
            delete 1m resolution data after 15 years, etc.
@@ -131,7 +134,7 @@ class DBDecimator(object):
         self.main_client.switch_database(self.db_name)
 
         # compare passed retention policies to existed and fix existed if needed
-        self.rt_policy_manager = RT_policy_manager(
+        self.rt_policy_manager = RTPolicyManager(
             client=self.main_client, logger=self.logger)
 
         if retention_policies is not None:
@@ -216,8 +219,8 @@ class DBDecimator(object):
                 return self.add_raw_data_filters(value)
             if key[0] == "retention_policies":
                 return self.rt_policy_manager.create_retention_policy(key[1], value)
-        except Exception as e:  # todo specify error
-            self.logger.error(e)
+        except Exception as e:  # if fails for any reason - return False, don't fail the process
+            self.logger.error(f"Error catched while setting new setting {traceback.format_exc()}")
             return False
         return False
 
@@ -255,7 +258,6 @@ class DBDecimator(object):
                 db_port=self.db_port,
                 master_measurement=self.master_measurement,
                 rt_policy_manager=self.rt_policy_manager,
-                # durations=self.durations,
                 time_sleep=self.time_sleep,
                 logger=self.logger)
             self.thread_created = True
@@ -278,7 +280,7 @@ class DBDecimator(object):
 
     def stop_decimator_loop_thread(self):
         """
-        DEFINE AND TEST THIS!!!!
+            Finish the deimator loop
         """
         self.logger.info("Decimator instance closed")
         self.DBDecimatorThread.stop()
@@ -290,7 +292,12 @@ class DBDecimator(object):
         self.server.register_function(self.pause_decimator_loop_thread)
         self.server.register_function(self.stop_decimator_loop_thread)
 
-        # not something we need at least in Rev 1
+        # rpc calls below is something we don't need in Rev 1,
+        # potentially it is possible that user might
+        # want this functionality, but it would be challenging
+        # to solve all the logics required for custom
+        # user input, therefore it is not a part of Rev A
+        
         # self.server.register_function(self.get_durations)
         # self.server.register_function(self.remove_durations)
         # self.server.register_function(self.remove_all_durations)
@@ -407,7 +414,6 @@ class DBDecimatorThread(threading.Thread):
             db_port,
             master_measurement,
             rt_policy_manager,
-            # durations,
             logger=None,
             time_sleep=5):
         threading.Thread.__init__(self, name="DBDecimatorThread")
@@ -449,7 +455,7 @@ class DBDecimatorThread(threading.Thread):
 
     def to_rp(self, measurement):
         """
-            Convert measurement name to include retention policie if needed.
+            Convert measurement name to include retention policy if needed.
             Convention is that retention policy must have same name as the measurement it belongs to.
             Respectively, each retention policy can have only one measurement in it.
         """
@@ -459,9 +465,9 @@ class DBDecimatorThread(threading.Thread):
             # check if valid
             dot = measurement.index(".")
             if not measurement[:dot] == measurement[dot + 1:]:
-                # if '.' is part of the measurement, it means that the part before it - a retentiona policy name
+                # if '.' is part of the measurement, it means that the part before it - a retention policy name
                 # current convention is that retention policy should have same name as measurement in it
-                # only one measurement allowed per retention policy
+                # only one measurement is allowed per retention policy
                 raise ValueError(
                     f"Measurement '{measurement}' has '.' in it, but naming convention is bad")
             return measurement
@@ -477,7 +483,6 @@ class DBDecimatorThread(threading.Thread):
         rs = self.client.query(query, epoch='ms')
         for key, gen in rs.items():
             for row in gen:
-                # return (row["time"])
                 return row["time"] if row["time"] else 0
         return 0
 
@@ -694,8 +699,6 @@ def parse_arguments():
     parser.add_argument('-n', '--db_name',
                         help='Database name', default="pigss_data")
 
-    # parser.add_argument('-v', '--verbose', help='Verbose', default=False, action="store_true")
-
     args = parser.parse_args()
     return args
 
@@ -725,8 +728,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-# todo
-#   test on real data when there will be one
-#   conditions - done, need test
-#   sql injection prevention and other bulletproof
-#   define default retention policies
+# TODO test on real data when there will be one
+# TODO conditions - done, need test
+# TODO sql injection prevention and other bulletproof
+# TODO define default retention policies

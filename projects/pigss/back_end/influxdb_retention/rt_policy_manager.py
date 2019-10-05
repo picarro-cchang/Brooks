@@ -4,11 +4,11 @@
 """
 
 from influxdb import InfluxDBClient
-import duration_tools as dt
-from lologger.lologger_client import LOLoggerClient
+import common.duration_tools as dt
+from back_end.lologger.lologger_client import LOLoggerClient
 
 
-class RT_policy_manager(object):
+class RTPolicyManager(object):
     """
         Class to deal with retention policies.
     """
@@ -39,7 +39,7 @@ class RT_policy_manager(object):
 
     def create_retention_policy(self, name, duration="INF"):
         """
-            Method to create a retantion policy.
+            Method to create a retention policy.
             If retention policy with that name exists - it will alter it
         """
         if not dt.check_for_valid_literal_duration(duration):
@@ -102,7 +102,7 @@ class RT_policy_manager(object):
     def delete_retention_policy(self, name):
         """
             Delete retention policy with passed name.
-            That will delete all the data, that belongs to this retantion policy,
+            That will delete all the data, that belongs to this retention policy,
             so only use it if you are aware of what is the data do be dropped and you are sure.
         """
         self.logger.info(f"Droping retention policy {name}")
