@@ -219,8 +219,8 @@ class DBDecimator(object):
                 return self.add_raw_data_filters(value)
             if key[0] == "retention_policies":
                 return self.rt_policy_manager.create_retention_policy(key[1], value)
-        except Exception as e:  # if fails for any reason - return False, don't fail the process
-            self.logger.error(f"Error catched while setting new setting {traceback.format_exc()}")
+        except Exception:  # if fails for any reason - return False, don't fail the process
+            self.logger.error(f"Unhandled exception while setting new setting {traceback.format_exc()}")
             return False
         return False
 
@@ -348,7 +348,7 @@ class DBDecimator(object):
             self.durations = []
             self.generate_durations_meta()
         self.logger.info(
-            f"All durations for data compressing has been removed")
+            f"All durations for data compressing have been removed")
 
     def add_durations(self, durations):
         """
@@ -378,7 +378,7 @@ class DBDecimator(object):
         """Remove all current filters, which are being applied to a raw data during decimation."""
         with self.compression_in_progress_lock:
             self.raw_filter_conditions = []
-        self.logger.info("All raw data condition were removed")
+        self.logger.info("All raw data conditions have been removed")
 
     def add_raw_data_filter(self, condition):
         """

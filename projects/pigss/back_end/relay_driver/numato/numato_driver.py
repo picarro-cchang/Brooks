@@ -56,7 +56,7 @@ class UsbRelay:
             time.sleep(0.001)
 
     def __send(self, command, answer_needed=False, wait_after=0.01):
-        self.serial_port.write(str.encode("{}\r".format(command)))
+        self.serial_port.write(str.encode(f"{command}\r"))
         self.__wait_for_echo(command)
         time.sleep(wait_after)
 
@@ -72,7 +72,7 @@ class UsbRelay:
         """
         if relay_num >= self.relay_count:
             raise ValueError("relay_num is bigger than relay_count")
-        responce = self.__send("relay read {}".format(relay_num), True)
+        responce = self.__send(f"relay read {relay_num}", True)
         return responce == "on"
 
     def set_relay(self, relay_num, status):
@@ -84,7 +84,7 @@ class UsbRelay:
         if relay_num >= self.relay_count:
             raise ValueError("relay_num is bigger than relay_count")
         key = "on" if status else "off"
-        self.__send("relay {} {}".format(key, relay_num))
+        self.__send(f"relay {key} {relay_num}")
 
     def flip_relay(self, relay_num):
         """
@@ -93,14 +93,14 @@ class UsbRelay:
         """
         self.set_relay(relay_num, not self.get_relay_status(relay_num))
 
-    def set_id(self, newId):
+    def set_id(self, new_id):
         """
             Sets device ID.
-            newID (string)
+            new_iD (string)
         """
-        if len(newId) != 8:
+        if len(new_id) != 8:
             raise ValueError("new id must be exactly 8 chars")
-        self.__send("id set {}".format(newId))
+        self.__send(f"id set {new_id}")
 
     def get_id(self):
         """
@@ -132,7 +132,7 @@ class UsbRelay:
             raise ValueError("gpio_num is bigger than gpio_count")
         if required_mode is not None:
             if self.gpio_modes[gpio_num] != required_mode:
-                raise ValueError("current gpio mode is wrong, should be {}".format(required_mode))
+                raise ValueError(f"current gpio mode is wrong, should be {required_mode}")
 
     def get_gpio_mode(self, gpio_num):
         """
@@ -165,7 +165,7 @@ class UsbRelay:
         if not isinstance(status, bool):
             raise ValueError("status should be boolean")
         key = "set" if status else "clear"
-        self.__send("gpio {} {}".format(key, gpio_num))
+        self.__send(f"gpio {key} {gpio_num}")
         self.gpio_output_status[gpio_num] = status
 
     def get_gpio_status(self, gpio_num):
@@ -182,7 +182,7 @@ class UsbRelay:
             gpio_num (int)
         """
         self.__gpio_check(gpio_num, required_mode="D_IN")
-        responce = self.__send("gpio read {}".format(gpio_num), True)
+        responce = self.__send(f"gpio read {gpio_num}", True)
         return responce == "on"
 
     def get_gpio_analog_reading(self, gpio_num):
@@ -191,7 +191,7 @@ class UsbRelay:
             gpio_num (int)
         """
         self.__gpio_check(gpio_num, required_mode="A_IN")
-        return self.__send("adc read {}".format(gpio_num), True)
+        return self.__send(f"adc read {gpio_num}", True)
 
 
 class NumatoDriver(object):
@@ -288,7 +288,7 @@ def main():
     if args.name:
         rpc_server_name = args.name
     else:
-        rpc_server_name = "NUMATO_{}".format(args.serial_port_name)
+        rpc_server_name = f"NUMATO_{args.serial_port_name}"
 
     logger = LOLoggerClient(client_name=f"RPC_NUMATO_{args.serial_port_name}", verbose=True)
 
@@ -305,7 +305,7 @@ def main():
     try:
         numato_driver.rpc_serve_forever()
     except KeyboardInterrupt:
-        logger.info("RPC server has ended it's lifecycle after brutal KeyboardInterrupt, good job.")
+        logger.info("RPC server has ended from a Keyboard Interrupt.")
 
     logger.info("RPC server has ended")
 
