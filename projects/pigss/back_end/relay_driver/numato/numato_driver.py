@@ -96,7 +96,7 @@ class UsbRelay:
     def set_id(self, new_id):
         """
             Sets device ID.
-            new_iD (string)
+            new_id (string)
         """
         if len(new_id) != 8:
             raise ValueError("new id must be exactly 8 chars")
