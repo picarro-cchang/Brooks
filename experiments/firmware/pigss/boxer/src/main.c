@@ -175,7 +175,7 @@ int main(void) {
 
   // Enable temperature sensor logging
   logger_setsystem( "lm75a" );
-  
+
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
   logger_setsystem( "pressure" );
@@ -194,8 +194,6 @@ int main(void) {
 
   // Start the power board
   vernon_init();
-
-  
 
   // Start the metronome
   metronome_init();
@@ -237,10 +235,10 @@ int main(void) {
   // SUSPENDED tasks will never execute
 
   // Task 0 -- Trigger all the pressure sensors
-  // OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
+  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
 
   // Task 1 -- Read all the pressure sensors
-  // OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
 
   // Task 2 -- Check for USB communication
   OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
@@ -260,7 +258,6 @@ int main(void) {
   // pressure_mpr_trigger_task();
 
   // cs_manifold_a_sr_noe(1);
-  
 
   // The main loop
   for(;;) {

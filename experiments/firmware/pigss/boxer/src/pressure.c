@@ -39,7 +39,6 @@
 
 #include "topaz.h"
 
-
 #include "spi.h"
 
 // Provides ltc2601_write() for proportional DACs
@@ -71,7 +70,7 @@ uint32_t pressure_inlet_new_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
 // New smoothed pressure value for all outlets (uncalibrated)
-uint32_t pressure_outlet_new_counts[2] = {0ul,0ul}; 
+uint32_t pressure_outlet_new_counts[2] = {0ul,0ul};
 
 //*************** Calibrated (Pascals) data storage ****************//
 
@@ -96,9 +95,6 @@ uint32_t pressure_outlet_new_pascals[2] = {0ul,0ul};
 uint16_t pressure_dac_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
 
-
-
-
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   switch(channel) {
   case 1 :
@@ -120,27 +116,27 @@ int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
     cs_sw_dac_mux();
     ltc2601_write( &cs_topaz_a_target, 0x3, counts);
     pressure_dac_counts[3] = counts;
-    break;  
+    break;
   case 5 :
     cs_ne_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
     pressure_dac_counts[4] = counts;
-    break;  
+    break;
   case 6 :
     cs_se_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
     pressure_dac_counts[5] = counts;
-    break;  
+    break;
   case 7 :
     cs_nw_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
     pressure_dac_counts[6] = counts;
-    break;  
+    break;
   case 8 :
     cs_sw_dac_mux();
     ltc2601_write( &cs_topaz_b_target, 0x3, counts);
     pressure_dac_counts[7] = counts;
-    break;  
+    break;
   }
   return 0;
 }
@@ -197,7 +193,7 @@ void cmd_pressure_dac_set_5( command_arg_t *command_arg_ptr ) {
   if (topaz_is_connected('b')) {
     uint16_t setting = (command_arg_ptr -> uint16_arg);
     pressure_dac_set(5, setting);
-    command_ack();    
+    command_ack();
   } else {
     command_nack(NACK_COMMAND_FAILED);
     return;
@@ -208,7 +204,7 @@ void cmd_pressure_dac_set_6( command_arg_t *command_arg_ptr ) {
   if (topaz_is_connected('b')) {
     uint16_t setting = (command_arg_ptr -> uint16_arg);
     pressure_dac_set(6, setting);
-    command_ack();    
+    command_ack();
   } else {
     command_nack(NACK_COMMAND_FAILED);
     return;
@@ -291,7 +287,7 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
 }
 
 int8_t pressure_mpr_outlet_trigger(char board) {
-  logger_msg_p("pressure", log_level_DEBUG, PSTR("Triggering Topaz %s outlet"),board);
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Triggering Topaz %c outlet"),board);
   switch(board) {
   case 'a' :
     cs_outlet_mpr_mux();
@@ -308,19 +304,28 @@ int8_t pressure_mpr_outlet_trigger(char board) {
 
 int8_t pressure_mpr_trigger_cycle( void ) {
   uint8_t retval = 0;
-  // Trigger Topaz A inlets
-  for (uint8_t channel = 1; channel <= 5; channel++) {
-    retval += pressure_mpr_inlet_trigger(channel);
+  if (topaz_is_connected('a')) {
+    // Trigger Topaz A inlets
+    for (uint8_t channel = 1; channel <= 5; channel++) {
+      retval += pressure_mpr_inlet_trigger(channel);
+    }
+    // Trigger Topaz A outlet
+    retval += pressure_mpr_outlet_trigger('a');
+  } else {
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c triggers"),'a');
   }
-  // Trigger Topaz A outlet
-  retval += pressure_mpr_outlet_trigger('a');
-  
-  // Trigger Topaz B inlets
-  for (uint8_t channel = 5; channel <= 8; channel++) {
-    retval += pressure_mpr_inlet_trigger(channel);
+
+  if (topaz_is_connected('b')) {
+    // Trigger Topaz B inlets
+    for (uint8_t channel = 5; channel <= 8; channel++) {
+      retval += pressure_mpr_inlet_trigger(channel);
+    }
+    // Trigger Topaz B outlet
+    retval += pressure_mpr_outlet_trigger('b');
+  } else {
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c triggers"),'b');
   }
-  // Trigger Topaz B outlet
-  retval += pressure_mpr_outlet_trigger('b');
+
   return retval;
 }
 
@@ -359,13 +364,13 @@ int8_t pressure_mpr_inlet_read(uint8_t channel, uint32_t *data_ptr) {
     cs_sw_mpr_mux();
     mpr_read( &cs_topaz_b_target, data_ptr);
     break;
-    
+
   }
   return 0;
 }
 
 int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
-  logger_msg_p("pressure", log_level_DEBUG, PSTR("Reading Topaz %s outlet"),board);
+  logger_msg_p("pressure", log_level_DEBUG, PSTR("Reading Topaz %c outlet"),board);
   switch(board) {
   case 'a' :
     cs_outlet_mpr_mux();
@@ -392,50 +397,58 @@ void pressure_mpr_read_task(void) {
   OS_SetTaskState(1, SUSPENDED);
   uint8_t index = 0;
 
-  // Topaz A inlets
-  for (uint8_t channel = 1; channel <= 4; channel++) {
-    index = channel - 1;
-    pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
-    pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
-						     pressure_inlet_old_counts[index],
-						     pressure_config.ema_alpha);
-    pressure_inlet_old_pascals[index] =
-      pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
-    // This delay has to be here to avoid SPI read errors
-    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US); 
+  if (topaz_is_connected('a')) {
+    // Topaz A inlets
+    for (uint8_t channel = 1; channel <= 4; channel++) {
+      index = channel - 1;
+      pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
+      pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
+						       pressure_inlet_old_counts[index],
+						       pressure_config.ema_alpha);
+      pressure_inlet_old_pascals[index] =
+	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+      // This delay has to be here to avoid SPI read errors
+      _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+    }
+
+    // Topaz A outlet
+    pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
+    pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
+						  pressure_outlet_old_counts[0],
+						  pressure_config.ema_alpha);
+    pressure_outlet_old_pascals[0] =
+      pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
+    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+  } else {
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c reads"),'a');
   }
 
-  // Topaz A outlet
-  pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
-  pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
-  						pressure_outlet_old_counts[0],
-  						pressure_config.ema_alpha);
-  pressure_outlet_old_pascals[0] =
-    pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+  if (topaz_is_connected('b')) {
+    // Topaz B inlets
+    for (uint8_t channel = 5; channel <= 8; channel++) {
+      index = channel - 1;
+      pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
+      pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
+						       pressure_inlet_old_counts[index],
+						       pressure_config.ema_alpha);
+      pressure_inlet_old_pascals[index] =
+	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+      // This delay has to be here to avoid SPI read errors
+      _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+    }
 
-  // Topaz B inlets
-  for (uint8_t channel = 5; channel <= 8; channel++) {
-    index = channel - 1;
-    pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
-    pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
-						     pressure_inlet_old_counts[index],
-						     pressure_config.ema_alpha);
-    pressure_inlet_old_pascals[index] =
-      pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
+    // Topaz B outlet
+    pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
+    pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
+						  pressure_outlet_old_counts[1],
+						  pressure_config.ema_alpha);
+    pressure_outlet_old_pascals[1] =
+      pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
     // This delay has to be here to avoid SPI read errors
     _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+  } else {
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c reads"),'b');
   }
-
-  // Topaz B outlet
-  pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
-  pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
-						pressure_outlet_old_counts[1],
-						pressure_config.ema_alpha);
-  pressure_outlet_old_pascals[1] =
-    pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
-  // This delay has to be here to avoid SPI read errors
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
 
 }
 
@@ -451,7 +464,7 @@ void cmd_out_prs_raw_q( command_arg_t *command_arg_ptr ) {
     usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
 		  pressure_outlet_old_counts[1],
 		  LINE_TERMINATION_CHARACTERS );
-    break; 
+    break;
   default :
     // This is an out of range input
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
@@ -470,7 +483,7 @@ void cmd_out_prs_pas_q( command_arg_t *command_arg_ptr ) {
     usart_printf( USART_CHANNEL_COMMAND, "%lu%s",
 		  pressure_outlet_old_pascals[1],
 		  LINE_TERMINATION_CHARACTERS );
-    break; 
+    break;
   default :
     // This is an out of range input
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
@@ -502,8 +515,6 @@ void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr ) {
 		pressure_inlet_old_pascals[index],
 		LINE_TERMINATION_CHARACTERS );
 }
-
-
 
 void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr ) {
   uint16_t alpha = (command_arg_ptr -> uint16_arg);
