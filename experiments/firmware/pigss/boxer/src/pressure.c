@@ -306,7 +306,7 @@ int8_t pressure_mpr_trigger_cycle( void ) {
   uint8_t retval = 0;
   if (topaz_is_connected('a')) {
     // Trigger Topaz A inlets
-    for (uint8_t channel = 1; channel <= 5; channel++) {
+    for (uint8_t channel = 1; channel <= 4; channel++) {
       retval += pressure_mpr_inlet_trigger(channel);
     }
     // Trigger Topaz A outlet
