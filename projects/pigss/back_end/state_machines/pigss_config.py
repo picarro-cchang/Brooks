@@ -94,6 +94,14 @@ class PigssConfig:
             filename = "rpc_tunnel_configs.json"
         return os.path.normpath(os.path.join(self.config_dir, filename))
 
+    @default(None)
+    def get_startup_plan(self):
+        """If this key is absent, we do not automatically identify channels or loop
+        a plan on startup. If the key is present, channel identification takes place,
+        and if the file name is non-empty, it is used to specify the plan file
+        (without the .pln extension)"""
+        return self.config["Settings"]["startup_plan"]
+
 
 if __name__ == "__main__":
     pc = PigssConfig("pigss_sim_config.yaml")

@@ -19,6 +19,7 @@
 #
 import asyncio
 import time
+import traceback
 
 from aiohttp import web
 
@@ -37,6 +38,7 @@ class ControllerService(ServiceTemplate):
     def setup_routes(self):
         self.app.router.add_route('GET', '/errors', self.handle_errors)
         self.app.router.add_route('POST', '/event', self.handle_event)
+        self.app.router.add_route('POST', '/auto_setup_flow', self.handle_auto_setup_flow)
         self.app.router.add_route('GET', '/modal_info', self.handle_modal_info)
         self.app.router.add_route('GET', '/plan', self.handle_plan)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
@@ -92,6 +94,42 @@ class ControllerService(ServiceTemplate):
         farm = request.app['farm']
         errors = farm.pigss_error_manager.error_deque
         return web.Response(text="\n\n".join(errors))
+
+    async def handle_auto_setup_flow(self, request):
+        """
+        description: Performs channel identify and optionally starts plan from a file
+
+        tags:
+            -   Controller
+        summary: Performs channel identify and optionally starts plan from a file
+        consumes:
+            -   application/json
+        produces:
+            -   text/plain
+        parameters:
+            -   in: body
+                name: plan_filename
+                description: Specify plan filename (without extension) in quotes
+                required: false
+                schema:
+                    type: string
+
+        responses:
+            "200":
+                description: successful operation.
+        """
+        body = await request.json()
+        if not body:  # Missing argument gives an empty dictionary
+            body = None
+        log.info(f"Handling /auto_setup_flow: {body}")
+        plan_filename = body
+
+        controller = request.app['farm'].controller
+        try:
+            result = await controller.auto_setup_flow(plan_filename)
+            return web.Response(text=result)
+        except Exception as e:
+            return web.Response(text=f"{e}\n{traceback.format_exc()}")
 
     async def handle_event(self, request):
         """

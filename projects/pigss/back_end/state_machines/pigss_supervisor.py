@@ -25,25 +25,24 @@ import time
 from collections import deque
 
 import attr
+from aiomultiprocess import Process
 from setproctitle import setproctitle
 
-from aiomultiprocess import Process
 from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
+from back_end.analyzer_driver.picarro_analyzer_driver import \
+    PicarroAnalyzerDriver
 from back_end.database_access.influx_database import InfluxDBWriter
+from back_end.influxdb_retention.db_decimator import DBDecimatorFactory
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.madmapper.madmapper import MadMapper
 from back_end.mfc_driver.alicat.alicat_driver import AlicatDriver
 from back_end.piglet.piglet_driver import PigletDriver
-from simulation.analyzer_simulator import AnalyzerSimulator
+from back_end.relay_driver.numato.numato_driver import NumatoDriver
 from back_end.state_machines.pigss_payloads import SystemConfiguration
 from common import CmdFIFO
 from common.async_helper import log_async_exception
 from common.rpc_ports import rpc_ports
-from back_end.analyzer_driver.picarro_analyzer_driver import PicarroAnalyzerDriver
-from experiments.influxdb_retention.DB_Decimator import \
-    DBDecimatorFactory  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
-from experiments.relay_driver.numato.numato_driver import \
-    NumatoDriver  # !!!!!!!!!!!!!!!!!!!!!!!!!!!
+from simulation.analyzer_simulator import AnalyzerSimulator
 from simulation.sim_piglet_driver import SimPigletDriver
 
 port = rpc_ports.get('madmapper')
@@ -255,6 +254,9 @@ class PigssSupervisor(Ahsm):
             return self.handled(e)
         elif sig == Signal.SYSTEM_CONFIGURE:
             log.info(f"System config: {e.value}")
+            startup_plan = self.farm.config.get_startup_plan()
+            if startup_plan is not None:
+                self.run_async(self.farm.controller.auto_setup_flow(startup_plan))
             return self.handled(e)
         elif sig == Signal.MONITOR_PROCESSES:
             self.mon_task = self.run_async(self.monitor_processes())
@@ -268,7 +270,10 @@ class PigssSupervisor(Ahsm):
 
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def perform_mapping(self):
-        # Run the MadMapper
+        # Run the MadMapper after a specified delay
+        delay = self.farm.config.get_madmapper_startup_delay()
+        log.info(f"\nWaiting {delay} seconds before starting madmapper.")
+        await asyncio.sleep(delay)
         wrapped_process = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
         self.wrapped_processes["MadMapper"] = wrapped_process
         madmapper_rpc = await wrapped_process.start(simulation=self.simulation)

@@ -617,12 +617,20 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_PLAN_LOOP", self)
         Framework.subscribe("BTN_PLAN_RUN", self)
         self.te = TimeEvent("UI_TIMEOUT")
-        return self.tran(self._operational)
+        return self.tran(self._configure)
 
     @state
     def _configure(self, e):
         sig = e.signal
-        if sig == Signal.SYSTEM_CONFIGURE:
+        if sig == Signal.ENTRY:
+            self.set_status(["standby"], UiStatus.DISABLED)
+            self.set_status(["identify"], UiStatus.DISABLED)
+            self.set_status(["run"], UiStatus.DISABLED)
+            self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["plan_run"], UiStatus.DISABLED)
+            self.set_status(["plan_loop"], UiStatus.DISABLED)
+            self.set_status(["reference"], UiStatus.DISABLED)
+        elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
             self.run_async(self.save_port_history())
@@ -1577,3 +1585,67 @@ class PigssController(Ahsm):
             self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         return self.super(self._edit)
+
+    async def auto_setup_flow(self, plan_filename_no_ext=None):
+        """This runs the channel identification procedure and then loops a plan specified
+        in `plan_filename_no_ext` starting at the first row. It can be called from the
+        supervisor shortly after startup to start the flow through the rack on power-up.
+        """
+        if plan_filename_no_ext is not None:
+            fname = f"{plan_filename_no_ext}.pln"
+            if not os.path.exists(fname):
+                raise FileNotFoundError(f"No such file: {fname}")
+
+        if self.get_status()["standby"] != UiStatus.ACTIVE:
+            while self.get_status()["standby"] != UiStatus.READY:
+                await asyncio.sleep(0.5)
+            Framework.publish(Event(Signal.BTN_STANDBY, None))
+            await asyncio.sleep(0.5)
+        if self.get_status()["standby"] != UiStatus.ACTIVE or self.get_status()["identify"] != UiStatus.READY:
+            msg = "Unexpected inability to start channel identification"
+            log.warning(msg)
+            return msg
+        Framework.publish(Event(Signal.BTN_IDENTIFY, None))
+        await asyncio.sleep(0.5)
+        # Wait until we are out of the identify state
+        while self.get_status()["standby"] != UiStatus.ACTIVE:
+            await asyncio.sleep(0.5)
+
+        if plan_filename_no_ext is not None:
+            Framework.publish(Event(Signal.BTN_PLAN, None))
+            await asyncio.sleep(0.5)
+            if self.state != self._plan_plan:
+                msg = "Unexpected inability to reach _plan_plan state before loading plan file"
+                log.warning(msg)
+                return msg
+            Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
+            await asyncio.sleep(0.5)
+            if self.state != self._plan_load:
+                msg = "Unexpected inability to reach _plan_load state"
+                log.warning(msg)
+                return msg
+            Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
+            await asyncio.sleep(0.5)
+            if self.state != self._plan_plan:
+                msg = "Unexpected inability to reach _plan_plan state after loading plan file"
+                log.warning(msg)
+                return msg
+            Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
+            await asyncio.sleep(0.5)
+            Framework.publish(Event(Signal.BTN_PLAN_OK, None))
+            await asyncio.sleep(0.5)
+            if self.get_status()["standby"] != UiStatus.ACTIVE:
+                msg = "Unexpected inability to verify plan and return to standby state"
+                log.warning(msg)
+                return msg
+            Framework.publish(Event(Signal.BTN_PLAN_LOOP, None))
+            await asyncio.sleep(0.5)
+            if self.state != self._loop_plan1:
+                msg = "Unexpected inability to reach _loop_plan1 state"
+                log.warning(msg)
+                return msg
+            Framework.publish(Event(Signal.MODAL_OK, None))
+
+        msg = "Successfully initialized flow state"
+        log.info(msg)
+        return msg
