@@ -188,7 +188,8 @@ class GraphElement {
   ): (() => ContextMenuGroup[]) => {
     return () => {
       // Fixed context menu items
-      const items: ContextMenuGroup[] = [
+      if (this.dashboard.meta.canEdit) {
+        const items: ContextMenuGroup[] = [
         {
           items: [
             {
@@ -216,8 +217,11 @@ class GraphElement {
           }),
         },
       ];
-      if (this.dashboard.meta.canEdit) {
+      // if (this.dashboard.meta.canEdit) {
         return [...items, ...dataLinks];
+      // } else {
+      //   return null;
+      // }
       } else {
         return null;
       }
