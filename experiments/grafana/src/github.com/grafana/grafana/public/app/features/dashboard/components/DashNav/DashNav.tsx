@@ -170,7 +170,7 @@ export class DashNav extends PureComponent<Props> {
 
   render() {
     const { dashboard, onAddPanel, location, $injector } = this.props;
-    const { canStar, canSave, canShare, showSettings, isStarred } = dashboard.meta;
+    const { canEdit, canSave, showSettings, isStarred } = dashboard.meta;
     const { snapshot } = dashboard;
     const snapshotUrl = snapshot && snapshot.originalUrl;
     return (
@@ -211,7 +211,7 @@ export class DashNav extends PureComponent<Props> {
             />
           )}
 
-          {canStar && (
+          {canEdit && (
             <DashNavButton
               tooltip="Mark as favorite"
               classSuffix="star"
@@ -220,7 +220,7 @@ export class DashNav extends PureComponent<Props> {
             />
           )}
 
-          {canShare && (
+          {canEdit && (
             <DashNavButton
               tooltip="Share dashboard"
               classSuffix="share"
@@ -252,14 +252,16 @@ export class DashNav extends PureComponent<Props> {
           )}
         </div>
 
-        <div className="navbar-buttons navbar-buttons--tv">
-          <DashNavButton
-            tooltip="Cycle view mode"
-            classSuffix="tv"
-            icon="fa fa-desktop"
-            onClick={this.onToggleTVMode}
-          />
-        </div>
+        {canEdit && (
+          <div className="navbar-buttons navbar-buttons--tv">
+            <DashNavButton
+              tooltip="Cycle view mode"
+              classSuffix="tv"
+              icon="fa fa-desktop"
+              onClick={this.onToggleTVMode}
+            />
+          </div>
+        )}
 
         {!dashboard.timepicker.hidden && (
           <div className="navbar-buttons">

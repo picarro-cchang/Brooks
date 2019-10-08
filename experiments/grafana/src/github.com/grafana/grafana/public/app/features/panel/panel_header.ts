@@ -1,7 +1,8 @@
-import { coreModule } from 'app/core/core';
+import { contextSrv, coreModule } from 'app/core/core';
 import { AngularPanelMenuItem } from '@grafana/ui';
 
-const template = `
+let template = '';
+const templateEditor = `
 <span class="panel-title">
   <span class="icon-gf panel-alert-icon"></span>
   <span class="panel-title-text">{{ctrl.panel.title | interpolateTemplateVars:this}}</span>
@@ -10,6 +11,13 @@ const template = `
     <ul class="dropdown-menu dropdown-menu--menu panel-menu" role="menu">
     </ul>
   </span>
+  <span class="panel-time-info" ng-if="ctrl.timeInfo"><i class="fa fa-clock-o"></i> {{ctrl.timeInfo}}</span>
+</span>`;
+
+const templateViewer = `
+<span class="panel-title">
+  <span class="icon-gf panel-alert-icon"></span>
+  <span class="panel-title-text-viewer">{{ctrl.panel.title | interpolateTemplateVars:this}}</span>
   <span class="panel-time-info" ng-if="ctrl.timeInfo"><i class="fa fa-clock-o"></i> {{ctrl.timeInfo}}</span>
 </span>`;
 
@@ -67,6 +75,11 @@ async function createMenuTemplate(ctrl: any) {
 
 /** @ngInject */
 function panelHeader($compile: any) {
+  if (contextSrv.isEditor) {
+    template = templateEditor;
+  } else {
+    template = templateViewer;
+  }
   return {
     restrict: 'E',
     template: template,

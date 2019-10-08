@@ -216,8 +216,11 @@ class GraphElement {
           }),
         },
       ];
-
-      return [...items, ...dataLinks];
+      if (this.dashboard.meta.canEdit) {
+        return [...items, ...dataLinks];
+      } else {
+        return null;
+      }
     };
   };
 
