@@ -30,16 +30,16 @@ class BottomNavLinks extends PureComponent<Props> {
       <div className="sidemenu-item dropdown dropup">
         <a href={link.url} className="sidemenu-link" target={link.target}>
           <span className="icon-circle sidemenu-icon">
-            {link.icon && <i className={link.icon} style={{width: "65px", height: "65px"}} />}
-            {link.img && <img src={link.img} style={{width: "65px", height: "65px"}} />}
+            {link.icon && <i className={link.icon} />}
+            {link.img && <img src={link.img} />}
           </span>
         </a>
         <ul className="dropdown-menu dropdown-menu--sidemenu" role="menu">
-          {/*{link.subTitle && (*/}
-          {/*  <li className="sidemenu-subtitle">*/}
-          {/*    <span className="sidemenu-item-text">{link.subTitle}</span>*/}
-          {/*  </li>*/}
-          {/*)}*/}
+          {link.subTitle && (
+            <li className="sidemenu-subtitle">
+              <span className="sidemenu-item-text">{link.subTitle}</span>
+            </li>
+          )}
           {link.showOrgSwitcher && (
             <li className="sidemenu-org-switcher">
               <a onClick={this.switchOrg}>

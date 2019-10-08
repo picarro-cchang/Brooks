@@ -18,7 +18,8 @@ import {
 import { GRID_COLUMN_COUNT } from 'app/core/constants';
 import { auto } from 'angular';
 import { TemplateSrv } from '../templating/template_srv';
-import { LinkSrv } from './panellinks/link_srv';
+import { PanelPluginMeta } from '@grafana/ui/src/types/panel';
+import { getPanelLinksSupplier } from './panellinks/linkSuppliers';
 
 export class PanelCtrl {
   panel: any;
@@ -119,16 +120,14 @@ export class PanelCtrl {
     }
   }
 
-  getMenu() {
+  async getMenu() {
     const menu = [];
-    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'View',
       click: 'ctrl.viewPanel();',
       icon: 'gicon gicon-viewer',
       shortcut: 'v',
     });
-    // }
 
     if (this.dashboard.meta.canEdit) {
       menu.push({
@@ -140,28 +139,23 @@ export class PanelCtrl {
       });
     }
 
-    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'Share',
       click: 'ctrl.sharePanel();',
       icon: 'fa fa-fw fa-share',
       shortcut: 'p s',
     });
-    // }
 
     // Additional items from sub-class
-    menu.push(...this.getAdditionalMenuItems());
+    menu.push(...(await this.getAdditionalMenuItems()));
 
     const extendedMenu = this.getExtendedMenu();
-
-    // if (this.dashboard.meta.canEdit) {
     menu.push({
       text: 'More ...',
       click: '',
       icon: 'fa fa-fw fa-cube',
       submenu: extendedMenu,
     });
-    // }
 
     if (this.dashboard.meta.canEdit) {
       menu.push({ divider: true, role: 'Editor' });
@@ -194,19 +188,17 @@ export class PanelCtrl {
       });
     }
 
-    if (this.dashboard.meta.canEdit) {
-      menu.push({
-        text: 'Panel JSON',
-        click: 'ctrl.editPanelJson(); dismiss();',
-      });
-    }
+    menu.push({
+      text: 'Panel JSON',
+      click: 'ctrl.editPanelJson(); dismiss();',
+    });
 
     this.events.emit('init-panel-actions', menu);
     return menu;
   }
 
   // Override in sub-class to add items before extended menu
-  getAdditionalMenuItems(): any[] {
+  async getAdditionalMenuItems(): Promise<any[]> {
     return [];
   }
 
@@ -257,37 +249,42 @@ export class PanelCtrl {
   }
 
   getInfoContent(options: { mode: string }) {
-    let markdown = this.panel.description;
+    const { panel } = this;
+    let markdown = panel.description || '';
 
     if (options.mode === 'tooltip') {
-      markdown = this.error || this.panel.description;
+      markdown = this.error || panel.description || '';
     }
 
-    const linkSrv: LinkSrv = this.$injector.get('linkSrv');
     const templateSrv: TemplateSrv = this.$injector.get('templateSrv');
-    const interpolatedMarkdown = templateSrv.replace(markdown, this.panel.scopedVars);
+    const interpolatedMarkdown = templateSrv.replace(markdown, panel.scopedVars);
     let html = '<div class="markdown-html panel-info-content">';
 
     const md = renderMarkdown(interpolatedMarkdown);
     html += config.disableSanitizeHtml ? md : sanitize(md);
 
-    if (this.panel.links && this.panel.links.length > 0) {
+    if (panel.links && panel.links.length > 0) {
+      const interpolatedLinks = getPanelLinksSupplier(panel).getLinks();
+
       html += '<ul class="panel-info-corner-links">';
-      for (const link of this.panel.links) {
-        const info = linkSrv.getDataLinkUIModel(link, this.panel.scopedVars);
+      for (const link of interpolatedLinks) {
         html +=
           '<li><a class="panel-menu-link" href="' +
-          escapeHtml(info.href) +
+          escapeHtml(link.href) +
           '" target="' +
-          escapeHtml(info.target) +
+          escapeHtml(link.target) +
           '">' +
-          escapeHtml(info.title) +
+          escapeHtml(link.title) +
           '</a></li>';
       }
       html += '</ul>';
     }
 
     html += '</div>';
+
     return html;
   }
+
+  // overriden from react
+  onPluginTypeChange = (plugin: PanelPluginMeta) => {};
 }

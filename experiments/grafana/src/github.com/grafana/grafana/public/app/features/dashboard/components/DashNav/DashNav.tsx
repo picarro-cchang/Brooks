@@ -87,7 +87,7 @@ export class DashNav extends PureComponent<Props> {
     const { dashboard, $injector } = this.props;
     const dashboardSrv = $injector.get('dashboardSrv');
 
-    dashboardSrv.starDashboard(dashboard.id, dashboard.meta.isStarred).then(newState => {
+    dashboardSrv.starDashboard(dashboard.id, dashboard.meta.isStarred).then((newState: any) => {
       dashboard.meta.isStarred = newState;
       this.forceUpdate();
     });
@@ -170,7 +170,7 @@ export class DashNav extends PureComponent<Props> {
 
   render() {
     const { dashboard, onAddPanel, location, $injector } = this.props;
-    const { canEdit, canSave, showSettings, isStarred } = dashboard.meta;
+    const { canStar, canSave, canShare, showSettings, isStarred } = dashboard.meta;
     const { snapshot } = dashboard;
     const snapshotUrl = snapshot && snapshot.originalUrl;
     return (
@@ -211,7 +211,7 @@ export class DashNav extends PureComponent<Props> {
             />
           )}
 
-          {canEdit && (
+          {canStar && (
             <DashNavButton
               tooltip="Mark as favorite"
               classSuffix="star"
@@ -220,7 +220,7 @@ export class DashNav extends PureComponent<Props> {
             />
           )}
 
-          {canEdit && (
+          {canShare && (
             <DashNavButton
               tooltip="Share dashboard"
               classSuffix="share"
@@ -252,16 +252,14 @@ export class DashNav extends PureComponent<Props> {
           )}
         </div>
 
-        {canEdit && (
-          <div className="navbar-buttons navbar-buttons--tv">
-            <DashNavButton
-              tooltip="Cycle view mode"
-              classSuffix="tv"
-              icon="fa fa-desktop"
-              onClick={this.onToggleTVMode}
-            />
-          </div>
-        )}
+        <div className="navbar-buttons navbar-buttons--tv">
+          <DashNavButton
+            tooltip="Cycle view mode"
+            classSuffix="tv"
+            icon="fa fa-desktop"
+            onClick={this.onToggleTVMode}
+          />
+        </div>
 
         {!dashboard.timepicker.hidden && (
           <div className="navbar-buttons">

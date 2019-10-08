@@ -194,9 +194,9 @@
     overflow: hidden;
   }
 
-  //.graph-legend-series:nth-child(odd) {
-  //  background: $table-bg-accent;
-  //}
+  .graph-legend-series:nth-child(odd) {
+    background: $table-bg-accent;
+  }
 
   .graph-legend-value {
     &.current,

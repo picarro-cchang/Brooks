@@ -130,16 +130,15 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 		{Text: "Playlists", Id: "playlists", Url: setting.AppSubUrl + "/playlists", Icon: "gicon gicon-playlists"},
 		{Text: "Snapshots", Id: "snapshots", Url: setting.AppSubUrl + "/dashboard/snapshots", Icon: "gicon gicon-snapshots"},
 	}
-	if c.OrgRole != m.ROLE_VIEWER {
-		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Text:     "Dashboards",
-			Id:       "dashboards",
-			SubTitle: "Manage dashboards & folders",
-			Icon:     "gicon gicon-dashboard",
-			Url:      setting.AppSubUrl + "/",
-			Children: dashboardChildNavs,
-		})
-	}
+
+	data.NavTree = append(data.NavTree, &dtos.NavLink{
+		Text:     "Dashboards",
+		Id:       "dashboards",
+		SubTitle: "Manage dashboards & folders",
+		Icon:     "gicon gicon-dashboard",
+		Url:      setting.AppSubUrl + "/",
+		Children: dashboardChildNavs,
+	})
 
 	if setting.ExploreEnabled && (c.OrgRole == m.ROLE_ADMIN || c.OrgRole == m.ROLE_EDITOR || setting.ViewersCanEdit) {
 		data.NavTree = append(data.NavTree, &dtos.NavLink{
@@ -297,18 +296,29 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 		})
 	}
 
-	if c.OrgRole != m.ROLE_VIEWER {
-		data.NavTree = append(data.NavTree, &dtos.NavLink{
-			Id:       "cfg",
-			Text:     "Configuration",
-			SubTitle: "Organization: " + c.OrgName,
-			Icon:     "gicon gicon-cog",
-			Url:      configNodes[0].Url,
-			Children: configNodes,
-		})
-	}
+	data.NavTree = append(data.NavTree, &dtos.NavLink{
+		Id:       "cfg",
+		Text:     "Configuration",
+		SubTitle: "Organization: " + c.OrgName,
+		Icon:     "gicon gicon-cog",
+		Url:      configNodes[0].Url,
+		Children: configNodes,
+	})
 
 	if c.IsGrafanaAdmin {
+		adminNavLinks := []*dtos.NavLink{
+			{Text: "Users", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "gicon gicon-user"},
+			{Text: "Orgs", Id: "global-orgs", Url: setting.AppSubUrl + "/admin/orgs", Icon: "gicon gicon-org"},
+			{Text: "Settings", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "gicon gicon-preferences"},
+			{Text: "Stats", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "fa fa-fw fa-bar-chart"},
+		}
+
+		if setting.LDAPEnabled {
+			adminNavLinks = append(adminNavLinks, &dtos.NavLink{
+				Text: "LDAP", Id: "ldap", Url: setting.AppSubUrl + "/admin/ldap", Icon: "fa fa-fw fa-address-book-o",
+			})
+		}
+
 		data.NavTree = append(data.NavTree, &dtos.NavLink{
 			Text:         "Server Admin",
 			SubTitle:     "Manage all users & orgs",
@@ -316,24 +326,21 @@ func (hs *HTTPServer) setIndexViewData(c *m.ReqContext) (*dtos.IndexViewData, er
 			Id:           "admin",
 			Icon:         "gicon gicon-shield",
 			Url:          setting.AppSubUrl + "/admin/users",
-			Children: []*dtos.NavLink{
-				{Text: "Users", Id: "global-users", Url: setting.AppSubUrl + "/admin/users", Icon: "gicon gicon-user"},
-				{Text: "Orgs", Id: "global-orgs", Url: setting.AppSubUrl + "/admin/orgs", Icon: "gicon gicon-org"},
-				{Text: "Settings", Id: "server-settings", Url: setting.AppSubUrl + "/admin/settings", Icon: "gicon gicon-preferences"},
-				{Text: "Stats", Id: "server-stats", Url: setting.AppSubUrl + "/admin/stats", Icon: "fa fa-fw fa-bar-chart"},
-			},
+			Children:     adminNavLinks,
 		})
 	}
 
 	data.NavTree = append(data.NavTree, &dtos.NavLink{
 		Text:         "Help",
-		SubTitle:     fmt.Sprintf(`%s v%s`, setting.ApplicationName, setting.BuildVersion),
+		SubTitle:     fmt.Sprintf(`%s v%s (%s)`, setting.ApplicationName, setting.BuildVersion, setting.BuildCommit),
 		Id:           "help",
 		Url:          "#",
 		Icon:         "gicon gicon-question",
 		HideFromMenu: true,
 		Children: []*dtos.NavLink{
 			{Text: "Keyboard shortcuts", Url: "/shortcuts", Icon: "fa fa-fw fa-keyboard-o", Target: "_self"},
+			{Text: "Community site", Url: "http://community.grafana.com", Icon: "fa fa-fw fa-comment", Target: "_blank"},
+			{Text: "Documentation", Url: "http://docs.grafana.org", Icon: "fa fa-fw fa-file", Target: "_blank"},
 		},
 	})
 
