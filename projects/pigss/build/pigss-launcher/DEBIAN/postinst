@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# Set favorite apps to only display pigss-launcher
+dconf write /org/gnome/shell/favorite-apps "['pigss-launcher.desktop']"

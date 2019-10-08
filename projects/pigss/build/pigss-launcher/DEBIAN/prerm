@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Remove files and folders created on install
+sudo rm -rf /usr/local/share/picarro || echo "Nothing here"
+sudo rm -rf /usr/share/applications/pigss-launcher.desktop || echo "Nothing here"
