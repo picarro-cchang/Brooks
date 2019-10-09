@@ -256,3 +256,18 @@
 .button-edit {
     justify-content: center;
 }
+
+.cancel:before {
+    content: '\2716';
+}
+
+.cancel {
+    position: absolute;
+    top: 0;
+    right: 10%;
+    cursor: pointer;
+    color: black;
+    font-size: 25px;
+    display: inline-block;
+}
+

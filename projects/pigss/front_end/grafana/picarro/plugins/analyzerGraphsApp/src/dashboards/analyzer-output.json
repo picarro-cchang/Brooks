@@ -334,7 +334,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569605892147,
+      "repeatIteration": 1570652007621,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -355,6 +355,18 @@
         {
           "alias": "NH3",
           "color": "#FF780A"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
         }
       ],
       "spaceLength": 10,
@@ -589,7 +601,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569605892147,
+      "repeatIteration": 1570652007621,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -610,6 +622,18 @@
         {
           "alias": "NH3",
           "color": "#FF780A"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
         }
       ],
       "spaceLength": 10,
@@ -844,7 +868,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569605892147,
+      "repeatIteration": 1570652007621,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -865,6 +889,18 @@
         {
           "alias": "NH3",
           "color": "#FF780A"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
         }
       ],
       "spaceLength": 10,
@@ -1166,11 +1202,11 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 19,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [
     "pigss"
@@ -1302,5 +1338,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "rHPC-eKZz",
-  "version": 4
+  "version": 2
 }

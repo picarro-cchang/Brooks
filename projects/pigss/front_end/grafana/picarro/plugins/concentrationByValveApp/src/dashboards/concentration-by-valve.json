@@ -239,7 +239,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -248,7 +248,24 @@
           "value": "4"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -391,7 +408,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -400,7 +417,24 @@
           "value": "6"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -543,7 +577,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -552,7 +586,24 @@
           "value": "8"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -695,7 +746,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -704,7 +755,24 @@
           "value": "18"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -847,7 +915,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -856,7 +924,24 @@
           "value": "20"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -999,7 +1084,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1008,7 +1093,24 @@
           "value": "22"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1151,7 +1253,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1160,7 +1262,24 @@
           "value": "24"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1303,7 +1422,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1312,7 +1431,24 @@
           "value": "26"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1455,7 +1591,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1464,7 +1600,24 @@
           "value": "28"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1607,7 +1760,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1616,7 +1769,24 @@
           "value": "30"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1759,7 +1929,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1569606029242,
+      "repeatIteration": 1570652081572,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1768,7 +1938,24 @@
           "value": "32"
         }
       },
-      "seriesOverrides": [],
+      "seriesOverrides": [
+        {
+          "alias": "NH3",
+          "color": "#FF780A"
+        },
+        {
+          "alias": "HF",
+          "color": "#F2CC0C"
+        },
+        {
+          "alias": "HCl",
+          "color": "#8F3BB8"
+        },
+        {
+          "alias": "H2S",
+          "color": "#56A64B"
+        }
+      ],
       "spaceLength": 10,
       "stack": false,
       "steppedLine": false,
@@ -1973,11 +2160,11 @@
           "value": "null"
         }
       ],
-      "valueName": "avg"
+      "valueName": "current"
     }
   ],
   "refresh": "5s",
-  "schemaVersion": 19,
+  "schemaVersion": 20,
   "style": "dark",
   "tags": [
     "pigss"
@@ -2103,5 +2290,5 @@
   "timezone": "",
   "title": "Concentration By Channel",
   "uid": "GTo10zcZz",
-  "version": 4
+  "version": 2
 }

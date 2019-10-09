@@ -92,12 +92,12 @@ export class Main extends Component<any, any> {
       panel_to_show: 0
     },
     isPlan: false,
-    isChanged: false
+    // isChanged: false
   };
   constructor(props) {
     super(props);
   //  this.switchPanel = this.switchPanel.bind(this)
-    this.updateFileName = this.updateFileName.bind(this)
+  //   this.updateFileName = this.updateFileName.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -180,11 +180,11 @@ export class Main extends Component<any, any> {
     this.ws.send(JSON.stringify(o));
   };
 
-  updateFileName(x: boolean){
-      this.setState({isChanged: x});
-      console.log("changed the state ", this.state.isChanged);
-
-  };
+  // updateFileName(x: boolean){
+  //     this.setState({isChanged: x});
+  //     console.log("changed the state ", this.state.isChanged);
+  //
+  // };
 
   render() {
     // console.log("Changed? ", this.props.isChanged);
@@ -197,23 +197,27 @@ export class Main extends Component<any, any> {
       case PlanPanelTypes.PLAN:
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
-                       setFocus={(row, column) => this.setFocus(row, column)} updateFileName={this.updateFileName}
-                       isChanged={this.state.isChanged} ws_sender={this.ws_sender} />
+                       setFocus={(row, column) => this.setFocus(row, column)}
+                       // updateFileName={this.updateFileName}
+                       // isChanged={this.state.isChanged}
+                       ws_sender={this.ws_sender} />
         );
       /*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/
         isPlan = true;
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
-            <PlanLoadPanel plan={this.state.plan} updateFileName={this.updateFileName}
-                           isChanged={this.state.isChanged}
+            <PlanLoadPanel plan={this.state.plan}
+                           // updateFileName={this.updateFileName}
+                           // isChanged={this.state.isChanged}
                            ws_sender={this.ws_sender} />
         );
         break;
       case PlanPanelTypes.SAVE:
         left_panel = (
-            <PlanSavePanel plan={this.state.plan} updateFileName={this.updateFileName}
-                           isChanged={this.state.isChanged}
+            <PlanSavePanel plan={this.state.plan}
+                           // updateFileName={this.updateFileName}
+                           // isChanged={this.state.isChanged}
                            ws_sender={this.ws_sender} />
         );
         break;

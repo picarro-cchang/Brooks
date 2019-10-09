@@ -8,7 +8,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
             <div className="btn-group d-flex">
                 <button type="button" className="btn w-100 btn-small"
                         onClick={e => {
-                            this.props.updateFileName(false);
+                            // this.props.updateFileName(false);
                             this.props.ws_sender({element: "plan_load_filename",
                             name: this.props.plan.plan_files[index+1]})
                         }}
