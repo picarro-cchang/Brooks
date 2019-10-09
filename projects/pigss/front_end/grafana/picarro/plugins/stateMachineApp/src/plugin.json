@@ -5,8 +5,7 @@
   "enabled": true,
   "info": {
     "author": {
-      "name": "Grafana Project",
-      "url": "https://grafana.com"
+      "name": "Picarro, Inc."
     },
     "logos": {
       "small": "img/setup_icon_dark.svg",
@@ -28,7 +27,7 @@
     }
   ],
   "dependencies": {
-    "grafanaVersion": "6.3.x",
+    "grafanaVersion": "6.4.x",
     "plugins": []
   }
 }
