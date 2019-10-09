@@ -1,4 +1,5 @@
 import { ComponentClass } from 'react';
+import { KeyValue } from '@grafana/data';
 
 export enum PluginState {
   alpha = 'alpha', // Only included it `enable_alpha` is true
@@ -10,8 +11,6 @@ export enum PluginType {
   datasource = 'datasource',
   app = 'app',
 }
-
-export type KeyValue<T = any> = { [s: string]: T };
 
 export interface PluginMeta<T extends {} = KeyValue> {
   id: string;
@@ -82,6 +81,13 @@ export interface PluginBuildInfo {
   repo?: string;
   branch?: string;
   hash?: string;
+  number?: number;
+  pr?: number;
+}
+
+export interface ScreenshotInfo {
+  name: string;
+  path: string;
 }
 
 export interface PluginMetaInfo {
@@ -96,7 +102,7 @@ export interface PluginMetaInfo {
     small: string;
   };
   build?: PluginBuildInfo;
-  screenshots: any[];
+  screenshots: ScreenshotInfo[];
   updated: string;
   version: string;
 }
@@ -117,6 +123,9 @@ export interface PluginConfigPage<T extends GrafanaPlugin> {
 export class GrafanaPlugin<T extends PluginMeta = PluginMeta> {
   // Meta is filled in by the plugin loading system
   meta?: T;
+
+  // This is set if the plugin system had errors loading the plugin
+  loadError?: boolean;
 
   // Config control (app/datasource)
   angularConfigCtrl?: any;

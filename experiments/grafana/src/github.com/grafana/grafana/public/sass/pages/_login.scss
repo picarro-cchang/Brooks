@@ -10,7 +10,7 @@ $login-border: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  // background-image: url(../img/heatmap_bg_test.svg);
+  //background-image: url(../img/heatmap_bg_test.svg);
   background-color: #161719;
   background-size: cover;
   color: #d8d9da;
@@ -21,7 +21,6 @@ $login-border: #ffffff;
 
   & .btn-primary {
     @include buttonBackground(#333333, #666666);
-    height: 40px;
   }
 }
 
@@ -163,18 +162,17 @@ select:-webkit-autofill:focus {
   transform: translate(0px, 0px);
   transition: 0.25s ease;
 
-  &.add {
-    transform: translate(0px, -320px);
-    &.hidden {
-      display: none;
-    }
+  &.hidden {
+    display: none;
   }
 
-  &.remove {
+  &-enter {
     transform: translate(0px, 320px);
-    &.hidden {
-      display: none;
-    }
+    display: flex;
+  }
+
+  &-enter-active {
+    transform: translate(0px, 0px);
   }
 }
 
@@ -320,13 +318,13 @@ select:-webkit-autofill:focus {
     }
   }
 
+  .login-button-group {
+    flex-direction: row;
+  }
+
   .login-inner-box {
     width: 55%;
     padding: $space-md 56px;
-  }
-
-  .login-button-group {
-    flex-direction: row;
   }
 
   .login-button-forgot-password {

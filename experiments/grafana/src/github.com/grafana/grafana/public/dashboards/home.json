@@ -23,9 +23,7 @@
       "icon": "external link",
       "includeVars": false,
       "keepTime": true,
-      "tags": [
-        "pigss"
-      ],
+      "tags": ["pigss"],
       "title": "Dashboards",
       "type": "dashboards"
     }
@@ -104,15 +102,11 @@
           "alias": "H2S",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -124,9 +118,7 @@
           "select": [
             [
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "field"
               },
               {
@@ -153,15 +145,11 @@
           "alias": "HCl",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -173,9 +161,7 @@
           "select": [
             [
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "field"
               },
               {
@@ -202,15 +188,11 @@
           "alias": "HF",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -222,9 +204,7 @@
           "select": [
             [
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "field"
               },
               {
@@ -251,15 +231,11 @@
           "alias": "NH3",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -271,9 +247,7 @@
           "select": [
             [
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "field"
               },
               {
@@ -300,15 +274,11 @@
           "alias": "Unstable",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -320,9 +290,7 @@
           "select": [
             [
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "field"
               },
               {
@@ -332,9 +300,7 @@
             ],
             [
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "field"
               },
               {
@@ -344,9 +310,7 @@
             ],
             [
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "field"
               },
               {
@@ -356,9 +320,7 @@
             ],
             [
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "field"
               },
               {
@@ -385,15 +347,11 @@
           "alias": "unselected",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -405,9 +363,7 @@
           "select": [
             [
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "field"
               },
               {
@@ -417,9 +373,7 @@
             ],
             [
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "field"
               },
               {
@@ -429,9 +383,7 @@
             ],
             [
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "field"
               },
               {
@@ -441,9 +393,7 @@
             ],
             [
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "field"
               },
               {
@@ -524,11 +474,7 @@
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
+      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "datasource": "PiGSS data source",
       "decimals": null,
       "format": "none",
@@ -587,15 +533,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -609,9 +551,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "field"
               },
               {
@@ -625,15 +565,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -648,9 +584,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$ports"
-                ],
+                "params": ["$ports"],
                 "type": "field"
               },
               {
@@ -740,11 +674,7 @@
         {
           "alias": "Species",
           "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
+          "colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -776,11 +706,7 @@
         {
           "alias": "",
           "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
+          "colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
           "decimals": 2,
           "pattern": "/.*/",
           "thresholds": [],
@@ -803,9 +729,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$valve_pos"
-                ],
+                "params": ["$valve_pos"],
                 "type": "field"
               }
             ]
@@ -830,33 +754,25 @@
           "select": [
             [
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "field"
               }
             ],
             [
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "field"
               }
             ],
             [
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "field"
               }
             ],
             [
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "field"
               }
             ]
@@ -906,11 +822,7 @@
         {
           "alias": "",
           "colorMode": "value",
-          "colors": [
-            "#56A64B",
-            "#56A64B",
-            "#56A64B"
-          ],
+          "colors": ["#56A64B", "#56A64B", "#56A64B"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -922,11 +834,7 @@
         {
           "alias": "",
           "colorMode": "value",
-          "colors": [
-            "#8F3BB8",
-            "#8F3BB8",
-            "#8F3BB8"
-          ],
+          "colors": ["#8F3BB8", "#8F3BB8", "#8F3BB8"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -938,11 +846,7 @@
         {
           "alias": "",
           "colorMode": "value",
-          "colors": [
-            "#FF780A",
-            "#FF780A",
-            "#FF780A"
-          ],
+          "colors": ["#FF780A", "#FF780A", "#FF780A"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -954,11 +858,7 @@
         {
           "alias": "",
           "colorMode": "value",
-          "colors": [
-            "#E0B400",
-            "#E0B400",
-            "#E0B400"
-          ],
+          "colors": ["#E0B400", "#E0B400", "#E0B400"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -970,11 +870,7 @@
         {
           "alias": "",
           "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
+          "colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
           "dateFormat": "YYYY-MM-DD HH:mm:ss",
           "decimals": 2,
           "mappingType": 1,
@@ -986,11 +882,7 @@
         {
           "alias": "",
           "colorMode": null,
-          "colors": [
-            "rgba(245, 54, 54, 0.9)",
-            "rgba(237, 129, 40, 0.89)",
-            "rgba(50, 172, 45, 0.97)"
-          ],
+          "colors": ["rgba(245, 54, 54, 0.9)", "rgba(237, 129, 40, 0.89)", "rgba(50, 172, 45, 0.97)"],
           "decimals": 2,
           "pattern": "/.*/",
           "thresholds": [],
@@ -1002,9 +894,7 @@
         {
           "groupBy": [
             {
-              "params": [
-                "valve_pos"
-              ],
+              "params": ["valve_pos"],
               "type": "tag"
             }
           ],
@@ -1020,57 +910,41 @@
           "select": [
             [
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "field"
               },
               {
-                "params": [
-                  "H2S"
-                ],
+                "params": ["H2S"],
                 "type": "alias"
               }
             ],
             [
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "field"
               },
               {
-                "params": [
-                  "HCl"
-                ],
+                "params": ["HCl"],
                 "type": "alias"
               }
             ],
             [
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "field"
               },
               {
-                "params": [
-                  "HF"
-                ],
+                "params": ["HF"],
                 "type": "alias"
               }
             ],
             [
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "field"
               },
               {
-                "params": [
-                  "NH3"
-                ],
+                "params": ["NH3"],
                 "type": "alias"
               }
             ]
@@ -1080,15 +954,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -1102,9 +972,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "field"
               },
               {
@@ -1127,9 +995,7 @@
   "refresh": "5s",
   "schemaVersion": 19,
   "style": "dark",
-  "tags": [
-    "pigss"
-  ],
+  "tags": ["pigss"],
   "templating": {
     "list": [
       {
@@ -1207,20 +1073,7 @@
     "to": "now"
   },
   "timepicker": {
-    "refresh_intervals": [
-      "1s",
-      "2s",
-      "5s",
-      "10s",
-      "30s",
-      "1m",
-      "5m",
-      "15m",
-      "30m",
-      "1h",
-      "2h",
-      "1d"
-    ]
+    "refresh_intervals": ["1s", "2s", "5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
   },
   "timezone": "browser",
   "title": "Home",

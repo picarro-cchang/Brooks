@@ -40,10 +40,6 @@ func (hs *HTTPServer) LoginView(c *models.ReqContext) {
 	}
 
 	viewData.Settings["oauth"] = enabledOAuths
-	viewData.Settings["disableUserSignUp"] = !setting.AllowUserSignUp
-	viewData.Settings["loginHint"] = setting.LoginHint
-	viewData.Settings["passwordHint"] = setting.PasswordHint
-	viewData.Settings["disableLoginForm"] = setting.DisableLoginForm
 	viewData.Settings["samlEnabled"] = setting.IsEnterprise && hs.Cfg.SAMLEnabled
 
 	if loginError, ok := tryGetEncryptedCookie(c, LoginErrorCookieName); ok {
@@ -199,15 +195,18 @@ func (hs *HTTPServer) trySetEncryptedCookie(ctx *models.ReqContext, cookieName s
 		return err
 	}
 
-	http.SetCookie(ctx.Resp, &http.Cookie{
+	cookie := http.Cookie{
 		Name:     cookieName,
 		MaxAge:   60,
 		Value:    hex.EncodeToString(encryptedError),
 		HttpOnly: true,
 		Path:     setting.AppSubUrl + "/",
 		Secure:   hs.Cfg.CookieSecure,
-		SameSite: hs.Cfg.CookieSameSite,
-	})
+	}
+	if hs.Cfg.CookieSameSite != http.SameSiteDefaultMode {
+		cookie.SameSite = hs.Cfg.CookieSameSite
+	}
+	http.SetCookie(ctx.Resp, &cookie)
 
 	return nil
 }

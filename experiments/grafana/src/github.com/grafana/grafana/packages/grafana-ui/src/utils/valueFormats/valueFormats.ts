@@ -1,5 +1,6 @@
+import { DecimalCount } from '@grafana/data';
+
 import { getCategories } from './categories';
-import { DecimalCount } from '../../types';
 
 export type ValueFormatter = (
   value: number,
@@ -31,6 +32,12 @@ let hasBuiltIndex = false;
 export function toFixed(value: number, decimals?: DecimalCount): string {
   if (value === null) {
     return '';
+  }
+  if (value === Number.NEGATIVE_INFINITY) {
+    return '-Inf';
+  }
+  if (value === Number.POSITIVE_INFINITY) {
+    return 'Inf';
   }
 
   const factor = decimals ? Math.pow(10, Math.max(0, decimals)) : 1;
