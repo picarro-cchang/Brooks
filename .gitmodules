@@ -1,0 +1,3 @@
+[submodule "projects/pigss/front_end/grafana/src/grafana"]
+	path = projects/pigss/front_end/grafana/src/grafana
+	url = https://github.com/picarro/grafana.git
