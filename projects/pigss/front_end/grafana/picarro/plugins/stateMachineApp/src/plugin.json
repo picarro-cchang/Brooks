@@ -1,0 +1,33 @@
+{
+  "type": "app",
+  "name": "Flow Setup",
+  "id": "multi-app",
+  "enabled": true,
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/setup_icon_dark.svg",
+      "large": "img/setup_icon_dark.svg"
+    }
+  },
+
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Flow Setup",
+      "path": "dashboards/statemachine.json",
+      "addToNav": true,
+      "defaultNav": true
+    },
+    {
+      "type": "panel",
+      "name": "Picarro State Machine"
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.4.x",
+    "plugins": []
+  }
+}
