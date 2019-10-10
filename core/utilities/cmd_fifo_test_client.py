@@ -64,233 +64,233 @@ class TestClientWidget(QWidget):
 
     def __init_items(self):
         # initiate all the items: qboxes, qtext, qframe
-        self.choice_1 = QComboBox()
-        self.text_ctrl_1 = QTextEdit()
-        self.leftPart = QGroupBox()
-        self.rightPart = QGroupBox()
-        self.RegisteredRPCsWidget = QGroupBox("Registered RPCs")
-        self.RegisteredRPCs = QFrame()
-        self.RegisteredRPCsWidgetScrollable = QScrollArea()
-        self.CmdFIFORPSWidget = QGroupBox("CmdFIFO RPCs")
-        self.ServerInformationWidget = QGroupBox("Server Information")
-        self.TransactionsWidget = QGroupBox("Transactions")
+        self.cmd_type_drop_list = QComboBox()
+        self.log_text_box = QTextEdit()
+        self.left_column_interface = QGroupBox()
+        self.right_column_interface = QGroupBox()
+        self.registered_rpcs_widget = QGroupBox("Registered RPCs")
+        self.registered_rpcs = QFrame()
+        self.registered_rpcs_widget_scrollable = QScrollArea()
+        self.cmd_fifo_rpc_widget = QGroupBox("CmdFIFO RPCs")
+        self.server_information_widget = QGroupBox("Server Information")
+        self.transactions_widget = QGroupBox("Transactions")
 
     def __init_layouts(self):
         # initiate all the layouts
-        self.leftPartLayout = QVBoxLayout()
-        self.rightPartLayout = QVBoxLayout()
-        self.RegisteredRPCsWidgetLayout = QVBoxLayout()
-        self.RegisteredRPCsLayout = QVBoxLayout()
-        self.CmdFIFORPSWidgetLayout = QVBoxLayout()
-        self.ServerInformationWidgetLayout = QHBoxLayout()
-        self.TransactionsWidgetLayout = QHBoxLayout()
+        self.left_column_interface_layout = QVBoxLayout()
+        self.right_column_interface_layout = QVBoxLayout()
+        self.registered_rpcs_widget_layout = QVBoxLayout()
+        self.registered_rpcs_layout = QVBoxLayout()
+        self.cmd_fifo_rpc_widget_layout = QVBoxLayout()
+        self.server_information_widget_layout = QHBoxLayout()
+        self.transactions_widget_layout = QHBoxLayout()
 
     def __set_layouts(self):
         # apply all the layouts to corresponded boxes
-        self.RegisteredRPCsWidget.setLayout(self.RegisteredRPCsWidgetLayout)
-        self.RegisteredRPCs.setLayout(self.RegisteredRPCsLayout)
-        self.CmdFIFORPSWidget.setLayout(self.CmdFIFORPSWidgetLayout)
-        self.ServerInformationWidget.setLayout(
-            self.ServerInformationWidgetLayout)
-        self.TransactionsWidget.setLayout(self.TransactionsWidgetLayout)
-        self.leftPart.setLayout(self.leftPartLayout)
-        self.rightPart.setLayout(self.rightPartLayout)
-        self.RegisteredRPCsWidgetScrollable.setWidget(
-            self.RegisteredRPCs)
+        self.registered_rpcs_widget.setLayout(self.registered_rpcs_widget_layout)
+        self.registered_rpcs.setLayout(self.registered_rpcs_layout)
+        self.cmd_fifo_rpc_widget.setLayout(self.cmd_fifo_rpc_widget_layout)
+        self.server_information_widget.setLayout(
+            self.server_information_widget_layout)
+        self.transactions_widget.setLayout(self.transactions_widget_layout)
+        self.left_column_interface.setLayout(self.left_column_interface_layout)
+        self.right_column_interface.setLayout(self.right_column_interface_layout)
+        self.registered_rpcs_widget_scrollable.setWidget(
+            self.registered_rpcs)
 
     def __add_widgets(self):
         # add all the widgets to the layouts
-        self.mgl.addWidget(self.leftPart)
-        self.mgl.addWidget(self.rightPart)
-        self.TransactionsWidgetLayout.addWidget(self.text_ctrl_1)
-        self.RegisteredRPCsWidgetLayout.addWidget(self.choice_1)
-        self.RegisteredRPCsWidgetLayout.addWidget(self.RegisteredRPCsWidgetScrollable)
+        self.mgl.addWidget(self.left_column_interface)
+        self.mgl.addWidget(self.right_column_interface)
+        self.transactions_widget_layout.addWidget(self.log_text_box)
+        self.registered_rpcs_widget_layout.addWidget(self.cmd_type_drop_list)
+        self.registered_rpcs_widget_layout.addWidget(self.registered_rpcs_widget_scrollable)
 
-        self.leftPartLayout.addWidget(self.RegisteredRPCsWidget)
-        self.leftPartLayout.addWidget(self.CmdFIFORPSWidget)
-        self.rightPartLayout.addWidget(self.ServerInformationWidget)
-        self.rightPartLayout.addWidget(self.TransactionsWidget)
+        self.left_column_interface_layout.addWidget(self.registered_rpcs_widget)
+        self.left_column_interface_layout.addWidget(self.cmd_fifo_rpc_widget)
+        self.right_column_interface_layout.addWidget(self.server_information_widget)
+        self.right_column_interface_layout.addWidget(self.transactions_widget)
 
     def __set_properties(self):
         # set some properties
         self.setWindowTitle("CmdFIFO Test Client")
-        choiceList = list(CmdTypeChoicesDict.keys())
-        choiceList.sort()
-        self.choice_1.addItems(choiceList)
-        self.choice_1.setCurrentIndex(2)
-        self.leftPart.setFixedWidth(250)
-        self.RegisteredRPCsWidgetScrollable.setWidgetResizable(True)
-        self.text_ctrl_1.setReadOnly(True)
+        choice_list = list(CmdTypeChoicesDict.keys())
+        choice_list.sort()
+        self.cmd_type_drop_list.addItems(choice_list)
+        self.cmd_type_drop_list.setCurrentIndex(2)
+        self.left_column_interface.setFixedWidth(250)
+        self.registered_rpcs_widget_scrollable.setWidgetResizable(True)
+        self.log_text_box.setReadOnly(True)
 
-        self.ServerInformationWidgetLayout.setAlignment(QtCore.Qt.AlignLeft)
-        self.RegisteredRPCsWidgetLayout.setAlignment(QtCore.Qt.AlignTop)
+        self.server_information_widget_layout.setAlignment(QtCore.Qt.AlignLeft)
+        self.registered_rpcs_layout.setAlignment(QtCore.Qt.AlignTop)
 
     def __init_core_rpc_buttons(self):
         # init the buttons that will call core CmdFIFO RPCs...
-        self.btnGetName = QPushButton("Get Server Name")
-        self.btnGetDescription = QPushButton("Get Server Desc")
-        self.btnGetVersion = QPushButton("Get Server Version")
-        self.btnGetQueueLength = QPushButton("Get Queue Length")
-        self.btnEnableLogging = QPushButton("Enable Logging")
-        self.btnDisableLogging = QPushButton("Disable Logging")
-        self.btnPingFIFO = QPushButton("Ping FIFO")
-        self.btnPingDispatcher = QPushButton("Ping Dispatcher")
-        self.btnShowFIFOGUI = QPushButton("Show FIFO GUI")
-        self.btnHideFIFOGUI = QPushButton("Hide FIFO GUI")
-        self.btnGetProcessID = QPushButton("Get Process ID")
-        self.btnStopServer = QPushButton("Stop Server")
-        self.btnKillServer = QPushButton("Kill Server")
-        self.btnDebugDelay = QPushButton("Debug Delay")
+        self.btn_get_name = QPushButton("Get Server Name")
+        self.btn_get_description = QPushButton("Get Server Desc")
+        self.btn_get_version = QPushButton("Get Server Version")
+        self.btn_get_queue_length = QPushButton("Get Queue Length")
+        self.btn_enable_logging = QPushButton("Enable Logging")
+        self.btn_disable_logging = QPushButton("Disable Logging")
+        self.btn_ping_fifo = QPushButton("Ping FIFO")
+        self.btn_ping_dispatcher = QPushButton("Ping Dispatcher")
+        self.btn_show_fifo_gui = QPushButton("Show FIFO GUI")
+        self.btn_hide_fifo_gui = QPushButton("Hide FIFO GUI")
+        self.btn_get_process_id = QPushButton("Get Process ID")
+        self.btn_stop_server = QPushButton("Stop Server")
+        self.btn_kill_server = QPushButton("Kill Server")
+        self.btn_debug_delay = QPushButton("Debug Delay")
 
         # bind buttons to functions
-        self.btnGetName.clicked.connect(self.OnGetNameClick)
-        self.btnGetDescription.clicked.connect(self.OnGetDescriptionClick)
-        self.btnGetVersion.clicked.connect(self.OnGetVersionClick)
-        self.btnGetQueueLength.clicked.connect(self.OnGetQueueLengthClick)
-        self.btnShowFIFOGUI.clicked.connect(self.OnShowFIFOGUIClick)
-        self.btnHideFIFOGUI.clicked.connect(self.OnHideFIFOGUIClick)
-        self.btnEnableLogging.clicked.connect(self.OnEnableLoggingClick)
-        self.btnDisableLogging.clicked.connect(self.OnDisableLoggingClick)
-        self.btnGetProcessID.clicked.connect(self.OnGetProcessIDClick)
-        self.btnStopServer.clicked.connect(self.OnStopServerClick)
-        self.btnKillServer.clicked.connect(self.OnKillServerClick)
-        self.btnPingFIFO.clicked.connect(self.OnPingFIFOClick)
-        self.btnPingDispatcher.clicked.connect(self.OnPingDispatcherClick)
-        self.btnDebugDelay.clicked.connect(self.OnDebugDelayClick)
+        self.btn_get_name.clicked.connect(self.on_get_name_click)
+        self.btn_get_description.clicked.connect(self.on_get_description_click)
+        self.btn_get_version.clicked.connect(self.on_get_version_click)
+        self.btn_get_queue_length.clicked.connect(self.on_get_queue_length_click)
+        self.btn_show_fifo_gui.clicked.connect(self.on_show_fifo_gui_click)
+        self.btn_hide_fifo_gui.clicked.connect(self.on_hide_fifo_gui_click)
+        self.btn_enable_logging.clicked.connect(self.on_enable_logging_click)
+        self.btn_disable_logging.clicked.connect(self.on_disable_logging_click)
+        self.btn_get_process_id.clicked.connect(self.on_get_process_id_click)
+        self.btn_stop_server.clicked.connect(self.on_stop_server_click)
+        self.btn_kill_server.clicked.connect(self.on_kill_server_click)
+        self.btn_ping_fifo.clicked.connect(self.on_ping_fifo_click)
+        self.btn_ping_dispatcher.clicked.connect(self.on_ping_dispatcher_click)
+        self.btn_debug_delay.clicked.connect(self.on_debug_delay_click)
 
-        # add buttons to the CmdFIFORPSWidgetLayout
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnGetName)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnGetDescription)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnGetVersion)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnGetQueueLength)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnEnableLogging)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnDisableLogging)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnPingFIFO)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnPingDispatcher)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnShowFIFOGUI)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnHideFIFOGUI)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnGetProcessID)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnStopServer)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnKillServer)
-        self.CmdFIFORPSWidgetLayout.addWidget(self.btnDebugDelay)
+        # add buttons to the cmd_fifo_rpc_widget_layout
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_get_name)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_get_description)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_get_version)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_get_queue_length)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_enable_logging)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_disable_logging)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_ping_fifo)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_ping_dispatcher)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_show_fifo_gui)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_hide_fifo_gui)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_get_process_id)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_stop_server)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_kill_server)
+        self.cmd_fifo_rpc_widget_layout.addWidget(self.btn_debug_delay)
 
     def __init_server_labels(self):
-        self.lblServerName = QLabel("Name:")
-        self.tlblServerName = QLabel("---")
-        self.lblProxyAddress = QLabel("Address:")
-        self.tlblProxyAddress = QLabel("---")
-        self.lblProxyPort = QLabel("Port:")
-        self.tlblProxyPort = QLabel("---")
+        self.server_name_label = QLabel("Name:")
+        self.dynamic_server_name_label = QLabel("---")
+        self.proxy_address_label = QLabel("Address:")
+        self.dynamic_proxy_address_label = QLabel("---")
+        self.proxy_port_label = QLabel("Port:")
+        self.dynamic_proxy_port_label = QLabel("---")
 
-        self.ServerInformationWidgetLayout.addWidget(self.lblServerName)
-        self.ServerInformationWidgetLayout.addWidget(self.tlblServerName)
-        self.ServerInformationWidgetLayout.addWidget(self.lblProxyAddress)
-        self.ServerInformationWidgetLayout.addWidget(self.tlblProxyAddress)
-        self.ServerInformationWidgetLayout.addWidget(self.lblProxyPort)
-        self.ServerInformationWidgetLayout.addWidget(self.tlblProxyPort)
+        self.server_information_widget_layout.addWidget(self.server_name_label)
+        self.server_information_widget_layout.addWidget(self.dynamic_server_name_label)
+        self.server_information_widget_layout.addWidget(self.proxy_address_label)
+        self.server_information_widget_layout.addWidget(self.dynamic_proxy_address_label)
+        self.server_information_widget_layout.addWidget(self.proxy_port_label)
+        self.server_information_widget_layout.addWidget(self.dynamic_proxy_port_label)
 
-    def _InvokeRPC(self, FuncName, ArgTuple, KwArgDict={}):
-        assert isinstance(ArgTuple, tuple)
-        assert isinstance(KwArgDict, dict)
-        assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)
-        argStr = ", ".join([repr(x) for x in ArgTuple])
-        if KwArgDict:
+    def _invoke_rpc(self, func_name, arg_tuple, kw_arg_dict={}):
+        assert isinstance(arg_tuple, tuple)
+        assert isinstance(kw_arg_dict, dict)
+        assert isinstance(self.server, CmdFIFO.CmdFIFOServerProxy)
+        argStr = ", ".join([repr(x) for x in arg_tuple])
+        if kw_arg_dict:
             if argStr:
                 argStr += ", "
             argStr += ", ".join([f"{k}={repr(v)}" for k,
-                                 v in KwArgDict.items()])
-        self.text_ctrl_1.append(f"Calling function: {FuncName}({argStr})\n")
+                                 v in kw_arg_dict.items()])
+        self.log_text_box.append(f"Calling function: {func_name}({argStr})\n")
         try:
-            ret = self.Server.__getattr__(FuncName)(*ArgTuple, **KwArgDict)
+            ret = self.server.__getattr__(func_name)(*arg_tuple, **kw_arg_dict)
         except Exception as E:
-            self.text_ctrl_1.append(f"  Exception raised: {E}\n")
+            self.log_text_box.append(f"  Exception raised: {E}\n")
         else:
-            self.text_ctrl_1.append(f"  Response = {ret}\n")
+            self.log_text_box.append(f"  Response = {ret}\n")
 
-    def OnGetNameClick(self):
-        self._InvokeRPC('CmdFIFO.GetName', ())
+    def on_get_name_click(self):
+        self._invoke_rpc('CmdFIFO.GetName', ())
 
-    def OnGetDescriptionClick(self):
-        self._InvokeRPC('CmdFIFO.GetDescription', ())
+    def on_get_description_click(self):
+        self._invoke_rpc('CmdFIFO.GetDescription', ())
 
-    def OnGetVersionClick(self):
-        self._InvokeRPC('CmdFIFO.GetVersion', ())
+    def on_get_version_click(self):
+        self._invoke_rpc('CmdFIFO.GetVersion', ())
 
-    def OnGetQueueLengthClick(self):
-        self._InvokeRPC('CmdFIFO.GetQueueLength', ())
+    def on_get_queue_length_click(self):
+        self._invoke_rpc('CmdFIFO.GetQueueLength', ())
 
-    def OnShowFIFOGUIClick(self):
-        self._InvokeRPC('CmdFIFO.ShowGUI', ())
+    def on_show_fifo_gui_click(self):
+        self._invoke_rpc('CmdFIFO.ShowGUI', ())
 
-    def OnHideFIFOGUIClick(self):
-        self._InvokeRPC('CmdFIFO.HideGUI', ())
+    def on_hide_fifo_gui_click(self):
+        self._invoke_rpc('CmdFIFO.HideGUI', ())
 
-    def OnEnableLoggingClick(self):
-        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (True, ))
+    def on_enable_logging_click(self):
+        self._invoke_rpc('CmdFIFO.SetLoggingStatus', (True, ))
 
-    def OnDisableLoggingClick(self):
-        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (False, ))
+    def on_disable_logging_click(self):
+        self._invoke_rpc('CmdFIFO.SetLoggingStatus', (False, ))
 
-    def OnGetProcessIDClick(self):
-        self._InvokeRPC('CmdFIFO.GetProcessID', ())
+    def on_get_process_id_click(self):
+        self._invoke_rpc('CmdFIFO.GetProcessID', ())
 
-    def OnPingFIFOClick(self):
-        self._InvokeRPC('CmdFIFO.PingFIFO', ())
+    def on_ping_fifo_click(self):
+        self._invoke_rpc('CmdFIFO.PingFIFO', ())
 
-    def OnPingDispatcherClick(self):
-        self._InvokeRPC('CmdFIFO.PingDispatcher', ())
+    def on_ping_dispatcher_click(self):
+        self._invoke_rpc('CmdFIFO.PingDispatcher', ())
 
-    def OnStopServerClick(self):
+    def on_stop_server_click(self):
         dlg = QMessageBox()
         dlg.setText("Are you sure?")
         dlg.setWindowTitle("Are you sure?")
         dlg.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         retval = dlg.exec_()
         if retval == QMessageBox.Yes:
-            self._InvokeRPC('CmdFIFO.StopServer', ())
+            self._invoke_rpc('CmdFIFO.StopServer', ())
 
-    def OnKillServerClick(self):
+    def on_kill_server_click(self):
         text, ok = QInputDialog.getText(
             self, "Kill Server Confirmation", "Killing the server requires a password to confirm the kill.\n\n"
             "Please enter the password now (no quotes required):")
         if ok and text != "":
-            self._InvokeRPC('CmdFIFO.KillServer', (text, ))
+            self._invoke_rpc('CmdFIFO.KillServer', (text, ))
 
-    def OnDebugDelayClick(self):
-        args, kwargs = self._GetArgsFromDialog(
+    def on_debug_delay_click(self):
+        args, kwargs = self._get_args_from_dialog(
             "CmdFIFO.DebugDelay", "DelayTime_s")
         if args is not None:
-            self._InvokeRPC('CmdFIFO.DebugDelay', args, kwargs)
+            self._invoke_rpc('CmdFIFO.DebugDelay', args, kwargs)
 
-    def _GetArgsFromDialog(self, FuncName, Args):
-        argsOkay = True
+    def _get_args_from_dialog(self, func_name, args):
+        args_okay = True
         args = ()
         kwargs = {}
-        text, ok = QInputDialog.getText(self, FuncName, "The selected RPC function requires arguments of the form:"
-                                        f"\n\n{Args}\n\n"
+        text, ok = QInputDialog.getText(self, func_name, "The selected RPC function requires arguments of the form:"
+                                        f"\n\n{args}\n\n"
                                         "Please enter the arguments below as if you were calling\n"
                                         "the function in a Python shell (without outside parentheses).")
         if not ok:
-            argsOkay = False
+            args_okay = False
         else:
             # make a tuple out of what gets entered...
-            dlgValue = text
+            dlg_value = text
             try:
                 # This is required for test_client to pass anything than
                 # integers or strings
                 def my_wrapper(*args, **kwargs):
                     return args, kwargs
 
-                command_to_eval = "my_wrapper(" + dlgValue + ")"
+                command_to_eval = "my_wrapper(" + dlg_value + ")"
                 args, kwargs = eval(command_to_eval)
             except Exception as e:
                 print(e)
-                argsOkay = False
+                args_okay = False
 
                 dlg = QMessageBox()
                 dlg.setText('There was a problem with the typed arguments.\n\n'
                             f'Expected form: {Args}\n'
-                            f'What you typed: {dlgValue}\n\n'
+                            f'What you typed: {dlg_value}\n\n'
                             'The RPC call will not be executed.\n\n'
                             'Possible problems:\n'
                             '  - String args must be enclosed in quotes\n'
@@ -301,58 +301,58 @@ class TestClientWidget(QWidget):
             else:
                 if not isinstance(args, tuple):
                     args = (args, )
-        if not argsOkay:
+        if not args_okay:
             args = None
         return args, kwargs
 
-    def CallbackTest(self, ReturnedVars, Fault):
-        self.text_ctrl_1.append(
-            f"  *** Callback received.  Ret = {ReturnedVars}  Fault = {Fault}\n")
+    def callback_test(self, returned_vars, fault):
+        self.log_text_box.append(
+            f"  *** Callback received.  Ret = {returned_vars}  Fault = {fault}\n")
 
-    def OnRPCButtonClick(self):
-        assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)
+    def on_rpc_button_click(self):
+        assert isinstance(self.server, CmdFIFO.CmdFIFOServerProxy)
         # figure out what to call...
         sender = self.sender()
-        funcName = sender.__getattribute__("method_name")
+        func_name = sender.__getattribute__("method_name")
         # set function method to what is in the choice box
-        choiceStr = self.choice_1.currentText()
-        funcMethod = CmdTypeChoicesDict[choiceStr]
-        if funcMethod == CmdFIFO.CMD_TYPE_Callback:
-            self.Server.SetFunctionMode(
-                funcName, funcMethod, self.CallbackTest)
+        choice_str = self.cmd_type_drop_list.currentText()
+        func_method = CmdTypeChoicesDict[choice_str]
+        if func_method == CmdFIFO.CMD_TYPE_Callback:
+            self.server.SetFunctionMode(
+                func_name, func_method, self.callback_test)
         else:
-            self.Server.SetFunctionMode(funcName, funcMethod)
+            self.server.SetFunctionMode(func_name, func_method)
         # if args exist, prompt for this...
-        args = self.RPCMethodDict[funcName]
+        args = self.rpc_method_dict[func_name]
         if args == '()':
             args = ()
             kwargs = {}
         else:
-            # need to ask user for the argTuple to invoke the function...
-            args, kwargs = self._GetArgsFromDialog(funcName, args)
+            # need to ask user for the arg_tuple to invoke the function...
+            args, kwargs = self._get_args_from_dialog(func_name, args)
         if args is not None:
-            self._InvokeRPC(funcName, args, kwargs)
+            self._invoke_rpc(func_name, args, kwargs)
 
-    def CreateRPCButtons(self, rpcMethodDict):
+    def create_rpc_buttons(self, rpc_method_dict):
         """
             Dynamically creates buttons in 'registered rpc' window.
         """
-        assert isinstance(rpcMethodDict, dict)
-        self.RPCMethodDict = rpcMethodDict
+        assert isinstance(rpc_method_dict, dict)
+        self.rpc_method_dict = rpc_method_dict
         i = 0
-        methods = list(rpcMethodDict.keys())
+        methods = list(rpc_method_dict.keys())
         methods.sort()
-        self.RPCButtons = []
-        for methodName in methods:
-            if (methodName.find("system.") < 0) and (methodName.find("CmdFIFO.") < 0):
+        self.rpc_buttons = []
+        for method_name in methods:
+            if (method_name.find("system.") < 0) and (method_name.find("CmdFIFO.") < 0):
                 i += 1
-                btn = QPushButton(f"  {methodName}")
-                btn.clicked.connect(self.OnRPCButtonClick)
-                btn.__setattr__("method_name", methodName)
-                self.RegisteredRPCsLayout.addWidget(btn)
-                self.RPCButtons.append(btn)
-                toolTip = self.Server.system.methodHelp(methodName)
-                btn.setToolTip(toolTip)
+                btn = QPushButton(f"  {method_name}")
+                btn.clicked.connect(self.on_rpc_button_click)
+                btn.__setattr__("method_name", method_name)
+                self.registered_rpcs_layout.addWidget(btn)
+                self.rpc_buttons.append(btn)
+                tool_tip = self.server.system.methodHelp(method_name)
+                btn.setToolTip(tool_tip)
 
 
 def main():
@@ -369,49 +369,49 @@ def main():
             print(e)
             sys.exit(1)
 
-        proxyAddress = "127.0.0.1"
-        proxyPort = 8001
-        callbackServerAddress = 8002  # default
-        simpleMode = False
+        proxy_address = "127.0.0.1"
+        proxy_port = 8001
+        callback_server_address = 8002  # default
+        simple_mode = False
         for o, a in options:
             if o in ['-h', '--help']:
                 PrintUsage()
                 sys.exit()
             if o in ['-a', '--serveraddr']:
-                proxyAddress = a
+                proxy_address = a
             if o in ['-p', '--serverport']:
-                proxyPort = a
+                proxy_port = a
             if o in ['-c', '--callbackaddr']:
-                callbackServerAddress = int(a)
+                callback_server_address = int(a)
             if o in ['-s', '--simple']:
-                simpleMode = True
+                simple_mode = True
 
         #########
         # Set up the server proxy...
-        serverURL = f"http://{proxyAddress}:{proxyPort}"
+        server_url = f"http://{proxy_address}:{proxy_port}"
         print("***************")
-        print(f"Configuring connection to server at '{serverURL}'")
+        print(f"Configuring connection to server at '{server_url}'")
         print("***************")
         try:
-            server = CmdFIFO.CmdFIFOServerProxy(uri=serverURL,
+            server = CmdFIFO.CmdFIFOServerProxy(uri=server_url,
                                                 IsDontCareConnection=False,
                                                 ClientName="TestClient",
-                                                CallbackURI="http://localhost:" + str(callbackServerAddress))
+                                                CallbackURI="http://localhost:" + str(callback_server_address))
             # reconfigure the default on some functions...
-            # server.SetFunctionMode("Delay",CmdFIFO.CMD_TYPE_Callback, CallbackTest)
+            # server.SetFunctionMode("Delay",CmdFIFO.CMD_TYPE_Callback, callback_test)
             # grab a list of the supported methods...
-            if not simpleMode:
-                rpcMethodList = server.system.listMethods()
+            if not simple_mode:
+                rpc_method_list = server.system.listMethods()
                 # Now build up a dictionary with the keys as method names and values as strings
                 # describing the args...
-                rpcDict = {}
-                for method in rpcMethodList:
+                rpc_dict = {}
+                for method in rpc_method_list:
                     sig = str(server.system.methodSignature(method))
                     # strip the self arg if a method...
                     sig = sig.replace("(self,", "(", 1)
                     sig = sig.replace("(self)", "()", 1)
-                    rpcDict.setdefault(method, sig)
-                if len(rpcDict) == 0:
+                    rpc_dict.setdefault(method, sig)
+                if len(rpc_dict) == 0:
                     sys.exit()
 
         except Exception as E:
@@ -421,19 +421,19 @@ def main():
             app = QApplication([])
 
             window = TestClientWidget()
-            window.Server = server
+            window.server = server
 
-            window.tlblServerName.setText(server.CmdFIFO.GetName())
-            window.tlblProxyAddress.setText(proxyAddress)
-            window.tlblProxyPort.setText(str(proxyPort))
+            window.dynamic_server_name_label.setText(server.CmdFIFO.GetName())
+            window.dynamic_proxy_address_label.setText(proxy_address)
+            window.dynamic_proxy_port_label.setText(str(proxy_port))
 
-            callbackServer = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost", callbackServerAddress),
-                                                                 CallbackList=(window.CallbackTest, ))
-            callbackServer.Launch()
+            callback_server = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost", callback_server_address),
+                                                                 CallbackList=(window.callback_test, ))
+            callback_server.Launch()
 
-            if not simpleMode:
+            if not simple_mode:
                 # Now autogenerate some buttons...
-                window.CreateRPCButtons(rpcDict)
+                window.create_rpc_buttons(rpc_dict)
 
             window.resize(960, 720)
             window.show()
