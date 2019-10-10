@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, {Component, PureComponent, ReactText} from 'react';
 import ReactList from 'react-list';
 import {Plan, PlanSavePanelOptions} from './../types';
@@ -60,7 +61,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
                         <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => {
-                                        // this.props.updateFileName(false);
+                                        this.props.updateFileName(false);
                                         this.props.ws_sender({element: "plan_save_ok"});
                                     }}
                                     className={"btn btn-block btn-med btn-green"}>

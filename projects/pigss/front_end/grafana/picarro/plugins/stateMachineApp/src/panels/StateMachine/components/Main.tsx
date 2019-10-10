@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, { Component, PureComponent, useImperativeHandle } from 'react';
 import PicarroAPI from './../api/PicarroAPI';
 import BankPanel from './BankPanel';
@@ -5,6 +6,7 @@ import CommandPanel from './CommandPanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
 import PlanSavePanel from './PlanSavePanel';
+// @ts-ignore
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import {ModalInfo, PlanPanelTypes} from './../types';
@@ -21,7 +23,7 @@ export class Main extends Component<any, any> {
       html: "",
       num_buttons: 0,
       buttons: {}
-},
+    },
     uistatus: {},
     plan: {
       max_steps: 10,
@@ -92,12 +94,12 @@ export class Main extends Component<any, any> {
       panel_to_show: 0
     },
     isPlan: false,
-    // isChanged: false
+    isChanged: false
   };
   constructor(props) {
     super(props);
   //  this.switchPanel = this.switchPanel.bind(this)
-  //   this.updateFileName = this.updateFileName.bind(this)
+    this.updateFileName = this.updateFileName.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -133,7 +135,6 @@ export class Main extends Component<any, any> {
     let p2 = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
         response => {
           response.json().then(obj => {
-            // this.refWebSocket.sendMessage("message via websocket");
             this.setState(deepmerge(this.state, { plan: obj }));
           })
         }
@@ -141,14 +142,12 @@ export class Main extends Component<any, any> {
     let p3 = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
         response => {
           response.json().then(obj => {
-            // this.refWebSocket.sendMessage("message via websocket");
             this.setState(deepmerge(this.state, { modal_info: obj }));
           })
         }
     );
     Promise.all([p1, p2, p3]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
-      //console.log("State after getting uistatus, plan and modal info", this.state);
     })
   };
 
@@ -157,7 +156,6 @@ export class Main extends Component<any, any> {
   }
 
   handleData(data: any) {
-    //console.log("Receiving from websocket", data);
     const o = JSON.parse(data);
     if (this.state.initialized) {
       if ("uistatus" in o) {
@@ -176,18 +174,15 @@ export class Main extends Component<any, any> {
   }
 
   ws_sender = (o: object) => {
-   // console.log("Sending to websocket:", o);
     this.ws.send(JSON.stringify(o));
   };
 
-  // updateFileName(x: boolean){
-  //     this.setState({isChanged: x});
-  //     console.log("changed the state ", this.state.isChanged);
-  //
-  // };
+  updateFileName(x: boolean){
+      this.setState({isChanged: x});
+      console.log("changed the state ", this.state.isChanged);
+  };
 
   render() {
-    // console.log("Changed? ", this.props.isChanged);
     let left_panel;
     let isPlan = false;
     switch (this.state.plan.panel_to_show) {
@@ -198,26 +193,25 @@ export class Main extends Component<any, any> {
         left_panel = (
             <PlanPanel uistatus={this.state.uistatus} plan={this.state.plan}
                        setFocus={(row, column) => this.setFocus(row, column)}
-                       // updateFileName={this.updateFileName}
-                       // isChanged={this.state.isChanged}
+                       updateFileName={this.updateFileName}
+                       isChanged={this.state.isChanged}
                        ws_sender={this.ws_sender} />
         );
-      /*  Commenting out Reference button for now, Marketing says we probably wont need it in plan*/
         isPlan = true;
         break;
       case PlanPanelTypes.LOAD:
         left_panel = (
             <PlanLoadPanel plan={this.state.plan}
-                           // updateFileName={this.updateFileName}
-                           // isChanged={this.state.isChanged}
+                           updateFileName={this.updateFileName}
+                           isChanged={this.state.isChanged}
                            ws_sender={this.ws_sender} />
         );
         break;
       case PlanPanelTypes.SAVE:
         left_panel = (
             <PlanSavePanel plan={this.state.plan}
-                           // updateFileName={this.updateFileName}
-                           // isChanged={this.state.isChanged}
+                           updateFileName={this.updateFileName}
+                           isChanged={this.state.isChanged}
                            ws_sender={this.ws_sender} />
         );
         break;
@@ -255,7 +249,7 @@ export class Main extends Component<any, any> {
       }
 
     }
-
+    console.log("File changed Main ? ", this.state.isChanged);
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">

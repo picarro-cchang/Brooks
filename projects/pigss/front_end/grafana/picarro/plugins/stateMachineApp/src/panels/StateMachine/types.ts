@@ -1,17 +1,3 @@
-// export interface Options {
-//   imageUrl: string;
-//   updateInterval: number;
-// }
-//
-// export const defaults: Options = {
-//   imageUrl: "",
-//   updateInterval: 60 * 5
-// };
-
-// export const defaults: CommandPanelOptions = {
-//
-// }
-
 export interface ButtonInfo {
   caption: string;
   className: string;
@@ -59,8 +45,8 @@ export interface PlanFocus {
 export interface PlanLoadPanelOptions {
   plan: Plan;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export interface PlanPanelOptions {
@@ -68,8 +54,8 @@ export interface PlanPanelOptions {
   plan: Plan;
   setFocus: (row: number, column: number) => void;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export enum PlanPanelTypes {
@@ -83,8 +69,8 @@ export enum PlanPanelTypes {
 export interface PlanSavePanelOptions {
   plan: Plan;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export interface BankConfig {
