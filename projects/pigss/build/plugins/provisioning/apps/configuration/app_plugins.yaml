@@ -1,14 +1,14 @@
 ---
 name: State Machine
-path: ../../../../../front_end/grafana/picarro/plugins/stateMachineApp/src/plugin.json
+path: ../../../../front_end/grafana/picarro/plugins/stateMachineApp/src/plugin.json
 ---
 name: Analyzer Graphs
-path: ../../../../../front_end/grafana/picarro/plugins/plugins/analyzerGraphsApp/src/plugin.json
+path: ../../../../front_end/grafana/picarro/plugins/analyzerGraphsApp/src/plugin.json
 ---
 name: Concentration By Valve
-path: ../../../../../front_end/grafana/picarro/plugins/plugins/concentrationByValveApp/src/plugin.json
+path: ../../../../front_end/grafana/picarro/plugins/concentrationByValveApp/src/plugin.json
 ---
 name: Current Values
-path: ../../../../../front_end/grafana/picarro/plugins/plugins/currentValuesApp/src/plugin.json
+path: ../../../../front_end/grafana/picarro/plugins/currentValuesApp/src/plugin.json
 
 
