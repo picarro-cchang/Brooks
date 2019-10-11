@@ -1,0 +1,114 @@
+[
+    {
+        "proxy_server_name": "supervisor",
+        "proxy_server_addres": "must_be_supplied_as_master_ip",
+        "proxy_server_port": "50030",
+        "new_methods_postfix": "",
+        "new_methods_prefix": "SV_",
+        "functions": [
+            {
+                "original_name": "RPC_TerminateApplications",
+                "new_name": ""
+            }
+        ]
+    },
+    {
+        "proxy_server_name": "INSTMGR",
+        "proxy_server_addres": "must_be_supplied_as_master_ip",
+        "proxy_server_port": "50110",
+        "new_methods_postfix": "",
+        "new_methods_prefix": "INSTMGR_",
+        "functions": [
+            {
+                "original_name": "INSTMGR_GetStateRpc",
+                "new_name": "GetStateRpc"
+            },
+            {
+                "original_name": "INSTMGR_GetStatusRpc",
+                "new_name": "GetStatusRpc"
+            },
+            {
+                "original_name": "INSTMGR_ShutdownRpc",
+                "new_name": "ShutdownRpc"
+            }
+        ]
+    },
+    {
+        "proxy_server_name": "Driver",
+        "proxy_server_addres": "must_be_supplied_as_master_ip",
+        "proxy_server_port": "50010",
+        "new_methods_postfix": "",
+        "new_methods_prefix": "DR_",
+        "functions": [
+            {
+                "original_name": "allVersions",
+                "new_name": ""
+            },
+            {
+                "original_name": "dasGetTicks",
+                "new_name": ""
+            },
+            {
+                "original_name": "fetchHardwareCapabilities",
+                "new_name": ""
+            },
+            {
+                "original_name": "fetchLogicEEPROM",
+                "new_name": ""
+            },
+            {
+                "original_name": "getLockStatus",
+                "new_name": ""
+            },
+            {
+                "original_name": "getPressureReading",
+                "new_name": ""
+            },
+            {
+                "original_name": "getProportionalValves",
+                "new_name": ""
+            },
+            {
+                "original_name": "getValveMask",
+                "new_name": ""
+            },
+            {
+                "original_name": "getWarmingState",
+                "new_name": ""
+            },
+            {
+                "original_name": "hostGetTicks",
+                "new_name": ""
+            },
+            {
+                "original_name": "invokeSupervisorLauncher",
+                "new_name": ""
+            },
+            {
+                "original_name": "rdDasReg",
+                "new_name": ""
+            },
+            {
+                "original_name": "rdFPGA",
+                "new_name": ""
+            },
+            {
+                "original_name": "setValveMask",
+                "new_name": ""
+            },
+            {
+                "original_name": "startEngine",
+                "new_name": ""
+            },
+            {
+                "original_name": "wrDasReg",
+                "new_name": ""
+            },
+            {
+                "original_name": "wrFPGA",
+                "new_name": ""
+            }
+        ]
+    }
+]
+
