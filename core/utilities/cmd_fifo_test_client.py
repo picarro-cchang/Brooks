@@ -10,6 +10,8 @@ For instructions on how to use, use the -h command line switch to get:
 
 P.S. This is a QT based implementation of the previously WX based script.
 """
+import sys
+import getopt
 import CmdFIFO
 
 from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QGroupBox, QTextEdit, QHBoxLayout, \
@@ -190,9 +192,13 @@ class TestClientWidget(QWidget):
         self.server_information_widget_layout.addWidget(self.dynamic_proxy_port_label)
 
     def _invoke_rpc(self, func_name, arg_tuple, kw_arg_dict={}):
-        assert isinstance(arg_tuple, tuple)
-        assert isinstance(kw_arg_dict, dict)
-        assert isinstance(self.server, CmdFIFO.CmdFIFOServerProxy)
+        if not isinstance(arg_tuple, tuple):
+            raise ValueError(f"arg_tuple has to be tuple, got {type(arg_tuple)} instead.")
+        if not isinstance(kw_arg_dict, dict):
+            raise ValueError(f"kw_arg_dict has to be dict, got {type(kw_arg_dict)} instead.")
+        if not isinstance(self.server, CmdFIFO.CmdFIFOServerProxy):
+            raise ValueError(f"self.server has to be CmdFIFO.CmdFIFOServerProxy, got {type(self.server)} instead.")
+
         argStr = ", ".join([repr(x) for x in arg_tuple])
         if kw_arg_dict:
             if argStr:
@@ -200,10 +206,12 @@ class TestClientWidget(QWidget):
             argStr += ", ".join([f"{k}={repr(v)}" for k,
                                  v in kw_arg_dict.items()])
         self.log_text_box.append(f"Calling function: {func_name}({argStr})\n")
+        QApplication.processEvents()
         try:
             ret = self.server.__getattr__(func_name)(*arg_tuple, **kw_arg_dict)
-        except Exception as E:
-            self.log_text_box.append(f"  Exception raised: {E}\n")
+        except Exception as e: # noqa
+            # catch any exceptions on the server side.
+            self.log_text_box.append(f"  Exception raised: {e}\n")
         else:
             self.log_text_box.append(f"  Response = {ret}\n")
 
@@ -262,12 +270,12 @@ class TestClientWidget(QWidget):
         if args is not None:
             self._invoke_rpc('CmdFIFO.DebugDelay', args, kwargs)
 
-    def _get_args_from_dialog(self, func_name, args):
+    def _get_args_from_dialog(self, func_name, args_in):
         args_okay = True
         args = ()
         kwargs = {}
         text, ok = QInputDialog.getText(self, func_name, "The selected RPC function requires arguments of the form:"
-                                        f"\n\n{args}\n\n"
+                                        f"\n\n{args_in}\n\n"
                                         "Please enter the arguments below as if you were calling\n"
                                         "the function in a Python shell (without outside parentheses).")
         if not ok:
@@ -283,13 +291,14 @@ class TestClientWidget(QWidget):
 
                 command_to_eval = "my_wrapper(" + dlg_value + ")"
                 args, kwargs = eval(command_to_eval)
-            except Exception as e:
-                print(e)
+            except Exception as e: # noqa
+                # exception can happen during the eval statement
+                if __debug__: print(e) # noqa
                 args_okay = False
 
                 dlg = QMessageBox()
                 dlg.setText('There was a problem with the typed arguments.\n\n'
-                            f'Expected form: {Args}\n'
+                            f'Expected form: {args_in}\n'
                             f'What you typed: {dlg_value}\n\n'
                             'The RPC call will not be executed.\n\n'
                             'Possible problems:\n'
@@ -310,7 +319,9 @@ class TestClientWidget(QWidget):
             f"  *** Callback received.  Ret = {returned_vars}  Fault = {fault}\n")
 
     def on_rpc_button_click(self):
-        assert isinstance(self.server, CmdFIFO.CmdFIFOServerProxy)
+        if not isinstance(self.server, CmdFIFO.CmdFIFOServerProxy):
+            raise ValueError(f"self.server has to be CmdFIFO.CmdFIFOServerProxy, got {type(self.server)} instead.")
+
         # figure out what to call...
         sender = self.sender()
         func_name = sender.__getattribute__("method_name")
@@ -337,7 +348,9 @@ class TestClientWidget(QWidget):
         """
             Dynamically creates buttons in 'registered rpc' window.
         """
-        assert isinstance(rpc_method_dict, dict)
+        if not isinstance(rpc_method_dict, dict):
+            raise ValueError(f"rpc_method_dict has to be dict, got {type(rpc_method_dict)} instead.")
+
         self.rpc_method_dict = rpc_method_dict
         i = 0
         methods = list(rpc_method_dict.keys())
@@ -357,89 +370,79 @@ class TestClientWidget(QWidget):
 
 def main():
     try:
+        options, _ = getopt.getopt(sys.argv[1:], 'a:p:c:hs',
+                                   ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple'])
+    except getopt.GetoptError as e:
+        if __debug__: print(e) # noqa
+        sys.exit(1)
 
-        import sys
-        # import exceptions
-        import getopt
+    proxy_address = "127.0.0.1"
+    proxy_port = 8001
+    callback_server_address = 8002  # default
+    simple_mode = False
+    for o, a in options:
+        if o in ['-h', '--help']:
+            PrintUsage()
+            sys.exit()
+        if o in ['-a', '--serveraddr']:
+            proxy_address = a
+        if o in ['-p', '--serverport']:
+            proxy_port = a
+        if o in ['-c', '--callbackaddr']:
+            callback_server_address = int(a)
+        if o in ['-s', '--simple']:
+            simple_mode = True
 
-        try:
-            options, args = getopt.getopt(sys.argv[1:], 'a:p:c:hs',
-                                          ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple'])
-        except getopt.GetoptError as e:
-            print(e)
-            sys.exit(1)
-
-        proxy_address = "127.0.0.1"
-        proxy_port = 8001
-        callback_server_address = 8002  # default
-        simple_mode = False
-        for o, a in options:
-            if o in ['-h', '--help']:
-                PrintUsage()
+    #########
+    # Set up the server proxy...
+    server_url = f"http://{proxy_address}:{proxy_port}"
+    if __debug__: print("***************") # noqa
+    if __debug__: print(f"Configuring connection to server at '{server_url}'") # noqa
+    if __debug__: print("***************") # noqa
+    try:
+        server = CmdFIFO.CmdFIFOServerProxy(uri=server_url,
+                                            IsDontCareConnection=False,
+                                            ClientName="TestClient",
+                                            CallbackURI="http://localhost:" + str(callback_server_address))
+        # grab a list of the supported methods...
+        if not simple_mode:
+            rpc_method_list = server.system.listMethods()
+            # Now build up a dictionary with the keys as method names and values as strings
+            # describing the args...
+            rpc_dict = {}
+            for method in rpc_method_list:
+                sig = str(server.system.methodSignature(method))
+                # strip the self arg if a method...
+                sig = sig.replace("(self,", "(", 1)
+                sig = sig.replace("(self)", "()", 1)
+                rpc_dict.setdefault(method, sig)
+            if len(rpc_dict) == 0:
                 sys.exit()
-            if o in ['-a', '--serveraddr']:
-                proxy_address = a
-            if o in ['-p', '--serverport']:
-                proxy_port = a
-            if o in ['-c', '--callbackaddr']:
-                callback_server_address = int(a)
-            if o in ['-s', '--simple']:
-                simple_mode = True
 
-        #########
-        # Set up the server proxy...
-        server_url = f"http://{proxy_address}:{proxy_port}"
-        print("***************")
-        print(f"Configuring connection to server at '{server_url}'")
-        print("***************")
-        try:
-            server = CmdFIFO.CmdFIFOServerProxy(uri=server_url,
-                                                IsDontCareConnection=False,
-                                                ClientName="TestClient",
-                                                CallbackURI="http://localhost:" + str(callback_server_address))
-            # reconfigure the default on some functions...
-            # server.SetFunctionMode("Delay",CmdFIFO.CMD_TYPE_Callback, callback_test)
-            # grab a list of the supported methods...
-            if not simple_mode:
-                rpc_method_list = server.system.listMethods()
-                # Now build up a dictionary with the keys as method names and values as strings
-                # describing the args...
-                rpc_dict = {}
-                for method in rpc_method_list:
-                    sig = str(server.system.methodSignature(method))
-                    # strip the self arg if a method...
-                    sig = sig.replace("(self,", "(", 1)
-                    sig = sig.replace("(self)", "()", 1)
-                    rpc_dict.setdefault(method, sig)
-                if len(rpc_dict) == 0:
-                    sys.exit()
+    except Exception as e:
+        if __debug__: print("Trapped an exception when connecting to server:", e)  # noqa
 
-        except Exception as E:
-            print("Trapped an exception when connecting to server:", E)
+    else:
+        app = QApplication([])
 
-        else:
-            app = QApplication([])
+        window = TestClientWidget()
+        window.server = server
 
-            window = TestClientWidget()
-            window.server = server
+        window.dynamic_server_name_label.setText(server.CmdFIFO.GetName())
+        window.dynamic_proxy_address_label.setText(proxy_address)
+        window.dynamic_proxy_port_label.setText(str(proxy_port))
 
-            window.dynamic_server_name_label.setText(server.CmdFIFO.GetName())
-            window.dynamic_proxy_address_label.setText(proxy_address)
-            window.dynamic_proxy_port_label.setText(str(proxy_port))
+        callback_server = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost", callback_server_address),
+                                                              CallbackList=(window.callback_test, ))
+        callback_server.Launch()
 
-            callback_server = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost", callback_server_address),
-                                                                 CallbackList=(window.callback_test, ))
-            callback_server.Launch()
+        if not simple_mode:
+            # Now autogenerate some buttons...
+            window.create_rpc_buttons(rpc_dict)
 
-            if not simple_mode:
-                # Now autogenerate some buttons...
-                window.create_rpc_buttons(rpc_dict)
-
-            window.resize(960, 720)
-            window.show()
-            app.exec_()
-    except Exception as E:
-        raise E
+        window.resize(960, 720)
+        window.show()
+        app.exec_()
 
 
 if __name__ == "__main__":
