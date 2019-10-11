@@ -1,31 +1,19 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   port_history_service.py
-#
-# DESCRIPTION:
-#   Provides a JSON datasource for Grafana which serves up information
-#  about what the port names were within a certain range of epoch times
-#  so that the port name combo boxes and graph titles can be correctly
-#  shown
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Provides a JSON datasource for Grafana which serves up information
+ about what the port names were within a certain range of epoch times
+ so that the port name combo boxes and graph titles can be correctly
+ shown
+"""
 import json
 import time
 
 from aiohttp import web
-
 from aioinflux import iterpoints
-from experiments.common.service_template import ServiceTemplate
-from experiments.IDriver.DBWriter.AioInfluxDBWriter import AioInfluxDBWriter
-from experiments.LOLogger.LOLoggerClient import LOLoggerClient
+
+from back_end.database_access.aio_influx_database import AioInfluxDBWriter
+from back_end.lologger.lologger_client import LOLoggerClient
+from back_end.servers.service_template import ServiceTemplate
 
 log = LOLoggerClient(client_name="PortHistoryService", verbose=True)
 
@@ -39,7 +27,7 @@ class PortHistoryService(ServiceTemplate):
         self.app.router.add_route("POST", "/search", self.search)
 
     async def on_startup(self, app):
-        log.info("port history service is starting up")
+        log.info("Port history service is starting up")
         db_config = self.app['farm'].config.get_time_series_database()
         self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
         self.bank_names = None
@@ -104,7 +92,7 @@ class PortHistoryService(ServiceTemplate):
 
     async def on_shutdown(self, app):
         await self.db_writer.close_connection()
-        log.info("port history service is shutting down")
+        log.info("Port history service is shutting down")
 
     async def health_check(self, request):
         """

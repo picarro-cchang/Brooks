@@ -1,20 +1,8 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   pigss_runner.py
-#
-# DESCRIPTION:
-#  Starts up the back end software consisting of a "farm" of Hierarchical
-# State Machines and a collection of web services.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Starts up the back end software consisting of a "farm" of Hierarchical State Machines
+ and a collection of web services.
+"""
 import asyncio
 import os
 import traceback
@@ -34,7 +22,14 @@ from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
 
 log = LOLoggerClient(client_name="PigssRunner", verbose=True)
-my_path = os.path.dirname(os.path.abspath(__file__))
+
+# Get a prioritized list of places to look for the config file
+config_path = [
+    os.getenv("PIGSS_CONFIG"),
+    os.path.join(os.getenv("HOME"), ".config", "pigss"),
+    os.path.dirname(os.path.abspath(__file__))
+]
+config_path = [p for p in config_path if p is not None and os.path.exists(p) and os.path.isdir(p)]
 
 
 class PigssRunner:
@@ -60,7 +55,7 @@ class PigssRunner:
         await app['farm'].shutdown()
 
     async def on_cleanup(self, app):
-        print("PigssRunner is cleaning up")
+        log.info("PigssRunner is cleaning up")
         self.terminate_event.set()
 
     @log_async_exception(log_func=log.error, stop_loop=True)
@@ -109,7 +104,7 @@ class PigssRunner:
         await self.runner.setup()
         site = web.TCPSite(self.runner, self.addr, self.port)
         await site.start()
-        print(f"======== Running on http://{site._host}:{site._port} ========")
+        log.info(f"======== Running on http://{site._host}:{site._port} ========")
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
@@ -142,22 +137,29 @@ async def setup_dummy_interfaces(num_interfaces):
     for i in range(num_interfaces):
         retcode, out, err = await run_and_raise(f'sudo ip link add dummy{i} type dummy')
         retcode, out, err = await run_and_raise(f'sudo ip addr add 192.168.10.{101 + i}/24 brd + dev dummy{i}')
-        # retcode, out, err = await run_and_raise(f'sudo ip link set dummy{i} up')
 
 
 async def async_main(config_filename):
     try:
-        config_filename = os.path.normpath(os.path.join(my_path, config_filename))
-        log.info(f"Starting PigssRunner with configuration file {config_filename}")
-        service = PigssRunner()
-        # loop = asyncio.get_event_loop()
-        # loop.set_exception_handler(service.handle_exception)
-        await service.server_init(config_filename)
-        await Framework.done()
-    except Exception as e:
+        service = None
+        found = False
+        for p in config_path:
+            filename = os.path.normpath(os.path.join(p, config_filename))
+            if os.path.exists(filename):
+                found = True
+                break
+        if found:
+            log.info(f"Starting PigssRunner with configuration file {filename}")
+            service = PigssRunner()
+            await service.server_init(filename)
+            await Framework.done()
+        else:
+            log.error(f"Configuration file {config_filename} was not found")
+    except Exception as e:  # noqa
+        # Catch unhandled exceptions to be logged
         log.error(f"Exception in main()\n{e}\n{traceback.format_exc()}")
     finally:
-        if service.runner is not None:
+        if service and service.runner is not None:
             await service.runner.cleanup()
             await service.terminate_event.wait()
     log.info('PigssRunner stopped')

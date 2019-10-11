@@ -1,26 +1,13 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   pigss_supervisor.py
-#
-# DESCRIPTION:
-#   Hierarchical state machine which supervises processes (typically drivers and
-#  services) which are run during the operation of the sampler rack and starts
-#  up their RPC servers. Monitoring tasks that ping these processes through their
-#  RPC servers are also started. These monitors will restart those processes
-#  which fail to respond to pings.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Hierarchical state machine which supervises processes (typically drivers and
+ services) which are run during the operation of the sampler rack and starts
+ up their RPC servers. Monitoring tasks that ping these processes through their
+ RPC servers are also started. These monitors will restart those processes
+ which fail to respond to pings.
+"""
 import asyncio
 import json
-import os
 import time
 from collections import deque
 
@@ -47,9 +34,6 @@ from simulation.sim_piglet_driver import SimPigletDriver
 
 port = rpc_ports.get('madmapper')
 ping_interval = 2.0
-
-my_path = os.path.dirname(os.path.abspath(__file__))
-tunnel_configs = os.path.normpath(os.path.join(my_path, 'rpc_tunnel_configs.json'))
 
 log = LOLoggerClient(client_name="PigssSupervisor", verbose=True)
 
@@ -113,14 +97,17 @@ class ProcessWrapper:
         try:
             while True:
                 await asyncio.sleep(period)
-                if await asyncio.wait_for(self.rpc_wrapper.CmdFIFO.PingFIFO(), timeout=2 * period) == 'Ping OK':
-                    print("+", end="", flush=True)
+                if await asyncio.wait_for(self.rpc_wrapper.CmdFIFO.PingFIFO(), timeout=2 * period) != 'Ping OK':
+                    raise ValueError("Bad response to ping")
         except CmdFIFO.RemoteException:
             log.warning(f"Ping to process {self.name} raised exception. Killing process.")
             await self.stop_process("Ping to process raised exception.")
         except asyncio.TimeoutError:
             log.warning(f"Ping to process {self.name} timed out. Killing process.")
             await self.stop_process("Ping to process timed out.")
+        except ValueError:
+            log.warning(f"Ping to process {self.name} returned unexpected response. Killing process.")
+            await self.stop_process("Ping to process returned unexpected response.")
 
 
 class PigssSupervisor(Ahsm):
@@ -142,7 +129,7 @@ class PigssSupervisor(Ahsm):
         self.mon_task = None
         with open(self.tunnel_config_filename, "r") as f:
             self.rpc_tunnel_config = json.loads(f.read())
-        log.info(f"RPC Tunnel settings loaded from {self.tunnel_config_filename}")
+            log.info(f"RPC Tunnel settings loaded from {self.tunnel_config_filename}")
 
     def get_device_map(self):
         return self.device_dict
@@ -230,7 +217,7 @@ class PigssSupervisor(Ahsm):
             payload = e.value
             self.device_dict = payload.copy()
             self.bank_list = []
-            for name, descr in payload["Devices"]["Serial_Devices"].items():
+            for descr in payload["Devices"]["Serial_Devices"].values():
                 if descr["Driver"] == "PigletDriver":
                     self.bank_list.append(descr["Bank_ID"])
             self.tasks.append(self.run_async(self.startup_drivers()))
@@ -277,7 +264,6 @@ class PigssSupervisor(Ahsm):
         wrapped_process = ProcessWrapper(MadMapper, rpc_ports.get('madmapper'), "MadMapper")
         self.wrapped_processes["MadMapper"] = wrapped_process
         madmapper_rpc = await wrapped_process.start(simulation=self.simulation)
-        # self.device_dict = await madmapper_rpc.read_json()
         self.device_dict = await madmapper_rpc.map_devices(True)
         log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
         Framework.publish(Event(Signal.MADMAPPER_DONE, self.device_dict))
@@ -407,7 +393,7 @@ class PigssSupervisor(Ahsm):
                                                 rpc_port=rpc_port,
                                                 **service.get("Parameters", {}))
             else:
-                print(f"Unknown service {service} ignored")
+                log.info(f"Unknown service {service} ignored")
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
     async def startup_services(self):

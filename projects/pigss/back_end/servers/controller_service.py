@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   controller_service.py
-#
-# DESCRIPTION:
-#   Provides an API for interacting with and querying the pigss_controller
-#  and the pigss_error_manager state machines. It is used by the flow setup
-#  front-end UI to fetch the bank and button status, the plan, and modal
-#  messages.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Provides an API for interacting with and querying the pigss_controller
+ and the pigss_error_manager state machines. It is used by the flow setup
+ front-end UI to fetch the bank and button status, the plan, and modal
+ messages.
+"""
 import asyncio
 import time
 import traceback
@@ -56,7 +44,6 @@ class ControllerService(ServiceTemplate):
         farm = app['farm']
         while True:
             msg = await farm.send_queue.get()
-            # print(f"Websocket send: {msg}")
             for ws in app['websockets']:
                 try:
                     await ws.send_str(msg)
@@ -65,7 +52,7 @@ class ControllerService(ServiceTemplate):
                     pass
 
     async def on_startup(self, app):
-        log.info("controller service is starting up")
+        log.info("Controller service is starting up")
         self.tasks = []
         self.app['websockets'] = []
         self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
@@ -76,7 +63,7 @@ class ControllerService(ServiceTemplate):
             task.cancel()
         for ws in app['websockets']:
             await ws.close(code=1001, message='Server shutdown')
-        log.info("controller service is shutting down")
+        log.info("Controller service is shutting down")
 
     async def handle_errors(self, request):
         """
@@ -128,7 +115,8 @@ class ControllerService(ServiceTemplate):
         try:
             result = await controller.auto_setup_flow(plan_filename)
             return web.Response(text=result)
-        except Exception as e:
+        except Exception as e:  # noqa
+            # Report unexpected exception with traceback back to initiator
             return web.Response(text=f"{e}\n{traceback.format_exc()}")
 
     async def handle_event(self, request):
@@ -256,7 +244,6 @@ class ControllerService(ServiceTemplate):
         request.app['websockets'].append(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         async for msg in ws:
-            # print(f"Websocket receive: {msg}")
             await farm.receive_queue.put(msg.data)
         request.app['websockets'].remove(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])

@@ -26,7 +26,6 @@ from common.rpc_ports import rpc_ports
 from back_end.influxdb_retention.rt_policy_manager import RTPolicyManager
 from back_end.lologger.lologger_client import LOLoggerClient
 
-
 influx_comparison_operators = ["=", "<>", "!=", ">", ">=", "<", "<="]
 default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
 
@@ -62,7 +61,6 @@ class DBDecimatorFactory(object):
     """
         A class to create DBDecimator with a provided dictionary of settings
     """
-
     def create_default_DBDecimator(self):
         """Create DBDecimator with default settings"""
         return self.create_DBDecimator_with_settings(default_settings)
@@ -79,7 +77,7 @@ class DBDecimatorFactory(object):
             db_decimator = DBDecimator(**settings)
         # if creating a DBDecimator failed for any possible reason - return False
         except Exception:
-            print(traceback.format_exc()) # this cant be a log message since lologger_client is not initiated yet
+            print(traceback.format_exc())  # this cant be a log message since lologger_client is not initiated yet
             return False
         return db_decimator
 
@@ -95,7 +93,6 @@ class DBDecimator(object):
            delete 15s resolution data after 10 years,
            delete 1m resolution data after 15 years, etc.
     """
-
     def __init__(self,
                  db_host_address="localhost",
                  db_port=8086,
@@ -123,27 +120,23 @@ class DBDecimator(object):
         elif isinstance(logger, LOLoggerClient):
             self.logger = logger
         else:
-            self.logger = LOLoggerClient(
-                client_name=self.__class__.__name__, verbose=verbose)
+            self.logger = LOLoggerClient(client_name=self.__class__.__name__, verbose=verbose)
 
         # check if database can be reached
-        self.main_client = InfluxDBClient(
-            host=self.db_host_address, port=self.db_port)
+        self.main_client = InfluxDBClient(host=self.db_host_address, port=self.db_port)
         if not check_if_db_exists(self.db_name, self.main_client):
             raise ValueError(f"Database {self.db_name} not found")
         self.main_client.switch_database(self.db_name)
 
         # compare passed retention policies to existed and fix existed if needed
-        self.rt_policy_manager = RTPolicyManager(
-            client=self.main_client, logger=self.logger)
+        self.rt_policy_manager = RTPolicyManager(client=self.main_client, logger=self.logger)
 
         if retention_policies is not None:
             self.rt_policy_manager.compare_and_fix(retention_policies)
 
         # how often loop will check for new decimation need
         if not (isinstance(time_sleep, int) or isinstance(time_sleep, float)) or time_sleep < 0:
-            raise ValueError(
-                f"time_sleep must be an int or float >=0, getting {self.db_name}")
+            raise ValueError(f"time_sleep must be an int or float >=0, getting {self.db_name}")
         self.time_sleep = time_sleep
 
         # RPC server params
@@ -209,8 +202,7 @@ class DBDecimator(object):
         if not isinstance(key, list):
             key = [key]
         if key[0] not in ["retention_policies", "raw_filter_conditions"]:
-            self.logger.error(f"Only settings in {settings_whitelist} allowed to "
-                              f"change, tried to change {key[0]}")
+            self.logger.error(f"Only settings in {settings_whitelist} allowed to " f"change, tried to change {key[0]}")
             return False
 
         try:
@@ -232,18 +224,15 @@ class DBDecimator(object):
     def generate_durations_meta(self):
         """Some routines around durations list"""
         self.durations = sort_durations(self.durations)
-        self.durations_ms = [dt.generate_duration_in_seconds(
-            d, ms=True) for d in self.durations]
-        self.durations_map = [list(a) for a in zip(
-            self.durations[:-1], self.durations[1:], self.durations_ms[1:])]
+        self.durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.durations]
+        self.durations_map = [list(a) for a in zip(self.durations[:-1], self.durations[1:], self.durations_ms[1:])]
 
     def rpc_serve_forever(self):
         """
             Start RPC server and serve it forever.
             this is a blocking method - call once you are done setting tags
         """
-        self.logger.info(
-            f"Starting RPC server to serve forever on port {self.rpc_server_port}")
+        self.logger.info(f"Starting RPC server to serve forever on port {self.rpc_server_port}")
         self.server.serve_forever()
 
     def start_decimator_loop_thread(self):
@@ -251,15 +240,14 @@ class DBDecimator(object):
             Method to start thread that will be compressing data
         """
         if not self.thread_created:
-            self.DBDecimatorThread = DBDecimatorThread(
-                parent=self,
-                db_name=self.db_name,
-                db_host_address=self.db_host_address,
-                db_port=self.db_port,
-                master_measurement=self.master_measurement,
-                rt_policy_manager=self.rt_policy_manager,
-                time_sleep=self.time_sleep,
-                logger=self.logger)
+            self.DBDecimatorThread = DBDecimatorThread(parent=self,
+                                                       db_name=self.db_name,
+                                                       db_host_address=self.db_host_address,
+                                                       db_port=self.db_port,
+                                                       master_measurement=self.master_measurement,
+                                                       rt_policy_manager=self.rt_policy_manager,
+                                                       time_sleep=self.time_sleep,
+                                                       logger=self.logger)
             self.thread_created = True
             self.logger.info("DBDecimatorThread loop has started")
         else:
@@ -297,7 +285,7 @@ class DBDecimator(object):
         # want this functionality, but it would be challenging
         # to solve all the logics required for custom
         # user input, therefore it is not a part of Rev A
-        
+
         # self.server.register_function(self.get_durations)
         # self.server.register_function(self.remove_durations)
         # self.server.register_function(self.remove_all_durations)
@@ -347,8 +335,7 @@ class DBDecimator(object):
         with self.compression_in_progress_lock:
             self.durations = []
             self.generate_durations_meta()
-        self.logger.info(
-            f"All durations for data compressing have been removed")
+        self.logger.info(f"All durations for data compressing have been removed")
 
     def add_durations(self, durations):
         """
@@ -406,16 +393,7 @@ class DBDecimator(object):
 
 
 class DBDecimatorThread(threading.Thread):
-    def __init__(
-            self,
-            parent,
-            db_name,
-            db_host_address,
-            db_port,
-            master_measurement,
-            rt_policy_manager,
-            logger=None,
-            time_sleep=5):
+    def __init__(self, parent, db_name, db_host_address, db_port, master_measurement, rt_policy_manager, logger=None, time_sleep=5):
         threading.Thread.__init__(self, name="DBDecimatorThread")
         self.parent = parent
         self.db_name = db_name
@@ -468,8 +446,7 @@ class DBDecimatorThread(threading.Thread):
                 # if '.' is part of the measurement, it means that the part before it - a retention policy name
                 # current convention is that retention policy should have same name as measurement in it
                 # only one measurement is allowed per retention policy
-                raise ValueError(
-                    f"Measurement '{measurement}' has '.' in it, but naming convention is bad")
+                raise ValueError(f"Measurement '{measurement}' has '.' in it, but naming convention is bad")
             return measurement
         else:
             return f"{measurement}.{measurement}"
@@ -502,8 +479,7 @@ class DBDecimatorThread(threading.Thread):
                     ORDER  BY time DESC
                     LIMIT  5 """
         rs = self.client.query(query)
-        last_decimations = [row["last_decimation"]
-                            for key, row_gen in rs.items() for row in row_gen]
+        last_decimations = [row["last_decimation"] for key, row_gen in rs.items() for row in row_gen]
         return last_decimations[0] if last_decimations else 0
 
     def record_decimation_timestamp(self, timestamp, src_meas):
@@ -573,16 +549,13 @@ class DBDecimatorThread(threading.Thread):
                     {conditions_str}
                     GROUP BY time({sort_time}), *"""
         self.client.query(query)
-        self.record_decimation_timestamp(
-            timestamp=stop_time_ms, src_meas="crds")
+        self.record_decimation_timestamp(timestamp=stop_time_ms, src_meas="crds")
 
     def get_start_stop_last(self, src_measurement, dest_duration_ms):
         # a helper for run function
-        last_recorded_timestamp = self.get_last_recorded_timestamp(
-            src_measurement)
+        last_recorded_timestamp = self.get_last_recorded_timestamp(src_measurement)
         start_time_ms = self.get_last_decimation_timestamp(src_measurement)
-        stop_time_ms = int(
-            dest_duration_ms * math.floor(last_recorded_timestamp / dest_duration_ms))
+        stop_time_ms = int(dest_duration_ms * math.floor(last_recorded_timestamp / dest_duration_ms))
         return start_time_ms, stop_time_ms, last_recorded_timestamp
 
     def run(self):
@@ -603,8 +576,7 @@ class DBDecimatorThread(threading.Thread):
                         # time to decimate has come
 
                         # first, decimate raw data
-                        self.logger.debug(
-                            ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
+                        self.logger.debug(ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
                         # we can do it for all fields at once this way
                         dest_meas = f"{self.master_measurement}_{self.parent.durations[0]}"
 
@@ -624,8 +596,7 @@ class DBDecimatorThread(threading.Thread):
 
                             if last_recorded_timestamp is None or stop_time_ms <= start_time_ms:
                                 break
-                            self.logger.debug(
-                                ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
+                            self.logger.debug(ghrdm(dest_duration_ms, start_time_ms, stop_time_ms))
                             for field_key, field_type in self.get_field_keys(
                                     self.master_measurement):  # here we need to do it for each field
                                 if field_type in ['float', 'integer']:
@@ -636,8 +607,7 @@ class DBDecimatorThread(threading.Thread):
                                                                                start_time_ms=start_time_ms,
                                                                                stop_time_ms=stop_time_ms)
 
-                            self.record_decimation_timestamp(
-                                timestamp=stop_time_ms, src_meas=src_meas)
+                            self.record_decimation_timestamp(timestamp=stop_time_ms, src_meas=src_meas)
             time.sleep(self.time_sleep)
         self.clien.close()
         self.logger.info("DBDecimator loop has ended")
@@ -645,14 +615,11 @@ class DBDecimatorThread(threading.Thread):
 
 # generate_human_readable_decimation_message
 def ghrdm(dest_duration_ms, start_time_ms, stop_time_ms):
-    dest_duration_ms = dt.generate_duration_literal(
-        int(dest_duration_ms / 1000))
+    dest_duration_ms = dt.generate_duration_literal(int(dest_duration_ms / 1000))
     start_time_ms /= 1000
     stop_time_ms /= 1000
-    start_time_ms = datetime.datetime.fromtimestamp(
-        start_time_ms).strftime('%Y-%m-%d %H:%M:%S')
-    stop_time_ms = datetime.datetime.fromtimestamp(
-        stop_time_ms).strftime('%Y-%m-%d %H:%M:%S')
+    start_time_ms = datetime.datetime.fromtimestamp(start_time_ms).strftime('%Y-%m-%d %H:%M:%S')
+    stop_time_ms = datetime.datetime.fromtimestamp(stop_time_ms).strftime('%Y-%m-%d %H:%M:%S')
     return f'Decimating to: {dest_duration_ms} , from {start_time_ms} to {stop_time_ms}'
 
 
@@ -664,16 +631,15 @@ def check_for_valid_raw_filter_condition(condition):
         return False
     if condition[1] not in influx_comparison_operators:
         return False
-    if not (isinstance(condition[2], int) or isinstance(condition[2], float) or
-            isinstance(condition[2], str) and condition[2].isdigit()):
+    if not (isinstance(condition[2], int) or isinstance(condition[2], float)
+            or isinstance(condition[2], str) and condition[2].isdigit()):
         return False
     return True
 
 
 def sort_durations(durations):
     """Given list of durations in a string form - sort it"""
-    durations_in_seconds = [dt.generate_duration_in_seconds(
-        a, ms=False) for a in durations]
+    durations_in_seconds = [dt.generate_duration_in_seconds(a, ms=False) for a in durations]
     durations_in_seconds.sort()
     durations = [dt.generate_duration_literal(a) for a in durations_in_seconds]
     return durations
@@ -689,15 +655,11 @@ def parse_arguments():
     """
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '-r', '--rpc_port', help='Decimator RPC Port', default=rpc_ports["db_decimator"])
-    parser.add_argument('-a', '--address',
-                        help='InfluxDB address', default="localhost")
+    parser.add_argument('-r', '--rpc_port', help='Decimator RPC Port', default=rpc_ports["db_decimator"])
+    parser.add_argument('-a', '--address', help='InfluxDB address', default="localhost")
     parser.add_argument('-p', '--port', help='InfluxDB port', default=8086)
-    parser.add_argument('-m', '--measurement',
-                        help='Name of the measurement to be decimated', default="crds")
-    parser.add_argument('-n', '--db_name',
-                        help='Database name', default="pigss_data")
+    parser.add_argument('-m', '--measurement', help='Name of the measurement to be decimated', default="crds")
+    parser.add_argument('-n', '--db_name', help='Database name', default="pigss_data")
 
     args = parser.parse_args()
     return args

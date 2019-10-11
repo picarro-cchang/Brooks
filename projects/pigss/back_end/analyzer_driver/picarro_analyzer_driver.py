@@ -1,20 +1,7 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   picarro_analyzer_driver.py
-#
-# DESCRIPTION:
-#  Starts up the back end software consisting of a "farm" of Hierarchical
-# State Machines and a collection of web services.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   5-Aug-2019  petr    Initial development
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Driver which communicates to a Picarro analyzer and wraps its RPC calls
+"""
 import json
 import queue as Queue
 import threading
@@ -222,7 +209,7 @@ class PicarroAnalyzerDriver:
             :param tags: a dictionary
         """
         if not isinstance(tags, dict):
-            raise ValueError("tags must be dictionary")
+            raise ValueError("Method parameter `tags` must be dictionary")
 
         with self.database_tags_lock:
             for tag in tags:
@@ -300,17 +287,24 @@ class PicarroAnalyzerDriver:
 
     def add_stopwatch_tag(self, tag_name, timestamp_of_event=None):
         """
-            eVENT, lol, you got it? bcz it will mostly be used for
-            changing VENTs. this will add a stopwatch tag - this tag's
-            value will be calculated time since some event. name of
-            the event is passed as tag_name. if time_stamp_of_event
-            is passed - it will be used for calculation
+            This will add a stopwatch tag with name `tag_name`, which actually populates
+            a field with that name in the influxdb database. For each data row, the value
+            of this field is calculated as the time elapsed since this function was last
+            called (which is referred to as the event). It is intended to calculate for
+            example the time since the last valve change, in which case this function
+            is called whenever the valve change occurs. If not specified `timestamp_of_event`
+            is set to the current time.
         """
         if timestamp_of_event is None:
             timestamp_of_event = timeutils.get_epoch_timestamp()
         with self.stopwatch_database_tags_lock:
             if tag_name not in self.stopwatch_database_tags:
                 self.stopwatch_database_tags[tag_name] = deque(maxlen=4)
+            # A queue of the timestamps for last four events is maintained, since a
+            #  data point may arrive with a time stamp before the latest event time
+            #  due to the processing latency (spectral fitting etc.) With this queue
+            #  we can determine the latest event time which is strictly before the
+            #  time of the data point.
             self.stopwatch_database_tags[tag_name].appendleft(timestamp_of_event)
 
     def remove_stopwatch_tag(self, tag_name):
@@ -384,16 +378,6 @@ class IDriverThread(threading.Thread):
         self.parent_idriver = parent_idriver
         self.queue = parent_idriver.queue
         self.database_writer = parent_idriver.database_writer
-        if flushing_mode in [BATCHING, TIMED]:
-            self.flushing_mode = flushing_mode
-        else:
-            self.logger.error("unsopperted flushing_mode supplied, setting to be BATCHING")
-            self.flushing_mode = BATCHING
-        self.flushing_batch_size = flushing_batch_size
-        self.flushing_timeout = flushing_timeout
-
-        self._pause_event = threading.Event()
-        self._stop_event = threading.Event()
 
         if isinstance(logger, str):
             self.logger = LOLoggerClient(client_name=logger)
@@ -401,6 +385,17 @@ class IDriverThread(threading.Thread):
             self.logger = logger
         if logger is None:
             self.logger = LOLoggerClient(client_name=f"{self.parent_idriver.rpc_server_name}_subthread")
+
+        if flushing_mode in [BATCHING, TIMED]:
+            self.flushing_mode = flushing_mode
+        else:
+            self.logger.error("Unrecognized flushing_mode supplied, setting to BATCHING")
+            self.flushing_mode = BATCHING
+        self.flushing_batch_size = flushing_batch_size
+        self.flushing_timeout = flushing_timeout
+
+        self._pause_event = threading.Event()
+        self._stop_event = threading.Event()
 
         # self starting thread
         self.setDaemon(True)
@@ -440,7 +435,8 @@ class IDriverThread(threading.Thread):
 
     def generate_data_for_database(self, queue):
         """
-
+            Get data from queue, organize it into tags and fields so that records
+            may be sequentially yielded for writing to the time series database.
         """
         while True:
             try:
@@ -450,9 +446,8 @@ class IDriverThread(threading.Thread):
 
                 if 'time' in obj:
                     data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
-                    # print(obj['time'])
                 else:
-                    self.logger.error("Measurment with no 'time' value passed, gonna ignore it")
+                    self.logger.error("Measurment with no 'time' value passed - will be ignored")
                     continue
 
                 # equip measurement with tags
@@ -482,10 +477,8 @@ class IDriverThread(threading.Thread):
         time_since_last_flush = time.time()
         gonna_flush_now = False
         loop_just_was_just_running = False
-        # print(f"flushing is timeout? - {self.flushing_mode == TIMED}")
 
         for datum in self.generate_data_for_database(self.queue):
-            # print("woop")
             if self._stop_event.is_set():
                 # if IDriver is set to be closed
                 break
@@ -493,11 +486,8 @@ class IDriverThread(threading.Thread):
                 # if IDriver is not set to be paused - store generated data in temp list
                 if datum is not None:
                     data_to_flush.append(datum)
-                    # print(len(data_to_flush))
-                    # print('.', end='')
 
                 # check if it is time to flush to database
-                # print(f"time since last flush - {time_since_last_flush}")
                 if ((self.flushing_mode == BATCHING and len(data_to_flush) > self.flushing_batch_size)
                         or (self.flushing_mode == TIMED and time_since_last_flush + self.flushing_timeout <= time.time())
                         or datum is None):
@@ -511,20 +501,16 @@ class IDriverThread(threading.Thread):
                     loop_just_was_just_running = False
 
             if gonna_flush_now:
-                # print("gonna_flush_now")
                 # flushing
                 if data_to_flush:
                     while True:
                         try:
                             self.database_writer.write_data(data_to_flush)
-                            # print("flushed to db")
                             break
                         except Exception:
                             self.logger.debug("flushing to db failed, try again in 5 seconds")
                             time.sleep(5.0)
-                            # print('x', end='')
 
-                    # print('.', end='')
                     data_to_flush = []
                 time_since_last_flush = time.time()
                 gonna_flush_now = False
@@ -574,13 +560,12 @@ def main():
     if args.name:
         rpc_server_name = args.name
     else:
-        rpc_server_name = "IDRIVER_{}".format(args.instrument_ip_address)
+        rpc_server_name = f"IDRIVER_{args.instrument_ip_address}"
 
     log = LOLoggerClient(client_name=f"{rpc_server_name}__main__", verbose=True)
 
     db_writer = InfluxDBWriter(db_name=args.database_name, address=args.database_ip, db_port=args.database_port)
-    log.info("Connected to Database '{}' on {}:{}".format(db_writer.get_db_name(), db_writer.get_db_address(),
-                                                          db_writer.get_db_port()))
+    log.info(f"Connected to Database '{db_writer.get_db_name()}' on {db_writer.get_db_address()}:{db_writer.get_db_port()}")
 
     with open(args.tunnel_configs, "r") as f:
         rpc_tunnel_config = json.loads(f.read())

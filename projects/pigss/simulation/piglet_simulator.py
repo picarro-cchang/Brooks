@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   piglet_simulator.py
-#
-# DESCRIPTION:
-#   Minimal simulation of the firmware on a piglet
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Minimal simulation of the firmware on a piglet
+"""
 import asyncio
 import random
 
@@ -138,7 +126,8 @@ class PigletSimulator:
                         result = "-2"
                 else:
                     result = "-1"
-        except Exception:
+        # This is a developer tool, we are ok with a bare exception
+        except Exception:  # noqa
             result = "-1"
         return result
 

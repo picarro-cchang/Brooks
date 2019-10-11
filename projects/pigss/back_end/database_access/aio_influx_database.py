@@ -1,19 +1,7 @@
 #!/usr/bin/python3
-#
-# FILE:
-#   aio_influx_database.py
-#
-# DESCRIPTION:
-#   Access influx database via asynchronous coroutines
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze  Initial check-in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+    Access influx database via asynchronous coroutines
+"""
 import asyncio
 import datetime
 import os

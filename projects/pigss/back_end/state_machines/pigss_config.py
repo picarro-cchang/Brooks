@@ -1,24 +1,12 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   pigss_config.py
-#
-# DESCRIPTION:
-#   Processes a yaml file which configures the sampling rack. All access
-#  to the configuration information should be made through methods in the PigssConfig
-#  class, so that configuration file format changes only require changes to this file.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Processes a yaml file which configures the sampling rack. All access
+ to the configuration information should be made through methods in the PigssConfig
+ class, so that configuration file format changes only require changes to this file.
+"""
 import os
 
-from ruamel.yaml import YAML
+from ruamel.yaml import YAML, YAMLError
 
 
 # Decorator which provides a default value for a configuration parameter
@@ -40,12 +28,16 @@ class PigssConfig:
     def __init__(self, config_filename):
         self.yaml = YAML()
         self.config_filename = config_filename
-        self.config_dir = os.path.dirname(os.path.normpath(config_filename))
-        try:
-            with open(config_filename, "r") as fp:
+        # The config_path attribute contains a prioritized list of directories used for
+        #  as the base directory for configuration files specified in the YAML file as
+        #  relative paths.
+        if not os.path.exists(config_filename):
+            raise FileNotFoundError(f"YAML configuration file {config_filename} does not exist")
+        with open(config_filename, "r") as fp:
+            try:
                 self.config = self.yaml.load(fp.read())
-        except Exception as e:
-            raise ValueError(f"Error while processing YAML file {config_filename}.\n{e}")
+            except YAMLError as e:
+                raise ValueError(f"Error while processing YAML file {config_filename}.\n{e}")
 
     @default([])
     def get_simulation_analyzers(self):
@@ -89,10 +81,21 @@ class PigssConfig:
 
     def get_rpc_tunnel_config_filename(self):
         try:
-            filename = self.config["Configuration"]["RpcTunnel"]["config_file"]
+            config_filename = self.config["Configuration"]["RpcTunnel"]["config_file"]
         except KeyError:
-            filename = "rpc_tunnel_configs.json"
-        return os.path.normpath(os.path.join(self.config_dir, filename))
+            config_filename = "rpc_tunnel_configs.json"
+        config_path = [
+            os.getenv("PIGSS_CONFIG"),
+            os.path.join(os.getenv("HOME"), ".config", "pigss"),
+            os.path.dirname(os.path.abspath(self.config_filename))
+        ]
+        config_path = [p for p in config_path if p is not None and os.path.exists(p) and os.path.isdir(p)]
+
+        for p in config_path:
+            filename = os.path.normpath(os.path.join(p, config_filename))
+            if os.path.exists(filename):
+                return filename
+        raise FileNotFoundError(f"Cannot find rpc_tunnel_config file {config_filename}")
 
     @default(None)
     def get_startup_plan(self):
@@ -101,8 +104,3 @@ class PigssConfig:
         and if the file name is non-empty, it is used to specify the plan file
         (without the .pln extension)"""
         return self.config["Settings"]["startup_plan"]
-
-
-if __name__ == "__main__":
-    pc = PigssConfig("pigss_sim_config.yaml")
-    print(pc.get_time_series_database())

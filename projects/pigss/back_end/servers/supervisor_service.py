@@ -1,20 +1,8 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   supervisor_service.py
-#
-# DESCRIPTION:
-#   Provides an API for querying the pigss_supervisor to determine information
-#  about the supervised processes and the results of the madmapper call
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Provides an API for querying the pigss_supervisor to determine information
+ about the supervised processes and the results of the madmapper call
+"""
 from aiohttp import web
 
 from back_end.lologger.lologger_client import LOLoggerClient
@@ -32,13 +20,13 @@ class SupervisorService(ServiceTemplate):
         self.app.router.add_route('GET', '/processes', self.handle_processes)
 
     async def on_startup(self, app):
-        log.info("supervisor service is starting up")
+        log.info("Supervisor service is starting up")
         self.tasks = []
 
     async def on_shutdown(self, app):
         for task in self.tasks:
             task.cancel()
-        log.info("supervisor service is shutting down")
+        log.info("Supervisor service is shutting down")
 
     async def handle_device_map(self, request):
         """

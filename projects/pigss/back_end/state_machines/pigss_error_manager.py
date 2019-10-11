@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   pigss_payloads.py
-#
-# DESCRIPTION:
-#   The pigss error manager is a sate machine which subscribes to events of type
-#    Signal.ERROR and reports them to the logger and other interested parties
-#    (for example the front-end GUI). Individual state machines are also free to
-#    subscribe to these messages and do whatever recovery they see fit.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+The pigss error manager is a hierarchical sTate machine which subscribes to
+ events of type Signal.ERROR and reports them to the logger and other interested
+ parties (for example the front-end GUI). Individual state machines are also free to
+ subscribe to these messages and do whatever recovery they see fit.
+"""
 from collections import deque
 
 import common.timeutils as timeutils

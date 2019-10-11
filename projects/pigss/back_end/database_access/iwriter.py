@@ -1,20 +1,7 @@
 #!/usr/bin/python3
-#
-# FILE:
-#   iwriter.py
-#
-# DESCRIPTION:
-#   Interface class for synchronous access to a time series database
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#               chetan  Original code
-#   3-Oct-2019  sze     Initial check-in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Interface class for synchronous access to a time series database
+"""
 import abc
 
 

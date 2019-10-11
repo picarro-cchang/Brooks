@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   pigss_controller.py
-#
-# DESCRIPTION:
-#   Hierarchical state machine which controls the valves and flow in the
-#  piglets and the sampling rack. It also maintains the state of the system
-#  which can be displayed and controlled via a web-based UI that communicates
-#  using API calls and a web socket.
-#
-# SEE ALSO:
-#   A state chart of this machine is contained in a separate document
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Hierarchical state machine which controls the valves and flow in the
+ piglets and the sampling rack. It also maintains the state of the system
+ which can be displayed and controlled via a web-based UI that communicates
+ using API calls and a web socket.
+"""
 import asyncio
 import collections
 import glob
@@ -37,7 +25,7 @@ from back_end.state_machines.pigss_payloads import (PigletRequestPayload, PlanEr
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
-PLAN_FILE_DIR = "/tmp/plan_files"
+PLAN_FILE_DIR = os.path.join(os.getenv("HOME"), ".config", "pigss", "plan_files")
 if not os.path.isdir(PLAN_FILE_DIR):
     os.makedirs(PLAN_FILE_DIR, 0o755)
 
@@ -89,23 +77,6 @@ class PigssController(Ahsm):
                 "row": 1,
                 "column": 1
             },
-            # "last_step": 1,
-            # "steps": {
-            #     1: {
-            #         "duration": 60,
-            #         "reference": 0,
-            #         "banks": {
-            #             3: {
-            #                 "chan_mask": 0,
-            #                 "clean": 0
-            #             },
-            #             4: {
-            #                 "chan_mask": 0,
-            #                 "clean": 1
-            #             }
-            #         }
-            #     }
-            # },
             "last_step": 0,
             "steps": {},
             "num_plan_files": 0,
@@ -256,7 +227,6 @@ class PigssController(Ahsm):
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
-                # log.info(f"Received from socket {msg}")
                 Framework.publish(Event(event_by_element[msg["element"]], msg))
             except KeyError:
                 log.warning(f"Cannot find event associated with socket message {msg['element']} - ignoring")
@@ -318,7 +288,6 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
-        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         self.run_async(self.send_queue.put(json.dumps({"modal_info": shadow})))
 
     def set_plan(self, path, value):
@@ -327,7 +296,6 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
-        # log.info(f"Setting plan {path} to {value}, shadow is {shadow}")
         self.run_async(self.send_queue.put(json.dumps({"plan": shadow})))
 
     def set_status(self, path, value):
@@ -336,7 +304,6 @@ class PigssController(Ahsm):
         the change is sent via a websocket to inform the UI of the change of status.
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
-        # log.info(f"Setting status of {path} to {value}, shadow is {shadow}")
         self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
     def set_reference(self, value):
@@ -361,6 +328,8 @@ class PigssController(Ahsm):
                     duration = int(msg["duration"]) if msg["duration"] else 0
                     self.set_plan(["steps", row, "duration"], duration)
                 except ValueError:
+                    # Do not throw eror while duration is edited. The back end is called on every
+                    # keypress to maintain synchronization between clients.
                     pass
         elif "current_step" in msg:
             row = msg["current_step"]
@@ -480,12 +449,14 @@ class PigssController(Ahsm):
             json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
 
     def load_plan_from_file(self):
+        # Exceptions raised here are signalled back to the front end
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
         with open(fname, "r") as fp:
             data = json.load(fp)
             plan = data["plan"]
             bank_names = data["bank_names"]
-        assert isinstance(plan, dict), "Plan should be a dictionary"
+        if not isinstance(plan, dict):
+            raise ValueError("Plan should be a dictionary")
         steps = {}
         last_step = len(plan)
         for i in range(last_step):
@@ -493,11 +464,15 @@ class PigssController(Ahsm):
             #  need to turn bank numbers and plan steps back into integers for compatibility
             #  with the rest of the code
             row = i + 1
-            assert str(row) in plan, f"Plan is missing step {row}"
+            if str(row) not in plan:
+                raise ValueError(f"Plan is missing step {row}")
             step = plan[str(row)]
-            assert "banks" in step, f"Plan row {row} is missing 'banks' key"
-            assert "reference" in step, f"Plan row {row} is missing 'reference' key"
-            assert "duration" in step, f"Plan row {row} is missing 'duration' key"
+            if "banks" not in step:
+                raise ValueError(f"Plan row {row} is missing 'banks' key")
+            if "reference" not in step:
+                raise ValueError(f"Plan row {row} is missing 'reference' key")
+            if "duration" not in step:
+                raise ValueError(f"Plan row {row} is missing 'duration' key")
             steps[row] = {
                 "banks": {int(bank_str): step["banks"][bank_str]
                           for bank_str in step["banks"]},
@@ -743,7 +718,6 @@ class PigssController(Ahsm):
     def _reference1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            # TODO: Activate reference valve on Numato
             Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("STANDBY", self.all_banks)))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
@@ -776,14 +750,6 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._clean1)
-        """
-        elif sig == Signal.BTN_CLEAN:  # and self.get_status()["clean"][e.value["bank"]] == UiStatus.CLEAN:
-            self.bank = e.value["bank"]
-            if self.get_status()["clean"][self.bank] == UiStatus.CLEAN:
-                return self.handled(e)
-            else:
-                return self.tran(self._clean1)
-        """
         return self.super(self._operational)
 
     @state
@@ -857,7 +823,6 @@ class PigssController(Ahsm):
             self.set_status(["bank", self.bank], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS:
-            # log.info(f"In identify2: {msg['status'][self.bank-1]['OPSTATE']}")
             if e.value[self.bank]['OPSTATE'].startswith('ident'):
                 return self.tran(self._identify3)
         return self.super(self._identify)
@@ -866,7 +831,6 @@ class PigssController(Ahsm):
     def _identify3(self, e):
         sig = e.signal
         if sig == Signal.PIGLET_STATUS:
-            # log.info(f"In identify3: {msg['status'][self.bank-1]['OPSTATE']}")
             if e.value[self.bank]['OPSTATE'] == 'standby':
                 return self.tran(self._identify4)
         return self.super(self._identify)
@@ -1250,7 +1214,6 @@ class PigssController(Ahsm):
                 self.bank_to_update = self.banks_to_process.pop(0)
                 self.bank = e.value["bank"]
                 self.channel = e.value["channel"]
-                # print(f"\nBTN_CHANNEL: {self.bank} {self.channel}")
                 mask = 1 << (self.channel - 1)
                 # For this version, we can only have one active channel, so
                 #  replace the currently active channel with the selected one
@@ -1573,9 +1536,6 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_plan(["panel_to_show"], int(PlanPanelType.EDIT))
             return self.handled(e)
-        # elif sig == Signal.CHANGE_NAME_BANK:
-        #     self.change_name_bank(e.value)
-        #     return self.tran(self._operational)
         elif sig == Signal.EDIT_CANCEL:
             self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
