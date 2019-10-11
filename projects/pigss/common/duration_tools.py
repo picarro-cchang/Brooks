@@ -1,19 +1,7 @@
 #!/usr/bin/python3
-#
-# FILE:
-#   duration_tools.py
-#
-# DESCRIPTION:
-#   Helper functions for processing influxdb duration strings
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#     Sep-2019  petr Initial code
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Helper functions for processing influxdb duration strings
+"""
 ms_map = {
     # "ns": 0.001*0.001*0.001,
     # "u": 0.001*0.001,
@@ -67,7 +55,6 @@ def check_for_valid_literal_duration(duration):
     for char_pos in range(len(duration)):
         if duration[char_pos] in ms_map:
             sub_duration = duration[last_cut:char_pos + 1]
-            # print(sub_duration)
             last_cut = char_pos + 1
             if not sub_duration[:-1].isdigit() and sub_duration[-1] in ms_map:
                 return False

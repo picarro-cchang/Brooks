@@ -1,11 +1,14 @@
+#!/usr/bin/python3
+"""
+    Access influx database via synchronous routines
+"""
 from influxdb import InfluxDBClient
-from back_end.database_access.conf import server, port, database_name
+
+from back_end.database_access.conf import database_name, port, server
 from back_end.database_access.iwriter import IWriter
 
-FILE_NAME = "DBWriter/InfluxDBWriter.py"
 
-
-# lets say our class is implementing IWriter interface
+# let's say our class is implementing IWriter interface
 @IWriter.register
 class InfluxDBWriter:
     def __init__(self, address=None, db_port=None, db_name=None):
@@ -25,7 +28,7 @@ class InfluxDBWriter:
         :return:
         """
         if not isinstance(data_dict, list):
-            raise TypeError(FILE_NAME, ": input data is not dictionary type")
+            raise TypeError("Parameter `data_dict` should be a list of dictionaries in method `write_data` of InfluxDBWriter")
         self._client.write_points(data_dict, time_precision='ms')
 
     def read_data(self, query, **args):

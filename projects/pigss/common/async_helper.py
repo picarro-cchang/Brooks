@@ -1,19 +1,7 @@
 #!/usr/bin/python3
-#
-# FILE:
-#   async_helper.py
-#
-# DESCRIPTION:
-#   Helper functions for working with asyncio
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze  Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Helper functions for working with asyncio
+"""
 import asyncio
 import functools
 import time
@@ -35,7 +23,8 @@ def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True):
         async def wrapper(*args, **kwargs):
             try:
                 await coroutine(*args, **kwargs)
-            except Exception as e:
+            # Bare exception intended to be a catch-all for any unhandled exceptuin
+            except Exception as e:  # noqa
                 if ignore_cancel and isinstance(e, asyncio.CancelledError):
                     pass
                 else:

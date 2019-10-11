@@ -37,7 +37,8 @@ class LOLoggerClient():
                                        client_timestamp=ClientTimestamp)
             except Exception as e:
                 print(f"{e}")
-                print(f"{ClientTimestamp}:WARNING!!! Failed to connect to LOLogger RPC on {self.server_path}! Forcing local verbose")
+                print(
+                    f"{ClientTimestamp}:WARNING!!! Failed to connect to LOLogger RPC on {self.server_path}! Forcing local verbose")
                 self.verbose = True
                 self.connected = False
 

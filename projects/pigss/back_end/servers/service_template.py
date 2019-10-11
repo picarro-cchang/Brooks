@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   service_template.py
-#
-# DESCRIPTION:
-#   Base class for an async http server with exception handling
-#    middleware that returns a text description of the error and
-#    traceback to the requester, and optionally publishes the exception
-#    as an Event of type Signal.ERROR to the async_hsm framework.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Base class for an async http server with exception handling
+ middleware that returns a text description of the error and
+ traceback to the requester, and optionally publishes the exception
+ as an Event of type Signal.ERROR to the async_hsm framework.
+"""
 import traceback
 
 from aiohttp import web
@@ -42,7 +30,8 @@ class ServiceTemplate:
     async def exception_middleware(self, request, handler):
         try:
             resp = await handler(request)
-        except Exception as e:
+        except Exception as e:  # noqa
+            # Handle unexpected exception by replying with a traceback and optionally publishing an event
             if self.publish_errors:
                 Framework.publish(
                     Event(

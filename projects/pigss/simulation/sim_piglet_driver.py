@@ -1,19 +1,7 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   sim_piglet_driver.py
-#
-# DESCRIPTION:
-#   Replaces PigletDriver class when the system is run in simulation mode.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Replaces PigletDriver class when the system is run in simulation mode.
+"""
 import argparse
 
 from common import CmdFIFO
@@ -25,8 +13,7 @@ from simulation.piglet_simulator import PigletSimulator
 
 class SimPigletDriver(object):
     """
-    This class currently covers the Boxer firmware for the
-    Piglet OFF (Arduino).
+    This class currently is based on the Boxer firmware for the piglets described in
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False):
@@ -56,21 +43,6 @@ class SimPigletDriver(object):
         :return:
         """
         pass
-        # try:
-        #     self.serial = SerialInterface()
-        #     self.serial.config(port=self.port, baudrate=self.baudrate)
-        #     if __debug__:
-        #         print(f'\nConnecting to Piglet on {self.port}\n')
-        #     # The Piglet boot loader takes a little less to load. Every time
-        #     # the DTR is toggled, the Piglet will re-set. The DTR is toggled
-        #     # upon enumeration from the Linux Kernel as well as every time
-        #     # we connect to the device. We'll sleep for a few seconds to
-        #     # allow the device to reset. At this time, we cannot disable
-        #     # the re-set functionality as we'll rely on this for flashing
-        #     # firmware to the device.
-        #     time.sleep(2)
-        # except serial.SerialException:
-        #     raise
 
     def send(self, command):
         """
@@ -98,8 +70,6 @@ class SimPigletDriver(object):
         :return:
         """
         pass
-        # if self.serial is not None:
-        #     self.serial.close()
 
     def get_id_string(self):
         """
@@ -251,8 +221,7 @@ class SimPigletDriver(object):
 
     def set_operating_state(self, new_state):
         """
-        This function is reserved for future use. It should
-        return a -1 for now.
+        This function will set the operating state
 
         :param new_state:
         :return:
@@ -264,8 +233,8 @@ class SimPigletDriver(object):
         """
         This function will get the status of provided channel.
         It accepts integers 1-8. If it is active, it will return True.
-        If it is not active, it will return False. If an invalid channel
-        is provided it will return -1.
+        If it is not active, it will return False. On error it will
+        return the code sent back by the piglet
 
         :param channel:
         :return:
@@ -281,8 +250,7 @@ class SimPigletDriver(object):
     def enable_channel(self, channel_to_enable):
         """
         This function will enable the provided channel. It accepts integers 1-8.
-        If successful, it will return a 0. If an invalid channel is provided
-        it will return -1.
+        It returns the status code returned by the piglet.
 
         :param channel_to_enable:
         :return:
@@ -293,8 +261,7 @@ class SimPigletDriver(object):
     def disable_channel(self, channel_to_disable):
         """
         This function will disable the provided channel. It accepts integers 1-8.
-        If successful, it will return a 0. If an invalid channel is provided it
-        will return -1.
+        It returns the status code returned by the piglet.
 
         :param channel_to_disable:
         :return:
@@ -305,8 +272,8 @@ class SimPigletDriver(object):
     def set_channel_registers(self, channels):
         """
         This function will accept integers 0-255, representing the bits
-        of the channels you would like to enable. If successful, it will
-        return 0. If in invalid setting is provided it will return -1.
+        of the channels you would like to enable.
+        It returns the status code returned by the piglet.
 
         :param channels:
         :return:
@@ -359,35 +326,20 @@ class SimPigletDriver(object):
 
 def get_cli_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--piglet_port', help='Piglet port')
-    parser.add_argument('-b', '--baudrate', help='Piglet baudrate')
-    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port')
+    parser.add_argument('-p', '--piglet_port', help='Piglet port', default='/dev/ttyACM0')
+    parser.add_argument('-b', '--baudrate', help='Piglet baudrate', default=38400)
+    parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports.get('piglet_drivers'))
     args = parser.parse_args()
     return args
 
 
 def main():
     cli_args = get_cli_args()
-    # Get the Piglet Port from the CLI
-    if cli_args.piglet_port:
-        port = cli_args.piglet_port
-    else:
-        port = '/dev/ttyACM0'
+    port = cli_args.piglet_port
+    baudrate = cli_args.baudrate
+    rpc_port = cli_args.rpc_port
     if __debug__:
-        print(f'Piglet Port: {port}')
-    # Get the Piglet baudrate from the CLI
-    if cli_args.baudrate:
-        baudrate = cli_args.baudrate
-    else:
-        baudrate = 38400
-    if __debug__:
-        print(f'Piglet baudrate: {baudrate}')
-    if cli_args.rpc_port:
-        rpc_port = cli_args.rpc_port
-    else:
-        rpc_port = rpc_ports.get('piglet_drivers')
-    if __debug__:
-        print(f'Piglet RPC Port: {rpc_port}')
+        print(f'\nPiglet Port: {port}' f'\nPiglet Baudrate: {baudrate}' f'\nPiglet RPC Port: {rpc_port}\n')
     # Instantiate the object and serve the RPC Port forever
     SimPigletDriver(port=port, baudrate=baudrate, rpc_port=int(rpc_port))
     if __debug__:

@@ -1,26 +1,14 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   time_aggregation_service.py
-#
-# DESCRIPTION:
-#   Provides a JSON datasource for Grafana which serves up time-aggregated data from a
-#  collection of decimated measurements in an influx database
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Provides a JSON datasource for Grafana which serves up time-aggregated data from a
+ collection of decimated measurements in an influx database
+"""
 from collections import namedtuple
 
 from aiohttp import web
+from aioinflux import InfluxDBClient, iterpoints
 
 import common.duration_tools as dt
-from aioinflux import InfluxDBClient, iterpoints
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.service_template import ServiceTemplate
 
@@ -41,14 +29,14 @@ class TimeAggregationService(ServiceTemplate):
         self.app.router.add_route("POST", "/query", self.query)
 
     async def on_startup(self, app):
-        log.info("time aggregation service is starting up")
+        log.info("Time aggregation service is starting up")
         db_config = self.app['farm'].config.get_time_series_database()
         self.client = InfluxDBClient(host=db_config["server"], port=db_config["port"], db=db_config["name"])
         self.default_durations = ["15s", "1m", "5m", "15m", "1h", "4h", "12h", "1d"]
         self.default_durations_ms = [dt.generate_duration_in_seconds(d, ms=True) for d in self.default_durations]
 
     async def on_shutdown(self, app):
-        log.info("time aggregation service is shutting down")
+        log.info("Time aggregation service is shutting down")
 
     async def health_check(self, request):
         return web.Response(text='This datasource is healthy.')
@@ -115,11 +103,8 @@ class TimeAggregationService(ServiceTemplate):
                 description: successful operation
         """
         body = await request.json()
-        print(f"Body: {body}")
         tag_name = body.get("key", None)
-        print(tag_name)
         rs = await self.client.query(f'SHOW TAG VALUES FROM crds WITH key={tag_name}')
-        print(rs)
         data = [{'text': result[1]} for result in iterpoints(rs)]
         return web.json_response(data)
 
@@ -179,7 +164,6 @@ class TimeAggregationService(ServiceTemplate):
                 description: successful operation
         """
         req = await request.json()
-        # print('Request: {}'.format(req))
         data = []
         if 'target' in req['targets'][0]:
             target = req['targets'][0]['target']
@@ -198,20 +182,11 @@ class TimeAggregationService(ServiceTemplate):
             start_time_ms = int(req['scopedVars']['__from']['value'])
             stop_time_ms = int(req['scopedVars']['__to']['value'])
             interval = req['scopedVars']['__interval']['value']
-            # interval_ms = int(req['scopedVars']['__interval_ms']['value'])
             range_ms = stop_time_ms - start_time_ms
             # Determine which resolution to use to satisfy the request
             for which, duration_ms in enumerate(self.default_durations_ms):
                 if range_ms < max_data_points * duration_ms:
                     break
-            # `which` is probably best, but check all coarser resolutions in case one
-            #  has data closer to the starting time
-
-            # Candidates contains tuples with (|start_time_ofset|, duration_ms, duration, data_points)
-            #  when these are sorted into ascending order, the first entry with data_points < max_data_points
-            #  is the one we use
-
-            # Candidate = namedtuple("Candidate", ['start_time_offset', 'duration_ms', 'duration', 'data_points'])
             Candidate = namedtuple("Candidate", ['duration_ms', 'duration', 'data_points'])
             candidates = []
             for duration, duration_ms in zip(self.default_durations[which:], self.default_durations_ms[which:]):
@@ -221,7 +196,6 @@ class TimeAggregationService(ServiceTemplate):
                     epoch='ms')
                 times = [result[0] for result in iterpoints(rs)]
                 if times:
-                    # candidates.append(Candidate(abs(times[0] - start_time_ms), duration_ms, duration, range_ms // duration_ms))
                     candidates.append(Candidate(duration_ms, duration, range_ms // duration_ms))
             if which == 0:
                 # Also need to consider the undecimated data
@@ -236,7 +210,6 @@ class TimeAggregationService(ServiceTemplate):
                     epoch='ms')
                 counts = [result[1] for result in iterpoints(rs)]
                 if times:
-                    # candidates.append(Candidate(abs(times[0] - start_time_ms), 0, '0', counts[0] // 2))
                     candidates.append(Candidate(0, '0', counts[0] // 2))
             good_candidates = [candidate for candidate in candidates if candidate.data_points <= max_data_points]
             good_candidates.sort()
@@ -256,7 +229,6 @@ class TimeAggregationService(ServiceTemplate):
                     f' WHERE {where_clause} time>={start_time_ms-duration_ms}ms AND time<{stop_time_ms+duration_ms}ms)'
                     f' GROUP BY time({best_duration}))',
                     epoch='ms')
-                # print([row for key, row_gen in rs.items() for row in row_gen])
 
             data = [{
                 "target": "mean_" + target,

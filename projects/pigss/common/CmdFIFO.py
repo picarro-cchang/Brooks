@@ -1,29 +1,14 @@
 #!/usr/bin/python
-#
-# FILE:
-#   CmdFIFO.py
-#
-# DESCRIPTION:
-#   Remote procedure call framework built on top of Pyro which allows functions
-#    to be called across a local or networked TCP/IP connection. A CmdFIFO server
-#    accepts connections from one or more clients, who request that functions be
-#    executed on their behalf. These functions are typically enqueued in order of
-#    receipt, and are executed sequentially. Remote procedure calls may be set
-#    up to block until completion, return immediately, or initiate a callback
-#    on completion. High priority functions may also be defined, which bypass the
-#    enqueing process.
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   18-Aug-2008  sze  Initial version to work with Pyro, almost totally rewritten
-#                      from Russ' XML/RPC based code which was having occasional
-#                      socket timeout errors.
-#   28-Jun-2014  sze  Ported to use Pyro4
-#
-#  Copyright (c) 2008-2014 Picarro, Inc. All rights reserved
-#
+"""
+Remote procedure call framework built on top of Pyro which allows functions
+ to be called across a local or networked TCP/IP connection. A CmdFIFO server
+ accepts connections from one or more clients, who request that functions be
+ executed on their behalf. These functions are typically enqueued in order of
+ receipt, and are executed sequentially. Remote procedure calls may be set
+ up to block until completion, return immediately, or initiate a callback
+ on completion. High priority functions may also be defined, which bypass the
+ enqueing process.
+"""
 import inspect
 import logging
 import os

@@ -1,22 +1,10 @@
 #!/usr/bin/env python3
-#
-# FILE:
-#   analyzer_simulator.py
-#
-# DESCRIPTION:
-#   Rudimentary analyzer simulator which provides an interface resembling that of
-#  a PicarroAnalyzerDriver. Sinusoidal concentration variations with random
-#  amplitude, frequency and background corrupted by white Gaussian noise at
-#  each of several ports are simulated
-#
-# SEE ALSO:
-#   Specify any related information.
-#
-# HISTORY:
-#   3-Oct-2019  sze Initial check in from experiments
-#
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
-#
+"""
+Rudimentary analyzer simulator which provides an interface resembling that of
+ a PicarroAnalyzerDriver. Sinusoidal concentration variations with random
+ amplitude, frequency and background corrupted by white Gaussian noise at
+ each of several ports are simulated
+"""
 import json
 import time
 from collections import namedtuple
@@ -28,10 +16,10 @@ import click
 import numpy as np
 from setproctitle import setproctitle
 
-from host.experiments.common.Broadcaster import Broadcaster
-from host.experiments.common.StringPickler import pack_arbitrary_object
-from host.experiments.Simulators import timestamp
-from host.experiments.testing.cmd_fifo.CmdFIFO import (CmdFIFOServer, CmdFIFOServerProxy)
+from common.broadcaster import Broadcaster
+from common.CmdFIFO import CmdFIFOServer, CmdFIFOServerProxy
+from common.string_pickler import pack_arbitrary_object
+from common.timeutils import get_timestamp
 
 RPC_PORT_DRIVER = 50010
 RPC_PORT_SUPERVISOR = 50030
@@ -94,7 +82,6 @@ class Simulator(object):
             next_time = next(gen)  # This runs the task for the event
             if next_time is not None:
                 self.enqueue_task(next_time, gen)
-        print("Simulation complete")
 
 
 class SimMeas(object):
@@ -156,16 +143,17 @@ class Driver:
         return versionDict
 
     def fetchHardwareCapabilities(self):
+        # TODO: Make this more dynamic
         return {"Ethane": False, "iGPS": False, "iCH4": False, "Mast": False}
 
     def fetchLogicEEPROM(self):
         return [dict(Chassis=self.analyzer.chassis, Analyzer=self.analyzer.analyzer, AnalyzerNum=self.analyzer.analyzer_num)]
 
     def dasGetTicks(self):
-        return timestamp.getTimestamp()
+        return get_timestamp()
 
     def hostGetTicks(self):
-        return timestamp.getTimestamp()
+        return get_timestamp()
 
     def setValveMask(self, mask):
         self.valve_pos = mask
@@ -174,6 +162,7 @@ class Driver:
         return self.valve_pos
 
     def register_rpc_functions(self):
+        # TODO: Implement non-existent RPC functions
         self.rpc_server.register_function(self.allVersions)
         self.rpc_server.register_function(self.dasGetTicks)
         self.rpc_server.register_function(self.fetchHardwareCapabilities)
@@ -200,17 +189,14 @@ class Driver:
 
     def calc_data_task(self, analyzer):
         sim = self.sim
-        # dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER)
         dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER, self.ip_address)
         while True:
             measurements = []
             for species in analyzer.species:
                 meas = self.sim_meas[species].get_meas(sim.sim_time, self.valve_pos)
-                # print('Measuring %s at %.3f: %.3f' % (species, sim.sim_time, meas))
                 measurements.append(meas)
             dm_dict = self.make_data_manager_dict(sim.sim_time, analyzer, measurements)
             dm_broadcaster.send(pack_arbitrary_object(dm_dict))
-            print(dm_dict)
             yield sim.sim_time + analyzer.interval
 
 
@@ -223,15 +209,7 @@ class Supervisor:
         self.sim = sim
         self.analyzer = analyzer
         self.register_rpc_functions()
-        self.sim.enqueue_task(time.time(), self.dotty_task())
         self.start_applications()
-
-    def dotty_task(self):
-        period = 2.0
-        sim = self.sim
-        while True:
-            print('.', end='', flush=True)
-            yield sim.sim_time + period
 
     def start_applications(self):
         Thread(target=Driver(self.sim, self.analyzer, self.ip_address).rpc_server.serve_forever, daemon=True).start()
@@ -261,6 +239,7 @@ class InstMgr:
         self.Supervisor.RPC_TerminateApplications()
 
     def register_rpc_functions(self):
+        # TODO: Implement non-existent RPC functions
         # self.rpc_server.register_function(self.INSTMGR_GetStateRpc)
         # self.rpc_server.register_function(self.INSTMGR_GetStatusRpc)
         self.rpc_server.register_function(self.INSTMGR_ShutdownRpc)
@@ -304,9 +283,6 @@ class AnalyzerSimulator:
 def main(proc_name, analyzer_json, ip_address):
     if proc_name:
         setproctitle(f"python Simulation on {proc_name}")
-    # print(f"{sys.path}")
-    # ip_addresses = [ifaddresses(ifname)[AF_INET][0]['addr'] for ifname in interfaces() if not ifname.startswith("lo")]
-    # print("IP address:", ip_addresses[0])
 
     sim = Simulator(real_time=True)
     supervisor = Supervisor(sim, Analyzer(**json.loads(analyzer_json)), ip_address)
@@ -316,9 +292,6 @@ def main(proc_name, analyzer_json, ip_address):
         sim.stop()
 
     Thread(target=supervisor_rpc_task, daemon=True).start()
-    # print(f"Simulator started at {ip_addresses[0]}.", flush=True)
-    print("Done\n", flush=True)
-
     sim.run()
 
 
