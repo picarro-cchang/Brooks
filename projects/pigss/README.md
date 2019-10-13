@@ -62,7 +62,7 @@ E: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), is an
 
 ### Updating
 
-Updating a machine that has already provisioned by Ansible is simple with the following command
+Updating a machine that has already provisioned by Ansible is simple with the following command:
 
 `headless`
 
