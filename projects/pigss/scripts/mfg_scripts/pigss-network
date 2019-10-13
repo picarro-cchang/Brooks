@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# This script will be the menu for picarro network mounting
+
+while : # Loop forever
+do
+clear
+cat << !
+
+			     *********************
+			     *                   *
+			     *  Picarro Network  *
+			     *                   *
+			     *********************
+
+
+1. Mount All Drives
+2. Mount R:
+3. Mount S:
+4. Mount X:
+5. Mount M:
+6. Unmount All Drives
+7. Unmount R:
+8. Unmount S:
+9. Unmount X:
+10. Unmount M:
+11. Return to Menu
+
+!
+
+echo -n "Selection an option: "
+read choice
+
+case $choice in
+	1) ./mount-shared-drive all ;;
+	2) ./mount-shared-drive r ;;
+	3) ./mount-shared-drive s ;;
+	4) ./mount-shared-drive x ;;
+	5) ./mount-shared-drive m ;;
+	6) ./unmount-shared-drive all ;;
+	7) ./unmount-shared-drive r ;;
+	8) ./unmount-shared-drive s ;;
+	9) ./unmount-shared-drive x ;;
+	10) ./unmount-shared-drive m ;;
+	11) exit ;;
+	*) echo "\"$choice\" is not an option."; sleep 1s ;;
+esac
+done
