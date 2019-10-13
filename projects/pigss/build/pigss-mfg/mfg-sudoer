@@ -1,0 +1,9 @@
+# Allow some scripts to be run without sudo password
+
+# This should be run during the postint step
+
+ALL ALL=NOPASSWD: /usr/bin/mount-shared-drive
+ALL ALL=NOPASSWD: /usr/bin/unmount-shared-drive
+ALL ALL=NOPASSWD: /usr/bin/pigss-hostname
+ALL ALL=NOPASSWD: /usr/bin/pigss-network
+ALL ALL=NOPASSWD: /usr/bin/pigss-menu
