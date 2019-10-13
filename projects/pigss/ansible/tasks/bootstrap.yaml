@@ -47,6 +47,14 @@
   apt: name=python-psutil
   become: yes
 
+- name: Install openssh-server
+  apt: name=openssh-server
+  become: yes
+
+- name: Install vino (vnc server)
+  apt: name=vino
+  become: yes
+
 - name: Install scrot package
   apt: name=scrot
   become: yes
