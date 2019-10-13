@@ -12,7 +12,7 @@ DEB_BUILD_DIR=${BUILD_DIR}/.debian
 BUILD_NUMBER=0.0.1
 GIT_HASH=$(shell git rev-parse --short HEAD)
 # Assets to include in the Debian file
-ASSETS=../../scripts/mfg_scripts/*
+ASSETS=../../scripts/mfg_scripts/* mfg-sudoer
 
 # Meta data for DEBIAN/control
 # PACKAGE_NAME can be overriden by passing in a name
