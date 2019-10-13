@@ -48,7 +48,7 @@ select yn in "Yes" "No"; do
 			break;;
 		No ) echo " ";
 		angryAndroid="How dare you open me for no reason! I was dedicating all unused clock cycles to count electric sheep! Where was I? 13844490? 1384491? Wonderful, now I have to start all over again! Sigh... 0, 1, 2, 3...";
-		( "./typed-echo" ${angryAndroid} );
+		( "./typed-echo" {angryAndroid} &>/dev/null) || ( "/usr/bin/typed-echo" ${angryAndroid} );
 		exit
 	esac
 done
@@ -57,19 +57,19 @@ done
 # Some terminal commands will not work until a reboot has been accomplished.
 echo " "
 rebootWarning="A system reboot is required for the changes to take effect. If you do not reboot, some terminal commands will not work."
-( "./typed-echo" ${rebootWarning} )
+( "./typed-echo" ${rebootWarning} &>/dev/null) || ( "/usr/bin/typed-echo" ${rebootWarning} )
 echo " "
 echo "Would you like to reboot now?"
 select ryesrno in "Yes" "No"; do
 	case ${ryesrno} in
 		Yes ) echo " ";
 		timerWarning="System will go down for a reboot in 60 seconds. Please ensure all files are saved and closed.";
-		( "./typed-echo" ${timerWarning} );		
+		( "./typed-echo" ${timerWarning} &>/dev/null) || ( "/usr/bin/typed-echo" ${timerWarning} );
 		echo " ";				
 		break;;
 		No ) echo " ";
 		terminalWarning="Any 'unable to resolve host XXXX-XXXXXXXXX: Connection timed out' are a byproduct of not rebooting the system.";
-		( "./typed-echo" ${terminalWarning} )
+		( "./typed-echo" ${terminalWarning} &>/dev/null) || ( "/usr/bin/typed-echo" ${terminalWarning} )
 		echo " ";
 		echo "Manual re-boot required when possible.";
 		sleep 2s
