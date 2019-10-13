@@ -44,7 +44,8 @@ Architecture: amd64
 Maintainer: gsornsen@picarro.com
 Priority: optional
 Version: 0.0.1
-Installed-Size: 48 kB
+Installed-Size: 53.2 kB
+Depends: cifs-utils (>= 2:6.8-2)
 Description: MFG tools for PiGSS
 ```
 
@@ -54,7 +55,8 @@ Architecture: amd64
 Maintainer: gsornsen@picarro.com
 Priority: optional
 Version: 1.0.0
-Installed-Size: 48 kB
+Installed-Size: 53.2 kB
+Depends: cifs-utils (>= 2:6.8-2)
 Description: MFG tools for PiGSS
 ```
 
@@ -64,6 +66,7 @@ Architecture: amd64
 Maintainer: gsornsen@picarro.com
 Priority: optional
 Version: 1.0.0
-Installed-Size: 48 kB
+Installed-Size: 53.2 kB
+Depends: cifs-utils (>= 2:6.8-2)
 Description: MFG tools for PiGSS
 ```
