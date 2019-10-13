@@ -27,10 +27,10 @@ read choice
 
 case $choice in
 	0) exit;;
-	1) sudo ./pigss-hostname ;;
+	1) sudo ./pigss-hostname || sudo pigss-hostname ;;
 	2) shutdown -r now ;;
 	3) shutdown -h now ;;
-	4) sudo ./pigss-network;;
+	4) sudo ./pigss-network || sudo pigss-network;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac
 done
