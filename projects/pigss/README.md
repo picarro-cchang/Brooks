@@ -75,5 +75,5 @@ Updating a machine that has already provisioned by Ansible is simple with the fo
 * `false` - For Production Environment
 
 ```bash
-ansible-playbook host/projects/pigss/ansible/pigss.yaml --extra-vars "headless=<bool> dev=<bool> update=true" --ask-become-pass
+ansible-playbook ${HOME}/git/host/projects/pigss/ansible/pigss.yaml --extra-vars "headless=<bool> dev=<bool> update=true" --ask-become-pass
 ```
