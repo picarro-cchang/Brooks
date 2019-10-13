@@ -17,10 +17,6 @@
 - name: Install fpm
   shell: gem install fpm
   become: yes
-#   gem:
-#     name: fpm
-#     state: latest
-#   become: yes
 
 - name: Install wizzy
   npm:
