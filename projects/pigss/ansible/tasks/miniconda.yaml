@@ -14,7 +14,7 @@
   when: update == "true"
 
 - name: Set up conda env
-  shell: ${HOME}/miniconda3/bin/conda env update -f {{ project_dir }}/ansible/tasks/files/pigss_conda_env.yaml
+  shell: ${HOME}/miniconda3/bin/conda env update -f "{{ project_dir }}/ansible/tasks/files/pigss_conda_env.yaml"
 
 # TODO: Change path or method to obtain async_hsm when permanent solution is implemented
 - name: Install async_hsm
