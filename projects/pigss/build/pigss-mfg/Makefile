@@ -23,6 +23,7 @@ ARCHITECTURE=amd64
 MAINTAINER=gsornsen@picarro.com
 PRIORITY=optional
 DESCRIPTION=MFG tools for PiGSS
+DEPENDS=cifs-utils (>= 2:6.8-2)
 
 # Make the debian package
 .PHONY: deb
@@ -44,6 +45,7 @@ control:
 	Maintainer: ${MAINTAINER}\n\
 	Priority: ${PRIORITY}\n\
 	Version: ${VERSION}\n\
+	Depends: ${DEPENDS}\n\
 	Installed-size: `du -s ${DEB_BUILD_DIR} | cut -f1`\n\
 	Description: ${DESCRIPTION}\n" > ${DEB_BUILD_DIR}/DEBIAN/control
 
