@@ -1,0 +1,21 @@
+- name: Download miniconda3
+  get_url:
+    url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    dest: /tmp/
+    mode: 0755
+  when: update == "false"
+
+- name: Install miniconda3
+  shell: /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p /home/picarro/miniconda3 -u && /home/picarro/miniconda3/bin/conda init bash
+  when: update == "false"
+
+- name: Update miniconda3
+  shell: conda update -n base conda
+  when: update == "true"
+
+- name: Set up conda env
+  shell: /home/picarro/miniconda3/bin/conda env update -f /home/picarro/git/host/experiments/ansible/pigss/tasks/files/pigss_conda_env.yaml
+
+- name: Install async_hsm
+  shell: cd /home/picarro/git/host/experiments/async_hsm/ && /home/picarro/miniconda3/bin/python setup.py develop
+
