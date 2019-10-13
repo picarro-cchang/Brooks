@@ -109,6 +109,10 @@
   apt: name=git
   become: yes
 
+- name: Install gem
+  apt: name=gem
+  become: yes
+
 - name: Disable splash at boot
   replace:
     path: /etc/default/grub
