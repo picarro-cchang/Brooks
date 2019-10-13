@@ -12,6 +12,13 @@
   become: yes
   when: update == "false"
 
+- name: Download VncViewer
+  get_url:
+    url: https://www.realvnc.com/download/file/viewer.files/VNC-Viewer-6.19.923-Linux-x64.deb
+    dest: /tmp/
+  become: yes
+  when: update == "false"
+
 - name: Install downloaded debian packages
   apt:
     deb: '{{ item }}'
@@ -19,6 +26,7 @@
   with_items:
     - /tmp/bat_0.11.0_amd64.deb
     - /tmp/influxdb_1.7.7_amd64.deb
+    - /tmp/VNC-Viewer-6.19.923-Linux-x64.deb
   become: yes
   when: update == "false"
 
