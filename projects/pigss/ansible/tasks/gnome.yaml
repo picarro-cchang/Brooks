@@ -1,11 +1,11 @@
 - name: Copy wallpaper
-  copy: src=files/picarro_wallpaper.png dest={{ playbook_home }}/.wallpaper.png owner={{ playbook_user }} mode=0600
+  copy: src=files/picarro_wallpaper.png dest="{{ playbook_home }}/.wallpaper.png" owner="{{ playbook_user }}" mode=0600
 
 - name: Copy lockscreen
-  copy: src=files/picarro_lockscreen.png dest={{ playbook_home }}/.lockscreen.png owner={{ playbook_user }} mode=0600
+  copy: src=files/picarro_lockscreen.png dest="{{ playbook_home }}/.lockscreen.png" owner="{{ playbook_user }}" mode=0600
 
 - name: Copy logo
-  copy: src=files/picarro_typelogo.png dest={{ playbook_home }}/.type_logo.png owner={{ playbook_user }} mode=0600
+  copy: src=files/picarro_typelogo.png dest="{{ playbook_home }}/.type_logo.png" owner="{{ playbook_user }}" mode=0600
 
 - name: Set favorite apps
   dconf:
