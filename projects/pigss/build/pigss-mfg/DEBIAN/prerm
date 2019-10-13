@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Remove files and folders created on install
+sudo rm -f /usr/bin/mount-shared-drive || echo "Nothing here"
+sudo rm -f /usr/bin/unmount-shared-drive || echo "Nothing here"
+sudo rm -f /usr/bin/pigss-hostname || echo "Nothing here"
+sudo rm -f /usr/bin/pigss-menu || echo "Nothing here"
+sudo rm -f /usr/bin/pigss-network || echo "Nothing here"
+sudo rm -f /usr/bin/typed-echo || echo "Nothing here"
