@@ -1,3 +1,10 @@
-#!/bin/bash
+#!/bin/bash -e
 
-# Let's do some suoders file stuffs here
+# Add mfg-sudoer to /etc/sudoers.d
+sudo visudo -c -q -f /usr/bin/mfg-sudoer # Make sure this is a valid sudoers file
+# postinst will fail here and exit via the #!/bin/bash -e flag
+# if the sudoers file is invalid.
+# This ensures we don't muck up our system with a bad sudoers file
+sudo chmod 440 /usr/bin/mfg-sudoer # Only user root/group root can read
+sudo chown root:root /usr/bin/mfg-sudoer
+sudo mv /usr/bin/mfg-sudoer /etc/sudoers.d/mfg-sudoer
