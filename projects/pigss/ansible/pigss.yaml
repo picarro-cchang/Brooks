@@ -33,11 +33,20 @@
     - set_fact:
         grafanapass: "{{  prompt.user_input  }}"
       when: update == "false"
-    # Bootstrap
-    - include: tasks/bootstrap.yaml
+    - set_fact:
+        playbook_user="{{ lookup('env', 'USER') }}"
+    - set_fact:
+        playbook_home="{{ lookup('env', 'HOME') }}"
+    - set_fact:
+        project_dir="{{ playbook_home }}/projects/pigss"
+    - set_fact:
+        project_scripts="{{ project_dir }}/scripts"
+    - set_fact:
+        project_build_scripts="{{ project_dir }}/build"
   tasks:
-    - name: Set playbook vars
-      set_fact: playbook_user="{{ lookup('env','USER') }}" playbook_home="{{  lookup('env','HOME')  }}" project_dir="{{ playbook_home }}/git/host/projects/pigss" project_scripts="{{ project_dir }}/scripts" project_build_scripts="{{ project_dir }}/build"
+#    - name: Set playbook vars
+#      set_fact: playbook_user="{{ lookup('env','USER') }}" playbook_home="{{  lookup('env','HOME')  }}"
+    - include: tasks/bootstrap.yaml
     - include: tasks/gnome.yaml
       when: headless == "false"
     - include: tasks/environmental-variables.yaml 
