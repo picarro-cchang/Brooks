@@ -95,6 +95,18 @@
     value: 'false'
     state: present
 
+- name: Disable vnc encryption
+  dconf:
+    key: "/org/gnome/desktop/remote-access/require-encryption"
+    value: 'false'
+    state: present
+
+- name: Enable vnc authentication
+  dconf:
+    key: "/org/gnome/desktop/remote-access/authentication-methods"
+    value: "['vnc']"
+    state: present
+
 - name: Disable multiple workspaces
 # dconf cannot read or write to this register
   shell: gsettings set org.gnome.shell.window-switcher current-workspace-only true
