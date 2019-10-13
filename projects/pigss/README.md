@@ -2,8 +2,6 @@
 
 ## Setting up the Environment
 
-***
-
 ### Operating System
 
 * Download /Install [Ubuntu 18.04.x](https://ubuntu.com/download/desktop)
