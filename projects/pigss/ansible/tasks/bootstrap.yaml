@@ -14,8 +14,8 @@
 
 - name: Add user to dialout group
   user:
-    name: {{ playbook_user }}
-    comment: {{ playbook_user }}
+    name: "{{ playbook_user }}"
+    comment: "{{ playbook_user }}"
     group: dialout
   become: yes
   when: update == "false"
