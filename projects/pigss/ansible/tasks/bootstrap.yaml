@@ -25,7 +25,7 @@
     state: absent
   become: yes
 
-- name: Remove gnome-sfotware
+- name: Remove gnome-software
   apt:
     pkg: gnome-software
     state: absent
