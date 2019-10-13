@@ -32,16 +32,16 @@ echo -n "Selection an option: "
 read choice
 
 case $choice in
-	1) ./mount-shared-drive all || mount-shared-drive all;;
-	2) ./mount-shared-drive r || mount-shared-drive r;;
-	3) ./mount-shared-drive s || mount-shared-drive s;;
-	4) ./mount-shared-drive x || mount-shared-drive x;;
-	5) ./mount-shared-drive m || mount-shared-drive m;;
-	6) ./unmount-shared-drive all || unmount-shared-drive all;;
-	7) ./unmount-shared-drive r || unmount-shared-drive r;;
-	8) ./unmount-shared-drive s || unmount-shared-drive s;;
-	9) ./unmount-shared-drive x || unmount-shared-drive x;;
-	10) ./unmount-shared-drive m || unmount-shared-drive m;;
+	1) sudo ./mount-shared-drive all || sudo /usr/bin/mount-shared-drive all;;
+	2) sudo ./mount-shared-drive r || sudo /usr/bin/mount-shared-drive r;;
+	3) sudo ./mount-shared-drive s || sudo /usr/bin/mount-shared-drive s;;
+	4) sudo ./mount-shared-drive x || sudo /usr/bin/mount-shared-drive x;;
+	5) sudo ./mount-shared-drive m || sudo /usr/bin/mount-shared-drive m;;
+	6) sudo ./unmount-shared-drive all || /usr/bin/sudo unmount-shared-drive all;;
+	7) sudo ./unmount-shared-drive r || sudo /usr/bin/unmount-shared-drive r;;
+	8) sudo ./unmount-shared-drive s || sudo /usr/bin/unmount-shared-drive s;;
+	9) sudo ./unmount-shared-drive x || sudo /usr/bin/unmount-shared-drive x;;
+	10) sudo ./unmount-shared-drive m || sudo /usr/bin/unmount-shared-drive m;;
 	11) exit ;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac
