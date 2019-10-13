@@ -3,37 +3,42 @@
 # This script edits /etc/hosts and /etc/hostname to set the network alias
 # to be the same as the serial number.
 
-#Grab the Serial Number from the hostname and set it as a variable
+# This script can be replaced if hostnamectl ever gets their act together
+# and actually edits /etc/hosts instead of just /etc/hostname
+
+# Grab the Serial Number from the hostname and set it as a variable
 currentSN=$(hostname)
 
-#Display the current Serial Number in the terminal and verify the user wants to change the Serial Number.
-#If they do not, the script will prompt them that the script will terminate.
+# Display the current Serial Number in the terminal and verify the user
+# wants to change the Serial Number.
+# If they do not, the script will prompt them that the script will terminate.
 echo " "
 echo "The current Hostname is" ${currentSN}
 echo " "
 echo "Would you like to change the Hostname? Enter '1' or '2': "
-#Verification, allowing the user to cancel.
+# Verification, allowing the user to cancel.
 select yn in "Yes" "No"; do
 	case ${yn} in
 		Yes ) echo " "; echo "Please enter the new Hostname then hit [Enter]: ";
-			read newSN; #Take input from the user and store it as the new Serial Number variable.
-			#Do not allow any empty string to be used as the Serial Number.
+			read newSN; # Take input from the user and store it as the new Serial Number variable.
+						# Do not allow any empty string to be used as the Serial Number.
 			while [ ${#newSN} -lt 1 ]; do
 				echo "Empty input is not accepted, try again!";
 				read newSN;
 			done;
 			echo " ";
 			printf "Are you sure you would like to change the Serial Number from $currentSN to $newSN?\n\nEnter '1' or '2':\n"
-			#Second level of verification. The user can double-check for typos and cancel if needed.
+			# Second level of verification. The user can double-check for typos and cancel if needed.
 			select yesno in "Yes" "No"; do
 				case ${yesno} in
 					Yes ) echo " ";
-					#There is no need for an If Then statement to check if the Serial Numbers already match. The sed command will not have any impact if they match.
+					# There is no need for an If Then statement to check if the Serial Numbers
+					# already match. The sed command will not have any impact if they match.
 					echo "Changing Serial Number in /etc/hostname to $newSN";
-					#sed command will replace the current Serial Number with the new Serial Number in /etc/hostname
+					# sed command will replace the current Serial Number with the new Serial Number in /etc/hostname
 					sudo sed -i "s/${currentSN}/${newSN}/g" /etc/hostname;
 					echo " ";
-					#sed command will replace the current Serial Number with the new Serial Number in /etc/hosts
+					# sed command will replace the current Serial Number with the new Serial Number in /etc/hosts
 					echo "Changing Serial Number in /etc/hosts to ${newSN}";
 					sudo sed -i "s/${currentSN}/${newSN}/g" /etc/hosts;
 					break;;
@@ -48,8 +53,8 @@ select yn in "Yes" "No"; do
 	esac
 done
 
-#Prompt the user that a system reboot is necessary for the changes to take effect.
-#Some terminal commands will not work until a reboot has been accomplished.
+# Prompt the user that a system reboot is necessary for the changes to take effect.
+# Some terminal commands will not work until a reboot has been accomplished.
 echo " "
 rebootWarning="A system reboot is required for the changes to take effect. If you do not reboot, some terminal commands will not work."
 ( "./typed-echo" ${rebootWarning} )
@@ -71,7 +76,7 @@ select ryesrno in "Yes" "No"; do
 		exit
 	esac
 done
-#Issue a safe reboot command unless overriden in prompt
+# Issue a safe reboot command unless overriden in prompt
 sudo shutdown -r +1
 	
 	
