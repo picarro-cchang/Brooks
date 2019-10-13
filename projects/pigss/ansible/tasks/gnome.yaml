@@ -24,7 +24,7 @@
     path: /usr/share/gnome-shell/theme/ubuntu.css
     after: 'url'
     regexp: 'resource:///org/gnome/shell/theme/noise-texture.png'
-    replace: 'file:///home/picarro/.lockscreen.png'
+    replace: 'file://{{ playbook_home }}/.lockscreen.png'
   become: yes
 
 - name: Set login logo
