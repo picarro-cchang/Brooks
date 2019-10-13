@@ -55,6 +55,10 @@
   apt: name=vino
   become: yes
 
+- name: Install cifs-utils
+  apt: name=cifs-utils
+  becomes: yes
+
 - name: Install scrot package
   apt: name=scrot
   become: yes
