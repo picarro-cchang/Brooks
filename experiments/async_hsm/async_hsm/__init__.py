@@ -1,6 +1,5 @@
 import asyncio
 import collections
-import os
 import signal
 import traceback
 import typing
@@ -261,11 +260,11 @@ class Hsm(object):
         return asyncio.ensure_future(wrapped_cor())
 
     def top(self, event):
-        """This is the default state handler. This handler ignores all signals except for Signal.TERMINATE and 
+        """This is the default state handler. This handler ignores all signals except for Signal.TERMINATE and
         Signal.ERROR. These default actions can be overridden within a user-provided top level state.
 
         The TERMINATE signal causes a transition to the state self._exit.
-        The ERROR signal does not cause a state transition, but prints a tracback message on the console.        
+        The ERROR signal does not cause a state transition, but prints a tracback message on the console.
         """
         if event.signal == Signal.TERMINATE:
             return self.tran(self._exit)

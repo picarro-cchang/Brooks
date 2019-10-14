@@ -203,6 +203,7 @@ class PigssController(Ahsm):
                                 modal_ok=Signal.MODAL_OK,
                                 plan=Signal.BTN_PLAN,
                                 plan_cancel=Signal.BTN_PLAN_CANCEL,
+                                plan_clear=Signal.BTN_PLAN_CLEAR,
                                 plan_delete=Signal.BTN_PLAN_DELETE,
                                 plan_insert=Signal.BTN_PLAN_INSERT,
                                 plan_load=Signal.BTN_PLAN_LOAD,
@@ -369,6 +370,13 @@ class PigssController(Ahsm):
         """Handle a reference button press in a bank. Add to plan at the location of the focussed row"""
         bank_config = {b: {"clean": 0, "chan_mask": 0} for b in self.all_banks}
         self.add_to_plan(bank_config, 1)
+
+    def plan_clear(self):
+        """Delete all rows of the plan"""
+        self.set_plan(["last_step"], 0)
+        self.set_plan(["steps"], {})
+        self.set_plan(["current_step"], 1)
+        self.set_plan(["focus"], {"row": 1, "column": 1})
 
     def plan_row_delete(self, msg):
         """Delete a row from the plan at the focussed row, moving up the remaining entries"""
@@ -564,6 +572,7 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_IDENTIFY", self)
         Framework.subscribe("BTN_PLAN", self)
         Framework.subscribe("BTN_PLAN_CANCEL", self)
+        Framework.subscribe("BTN_PLAN_CLEAR", self)
         Framework.subscribe("BTN_PLAN_DELETE", self)
         Framework.subscribe("BTN_PLAN_DELETE_FILENAME", self)
         Framework.subscribe("BTN_PLAN_INSERT", self)
@@ -940,6 +949,9 @@ class PigssController(Ahsm):
                 return self.tran(self._plan_plan1)
         elif sig == Signal.BTN_PLAN_CANCEL:
             return self.tran(self._operational)
+        elif sig == Signal.BTN_PLAN_CLEAR:
+            self.plan_clear()
+            return self.handled(e)
         elif sig == Signal.BTN_PLAN_DELETE:
             self.plan_row_delete(e.value)
             return self.handled(e)
@@ -1138,7 +1150,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             for bank in self.all_banks:
                 self.chan_active[bank] = 0
-            self.piglet_commands = [("CHANSET 0", self.all_banks)]
+            self.piglet_commands = [("STANDBY", self.all_banks)]
             self.postLIFO(Event(Signal.PIGLET_SEQUENCE, None))
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1234,7 +1246,10 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             mask = self.chan_active[self.bank_to_update]
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+            if mask == 0:
+                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+            else:
+                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             for j in setbits(mask):
                 self.set_status(["channel", self.bank_to_update, j + 1], UiStatus.ACTIVE)
             return self.handled(e)
@@ -1374,7 +1389,10 @@ class PigssController(Ahsm):
                 Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
             else:
                 mask = self.chan_active[self.bank_to_update]
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                if mask == 0:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+                else:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             if self.banks_to_process:
@@ -1508,7 +1526,10 @@ class PigssController(Ahsm):
                 Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
             else:
                 mask = self.chan_active[self.bank_to_update]
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                if mask == 0:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+                else:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             if self.banks_to_process:

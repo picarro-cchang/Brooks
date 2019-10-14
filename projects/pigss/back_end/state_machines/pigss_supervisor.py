@@ -30,6 +30,8 @@ from common import CmdFIFO
 from common.async_helper import log_async_exception
 from common.rpc_ports import rpc_ports
 from simulation.analyzer_simulator import AnalyzerSimulator
+from simulation.sim_alicat_driver import SimAlicatDriver
+from simulation.sim_numato_driver import SimNumatoDriver
 from simulation.sim_piglet_driver import SimPigletDriver
 
 port = rpc_ports.get('madmapper')
@@ -161,6 +163,7 @@ class PigssSupervisor(Ahsm):
     @state
     def _initial(self, e):
         self.publish_errors = True
+        Framework.subscribe("ERROR", self)
         Framework.subscribe("SERVICES_STARTED", self)
         Framework.subscribe("MADMAPPER_DONE", self)
         Framework.subscribe("DRIVERS_STARTED", self)
@@ -174,12 +177,6 @@ class PigssSupervisor(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.terminated = True
-            for task in self.tasks:
-                task.cancel()
-            self.tasks = []
-            for wrapper in self.wrapped_processes.values():
-                if wrapper.process is not None:
-                    wrapper.process.kill()
             return self.handled(e)
         elif sig == Signal.TERMINATE:
             return self.handled(e)
@@ -190,6 +187,13 @@ class PigssSupervisor(Ahsm):
         sig = e.signal
         if sig == Signal.INIT:
             return self.tran(self._startup)
+        elif sig == Signal.EXIT:
+            for task in self.tasks:
+                task.cancel()
+            self.tasks = []
+            for wrapper in self.wrapped_processes.values():
+                if wrapper.process is not None:
+                    wrapper.process.kill()
         elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
         return self.super(self.top)
@@ -255,6 +259,12 @@ class PigssSupervisor(Ahsm):
             return self.handled(e)
         return self.super(self._operational)
 
+    async def reconfigure(self, delay):
+        await asyncio.sleep(delay)
+        Framework.publish(
+            Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=sorted(self.bank_list),
+                                                               mad_mapper_result=self.device_dict)))
+
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def perform_mapping(self):
         # Run the MadMapper after a specified delay
@@ -287,7 +297,12 @@ class PigssSupervisor(Ahsm):
         if at_start:
             self.tasks.append(self.run_async(wrapped_process.pinger(ping_interval)))
         else:
-            log.info(f"Restarted {wrapped_process.driver.__name__} at {key}")
+            name = wrapped_process.driver.__name__
+            if "PigletDriver" in name:
+                self.run_async(self.reconfigure(10.0))
+                log.info(f"Restarted {name} at {key}. Recovery and reconfiguration scheduled.")
+            else:
+                log.info(f"Restarted {name} at {key}")
         return
 
     async def setup_drivers(self, at_start=True):
@@ -311,7 +326,8 @@ class PigssSupervisor(Ahsm):
             elif dev_params['Driver'] == 'AlicatDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = "MFC"
-                    wrapped_process = ProcessWrapper(AlicatDriver, dev_params['RPC_Port'], name, dev_name=key)
+                    DriverClass = SimAlicatDriver if self.simulation else AlicatDriver
+                    wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
                                                 name,
@@ -324,7 +340,8 @@ class PigssSupervisor(Ahsm):
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     relay_id = dev_params['Numato_ID']
                     name = f"Relay_{relay_id}"
-                    wrapped_process = ProcessWrapper(NumatoDriver, dev_params['RPC_Port'], name, dev_name=key)
+                    DriverClass = SimNumatoDriver if self.simulation else NumatoDriver
+                    wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
                                                 name,
