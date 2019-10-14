@@ -5,7 +5,15 @@ Wants = network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/lologger.sh
+###########################################################################
+#                            CLI args                                     #
+###########################################################################
+# -j ------ Start JSON database for Loki                                  #
+# -meta --- Create a metadata table in the db file                        #
+# -pr ----- Prefix for db filename                                        #
+# -pkg ---- List of dpkg packages and versions to include in db metadata  #
+###########################################################################
+ExecStart=/usr/bin/lologger -meta -j -pr pigss -pkg "lologger pigss-meta"
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -HUP $MAINPID
 Restart=always

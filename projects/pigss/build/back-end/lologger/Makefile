@@ -8,7 +8,7 @@ SHELL:=/bin/sh
 SOURCE_DIR=../../../
 SOURCE_FILE=${SOURCE_DIR}back_end/lologger/lologger.py
 INSTALL_DIR=/usr/bin
-SERVICE_INSTALL_DIR=/etc/systemd/user
+SERVICE_INSTALL_DIR=/etc/systemd/system
 BUILD_DIR=dist
 DEB_BUILD_DIR=${BUILD_DIR}/.debian
 # BUILD_NUMBER can be overridden by passing in a build number
@@ -31,9 +31,10 @@ DESCRIPTION=RPC based logger for PiGSS
 
 # Make the debian package
 .PHONY: deb
-deb: clean binary deb-dirs start prerm postinst control
+deb: clean binary deb-dirs prerm postinst control
 	dpkg-deb --build ${DEB_BUILD_DIR} ${BUILD_DIR}/${PACKAGE_NAME}-${VERSION}.deb
 
+# Make the directories necessary for the debian package
 .PHONY: deb-dirs
 deb-dirs:
 	@ mkdir -p ${DEB_BUILD_DIR}${INSTALL_DIR}
@@ -69,14 +70,6 @@ prerm:
 postinst:
 	@ mkdir -p ${DEB_BUILD_DIR}/DEBIAN
 	@ cp -r DEBIAN/postinst ${DEB_BUILD_DIR}/DEBIAN/postinst
-
-# Write lologger start script since systemd services are awful
-# and won't let us pass environmental variables into ExecStart
-.PHONY: start
-start:
-	@ printf '#!/bin/bash\n\
-	/usr/bin/lologger -j -p /var/log/$${USER} -pr $${HOSTNAME}' > ${DEB_BUILD_DIR}${INSTALL_DIR}/lologger.sh
-	@ chmod +x ${DEB_BUILD_DIR}${INSTALL_DIR}/lologger.sh
 
 .PHONY: clean
 clean:
