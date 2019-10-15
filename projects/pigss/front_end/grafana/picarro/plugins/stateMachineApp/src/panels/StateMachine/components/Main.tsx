@@ -266,7 +266,7 @@ export class Main extends Component<any, any> {
                       <div style={{height: "15%", float: "left", padding: "10px", textAlign: "left"}}>
                         <button type="button"
                                 onClick={e => this.ws_sender({element: "reference"})}
-                                className={"btn btn-large ref-btn btn-command"}
+                                className={"btn btn-large ref-btn"}
                                 style={{color: "black"}}>Reference</button>
                       </div> :
                       null

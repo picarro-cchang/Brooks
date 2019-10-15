@@ -334,7 +334,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652007621,
+      "repeatIteration": 1571176199241,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -601,7 +601,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652007621,
+      "repeatIteration": 1571176199241,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -868,7 +868,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652007621,
+      "repeatIteration": 1571176199241,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -1191,7 +1191,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Current Channel",
+      "title": "Current Port",
       "transparent": true,
       "type": "singlestat",
       "valueFontSize": "80%",
@@ -1225,7 +1225,7 @@
         "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
-        "label": "Channels",
+        "label": "Ports",
         "multi": true,
         "name": "ports",
         "options": [],

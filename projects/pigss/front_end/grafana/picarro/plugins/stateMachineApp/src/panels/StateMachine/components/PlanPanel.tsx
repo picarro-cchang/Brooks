@@ -64,9 +64,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 durationString = `${planRow.duration}`;
             }
         }
+
         return (
             <div className="gf-form-inline" key={row}>
-                <label className="col-sm-1" style={{color: "black", marginRight: "-5px"}}>{row}</label>
+                {row < 10 ?
+                    <label className="col-sm-1" style={{ color: "#fff", marginLeft: "7px", marginRight: "-7px"}}>{row + ". "}</label> :
+                    <label className="col-sm-1" style={{ color: "#fff"}}>{row + ". "}</label>
+                }
                 <div className="col-sm-6 col-bank-name">
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 1) && this.manageFocus(input)}
@@ -76,17 +80,15 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            }}
                            onChange={(e) => {
                                this.props.updateFileName(true);
-                               // this.setState({isChanged: true});
                            }}
-                           style={{ backgroundColor: 'white', maxWidth: "100%", float: "left"}}
+                           style={{maxWidth: "90%", float: "left", marginLeft: "2px"}}
                            value={portString} placeholder="Select port"/>
                 </div>
-                <div className="col-sm-3" style={{paddingLeft: "0px", paddingRight: "5px"}}>
+                <div className="col-sm-3" style={{paddingLeft: "0px"}}>
                     <input ref={input => input && (this.props.plan.focus.row === row) &&
                         (this.props.plan.focus.column === 2) && this.manageFocus(input)}
                            onChange={(e) => {
                                this.props.updateFileName(true);
-                               // this.setState({isChanged: true});
                                this.props.ws_sender({element: "plan_panel", row, duration: e.target.value});
                            }}
                            onFocus={(e) => {
@@ -98,7 +100,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                            style = {{ maxWidth: "100%"}}
                            value={durationString} placeholder="Duration" />
                 </div>
-                <label style={{color: "black", marginLeft: "-15px", paddingRight: "5px"}}>s</label>
+                <label style={{marginLeft: "-15px", paddingRight: "5px", color: "#fff"}}>s</label>
                 <label className="col-sm-1 radio-btn">
                     <input type="radio" id={"plan-row-" + row} checked={row == this.props.plan.current_step}
                      onChange={e => this.props.ws_sender({element: "plan_panel", current_step: row})}
@@ -119,13 +121,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         return (
             <div>
             <div className="panel-plan" >
-                <h2 style={{color: "black"}}>Schedule</h2>
-                <span className="cancel" onClick={e => {this.props.ws_sender({element: "plan_cancel"});}}></span>
-                <h6 style={{color: "black"}}>Please click on available channels to set up a schedule,
+                <h2 style={{color: "#fff"}}>Schedule</h2>
+                <span className="cancel" onClick={e => {this.props.ws_sender({element: "plan_cancel"});}} style={{color: "#fff"}}></span>
+                <h6 style={{color: "#fff"}}>Please click on available channels to set up a schedule,
                     then click on the radio button to select starting position.</h6>
                 {/*Potential way to show file name */}
                {(this.props.plan.plan_filename && !this.props.isChanged)?
-                   <h6 style={{color: "black"}}>Currently viewing File: {file_name}</h6> : <h6 style={{color: "black"}}>Currently not viewing a saved file</h6>
+                   <h6 style={{color: "#fff"}}>Currently viewing File: {file_name}</h6> : <h6 style={{color: "#fff"}}>Currently not viewing a saved file</h6>
                }
                 <div className="panel-plan-inner" >
                     <form>
@@ -146,7 +148,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                         this.props.ws_sender({element: "plan_insert"});
                                     }}
                                     className={"btn btn-block btn-group"}
-                                    style={{backgroundColor: "rgb(8, 8, 8)"}}>
+                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
                                 Insert
                             </button>
                         </div>
@@ -154,7 +156,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
                                     className={"btn btn-block btn-light btn-group"}
-                                    style={{backgroundColor: "rgb(8, 8, 8)"}}>
+                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
                                 Save
                             </button>
                         </div>
@@ -164,7 +166,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
                                     className={"btn btn-block btn-light btn-group"}
-                                    style={{backgroundColor: "rgb(8, 8, 8)"}}>
+                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
                             Load
                             </button>
                         </div>
@@ -175,7 +177,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => {
                                         this.props.updateFileName(true);
-                                        // this.setState({isChanged: true});
                                         this.props.ws_sender({element: "plan_delete"});
                                     }}
                                     className={"btn btn-block btn-cancel btn-group"}>
@@ -186,12 +187,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => {
-                                        //this.props.updateFileName(true);
-                                        this.setState({isChanged: true});
-                                        for (let i = 0; i < this.props.plan.focus.row; i++ ){
-                                            console.log("Hello");
-                                            this.props.ws_sender({element: "plan_delete"})
-                                        }                                    }}
+                                        this.props.updateFileName(true);
+                                        this.props.ws_sender({element: "plan_clear"});
+                                        // for (let i = 0; i < this.props.plan.focus.row; i++ ){
+                                        //     console.log("Hello");
+                                        //     this.props.ws_sender({element: "plan_delete"})
+                                        // }
+                                    }}
                                     className={"btn btn-block btn-cancel btn-group"} >
                                 Clear
                             </button>

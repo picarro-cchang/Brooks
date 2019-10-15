@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, {Component, PureComponent} from 'react';
 import './bankpanel.css'
 
@@ -22,15 +23,15 @@ interface BankPanelOptions {
 
 class BankPanel extends PureComponent<BankPanelOptions> {
     bankStyleOpt = {
-        READY:{color:"#fff", backgroundColor:"#c5d2e6"},
+        READY:{color:"#fff", backgroundColor:"#989898"},
         ACTIVE:{color:"#fff", backgroundColor:"rgb(86, 166, 75)"},
         CLEAN:{color:"#fff", backgroundColor:"#4BBEE3"},
-        REFERENCE:{color:"#440", backgroundColor:"rgb(224, 180, 0)"}}; //hope this will work to not display any inactive banks
+        REFERENCE:{color:"#440", backgroundColor:"rgb(224, 180, 0)"}};
     cleanClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "btn-light", ACTIVE:"btn-light", CLEAN:"btn-secondary btn-clean-act"
+        DISABLED:"btn-inverse-2 disabled", READY: "btn-ready", ACTIVE:"btn-light", CLEAN:"btn-secondary btn-clean-act"
     };
     channelClassNameOpt = {
-        DISABLED:"btn-inverse disabled", READY: "btn-light", AVAILABLE:"btn-light", ACTIVE:"btn-green", CLEAN:"btn-light", REFERENCE:"btn-warning"
+        DISABLED:"btn-inverse-2 disabled", READY: "btn-ready", AVAILABLE:"btn-ready", ACTIVE:"btn-green", CLEAN:"btn-light", REFERENCE:"btn-warning"
     };
 
     render() {
@@ -42,7 +43,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         let test = {}
 
         if ("bank" in (this.props.uistatus as any)) {
-            //console.log("In bankPanel.render", this.props.uistatus);
             const bankStatus: string = (this.props.uistatus.bank as any)[this.props.bank];
             const channelStatus: {[key:number]: string} = (this.props.uistatus.channel as any)[this.props.bank];
             const cleanStatus: string = (this.props.uistatus.clean as any)[this.props.bank];
@@ -53,7 +53,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             getChannelDisabled = (chan) => (channelStatus as any)[chan] !== "READY";
             test = channelStatus;
         }
-       // console.log("hello", channelStatus);
 
         let channelButtons = [];
         for (let i=1; i<=8; i++) {
@@ -92,7 +91,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             </button>
         );
         const value: string = this.props.plan.bank_names[this.props.bank].name;
-        //const value: string = "Bank " + this.props.bank;
         return (
             <div>
                 <div className="panel-bank" style={bankStyle}>

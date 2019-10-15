@@ -6,7 +6,7 @@ import {Plan, PlanSavePanelOptions} from './../types';
 class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
     renderItem = (index: number, key: ReactText) => (
         <div className="container" style={{paddingTop: "5px"}} key={key}>
-            <div className="btn-group d-flex">
+            <div className="btn-group d-flex" style={{marginLeft: "0px"}}>
                 <button type="button" className="btn btn-light w-100 btn-small"
                         onClick={e => this.props.ws_sender({element: "plan_save_filename",
                             name: this.props.plan.plan_files[index+1]})}
@@ -19,21 +19,11 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
                 </button>
             </div>
         </div>)
-    /*
-        renderItem = (index: number, key: ReactText) => (
-            <div style={{paddingTop: "5px"}} key={key}>
-                <button type="button" className="btn btn-light btn-block btn-small"
-                 onClick={e => this.props.ws_sender({element: "plan_save_filename",
-                 name: this.props.plan.plan_files[index+1]})}>
-                    {this.props.plan.plan_files[index+1]}
-                </button>
-            </div>)
-    */
     render() {
         return (
-            <div className="panel-plan" style={{marginTop: 10, backgroundColor: "#ccc", padding: 10, border: "3px solid #111", borderRadius: 10}} >
-                <h2 style={{color: 'black'}}>Save Plan</h2>
-                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:520}}>
+            <div className="panel-save" >
+                <h2 style={{color: 'white'}}>Save Plan</h2>
+                <div className="panel-save-inner">
                     <form>
                         <ReactList
                             itemRenderer={this.renderItem}
@@ -50,24 +40,21 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
                 </div>
 
                 <div className="container" style={{marginTop: "20px"}}>
-                    <div className="row text-center">
-                        <div className="col-sm-6">
+                    <div className="text-center">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save_cancel"})}
-                                    className={"btn btn-block btn-med btn-cancel"}>
+                                    className={"btn btn-group-2 btn-cancel"}>
                                 Cancel
                             </button>
-                        </div>
-                        <div className="col-sm-6">
                             <button type="button"
                                     onClick={e => {
                                         this.props.updateFileName(false);
                                         this.props.ws_sender({element: "plan_save_ok"});
                                     }}
-                                    className={"btn btn-block btn-med btn-green"}>
+                                    className={"btn btn-group-2 btn-green"}>
                                 OK
                             </button>
-                        </div>
+
                     </div>
                 </div>
 

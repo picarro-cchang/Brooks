@@ -6,7 +6,7 @@ import {Plan, PlanLoadPanelOptions} from './../types';
 class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
     renderItem = (index: number, key: ReactText) => (
         <div className="container" style={{paddingTop: "5px"}} key={key}>
-            <div className="btn-group d-flex">
+            <div className="btn-group d-flex" style={{marginLeft: "0px"}}>
                 <button type="button" className="btn w-100 btn-small"
                         onClick={e => {
                             this.props.updateFileName(false);
@@ -27,9 +27,9 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
 
     render() {
         return (
-            <div className="panel-plan" style={{marginTop: 10, backgroundColor: "#ccc", padding: 10, border: "3px solid #111", borderRadius: 10}}>
-                <h2 style={{ color: 'black'}}>Load Plan</h2>
-                <div style={{overflowX: "hidden", overflowY: "auto", maxHeight:520}}>
+            <div className="panel-save">
+                <h2 style={{ color: 'white'}}>Load Plan</h2>
+                <div className="panel-save-inner">
                     <form>
                         <ReactList
                             itemRenderer={this.renderItem}
@@ -43,7 +43,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
                         <div className="col-sm-12">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load_cancel"})}
-                                    className={"btn btn-block btn-xlarge btn-cancel"}>
+                                    className={"btn btn-group-2 btn-cancel"}>
                                 Cancel
                             </button>
                         </div>
