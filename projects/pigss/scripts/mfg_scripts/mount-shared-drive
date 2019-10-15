@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# This script will accept an argument from the pigss-network menu
+# and mount the applicable drive(s).
+
+# Make mount-point parent directories if necessary
+sudo mkdir -p /mnt/r
+sudo mkdir -p /mnt/s
+sudo mkdir -p /mnt/x
+sudo mkdir -p /mnt/m
+
+# Define the argument
+arg=${@}
+
+cred="Picarro1"
+
+# Define command components
+mountIP="//10.100.1.172"
+mountCommand="sudo mount -t cifs"
+mountLocation="/mnt/$arg"
+mountArgs="-o username=lab,password=${cred},domain=CORP,uid=1000,gid=1000"
+
+function mountDrive()
+	{
+	if [ ${arg} = "all" ]; then
+		${mountCommand} ${mountIP}/data /mnt/r ${mountArgs}
+		${mountCommand} ${mountIP}/shared /mnt/s ${mountArgs}
+		${mountCommand} ${mountIP}/temp_space /mnt/x ${mountArgs}
+		${mountCommand} ${mountIP}/MFG /mnt/m ${mountArgs}
+		echo ""
+		echo "Mounting All Drives"
+		echo ""
+		sleep 1s
+	elif [ ${arg} = "r" ]; then
+		${mountCommand} ${mountIP}/data ${mountLocation} ${mountArgs}
+		echo ""
+		echo "Mounting R Drive"
+		echo ""
+		sleep 1s
+	elif [ ${arg} = "s" ]; then
+		${mountCommand} ${mountIP}/shared ${mountLocation} ${mountArgs}
+		echo ""
+		echo "Mounting S Drive"
+		echo ""
+		sleep 1s
+	elif [ ${arg} = "x" ]; then
+		${mountCommand} ${mountIP}/temp_space ${mountLocation} ${mountArgs}
+		echo ""
+		echo "Mounting X Drive"
+		echo ""
+		sleep 1s
+	elif [ ${arg} = "m" ]; then
+		${mountCommand} ${mountIP}/MFG ${mountLocation} ${mountArgs}
+		echo ""
+		echo "Mounting M Drive"
+		echo ""
+		sleep 1s
+	else
+		echo ""
+		echo "Error! Incorrect Argument!"
+		echo ""
+		sleep 1s
+	fi
+	}
+
+mountDrive
