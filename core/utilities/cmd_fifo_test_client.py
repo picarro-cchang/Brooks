@@ -10,13 +10,14 @@ For instructions on how to use, use the -h command line switch to get:
 
 P.S. This is a QT based implementation of the previously WX based script.
 """
-import sys
 import getopt
-import CmdFIFO
+import sys
 
-from PyQt5.QtWidgets import QApplication, QLabel, QWidget, QGroupBox, QTextEdit, QHBoxLayout, \
-    QVBoxLayout, QPushButton, QMessageBox, QInputDialog, QComboBox, QScrollArea, QFrame
-from PyQt5 import QtCore
+from qtpy import QtCore
+from qtpy.QtWidgets import (QApplication, QComboBox, QFrame, QGroupBox, QHBoxLayout, QInputDialog, QLabel, QMessageBox, QPushButton,
+                            QScrollArea, QTextEdit, QVBoxLayout, QWidget)
+
+import CmdFIFO
 
 HELP_STRING = \
     """ TestClient.py [options]
@@ -92,13 +93,11 @@ class TestClientWidget(QWidget):
         self.registered_rpcs_widget.setLayout(self.registered_rpcs_widget_layout)
         self.registered_rpcs.setLayout(self.registered_rpcs_layout)
         self.cmd_fifo_rpc_widget.setLayout(self.cmd_fifo_rpc_widget_layout)
-        self.server_information_widget.setLayout(
-            self.server_information_widget_layout)
+        self.server_information_widget.setLayout(self.server_information_widget_layout)
         self.transactions_widget.setLayout(self.transactions_widget_layout)
         self.left_column_interface.setLayout(self.left_column_interface_layout)
         self.right_column_interface.setLayout(self.right_column_interface_layout)
-        self.registered_rpcs_widget_scrollable.setWidget(
-            self.registered_rpcs)
+        self.registered_rpcs_widget_scrollable.setWidget(self.registered_rpcs)
 
     def __add_widgets(self):
         # add all the widgets to the layouts
@@ -203,13 +202,12 @@ class TestClientWidget(QWidget):
         if kw_arg_dict:
             if argStr:
                 argStr += ", "
-            argStr += ", ".join([f"{k}={repr(v)}" for k,
-                                 v in kw_arg_dict.items()])
+            argStr += ", ".join([f"{k}={repr(v)}" for k, v in kw_arg_dict.items()])
         self.log_text_box.append(f"Calling function: {func_name}({argStr})\n")
         QApplication.processEvents()
         try:
             ret = self.server.__getattr__(func_name)(*arg_tuple, **kw_arg_dict)
-        except Exception as e: # noqa
+        except Exception as e:  # noqa
             # catch any exceptions on the server side.
             self.log_text_box.append(f"  Exception raised: {e}\n")
         else:
@@ -265,8 +263,7 @@ class TestClientWidget(QWidget):
             self._invoke_rpc('CmdFIFO.KillServer', (text, ))
 
     def on_debug_delay_click(self):
-        args, kwargs = self._get_args_from_dialog(
-            "CmdFIFO.DebugDelay", "DelayTime_s")
+        args, kwargs = self._get_args_from_dialog("CmdFIFO.DebugDelay", "DelayTime_s")
         if args is not None:
             self._invoke_rpc('CmdFIFO.DebugDelay', args, kwargs)
 
@@ -274,10 +271,11 @@ class TestClientWidget(QWidget):
         args_okay = True
         args = ()
         kwargs = {}
-        text, ok = QInputDialog.getText(self, func_name, "The selected RPC function requires arguments of the form:"
-                                        f"\n\n{args_in}\n\n"
-                                        "Please enter the arguments below as if you were calling\n"
-                                        "the function in a Python shell (without outside parentheses).")
+        text, ok = QInputDialog.getText(
+            self, func_name, "The selected RPC function requires arguments of the form:"
+            f"\n\n{args_in}\n\n"
+            "Please enter the arguments below as if you were calling\n"
+            "the function in a Python shell (without outside parentheses).")
         if not ok:
             args_okay = False
         else:
@@ -291,9 +289,9 @@ class TestClientWidget(QWidget):
 
                 command_to_eval = "my_wrapper(" + dlg_value + ")"
                 args, kwargs = eval(command_to_eval)
-            except Exception as e: # noqa
+            except Exception as e:  # noqa
                 # exception can happen during the eval statement
-                if __debug__: print(e) # noqa
+                if __debug__: print(e)  # noqa
                 args_okay = False
 
                 dlg = QMessageBox()
@@ -315,8 +313,7 @@ class TestClientWidget(QWidget):
         return args, kwargs
 
     def callback_test(self, returned_vars, fault):
-        self.log_text_box.append(
-            f"  *** Callback received.  Ret = {returned_vars}  Fault = {fault}\n")
+        self.log_text_box.append(f"  *** Callback received.  Ret = {returned_vars}  Fault = {fault}\n")
 
     def on_rpc_button_click(self):
         if not isinstance(self.server, CmdFIFO.CmdFIFOServerProxy):
@@ -324,13 +321,12 @@ class TestClientWidget(QWidget):
 
         # figure out what to call...
         sender = self.sender()
-        func_name = sender.__getattribute__("method_name")
+        func_name = sender.method_name
         # set function method to what is in the choice box
         choice_str = self.cmd_type_drop_list.currentText()
         func_method = CmdTypeChoicesDict[choice_str]
         if func_method == CmdFIFO.CMD_TYPE_Callback:
-            self.server.SetFunctionMode(
-                func_name, func_method, self.callback_test)
+            self.server.SetFunctionMode(func_name, func_method, self.callback_test)
         else:
             self.server.SetFunctionMode(func_name, func_method)
         # if args exist, prompt for this...
@@ -361,7 +357,7 @@ class TestClientWidget(QWidget):
                 i += 1
                 btn = QPushButton(f"  {method_name}")
                 btn.clicked.connect(self.on_rpc_button_click)
-                btn.__setattr__("method_name", method_name)
+                btn.method_name = method_name
                 self.registered_rpcs_layout.addWidget(btn)
                 self.rpc_buttons.append(btn)
                 tool_tip = self.server.system.methodHelp(method_name)
@@ -370,10 +366,9 @@ class TestClientWidget(QWidget):
 
 def main():
     try:
-        options, _ = getopt.getopt(sys.argv[1:], 'a:p:c:hs',
-                                   ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple'])
+        options, _ = getopt.getopt(sys.argv[1:], 'a:p:c:hs', ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple'])
     except getopt.GetoptError as e:
-        if __debug__: print(e) # noqa
+        if __debug__: print(e)  # noqa
         sys.exit(1)
 
     proxy_address = "127.0.0.1"
@@ -396,9 +391,9 @@ def main():
     #########
     # Set up the server proxy...
     server_url = f"http://{proxy_address}:{proxy_port}"
-    if __debug__: print("***************") # noqa
-    if __debug__: print(f"Configuring connection to server at '{server_url}'") # noqa
-    if __debug__: print("***************") # noqa
+    if __debug__: print("***************")  # noqa
+    if __debug__: print(f"Configuring connection to server at '{server_url}'")  # noqa
+    if __debug__: print("***************")  # noqa
     try:
         server = CmdFIFO.CmdFIFOServerProxy(uri=server_url,
                                             IsDontCareConnection=False,
