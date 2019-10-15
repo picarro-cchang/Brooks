@@ -20,13 +20,11 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         //  only the last component to receive the focus. This prevents
         //  oscillations in which a cycle of components receive focus in
         //  quick succession.
-       // console.log("Manage Focus", component);
         if (this.focusTimer !== null) {
             clearTimeout(this.focusTimer);
         }
         this.focusComponent = component;
         this.focusTimer = setTimeout(() => {
-          //  console.log("Setting focus", this.focusComponent)
             this.focusComponent.focus();
             this.focusTimer = null;
         }, 200);
@@ -125,7 +123,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 <span className="cancel" onClick={e => {this.props.ws_sender({element: "plan_cancel"});}} style={{color: "#fff"}}></span>
                 <h6 style={{color: "#fff"}}>Please click on available channels to set up a schedule,
                     then click on the radio button to select starting position.</h6>
-                {/*Potential way to show file name */}
                {(this.props.plan.plan_filename && !this.props.isChanged)?
                    <h6 style={{color: "#fff"}}>Currently viewing File: {file_name}</h6> : <h6 style={{color: "#fff"}}>Currently not viewing a saved file</h6>
                }

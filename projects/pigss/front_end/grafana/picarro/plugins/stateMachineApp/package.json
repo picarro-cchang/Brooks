@@ -1,9 +1,9 @@
 {
-  "name": "grafana-image-panel",
+  "name": "flow-setup-application",
   "version": "0.0.1",
-  "description": "Grafana panel practice",
-  "author": "Emma Peatfield",
-  "license": "MIT",
+  "description": "Picarro State Machine",
+  "author": "Picarro",
+  "license": "Apache",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack --mode development",

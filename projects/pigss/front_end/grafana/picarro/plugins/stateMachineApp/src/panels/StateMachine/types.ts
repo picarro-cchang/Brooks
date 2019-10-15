@@ -84,20 +84,11 @@ export interface PlanStep {
   duration: number;
 }
 
-export interface Options {
-  panel_to_show: number;
-}
-
-export enum OptionsPanelTypes {
-  NONE = 0,
-  EDIT = 1,
-}
 
 export interface EditPanelOptions {
   uistatus: {
     [key: string]: string;
   }
   ws_sender: (o: object)=>void;
-  //switches: (v: any) => void;
   plan: Plan
 }

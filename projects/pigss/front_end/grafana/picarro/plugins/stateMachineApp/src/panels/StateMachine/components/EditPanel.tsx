@@ -1,3 +1,4 @@
+// @ts-ignore
 import React, {Component, PureComponent, ReactText} from 'react';
 import { EditPanelOptions } from "../types";
 import ReactList from 'react-list';
@@ -21,10 +22,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     };
     constructor(props) {
         super(props);
-        // this.handleBankInputChange = this.handleBankInputChange.bind(this)
     }
-    //Make Rows based on Banks Available
-    //ex: Bank Panel 1 then input box to change name
+
     banks: any;
     bank_list:  any;
 
@@ -100,8 +99,6 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                             <label className="edit-label" > Channel 8 </label>
                             <input name={"bank" + key + "8"} className="col-sm-6 edit-panel" type="text" defaultValue={this.state.plan.bank_names[key].channels[8]}
                                    onChange={(e) => console.log('yo')}
-
-                                // onChange={(e) => this.handleChannelChange(e, key, 8)}
                                    maxLength={8}
                             />
                         </div>

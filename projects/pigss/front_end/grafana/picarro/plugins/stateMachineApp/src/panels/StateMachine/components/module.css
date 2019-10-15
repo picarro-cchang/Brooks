@@ -1,52 +1,52 @@
-.App {
-    text-align: center;
-}
+/*.App {*/
+/*    text-align: center;*/
+/*}*/
 
 
-.btn-bank {
-    height: 90px;
-    width: 90px;
-}
-
-
-
-.grid-command {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    grid-gap: 20px;
-    padding: 20px;
-}
+/*.btn-bank {*/
+/*    height: 90px;*/
+/*    width: 90px;*/
+/*}*/
 
 
 
-.panel-bank {
-    float: left;
-}
+/*.grid-command {*/
+/*    display: grid;*/
+/*    grid-template-columns: 1fr 1fr 1fr;*/
+/*    grid-gap: 20px;*/
+/*    padding: 20px;*/
+/*}*/
 
-.panel-plan {
-    margin-top: -50px;
-    background-color: #ccc;
-    padding: 10px;
-    border: 3px solid #111;
-    border-radius: 10px
-}
 
-.small-input {
-    font-size: 10pt;
-    height: 18px
-}
 
-.btn-outline-success:hover {
-    color: #080;
-    background-color: #DFD;
-}
+/*.panel-bank {*/
+/*    float: left;*/
+/*}*/
 
-.disabled.my-disabled {
-    color: #333;
-    background-color: #444;
-}
+/*.panel-plan {*/
+/*    margin-top: -50px;*/
+/*    background-color: #ccc;*/
+/*    padding: 10px;*/
+/*    border: 3px solid #111;*/
+/*    border-radius: 10px*/
+/*}*/
 
-.disabled.command-disabled {
-    color: #EEE;
-    background-color: #FFF;
-}
+/*.small-input {*/
+/*    font-size: 10pt;*/
+/*    height: 18px*/
+/*}*/
+
+/*.btn-outline-success:hover {*/
+/*    color: #080;*/
+/*    background-color: #DFD;*/
+/*}*/
+
+/*.disabled.my-disabled {*/
+/*    color: #333;*/
+/*    background-color: #444;*/
+/*}*/
+
+/*.disabled.command-disabled {*/
+/*    color: #EEE;*/
+/*    background-color: #FFF;*/
+/*}*/
