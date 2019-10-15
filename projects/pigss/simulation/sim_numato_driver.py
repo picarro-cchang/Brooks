@@ -256,7 +256,7 @@ class SimNumatoDriver(object):
         app = QApplication([])
         self.ui_root = QDialog()
         self.ui_root.setWindowTitle(f"Numato Board")
-        self.ui_root.setStyleSheet("QLabel {font: 6pt Helvetica}")
+        self.ui_root.setStyleSheet("QLabel {font: 10pt Helvetica}")
         column = QVBoxLayout()
         label = QLabel(f"Port: {self.rpc_server_port}", self.ui_root)
         column.addWidget(label)
@@ -278,7 +278,7 @@ class SimNumatoDriver(object):
         timer.setSingleShot(False)
         timer.timeout.connect(self.update_ui)
         timer.start(200)
-        app.exec()
+        app.exec_()
 
     def update_ui(self):
         for i in range(self.relay_count):

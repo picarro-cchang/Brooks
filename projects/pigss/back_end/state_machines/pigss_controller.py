@@ -1573,7 +1573,7 @@ class PigssController(Ahsm):
         supervisor shortly after startup to start the flow through the rack on power-up.
         """
         if plan_filename_no_ext is not None:
-            fname = f"{plan_filename_no_ext}.pln"
+            fname = os.path.join(PLAN_FILE_DIR, f"{plan_filename_no_ext}.pln")
             if not os.path.exists(fname):
                 raise FileNotFoundError(f"No such file: {fname}")
 

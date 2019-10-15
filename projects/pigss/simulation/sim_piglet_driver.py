@@ -58,7 +58,7 @@ class SimPigletDriver(object):
         app = QApplication([])
         self.ui_root = QDialog()
         self.ui_root.setWindowTitle(f"Piglet")
-        self.ui_root.setStyleSheet("QLabel {font: 6pt Helvetica}")
+        self.ui_root.setStyleSheet("QLabel {font: 10pt Helvetica}")
         layout = QGridLayout()
         layout.addWidget(QLabel("Port:", self.ui_root), 0, 0)
         layout.addWidget(QLabel(f"{self.rpc_port}", self.ui_root), 0, 1)
@@ -83,7 +83,7 @@ class SimPigletDriver(object):
         timer.setSingleShot(False)
         timer.timeout.connect(self.update_ui)
         timer.start(200)
-        app.exec()
+        app.exec_()
         self.rpc_server.stop_server()
 
     def update_ui(self):
