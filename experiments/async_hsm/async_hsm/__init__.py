@@ -247,7 +247,7 @@ class Hsm(object):
                 await cor
             except Exception as e:
                 event = Event(Signal.ERROR, {
-                    "exc": e,
+                    "exc": str(e),
                     "traceback": traceback.format_exc(),
                     "location": self.__class__.__name__,
                     "name": cor.__name__
@@ -404,7 +404,7 @@ class Hsm(object):
             self.state_receiving_dispatch = None
 
         except Exception as e:
-            event = Event(Signal.ERROR, {"exc": e, "traceback": traceback.format_exc(), "location": self.__class__.__name__})
+            event = Event(Signal.ERROR, {"exc": str(e), "traceback": traceback.format_exc(), "location": self.__class__.__name__})
             if self.publish_errors:
                 Framework.publish(event)
             else:
@@ -694,7 +694,7 @@ class Ahsm(Hsm):
         try:
             self.init()
         except Exception as e:
-            event = Event(Signal.ERROR, {"exc": e, "traceback": traceback.format_exc(), "location": self.__class__.__name__})
+            event = Event(Signal.ERROR, {"exc": str(e), "traceback": traceback.format_exc(), "location": self.__class__.__name__})
             if self.publish_errors:
                 Framework.publish(event)
             else:

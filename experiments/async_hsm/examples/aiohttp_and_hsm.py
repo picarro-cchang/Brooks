@@ -36,7 +36,7 @@ class SampleService:
             if self.publish_errors:
                 Framework.publish(
                     Event(Signal.ERROR, {
-                        "exc": e,
+                        "exc": str(e),
                         "traceback": traceback.format_exc(),
                         "location": self.__class__.__name__,
                         "request": request.url
