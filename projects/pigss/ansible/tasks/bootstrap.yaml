@@ -57,7 +57,7 @@
 
 - name: Install cifs-utils
   apt: name=cifs-utils
-  becomes: yes
+  become: yes
 
 - name: Install scrot package
   apt: name=scrot
