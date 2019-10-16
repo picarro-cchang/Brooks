@@ -1,7 +1,6 @@
-// @ts-ignore
-import React, {Component, PureComponent, ReactText} from 'react';
+import React, {PureComponent, ReactText} from 'react';
 import ReactList from 'react-list';
-import {Plan, PlanLoadPanelOptions} from './../types';
+import {PlanLoadPanelOptions} from './../types';
 
 class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
     renderItem = (index: number, key: ReactText) => (

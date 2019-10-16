@@ -1,7 +1,6 @@
-// @ts-ignore
-import React, {Component, PureComponent, ReactText} from 'react';
+import React, { PureComponent, ReactText} from 'react';
 import ReactList from 'react-list';
-import {Plan, PlanFocus, PlanPanelOptions, PlanStep} from './../types';
+import {PlanPanelOptions, PlanStep} from './../types';
 
 class PlanPanel extends PureComponent<PlanPanelOptions> {
     state = {
@@ -113,7 +112,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
     renderItem = (index: number, key: ReactText) => <div key={key}>{this.makePlanRow(index + 1)}</div>
 
     render() {
-        console.log("File chahed ? ", this.props.isChanged)
         const file_name = this.props.plan.plan_filename;
 
         return (
@@ -137,39 +135,36 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 </div>
                 <div className="container">
                     <div className="row text-center btn-row-1" >
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3">
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => {
                                         this.setState({isChanged: true});
                                         this.props.ws_sender({element: "plan_insert"});
                                     }}
-                                    className={"btn btn-block btn-group"}
-                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
+                                    className={"btn btn-block btn-group"}>
                                 Insert
                             </button>
                         </div>
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3" >
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_save"})}
-                                    className={"btn btn-block btn-light btn-group"}
-                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
+                                    className={"btn btn-block btn-light btn-group"}>
                                 Save
                             </button>
                         </div>
 
 
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3">
                             <button type="button"
                                     onClick={e => this.props.ws_sender({element: "plan_load"})}
-                                    className={"btn btn-block btn-light btn-group"}
-                                    style={{color: "rgb(8, 8, 8)", backgroundColor: "#e4e4e4"}}>
+                                    className={"btn btn-block btn-light btn-group"}>
                             Load
                             </button>
                         </div>
                     </div>
                     <div className="row btn-row-2">
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3" >
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => {
@@ -180,7 +175,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                                 Delete
                             </button>
                         </div>
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3" >
                             <button type="button"
                                     disabled={this.props.plan.focus.row > this.props.plan.last_step}
                                     onClick={e => {
@@ -196,7 +191,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                             </button>
                         </div>
 
-                        <div className="col-sm-3" style={{paddingRight: "5px", paddingLeft: "5px"}}>
+                        <div className="col-sm-3" >
                             <button type="button"
                                     onClick={e => {
                                         this.props.ws_sender({element: "plan_ok"})

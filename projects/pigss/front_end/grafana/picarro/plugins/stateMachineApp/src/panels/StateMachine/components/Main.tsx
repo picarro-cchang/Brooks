@@ -1,12 +1,10 @@
-// @ts-ignore
-import React, { Component, PureComponent, useImperativeHandle } from 'react';
+import React, { Component } from 'react';
 import PicarroAPI from './../api/PicarroAPI';
 import BankPanel from './BankPanel';
 import CommandPanel from './CommandPanel';
 import PlanPanel from './PlanPanel';
 import PlanLoadPanel from './PlanLoadPanel';
 import PlanSavePanel from './PlanSavePanel';
-// @ts-ignore
 import deepmerge from 'deepmerge';
 import Modal from 'react-responsive-modal';
 import {ModalInfo, PlanPanelTypes} from './../types';
@@ -98,7 +96,6 @@ export class Main extends Component<any, any> {
   };
   constructor(props) {
     super(props);
-  //  this.switchPanel = this.switchPanel.bind(this)
     this.updateFileName = this.updateFileName.bind(this)
   }
 
@@ -108,7 +105,6 @@ export class Main extends Component<any, any> {
 
     this.ws.onopen = () => {
       // on connecting, do nothing but log it to the console
-      console.log('web socket connected');
     }
 
     this.ws.onmessage = evt => {
@@ -127,7 +123,6 @@ export class Main extends Component<any, any> {
     let p1 = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
         response => {
           response.json().then(obj => {
-            // this.refWebSocket.sendMessage("message via websocket");
             this.setState(deepmerge(this.state, { uistatus: obj }));
           })
         }
@@ -179,7 +174,6 @@ export class Main extends Component<any, any> {
 
   updateFileName(x: boolean){
       this.setState({isChanged: x});
-      console.log("changed the state ", this.state.isChanged);
   };
 
   render() {
@@ -249,7 +243,6 @@ export class Main extends Component<any, any> {
       }
 
     }
-    console.log("File changed Main ? ", this.state.isChanged);
     return (
         <div style={{ textAlign: 'center' }}>
           <div className="container-fluid">
@@ -263,7 +256,7 @@ export class Main extends Component<any, any> {
                 </div>
                 {
                   isPlan  ?
-                      <div style={{height: "15%", float: "left", padding: "10px", textAlign: "left"}}>
+                      <div className="ref-div" >
                         <button type="button"
                                 onClick={e => this.ws_sender({element: "reference"})}
                                 className={"btn btn-large ref-btn"}

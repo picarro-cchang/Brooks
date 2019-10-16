@@ -1,5 +1,4 @@
-// @ts-ignore
-import React, {Component, PureComponent} from 'react';
+import React, {PureComponent} from 'react';
 import './bankpanel.css'
 
 
@@ -63,7 +62,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                         className={"btn btn-large bank-btn " + getChannelClassNames(i)}
                         style={{color: 'black'}}>
                         <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
-                        <p style={{fontSize: 10, marginTop: 30}}>Status: {test[i]} </p>
+                        <p className="chn-status" >Status: {test[i]} </p>
                     </button>
                 ) : (
                     <button
@@ -72,7 +71,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                         key={i}
                         className={"btn btn-large bank-btn " + getChannelClassNames(i)}>
                         <p className="chn-label">{this.props.plan.bank_names[this.props.bank].channels[i]}</p>
-                        <p style={{ fontSize: 10, marginTop: 30 }}>Status: {test[i]}</p>
+                        <p className="chn-status">Status: {test[i]}</p>
                     </button>
                 )
             );

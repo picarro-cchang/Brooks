@@ -11,8 +11,6 @@ let PicarroAPI = {
             if (!response.ok) {
                 throw Error('Network POST request failed');
             }
-            console.log('Posted', data);
-            console.log('Response', response);
             return response;
         });
     },
@@ -24,7 +22,6 @@ let PicarroAPI = {
             if (!response.ok) {
                 throw Error('Network GET request failed');
             }
-            console.log('Response to GET', response);
             return response;
         });
     },

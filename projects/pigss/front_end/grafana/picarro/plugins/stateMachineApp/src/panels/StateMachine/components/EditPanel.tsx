@@ -1,8 +1,5 @@
-// @ts-ignore
 import React, {Component, PureComponent, ReactText} from 'react';
 import { EditPanelOptions } from "../types";
-import ReactList from 'react-list';
-
 
 
 class EditPanel extends PureComponent<EditPanelOptions> {
@@ -30,7 +27,6 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     makeEditRow = () => {
         let edit_list = [];
         this.bank_list = [];
-        //let banks_list = [];
         this.banks = this.props.uistatus.bank;
         for (let key in this.banks) {
             let value = this.banks[key];
@@ -41,14 +37,12 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                         <div className="row">
                             <label className="edit-label"> Bank {key}</label>
                             <input name={"bank" + key} className="col-sm-6 edit-panel"  type="text"
-                            onChange={(e) => console.log('')}
                                    defaultValue={this.state.plan.bank_names[key].name}
-                            maxLength={14}/>
+                                   maxLength={14}/>
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 1 </label>
                             <input name={"bank" + key + "1"} className="col-sm-6 edit-panel" type="text"
-                                   onChange={(e) => console.log('')}
                                    defaultValue={this.state.plan.bank_names[key].channels[1]}
                                    maxLength={8}
                             />
@@ -56,49 +50,42 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                         <div className="row">
                             <label className="edit-label"> Channel 2 </label>
                             <input name={"bank" + key + "2"} className="col-sm-6 edit-panel" type="text" defaultValue={this.state.plan.bank_names[key].channels[2]}
-                                   onChange={(e) => console.log('')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 3 </label>
                             <input name={"bank" + key + "3"} className="col-sm-6 edit-panel" type="text" defaultValue={this.state.plan.bank_names[key].channels[3]}
-                                   onChange={(e) => console.log('')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 4 </label>
                             <input name={"bank" + key + "4"} className="col-sm-6 edit-panel" type="text" defaultValue={this.state.plan.bank_names[key].channels[4]}
-                                   onChange={(e) => console.log('')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 5 </label>
                             <input name={"bank" + key + "5"} className="col-sm-6 edit-panel"  type="text" defaultValue={this.state.plan.bank_names[key].channels[5]}
-                                   onChange={(e) => console.log('')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 6 </label>
                             <input name={"bank" + key + "6"} className="col-sm-6 edit-panel"  type="text" defaultValue={this.state.plan.bank_names[key].channels[6]}
-                                   onChange={(e) => console.log('')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label"> Channel 7 </label>
                             <input name={"bank" + key + "7"} className="col-sm-6 edit-panel"  type="text" defaultValue={this.state.plan.bank_names[key].channels[7]}
-                                   onChange={(e) => console.log('yo')}
                                    maxLength={8}
                             />
                         </div>
                         <div className="row">
                             <label className="edit-label" > Channel 8 </label>
                             <input name={"bank" + key + "8"} className="col-sm-6 edit-panel" type="text" defaultValue={this.state.plan.bank_names[key].channels[8]}
-                                   onChange={(e) => console.log('yo')}
                                    maxLength={8}
                             />
                         </div>
@@ -126,7 +113,6 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             const currentName = bank_names[bankNum];
             currentName.name = bankValue;
             this.setState({...this.state.plan.bank_names, [bankNum]: {name: bankValue}});
-            console.log(bankName, " changed");
             const {channels} = {...this.state.plan.bank_names[bankNum]};
             const currentNames = channels;
             for (let i = 1; i < 9; i++){
@@ -134,11 +120,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                 const chanValue = targets[chanName].value;
                 currentNames[i] = chanValue;
                 this.setState({...this.state.plan.bank_names[bankNum].channels, [i]: chanValue});
-                console.log(chanName, " changed");
-
             }
         }
-        console.log(this.state.plan.bank_names);
         const channels1 = this.state.plan.bank_names[1].channels;
         const channels2 = this.state.plan.bank_names[2].channels;
         const channels3 = this.state.plan.bank_names[3].channels;
@@ -162,10 +145,10 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                         <h2 style={{color: "white"}}>Edit Bank & Channel Names</h2>
                     <form onSubmit={this.handleSubmit} >
                             {this.makeEditRow()}
-                    <div className="row text-center button-edit" style={{marginTop: "10px", marginBottom: "10px", alignContent: "center"}}>
+                    <div className="row text-center button-edit" >
                         <div className="col-sm-4">
                             <button type="submit"
-                                    className={"btn btn-block btn-green btn-edit-panel"}  >
+                                    className={"btn  btn-green btn-edit-panel btn-group-2"}  >
 
                                 Ok
                             </button>
@@ -175,7 +158,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
                                     onClick={e => {
                                         this.props.ws_sender({element: "edit_cancel"});
                                     }}
-                                    className={"btn btn-block btn-cancel btn-edit-panel"}>
+                                    className={"btn btn-cancel btn-edit-panel btn-group-2"}>
                                 Cancel
                             </button>
                         </div>
