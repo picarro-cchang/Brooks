@@ -12,7 +12,7 @@ class DBInitError(Exception):
 
 
 class DBCloseError(Exception):
-    """Raised when there is an isse in closing the db connection
+    """Raised when there is an issue in closing the db connection
     """
 
     pass

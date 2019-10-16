@@ -30,7 +30,7 @@ async def get_keys(request):
 
 
 async def get_points(request):
-    """ Returns list of points in measurements based on provided constrains
+    """ Returns list of points in measurements based on provided constraints
 
     It can parse two different time formats: UTC and unix epoch
 
@@ -71,13 +71,13 @@ async def get_points(request):
                 time_to = (int)(parse(time_to, fuzzy=True).timestamp() * i)
         except OverflowError:
             return web.json_response(
-                text="""There is some issue with passed time from and to epoch
+                text="""There is an issue with passed time from and to epoch
                 fields""",
                 status=400,
             )
         except ValueError:
             return web.json_response(
-                text="There is some issue with passed from and to fields.",
+                text="There is an issue with passed from and to fields.",
                 status=400
             )
     else:

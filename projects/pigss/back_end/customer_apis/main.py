@@ -10,7 +10,7 @@ async def init_app():
     app = web.Application()
     app["config"] = {
         "influxdb": {
-            "host": "10.100.3.28",
+            "host": "0.0.0.0",
             "port": 8086,
             "database": "pigss_data",
             "timeout": 60,
