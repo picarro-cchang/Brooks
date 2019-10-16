@@ -10,6 +10,8 @@ from datetime import datetime
 import common.CmdFIFO as CmdFIFO
 import common.timeutils as timeutils
 from common.rpc_ports import rpc_ports
+from common.meta_data_collector import get_metadata_ready_for_db
+
 """
     LOLogger: a logging service with RPC server capabilities. At current implementation it
     accepts logs using RPC function LogEvent() with multiple optional arguments. It is
@@ -68,6 +70,7 @@ class LOLogger(object):
                  db_folder_path,
                  db_filename_prefix,
                  rpc_port,
+                 db_filename_hostname=None,
                  rpc_server_name="LOLogger",
                  rpc_server_description="Universal log collector, flushes to sqlite",
                  flushing_mode=TIMED,
@@ -77,9 +80,12 @@ class LOLogger(object):
                  zip_old_file=ZIP_OLD_FILE,
                  do_database_transition=DO_DATABASE_TRANSITION,
                  verbose=True,
-                 redundant_json=False):
+                 redundant_json=False,
+                 meta_table=False,
+                 pkg_meta=None):
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
+        self.db_filename_hostname = db_filename_hostname
         self.rpc_port = rpc_port
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
@@ -98,6 +104,9 @@ class LOLogger(object):
         self.logs_passed_to_queue = 0
         self.redundant_json = redundant_json
 
+        self.meta_table = meta_table
+        self.pkg_meta = pkg_meta
+
         self.server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
                                             ServerName=self.rpc_server_name,
                                             ServerDescription=self.rpc_server_description,
@@ -105,6 +114,7 @@ class LOLogger(object):
 
         self.lologger_thread = LOLoggerThread(db_folder_path=self.db_folder_path,
                                               db_filename_prefix=self.db_filename_prefix,
+                                              db_filename_hostname=self.db_filename_hostname,
                                               queue=self.queue,
                                               parent=self,
                                               flushing_mode=self.flushing_mode,
@@ -113,7 +123,10 @@ class LOLogger(object):
                                               move_to_new_file_every_month=self.move_to_new_file_every_month,
                                               zip_old_file=self.zip_old_file,
                                               do_database_transition=self.do_database_transition,
-                                              redundant_json=self.redundant_json)
+                                              redundant_json=self.redundant_json,
+                                              meta_table=self.meta_table,
+                                              pkg_meta=self.pkg_meta)
+
         self.register_rpc_functions()
 
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -192,6 +205,7 @@ class LOLoggerThread(threading.Thread):
     def __init__(self,
                  db_folder_path,
                  db_filename_prefix,
+                 db_filename_hostname,
                  queue,
                  parent,
                  flushing_mode=TIMED,
@@ -200,12 +214,15 @@ class LOLoggerThread(threading.Thread):
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
                  zip_old_file=ZIP_OLD_FILE,
                  do_database_transition=DO_DATABASE_TRANSITION,
-                 redundant_json=False):
+                 redundant_json=False,
+                 meta_table=False,
+                 pkg_meta=None):
         threading.Thread.__init__(self, name="LOLoggerThread")
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
+        self.db_filename_hostname = db_filename_hostname
         self.db_path = self._create_database_file_path(
-            self.db_folder_path, self.db_filename_prefix)
+            self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
         self.queue = queue
         self.parent = parent
         self.move_to_new_file_every_month = move_to_new_file_every_month
@@ -218,12 +235,16 @@ class LOLoggerThread(threading.Thread):
         if flushing_mode in FLUSHING_MODES:
             self.flushing_mode = flushing_mode
         else:
-            print("unsopperted flushing_mode supplied, setting to be TIMED")
+            print("unsupported flushing_mode supplied, setting to be TIMED")
             self.flushing_mode = TIMED
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
 
         self._sigint_event = threading.Event()
+
+        self.start_time = time.time()
+        self.meta_table = meta_table
+        self.pkg_meta = pkg_meta
 
         self.setDaemon(True)
         self.start()
@@ -237,9 +258,11 @@ class LOLoggerThread(threading.Thread):
         else:
             return last_row_id
 
-    def _create_database_file_path(self, db_folder_path, db_filename_prefix):
+    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname):
         """Create a filename for the new sqlite file."""
         db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
+        if db_filename_hostname is not None:
+            db_filename = f"{os.uname()[1]}_{db_filename}"
         return os.path.join(db_folder_path, db_filename)
 
     def _create_new_databade_table(self):
@@ -248,6 +271,9 @@ class LOLoggerThread(threading.Thread):
             t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields])
         query = f"CREATE TABLE {db_table_name} ({query_arguments})"
         self.connection.execute(query)
+        if self.meta_table:
+            query = f"CREATE TABLE metadata (field text PRIMARY KEY, value text)"
+            self.connection.execute(query)
 
     def _check_tupple_types(self, t):
         """Check if a content of the passed tupple corresponds to the db fields types."""
@@ -312,13 +338,17 @@ class LOLoggerThread(threading.Thread):
         if self.redundant_json:
             self.json_file.close()
 
+    def collect_metadata(self):
+        """
+            Prepare metadata for database
+        """
+        meta_dict = get_metadata_ready_for_db(self.pkg_meta)
+        meta_dict.append(("lologger_start_time", self.start_time))
+        return meta_dict
+
     def run(self):
         """Get tuples from queue and flush it to database."""
         self.get_connection(self.db_path)
-        # if self.redundant_json:
-        #     db_extension = os.path.splitext(self.db_path)[1]
-        #     json_file_path = self.db_path.replace(db_extension, ".json")
-        #     self.json_file = open(json_file_path, "a")
 
         data_to_flush = []
         time_since_last_flush = time.time()
@@ -332,7 +362,7 @@ class LOLoggerThread(threading.Thread):
                     if self._check_tupple_types(obj):
                         data_to_flush.append(obj)
 
-                    # if batch reached size
+                # if batch reached size
                 if ((self.flushing_mode == BATCHING and len(data_to_flush) > self.flushing_batch_size) or
                         # if batch been waiting for too long
                     (self.flushing_mode == BATCHING and time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
@@ -345,6 +375,12 @@ class LOLoggerThread(threading.Thread):
                     self.connection.executemany(
                         f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
                     self.connection.commit()
+                    if self.meta_table:
+                        # insert metadata here
+                        self.connection.executemany(
+                            f"REPLACE INTO metadata VALUES (?, ?)", self.collect_metadata())
+                        self.connection.commit()
+
                     if self.redundant_json:
                         string_to_flush = ""
                         for data in data_to_flush:
@@ -406,6 +442,8 @@ def parse_arguments():
         '-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=".")
     parser.add_argument('-pr', '--db_filename_prefix',
                         help='SQLite filename will be started with that prefix', default="")
+    parser.add_argument('-prh', '--db_filename_prefix_hostname',
+                        help='SQLite filename will be started with that hostname', default=False, action="store_true")
     parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file',
                         default=True)  # this is kinda wrong
     parser.add_argument('-z',
@@ -422,6 +460,9 @@ def parse_arguments():
                         default=False, action="store_true")
     parser.add_argument('-j', '--json', help='Write redundunt logs to json file',
                         default=False, action="store_true")
+    parser.add_argument('-meta', '--meta_table', help='Create a table with metadata',
+                        default=False, action="store_true")
+    parser.add_argument('-pkg', '--pkg_meta', nargs='+', help='Add versions of the passed packages to the metadata table')
 
     args = parser.parse_args()
     return args
@@ -433,12 +474,15 @@ def main():
     print(f"RPC server will be available at {args.rpc_port} in a sec.")
     lologger = LOLogger(db_folder_path=args.db_path,  # noqa
                         db_filename_prefix=args.db_filename_prefix,
+                        db_filename_hostname=args.db_filename_prefix_hostname,
                         rpc_port=args.rpc_port,
                         move_to_new_file_every_month=args.move_to_new_file_every_month,
                         zip_old_file=args.zip_old_file,
                         do_database_transition=args.transition_to_new_database,
                         verbose=args.verbose,
-                        redundant_json=args.json)
+                        redundant_json=args.json,
+                        meta_table=args.meta_table,
+                        pkg_meta=args.pkg_meta)
 
 
 if __name__ == "__main__":
