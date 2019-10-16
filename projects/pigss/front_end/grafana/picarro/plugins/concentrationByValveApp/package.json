@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Grafana Page for Concentration by Valve Graphs",
   "author": "Picarro, Inc.",
-  "license": "Apache",
+  "license": "See license in LICENSE.md",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack --mode development",

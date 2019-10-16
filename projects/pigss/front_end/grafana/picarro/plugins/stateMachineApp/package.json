@@ -2,8 +2,8 @@
   "name": "flow-setup-application",
   "version": "0.0.1",
   "description": "Picarro State Machine",
-  "author": "Picarro",
-  "license": "Apache",
+  "author": "Picarro Inc.",
+  "license": "See license in LICENSE.md",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack --mode development",
