@@ -239,7 +239,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -408,7 +408,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -577,7 +577,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -746,7 +746,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -915,7 +915,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1084,7 +1084,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1253,7 +1253,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1422,7 +1422,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1591,7 +1591,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1760,7 +1760,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1929,7 +1929,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1570652081572,
+      "repeatIteration": 1571176111116,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -2150,7 +2150,7 @@
       "thresholds": "",
       "timeFrom": null,
       "timeShift": null,
-      "title": "Current Channel",
+      "title": "Current Port",
       "type": "singlestat",
       "valueFontSize": "80%",
       "valueMaps": [
@@ -2183,7 +2183,7 @@
         "definition": "[$__from, $__to]",
         "hide": 0,
         "includeAll": true,
-        "label": "Channels",
+        "label": "Ports",
         "multi": true,
         "name": "ports",
         "options": [],

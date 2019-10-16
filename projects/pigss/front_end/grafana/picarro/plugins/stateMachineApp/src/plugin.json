@@ -1,7 +1,7 @@
 {
   "type": "app",
   "name": "Flow Setup",
-  "id": "multi-app",
+  "id": "flow-setup-app",
   "enabled": true,
   "info": {
     "author": {

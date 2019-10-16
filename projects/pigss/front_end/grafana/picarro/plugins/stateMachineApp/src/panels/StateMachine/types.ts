@@ -1,17 +1,3 @@
-// export interface Options {
-//   imageUrl: string;
-//   updateInterval: number;
-// }
-//
-// export const defaults: Options = {
-//   imageUrl: "",
-//   updateInterval: 60 * 5
-// };
-
-// export const defaults: CommandPanelOptions = {
-//
-// }
-
 export interface ButtonInfo {
   caption: string;
   className: string;
@@ -21,34 +7,34 @@ export interface ButtonInfo {
 export interface CommandPanelOptions {
   uistatus: {
     [key: string]: string;
-  }
-  ws_sender: (o: object)=>void;
+  };
+  ws_sender: (o: object) => void;
   plan: Plan;
 }
 
 export interface ModalInfo {
-  show: boolean,
-  html: string,
-  num_buttons: number,
-  buttons: { [key: string]: ButtonInfo }
+  show: boolean;
+  html: string;
+  num_buttons: number;
+  buttons: { [key: string]: ButtonInfo };
 }
 
 export interface Plan {
-  max_steps: number,
-  panel_to_show: number,
-  current_step: number,
-  focus: PlanFocus,
-  last_step: number,
-  steps: { [key: string]: PlanStep }
-  num_plan_files: number,
-  plan_files: { [key: string]: string },
-  plan_filename: string,
+  max_steps: number;
+  panel_to_show: number;
+  current_step: number;
+  focus: PlanFocus;
+  last_step: number;
+  steps: { [key: string]: PlanStep };
+  num_plan_files: number;
+  plan_files: { [key: string]: string };
+  plan_filename: string;
   bank_names: {
     [key: number]: {
-      name: string,
-      channels: { [key: number]: string }
-    }
-  }
+      name: string;
+      channels: { [key: number]: string };
+    };
+  };
 }
 
 export interface PlanFocus {
@@ -59,17 +45,17 @@ export interface PlanFocus {
 export interface PlanLoadPanelOptions {
   plan: Plan;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export interface PlanPanelOptions {
-  uistatus: { [key: string]: string; }
+  uistatus: { [key: string]: string };
   plan: Plan;
   setFocus: (row: number, column: number) => void;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export enum PlanPanelTypes {
@@ -77,14 +63,14 @@ export enum PlanPanelTypes {
   PLAN = 1,
   LOAD = 2,
   SAVE = 3,
-  EDIT = 4,
+  EDIT = 4
 }
 
 export interface PlanSavePanelOptions {
   plan: Plan;
   ws_sender: (o: object) => void;
-  // isChanged: boolean;
-  // updateFileName: (x: boolean) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
 }
 
 export interface BankConfig {
@@ -93,25 +79,15 @@ export interface BankConfig {
 }
 
 export interface PlanStep {
-  banks: { [key: number]: BankConfig; }
+  banks: { [key: number]: BankConfig };
   reference: number;
   duration: number;
-}
-
-export interface Options {
-  panel_to_show: number;
-}
-
-export enum OptionsPanelTypes {
-  NONE = 0,
-  EDIT = 1,
 }
 
 export interface EditPanelOptions {
   uistatus: {
     [key: string]: string;
-  }
-  ws_sender: (o: object)=>void;
-  //switches: (v: any) => void;
-  plan: Plan
+  };
+  ws_sender: (o: object) => void;
+  plan: Plan;
 }
