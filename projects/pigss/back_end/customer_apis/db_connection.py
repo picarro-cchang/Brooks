@@ -55,7 +55,6 @@ class DBInstance:
         except ConnectionError:
             print(format_exc())
 
-    
     @classmethod
     async def close_influxdb(cls, app=None):
         """Close influx db connection

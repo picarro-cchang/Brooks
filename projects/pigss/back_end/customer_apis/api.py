@@ -18,26 +18,25 @@ def is_date(date_str, fuzzy=True):
 
 async def get_keys(request):
     """ Fetches field keys from measurement
-    
+
     Arguments:
-        request  -- 
-    
+        request  -- request object
+
     Returns:
         JSON -- JSON object containing list of keys from measurement
     """
-    return web.json_response(
-        {"keys": await db.get_keys(request.app["config"]["influxdb"]["measurement"])}
-    )
+    measurement = request.app["config"]["influxdb"]["measurement"]
+    return web.json_response({"keys": await db.get_keys(measurement)})
 
 
 async def get_points(request):
     """ Returns list of points in measurements based on provided constrains
 
     It can parse two different time formats: UTC and unix epoch
-    
+
     Arguments:
         request {[type]} -- request object
-    
+
     Returns:
         JSON -- returns JSON object of points in measurement for given keys
     """
@@ -66,20 +65,31 @@ async def get_points(request):
                 time_from = int(time_from) * 1000000
                 time_to = int(time_to) * 1000000
             else:
-                time_from = (int)(parse(time_from, fuzzy=True).timestamp() * 1000000000)
-                time_to = (int)(parse(time_to, fuzzy=True).timestamp() * 1000000000)
+                # Multiplier for conversion into ns timestamps
+                i = 1000000000
+                time_from = (int)(parse(time_from, fuzzy=True).timestamp() * i)
+                time_to = (int)(parse(time_to, fuzzy=True).timestamp() * i)
         except OverflowError:
             return web.json_response(
-                text="There is some issue with passed time- from and to epoch fields",
+                text="""There is some issue with passed time from and to epoch
+                fields""",
                 status=400,
             )
         except ValueError:
             return web.json_response(
-                text="There is some issue with passed from and to fields.", status=400
+                text="There is some issue with passed from and to fields.",
+                status=400
             )
     else:
         latest = True
 
     return web.json_response(
-        {"keys": await db.get_points(keys, measurement, time_from, time_to, latest)}
+        {
+            "keys": await db.get_points(
+                                    keys,
+                                    measurement,
+                                    time_from,
+                                    time_to,
+                                    latest)
+        }
     )

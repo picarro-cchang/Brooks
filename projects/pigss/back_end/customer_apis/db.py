@@ -1,14 +1,14 @@
 from traceback import format_exc
-import time
 
 from influxdb.exceptions import InfluxDBClientError
 
 from db_connection import DBInstance
 
 
-async def get_points(keys, measurement, time_from=None, time_to=None, latest=False):
+async def get_points(keys, measurement, time_from=None, time_to=None,
+                     latest=False):
     """Generate and execute SQL statements to fetch points from measurement
-    
+
     Arguments:
         query_params {dict} -- dictionary of all constraints
         measurement {list(str)} -- list of influx measurement
@@ -24,7 +24,10 @@ async def get_points(keys, measurement, time_from=None, time_to=None, latest=Fal
         if not latest:
             query += f"WHERE time >= {time_from} AND time <= {time_to}"
         else:
-            query = f"SELECT {keys} FROM {measurement} order by time desc limit 1"
+            query = (
+                f"SELECT {keys} FROM {measurement}"
+                f" ORDER BY time DESC LIMIT 1",
+            )
 
         print("query", query)
         data_generator = client.query(query=query, epoch="ms").get_points()
@@ -42,10 +45,10 @@ async def get_points(keys, measurement, time_from=None, time_to=None, latest=Fal
 
 async def get_keys(measurement):
     """Returns list of field keys in measurements from influxdb
-    
+
     Arguments:
         measurements {list(str)} -- list of str representing measurements
-    
+
     Returns:
         dict -- dict of field keys for each measurement
     """
