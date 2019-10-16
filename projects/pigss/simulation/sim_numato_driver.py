@@ -185,7 +185,8 @@ class SimNumatoDriver(object):
                  relay_count=4,
                  gpio_count=4,
                  debug=False,
-                 logger=None):
+                 logger=None,
+                 enable_ui=True):
 
         self.device_port_name = device_port_name
         self.rpc_server_port = rpc_server_port
@@ -213,8 +214,11 @@ class SimNumatoDriver(object):
                                             threaded=True)
 
         self.register_numato_driver_rpc_functions()
-        Thread(target=self.serve_forever, daemon=True).start()
-        self.simple_ui()
+        if enable_ui:
+            Thread(target=self.serve_forever, daemon=True).start()
+            self.simple_ui()
+        else:
+            self.server.serve_forever()
 
     def register_numato_driver_rpc_functions(self):
         """Register all public methods to the rpc server."""

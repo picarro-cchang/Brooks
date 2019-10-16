@@ -20,7 +20,7 @@ class SimPigletDriver(object):
     This class currently is based on the Boxer firmware for the piglets described in
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False):
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False, enable_ui=True):
         self.serial = None
         self.terminate = False
         self.port = port
@@ -37,8 +37,11 @@ class SimPigletDriver(object):
         self.piglet_simulator.random_ids = random_ids
         self.connect()
         self.register_rpc_functions()
-        Thread(target=self.serve_forever, daemon=True).start()
-        self.simple_ui()
+        if enable_ui:
+            Thread(target=self.serve_forever, daemon=True).start()
+            self.simple_ui()
+        else:
+            self.rpc_server.serve_forever()
 
     def serve_forever(self):
         """

@@ -15,7 +15,7 @@ class SimAlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
-    def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200):
+    def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200, enable_ui=True):
 
         self.mass_flow = 0.0
         self.flow_set_point = 0.0
@@ -34,8 +34,11 @@ class SimAlicatDriver(object):
                                                 threaded=True)
         self.connect()
         self.register_rpc_functions()
-        Thread(target=self.serve_forever, daemon=True).start()
-        self.simple_ui()
+        if enable_ui:
+            Thread(target=self.serve_forever, daemon=True).start()
+            self.simple_ui()
+        else:
+            self.rpc_server.serve_forever()
 
     def serve_forever(self):
         """

@@ -7,6 +7,7 @@ Hierarchical state machine which supervises processes (typically drivers and
  which fail to respond to pings.
 """
 import asyncio
+import functools
 import json
 import time
 from collections import deque
@@ -307,11 +308,14 @@ class PigssSupervisor(Ahsm):
 
     async def setup_drivers(self, at_start=True):
         db_config = self.farm.config.get_time_series_database()
+        use_sim_ui = self.farm.config.get_simulation_ui_enabled()
         for key, dev_params in sorted(self.device_dict['Devices']['Serial_Devices'].items()):
             if dev_params['Driver'] == 'PigletDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = f"Piglet_{dev_params['Bank_ID']}"
-                    DriverClass = SimPigletDriver if self.simulation else PigletDriver
+                    # The following is a temporary hack until we get the piglet firmware updated
+                    DriverClass = (functools.partial(SimPigletDriver, enable_ui=use_sim_ui)
+                                   if self.simulation else functools.partial(SimPigletDriver, enable_ui=False))
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
@@ -326,7 +330,7 @@ class PigssSupervisor(Ahsm):
             elif dev_params['Driver'] == 'AlicatDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = "MFC"
-                    DriverClass = SimAlicatDriver if self.simulation else AlicatDriver
+                    DriverClass = functools.partial(SimAlicatDriver, enable_ui=use_sim_ui) if self.simulation else AlicatDriver
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
@@ -340,7 +344,7 @@ class PigssSupervisor(Ahsm):
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     relay_id = dev_params['Numato_ID']
                     name = f"Relay_{relay_id}"
-                    DriverClass = SimNumatoDriver if self.simulation else NumatoDriver
+                    DriverClass = functools.partial(SimNumatoDriver, enable_ui=use_sim_ui) if self.simulation else NumatoDriver
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,

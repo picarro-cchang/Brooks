@@ -47,6 +47,10 @@ class PigssConfig:
     def get_simulation_enabled(self):
         return ("Simulation" in self.config["Configuration"] and self.config["Configuration"]["Simulation"].get("enabled", False))
 
+    @default(True)
+    def get_simulation_ui_enabled(self):
+        return self.get_simulation_enabled() and self.config["Configuration"]["Simulation"].get("ui_enabled", True)
+
     @default(False)
     def get_simulation_random_ids(self):
         return self.get_simulation_enabled() and self.config["Configuration"]["Simulation"].get("random_ids", False)
