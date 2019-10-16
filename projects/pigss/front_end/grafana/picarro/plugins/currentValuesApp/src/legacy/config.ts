@@ -20,17 +20,11 @@ export class ExampleConfigCtrl {
     if (!appModel.jsonData) {
       appModel.jsonData = {};
     }
-
-    console.log("ExampleConfigCtrl", this);
   }
 
   postUpdate() {
     if (!this.appModel.enabled) {
-      console.log("Not enabled...");
       return;
     }
-
-    // TODO, can do stuff after update
-    console.log("Post Update:", this);
   }
 }
