@@ -11,9 +11,10 @@ Type=simple
 # -j ------ Start JSON database for Loki                                  #
 # -meta --- Create a metadata table in the db file                        #
 # -pr ----- Prefix for db filename                                        #
+# -prh ----- Prefix for db filename to be hostname                        #
 # -pkg ---- List of dpkg packages and versions to include in db metadata  #
 ###########################################################################
-ExecStart=/usr/bin/lologger -meta -j -pr pigss -pkg "lologger pigss-meta"
+ExecStart=/usr/bin/lologger -meta -j -prh -pkg lologger pigss-meta
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -HUP $MAINPID
 Restart=always
