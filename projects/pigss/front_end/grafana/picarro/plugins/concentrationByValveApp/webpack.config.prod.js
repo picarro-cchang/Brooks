@@ -5,9 +5,9 @@ var conf = baseWebpackConfig;
 conf.mode = "production";
 
 conf.plugins.push(
-    new UglifyJSPlugin({
-        sourceMap: true
-    })
+  new UglifyJSPlugin({
+    sourceMap: true
+  })
 );
 
 module.exports = conf;

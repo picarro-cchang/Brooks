@@ -21,9 +21,7 @@
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
-      "tags": [
-        "pigss"
-      ],
+      "tags": ["pigss"],
       "title": "Dashboards",
       "type": "dashboards"
     }
@@ -110,15 +108,11 @@
           "alias": "$species_available",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -132,9 +126,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -161,15 +153,11 @@
           "alias": "unstable",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -183,9 +171,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -212,15 +198,11 @@
           "alias": "unselected",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -232,9 +214,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -377,15 +357,11 @@
           "alias": "$species_available",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -399,9 +375,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -428,15 +402,11 @@
           "alias": "unstable",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -450,9 +420,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -479,15 +447,11 @@
           "alias": "unselected",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -499,9 +463,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -644,15 +606,11 @@
           "alias": "$species_available",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -666,9 +624,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -695,15 +651,11 @@
           "alias": "unstable",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -717,9 +669,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -746,15 +696,11 @@
           "alias": "unselected",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -766,9 +712,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -911,15 +855,11 @@
           "alias": "$species_available",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -933,9 +873,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -962,15 +900,11 @@
           "alias": "unstable",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -984,9 +918,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -1013,15 +945,11 @@
           "alias": "unselected",
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "none"
-              ],
+              "params": ["none"],
               "type": "fill"
             }
           ],
@@ -1033,9 +961,7 @@
           "select": [
             [
               {
-                "params": [
-                  "$species_available"
-                ],
+                "params": ["$species_available"],
                 "type": "field"
               },
               {
@@ -1099,11 +1025,7 @@
       "cacheTimeout": null,
       "colorBackground": false,
       "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
+      "colors": ["#299c46", "rgba(237, 129, 40, 0.89)", "#d44a3a"],
       "datasource": "PiGSS data source",
       "format": "none",
       "gauge": {
@@ -1161,9 +1083,7 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             }
           ],
@@ -1178,9 +1098,7 @@
           "select": [
             [
               {
-                "params": [
-                  "*"
-                ],
+                "params": ["*"],
                 "type": "field"
               }
             ]
@@ -1208,18 +1126,14 @@
   "refresh": "5s",
   "schemaVersion": 20,
   "style": "dark",
-  "tags": [
-    "pigss"
-  ],
+  "tags": ["pigss"],
   "templating": {
     "list": [
       {
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": ["$__all"]
         },
         "datasource": "port history server",
         "definition": "[$__from, $__to]",
@@ -1244,9 +1158,7 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": ["$__all"]
         },
         "hide": 0,
         "includeAll": true,
@@ -1323,17 +1235,7 @@
       "2h",
       "1d"
     ],
-    "time_options": [
-      "5m",
-      "15m",
-      "1h",
-      "6h",
-      "12h",
-      "24h",
-      "2d",
-      "7d",
-      "30d"
-    ]
+    "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
   },
   "timezone": "",
   "title": "Analyzer Output Graphs",
