@@ -10,8 +10,8 @@
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
-    "@grafana/data": "6.3.0-alpha.0",
-    "@grafana/ui": "6.3.0-alpha.32",
+    "@grafana/data": "^6.3.0-alpha.0",
+    "@grafana/ui": "^6.3.0-alpha.32",
     "deepmerge": "^4.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
