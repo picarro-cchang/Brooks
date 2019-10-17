@@ -265,7 +265,7 @@ class LOLoggerThread(threading.Thread):
             db_filename = f"{os.uname()[1]}_{db_filename}"
         return os.path.join(db_folder_path, db_filename)
 
-    def _create_new_databade_table(self):
+    def _create_new_database_table(self):
         """Create table."""
         query_arguments = ",".join(["{} {}".format(
             t[0], python_to_sqlite_types_cast_map[str(t[1])]) for t in db_fields])
@@ -295,7 +295,7 @@ class LOLoggerThread(threading.Thread):
             self.rowid = self.get_rowid_from_db_connection(self.connection)
         else:
             self.connection = sqlite3.connect(db_path)
-            self._create_new_databade_table()
+            self._create_new_database_table()
             self.rowid = 0
         if self.redundant_json:
             db_extension = os.path.splitext(db_path)[1]
