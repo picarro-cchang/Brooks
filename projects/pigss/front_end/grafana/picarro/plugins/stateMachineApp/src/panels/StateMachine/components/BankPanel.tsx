@@ -21,10 +21,10 @@ interface BankPanelOptions {
 
 class BankPanel extends PureComponent<BankPanelOptions> {
   bankStyleOpt = {
-    READY: { color: "#fff", backgroundColor: "#989898" },
-    ACTIVE: { color: "#fff", backgroundColor: "rgb(86, 166, 75)" },
+    READY: { color: "#fff", backgroundColor: "#797979" },
+    ACTIVE: { color: "#fff", backgroundColor: "#56a64b" },
     CLEAN: { color: "#fff", backgroundColor: "#4BBEE3" },
-    REFERENCE: { color: "#440", backgroundColor: "rgb(224, 180, 0)" }
+    REFERENCE: { color: "#440", backgroundColor: "#e0b400" }
   };
   cleanClassNameOpt = {
     DISABLED: "btn-inverse-2 disabled",
@@ -76,10 +76,17 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
             style={{ color: "black" }}
           >
+
             <p className="chn-label">
-              {this.props.plan.bank_names[this.props.bank].channels[i]}
-            </p>
-            <p className="chn-status">Status: {test[i]} </p>
+              <u>
+              {this.props.plan.bank_names[this.props.bank].channels[i]}</u>
+            </p> 
+
+            {/*<div style={{float: "left", width: "100%", height:"100%"}}>*/}
+            {/*<hr style={{border: 0, clear: "both", display: "block", width: "96%", backgroundColor:"purple", height: "2px"}}/>*/}
+            {/*</div>*/}
+
+            <p className="chn-status"> {test[i]} </p>
           </button>
         ) : (
           <button
@@ -97,7 +104,8 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             <p className="chn-label">
               {this.props.plan.bank_names[this.props.bank].channels[i]}
             </p>
-            <p className="chn-status">Status: {test[i]}</p>
+
+            <p className="chn-status"> {test[i]}</p>
           </button>
         )
       );
