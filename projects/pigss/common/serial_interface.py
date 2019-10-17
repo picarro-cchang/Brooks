@@ -12,7 +12,7 @@ class SerialInterface(object):
                bytesize=serial.EIGHTBITS,
                parity=serial.PARITY_NONE,
                stopbits=serial.STOPBITS_ONE,
-               timeout=None,
+               timeout=0.2,
                xonxoff=0,
                rtscts=0):
         """
@@ -42,8 +42,10 @@ class SerialInterface(object):
             if self.serial.isOpen():
                 self.serial.close()
 
-    def read(self):
-        return self.serial.read_all().decode()
+    def read(self, terminator=b"\n"):
+        if not isinstance(terminator, bytes):
+            raise AssertionError("Terminator in serial_interface.read must be a byte string")
+        return self.serial.read_until(terminator).decode()
 
     def write(self, msg):
         self.serial.write(msg.encode())

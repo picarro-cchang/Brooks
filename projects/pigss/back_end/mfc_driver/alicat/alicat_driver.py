@@ -1,10 +1,12 @@
-import time
 import argparse
+import time
+
 import serial
+
+from common import CmdFIFO
+from common.rpc_ports import rpc_ports
 from common.serial_interface import SerialInterface
 from common.timeutils import get_local_timestamp
-from common.rpc_ports import rpc_ports
-from common import CmdFIFO
 
 
 class AlicatDriver(object):
@@ -40,34 +42,55 @@ class AlicatDriver(object):
         """
         try:
             self.serial = SerialInterface()
-            self.serial.config(port=self.port, baudrate=self.baudrate)
+            self.serial.config(port=self.port, baudrate=self.baudrate, timeout=0.2)
             if __debug__:
                 print(f'\nConnecting to Alicat on {self.port}\n')
         except serial.SerialException:
             raise
 
-    def send(self, command):
+    def send(self, command, lines_to_receive=1):
         """
         This function will send any string to the MFC. If the MFC does not
         recognize the command, it will response with: '?'. If an unrecognized command
         is sent, we will disregard the response, otherwise we will
         return the response.
 
-        :param command:
-        :return:
+        When the Alicat receives its own id character followed by a carriage return,
+         it responds with status string terminated by a carriage return, e.g.,
+
+        Send> A\r
+        Recv> A +014.44 +026.92 +000.00 +000.00 000.00     Air\r
+
+        If we send it a set-point command, the response consists of two lines, as shown
+
+        Send> AS 10.00\r
+        Recv> 10.0000\rA +014.44 +026.92 +000.00 +000.00 010.00     Air\r
+
+        It is necessary to specify the number of lines to receive so that we wait for
+        the correct number of carriage returns.
+
+        :param command: Command to send
+        :param lines_to_receive: Number of lines to receive
+        :return: if `lines_to_recive`==1, either the received string or None if the Alicat returns "?"
+                 otherwise, the list of received strings
         """
         self.serial.write(command + self.carriage_return)
+        time.sleep(0.01)
         """
         Alicat recommends an optimal baud rate of 19200
         We start getting garbage data from the MFC if we try
         to poll faster than 5 Hz at this baud rate.
         """
-        time.sleep(0.2)
-        response = self.serial.read()
-        if response == '?':
-            # Alicat doesn't recognize the command
-            if __debug__:
-                print(f'Command not recognized: {command}')
+        try:
+            response = [self.serial.read(terminator=b"\r").strip() for i in range(lines_to_receive)]
+            if lines_to_receive == 1:
+                response = response[0]
+                if response == '?':
+                    # Alicat doesn't recognize the command
+                    if __debug__:
+                        print(f'Command not recognized: {command}')
+                    response = None
+        except serial.SerialException:
             response = None
         if __debug__:
             print(f'Command sent: {command}\nResponse received: {response}\n')
@@ -273,7 +296,7 @@ class AlicatDriver(object):
             # reject the setpoint.
             set_point = float(set_point)
             set_point = round(set_point, 2)
-            self.send(self.id + "S" + str(set_point))
+            self.send(self.id + "S" + str(set_point), lines_to_receive=2)
         except TypeError:
             set_point = None
         except ValueError:

@@ -34,6 +34,7 @@ class PigletManager(Ahsm):
     A lock (self.comm_lock) is used to ensure that status discovery and piglet requests do not
     occur at the same time.
     """
+
     def __init__(self, farm):
         super().__init__()
         self.farm = farm
@@ -243,6 +244,9 @@ class PigletManager(Ahsm):
         self.reference_pending = False
 
     async def set_mfc_setpoint(self, set_point):
+        # TODO: Remove this!
+        if set_point > 20.0:
+            set_point = 20.0
         await self.farm.RPC["MFC"].set_set_point(set_point)
 
     async def set_exhaust_valve(self, state):

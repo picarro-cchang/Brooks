@@ -1579,48 +1579,50 @@ class PigssController(Ahsm):
 
         if self.get_status()["standby"] != UiStatus.ACTIVE:
             while self.get_status()["standby"] != UiStatus.READY:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1.0)
             Framework.publish(Event(Signal.BTN_STANDBY, None))
+        while self.get_status()["standby"] != UiStatus.ACTIVE:
             await asyncio.sleep(0.5)
-        if self.get_status()["standby"] != UiStatus.ACTIVE or self.get_status()["identify"] != UiStatus.READY:
-            msg = "Unexpected inability to start channel identification"
+        if self.get_status()["identify"] != UiStatus.READY:
+            msg = (f'Unexpected inability to start channel identification sb:{self.get_status()["standby"]}'
+                   f' id:{self.get_status()["identify"]}')
             log.warning(msg)
             return msg
         Framework.publish(Event(Signal.BTN_IDENTIFY, None))
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1.0)
         # Wait until we are out of the identify state
         while self.get_status()["standby"] != UiStatus.ACTIVE:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
 
         if plan_filename_no_ext is not None:
             Framework.publish(Event(Signal.BTN_PLAN, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_plan:
                 msg = "Unexpected inability to reach _plan_plan state before loading plan file"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_load:
                 msg = "Unexpected inability to reach _plan_load state"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_plan:
                 msg = "Unexpected inability to reach _plan_plan state after loading plan file"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             Framework.publish(Event(Signal.BTN_PLAN_OK, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.get_status()["standby"] != UiStatus.ACTIVE:
                 msg = "Unexpected inability to verify plan and return to standby state"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.BTN_PLAN_LOOP, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._loop_plan1:
                 msg = "Unexpected inability to reach _loop_plan1 state"
                 log.warning(msg)

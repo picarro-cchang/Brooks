@@ -7,7 +7,6 @@ Hierarchical state machine which supervises processes (typically drivers and
  which fail to respond to pings.
 """
 import asyncio
-import functools
 import json
 import time
 from collections import deque
@@ -43,6 +42,7 @@ log = LOLoggerClient(client_name="PigssSupervisor", verbose=True)
 
 class AsyncWrapper:
     """Returns asynchronous version of a method by wrapping it in an executor"""
+
     def __init__(self, proxy):
         self.proxy = proxy
 
@@ -313,9 +313,10 @@ class PigssSupervisor(Ahsm):
             if dev_params['Driver'] == 'PigletDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = f"Piglet_{dev_params['Bank_ID']}"
-                    # The following is a temporary hack until we get the piglet firmware updated
-                    DriverClass = (functools.partial(SimPigletDriver, enable_ui=use_sim_ui)
-                                   if self.simulation else functools.partial(SimPigletDriver, enable_ui=False))
+                    DriverClass = SimPigletDriver if self.simulation else PigletDriver
+                    kwextra = {}
+                    if self.simulation:
+                        kwextra["enable_ui"] = use_sim_ui
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
@@ -326,11 +327,15 @@ class PigssSupervisor(Ahsm):
                                                 rpc_port=dev_params['RPC_Port'],
                                                 baudrate=dev_params['Baudrate'],
                                                 bank=dev_params['Bank_ID'],
-                                                random_ids=self.random_ids)
+                                                random_ids=self.random_ids,
+                                                **kwextra)
             elif dev_params['Driver'] == 'AlicatDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     name = "MFC"
-                    DriverClass = functools.partial(SimAlicatDriver, enable_ui=use_sim_ui) if self.simulation else AlicatDriver
+                    DriverClass = SimAlicatDriver if self.simulation else AlicatDriver
+                    kwextra = {}
+                    if self.simulation:
+                        kwextra["enable_ui"] = use_sim_ui
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
@@ -339,12 +344,16 @@ class PigssSupervisor(Ahsm):
                                                 at_start,
                                                 port=dev_params['Path'],
                                                 rpc_port=dev_params['RPC_Port'],
-                                                baudrate=dev_params['Baudrate'])
+                                                baudrate=dev_params['Baudrate'],
+                                                **kwextra)
             elif dev_params['Driver'] == 'NumatoDriver':
                 if at_start or not self.wrapped_processes[key].process.is_alive():
                     relay_id = dev_params['Numato_ID']
                     name = f"Relay_{relay_id}"
-                    DriverClass = functools.partial(SimNumatoDriver, enable_ui=use_sim_ui) if self.simulation else NumatoDriver
+                    DriverClass = SimNumatoDriver if self.simulation else NumatoDriver
+                    kwextra = {}
+                    if self.simulation:
+                        kwextra["enable_ui"] = use_sim_ui
                     wrapped_process = ProcessWrapper(DriverClass, dev_params['RPC_Port'], name, dev_name=key)
                     await self.register_process(key,
                                                 wrapped_process,
@@ -352,7 +361,8 @@ class PigssSupervisor(Ahsm):
                                                 ping_interval,
                                                 at_start,
                                                 device_port_name=dev_params['Path'],
-                                                rpc_server_port=dev_params['RPC_Port'])
+                                                rpc_server_port=dev_params['RPC_Port'],
+                                                **kwextra)
 
         for key, dev_params in sorted(self.device_dict['Devices']['Network_Devices'].items()):
             if dev_params['Driver'] == 'IDriver':

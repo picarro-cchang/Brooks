@@ -5,16 +5,14 @@ import time
 #   Remove local import
 #   Remove hard coded host
 #   Remove hard coded port
-TestClient = CmdFIFO.CmdFIFOServerProxy("http://10.100.3.95:6667",
-                                    "test", IsDontCareConnection=False)
-
+TestClient = CmdFIFO.CmdFIFOServerProxy("http://localhost:33020", "test", IsDontCareConnection=False)
 
 print(TestClient.CmdFIFO.PingFIFO())
 print(TestClient.CmdFIFO.GetProcessID())
 
 methods = TestClient.system.listMethods()
 for method in methods:
-    print(method + " " + TestClient.system.methodSignature(method))
+    print(f"{method} {TestClient.system.methodSignature(method)}")
 
 
 def get_flow_delta():
@@ -54,6 +52,4 @@ if __name__ == '__main__':
     print('\n')
     while True:
         print(get_data_dict())
-        time.sleep(0.2)
-
-
+        time.sleep(0.05)
