@@ -15,7 +15,7 @@ REVCODE = 1.1.3
 #   error -- You want to know about this
 #
 # LOG_LEVEL = debug
-LOG_LEVEL = debug
+LOG_LEVEL = error
 
 # MCU name
 #

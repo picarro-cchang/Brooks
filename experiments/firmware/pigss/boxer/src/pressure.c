@@ -115,8 +115,8 @@ int8_t pressure_init(void) {
     mpr_read_delay_ms = 1000;
   } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
     // This could be a release.  The minimum read delay is 5ms.
-    pressure_read_period_ms = 10;
-    mpr_read_delay_ms = 5;
+    pressure_read_period_ms = 100;
+    mpr_read_delay_ms = 50;
   }
 
   // OS_TaskCreate(function pointer, interval (ms), READY, BLOCKED or SUSPENDED)
@@ -352,7 +352,6 @@ int8_t pressure_mpr_inlet_trigger(uint8_t channel) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   return 0;
 }
 
@@ -368,7 +367,6 @@ int8_t pressure_mpr_outlet_trigger(char board) {
     mpr_trigger( &cs_topaz_b_target );
     break;
   }
-  _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   return 0;
 }
 
@@ -381,6 +379,9 @@ int8_t pressure_mpr_trigger_cycle( void ) {
     }
     // Trigger Topaz A outlet
     retval += pressure_mpr_outlet_trigger('a');
+
+    // Add a delay while we switch between boards
+    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   } else {
     logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c triggers"),'a');
   }
@@ -479,7 +480,7 @@ void pressure_mpr_read_task(void) {
       pressure_inlet_old_pascals[index] =
 	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
       // This delay has to be here to avoid SPI read errors
-      _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
+      //_delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
     }
 
     // Topaz A outlet
@@ -489,6 +490,8 @@ void pressure_mpr_read_task(void) {
 						  pressure_state.ema_alpha);
     pressure_outlet_old_pascals[0] =
       pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
+
+    // Add a delay while we switch between boards
     _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   } else {
     logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c reads"),'a');
@@ -504,8 +507,6 @@ void pressure_mpr_read_task(void) {
 						       pressure_state.ema_alpha);
       pressure_inlet_old_pascals[index] =
 	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
-      // This delay has to be here to avoid SPI read errors
-      _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
     }
 
     // Topaz B outlet
@@ -515,8 +516,6 @@ void pressure_mpr_read_task(void) {
 						  pressure_state.ema_alpha);
     pressure_outlet_old_pascals[1] =
       pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
-    // This delay has to be here to avoid SPI read errors
-    _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
   } else {
     logger_msg_p("pressure", log_level_DEBUG, PSTR("Skipping unconnected Topaz %c reads"),'b');
   }

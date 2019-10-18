@@ -14,7 +14,7 @@
 #define PRESSURE_DAC_INACTIVE_COUNTS 17134
 
 // Pressure read delay
-#define PRESSURE_READ_KLUDGE_DELAY_US 1
+#define PRESSURE_READ_KLUDGE_DELAY_US 3000
 
 // Pressure configuration structure
 // Overall system state structure
