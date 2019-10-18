@@ -37,6 +37,10 @@ int8_t identify_init(void) {
   int8_t retval = 0;
   identify_state.mfc_value = 0.0;
   identify_state.active_channel_byte = 0;
+
+  // Exit identify state task
+  OS_TaskCreate(&identify_exit_task, 5000, SUSPENDED);
+  
   int8_t state_number = OS_get_task_number(&identify_exit_task);
   if (state_number >= 0) {
     identify_state.exit_identify_task_number = (uint8_t) state_number;

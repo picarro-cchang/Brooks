@@ -8,7 +8,6 @@
 #define PRESSURE_DAC_REFERENCE_VOLTS 3.0
 
 // Alpha value for pressure moving average
-// #define PRESSURE_EMA_ALPHA 1180
 #define PRESSURE_EMA_ALPHA 65535
 
 // Setpoint for bypass DACs when channels are disabled
@@ -19,10 +18,17 @@
 
 // Pressure configuration structure
 // Overall system state structure
-typedef struct pressure_config_struct {
+typedef struct pressure_state_struct {
   // Exponential moving average alpha value
   uint16_t ema_alpha;
-} pressure_config_t;
+  // Pressure trigger task
+  uint8_t pressure_trigger_task_number;
+  // Pressure read task
+  uint8_t pressure_read_task_number;
+} pressure_state_t;
+
+// Initialize the module
+int8_t pressure_init(void);
 
 // Set the voltage output from one of the pressure-control DACs
 //

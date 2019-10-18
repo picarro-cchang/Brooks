@@ -11,7 +11,7 @@
 #define MPR_PMAX_PASCAL 103421
 
 // Retries for MPR reads and triggers
-#define MPR_MAX_RETRIES 10
+#define MPR_MAX_RETRIES 0
 
 // Set initial values
 //

@@ -3,6 +3,9 @@
 // Provides integer max value definitions
 #include <stdint.h>
 
+// Provides strcmp
+#include <string.h>
+
 // Device-specific port definitions.  Also provides special
 // bit-manipulations functions like bit_is_clear and
 // loop_until_bit_is_set.
@@ -54,7 +57,7 @@
 
 #include "pressure.h"
 
-pressure_config_t pressure_config = { .ema_alpha = 65535 };
+pressure_state_t pressure_state = { .ema_alpha = 65535 };
 
 //*************** Uncalibrated (counts) data storage ***************//
 
@@ -94,6 +97,73 @@ uint32_t pressure_outlet_new_pascals[2] = {0ul,0ul};
 // first entry.
 uint16_t pressure_dac_counts[8] =
   {0ul,0ul,0ul,0ul,0ul,0ul,0ul,0ul};
+
+
+int8_t pressure_init(void) {
+  int8_t retval = 0;
+
+  uint16_t pressure_read_period_ms = 0;
+  uint16_t mpr_read_delay_ms = 0;
+
+  if (strcmp( LOG_LEVEL, "debug" ) == 0) {
+    // We're debugging.  Slow the reads way down.
+    pressure_read_period_ms = 1000;
+    mpr_read_delay_ms = 500;
+  } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
+    // We're debugging.  Slow the reads way down.
+    pressure_read_period_ms = 2000;
+    mpr_read_delay_ms = 1000;
+  } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
+    // This could be a release.  The minimum read delay is 5ms.
+    pressure_read_period_ms = 10;
+    mpr_read_delay_ms = 5;
+  }
+
+  // OS_TaskCreate(function pointer, interval (ms), READY, BLOCKED or SUSPENDED)
+  //
+  // READY tasks will execute ASAP and then switch to BLOCKED
+  // BLOCKED tasks will wait for their interval to expire and then become READY
+  // SUSPENDED tasks will never execute
+
+  // Task -- Trigger all the pressure sensors.  This task will
+  // schedule the read, which will then cancel itself.  The next
+  // trigger will schedule it again.
+  if (strcmp( PRESSURE_READS_ENABLED, "true" ) == 0) {
+    // Pressure reads are enabled
+    OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);    
+  }
+
+  // Task -- Read all the pressure sensors
+  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
+
+  // Find the MPR trigger task number
+  int8_t state_number = OS_get_task_number(&pressure_mpr_trigger_task);
+  if (state_number >= 0) {
+    pressure_state.pressure_trigger_task_number = (uint8_t) state_number;
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Pressure trigger task id is %i"),
+	       pressure_state.pressure_trigger_task_number);
+  } else {
+    logger_msg_p("pressure", log_level_ERROR, PSTR("Pressure trigger task id not found"));
+    retval += -1;
+  }
+
+  // Find the MPR read task number
+  state_number = OS_get_task_number(&pressure_mpr_read_task);
+  if (state_number >= 0) {
+    pressure_state.pressure_read_task_number = (uint8_t) state_number;
+    logger_msg_p("pressure", log_level_DEBUG, PSTR("Pressure read task id is %i"),
+	       pressure_state.pressure_read_task_number);
+  } else {
+    logger_msg_p("pressure", log_level_ERROR, PSTR("Pressure read task id not found"));
+    retval += -1;
+  }
+
+  // Initialize exponential moving average value
+  pressure_state.ema_alpha = 65535;
+  
+  return retval;
+}
+
 
 int8_t pressure_dac_set(uint8_t channel, uint16_t counts) {
   switch(channel) {
@@ -385,17 +455,18 @@ int8_t pressure_mpr_outlet_read(char board, uint32_t *data_ptr) {
 }
 
 void pressure_mpr_trigger_task(void) {
-  volatile int8_t retval = 0;
+  volatile int8_t retval = 0;  
   retval += pressure_mpr_trigger_cycle();
 
   // Schedule the read
-  OS_SetTaskState(1, BLOCKED);
+  OS_SetTaskState(pressure_state.pressure_read_task_number, BLOCKED);
 }
 
 void pressure_mpr_read_task(void) {
-  // Cancel the trigger
-  OS_SetTaskState(1, SUSPENDED);
   uint8_t index = 0;
+
+  // Cancel the read
+  OS_SetTaskState(pressure_state.pressure_read_task_number, SUSPENDED);
 
   if (topaz_is_connected('a')) {
     // Topaz A inlets
@@ -404,7 +475,7 @@ void pressure_mpr_read_task(void) {
       pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
       pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
 						       pressure_inlet_old_counts[index],
-						       pressure_config.ema_alpha);
+						       pressure_state.ema_alpha);
       pressure_inlet_old_pascals[index] =
 	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
       // This delay has to be here to avoid SPI read errors
@@ -415,7 +486,7 @@ void pressure_mpr_read_task(void) {
     pressure_mpr_outlet_read('a', &pressure_outlet_new_counts[0]);
     pressure_outlet_old_counts[0] = math_ema_ui32(pressure_outlet_new_counts[0],
 						  pressure_outlet_old_counts[0],
-						  pressure_config.ema_alpha);
+						  pressure_state.ema_alpha);
     pressure_outlet_old_pascals[0] =
       pressure_convert_outlet_pascals('a', pressure_outlet_old_counts[0]);
     _delay_us(PRESSURE_READ_KLUDGE_DELAY_US);
@@ -430,7 +501,7 @@ void pressure_mpr_read_task(void) {
       pressure_mpr_inlet_read(channel, &pressure_inlet_new_counts[index]);
       pressure_inlet_old_counts[index] = math_ema_ui32(pressure_inlet_new_counts[index],
 						       pressure_inlet_old_counts[index],
-						       pressure_config.ema_alpha);
+						       pressure_state.ema_alpha);
       pressure_inlet_old_pascals[index] =
 	pressure_convert_inlet_pascals(channel, pressure_inlet_old_counts[index]);
       // This delay has to be here to avoid SPI read errors
@@ -441,7 +512,7 @@ void pressure_mpr_read_task(void) {
     pressure_mpr_outlet_read('b', &pressure_outlet_new_counts[1]);
     pressure_outlet_old_counts[1] = math_ema_ui32(pressure_outlet_new_counts[1],
 						  pressure_outlet_old_counts[1],
-						  pressure_config.ema_alpha);
+						  pressure_state.ema_alpha);
     pressure_outlet_old_pascals[1] =
       pressure_convert_outlet_pascals('b', pressure_outlet_old_counts[1]);
     // This delay has to be here to avoid SPI read errors
@@ -518,14 +589,14 @@ void cmd_in_prs_pas_q( command_arg_t *command_arg_ptr ) {
 
 void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr ) {
   uint16_t alpha = (command_arg_ptr -> uint16_arg);
-  pressure_config.ema_alpha = alpha;
+  pressure_state.ema_alpha = alpha;
   command_ack();
   return;
 }
 
 void cmd_pressure_get_ema_alpha( command_arg_t *command_arg_ptr ){
   usart_printf(USART_CHANNEL_COMMAND, "%u%s",
-	       pressure_config.ema_alpha,
+	       pressure_state.ema_alpha,
 	       LINE_TERMINATION_CHARACTERS);
 }
 

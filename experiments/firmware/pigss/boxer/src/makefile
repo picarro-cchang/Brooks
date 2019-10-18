@@ -30,6 +30,11 @@ MCU = atmega2560
 # PCB = mega
 PCB = whitfield
 
+# Enable or disable pressure reads
+#
+# Set this to true or false
+PRESSURE_READS_ENABLED = true
+
 # Processor frequency.
 #     This will define a symbol, F_CPU, in all source code files equal to the
 #     processor frequency. You can then use this symbol in your source code to
@@ -195,6 +200,7 @@ CDEFS = -D F_CPU=$(F_CPU)UL
 CDEFS += -D REVCODE=\"$(strip $(REVCODE))\"
 CDEFS += -D LOG_LEVEL=\"$(strip $(LOG_LEVEL))\"
 CDEFS += -D PCB=\"$(strip $(PCB))\"
+CDEFS += -D PRESSURE_READS_ENABLED=\"$(strip $(PRESSURE_READS_ENABLED))\"
 
 # Place -D or -U options here for ASM sources
 ADEFS = -DF_CPU=$(F_CPU)
@@ -480,7 +486,15 @@ css_url = http://www.eventuallabs.com/pandoc.css
 
 release_directory = ../bin
 
-release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL)_$(PCB).hex
+ifeq ($(PRESSURE_READS_ENABLED),true)
+	pressure_tag = "pres"
+endif
+
+ifeq ($(PRESSURE_READS_ENABLED),false)
+	pressure_tag = "nopres"
+endif
+
+release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL)_$(PCB)_$(pressure_tag).hex
 
 
 

@@ -16,6 +16,9 @@
 
 #include "usart.h"
 
+// Functions for simple scheduling
+#include "OS.h"
+
 // Sets up logging
 #include "logger.h"
 
@@ -88,6 +91,25 @@ void system_init( void ) {
   // Set the OK status on the front panel
   uint32_t led_value = system_state_get_fp_led_value();
   aloha_write( (uint32_t) 1<<STATUS_GREEN | led_value);
+
+  // Create and schedule a task for checking USB communication
+  //
+  // OS_TaskCreate(function pointer, interval (ms), READY, BLOCKED or SUSPENDED)
+  //
+  // READY tasks will execute ASAP and then switch to BLOCKED
+  // BLOCKED tasks will wait for their interval to expire and then become READY
+  // SUSPENDED tasks will never execute
+  OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
+
+  // Get the task number for the communication check
+  int8_t state_number = OS_get_task_number(&system_comcheck_task);
+  if (state_number >= 0) {
+    system_state.comm_check_task_number = (uint8_t) state_number;
+    logger_msg_p("system", log_level_DEBUG, PSTR("Comm check task id is %i"),
+	       system_state.comm_check_task_number);
+  } else {
+    logger_msg_p("system", log_level_ERROR, PSTR("Comm check task id not found"));
+  }
 
   // Check for USB connection.  We only have to do this at startup,
   // since the system always goes through a reset when a USB channel is opened

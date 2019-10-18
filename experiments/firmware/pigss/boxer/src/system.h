@@ -23,7 +23,7 @@ typedef enum system_state_enum {
 
 
 // Overall system state structure
-typedef struct system_status_struct {
+typedef struct system_state_struct {
   // System serial number
   uint16_t sernum;
   // System slot ID -- where the instrument is in the rack
@@ -38,6 +38,8 @@ typedef struct system_status_struct {
   uint16_t vernon_sernum;
   // Aloha front panel value
   uint32_t fp_led_value;
+  // USB communication check task number
+  uint8_t comm_check_task_number;
 } system_state_t;
 
 

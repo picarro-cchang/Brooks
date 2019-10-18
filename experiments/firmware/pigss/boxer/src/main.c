@@ -186,6 +186,8 @@ int main(void) {
   // Start the I2C module
   i2c_init();
 
+  pressure_init();
+
   // Set up the front panel board
   aloha_init();
 
@@ -209,53 +211,14 @@ int main(void) {
   // Set state to standby
   system_enter_standby();
 
-  //********************* Schedule some tasks **********************//
-
-  uint16_t pressure_read_period_ms = 0;
-  uint16_t mpr_read_delay_ms = 0;
-
-  if (strcmp( LOG_LEVEL, "debug" ) == 0) {
-    // We're debugging.  Slow the reads way down.
-    pressure_read_period_ms = 1000;
-    mpr_read_delay_ms = 500;
-  } else if (strcmp( LOG_LEVEL, "info" ) == 0) {
-    // We're debugging.  Slow the reads way down.
-    pressure_read_period_ms = 2000;
-    mpr_read_delay_ms = 1000;
-  } else if (strcmp( LOG_LEVEL, "error" ) == 0) {
-    // This could be a release.  The minimum read delay is 5ms.
-    pressure_read_period_ms = 10;
-    mpr_read_delay_ms = 5;
-  }
-
-  // OS_TaskCreate(function pointer, interval (ms), READY, BLOCKED or SUSPENDED)
-  //
-  // READY tasks will execute ASAP and then switch to BLOCKED
-  // BLOCKED tasks will wait for their interval to expire and then become READY
-  // SUSPENDED tasks will never execute
-
-  // Task 0 -- Trigger all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_trigger_task, pressure_read_period_ms, BLOCKED);
-
-  // Task 1 -- Read all the pressure sensors
-  OS_TaskCreate(&pressure_mpr_read_task, mpr_read_delay_ms, SUSPENDED);
-
-  // Task 2 -- Check for USB communication
-  OS_TaskCreate(&system_comcheck_task, 1000, BLOCKED);
-
-  // Task 3 -- Exit identify state
-  OS_TaskCreate(&identify_exit_task, 5000, SUSPENDED);
-
-  // Task 2 -- Test task
+  // Test task
   // OS_TaskCreate(&test_task, 500, BLOCKED);
 
   // Set up the identify module.  This has to be done after
   // registering tasks so it can populate task IDs.
   identify_init();
 
-  // Start the trigger/read cycle by calling the trigger task.  This
-  // will schedule the read task, which will then schedule the next trigger.
-  // pressure_mpr_trigger_task();
+
 
   // cs_manifold_a_sr_noe(1);
 

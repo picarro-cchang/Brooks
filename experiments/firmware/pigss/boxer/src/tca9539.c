@@ -205,7 +205,7 @@ uint8_t tca9539_read(uint8_t slave_address, uint8_t register_address) {
 }
 
 int8_t tca9539_write(uint8_t slave_address, uint8_t register_address, uint8_t data) {
-  int16_t retval = 0;
+  int8_t retval = 0;
   // Keep track of the number of times we've tried to write
   uint8_t tries = 0;
   // Slave address + R/W bit
