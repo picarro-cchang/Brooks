@@ -4,7 +4,7 @@ from common.sqlite_connection import SQLiteInstance
 class EventsModel:
 
     @classmethod
-    def build_sql_select_query(cls, query_params, table_name):
+    def build_sql_select_query(cls, query_params, table_name, log):
         """
         description: Given a query dictionary, create a sql statement
         params:
@@ -62,13 +62,13 @@ class EventsModel:
         return query
 
     @classmethod
-    def build_select_default(cls, table_name):
+    def build_select_default(cls, table_name, log):
         return (f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level"
                 f"FROM {table_name} ORDER BY rowid ASC LIMIT 20"
                 )
 
     @classmethod
-    def execute_query(cls, query, table_name):
+    def execute_query(cls, query, table_name, log):
         """
         Return rows of logs after applying query if query is not None, else
         returns all of the logs
@@ -79,7 +79,13 @@ class EventsModel:
         return:
             dict of rows
         """
-        connection = SQLiteInstance.get_instance()
-        cursor = connection.cursor()
-        result = cursor.execute(query)
-        return result.fetchall()
+        try:
+            connection = SQLiteInstance("/home/picarro/git/host/projects/_2019_10.db").get_instance()
+            cursor = connection.cursor()
+            result = cursor.execute(query)
+            return result.fetchall()
+        except FileNotFoundError:
+            log.error("DB File does not exist.")
+        except ConnectionError:
+            log.error("Unable to connect to SQLite DB")
+

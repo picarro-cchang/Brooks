@@ -136,7 +136,7 @@ class GrafanaLoggerService(ServiceTemplate):
                 await ws.close(message="Server Shutdown Initiated from Client")
 
         self.app["websockets"].remove(ws)
-        self.socket_stats['ws_open'] = len(request.app["websokets"])
+        self.socket_stats['ws_open'] = len(self.app["websockets"])
         self.socket_stats['ws_disconnections'] += 1
 
         return ws
@@ -153,12 +153,12 @@ class GrafanaLoggerService(ServiceTemplate):
         table_name = self.app["config"]["sqlite"]["table"]
         if len(query_params) > 0:
             query = EventsModel.build_sql_select_query(
-                query_params, table_name)
+                query_params, table_name, log)
         else:
-            query = EventsModel.build_select_default(table_name)
+            query = EventsModel.build_select_default(table_name, log)
         ws['query'] = query
         if query is not None:
-            return EventsModel.execute_query(query, table_name)
+            return EventsModel.execute_query(query, table_name, log)
 
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \
@@ -178,7 +178,7 @@ class GrafanaLoggerService(ServiceTemplate):
                 timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
-            print("Error in should_send_task", ve)
+            log.error("Error in should_send_task", ve)
 
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def listener(self, app, DEFAULT_INTERVAL=1.0):
@@ -197,4 +197,4 @@ class GrafanaLoggerService(ServiceTemplate):
                     asyncio.gather(*[self.send_task(ws, current_time)
                                      for ws in self.app["websockets"] if self.should_send_task(ws, current_time)])
             except ConnectionError as e:
-                print(f"{e} in listener")
+                log.error(f"{e} in listener")

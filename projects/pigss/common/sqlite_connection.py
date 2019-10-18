@@ -19,12 +19,12 @@ class SQLiteInstance:
         if SQLiteInstance.__instance is not None:
             pass
         else:
-            SQLiteInstance.__instance = sqlite3.connect(DB_FILE_PATH)
+            SQLiteInstance.__instance = self = sqlite3.connect(DB_FILE_PATH)
 
     @classmethod
     def get_instance(cls):
         if SQLiteInstance.__instance is None:
-            SQLiteInstance()
+            raise RuntimeError("SQLITE Connection has not been initialized.")
         return SQLiteInstance.__instance
 
     @classmethod
