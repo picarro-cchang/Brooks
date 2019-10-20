@@ -81,7 +81,6 @@ class PigletDriver(object):
         """
         return self.piglet_simulator.cli(command + self.carriage_return)
 
-        # self.serial.write(command + self.carriage_return)
         # response = self.serial.read()
         # if '-1' in response:
         #     # Piglet doesn't recognize the command
