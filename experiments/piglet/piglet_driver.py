@@ -77,7 +77,6 @@ class PigletDriver(object):
         :return:
         """
         self.serial.write(command + self.carriage_return)
-        # time.sleep(0.2)
         response = self.serial.read()
         if '-1' in response:
             # Piglet doesn't recognize the command
