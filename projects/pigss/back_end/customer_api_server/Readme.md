@@ -4,11 +4,11 @@
 
 ### Get Available Keys
 
-    /api/v0.1/getkeys
+    /public/api/v0.1/getkeys
 
 ### Get Points
 
-    /api/v0.1/getpoints
+    /public/api/v0.1/getpoints
 
 #### URL Parameters
 
@@ -23,6 +23,6 @@
 
 Examples
 
-`/api/v0.1/getpoints?keys=NH3&from=1571141669042&to=1571332469042&epoch=true`
+`/public/api/v0.1/getpoints?keys=NH3&from=1571141669042&to=1571332469042&epoch=true`
 
-`/api/v0.1/getpoints?keys=NH3&keys=H2O&from=2019-10-15T12:14:29.042Z&to=2019-10-17T17:14:29.042Z`
+`/public/api/v0.1/getpoints?keys=NH3&keys=H2O&from=2019-10-15T12:14:29.042Z&to=2019-10-17T17:14:29.042Z`

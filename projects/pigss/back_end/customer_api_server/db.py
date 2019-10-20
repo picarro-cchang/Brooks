@@ -1,11 +1,6 @@
-from traceback import format_exc
-
 from influxdb.exceptions import InfluxDBClientError
 
-from db_connection import DBInstance
-
-
-async def get_points(keys, measurement, time_from=None, time_to=None,
+async def get_points(client, log, keys, measurement, time_from=None, time_to=None,
                      latest=False):
     """Generate and execute SQL statements to fetch points from measurement
 
@@ -17,7 +12,6 @@ async def get_points(keys, measurement, time_from=None, time_to=None,
         {list(dict)} -- the list of all rows satisying given conditions
     """
     try:
-        client = DBInstance.get_instance()
 
         query = f"SELECT {keys} FROM {measurement} "
 
@@ -29,7 +23,6 @@ async def get_points(keys, measurement, time_from=None, time_to=None,
                 f" ORDER BY time DESC LIMIT 1",
             )
 
-        print("query", query)
         data_generator = client.query(query=query, epoch="ms").get_points()
         result = []
         for datum in data_generator:
@@ -37,13 +30,13 @@ async def get_points(keys, measurement, time_from=None, time_to=None,
 
         return result
 
-    except ConnectionError:
-        print(format_exc())
+    except ConnectionError as ce:
+        log.error("ConnectionError in CustomerAPIServer", ce)
     except InfluxDBClientError:
-        print("Error executing query", query)
+        log.error("Error executing query", query)
 
 
-async def get_keys(measurement):
+async def get_keys(client, log, measurement):
     """Returns list of field keys in measurements from influxdb
 
     Arguments:
@@ -54,7 +47,6 @@ async def get_keys(measurement):
     """
 
     try:
-        client = DBInstance.get_instance()
         result = []
         query = f"SHOW FIELD KEYS FROM {measurement}"
         data_generator = client.query(query)
@@ -63,6 +55,6 @@ async def get_keys(measurement):
                 result.append(field["fieldKey"])
         return result
     except ConnectionError:
-        print(format_exc())
+        log.error("ConnectionError in CustomerAPIServer", ce)
     except InfluxDBClientError:
-        print("Error getting keys from databases.")
+        log.error("CustomerAPIServer: Error getting keys from databases.")
