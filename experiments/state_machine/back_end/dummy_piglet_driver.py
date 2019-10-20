@@ -81,7 +81,6 @@ class PigletDriver(object):
         """
         return self.piglet_simulator.cli(command + self.carriage_return)
 
-        # if '-1' in response:
         #     # Piglet doesn't recognize the command
         #     if __debug__:
         #         print(f'Command not recognized: {command}')
