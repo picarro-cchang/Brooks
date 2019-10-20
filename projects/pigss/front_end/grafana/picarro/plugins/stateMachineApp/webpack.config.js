@@ -11,8 +11,8 @@ module.exports = {
   },
   context: path.join(__dirname, "src"),
   entry: {
-    './module': "./module.tsx",
-    'panels/StateMachine/module': "./panels/StateMachine/module.tsx"
+    "./module": "./module.tsx",
+    "panels/StateMachine/module": "./panels/StateMachine/module.tsx"
   },
   devtool: "source-map",
   output: {
@@ -27,15 +27,9 @@ module.exports = {
     new CopyWebpackPlugin([
       { from: "plugin.json", to: "." },
       { from: "../README.md", to: "." },
-      { from: 'img', to: "./img"},
-      { from: 'panels/StateMachine/*.json', to: "."},
-
-     // { from: 'config', to: "./config"},
-      { from: 'dashboards', to: "./dashboards"}
-
-      // { from: 'panels/plugin.json', to: "."},
-
-      //{ from: 'dashboards/DashboardCopy.json', to: "."}
+      { from: "img", to: "./img" },
+      { from: "panels/StateMachine/*.json", to: "." },
+      { from: "dashboards", to: "./dashboards" }
     ])
   ],
   resolve: {
@@ -56,10 +50,8 @@ module.exports = {
       },
       {
         test: /\.css$/i,
-        use: ['style-loader', 'css-loader'],
+        use: ["style-loader", "css-loader"]
       }
     ]
   }
 };
-
-

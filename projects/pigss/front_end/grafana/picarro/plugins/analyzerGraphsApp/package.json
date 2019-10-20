@@ -3,15 +3,15 @@
   "version": "0.0.1",
   "description": "Grafana Page for Analyzer Graphs",
   "author": "Picarro, Inc.",
-  "license": "Apache",
+  "license": "See license in LICENSE.md",
   "scripts": {
     "build": "webpack --config webpack.config.prod.js",
     "dev": "webpack --mode development",
     "watch": "webpack --mode development --watch"
   },
   "dependencies": {
-    "@grafana/data": "6.3.0-alpha.0",
-    "@grafana/ui": "6.3.0-alpha.32",
+    "@grafana/data": "^6.3.0-alpha.0",
+    "@grafana/ui": "^6.3.0-alpha.32",
     "deepmerge": "^4.0.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

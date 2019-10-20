@@ -20,9 +20,7 @@
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
-      "tags": [
-        "pigss"
-      ],
+      "tags": ["pigss"],
       "title": "Dashboards",
       "type": "dashboards"
     }
@@ -41,15 +39,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -60,9 +54,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "field"
               },
               {
@@ -83,9 +75,7 @@
   ],
   "schemaVersion": 19,
   "style": "dark",
-  "tags": [
-    "pigss"
-  ],
+  "tags": ["pigss"],
   "templating": {
     "list": []
   },
