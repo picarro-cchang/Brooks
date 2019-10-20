@@ -21,7 +21,7 @@ export const DataGeneratorService = (() => {
       let url = URL.GENERATE_FILE + '?';
       const { from, to, keys } = params;
 
-      for (let key of keys) {
+      for (const key of keys) {
         url += `keys=${key['value']}&`;
       }
 

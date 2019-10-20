@@ -9,7 +9,7 @@ import { DataGeneratorService } from '../services/DataGeneratorService';
 
 import './Layout.css';
 
-interface Props extends DataGeneratorLayoutProps { }
+interface Props extends DataGeneratorLayoutProps {}
 
 const labelWidth = 6;
 const selectWidth = 12;
@@ -21,7 +21,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       timeRange: this.props.options.timeRange,
       keys: [],
       keyOptions: [],
-      files: []
+      files: [],
     };
   }
 
@@ -49,7 +49,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       return;
     }
 
-    let queryParams = {
+    const queryParams = {
       from: timeRange.from._d.getTime() * 1000000,
       to: timeRange.to._d.getTime() * 1000000,
       keys: keys,
@@ -95,7 +95,9 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   onKeysChange = (keys: any) => {
-    this.setState(() => { return { keys } });
+    this.setState(() => {
+      return { keys };
+    });
   };
 
   componentWillMount() {
@@ -117,7 +119,6 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   }
 
   render() {
-
     const { files, timeRange, keyOptions } = this.state;
 
     const styleObj = {
@@ -171,10 +172,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             </div>
 
             <div className="gf-form col-md-3 col-sm-12">
-              <Button size="md" variant="primary" value="Generate"
-                onClick={this.generateFile}
-                disabled={!this.state.keys.length}
-              >
+              <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={!this.state.keys.length}>
                 Generate
               </Button>
             </div>
@@ -189,7 +187,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             </div>
           </div>
         </PanelOptionsGroup>
-      </Fragment >
+      </Fragment>
     );
   }
 }

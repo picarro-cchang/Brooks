@@ -32,12 +32,14 @@ class PigssConfig:
         #  as the base directory for configuration files specified in the YAML file as
         #  relative paths.
         if not os.path.exists(config_filename):
-            raise FileNotFoundError(f"YAML configuration file {config_filename} does not exist")
+            raise FileNotFoundError(
+                f"YAML configuration file {config_filename} does not exist")
         with open(config_filename, "r") as fp:
             try:
                 self.config = self.yaml.load(fp.read())
             except YAMLError as e:
-                raise ValueError(f"Error while processing YAML file {config_filename}.\n{e}")
+                raise ValueError(
+                    f"Error while processing YAML file {config_filename}.\n{e}")
 
     @default([])
     def get_simulation_analyzers(self):
@@ -89,13 +91,15 @@ class PigssConfig:
             os.path.join(os.getenv("HOME"), ".config", "pigss"),
             os.path.dirname(os.path.abspath(self.config_filename))
         ]
-        config_path = [p for p in config_path if p is not None and os.path.exists(p) and os.path.isdir(p)]
+        config_path = [p for p in config_path if p is not None and os.path.exists(
+            p) and os.path.isdir(p)]
 
         for p in config_path:
             filename = os.path.normpath(os.path.join(p, config_filename))
             if os.path.exists(filename):
                 return filename
-        raise FileNotFoundError(f"Cannot find rpc_tunnel_config file {config_filename}")
+        raise FileNotFoundError(
+            f"Cannot find rpc_tunnel_config file {config_filename}")
 
     @default(None)
     def get_startup_plan(self):
@@ -104,3 +108,11 @@ class PigssConfig:
         and if the file name is non-empty, it is used to specify the plan file
         (without the .pln extension)"""
         return self.config["Settings"]["startup_plan"]
+
+    @default([])
+    def get_glogger_plugin_config(self):
+        return self.config["Plugins"]["GrafanaLogger"]
+
+    @default([])
+    def get_gdg_plugin_config(self):
+        return self.config["Plugins"]["GrafanaDataGenerator"]

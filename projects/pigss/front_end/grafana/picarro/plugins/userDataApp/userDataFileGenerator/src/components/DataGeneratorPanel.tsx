@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { DataGeneratorPanelProps } from './../types';
 import DataGeneratorLayout from './DataGeneratorLayout';
 
-interface Props extends PanelProps<DataGeneratorPanelProps> { }
+interface Props extends PanelProps<DataGeneratorPanelProps> {}
 
 export class DataGeneratorPanel extends PureComponent<Props> {
   constructor(props: Props) {
@@ -19,10 +19,12 @@ export class DataGeneratorPanel extends PureComponent<Props> {
     return (
       <ThemeContext.Consumer>
         {(theme: GrafanaTheme) => {
-          return <Fragment>
-            <DataGeneratorLayout options={{ ...options }} theme={theme} />;
-            <ToastContainer />
-          </Fragment>
+          return (
+            <Fragment>
+              <DataGeneratorLayout options={{ ...options }} theme={theme} />;
+              <ToastContainer />
+            </Fragment>
+          );
         }}
       </ThemeContext.Consumer>
     );

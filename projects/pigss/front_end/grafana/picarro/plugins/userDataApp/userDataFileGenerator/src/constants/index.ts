@@ -2,7 +2,7 @@ import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
 import { DataGeneratorPanelProps } from 'types';
 
 export const DEFAULT_TIME_RANGE: TimeRange = {
-  from: dateTime().subtract(6, "h"),
+  from: dateTime().subtract(6, 'h'),
   to: dateTime(),
   raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment },
 };
@@ -23,8 +23,8 @@ export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
 ];
 
 export const URL = {
-  GET_SAVED_FILES: `http://${window.location.hostname}:8010/api/getsavedfiles`,
-  GET_FIELD_KEYS: `http://${window.location.hostname}:8010/api/getkeys`,
-  GET_FILE: `http://${window.location.hostname}:8010/api/getfile`,
-  GENERATE_FILE: `http://${window.location.hostname}:8010/api/generatefile`
+  GET_SAVED_FILES: `http://${window.location.hostname}:8000/grafana_data_generator/api/getsavedfiles`,
+  GET_FIELD_KEYS: `http://${window.location.hostname}:8000/grafana_data_generator/api/getkeys`,
+  GET_FILE: `http://${window.location.hostname}:8000/grafana_data_generator/api/getfile`,
+  GENERATE_FILE: `http://${window.location.hostname}:8000/grafana_data_generator/api/generatefile`,
 };

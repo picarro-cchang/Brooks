@@ -13,7 +13,7 @@ Settings:
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
   madmapper_startup_delay: 30
-  startup_plan: /home/picarro/plan_files/once_a_minute  # Do NOT include extension
+  startup_plan: /home/picarro/plan_files/once_a_minute # Do NOT include extension
 
 Services:
   - Name: DBDecimator
@@ -22,6 +22,26 @@ Services:
       db_name: pigss_data
       rpc_server_name: DBDecimator
       rpc_server_description: DBDecimator
-      raw_filter_conditions: 
+      raw_filter_conditions:
         - ["valve_stable_time", ">", 15]
       start: true
+
+Plugins:
+  GrafanaLogger:
+    limit: 20
+    measurements: ["crds", "port_history"]
+    timeout: 300
+    retries: 1
+
+  GrafanaDataGenerator:
+    database:
+      host: 0.0.0.0
+      port: 8086
+      database: "pigss_data"
+      timeout: 300
+      retries: 1
+      measurements: "crds"
+    server:
+      user_keys: ["H20", "CO2", "NH3", "CH4", "HF", "HCl"]
+      data_dir: "/tmp"
+      file_type: "csv"
