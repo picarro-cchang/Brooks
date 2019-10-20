@@ -119,6 +119,7 @@ dependencies:
     - aiomultiprocess==0.6.0
     - aiosqlite==0.10.0
     - aniso8601==7.0.0
+    - autopep8==1.4.4
     - ciso8601==2.1.1
     - click==7.0
     - flask==1.1.1
@@ -131,12 +132,16 @@ dependencies:
     - jinja2==2.10.1
     - jsonschema==3.0.1
     - markupsafe==1.1.1
+    - pyinstaller==3.5
+    - pyqt5-sip==12.7.0
     - pyrsistent==0.15.4
+    - pyside2==5.13.1
     - python-dateutil==2.8.0
     - python-engineio==3.9.0
     - python-socketio==4.3.0
     - pytz==2019.1
     - pyyaml==5.1.1
+    - qtpy==1.9.0
 # ruamel-yaml needs to be overridden to ruamel.yaml
 # when updating the conda env - This will likely need to be manually done
 # every time we export the conda env yaml file, or until conda fixes this issue
@@ -145,6 +150,6 @@ dependencies:
     - ruamel.yaml==0.16.5
     - ruamel.yaml-clib==0.1.2
     - setproctitle==1.1.10
-    - werkzeug==0.15.5
-prefix: /home/picarro/miniconda3
+    - shiboken2==5.13.1
+prefix: /home/gerald/miniconda3
 
