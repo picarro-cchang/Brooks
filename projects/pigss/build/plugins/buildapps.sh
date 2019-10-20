@@ -2,7 +2,6 @@
 
 # Location for grafana plugins when running from source
 grafanaSourcePluginDestDir=${HOME}/git/host/projects/pigss/front_end/grafana/src/grafana/data/plugins
-# grafanaSourcePluginDestDir=${HOME}/git/host/experiments/grafana/src/github.com/grafana/grafana/data/plugins
 # Location of custom grafana plugins in repo
 pluginSourceDir=${HOME}/git/host/projects/pigss/front_end/grafana/picarro/plugins
 # List of plugins to be built
