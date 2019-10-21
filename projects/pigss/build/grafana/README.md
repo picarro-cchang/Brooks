@@ -31,7 +31,7 @@ The version can be found in `package.json`
   "version": "6.4.2",
   "repository": {
     "type": "git",
-    "url": "http://github.com/grafana/grafana.git"
+    "url": "http://github.com/grafana/grafana.git"}
 }
 ```
 
@@ -68,7 +68,7 @@ The version can be found in `package.json`
   "version": "6.4.2",
   "repository": {
     "type": "git",
-    "url": "http://github.com/grafana/grafana.git"
+    "url": "http://github.com/grafana/grafana.git"}
 }
 ```
 
