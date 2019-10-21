@@ -88,6 +88,9 @@ class SyncWrapper:
         time.sleep(0.01)
         return self
 
+    def raw_access(self):
+        return self.__sim
+
 
 if __name__ == "__main__":
 

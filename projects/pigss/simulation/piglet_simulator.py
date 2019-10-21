@@ -32,7 +32,7 @@ class PigletSimulator:
     bypass_values = attr.ib(factory=lambda: 8 * [0])
     BYPASS_ACTIVE = attr.ib(40000)
     active_chan = attr.ib(factory=lambda: 8 * [0])
-    mfc_value = attr.ib(0)
+    mfc_value = attr.ib(0.0)
     clean_solenoid_state = attr.ib(0)
     random_ids = attr.ib(0)
 
@@ -77,18 +77,18 @@ class PigletSimulator:
                     result = f"{code}"
                 elif atoms[0] == "MFCVAL?":
                     if (self.opstate in ["control", "clean", "reference"]):
-                        self.mfc_value = random.randrange(10, 100)
+                        self.mfc_value = random.uniform(10.0, 40.0)
                     elif self.opstate in ["identify"]:
                         if self.idstate in ["ambient", "calculate"]:
-                            self.mfc_value = 0
+                            self.mfc_value = 0.0
                         elif self.idstate in ["flow_1"]:
-                            self.mfc_value = 20
+                            self.mfc_value = 20.0
                         elif self.idstate in ["flow_2"]:
-                            self.mfc_value = 30
+                            self.mfc_value = 30.0
                         elif self.idstate in ["flow_3"]:
-                            self.mfc_value = 40
+                            self.mfc_value = 40.0
                     else:
-                        self.mfc_value = 0
+                        self.mfc_value = 0.0
                     result = f"{self.mfc_value}"
                 elif atoms[0] == "OPSTATE?":
                     result = f"{self.opstate}"
@@ -169,6 +169,10 @@ class PigletSimulator:
                     else:
                         self.active_chan[i] = i % 2
                 self.opstate_changed.set()
+            elif self.opstate == "control":
+                self.clean_solenoid_state = 0
+                for i, _ in enumerate(self.bypass_values):
+                    self.bypass_values[i] = self.BYPASS_ACTIVE if not self.solenoid_state[i] else 0
             elif self.opstate == "clean":
                 for i, _ in enumerate(self.solenoid_state):
                     self.solenoid_state[i] = 0

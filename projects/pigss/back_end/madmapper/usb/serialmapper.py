@@ -1,8 +1,9 @@
-import pyudev
 import time
-from common.serial_interface import SerialInterface
-from common.rpc_ports import rpc_ports
+
+import pyudev
 from back_end.lologger.lologger_client import LOLoggerClient
+from common.rpc_ports import rpc_ports
+from common.serial_interface import SerialInterface
 
 
 class SerialMapper(object):
@@ -30,8 +31,8 @@ class SerialMapper(object):
                     serial_interface.open()
                     time.sleep(0.5)
                     serial_interface.write('id get\r')
-                    time.sleep(0.25)
-                    numato_id = int(f'{serial_interface.read()}'.split('\n')[1][-1])
+                    serial_interface.read()  # Remove echoed command
+                    numato_id = int(serial_interface.read().strip())
                     serial_interface.close()
                     relay_rpc_port = self.relay_port + numato_id
                     self.devices['Serial_Devices'].update({
@@ -46,15 +47,14 @@ class SerialMapper(object):
                     self.relay_count += 1
                 except Exception as e:
                     self.logger.critical(f'Unhandled Exception: {e}')
-            elif 'Mega 2560 R3' in device.get('ID_MODEL_FROM_DATABASE'):
+            elif device.get('ID_SERIAL').startswith('Picarro_Piglet'):
                 serial_interface = SerialInterface()
-                serial_interface.config(port=device.get('DEVNAME'), baudrate=38400)
+                serial_interface.config(port=device.get('DEVNAME'), baudrate=230400)
                 try:
                     serial_interface.open()
-                    time.sleep(2)
+                    time.sleep(2.0)
                     serial_interface.write('slotid?\r')
-                    time.sleep(0.25)
-                    slot_id = int(f'{serial_interface.read()}'.rstrip('\n'))
+                    slot_id = int(serial_interface.read().strip())
                     serial_interface.close()
                     piglet_rpc_port = self.piglet_port + (slot_id - 1)
                     self.devices['Serial_Devices'].update({
@@ -65,7 +65,7 @@ class SerialMapper(object):
                             'Topaz_B_HW_Rev': 'Null',
                             'Whitfield_HW_Rev': 'Null',
                             'Path': device.get('DEVNAME'),
-                            'Baudrate': 38400,
+                            'Baudrate': 230400,
                             'RPC_Port': piglet_rpc_port
                         }
                     })

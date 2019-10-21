@@ -3,6 +3,7 @@ Configuration: # This is for high level information
     config_file: rpc_tunnel_configs.json
   Simulation: 
     enabled: true
+    ui_enabled: true
     random_ids: false
     analyzers:
       - ip_address: 192.168.10.101
@@ -51,7 +52,7 @@ Settings:
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
   madmapper_startup_delay: 30
-  startup_plan: "/home/picarro/plan_files/once_a_minute"
+  startup_plan: "once_a_minute"  # Do NOT include extension or directory
 
 Services:
   - Name: DBDecimator

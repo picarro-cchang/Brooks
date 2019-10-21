@@ -37,10 +37,10 @@ class ServiceTemplate:
                     Event(
                         Signal.ERROR, {
                             "type": "service",
-                            "exc": e,
+                            "exc": str(e),
                             "traceback": traceback.format_exc(),
                             "location": self.__class__.__name__,
-                            "request": request.url
+                            "request": str(request.url)
                         }))
             raise HTTPInternalServerError(text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
         return resp

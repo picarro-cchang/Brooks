@@ -1,7 +1,4 @@
-import serial
-import time
 import argparse
-from experiments.common.serial_interface import SerialInterface
 from experiments.common.timeutils import get_local_timestamp
 from experiments.common.rpc_ports import rpc_ports
 from experiments.testing.cmd_fifo import CmdFIFO
@@ -21,6 +18,7 @@ class PigletDriver(object):
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
+
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False):
         self.serial = None
         self.terminate = False
@@ -83,11 +81,6 @@ class PigletDriver(object):
         """
         return self.piglet_simulator.cli(command + self.carriage_return)
 
-        # self.serial.write(command + self.carriage_return)
-        # time.sleep(0.2)
-        # response = self.serial.read()
-        # if '-1' in response:
-        #     # Piglet doesn't recognize the command
         #     if __debug__:
         #         print(f'Command not recognized: {command}')
         # elif '-2' in response:
