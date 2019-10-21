@@ -7,7 +7,7 @@ SHELL:=/bin/sh
 # to support Mac/Windows and create RPM packages. We're settling with Debian only
 # for PiGSS. Should we decide to port "Picarro" Grafana for more projects, we should
 # recycle this work and make this slightly more complex.
-PATH :=/usr/local/go/bin:${PATH}
+PATH:=/usr/local/go/bin:${PATH}
 export GOPATH=${HOME}/go
 REPO_ROOT_DIR=${HOME}/git/host
 GRAFANA_ROOT_DIR=${REPO_ROOT_DIR}/projects/pigss/front_end/grafana/src/grafana
