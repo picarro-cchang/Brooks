@@ -80,7 +80,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             <p className="chn-label">
               <u>
               {this.props.plan.bank_names[this.props.bank].channels[i]}</u>
-            </p> 
+            </p>
 
             {/*<div style={{float: "left", width: "100%", height:"100%"}}>*/}
             {/*<hr style={{border: 0, clear: "both", display: "block", width: "96%", backgroundColor:"purple", height: "2px"}}/>*/}
