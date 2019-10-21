@@ -3,7 +3,7 @@
 project_name = boxer
 
 # Project version code.  This will set the REVCODE symbol in the image
-REVCODE = 1.1.3
+REVCODE = 1.1.4
 
 # Log level
 #
@@ -487,11 +487,11 @@ css_url = http://www.eventuallabs.com/pandoc.css
 release_directory = ../bin
 
 ifeq ($(PRESSURE_READS_ENABLED),true)
-	pressure_tag = "pres"
+	pressure_tag = pres
 endif
 
 ifeq ($(PRESSURE_READS_ENABLED),false)
-	pressure_tag = "nopres"
+	pressure_tag = nopres
 endif
 
 release_file = $(project_name)_$(REVCODE)_$(LOG_LEVEL)_$(PCB)_$(pressure_tag).hex

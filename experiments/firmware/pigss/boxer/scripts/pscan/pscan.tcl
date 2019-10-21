@@ -36,6 +36,7 @@ set options {
     {o.arg "pscan" "Output file name base"}
     {n.arg "20" "Number of read cycles"}
     {r.arg "10" "Read rate (Hz)"}
+    {a.arg "65535" "Exponential moving average factor"}
 }
 
 try {
@@ -141,6 +142,10 @@ proc lmean  L {
 }
 
 proc get_channel_list {dict_list channel} {
+    # Return the list of measurements from the given channel
+    #
+    # Arguments:
+    #   dict_list -- List of dictionaries created during data acquisition
     foreach cycle_dict $dict_list {
 	lappend channel_list [dict get $cycle_dict $channel pressure]
     }
@@ -217,7 +222,7 @@ try {
 set read_period_ms [expr double(1000)/$params(r)]
 
 # Configure exponential moving average
-boxer::sendcmd $channel "prs.alpha 65535"
+boxer::sendcmd $channel "prs.alpha $params(a)"
 set return_value [boxer::readline $channel]
 
 # Wait for system to start reading pressures
@@ -358,6 +363,8 @@ foreach channel $channel_list {
 package require Tk
 package require Plotchart
 
+set color_list [list "blue" "red" "cyan" "green" "lavender" "salmon" "tan" "yellow" "black" "brown"]
+
 # Set the dimensions of the canvas.  The plot will be scaled to fit
 # the canvas...though the axis labels don't seem to participate in this.
 set canvas_width 1000
@@ -366,27 +373,56 @@ set canvas_height 600
 canvas .c -background white -width $canvas_width -height $canvas_height
 pack .c -fill both
 tkwait visibility .c
+
+# Find the minimum and maximum of all the traces.  Maximum data is
+# 2**24
+set plot_min [expr 2**24]
+set plot_max 0
+foreach channel_name $channel_list {
+    set data_list [get_channel_list $read_cycle_list $channel_name]
+    set data_min [math::statistics::min $data_list]
+    set data_max [math::statistics::max $data_list]
+    if {$data_min < $plot_min} {
+	set plot_min $data_min
+    }
+    if {$data_max > $plot_max} {
+	set plot_max $data_max
+    }
+}
+set plot_middle [expr ($plot_max + $plot_min)/2]
 set data_list [get_channel_list $read_cycle_list 1]
 set number_of_points [llength $data_list]
-set plot_min [math::statistics::min $data_list]
-set plot_max [math::statistics::max $data_list]
 set plot_ytic [expr int(($plot_max - $plot_min)/10)]
-set plot_xtic [expr int($number_of_points / 10)]
+if {$number_of_points < 10} {
+    set plot_xtic 1
+} else {
+    set plot_xtic [expr int($number_of_points / 10)]    
+}
+
 set s [Plotchart::createXYPlot .c \
-	   [list 0 [llength $data_list] $plot_xtic] \
+	   [list 0 [expr $number_of_points * 1.1] $plot_xtic] \
 	   [list [expr $plot_min - $plot_ytic] [expr $plot_max + $plot_ytic] $plot_ytic] \
 	   -box [list 0 0 $canvas_width [expr 0.95 * $canvas_height]]]
-$s dataconfig "channel 1" -color "red"
 $s xtext "Reading number"
 $s ytext "Raw MPR output"
 
-
-foreach x [iterint 0 [llength $data_list]] y $data_list {
-    $s plot "channel 1" $x $y
-}
 # Legendconfig has to come before the legend command
 $s legendconfig -position top-right -border ""
-$s legend "channel 1" "Channel 1"
+
+foreach channel_name $channel_list color $color_list {
+    $s dataconfig "channel $channel_name" -color $color -width 3
+    set data_list [get_channel_list $read_cycle_list $channel_name]
+    foreach x [iterint 0 [llength $data_list]] y $data_list {
+	$s plot "channel $channel_name" $x $y
+    }
+    $s legend "channel $channel_name" "Channel $channel_name"
+    
+}
+
+$s plaintextconfig -font "Helvetica 10"
+$s plaintext [expr ($number_of_points - 1) * 1.05] $plot_middle "alpha = $params(a)" south-west
+
+
 
 
 

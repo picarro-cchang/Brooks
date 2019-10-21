@@ -108,7 +108,7 @@ if {$params(o) != "all"} {
 }
 
 # Skip pressure commands
-tcltest::configure -notfile "pressure.test"
+# tcltest::configure -notfile "pressure.test"
 
 # Only run the channel locations test.  Comment this out to run all
 # tests.
