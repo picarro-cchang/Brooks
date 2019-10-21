@@ -39,7 +39,7 @@ test: setup
 	@ echo "\n#####################\nTesting Front-End\n#####################\n"
 	@ cd ${GRAFANA_ROOT_DIR} && npm run test
 	@ echo "n#####################\nTesting Back-Endn#####################\n"
-	@ cd ${GRAFANA_ROOT_DIR} && go run build.go build test
+	@ cd ${GRAFANA_ROOT_DIR} && go run build.go test
 
 .PHONY: clean
 clean:
