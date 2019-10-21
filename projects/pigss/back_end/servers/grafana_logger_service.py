@@ -108,9 +108,6 @@ class GrafanaLoggerService(ServiceTemplate):
 
         ws["query_params"]["columns"] = self.app["config"]["sqlite"]["columns"]
 
-        if "interval" not in ws["query_params"]:
-            ws["query_params"]["interval"] = self.app["config"]["sqlite"]["interval"]
-
         if "limit" not in ws["query_params"]:
             ws["query_params"]["limit"] = self.app["config"]["sqlite"]["limit"]
 
@@ -174,6 +171,11 @@ class GrafanaLoggerService(ServiceTemplate):
     def should_send_task(self, ws, current_time):
         try:
             is_time = (ws['next_run'] <= current_time)
+
+            if "interval" not in ws["query_params"]:
+                print("what here", self.app["config"]["sqlite"]["interval"])
+                ws["query_params"]["interval"] = self.app["config"]["sqlite"]["interval"]
+
             is_new_interval = current_time + \
                 timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval

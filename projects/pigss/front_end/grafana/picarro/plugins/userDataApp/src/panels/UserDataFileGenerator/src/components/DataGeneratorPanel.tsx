@@ -4,7 +4,7 @@ import { GrafanaTheme } from '@grafana/ui';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import { DataGeneratorPanelProps } from './../types';
+import { DataGeneratorPanelProps } from '../types';
 import DataGeneratorLayout from './DataGeneratorLayout';
 
 interface Props extends PanelProps<DataGeneratorPanelProps> {}

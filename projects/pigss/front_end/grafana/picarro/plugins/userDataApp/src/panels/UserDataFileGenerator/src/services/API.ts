@@ -1,4 +1,4 @@
-import { notifyError } from './../utils/Notifications';
+import { notifyError } from '../utils/Notifications';
 
 export const API = {
   get(url: string) {

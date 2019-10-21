@@ -2,9 +2,9 @@ import React, { PureComponent, Fragment } from 'react';
 import { TimeRange, dateTime } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
 
-import { notifyError, notifySuccess } from './../utils/Notifications';
-import { DataGeneratorLayoutProps } from './../types';
-import { DEFAULT_TIME_OPTIONS } from './../constants';
+import { notifyError, notifySuccess } from '../utils/Notifications';
+import { DataGeneratorLayoutProps } from '../types';
+import { DEFAULT_TIME_OPTIONS } from '../constants';
 import { DataGeneratorService } from '../services/DataGeneratorService';
 
 import './Layout.css';

@@ -1,6 +1,6 @@
-import { URL, DEFAULT_DATA_GENERATOR_PROPS } from './../constants';
+import { URL, DEFAULT_DATA_GENERATOR_PROPS } from '../constants';
 import { API } from './API';
-import { DataGeneratorPanelProps } from 'types';
+import { DataGeneratorPanelProps } from '../types';
 
 export const DataGeneratorService = (() => {
   return {

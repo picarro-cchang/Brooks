@@ -1,5 +1,5 @@
 import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
-import { DataGeneratorPanelProps } from 'types';
+import { DataGeneratorPanelProps } from '../types';
 
 export const DEFAULT_TIME_RANGE: TimeRange = {
   from: dateTime().subtract(6, 'h'),
