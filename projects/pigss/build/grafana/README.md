@@ -32,7 +32,7 @@ The version can be found in `package.json`
   "repository": {
     "type": "git",
     "url": "http://github.com/grafana/grafana.git"
-  },
+}
 ```
 
 Example Filename: `grafana_6.4.2-1571619165_amd64.deb`
@@ -69,7 +69,7 @@ The version can be found in `package.json`
   "repository": {
     "type": "git",
     "url": "http://github.com/grafana/grafana.git"
-  },
+}
 ```
 
 Example Filename: `grafana_6.4.2-1571619165_amd64.deb`
