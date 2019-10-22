@@ -1,5 +1,6 @@
 from influxdb.exceptions import InfluxDBClientError
 
+
 async def get_points(client, log, keys, measurement, time_from=None, time_to=None,
                      latest=False):
     """Generate and execute SQL statements to fetch points from measurement

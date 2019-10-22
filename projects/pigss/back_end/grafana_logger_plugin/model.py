@@ -82,7 +82,8 @@ class EventsModel:
             dict of rows
         """
         try:
-            connection = SQLiteInstance(os.path.join(db_dir, database)).get_instance()
+            connection = SQLiteInstance(
+                os.path.join(db_dir, database)).get_instance()
             cursor = connection.cursor()
             result = cursor.execute(query)
             return result.fetchall()
@@ -90,4 +91,3 @@ class EventsModel:
             log.error("DB File does not exist.")
         except ConnectionError:
             log.error("Unable to connect to SQLite DB")
-
