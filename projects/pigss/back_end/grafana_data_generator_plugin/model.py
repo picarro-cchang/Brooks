@@ -37,7 +37,7 @@ class Model:
             keys = ", ".join(keys)
 
             query = (
-                f"SELECT {query_params['keys']} FROM {measurements} "
+                f"SELECT {keys} FROM {measurements} "
                 f"WHERE time > {time_from} AND time <= {time_to} fill(previous) "
                 f"ORDER BY time DESC"
             )
