@@ -67,22 +67,27 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-17)
             - [PRS.OUT.RAW? n](#prsoutraw-n)
                 - [Typical Return](#typical-return-18)
+            - [PRS.ALPHA n](#prsalpha-n)
+                - [Parameter (n)](#parameter-n-9)
+                - [Typical Return](#typical-return-19)
+            - [PRS.ALPHA?](#prsalpha)
+                - [Typical Return](#typical-return-20)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
-                - [Parameter (n)](#parameter-n-9)
+                - [Parameter (n)](#parameter-n-10)
                 - [Typical return](#typical-return)
             - [BYP.DAC? n](#bypdac-n)
-                - [Parameter (n)](#parameter-n-10)
+                - [Parameter (n)](#parameter-n-11)
                 - [Typical return](#typical-return-1)
         - [Channel identification commands](#channel-identification-commands)
             - [MFCVAL?](#mfcval)
-                - [Typical Return](#typical-return-19)
-            - [IDENTIFY](#identify)
-                - [Typical Return](#typical-return-20)
-            - [IDSTATE?](#idstate)
                 - [Typical Return](#typical-return-21)
-            - [ACTIVECH?](#activech)
+            - [IDENTIFY](#identify)
                 - [Typical Return](#typical-return-22)
+            - [IDSTATE?](#idstate)
+                - [Typical Return](#typical-return-23)
+            - [ACTIVECH?](#activech)
+                - [Typical Return](#typical-return-24)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -99,6 +104,7 @@ hardware will be a custom PCB.
         - [Version 1.1.1](#version-111)
         - [Version 1.1.2](#version-112)
         - [Version 1.1.3](#version-113)
+        - [Version 1.1.4](#version-114)
 
 <!-- markdown-toc end -->
 
@@ -449,6 +455,14 @@ Integers 0-65535
 
 0
 
+#### PRS.ALPHA? ####
+
+Query the exponential averaging factor used for pressure readings.
+
+##### Typical Return #####
+
+65535
+
 ### Proportional bypass valve commands ###
 
 #### CHx.BYP.DAC n ####
@@ -674,8 +688,11 @@ Added the [ACTIVECH?](#activech) query to return the active channels
 discovered during channel identification.
 
 ### Version 1.1.4 ###
+
   * Turned pressure reads back on at 40 Hz.  This slow rate is
-    designed to accommodate rev A Topaz boards.  Use the new 
+    designed to accommodate rev A Topaz boards.  Use the new
+    [PRS.ALPHA](#prsalpha-n) command to set the exponential averaging
+    factor.
   * A broken USB channel or physical connection now puts the system
     into `standby` instead of `shutdown`.  The system will show a red
     communication light on the front panel while the connection is
