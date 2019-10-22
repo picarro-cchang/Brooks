@@ -121,8 +121,8 @@ if __name__ == "__main__":
 
     python setup_client.py deploy ip-addr
 
-    This is run on the rack server to set up NTP time-synchronization software on the analyzer client 
+    This is run on the rack server to set up NTP time-synchronization software on the analyzer client
     at ip-addr.
-    
+
     Note: The analyzer client should be running Ubuntu 16.04 LTS software.
     """)

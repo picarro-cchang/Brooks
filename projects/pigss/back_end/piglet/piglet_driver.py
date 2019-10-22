@@ -72,8 +72,8 @@ class PigletDriver(object):
         :return:
         """
         self.serial.write(command + self.carriage_return)
-        time.sleep(0.2)
-        response = self.serial.read()
+        time.sleep(0.01)
+        response = self.serial.read().strip()
         if '-1' in response:
             # Piglet doesn't recognize the command
             if __debug__:
@@ -86,7 +86,7 @@ class PigletDriver(object):
                 time.sleep(0.01)
                 if __debug__:
                     print(f'Attempt {attempt} to wait on Piglet...')
-                response = self.serial.read()
+                response = self.serial.read().strip()
                 if '-2' not in response:
                     break
         if __debug__:

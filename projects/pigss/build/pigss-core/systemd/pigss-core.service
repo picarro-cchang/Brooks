@@ -1,5 +1,5 @@
 [Unit]
-Description=Lologger Service
+Description=PiGSS Core Service
 After = network.target network-online.target
 Wants = network-online.target
 
@@ -8,13 +8,14 @@ Type=simple
 ###########################################################################
 #                            CLI args                                     #
 ###########################################################################
-# -j ------ Start JSON database for Loki                                  #
-# -meta --- Create a metadata table in the db file                        #
-# -pr ----- Prefix for db filename                                        #
-# -prh ----- Prefix for db filename to be hostname                        #
-# -pkg ---- List of dpkg packages and versions to include in db metadata  #
+#                                                                         #
+# -c --- Configuration file for pigss_runner                              #
+#                                                                         #
 ###########################################################################
-ExecStart=/usr/bin/lologger -meta -j -prh -pkg lologger pigss-meta
+ExecStart=/usr/bin/pigss-core
+# Switch ExecStart to run in simulation mode
+# It seems silly to maintain a separate package for the simulators
+# ExecStart=/usr/bin/pigss-core -c pigss_sim_config.yaml
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -HUP $MAINPID
 Restart=always

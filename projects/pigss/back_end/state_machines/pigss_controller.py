@@ -203,6 +203,7 @@ class PigssController(Ahsm):
                                 modal_ok=Signal.MODAL_OK,
                                 plan=Signal.BTN_PLAN,
                                 plan_cancel=Signal.BTN_PLAN_CANCEL,
+                                plan_clear=Signal.BTN_PLAN_CLEAR,
                                 plan_delete=Signal.BTN_PLAN_DELETE,
                                 plan_insert=Signal.BTN_PLAN_INSERT,
                                 plan_load=Signal.BTN_PLAN_LOAD,
@@ -369,6 +370,13 @@ class PigssController(Ahsm):
         """Handle a reference button press in a bank. Add to plan at the location of the focussed row"""
         bank_config = {b: {"clean": 0, "chan_mask": 0} for b in self.all_banks}
         self.add_to_plan(bank_config, 1)
+
+    def plan_clear(self):
+        """Delete all rows of the plan"""
+        self.set_plan(["last_step"], 0)
+        self.set_plan(["steps"], {})
+        self.set_plan(["current_step"], 1)
+        self.set_plan(["focus"], {"row": 1, "column": 1})
 
     def plan_row_delete(self, msg):
         """Delete a row from the plan at the focussed row, moving up the remaining entries"""
@@ -564,6 +572,7 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_IDENTIFY", self)
         Framework.subscribe("BTN_PLAN", self)
         Framework.subscribe("BTN_PLAN_CANCEL", self)
+        Framework.subscribe("BTN_PLAN_CLEAR", self)
         Framework.subscribe("BTN_PLAN_DELETE", self)
         Framework.subscribe("BTN_PLAN_DELETE_FILENAME", self)
         Framework.subscribe("BTN_PLAN_INSERT", self)
@@ -940,6 +949,9 @@ class PigssController(Ahsm):
                 return self.tran(self._plan_plan1)
         elif sig == Signal.BTN_PLAN_CANCEL:
             return self.tran(self._operational)
+        elif sig == Signal.BTN_PLAN_CLEAR:
+            self.plan_clear()
+            return self.handled(e)
         elif sig == Signal.BTN_PLAN_DELETE:
             self.plan_row_delete(e.value)
             return self.handled(e)
@@ -1138,7 +1150,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             for bank in self.all_banks:
                 self.chan_active[bank] = 0
-            self.piglet_commands = [("CHANSET 0", self.all_banks)]
+            self.piglet_commands = [("STANDBY", self.all_banks)]
             self.postLIFO(Event(Signal.PIGLET_SEQUENCE, None))
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1234,7 +1246,10 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             mask = self.chan_active[self.bank_to_update]
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+            if mask == 0:
+                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+            else:
+                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             for j in setbits(mask):
                 self.set_status(["channel", self.bank_to_update, j + 1], UiStatus.ACTIVE)
             return self.handled(e)
@@ -1374,7 +1389,10 @@ class PigssController(Ahsm):
                 Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
             else:
                 mask = self.chan_active[self.bank_to_update]
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                if mask == 0:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+                else:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             if self.banks_to_process:
@@ -1508,7 +1526,10 @@ class PigssController(Ahsm):
                 Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
             else:
                 mask = self.chan_active[self.bank_to_update]
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                if mask == 0:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
+                else:
+                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             if self.banks_to_process:
@@ -1552,54 +1573,56 @@ class PigssController(Ahsm):
         supervisor shortly after startup to start the flow through the rack on power-up.
         """
         if plan_filename_no_ext is not None:
-            fname = f"{plan_filename_no_ext}.pln"
+            fname = os.path.join(PLAN_FILE_DIR, f"{plan_filename_no_ext}.pln")
             if not os.path.exists(fname):
                 raise FileNotFoundError(f"No such file: {fname}")
 
         if self.get_status()["standby"] != UiStatus.ACTIVE:
             while self.get_status()["standby"] != UiStatus.READY:
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(1.0)
             Framework.publish(Event(Signal.BTN_STANDBY, None))
+        while self.get_status()["standby"] != UiStatus.ACTIVE:
             await asyncio.sleep(0.5)
-        if self.get_status()["standby"] != UiStatus.ACTIVE or self.get_status()["identify"] != UiStatus.READY:
-            msg = "Unexpected inability to start channel identification"
+        if self.get_status()["identify"] != UiStatus.READY:
+            msg = (f'Unexpected inability to start channel identification sb:{self.get_status()["standby"]}'
+                   f' id:{self.get_status()["identify"]}')
             log.warning(msg)
             return msg
         Framework.publish(Event(Signal.BTN_IDENTIFY, None))
-        await asyncio.sleep(0.5)
+        await asyncio.sleep(1.0)
         # Wait until we are out of the identify state
         while self.get_status()["standby"] != UiStatus.ACTIVE:
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
 
         if plan_filename_no_ext is not None:
             Framework.publish(Event(Signal.BTN_PLAN, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_plan:
                 msg = "Unexpected inability to reach _plan_plan state before loading plan file"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_load:
                 msg = "Unexpected inability to reach _plan_load state"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._plan_plan:
                 msg = "Unexpected inability to reach _plan_plan state after loading plan file"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             Framework.publish(Event(Signal.BTN_PLAN_OK, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.get_status()["standby"] != UiStatus.ACTIVE:
                 msg = "Unexpected inability to verify plan and return to standby state"
                 log.warning(msg)
                 return msg
             Framework.publish(Event(Signal.BTN_PLAN_LOOP, None))
-            await asyncio.sleep(0.5)
+            await asyncio.sleep(1.0)
             if self.state != self._loop_plan1:
                 msg = "Unexpected inability to reach _loop_plan1 state"
                 log.warning(msg)
