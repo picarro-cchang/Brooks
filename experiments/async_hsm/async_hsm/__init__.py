@@ -1,6 +1,5 @@
 import asyncio
 import collections
-import os
 import signal
 import traceback
 import typing
@@ -151,6 +150,7 @@ def state(func):
     to determine which methods inside a class are actually states.
     Other uses of the attribute may come in the future.
     """
+
     @wraps(func)
     def func_wrap(self, evt):
         result = func(self, evt)
@@ -248,7 +248,7 @@ class Hsm(object):
                 await cor
             except Exception as e:
                 event = Event(Signal.ERROR, {
-                    "exc": e,
+                    "exc": str(e),
                     "traceback": traceback.format_exc(),
                     "location": self.__class__.__name__,
                     "name": cor.__name__
@@ -261,11 +261,11 @@ class Hsm(object):
         return asyncio.ensure_future(wrapped_cor())
 
     def top(self, event):
-        """This is the default state handler. This handler ignores all signals except for Signal.TERMINATE and 
+        """This is the default state handler. This handler ignores all signals except for Signal.TERMINATE and
         Signal.ERROR. These default actions can be overridden within a user-provided top level state.
 
         The TERMINATE signal causes a transition to the state self._exit.
-        The ERROR signal does not cause a state transition, but prints a tracback message on the console.        
+        The ERROR signal does not cause a state transition, but prints a tracback message on the console.
         """
         if event.signal == Signal.TERMINATE:
             return self.tran(self._exit)
@@ -405,7 +405,7 @@ class Hsm(object):
             self.state_receiving_dispatch = None
 
         except Exception as e:
-            event = Event(Signal.ERROR, {"exc": e, "traceback": traceback.format_exc(), "location": self.__class__.__name__})
+            event = Event(Signal.ERROR, {"exc": str(e), "traceback": traceback.format_exc(), "location": self.__class__.__name__})
             if self.publish_errors:
                 Framework.publish(event)
             else:
@@ -605,6 +605,7 @@ class Framework(object):
         and the class name in which the exception occured, so that it can be
         dealt with appropriately.
         """
+
         def getPriority(x):
             return x.priority
 
@@ -687,6 +688,7 @@ class Ahsm(Hsm):
     """An Augmented Hierarchical State Machine (AHSM); a.k.a. ActiveObject/AO.
     Adds a priority, message queue and methods to work with the queue.
     """
+
     def start(self, priority):
         # must set the priority before Framework.add() which uses the priority
         self.priority = priority
@@ -695,7 +697,7 @@ class Ahsm(Hsm):
         try:
             self.init()
         except Exception as e:
-            event = Event(Signal.ERROR, {"exc": e, "traceback": traceback.format_exc(), "location": self.__class__.__name__})
+            event = Event(Signal.ERROR, {"exc": str(e), "traceback": traceback.format_exc(), "location": self.__class__.__name__})
             if self.publish_errors:
                 Framework.publish(event)
             else:
@@ -780,6 +782,7 @@ class TimeEvent(object):
     A one-shot TimeEvent is created by calling either postAt() or postIn().
     A periodic TimeEvent is created by calling the postEvery() method.
     """
+
     def __init__(self, signame):
         assert type(signame) == str
         self.signal = Signal.register(signame)

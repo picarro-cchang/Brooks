@@ -61,6 +61,7 @@ class SyncWrapper:
 
     See https://gist.github.com/dmfigol/3e7d5b84a16d076df02baa9f53271058
     """
+
     def __init__(self, cls, *a, **k):
         self.__class_to_wrap = cls
         self.__args = a
@@ -87,6 +88,9 @@ class SyncWrapper:
         t.start()
         time.sleep(0.01)
         return self
+
+    def raw_access(self):
+        return self.__sim
 
 
 if __name__ == "__main__":

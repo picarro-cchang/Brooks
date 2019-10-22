@@ -1,21 +1,25 @@
 import argparse
 import time
+from threading import Thread
 
-import serial
+from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import QApplication, QDialog, QGridLayout, QLabel
 
 from common import CmdFIFO
 from common.rpc_ports import rpc_ports
-from common.serial_interface import SerialInterface
 from common.timeutils import get_local_timestamp
 
 
-class AlicatDriver(object):
+class SimAlicatDriver(object):
     """
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
 
-    def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200):
+    def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200, enable_ui=True):
+
+        self.mass_flow = 0.0
+        self.flow_set_point = 0.0
         self.serial = None
         self.terminate = False
         self.data_dict = None
@@ -31,7 +35,53 @@ class AlicatDriver(object):
                                                 threaded=True)
         self.connect()
         self.register_rpc_functions()
+        if enable_ui:
+            Thread(target=self.serve_forever, daemon=True).start()
+            self.simple_ui()
+        else:
+            self.rpc_server.serve_forever()
+
+    def serve_forever(self):
+        """
+            Call serve_forever method of rpc_server. It is called automatically by __init__
+            NOTE: This should not be renamed to rpc_serve_forever since that name is reserved
+                for a method that the user has to call, if the driver is written in such a
+                way that the RPC server loop has to be run manually after calling __init__
+        """
         self.rpc_server.serve_forever()
+        self.ui_root.close()
+
+    def simple_ui(self):
+        """
+            Generates a simple user interface showing the state of the simulated hardware
+        """
+        app = QApplication([])
+        self.ui_root = QDialog()
+        self.ui_root.setWindowTitle(f"Alicat MFC")
+        self.ui_root.setStyleSheet("QLabel {font: 10pt Helvetica}")
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Port:", self.ui_root), 0, 0)
+        layout.addWidget(QLabel(f"{self.rpc_port}", self.ui_root), 0, 1)
+        layout.addWidget(QLabel("Flow set point:", self.ui_root), 1, 0)
+        self.flow_set_point_label = QLabel(f"{self.flow_set_point:.2f}", self.ui_root)
+        layout.addWidget(self.flow_set_point_label, 1, 1)
+        layout.addWidget(QLabel("Mass flow:", self.ui_root), 2, 0)
+        self.mass_flow_label = QLabel(f"{self.mass_flow:.2f}", self.ui_root)
+        layout.addWidget(self.mass_flow_label, 2, 1)
+        self.ui_root.setLayout(layout)
+        self.ui_root.setFixedSize(self.ui_root.sizeHint())
+        self.ui_root.show()
+        timer = QTimer(self.ui_root)
+        timer.setSingleShot(False)
+        timer.timeout.connect(self.update_ui)
+        timer.start(200)
+        app.exec_()
+        self.rpc_server.stop_server()
+
+    def update_ui(self):
+        self.mass_flow = 0.3 * self.mass_flow + 0.7 * self.flow_set_point
+        self.flow_set_point_label.setText(f"{self.flow_set_point:.2f}")
+        self.mass_flow_label.setText(f"{self.mass_flow:.2f}")
 
     def connect(self):
         """
@@ -40,60 +90,41 @@ class AlicatDriver(object):
 
         :return:
         """
-        try:
-            self.serial = SerialInterface()
-            self.serial.config(port=self.port, baudrate=self.baudrate, timeout=0.2)
-            if __debug__:
-                print(f'\nConnecting to Alicat on {self.port}\n')
-        except serial.SerialException:
-            raise
+        return
 
-    def send(self, command, lines_to_receive=1):
+    def send(self, command):
         """
         This function will send any string to the MFC. If the MFC does not
         recognize the command, it will response with: '?'. If an unrecognized command
         is sent, we will disregard the response, otherwise we will
         return the response.
 
-        When the Alicat receives its own id character followed by a carriage return,
-         it responds with status string terminated by a carriage return, e.g.,
+        :param command:
+        :return:
 
-        Send> A\r
-        Recv> A +014.44 +026.92 +000.00 +000.00 000.00     Air\r
-
-        If we send it a set-point command, the response consists of two lines, as shown
-
-        Send> AS 10.00\r
-        Recv> 10.0000\rA +014.44 +026.92 +000.00 +000.00 010.00     Air\r
-
-        It is necessary to specify the number of lines to receive so that we wait for
-        the correct number of carriage returns.
-
-        :param command: Command to send
-        :param lines_to_receive: Number of lines to receive
-        :return: if `lines_to_recive`==1, either the received string or None if the Alicat returns "?"
-                 otherwise, the list of received strings
-        """
-        self.serial.write(command + self.carriage_return)
-        time.sleep(0.01)
-        """
         Alicat recommends an optimal baud rate of 19200
         We start getting garbage data from the MFC if we try
         to poll faster than 5 Hz at this baud rate.
         """
-        try:
-            response = [self.serial.read(terminator=b"\r").strip() for i in range(lines_to_receive)]
-            if lines_to_receive == 1:
-                response = response[0]
-                if response == '?':
-                    # Alicat doesn't recognize the command
-                    if __debug__:
-                        print(f'Command not recognized: {command}')
-                    response = None
-        except serial.SerialException:
+        time.sleep(0.2)
+        response = '?'
+        if command.startswith(self.id):
+            tail = command[len(self.id):].strip()
+            if not tail:
+                temperature = 25.0
+                pressure = 760.0
+                density = 1.225
+                self.volume_flow = self.mass_flow / density
+                # Request data from Alicat
+                response = (f"{self.id} {pressure:+07.2f} {temperature:+07.2f} {self.volume_flow:+07.2f}"
+                            f" {self.mass_flow:+07.2f} {self.flow_set_point:+07.2f}     Air")
+            elif tail[0] == "S":
+                # Setpoint command
+                set_point = float(tail[1:])
+                self.flow_set_point = set_point
+                response = command.strip()
+        if response == '?':
             response = None
-        if __debug__:
-            print(f'Command sent: {command}\nResponse received: {response}\n')
         return response
 
     def close(self):
@@ -101,8 +132,7 @@ class AlicatDriver(object):
         This function will close the serial port if it is open.
         :return:
         """
-        if self.serial is not None:
-            self.serial.close()
+        return
 
     def get_data(self):
         """
@@ -296,7 +326,7 @@ class AlicatDriver(object):
             # reject the setpoint.
             set_point = float(set_point)
             set_point = round(set_point, 2)
-            self.send(self.id + "S" + str(set_point), lines_to_receive=2)
+            self.send(self.id + "S" + str(set_point))
         except TypeError:
             set_point = None
         except ValueError:
@@ -337,20 +367,9 @@ def main():
     port = cli_args.mfc_port
     baudrate = cli_args.baudrate
     rpc_port = cli_args.rpc_port
-    if __debug__:
-        print(f'\nAlicat MFC_ID: {id}'
-              f'\nAlicat MFC Port: {port}'
-              f'\nAlicat RCP Port: {rpc_port}'
-              f'\nAlicat MFC Baudrate: {baudrate}\n')
     # Instantiate the object and serve the RPC Port forever
-    AlicatDriver(mfc_id=id, port=port, baudrate=baudrate, rpc_port=int(rpc_port))
-    if __debug__:
-        print('AlicatDriver stopped.')
+    SimAlicatDriver(mfc_id=id, port=port, baudrate=baudrate, rpc_port=int(rpc_port))
 
 
 if __name__ == "__main__":
-    import sys
-    try:
-        main()
-    except KeyboardInterrupt:
-        sys.exit(0)
+    main()

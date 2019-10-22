@@ -3,6 +3,10 @@
 Replaces PigletDriver class when the system is run in simulation mode.
 """
 import argparse
+from threading import Thread
+
+from qtpy.QtCore import QTimer
+from qtpy.QtWidgets import QApplication, QDialog, QGridLayout, QLabel
 
 from common import CmdFIFO
 from common.async_helper import SyncWrapper
@@ -16,7 +20,8 @@ class SimPigletDriver(object):
     This class currently is based on the Boxer firmware for the piglets described in
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
-    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False):
+
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', bank=1, random_ids=False, enable_ui=True):
         self.serial = None
         self.terminate = False
         self.port = port
@@ -33,7 +38,64 @@ class SimPigletDriver(object):
         self.piglet_simulator.random_ids = random_ids
         self.connect()
         self.register_rpc_functions()
+        if enable_ui:
+            Thread(target=self.serve_forever, daemon=True).start()
+            self.simple_ui()
+        else:
+            self.rpc_server.serve_forever()
+
+    def serve_forever(self):
+        """
+            Call serve_forever method of rpc_server. It is called automatically by __init__
+            NOTE: This should not be renamed to rpc_serve_forever since that name is reserved
+                for a method that the user has to call, if the driver is written in such a
+                way that the RPC server loop has to be run manually after calling __init__
+        """
         self.rpc_server.serve_forever()
+        self.ui_root.close()
+
+    def simple_ui(self):
+        """
+            Generates a simple user interface showing the state of the simulated hardware
+        """
+        piglet = self.piglet_simulator.raw_access()
+        app = QApplication([])
+        self.ui_root = QDialog()
+        self.ui_root.setWindowTitle(f"Piglet")
+        self.ui_root.setStyleSheet("QLabel {font: 10pt Helvetica}")
+        layout = QGridLayout()
+        layout.addWidget(QLabel("Port:", self.ui_root), 0, 0)
+        layout.addWidget(QLabel(f"{self.rpc_port}", self.ui_root), 0, 1)
+        layout.addWidget(QLabel("Bank:", self.ui_root), 1, 0)
+        layout.addWidget(QLabel(f"{piglet.bank}", self.ui_root), 1, 1)
+        layout.addWidget(QLabel("Opstate:", self.ui_root), 2, 0)
+        self.opstate_label = QLabel(f"{piglet.opstate}", self.ui_root)
+        layout.addWidget(self.opstate_label, 2, 1)
+        layout.addWidget(QLabel("MFC value:", self.ui_root), 3, 0)
+        self.mfc_value_label = QLabel(f"{piglet.mfc_value:.2f}", self.ui_root)
+        layout.addWidget(self.mfc_value_label, 3, 1)
+        layout.addWidget(QLabel("Clean:", self.ui_root), 4, 0)
+        self.clean_solenoid_state_label = QLabel(f"{piglet.clean_solenoid_state}", self.ui_root)
+        layout.addWidget(self.clean_solenoid_state_label, 4, 1)
+        layout.addWidget(QLabel("Solenoids:", self.ui_root), 5, 0)
+        self.solenoid_state_label = QLabel(f"{piglet.solenoid_state}", self.ui_root)
+        layout.addWidget(self.solenoid_state_label, 5, 1)
+        self.ui_root.setLayout(layout)
+        self.ui_root.setFixedSize(self.ui_root.sizeHint())
+        self.ui_root.show()
+        timer = QTimer(self.ui_root)
+        timer.setSingleShot(False)
+        timer.timeout.connect(self.update_ui)
+        timer.start(200)
+        app.exec_()
+        self.rpc_server.stop_server()
+
+    def update_ui(self):
+        piglet = self.piglet_simulator.raw_access()
+        self.opstate_label.setText(f"{piglet.opstate}")
+        self.mfc_value_label.setText(f"{piglet.mfc_value:.2f}")
+        self.clean_solenoid_state_label.setText(f"{piglet.clean_solenoid_state}")
+        self.solenoid_state_label.setText(f"{piglet.solenoid_state}")
 
     def connect(self):
         """
@@ -338,12 +400,8 @@ def main():
     port = cli_args.piglet_port
     baudrate = cli_args.baudrate
     rpc_port = cli_args.rpc_port
-    if __debug__:
-        print(f'\nPiglet Port: {port}' f'\nPiglet Baudrate: {baudrate}' f'\nPiglet RPC Port: {rpc_port}\n')
     # Instantiate the object and serve the RPC Port forever
     SimPigletDriver(port=port, baudrate=baudrate, rpc_port=int(rpc_port))
-    if __debug__:
-        print('PigletDriver stopped.')
 
 
 if __name__ == '__main__':

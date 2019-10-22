@@ -1,0 +1,23 @@
+#!/bin/bash
+
+CONFIG_DIR="/home/$SUDO_USER/.config/pigss"
+TMP_DIR=/tmp/config/pigss-core
+sudo mkdir -p $CONFIG_DIR
+
+# Copy all config files from the installed location to their
+# final home
+sudo cp -r $TMP_DIR/pigss_config.yaml $CONFIG_DIR
+sudo cp -r $TMP_DIR/pigss_sim_config.yaml $CONFIG_DIR
+sudo cp -r $TMP_DIR/rpc_tunnel_configs.json $CONFIG_DIR
+sudo cp -r $TMP_DIR/sim_serial_map.json $CONFIG_DIR
+
+# Make sure files and folders are owned by $SUDO_USER
+sudo chown -R $SUDO_USER:$SUDO_USER $CONFIG_DIR
+
+# Enable and Start the systemd system service
+sudo systemctl daemon-reload
+sudo systemctl enable pigss-core.service
+sudo systemctl start pigss-core.service
+
+# Clean up the tmp directory
+sudo rm -rf /tmp/config/pigss-core
