@@ -24,7 +24,7 @@ class EventsModel:
             if "client" in query_params:
                 client = query_params["client"]
             if "level" in query_params:
-                level = query_params["level"]
+                level = [int(i) for i in query_params["level"]]
             if "start" in query_params:
                 start = query_params["start"]
             if "end" in query_params:
@@ -45,8 +45,8 @@ class EventsModel:
                 constraints.append(f'ClientName = ?')
                 values.append(client)
             if level:
-                constraints.append(f'Level in ?')
-                values.append(({", ".join(level)}))
+                # int values, so no issue of sql injection
+                constraints.append(f'Level in ({", ".join([str(i) for i in level])})')
             if start:
                 constraints.append(f'EpochTime >= ?')
                 values.append(start)
@@ -64,10 +64,12 @@ class EventsModel:
             if limit_tpl:
                 query += f'{limit_tpl}'
             query += ';'
-        except Exception as ex:
-            print("Exception", ex)
+        except ValueError as ve:
+            log.error("Error in building query", ve)
             return None
-        print("query", query)
+        except TypeError as te:
+            log.error("Error in building query", te)
+            return None
         return query, tuple(values)
 
     @classmethod
@@ -77,7 +79,7 @@ class EventsModel:
                 )
 
     @classmethod
-    def execute_query(cls, db_dir, database, query, values, table_name, log):
+    def execute_query(cls, sqlite_path, query, values, table_name, log):
         """
         Return rows of logs after applying query if query is not None, else
         returns all of the logs
@@ -89,8 +91,7 @@ class EventsModel:
             dict of rows
         """
         try:
-            connection = SQLiteInstance(
-                os.path.join(db_dir, database)).get_instance()
+            connection = SQLiteInstance(sqlite_path).get_instance()
             cursor = connection.cursor()
             result = cursor.execute(query, values)
             return result.fetchall()

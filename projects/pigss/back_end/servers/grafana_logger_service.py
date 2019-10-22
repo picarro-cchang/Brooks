@@ -11,6 +11,8 @@ from datetime import datetime, timedelta
 from aiohttp import web, WSMsgType, WSCloseCode
 
 from back_end.lologger.lologger_client import LOLoggerClient
+from common.CmdFIFO import CmdFIFOServerProxy
+from common.rpc_ports import rpc_ports
 from back_end.servers.service_template import ServiceTemplate
 from common.async_helper import log_async_exception
 from back_end.grafana_logger_plugin.model import EventsModel
@@ -144,8 +146,11 @@ class GrafanaLoggerService(ServiceTemplate):
             row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
         """
         query = None
-        db_dir = self.app["config"]["sqlite"]["db_dir"]
-        database = self.app["config"]["sqlite"]["database"]
+
+        lologger_proxy = CmdFIFOServerProxy(
+            f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        sqlite_path = lologger_proxy.get_sqlite_path()
+
         table_name = self.app["config"]["sqlite"]["table_name"]
         if len(query_params) > 0:
             query, values = EventsModel.build_sql_select_query(
@@ -154,7 +159,7 @@ class GrafanaLoggerService(ServiceTemplate):
             query = EventsModel.build_select_default(table_name, log)
         ws['query'] = query
         if query is not None:
-            return EventsModel.execute_query(db_dir, database, query, values, table_name, log)
+            return EventsModel.execute_query(sqlite_path, query, values, table_name, log)
 
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \

@@ -4,15 +4,10 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import { notifyError, notifySuccess } from '../utils/Notifications';
-
 import { LogProps } from './types';
 import { LogLayout } from './LogLayout';
 import { LOG_LIMIT, REFRESH_INTERVAL } from '../constants';
-
-// @ts-ignore
 import { SocketURL } from '../constants';
-// @ts-ignore
-import console = require('console');
 
 interface Props extends PanelProps<LogProps> {}
 
@@ -60,14 +55,10 @@ export class LogPanel extends PureComponent<Props, State> {
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
-    // @ts-ignore
+
     const isDateTimeFromChanged = this.props.data.request.range.raw.from !== prevProps.data.request.range.raw.from;
-    // @ts-ignore
     const isDateTimeToChanged = this.props.data.request.range.raw.to !== prevProps.data.request.range.raw.to;
-    // @ts-ignore
     const isIntervalChanged = this.props.data.request.interval !== prevProps.data.request.interval;
-    // ERASE
-    // @ts-ignore
     const interval = parseInt(this.props.replaceVariables('$interval'), 10);
 
     if (
@@ -84,13 +75,13 @@ export class LogPanel extends PureComponent<Props, State> {
   }
 
   getQueryObj = (props: any) => {
+    // Removing @ts-ingore gives build err, as it thinks properties "probably" doesn't exist.
     // @ts-ignore
     const start = new Date(this.props.data.request.range.from).getTime();
     // @ts-ignore
     const end = new Date(this.props.data.request.range.to).getTime();
     // @ts-ignore
     const interval = parseInt(this.props.replaceVariables('$interval'), 10);
-    // console.log("Intrerval Now ", interval);
     const query: any = {
       level: this.props.options.level.map((item: any) => item.value),
       limit: this.props.options.limit,
@@ -108,9 +99,8 @@ export class LogPanel extends PureComponent<Props, State> {
   };
 
   componentWillUnmount() {
-    console.log('Component will unmount');
     this.ws.send('CLOSE');
-    this.ws.close(1000, 'Client Initited Connection Termination');
+    this.ws.close(1000, 'Client Initiated Connection Termination');
   }
 
   render() {

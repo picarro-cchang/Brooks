@@ -28,11 +28,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   // Code to download the file
   downloadData = (blob: any, fileName: string) => {
     const a = document.createElement('a');
-    // @ts-ignore
+
     document.getElementById('file-list').appendChild(a);
     // @ts-ignore
     a.style = 'display: none';
-
     const url = window.URL.createObjectURL(blob);
     a.href = url;
     a.download = fileName;
@@ -44,7 +43,6 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   generateFile = () => {
     const { timeRange, keys } = this.state;
     if (timeRange.from._d.getTime() === timeRange.to._d.getTime() || keys.length === 0) {
-      console.log('Invalid Query parameters');
       notifyError('Invalid Query parameters');
       return;
     }

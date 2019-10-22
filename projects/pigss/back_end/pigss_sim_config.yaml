@@ -68,8 +68,6 @@ Services:
 Plugins:
   GrafanaLogger:
     sqlite:
-      database: '_2019_10.db'
-      db_dir: '/home/picarro/git/host/projects/'
       table_name: 'Events'
       columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
     limit: 20

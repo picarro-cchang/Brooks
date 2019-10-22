@@ -5,13 +5,13 @@ export const API = {
     return fetch(url, { method: 'GET' })
       .then(response => {
         if (!response.ok) {
-          throw Error('Netwoek GET request failed.');
+          throw Error('Network GET request failed.');
         }
         return response;
       })
       .catch(err => {
         notifyError(err.message);
-        throw Error('Netwoek GET request failed.');
+        throw Error('Network GET request failed.');
       });
   },
 };

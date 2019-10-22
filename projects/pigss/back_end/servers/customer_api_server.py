@@ -1,6 +1,6 @@
 #!usr/bin/env/python3
 
-""" Creates an API server which fascilitates customers to query influx db
+""" Creates an API server which facilitates customers to query influx db
 """
 
 from urllib.parse import parse_qs
