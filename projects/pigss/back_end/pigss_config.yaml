@@ -2,7 +2,7 @@ Configuration: # This is for high level information
   RpcTunnel:
     config_file: rpc_tunnel_configs.json
   Database:
-    server: localhost
+    server: 0.0.0.0
     port: 8086
     name: pigss_data
   HttpServer:
@@ -28,8 +28,13 @@ Services:
 
 Plugins:
   GrafanaLogger:
+    sqlite:
+      database: '_2019_10.db'
+      db_dir: '/home/picarro/git/host/projects/'
+      table_name: 'Events'
+      columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
     limit: 20
-    measurements: ["crds", "port_history"]
+    interval: 3
     timeout: 300
     retries: 1
 

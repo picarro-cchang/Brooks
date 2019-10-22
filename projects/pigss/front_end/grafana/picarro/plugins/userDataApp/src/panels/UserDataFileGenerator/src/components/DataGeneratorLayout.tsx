@@ -37,7 +37,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     a.href = url;
     a.download = fileName;
     a.click();
-    notifySuccess(`File succefully downloaded in Downloads folder.`);
+    notifySuccess(`File successfully downloaded in Downloads folder.`);
     window.URL.revokeObjectURL(url);
   };
 

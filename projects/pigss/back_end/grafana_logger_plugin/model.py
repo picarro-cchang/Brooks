@@ -1,3 +1,5 @@
+import os
+
 from common.sqlite_connection import SQLiteInstance
 
 
@@ -68,7 +70,7 @@ class EventsModel:
                 )
 
     @classmethod
-    def execute_query(cls, query, table_name, log):
+    def execute_query(cls, db_dir, database, query, table_name, log):
         """
         Return rows of logs after applying query if query is not None, else
         returns all of the logs
@@ -80,7 +82,7 @@ class EventsModel:
             dict of rows
         """
         try:
-            connection = SQLiteInstance("/home/picarro/git/host/projects/_2019_10.db").get_instance()
+            connection = SQLiteInstance(os.path.join(db_dir, database)).get_instance()
             cursor = connection.cursor()
             result = cursor.execute(query)
             return result.fetchall()

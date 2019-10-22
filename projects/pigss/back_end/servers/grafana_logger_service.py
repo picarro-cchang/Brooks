@@ -35,14 +35,8 @@ class GrafanaLoggerService(ServiceTemplate):
 
     async def on_startup(self, app):
         log.info("GrafanaLoggerService is starting up")
-        self.app["config"] = {
-            'sqlite': {
-                'database': 'Logs.db', 'db_dir': './', 'table': 'Events',
-                'columns': [
-                    'rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level'
-                ],
-                'limit': 20, 'interval': 3},
-            'server': {'host': '0.0.0.0', 'port': 8004}}
+
+        self.app["config"] = self.app["farm"].config.get_glogger_plugin_config()
 
         self.app["websockets"] = []
         self.tasks = []
@@ -109,7 +103,10 @@ class GrafanaLoggerService(ServiceTemplate):
         ws["query_params"]["columns"] = self.app["config"]["sqlite"]["columns"]
 
         if "limit" not in ws["query_params"]:
-            ws["query_params"]["limit"] = self.app["config"]["sqlite"]["limit"]
+            ws["query_params"]["limit"] = self.app["config"]["limit"]
+
+        if "interval" not in ws["query_params"]:
+            ws["query_params"]["interval"] = self.app["config"]["interval"]
 
         self.app["websockets"].append(ws)
 
@@ -147,7 +144,9 @@ class GrafanaLoggerService(ServiceTemplate):
             row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
         """
         query = None
-        table_name = self.app["config"]["sqlite"]["table"]
+        db_dir = self.app["config"]["sqlite"]["db_dir"]
+        database = self.app["config"]["sqlite"]["database"]
+        table_name = self.app["config"]["sqlite"]["table_name"]
         if len(query_params) > 0:
             query = EventsModel.build_sql_select_query(
                 query_params, table_name, log)
@@ -155,7 +154,7 @@ class GrafanaLoggerService(ServiceTemplate):
             query = EventsModel.build_select_default(table_name, log)
         ws['query'] = query
         if query is not None:
-            return EventsModel.execute_query(query, table_name, log)
+            return EventsModel.execute_query(db_dir, database, query, table_name, log)
 
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \
@@ -172,12 +171,9 @@ class GrafanaLoggerService(ServiceTemplate):
         try:
             is_time = (ws['next_run'] <= current_time)
 
-            if "interval" not in ws["query_params"]:
-                print("what here", self.app["config"]["sqlite"]["interval"])
-                ws["query_params"]["interval"] = self.app["config"]["sqlite"]["interval"]
-
             is_new_interval = current_time + \
-                timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
+                timedelta(seconds=ws['query_params']
+                          ['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
             log.error("Error in should_send_task", ve)

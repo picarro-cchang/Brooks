@@ -173,7 +173,10 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             self.app["db_client"], log, query_params, measurements)
 
         if len(result) == 0:
-            return web.json_response(text="No observation in measurements", status=200)
+            data = {
+                "message": "No observation in measurements"
+            }
+            return web.json_response(data=data, status=200)
 
         try:
             host_name = environ["HOSTNAME"]
