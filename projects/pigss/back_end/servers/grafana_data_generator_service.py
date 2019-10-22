@@ -13,7 +13,7 @@ from aiohttp import web
 from common.influx_connection import InfluxDBInstance
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.service_template import ServiceTemplate
-from back_end.grafana_data_generator_plugin.db import get_points, get_field_keys
+from back_end.grafana_data_generator_plugin.model import Model
 
 log = LOLoggerClient(client_name="UserDataFileGenerator")
 
@@ -169,7 +169,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             "to": int(query_dict["to"][0]),
         }
         measurements = self.app["config"]["database"]["measurements"]
-        result = await get_points(
+        result = await Model.get_points(
             self.app["db_client"], log, query_params, measurements)
 
         if len(result) == 0:
@@ -204,7 +204,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         Returns:
             json -- list of permissible user_keys
         """
-        field_keys = await get_field_keys(self.app["db_client"], log)
+        field_keys = await Model.get_field_keys(self.app["db_client"], log)
         user_keys = self.app["config"]["server"]["user_keys"]
         return web.json_response(
             {"keys": list(filter(lambda x: x in field_keys, user_keys))}
