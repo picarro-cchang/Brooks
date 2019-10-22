@@ -432,6 +432,23 @@ channels 5-8.
 
 14799059
 
+#### PRS.ALPHA n ####
+
+Set the exponential moving average factor for pressure readings.  See
+[this Wikipedia
+page](https://en.wikipedia.org/wiki/Moving_average#Exponential_moving_average)
+for a description of this factor.  In our case, alpha values of 0-1
+are represented by settings of 0-65535, where 65535 gives the least
+averaging, and 0 gives the most.
+
+##### Parameter (n) #####
+
+Integers 0-65535
+
+##### Typical Return #####
+
+0
+
 ### Proportional bypass valve commands ###
 
 #### CHx.BYP.DAC n ####
@@ -655,3 +672,11 @@ parent state ID during channel identification.
 
 Added the [ACTIVECH?](#activech) query to return the active channels
 discovered during channel identification.
+
+### Version 1.1.4 ###
+  * Turned pressure reads back on at 40 Hz.  This slow rate is
+    designed to accommodate rev A Topaz boards.  Use the new 
+  * A broken USB channel or physical connection now puts the system
+    into `standby` instead of `shutdown`.  The system will show a red
+    communication light on the front panel while the connection is
+    broken, but at least the light will stay on.

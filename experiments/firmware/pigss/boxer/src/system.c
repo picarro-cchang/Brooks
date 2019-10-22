@@ -567,7 +567,7 @@ void system_comcheck_task( void ) {
     return;
   } else {
     logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
-    system_enter_shutdown();
+    system_enter_standby();
     return;
   }
 }
