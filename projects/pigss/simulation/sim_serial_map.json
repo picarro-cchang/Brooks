@@ -2,6 +2,12 @@
   "Name": "MadMapper",
   "Devices": {
     "Serial_Devices": {
+      "/dev/ttyUSB0": {
+        "Driver": "AlicatDriver",
+        "Path": "/dev/ttyUSB0",
+        "Baudrate": 19200,
+        "RPC_Port": 33020
+      },
       "/dev/ttyACM4": {
         "Driver": "PigletDriver",
         "Bank_ID": 1,
@@ -31,6 +37,20 @@
         "Path": "/dev/ttyACM0",
         "Baudrate": 38400,
         "RPC_Port": 33073
+      },
+      "/dev/ttyACM1": {
+        "Driver": "NumatoDriver",
+        "Path": "/dev/ttyACM1",
+        "Baudrate": 19200,
+        "Numato_ID": 0,
+        "RPC_Port": 33030
+      },
+      "/dev/ttyACM2": {
+        "Driver": "NumatoDriver",
+        "Path": "/dev/ttyACM2",
+        "Baudrate": 19200,
+        "Numato_ID": 1,
+        "RPC_Port": 33031
       }
     }
   }
