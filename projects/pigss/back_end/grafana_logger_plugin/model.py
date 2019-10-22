@@ -35,19 +35,25 @@ class EventsModel:
             # Sequential Query Building, careful
             query = ""
             constraints = []
+            values = []
             columns_tpl = (", ".join(columns))
 
             if rowid:
-                constraints.append((f'rowid > {rowid}'))
+                constraints.append((f'rowid > ?'))
+                values.append(rowid)
             if client:
-                constraints.append(f'ClientName = "{client}"')
+                constraints.append(f'ClientName = ?')
+                values.append(client)
             if level:
-                constraints.append(f'Level in ({", ".join(level)})')
+                constraints.append(f'Level in ?')
+                values.append(({", ".join(level)}))
             if start:
-                constraints.append(f'EpochTime >= {start}')
+                constraints.append(f'EpochTime >= ?')
+                values.append(start)
             if end:
-                constraints.append(f'EpochTime <= {end}')
-            if limit:
+                constraints.append(f'EpochTime <= ?')
+                values.append(end)
+            if limit and isinstance(limit, int):
                 limit_tpl = (f'LIMIT {limit}')
 
             # Respect the space between constraints
@@ -61,7 +67,8 @@ class EventsModel:
         except Exception as ex:
             print("Exception", ex)
             return None
-        return query
+        print("query", query)
+        return query, tuple(values)
 
     @classmethod
     def build_select_default(cls, table_name, log):
@@ -70,7 +77,7 @@ class EventsModel:
                 )
 
     @classmethod
-    def execute_query(cls, db_dir, database, query, table_name, log):
+    def execute_query(cls, db_dir, database, query, values, table_name, log):
         """
         Return rows of logs after applying query if query is not None, else
         returns all of the logs
@@ -85,7 +92,7 @@ class EventsModel:
             connection = SQLiteInstance(
                 os.path.join(db_dir, database)).get_instance()
             cursor = connection.cursor()
-            result = cursor.execute(query)
+            result = cursor.execute(query, values)
             return result.fetchall()
         except FileNotFoundError:
             log.error("DB File does not exist.")

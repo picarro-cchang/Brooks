@@ -148,13 +148,13 @@ class GrafanaLoggerService(ServiceTemplate):
         database = self.app["config"]["sqlite"]["database"]
         table_name = self.app["config"]["sqlite"]["table_name"]
         if len(query_params) > 0:
-            query = EventsModel.build_sql_select_query(
+            query, values = EventsModel.build_sql_select_query(
                 query_params, table_name, log)
         else:
             query = EventsModel.build_select_default(table_name, log)
         ws['query'] = query
         if query is not None:
-            return EventsModel.execute_query(db_dir, database, query, table_name, log)
+            return EventsModel.execute_query(db_dir, database, query, values, table_name, log)
 
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \
