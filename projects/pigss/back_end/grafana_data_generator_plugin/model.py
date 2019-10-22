@@ -17,8 +17,8 @@ class Model:
 
     @classmethod
     async def get_points(cls, client, log, query_params, measurements):
-        """ Given query_params dictionary, executes SELECT statement to get points
-        from measurement "crds"
+        """ Given query_params dictionary, executes SELECT statement to get
+        points from measurement "crds"
 
         Arguments:
             query_params {[dict]} -- [ dictionary of all the paramters ]
@@ -36,11 +36,9 @@ class Model:
             keys = [f"last({key})" for key in keys]
             keys = ", ".join(keys)
 
-            query = (
-                f"SELECT {keys} FROM {measurements} "
-                f"WHERE time > {time_from} AND time <= {time_to} fill(previous) "
-                f"ORDER BY time DESC"
-            )
+            query = (f"SELECT {keys} FROM {measurements} "
+                     f"WHERE time > {time_from} AND time <= {time_to} fill(previous) "
+                     f"ORDER BY time DESC")
 
             data_generator = client.query(query=query, epoch="ms").get_points()
             result = []

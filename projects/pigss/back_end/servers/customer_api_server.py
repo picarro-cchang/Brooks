@@ -1,5 +1,4 @@
 #!usr/bin/env/python3
-
 """ Creates an API server which facilitates customers to query influx db
 """
 
@@ -17,7 +16,6 @@ log = LOLoggerClient(client_name="CustomerAPIServer")
 
 
 class CustomerAPIService(ServiceTemplate):
-
     def __init__(self):
         super().__init__()
 
@@ -31,8 +29,7 @@ class CustomerAPIService(ServiceTemplate):
         self.app["config"] = self.app["farm"].config.get_gdg_plugin_config()
 
         # Create influxdb connection
-        self.app["db_client"] = InfluxDBInstance(
-            self.app["config"]["database"]).get_instance()
+        self.app["db_client"] = InfluxDBInstance(self.app["config"]["database"]).get_instance()
 
     async def on_shutdown(self, app):
         log.info("CustomerAPIServer is shutting down")
@@ -78,7 +75,6 @@ class CustomerAPIService(ServiceTemplate):
         if "valve_pos" not in keys:
             keys.append("valve_pos")
 
-        
         if "from" in query_params and "to" in query_params:
             time_from = query_params["from"][0]
             time_to = query_params["to"][0]
@@ -92,8 +88,7 @@ class CustomerAPIService(ServiceTemplate):
                 else:
                     # Multiplier for conversion into ns timestamps
                     i = 1000000000
-                    time_from = (int)(
-                        parse(time_from, fuzzy=True).timestamp() * i)
+                    time_from = (int)(parse(time_from, fuzzy=True).timestamp() * i)
                     time_to = (int)(parse(time_to, fuzzy=True).timestamp() * i)
             except OverflowError:
                 return web.json_response(
@@ -102,22 +97,9 @@ class CustomerAPIService(ServiceTemplate):
                     status=400,
                 )
             except ValueError:
-                return web.json_response(
-                    text="There is an issue with passed from and to fields.",
-                    status=400
-                )
+                return web.json_response(text="There is an issue with passed from and to fields.", status=400)
         else:
             latest = True
 
         return web.json_response(
-            {
-                "keys": await Model.get_points(
-                    self.app["db_client"],
-                    log,
-                    keys,
-                    measurement,
-                    time_from,
-                    time_to,
-                    latest)
-            }
-        )
+            {"keys": await Model.get_points(self.app["db_client"], log, keys, measurement, time_from, time_to, latest)})

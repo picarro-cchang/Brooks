@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 """ Provides an API for sending logs to grafana logger plugin using websockets
 """
 
@@ -23,7 +22,6 @@ log = LOLoggerClient(client_name="GrafanaLoggerService", verbose=True)
 
 
 class GrafanaLoggerService(ServiceTemplate):
-
     def __init__(self):
         super().__init__()
 
@@ -42,8 +40,7 @@ class GrafanaLoggerService(ServiceTemplate):
 
         self.app["websockets"] = []
         self.tasks = []
-        self.socket_stats = {"ws_connections": 0,
-                             "ws_disconnections": 0, "ws_open": 0}
+        self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
         self.tasks.append(asyncio.create_task(self.listener(app)))
 
     async def on_shutdown(self, app):
@@ -54,8 +51,7 @@ class GrafanaLoggerService(ServiceTemplate):
             task.cancel()
 
         for ws in self.app["websockets"]:
-            await ws.close(code=WSCloseCode.GOING_AWAY,
-                           message='Server shutdown')
+            await ws.close(code=WSCloseCode.GOING_AWAY, message='Server shutdown')
 
         log.info("GrafanaLoggerService is shutting down")
 
@@ -121,10 +117,7 @@ class GrafanaLoggerService(ServiceTemplate):
                     query_params = {}
                     if msg.data is not None:
                         query_params = loads(msg.data)
-                    self.app["websockets"][i]['query_params'] = {
-                        **self.app["websockets"][i]['query_params'],
-                        **query_params
-                    }
+                    self.app["websockets"][i]['query_params'] = {**self.app["websockets"][i]['query_params'], **query_params}
             elif msg.type == WSMsgType.ERROR:
                 ws.exception()
             elif msg.type == WSMsgType.CLOSE:
@@ -143,18 +136,17 @@ class GrafanaLoggerService(ServiceTemplate):
         params:
             query_params: dict
         returns:
-            row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
+            row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage",
+             "Level"]
         """
         query = None
 
-        lologger_proxy = CmdFIFOServerProxy(
-            f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
         sqlite_path = lologger_proxy.get_sqlite_path()
 
         table_name = self.app["config"]["sqlite"]["table_name"]
         if len(query_params) > 0:
-            query, values = EventsModel.build_sql_select_query(
-                query_params, table_name, log)
+            query, values = EventsModel.build_sql_select_query(query_params, table_name, log)
         else:
             query = EventsModel.build_select_default(table_name, log)
         ws['query'] = query
@@ -186,8 +178,8 @@ class GrafanaLoggerService(ServiceTemplate):
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def listener(self, app, DEFAULT_INTERVAL=1.0):
         """
-        The following code handles multiple clients connected to the server. It sends
-        out the logs by reading query parameters.
+        The following code handles multiple clients connected to the server.
+        It sends out the logs by reading query parameters.
         """
         while True:
             await asyncio.sleep(1)
@@ -197,7 +189,9 @@ class GrafanaLoggerService(ServiceTemplate):
                     ws['next_run'] = current_time
             try:
                 if len(self.app["websockets"]) > 0:
-                    asyncio.gather(*[self.send_task(ws, current_time)
-                                     for ws in self.app["websockets"] if self.should_send_task(ws, current_time)])
+                    asyncio.gather(*[
+                        self.send_task(ws, current_time)
+                        for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
+                    ])
             except ConnectionError as e:
                 log.error(f"{e} in listener")

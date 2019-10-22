@@ -1,10 +1,7 @@
-import os
-
 from common.sqlite_connection import SQLiteInstance
 
 
 class EventsModel:
-
     @classmethod
     def build_sql_select_query(cls, query_params, table_name, log):
         """
@@ -74,9 +71,7 @@ class EventsModel:
 
     @classmethod
     def build_select_default(cls, table_name, log):
-        return (f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level"
-                f"FROM {table_name} ORDER BY rowid ASC LIMIT 20"
-                )
+        return (f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level" f"FROM {table_name} ORDER BY rowid ASC LIMIT 20")
 
     @classmethod
     def execute_query(cls, sqlite_path, query, values, table_name, log):

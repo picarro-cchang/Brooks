@@ -32,8 +32,7 @@ config_path = [
     os.path.join(os.getenv("HOME"), ".config", "pigss"),
     os.path.dirname(os.path.abspath(__file__))
 ]
-config_path = [p for p in config_path if p is not None and os.path.exists(
-    p) and os.path.isdir(p)]
+config_path = [p for p in config_path if p is not None and os.path.exists(p) and os.path.isdir(p)]
 
 
 class PigssRunner:
@@ -74,8 +73,7 @@ class PigssRunner:
             await setup_dummy_interfaces(nsim)
             await asyncio.sleep(2.0)
         self.app['farm'] = farm
-        self.set_host(farm.config.get_http_server_port(),
-                      farm.config.get_http_server_listen_address())
+        self.set_host(farm.config.get_http_server_port(), farm.config.get_http_server_listen_address())
 
         cors = aiohttp_cors.setup(
             self.app, defaults={"*": aiohttp_cors.ResourceOptions(
@@ -106,13 +104,11 @@ class PigssRunner:
 
         grafana_data_generator_service = GrafanaDataGeneratorService()
         grafana_data_generator_service.app['farm'] = self.app['farm']
-        self.app.add_subapp("/grafana_data_generator/",
-                            grafana_data_generator_service.app)
+        self.app.add_subapp("/grafana_data_generator/", grafana_data_generator_service.app)
 
         customer_api_service = CustomerAPIService()
         customer_api_service.app['farm'] = self.app['farm']
-        self.app.add_subapp("/public/",
-                            customer_api_service.app)
+        self.app.add_subapp("/public/", customer_api_service.app)
 
         setup_swagger(self.app)
 
@@ -123,8 +119,7 @@ class PigssRunner:
         await self.runner.setup()
         site = web.TCPSite(self.runner, self.addr, self.port)
         await site.start()
-        log.info(
-            f"======== Running on http://{site._host}:{site._port} ========")
+        log.info(f"======== Running on http://{site._host}:{site._port} ========")
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
@@ -169,8 +164,7 @@ async def async_main(config_filename):
                 found = True
                 break
         if found:
-            log.info(
-                f"Starting PigssRunner with configuration file {filename}")
+            log.info(f"Starting PigssRunner with configuration file {filename}")
             service = PigssRunner()
             await service.server_init(filename)
             await Framework.done()

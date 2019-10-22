@@ -16,8 +16,7 @@ class Model:
         return isinstance(dt, int)
 
     @classmethod
-    async def get_points(cls, client, log, keys, measurement, time_from=None, time_to=None,
-                         latest=False):
+    async def get_points(cls, client, log, keys, measurement, time_from=None, time_to=None, latest=False):
         """Generate and execute SQL statements to fetch points from measurement
 
         Arguments:
@@ -25,7 +24,7 @@ class Model:
             measurement {list(str)} -- list of influx measurement
 
         Returns:
-            {list(dict)} -- the list of all rows satisying given conditions
+            {list(dict)} -- the list of all rows satisfying given conditions
         """
         try:
             # Filter common keys and create a string
@@ -40,10 +39,7 @@ class Model:
             if not latest:
                 query += f"WHERE time >= {time_from} AND time <= {time_to}"
             else:
-                query = (
-                    f"SELECT {keys} FROM {measurement}"
-                    f" ORDER BY time DESC LIMIT 1",
-                )
+                query = (f"SELECT {keys} FROM {measurement}" f" ORDER BY time DESC LIMIT 1", )
 
             data_generator = client.query(query=query, epoch="ms").get_points()
             result = []
@@ -78,6 +74,6 @@ class Model:
             cls.__keys = result
             return result
         except ConnectionError:
-            log.error("ConnectionError in CustomerAPIServer", ce)
+            log.error("ConnectionError in CustomerAPIServer")
         except InfluxDBClientError:
             log.error("CustomerAPIServer: Error getting keys from databases.")
