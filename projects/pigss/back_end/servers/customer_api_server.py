@@ -11,7 +11,7 @@ from dateutil.parser import parse
 from back_end.lologger.lologger_client import LOLoggerClient
 from common.influx_connection import InfluxDBInstance
 from back_end.servers.service_template import ServiceTemplate
-from back_end.customer_api_server import db
+from back_end.customer_api_server.model import Model
 
 log = LOLoggerClient(client_name="CustomerAPIServer")
 
@@ -52,7 +52,7 @@ class CustomerAPIService(ServiceTemplate):
             JSON -- JSON object containing list of keys from measurement
         """
         measurement = self.app["config"]["database"]["measurements"]
-        return web.json_response({"keys": await db.get_keys(self.app["db_client"], log, measurement)})
+        return web.json_response({"keys": await Model.get_keys(self.app["db_client"], log, measurement)})
 
     async def get_points(self, request):
         """ Returns list of points in measurements based on provided constraints
@@ -78,7 +78,7 @@ class CustomerAPIService(ServiceTemplate):
         if "valve_pos" not in keys:
             keys.append("valve_pos")
 
-        keys = ", ".join(keys)
+        
         if "from" in query_params and "to" in query_params:
             time_from = query_params["from"][0]
             time_to = query_params["to"][0]
@@ -111,7 +111,7 @@ class CustomerAPIService(ServiceTemplate):
 
         return web.json_response(
             {
-                "keys": await db.get_points(
+                "keys": await Model.get_points(
                     self.app["db_client"],
                     log,
                     keys,
