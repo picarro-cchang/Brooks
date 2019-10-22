@@ -7,6 +7,8 @@ class Model:
 
     @classmethod
     def get_common_keys(cls, keys):
+        if cls.__keys is None:
+            raise InfluxDBClientError()
         return list(set(cls.__keys) & set(keys))
 
     @classmethod
@@ -28,11 +30,11 @@ class Model:
         try:
             # Filter common keys and create a string
             keys = cls.get_common_keys(keys)
-            keys = ", ".join(keys)
 
             if latest is False and not (cls.is_dt(time_from) or cls.is_dt(time_to)):
                 raise InfluxDBClientError()
 
+            keys = ", ".join(keys)
             query = f"SELECT {keys} FROM {measurement} "
 
             if not latest:
