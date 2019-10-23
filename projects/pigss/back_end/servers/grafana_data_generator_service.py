@@ -179,7 +179,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             if success:
                 return web.json_response({"filename": file_name})
         except KeyError as ke:
-            log.error("HOSTNAME enveironment variable is not defined.", ke)
+            log.error(f"HOSTNAME enveironment variable is not defined. {ke}")
 
     async def get_user_keys(self, request):
         """ Return the keys to the user which are not in admin_keys config

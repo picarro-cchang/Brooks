@@ -49,9 +49,9 @@ class Model:
             return result
 
         except ConnectionError as ce:
-            log.error("ConnectionError in CustomerAPIServer", ce)
+            log.error(f"ConnectionError in CustomerAPIServer {ce}")
         except InfluxDBClientError:
-            log.error("Error executing query", query)
+            log.error(f"Error executing query {query}")
 
     @classmethod
     async def get_keys(cls, client, log, measurement):
