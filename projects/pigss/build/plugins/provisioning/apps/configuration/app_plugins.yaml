@@ -10,5 +10,9 @@ path: ../../../../front_end/grafana/picarro/plugins/concentrationByValveApp/src/
 ---
 name: Current Values
 path: ../../../../front_end/grafana/picarro/plugins/currentValuesApp/src/plugin.json
-
-
+---
+name: Status App
+path: ../../../../front_end/grafana/picarro/plugins/statusApp/src/plugin.json
+---
+name: User Data App
+path: ../../../../front_end/grafana/picarro/plugins/userDataApp/src/plugin.json
