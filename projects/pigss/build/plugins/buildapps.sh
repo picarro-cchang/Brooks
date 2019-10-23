@@ -5,12 +5,15 @@ grafanaSourcePluginDestDir=${HOME}/git/host/projects/pigss/front_end/grafana/src
 # Location of custom grafana plugins in repo
 pluginSourceDir=${HOME}/git/host/projects/pigss/front_end/grafana/picarro/plugins
 # List of plugins to be built
+
 pluginList=('
     analyzerGraphsApp
     concentrationByValveApp
     simpodJsonDatasource
     currentValuesApp
     stateMachineApp
+    statusApp
+    userDataApp
     ')
 
 # Make the grafana source plugin directory if it doesn't exist
