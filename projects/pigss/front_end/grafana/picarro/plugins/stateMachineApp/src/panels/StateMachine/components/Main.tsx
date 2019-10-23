@@ -7,7 +7,7 @@ import PlanLoadPanel from "./PlanLoadPanel";
 import PlanSavePanel from "./PlanSavePanel";
 import deepmerge from "deepmerge";
 import Modal from "react-responsive-modal";
-import { notifyError, notifySuccess } from '../utils/Notifications';
+import {notifyError, notifySuccess} from '../utils/Notifications';
 import { ModalInfo, PlanPanelTypes } from "./../types";
 import EditPanel from "./EditPanel";
 import { ToastContainer } from 'react-toastify';
@@ -107,8 +107,14 @@ export class Main extends Component<any, any> {
     this.getDataViaApi();
 
     this.ws.onopen = () => {
-      notifySuccess("Web Socket Connected");
-      // on connecting, do nothing but log it to the console
+      // on connecting, do nothing
+      // notifySuccess(
+      //     <div>
+      //       <h6>
+      //         <b>Web Socket Connected!</b>
+      //       </h6>
+      //     </div>
+      // );
     };
 
     this.ws.onmessage = evt => {
@@ -117,7 +123,13 @@ export class Main extends Component<any, any> {
     };
 
     this.ws.onclose = () => {
-      notifyError("web socket disconnected");
+      notifyError(
+          <div>
+            <h6>
+              <b>Web Socket Disconnected!</b>
+            </h6>
+          </div>
+      );
       this.ws = new WebSocket(socketURL);
       this.getDataViaApi();
     };

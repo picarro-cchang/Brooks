@@ -21,7 +21,7 @@ interface BankPanelOptions {
 
 class BankPanel extends PureComponent<BankPanelOptions> {
   bankStyleOpt = {
-    READY: { color: "#fff", backgroundColor: "#797979" },
+    READY: { color: "#424242", backgroundColor: "#e4e4e4" },
     ACTIVE: { color: "#fff", backgroundColor: "#56a64b" },
     CLEAN: { color: "#fff", backgroundColor: "#4BBEE3" },
     REFERENCE: { color: "#440", backgroundColor: "#e0b400" }
@@ -130,7 +130,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       <div>
         <div className="panel-bank" style={bankStyle}>
           <div style={{ width: "100%" }}>
-            <h2 style={{ color: "white" }}>{value}</h2>
+            <h2 style={{ color: "#424242", marginBottom: "10px" }}>{value}</h2>
             <div className="grid-bank">{channelButtons}</div>
             {cleanButton}
           </div>

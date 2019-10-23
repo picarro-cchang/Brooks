@@ -1,6 +1,6 @@
 .bank-btn {
-  border-radius: 25%;
-  border: 3px solid hsla(0, 0%, 64%, 0.45);
+  /*border-radius: 25%;*/
+  border: 2px solid hsla(0, 0%, 100%, 0.61);
   height: 90px;
   width: 90px;
   color: black;
@@ -19,19 +19,20 @@
 }
 .btn-clean {
   width: 100%;
-  border: 3px solid hsla(0, 0%, 100%, 0.34);
+  /*border: 3px solid hsla(0, 0%, 100%, 0.34);*/
   color: black;
-  border-radius: 10px;
+  /*border-radius: 10px;*/
 }
 .btn-clean-act {
   border: none;
 }
 
 .btn-ready {
-  background-color: #fff;
+  background-color: #ffffff;
+  border: 2px solid hsl(0, 0%, 42%);
 }
 .btn-inverse-2.disabled {
-  background-color: #000000bf;
+  background-color: #484848;
   opacity: 0.9;
 }
 .test {
@@ -88,9 +89,9 @@
 .panel-plan {
   height: 640px;
   /*background-color: #464646;*/
-  background-color: #ffffff;
+  background-color: #292929;
   padding: 10px;
-  border-radius: 5px;
+  border-radius: 2px;
 }
 .panel-save {
   height: 400px;
@@ -100,7 +101,7 @@
   border-radius: 5px;
 }
 .panel-plan-text {
-  color: #424242;
+  color: #d6d6d6;
 }
 .panel-plan-inner {
   overflow-x: hidden;
@@ -123,7 +124,7 @@
 .panel-bank {
   border: 2px solid #1111117a;
   margin-right: 2%;
-  border-radius: 10px;
+  /*border-radius: 10px;*/
   padding: 10px;
   float: left;
   background-color: rgba(136, 136, 136, 0.51);
@@ -146,12 +147,14 @@
   display: inline-block;
 }
 .ref-btn {
+  background-color: #e4e4e4;
+  border: 2px solid hsl(0, 0%, 42%);
   grid-row-start: 2;
   grid-column-start: 1;
-  border-radius: 5px;
+  /*border-radius: 5px;*/
   color: black;
   height: 60px;
-  width: 20%;
+  /*width: 20%;*/
 }
 .ref-div {
   height: 15%;
