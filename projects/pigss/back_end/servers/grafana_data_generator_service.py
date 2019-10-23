@@ -26,10 +26,6 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app.router.add_get("/api/getfile", self.send_file)
         self.app.router.add_get("/api/getkeys", self.get_user_keys)
         self.app.router.add_get("/api/generatefile", self.generate_file)
-        self.app.router.add_route('GET', '/hello', self.hello)
-
-    async def hello(self, request):
-        return web.json_response(text="Hello")
 
     async def on_startup(self, app):
         log.info("GrafanaDataGeneratorService is starting up")

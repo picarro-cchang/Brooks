@@ -28,10 +28,6 @@ class GrafanaLoggerService(ServiceTemplate):
     def setup_routes(self):
         self.app.router.add_route("GET", "/ws", self.websocket_handler)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
-        self.app.router.add_route('GET', '/hello', self.hello)
-
-    async def hello(self, request):
-        return web.json_response(text="Hello")
 
     async def on_startup(self, app):
         log.info("GrafanaLoggerService is starting up")
