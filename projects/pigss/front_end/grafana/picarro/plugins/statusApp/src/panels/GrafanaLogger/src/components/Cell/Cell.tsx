@@ -17,7 +17,6 @@ export class Cell extends Component<Props> {
         {/* Severity Level */}
         <div className={'log-fields ' + 'severity-level-' + row[4]}>{row[4]}</div>
         {/* Epoch Time */}
-        {/* <div className="log-fields">{row[2]}</div> */}
         {/* Log Message */}
         <div className="log-fields log-message">{row[3]}</div>
       </div>
