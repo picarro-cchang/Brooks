@@ -1,5 +1,4 @@
 #!usr/bin/env/python3
-
 """ Provides an API for generating and downloading user data files
 """
 
@@ -13,13 +12,12 @@ from aiohttp import web
 from common.influx_connection import InfluxDBInstance
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.service_template import ServiceTemplate
-from back_end.grafana_data_generator_plugin.db import get_points, get_field_keys
+from back_end.grafana_data_generator_plugin.model import Model
 
 log = LOLoggerClient(client_name="UserDataFileGenerator")
 
 
 class GrafanaDataGeneratorService(ServiceTemplate):
-
     def __init__(self):
         super().__init__()
 
@@ -39,8 +37,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app["config"] = self.app["farm"].config.get_gdg_plugin_config()
 
         # Create influxdb connection
-        self.app["db_client"] = InfluxDBInstance(
-            self.app["config"]["database"]).get_instance()
+        self.app["db_client"] = InfluxDBInstance(self.app["config"]["database"]).get_instance()
 
     async def on_shutdown(self, app):
         log.info("GrafanaDataGeneratorService is shutting down")
@@ -64,9 +61,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         file_path = f"{data_dir}/{file_name}"
 
         if path.exists(file_path) and path.isfile(file_name):
-            return web.json_response(
-                {"message": "File already exists, try downloading it."}
-            )
+            return web.json_response({"message": "File already exists, try downloading it."})
 
         keys = result[0].keys()
         try:
@@ -78,9 +73,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         except IOError:
             return web.json_response(text="IO Error while writing the file.", status=503)
         except PermissionError:
-            return web.json_response(
-                text="Permission error occured while writing the file.", status=403
-            )
+            return web.json_response(text="Permission error occured while writing the file.", status=403)
         return False
 
     def chunks(self, stream, chunk_size=1024):
@@ -108,11 +101,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
 
         try:
             # Filter only CSV files
-            files = [
-                f
-                for f in listdir(data_dir)
-                if f.endswith(self.app["config"]["server"]["file_type"])
-            ]
+            files = [f for f in listdir(data_dir) if f.endswith(self.app["config"]["server"]["file_type"])]
         except PermissionError:
             return web.json_response(text="OS Permission Error", status=404)
 
@@ -140,9 +129,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
 
         stats = stat(file_path)
 
-        res = web.StreamResponse(
-            headers={"Content-Disposition": f"Attachment; filename={file_name}"}
-        )
+        res = web.StreamResponse(headers={"Content-Disposition": f"Attachment; filename={file_name}"})
         res.content_type = file_type
         res.content_length = stats.st_size
 
@@ -169,19 +156,18 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             "to": int(query_dict["to"][0]),
         }
         measurements = self.app["config"]["database"]["measurements"]
-        result = await get_points(
-            self.app["db_client"], log, query_params, measurements)
+        result = await Model.get_points(self.app["db_client"], log, query_params, measurements)
 
         if len(result) == 0:
-            return web.json_response(text="No observation in measurements", status=200)
+            data = {"message": "No observation in measurements"}
+            return web.json_response(data=data, status=200)
 
         try:
             host_name = environ["HOSTNAME"]
             data_dir = self.app["config"]["server"]["data_dir"]
 
             # python's epoch time is in seconds
-            time_from = datetime.fromtimestamp(
-                query_params["from"] / 1000000000)
+            time_from = datetime.fromtimestamp(query_params["from"] / 1000000000)
             time_to = datetime.fromtimestamp(query_params["to"] / 1000000000)
 
             from_formatted = time_from.strftime("%m-%d-%Y_%H%M%S")
@@ -201,8 +187,6 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         Returns:
             json -- list of permissible user_keys
         """
-        field_keys = await get_field_keys(self.app["db_client"], log)
+        field_keys = await Model.get_field_keys(self.app["db_client"], log)
         user_keys = self.app["config"]["server"]["user_keys"]
-        return web.json_response(
-            {"keys": list(filter(lambda x: x in field_keys, user_keys))}
-        )
+        return web.json_response({"keys": list(filter(lambda x: x in field_keys, user_keys))})

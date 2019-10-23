@@ -151,6 +151,7 @@ class LOLogger(object):
         self.server.register_function(self.get_verbose)
         self.server.register_function(self.set_log_level)
         self.server.register_function(self.get_log_level)
+        self.server.register_function(self.get_sqlite_path)
 
     def flip_verbose(self):
         """Switch verbose value to opposite from current."""
@@ -179,6 +180,10 @@ class LOLogger(object):
     def get_log_level(self):
         """Get current log level."""
         return self.LogLevel
+
+    def get_sqlite_path(self):
+        """Get path of the curretn sqlite DB file"""
+        return self.lologger_thread.db_path
 
     def _signal_handler(self, sig, frame):
         """
@@ -274,7 +279,7 @@ class LOLoggerThread(threading.Thread):
             return False
         for obj in zip(t, db_fields):
             if not isinstance(obj[0], obj[1][1]):
-                raise ValueError(f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
+                raise ValueError(f"Tuple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
                 return False
         return True
 
@@ -422,12 +427,12 @@ def parse_arguments():
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
     parser.add_argument('-l', '--log_level', help='LogLevel', default=20)
-    parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=".")
+    parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=os.getcwd())
     parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
     parser.add_argument('-prh',
                         '--db_filename_prefix_hostname',
                         help='SQLite filename will be started with that hostname',
-                        default=False,
+                        default=None,
                         action="store_true")
     parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file',
                         default=True)  # this is kinda wrong
@@ -454,6 +459,10 @@ def main():
     args = parse_arguments()
     print(f"LOLogger is about to start.")
     print(f"RPC server will be available at {args.rpc_port} in a sec.")
+
+    if not os.path.isabs(args.db_path):
+        args.db_path = os.path.abspath(args.db_path)
+
     lologger = LOLogger(
         db_folder_path=args.db_path,  # noqa
         db_filename_prefix=args.db_filename_prefix,

@@ -31,16 +31,13 @@ class InfluxDBInstance:
             pass
 
         try:
-            InfluxDBInstance.__instance = self = InfluxDBClient(
-                host=config["host"],
-                port=config["port"],
-                timeout=config["timeout"],
-                retries=config["retries"],
-                database=config["database"]
-            )
+            InfluxDBInstance.__instance = self = InfluxDBClient(host=config["host"],
+                                                                port=config["port"],
+                                                                timeout=config["timeout"],
+                                                                retries=config["retries"],
+                                                                database=config["database"])
         except InfluxDBClientError:
-            raise ConnectionError(
-                "Unable to connect to influx db. Check configuration.")
+            raise ConnectionError("Unable to connect to influx db. Check configuration.")
 
     @classmethod
     def get_instance(cls):

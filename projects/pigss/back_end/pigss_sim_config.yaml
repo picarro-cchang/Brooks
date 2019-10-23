@@ -67,8 +67,11 @@ Services:
 
 Plugins:
   GrafanaLogger:
+    sqlite:
+      table_name: 'Events'
+      columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
     limit: 20
-    measurements: ["crds", "port_history"]
+    interval: 3
     timeout: 300
     retries: 1
 

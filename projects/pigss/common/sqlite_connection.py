@@ -14,7 +14,7 @@ class SQLiteInstance:
     def __init__(self, DB_FILE_PATH):
 
         if not os.path.isfile(DB_FILE_PATH):
-            raise FileNotFoundError("Database file does not exist.")
+            raise FileNotFoundError(f"Database file does not exist: {DB_FILE_PATH}")
 
         if SQLiteInstance.__instance is not None:
             pass
