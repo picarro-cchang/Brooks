@@ -279,7 +279,7 @@ class LOLoggerThread(threading.Thread):
             return False
         for obj in zip(t, db_fields):
             if not isinstance(obj[0], obj[1][1]):
-                raise ValueError(f"Tupple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
+                raise ValueError(f"Tuple element {obj[0]} is type of {type(obj[0])}, should be {obj[1][1]}")
                 return False
         return True
 
