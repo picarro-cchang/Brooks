@@ -167,10 +167,8 @@ class GrafanaLoggerService(ServiceTemplate):
     def should_send_task(self, ws, current_time):
         try:
             is_time = (ws['next_run'] <= current_time)
-
-            is_new_interval = current_time + \
-                timedelta(seconds=ws['query_params']
-                          ['interval']) < ws['next_run']
+            if 'next_run' in ws:
+                is_new_interval = current_time + timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
             log.error("Error in should_send_task", ve)

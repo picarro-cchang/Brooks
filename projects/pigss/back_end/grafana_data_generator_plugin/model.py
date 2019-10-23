@@ -33,7 +33,7 @@ class Model:
             if not (cls.is_dt(time_from) or cls.is_dt(time_to)):
                 raise InfluxDBClientError()
 
-            keys = [f"last({key})" for key in keys]
+            keys = [f"last({key}) as {key}" for key in keys]
             keys = ", ".join(keys)
 
             query = (f"SELECT {keys} FROM {measurements} "
