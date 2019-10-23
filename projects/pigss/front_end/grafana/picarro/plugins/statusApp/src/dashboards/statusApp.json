@@ -20,8 +20,8 @@
     {
       "datasource": null,
       "gridPos": {
-        "h": 9,
-        "w": 23,
+        "h": 11,
+        "w": 24,
         "x": 0,
         "y": 0
       },
@@ -101,7 +101,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Panel Title",
+      "title": "",
       "type": "logger-panel"
     }
   ],
@@ -185,5 +185,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 6
+  "version": 2
 }

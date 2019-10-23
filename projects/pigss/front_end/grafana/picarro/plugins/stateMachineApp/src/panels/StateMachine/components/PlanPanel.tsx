@@ -66,12 +66,12 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         {row < 10 ? (
           <label
             className="col-sm-1 panel-plan-text"
-            style={{  marginLeft: "7px", marginRight: "-7px" }}
+            style={{ fontSize: "17px", marginTop: "5px"}}
           >
             {row + ". "}
           </label>
         ) : (
-          <label className="col-sm-1 panel-plan-text" >
+          <label className="col-sm-1 panel-plan-text" style={{marginLeft: "-7px", marginRight: "7px", fontSize: "17px", marginTop: "5px"}}>
             {row + ". "}
           </label>
         )}

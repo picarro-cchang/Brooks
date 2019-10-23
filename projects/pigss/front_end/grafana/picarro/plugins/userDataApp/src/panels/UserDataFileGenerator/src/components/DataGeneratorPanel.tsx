@@ -21,7 +21,7 @@ export class DataGeneratorPanel extends PureComponent<Props> {
         {(theme: GrafanaTheme) => {
           return (
             <Fragment>
-              <DataGeneratorLayout options={{ ...options }} theme={theme} />;
+              <DataGeneratorLayout options={{ ...options }} theme={theme} />
               <ToastContainer />
             </Fragment>
           );
