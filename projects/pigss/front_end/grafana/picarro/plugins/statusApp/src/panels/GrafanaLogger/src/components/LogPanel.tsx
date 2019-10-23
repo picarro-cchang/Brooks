@@ -9,7 +9,7 @@ import { LogLayout } from './LogLayout';
 import { LOG_LIMIT, REFRESH_INTERVAL } from '../constants';
 import { SocketURL } from '../constants';
 
-interface Props extends PanelProps<LogProps> {}
+interface Props extends PanelProps<LogProps> { }
 
 interface State {
   data: string[][];
@@ -110,7 +110,7 @@ export class LogPanel extends PureComponent<Props, State> {
         {theme => {
           return (
             <Fragment>
-              <LogLayout options={{ ...options, data: this.state.data }} theme={theme} />;
+              <LogLayout options={{ ...options, data: this.state.data }} theme={theme} />
               <ToastContainer />
             </Fragment>
           );
