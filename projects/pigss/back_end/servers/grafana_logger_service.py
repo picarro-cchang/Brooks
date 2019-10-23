@@ -60,7 +60,7 @@ class GrafanaLoggerService(ServiceTemplate):
         description: Close DB Connection for graceful shutdown
         """
         # SQLiteInstance.close_connection()
-        # Figure out a better way to do this
+        # TODO: Figure out a better way to do this
         pass
 
     async def handle_stats(self, request):
