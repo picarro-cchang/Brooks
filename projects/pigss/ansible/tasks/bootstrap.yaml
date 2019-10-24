@@ -63,11 +63,13 @@
   systemd:
     state: enabled
     name: chrony
+  become: yes
 
 - name: Start chrony service
   systemd:
     state: started
     name: chrony
+  become: yes
 
 - name: Install ntp server
   apt: name=ntp
@@ -77,11 +79,13 @@
   systemd:
     state: enabled
     name: ntp
+  become: yes
 
 - name: Start ntp service
   systemd:
     state: started
     name: ntp
+  become: yes
 
 - name: Install cifs-utils
   apt: name=cifs-utils
