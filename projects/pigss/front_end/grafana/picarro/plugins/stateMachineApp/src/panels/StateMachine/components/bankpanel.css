@@ -123,6 +123,18 @@
   font-size: 17px;
   color: #2f2f2f;
 }
+
+.edit-input {
+    background-color: transparent;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #2f2f2f;
+    font-size: 17px;
+    color: #2f2f2f;
+}
+
+.edit-input:focus {
+    color: #d8d9da;
+}
 .panel-bank {
   border: 2px solid #1111117a;
   margin-right: 2%;

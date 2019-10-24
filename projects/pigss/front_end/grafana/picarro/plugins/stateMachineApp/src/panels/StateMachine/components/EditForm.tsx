@@ -32,7 +32,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Bank {key}</label>
               <input
                 name={"bank" + key}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].name}
                 maxLength={14}
@@ -42,7 +42,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label "> Channel 1 </label>
               <input
                 name={"bank" + key + "1"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[1]}
                 maxLength={8}
@@ -52,7 +52,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 2 </label>
               <input
                 name={"bank" + key + "2"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[2]}
                 maxLength={8}
@@ -62,7 +62,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 3 </label>
               <input
                 name={"bank" + key + "3"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[3]}
                 maxLength={8}
@@ -72,7 +72,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 4 </label>
               <input
                 name={"bank" + key + "4"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[4]}
                 maxLength={8}
@@ -82,7 +82,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 5 </label>
               <input
                 name={"bank" + key + "5"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[5]}
                 maxLength={8}
@@ -92,7 +92,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 6 </label>
               <input
                 name={"bank" + key + "6"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[6]}
                 maxLength={8}
@@ -102,7 +102,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 7 </label>
               <input
                 name={"bank" + key + "7"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[7]}
                 maxLength={8}
@@ -112,7 +112,7 @@ export class EditForm extends Component<EditPanelOptions> {
               <label className="edit-label"> Channel 8 </label>
               <input
                 name={"bank" + key + "8"}
-                className="col-sm-6 plan-input"
+                className="col-sm-6 edit-input"
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].channels[8]}
                 maxLength={8}
