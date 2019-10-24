@@ -59,12 +59,6 @@
   apt: name=chrony
   become: yes
 
-- name: Enable chrony service
-  systemd:
-    state: enabled
-    name: chrony
-  become: yes
-
 - name: Start chrony service
   systemd:
     state: started
