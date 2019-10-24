@@ -57,7 +57,11 @@
     # Project build scripts/makefiles
     - set_fact:
         project_build_scripts="{{ project_dir }}/build"
+    # Playbook and OS Version
+    - set_fact:
+        os_version="1.0.0"
   tasks:
+    - include: tasks/os-version.yaml
     - include: tasks/bootstrap.yaml
     - include: tasks/gnome.yaml
       when: headless == "false"
