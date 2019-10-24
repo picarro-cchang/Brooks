@@ -25,7 +25,6 @@ class PortHistoryService(ServiceTemplate):
     def setup_routes(self):
         self.app.router.add_route("GET", "/", self.health_check)
         self.app.router.add_route("POST", "/search", self.search)
-        self.app.router.add_route('GET', '/analyzer_status', self.handle_analyzer_status)
 
     async def on_startup(self, app):
         log.info("Port history service is starting up")
@@ -94,41 +93,6 @@ class PortHistoryService(ServiceTemplate):
     async def on_shutdown(self, app):
         await self.db_writer.close_connection()
         log.info("Port history service is shutting down")
-
-    async def handle_analyzer_status(self, request):
-        """
-        description: Retrieve status of Picarro analyzers
-
-        tags:
-            -   port history service
-        summary: Retrieve status of Picarro analyzers
-        produces:
-            -   text/plain
-        responses:
-            "200":
-                description: successful operation."
-        """
-        farm = request.app['farm']
-        result = []
-        self.picarro_analyzers = [rpc_name for rpc_name in farm.RPC if rpc_name.startswith("Picarro_")]
-        for analyzer in self.picarro_analyzers:
-            name = analyzer[len("Picarro_"):]
-            inst_mgr_state = (await farm.RPC[analyzer].INSTMGR_GetStateRpc())["InstMgr"]
-            warming_state = await farm.RPC[analyzer].DR_getWarmingState()
-            cavity_temp, cavity_temp_setpoint = warming_state["CavityTemperature"]
-            warm_box_temp, warm_box_temp_setpoint = warming_state["WarmBoxTemperature"]
-            cavity_pressure, cavity_pressure_setpoint = warming_state["CavityPressure"]
-            result.append({
-                "name": name,
-                "cavity_temp": cavity_temp,
-                "cavity_temp_setpoint": cavity_temp_setpoint,
-                "warm_box_temp": warm_box_temp,
-                "warm_box_temp_setpoint": warm_box_temp_setpoint,
-                "cavity_pressure": cavity_pressure,
-                "cavity_pressure_setpoint": cavity_pressure_setpoint,
-                "status": inst_mgr_state
-            })
-        return web.json_response(result)
 
     async def health_check(self, request):
         """

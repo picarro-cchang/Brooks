@@ -17,6 +17,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.controller_service import ControllerService
 from back_end.servers.port_history_service import PortHistoryService
 from back_end.servers.supervisor_service import SupervisorService
+from back_end.servers.system_status_service import SystemStatusService
 from back_end.servers.time_aggregation_sevice import TimeAggregationService
 from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
@@ -58,7 +59,7 @@ class PigssRunner:
         log.info("PigssRunner is cleaning up")
         self.terminate_event.set()
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error)
     async def server_init(self, config_filename):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
@@ -86,6 +87,10 @@ class PigssRunner:
         supervisor_service = SupervisorService()
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
+
+        system_status_service = SystemStatusService()
+        system_status_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/system_status/", system_status_service.app)
 
         port_history_service = PortHistoryService()
         port_history_service.app['farm'] = self.app['farm']
