@@ -1,0 +1,98 @@
+{
+    "annotations": {
+      "list": [
+        {
+          "builtIn": 1,
+          "datasource": "-- Grafana --",
+          "enable": true,
+          "hide": true,
+          "iconColor": "rgba(0, 211, 255, 1)",
+          "name": "Annotations & Alerts",
+          "type": "dashboard"
+        }
+      ]
+    },
+    "editable": true,
+    "gnetId": null,
+    "graphTooltip": 0,
+    "id": 5,
+    "links": [],
+    "panels": [
+      {
+        "datasource": "port history server",
+        "description": "",
+        "gridPos": {
+          "h": 3,
+          "w": 18,
+          "x": 0,
+          "y": 0
+        },
+        "header_js": "{}",
+        "id": 2,
+        "links": [
+          {
+            "title": "",
+            "url": ""
+          }
+        ],
+        "method": "GET",
+        "mode": "template",
+        "options": {},
+        "params_js": "{}",
+        "request": "datasource",
+        "responseType": "json",
+        "showErrors": true,
+        "showTime": false,
+        "showTimeFormat": "LTS",
+        "showTimePrefix": null,
+        "showTimeValue": "request",
+        "skipSameURL": false,
+        "targets": [
+          {
+            "data": "",
+            "hide": false,
+            "refId": "A",
+            "target": "select metric",
+            "type": "timeseries"
+          }
+        ],
+        "template": "<table style=\"width:100%\">\n<tr>\n  <td style=\"text-align:center\"><h5>Analyzer Name</h5></td>\n  <td style=\"text-align:center\"><h5>Warm Box Temperature</h5></td>\n  <td style=\"text-align:center\"><h5>Cavity Temperature</h5></td>\n  <td style=\"text-align:center\"><h5>Cavity Pressure</h5></td>\n  <td style=\"text-align:center\"><h5>Status</h5></td>\n</tr>  \n<tr ng-repeat=\"value in response\">\n  <td style=\"text-align:center\">{{value.name}}</td>\n  <td style=\"text-align:center\">{{value.warm_box_temp | number:2 }} / {{value.warm_box_temp_setpoint | number:2}}</td>\n  <td style=\"text-align:center\">{{value.cavity_temp | number:2}} / {{value.cavity_temp_setpoint | number:2}}</td>\n  <td style=\"text-align:center\">{{value.cavity_pressure | number:1}} / {{value.cavity_pressure_setpoint | number:1}}</td>\n  <td style=\"text-align:center\">{{value.status}}</td>\n</tr>\n</table>",
+        "templateResponse": true,
+        "timeFrom": null,
+        "timeShift": null,
+        "title": "",
+        "type": "ryantxu-ajax-panel",
+        "url": "/analyzer_status",
+        "withCredentials": false
+      }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 20,
+    "style": "dark",
+    "tags": [],
+    "templating": {
+      "list": []
+    },
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ]
+    },
+    "timezone": "",
+    "title": "Status dashboard",
+    "uid": "GYCgKgAZk",
+    "version": 11
+  }
