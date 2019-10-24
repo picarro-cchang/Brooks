@@ -71,22 +71,6 @@
     name: chrony
   become: yes
 
-- name: Install ntp server
-  apt: name=ntp
-  become: yes
-
-- name: Enable ntp service
-  systemd:
-    state: enabled
-    name: ntp
-  become: yes
-
-- name: Start ntp service
-  systemd:
-    state: started
-    name: ntp
-  become: yes
-
 - name: Install cifs-utils
   apt: name=cifs-utils
   become: yes
