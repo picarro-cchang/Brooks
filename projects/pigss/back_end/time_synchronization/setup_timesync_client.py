@@ -33,7 +33,7 @@ import sys
 import time
 
 my_path = os.path.dirname(os.path.abspath(__file__))
-access_str = os.environ.get('PIGSS_CLIENT_ACCESS', "310595054")
+access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
 
 
 def sudo_run(cmd):
