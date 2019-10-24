@@ -1,4 +1,4 @@
-# This is based on https://vitux.com/how-to-install-ntp-server-and-client-on-ubuntu/
+# This is based on https://help.ubuntu.com/lts/serverguide/NTP.html
 
 # Please run first: conda install -c conda-forge netifaces
 
@@ -10,27 +10,17 @@ import subprocess
 
 from netifaces import AF_INET, ifaddresses, interfaces
 
-# Install the ntp package
-subprocess.run(shlex.split("sudo apt-get update"))
-subprocess.run(shlex.split("sudo apt-get install -y ntp"))
-subprocess.run(shlex.split("sntp --version"))
+# Install chrony if it is not already installed
+result = subprocess.run(shlex.split("dpkg -l chrony"))
+if result.returncode:
+    subprocess.run(shlex.split("sudo apt-get update"))
+    subprocess.run(shlex.split("sudo apt-get install -y chrony"))
 
-# Configure the server to use the US time servers as its reference
-with open("/etc/ntp.conf", "r") as fp:
-    contents = fp.read()
-    contents = contents.replace("ubuntu.pool.ntp.org", "us.pool.ntp.org")
+# Restart the chrony service on the server
+subprocess.run(shlex.split("sudo systemctl restart chrony.service"))
 
-with open("./temp.tmp", "w") as fp:
-    fp.write(contents)
-
-subprocess.run(shlex.split("sudo cp ./temp.tmp /etc/ntp.conf"))
-subprocess.run(shlex.split("rm ./temp.tmp"))
-
-# Restart the NTP service on the server
-subprocess.run(shlex.split("sudo service ntp restart"))
-# Allow connections from clients on the nto port 123
-subprocess.run(shlex.split("sudo ufw allow from any to any port 123 proto udp"))
-# subprocess.run(shlex.split("sudo service ntp status"))
+# Enable the next line if firewall is used to allow connections from clients on the into port 123
+# subprocess.run(shlex.split("sudo ufw allow from any to any port 123 proto udp"))
 
 ip_addresses = [(ifname, ifaddresses(ifname)[AF_INET][0]['addr']) for ifname in interfaces()]
 print("Set up each client using setup_client. This host has the following IPv4 interfaces:")
