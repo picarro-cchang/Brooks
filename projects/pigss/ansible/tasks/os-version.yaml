@@ -1,7 +1,7 @@
 - name: Write os version file
   lineinfile:
     dest: /etc/os-release-picarro
-    line: {{ os_version }}
+    line: "{{ os_version }}"
     state: present
     create: yes
   become: yes
