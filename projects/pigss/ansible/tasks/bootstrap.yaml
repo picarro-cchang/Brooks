@@ -59,9 +59,29 @@
   apt: name=chrony
   become: yes
 
+- name: Enable chrony service
+  systemd:
+    state: enabled
+    name: chrony
+
+- name: Start chrony service
+  systemd:
+    state: started
+    name: chrony
+
 - name: Install ntp server
   apt: name=ntp
   become: yes
+
+- name: Enable ntp service
+  systemd:
+    state: enabled
+    name: ntp
+
+- name: Start ntp service
+  systemd:
+    state: started
+    name: ntp
 
 - name: Install cifs-utils
   apt: name=cifs-utils
