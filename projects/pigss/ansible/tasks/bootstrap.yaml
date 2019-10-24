@@ -167,6 +167,10 @@
   apt: name=dconf-editor
   become: yes
 
+- name: Configure firewall for ntp server
+  shell: ufw allow from any to any port 123 proto udp
+  become: yes
+
 - name: Upgrade all packages to the latest version
   shell: apt upgrade -y
   become: yes
