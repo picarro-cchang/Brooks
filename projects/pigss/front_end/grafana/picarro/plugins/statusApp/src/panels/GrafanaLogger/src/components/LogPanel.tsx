@@ -9,7 +9,7 @@ import { LogLayout } from './LogLayout';
 import { LOG_LIMIT, REFRESH_INTERVAL } from '../constants';
 import { SocketURL } from '../constants';
 
-interface Props extends PanelProps<LogProps> {}
+interface Props extends PanelProps<LogProps> { }
 
 interface State {
   data: string[][];

@@ -20,8 +20,8 @@
     {
       "datasource": null,
       "gridPos": {
-        "h": 21,
-        "w": 24,
+        "h": 10,
+        "w": 18,
         "x": 0,
         "y": 0
       },
@@ -36,50 +36,13 @@
           "to": "2019-10-21T22:20:10.345Z"
         }
       },
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            },
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "orderByTime": "ASC",
-          "policy": "default",
-          "refId": "A",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "value"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "mean"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
       "timeFrom": null,
       "timeShift": null,
       "title": "",
-      "transparent": true,
       "type": "user-data-generator"
     }
   ],
+  "refresh": "5s",
   "schemaVersion": 20,
   "style": "dark",
   "tags": [],
@@ -87,7 +50,7 @@
     "list": []
   },
   "time": {
-    "from": "now-6h",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
@@ -107,5 +70,5 @@
   "timezone": "",
   "title": "User Data",
   "uid": "DbA8q_oZz",
-  "version": 2
+  "version": 1
 }

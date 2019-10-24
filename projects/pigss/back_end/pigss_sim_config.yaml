@@ -3,7 +3,7 @@ Configuration: # This is for high level information
     config_file: rpc_tunnel_configs.json
   Simulation: 
     enabled: true
-    ui_enabled: true
+    ui_enabled: false
     random_ids: false
     analyzers:
       - ip_address: 192.168.10.101
