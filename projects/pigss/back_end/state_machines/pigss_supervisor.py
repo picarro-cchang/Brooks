@@ -26,6 +26,8 @@ from back_end.mfc_driver.alicat.alicat_driver import AlicatDriver
 from back_end.piglet.piglet_driver import PigletDriver
 from back_end.relay_driver.numato.numato_driver import NumatoDriver
 from back_end.state_machines.pigss_payloads import SystemConfiguration
+from back_end.time_synchronization.setup_timesync_client import \
+    time_sync_analyzers
 from common import CmdFIFO
 from common.async_helper import log_async_exception
 from common.rpc_ports import rpc_ports
@@ -95,7 +97,7 @@ class ProcessWrapper:
             self.stop_reason = stop_reason
         await self.process.join()
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def pinger(self, period):
         try:
             while True:
@@ -266,7 +268,7 @@ class PigssSupervisor(Ahsm):
             Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=sorted(self.bank_list),
                                                                mad_mapper_result=self.device_dict)))
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error)
     async def perform_mapping(self):
         # Run the MadMapper after a specified delay
         delay = self.farm.config.get_madmapper_startup_delay()
@@ -426,18 +428,22 @@ class PigssSupervisor(Ahsm):
             else:
                 log.info(f"Unknown service {service} ignored")
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def startup_services(self):
         await self.setup_services(at_start=True)
         await asyncio.sleep(1.0)
         Framework.publish(Event(Signal.SERVICES_STARTED, None))
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def startup_drivers(self):
+        picarro_analyzer_ips = [
+            device["IP"] for device in self.device_dict["Devices"]["Network_Devices"].values() if device["Driver"] == "IDriver"
+        ]
+        await time_sync_analyzers(picarro_analyzer_ips)
         await self.setup_drivers(at_start=True)
         Framework.publish(Event(Signal.DRIVERS_STARTED, None))
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def monitor_processes(self):
         await self.setup_services(at_start=False)
         await self.setup_drivers(at_start=False)

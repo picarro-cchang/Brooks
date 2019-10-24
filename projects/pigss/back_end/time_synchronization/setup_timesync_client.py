@@ -1,19 +1,31 @@
-# This is based on information at https://vitux.com/how-to-install-ntp-server-and-client-on-ubuntu/
-# Also see https://stackoverflow.com/questions/20499074/run-local-python-script-on-remote-server
+"""
+This is based on information at https://help.ubuntu.com/lts/serverguide/NTP.html
+Also see https://stackoverflow.com/questions/20499074/run-local-python-script-on-remote-server
+ It is used to configure the Picarro analyzers on the network to use the rack server as their time
+ standard.
+ NOTE: The rack server must first be set up as an chrony time server (e.g., by using setup_server.py)
+  before this will work. It should have a static IP address on the local network since this is
+  written to a configuration file.
+"""
+import asyncio
 
-# This script is run on the rack server which has been set up as an ntp time server (using setup_server.py)
-#  in order to configure the Picarro analyzers on the network to use it as their time standard.
-# Note that the rack server should be given a static IP address since this is written to configuration files
-#  on the clients
+from back_end.lologger.lologger_client import LOLoggerClient
 
-# Usage:
-#     setup_client deploy ip-address-of-client
+log = LOLoggerClient(client_name="SetupTimeSyncClient", verbose=True)
+TMP_FILENAME = "/tmp/setup_client.py"
+
+# The script setup_client.py is contained in the string setup_client_script, which is copied
+#  to /tmp/setup_client.py when this script is imported. The co-routine time_sync_analyzers
+#  runs the following in a subprocess for each client in analyzer_ips
 #
-# The script copies itself to the client via sftp and runs itself there (without the deploy argument) to perform
-#  the installation. It installs ntp and ntpdate from .deb packages which it copies to the client. These
-#  files are appropriate for UBUNTU 16.04 LTS (xenial). This script will need to be modified for use with a
-#  different version of the OS on the client.
+#    python /tmp/setup_client.py deploy ip-address-of-client
+#
+# This causes paramiko to rewrite /etc/timesyncd.conf on the client with the server
+#  address and to restart the systemd-timesyncd service on the client
 
+# Note: Care is needed to escape backslashes in setup_client_script so that it is correctly
+#  written out to disk
+setup_client_script = """
 import os
 import shlex
 import subprocess
@@ -21,12 +33,12 @@ import sys
 import time
 
 my_path = os.path.dirname(os.path.abspath(__file__))
-access_str = "310595054"
+access_str = os.environ.get('PIGSS_CLIENT_ACCESS', "310595054")
 
 
 def sudo_run(cmd):
     p = subprocess.Popen(shlex.split("sudo -S %s" % cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    return p.communicate(access_str + "\n")
+    return p.communicate(access_str + "\\n")
 
 
 def run(cmd):
@@ -69,9 +81,8 @@ if __name__ == "__main__":
 
             # Set up the configuration file for ntp on the client
             with open("/tmp/timesyncd.conf", "w") as fp:
-                fp.write("[Time]\n")
-                fp.write("NTP=%s\n" % server_address)
-                fp.write("FallbackNTP=0.us.pool.ntp.org\n")
+                fp.write("[Time]\\n")
+                fp.write("NTP=%s\\n" % server_address)
 
             client = paramiko.SSHClient()
             client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -84,7 +95,7 @@ if __name__ == "__main__":
             # Copy the generated ntp.conf file to the client
             sftp.put("/tmp/timesyncd.conf", "/tmp/timesyncd.conf")
 
-            print("\n\nCopying script to client and starting execution...")
+            print("\\n\\nCopying script to client and starting execution...")
             # Execute the script on the client and record the results
             stdout = client.exec_command("python /tmp/myscript.py install")[1]
             for line in stdout:
@@ -96,11 +107,18 @@ if __name__ == "__main__":
             sys.exit(0)
     except IndexError:
         pass
+"""
+with open(TMP_FILENAME, "w") as fp:
+    fp.write(setup_client_script)
 
-    print("""Usage:
 
-    python setup_client.py deploy ip-addr
-
-    This is run on the rack server to set up time-synchronization software on the analyzer client
-    at ip-addr.
-    """)
+async def time_sync_analyzers(analyzer_ips):
+    for ip in analyzer_ips:
+        proc = await asyncio.create_subprocess_shell(f"python {TMP_FILENAME} deploy {ip}",
+                                                     stdin=asyncio.subprocess.PIPE,
+                                                     stdout=asyncio.subprocess.PIPE,
+                                                     stderr=asyncio.subprocess.PIPE)
+        stdout, stderr = await proc.communicate()
+        log.info(f"TimeSyncClient {ip} returns {proc.returncode} stdout: {stdout.decode()}")
+        log.info(f"TimeSyncClient {ip} returns {proc.returncode} stderr: {stderr.decode()}")
+        await proc.wait()
