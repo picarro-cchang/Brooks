@@ -2,7 +2,7 @@
 """ Provides an API for generating and downloading user data files
 """
 
-from os import listdir, path, stat, environ
+from os import listdir, path, stat, uname
 from urllib.parse import parse_qs
 import csv
 from datetime import datetime
@@ -159,7 +159,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             return web.json_response(data=data, status=200)
 
         try:
-            host_name = environ["HOSTNAME"]
+            host_name = uname()[1]
             data_dir = self.app["config"]["server"]["data_dir"]
 
             # python's epoch time is in seconds
