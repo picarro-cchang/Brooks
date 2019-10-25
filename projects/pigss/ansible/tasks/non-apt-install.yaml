@@ -52,20 +52,10 @@
   become: yes
   when: update == "false"
 
-- name: Start telegraf service
+- name: Start InfluxDB Service service
   systemd:
     state: started
-    name: telegraf
-  become: yes
-  when: update == "false"
-
-- name: Start InfluxDB Service
-  shell: systemctl start influxdb.service
-  become: yes
-  when: update == "false"
-
-- name: Enable InfluxDB Service
-  shell: systemctl enable influxdb.service
+    name: influxdb
   become: yes
   when: update == "false"
 
@@ -75,6 +65,13 @@
 
 - name: Create telegraf database
   shell: influx -execute 'show databases' | grep telegraf || influx -execute 'create database telegraf'
+  when: update == "false"
+
+- name: Start telegraf service
+  systemd:
+    state: started
+    name: telegraf
+  become: yes
   when: update == "false"
 
 - name: Download go
