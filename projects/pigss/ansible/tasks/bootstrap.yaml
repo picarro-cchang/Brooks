@@ -59,6 +59,10 @@
   apt: name=chrony
   become: yes
 
+- name: Install htop
+  apt: name=htop
+  become: yes
+
 - name: Start chrony service
   systemd:
     state: started
