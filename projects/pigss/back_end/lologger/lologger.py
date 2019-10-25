@@ -497,7 +497,7 @@ def parse_arguments():
     parser.add_argument('-meta', '--meta_table', help='Create a table with metadata', default=False, action="store_true")
     parser.add_argument('-pkg', '--pkg_meta', nargs='+', help='Add versions of the passed packages to the metadata table')
     parser.add_argument('-pv', '--picarro_version',
-                        help='Store version of Picarro software in metadata',
+                        help='Store version of Picarro OS in metadata',
                         default=False,
                         action="store_true")
     parser.add_argument('-pol', '--purge_old_logs', help='Will delete log files older than provided number of months', default=None)
