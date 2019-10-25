@@ -99,7 +99,7 @@ class PortHistoryService(ServiceTemplate):
         description: Used to check that data source exists and works
 
         tags:
-            -   port history service
+            -   Port history server
         summary: Used to check that data source exists and works
         produces:
             -   application/text
@@ -114,7 +114,7 @@ class PortHistoryService(ServiceTemplate):
         description: Gets the names of the available banks or the available ports
 
         tags:
-            -   port history service
+            -   Port history server
         summary:  Gets the names of the available banks or the available ports
 
         consumes:

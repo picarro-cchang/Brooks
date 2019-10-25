@@ -1,23 +1,19 @@
 #!/usr/bin/env python3
 """
 Provides a JSON datasource for Grafana which serves up information
- about the status of various aspects of the system, such as the 
+ about the status of various aspects of the system, such as the
  Picarro analyzers.
 """
-import json
-import time
 
 from aiohttp import web
-from aioinflux import iterpoints
 
-from back_end.database_access.aio_influx_database import AioInfluxDBWriter
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.service_template import ServiceTemplate
 
 log = LOLoggerClient(client_name="SystemStatusService", verbose=True)
 
 
-class PortHistoryService(ServiceTemplate):
+class SystemStatusService(ServiceTemplate):
     def __init__(self):
         super().__init__()
 
@@ -36,7 +32,7 @@ class PortHistoryService(ServiceTemplate):
         description: Retrieve status of Picarro analyzers
 
         tags:
-            -   system status service
+            -   System status server
         summary: Retrieve status of Picarro analyzers
         produces:
             -   text/plain
@@ -71,7 +67,7 @@ class PortHistoryService(ServiceTemplate):
         description: Used to check that data source exists and works
 
         tags:
-            -   port history service
+            -   System status server
         summary: Used to check that data source exists and works
         produces:
             -   application/text
