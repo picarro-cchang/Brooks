@@ -1,7 +1,7 @@
 Configuration: # This is for high level information
   RpcTunnel:
     config_file: rpc_tunnel_configs.json
-  Simulation: 
+  Simulation:
     enabled: true
     ui_enabled: false
     random_ids: false
@@ -18,6 +18,7 @@ Configuration: # This is for high level information
         mode: AMADS_LCT_mode
         interval: 1.1
         seed: 12345
+        warmup_time: 90.0
       - ip_address: 192.168.10.102
         chassis: 4357
         analyzer: SBDS
@@ -29,6 +30,7 @@ Configuration: # This is for high level information
         mode: SBDS_mode
         interval: 1.2
         seed: 23456
+        warmup_time: 90.0
       - ip_address: 192.168.10.103
         chassis: 4532
         analyzer: BFADS
@@ -40,6 +42,7 @@ Configuration: # This is for high level information
         mode: BFADS_mode
         interval: 1.3
         seed: 34567
+        warmup_time: 90.0
   Database:
     server: localhost
     port: 8086
@@ -52,7 +55,7 @@ Settings:
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
   madmapper_startup_delay: 30
-  startup_plan: "once_a_minute"  # Do NOT include extension or directory
+  startup_plan: "once_a_minute" # Do NOT include extension or directory
 
 Services:
   - Name: DBDecimator
@@ -61,15 +64,15 @@ Services:
       db_name: pigss_data
       rpc_server_name: DBDecimator
       rpc_server_description: DBDecimator
-      raw_filter_conditions: 
+      raw_filter_conditions:
         - ["valve_stable_time", ">", 15]
       start: true
 
 Plugins:
   GrafanaLogger:
     sqlite:
-      table_name: 'Events'
-      columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
+      table_name: "Events"
+      columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
     limit: 20
     interval: 3
     timeout: 300

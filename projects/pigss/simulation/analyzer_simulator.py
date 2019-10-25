@@ -37,6 +37,7 @@ class Analyzer:
     mode = attr.ib(type=str)
     interval = attr.ib(type=float)
     seed = attr.ib(type=int, default=98765)
+    warmup_time = attr.ib(type=float, default=300.0)
 
 
 SimEvent = namedtuple('SimEvent', ['when', 'seq', 'gen'])
@@ -57,6 +58,7 @@ class Simulator(object):
         self.running = False
         self.real_time = real_time
         self.sim_time = time.time() if real_time else 0
+        self.sim_start_time = self.sim_time
 
     def enqueue_task(self, when, task):
         heappush(self.event_heap, SimEvent(when, self.next_seq, task))
@@ -131,6 +133,13 @@ class Driver:
         self.sim_meas = {species: SimMeas(species, 32, time_origin) for species in self.analyzer.species}
         self.sim.enqueue_task(time_origin + analyzer.interval, self.calc_data_task(analyzer))
         self.valve_pos = 13
+        self.cavity_pressure_setpoint = 140.0
+        self.cavity_temperature_setpoint = 80.0
+        self.warm_box_temperature_setpoint = 45.0
+        self.cavity_pressure_initial = 760.0
+        self.cavity_temperature_initial = 25.0
+        self.warm_box_temperature_initial = 20.0
+        self.warmup_time = self.analyzer.warmup_time
 
     def allVersions(self):
         versionDict = {}
@@ -152,6 +161,20 @@ class Driver:
     def dasGetTicks(self):
         return get_timestamp()
 
+    def getWarmingState(self):
+        t = self.sim.sim_time - self.sim.sim_start_time
+        step = self.cavity_pressure_setpoint - self.cavity_pressure_initial
+        cavity_pressure = self.cavity_pressure_setpoint - step * np.exp(-5 * t / self.warmup_time)
+        step = self.cavity_temperature_setpoint - self.cavity_temperature_initial
+        cavity_temperature = self.cavity_temperature_setpoint - step * np.exp(-5 * t / self.warmup_time)
+        step = self.warm_box_temperature_setpoint - self.warm_box_temperature_initial
+        warm_box_temperature = self.warm_box_temperature_setpoint - step * np.exp(-5 * t / self.warmup_time)
+        return {
+            "CavityPressure": (cavity_pressure, self.cavity_pressure_setpoint),
+            "CavityTemperature": (cavity_temperature, self.cavity_temperature_setpoint),
+            "WarmBoxTemperature": (warm_box_temperature, self.warm_box_temperature_setpoint)
+        }
+
     def hostGetTicks(self):
         return get_timestamp()
 
@@ -171,7 +194,7 @@ class Driver:
         # self.rpc_server.register_function(self.getPressureReading)
         # self.rpc_server.register_function(self.getProportionalValves)
         self.rpc_server.register_function(self.getValveMask)
-        # self.rpc_server.register_function(self.getWarmingState)
+        self.rpc_server.register_function(self.getWarmingState)
         self.rpc_server.register_function(self.hostGetTicks)
         # self.rpc_server.register_function(self.invokeSupervisorLauncher)
         # self.rpc_server.register_function(self.rdDasReg)
@@ -187,15 +210,27 @@ class Driver:
             result['data'][species] = measurement
         return result
 
+    def make_sensor_dict(self, unix_time, analyzer):
+        warming_state = self.getWarmingState()
+        result = {'time': unix_time, 'source': "analyze_warming", 'mode': analyzer.mode, 'good': 1, 'data': {}}
+        result['data']['CavityTemp'] = warming_state['CavityTemperature'][0]
+        result['data']['CavityPressure'] = warming_state['CavityPressure'][0]
+        result['data']['WarmBoxTemp'] = warming_state['WarmBoxTemperature'][0]
+        return result
+
     def calc_data_task(self, analyzer):
         sim = self.sim
         dm_broadcaster = Broadcaster(BROADCAST_PORT_DATA_MANAGER, self.ip_address)
         while True:
-            measurements = []
-            for species in analyzer.species:
-                meas = self.sim_meas[species].get_meas(sim.sim_time, self.valve_pos)
-                measurements.append(meas)
-            dm_dict = self.make_data_manager_dict(sim.sim_time, analyzer, measurements)
+            t = sim.sim_time - sim.sim_start_time
+            if t > self.warmup_time:
+                measurements = []
+                for species in analyzer.species:
+                    meas = self.sim_meas[species].get_meas(sim.sim_time, self.valve_pos)
+                    measurements.append(meas)
+                dm_dict = self.make_data_manager_dict(sim.sim_time, analyzer, measurements)
+                dm_broadcaster.send(pack_arbitrary_object(dm_dict))
+            dm_dict = self.make_sensor_dict(sim.sim_time, analyzer)
             dm_broadcaster.send(pack_arbitrary_object(dm_dict))
             yield sim.sim_time + analyzer.interval
 
@@ -213,7 +248,7 @@ class Supervisor:
 
     def start_applications(self):
         Thread(target=Driver(self.sim, self.analyzer, self.ip_address).rpc_server.serve_forever, daemon=True).start()
-        Thread(target=InstMgr(self.sim, self.ip_address).rpc_server.serve_forever, daemon=True).start()
+        Thread(target=InstMgr(self.sim, self.analyzer, self.ip_address).rpc_server.serve_forever, daemon=True).start()
         self.Driver = CmdFIFOServerProxy(f"http://{self.ip_address}:{RPC_PORT_DRIVER}", "From Supervisor")
         self.InstMgr = CmdFIFOServerProxy(f"http://{self.ip_address}:{RPC_PORT_INSTR_MANAGER}", "From Supervisor")
 
@@ -227,20 +262,29 @@ class Supervisor:
 
 
 class InstMgr:
-    def __init__(self, sim, ip_address):
+    def __init__(self, sim, analyzer, ip_address):
         self.rpc_server = CmdFIFOServer((f"{ip_address}", RPC_PORT_INSTR_MANAGER),
                                         ServerName="PicarroInstMgrSimulator",
                                         threaded=True)
         self.sim = sim
+        self.analyzer = analyzer
         self.Supervisor = CmdFIFOServerProxy(f"http://{ip_address}:{RPC_PORT_SUPERVISOR}", "From InstMgr")
         self.register_rpc_functions()
+
+    def INSTMGR_GetStateRpc(self):
+        warming = self.sim.sim_time - self.sim.sim_start_time < self.analyzer.warmup_time
+        return {
+            "Measuring": "<MEASURING - UNDEFINED STATE!>" if warming else "MEAS_CONT_MEASURING",
+            "InstMgr": "WARMING" if warming else "MEASURING",
+            "Warming": "<WARMING UNDEFINED STATE!>" if warming else "WARMING_TEMP_STAB"
+        }
 
     def INSTMGR_ShutdownRpc(self):
         self.Supervisor.RPC_TerminateApplications()
 
     def register_rpc_functions(self):
         # TODO: Implement non-existent RPC functions
-        # self.rpc_server.register_function(self.INSTMGR_GetStateRpc)
+        self.rpc_server.register_function(self.INSTMGR_GetStateRpc)
         # self.rpc_server.register_function(self.INSTMGR_GetStatusRpc)
         self.rpc_server.register_function(self.INSTMGR_ShutdownRpc)
 

@@ -436,10 +436,11 @@ class PigssSupervisor(Ahsm):
 
     @log_async_exception(log_func=log.warning)
     async def startup_drivers(self):
-        picarro_analyzer_ips = [
-            device["IP"] for device in self.device_dict["Devices"]["Network_Devices"].values() if device["Driver"] == "IDriver"
-        ]
-        await time_sync_analyzers(picarro_analyzer_ips)
+        if not self.simulation:
+            picarro_analyzer_ips = [
+                device["IP"] for device in self.device_dict["Devices"]["Network_Devices"].values() if device["Driver"] == "IDriver"
+            ]
+            await time_sync_analyzers(picarro_analyzer_ips)
         await self.setup_drivers(at_start=True)
         Framework.publish(Event(Signal.DRIVERS_STARTED, None))
 
