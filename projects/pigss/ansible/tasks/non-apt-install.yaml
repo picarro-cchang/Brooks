@@ -52,7 +52,7 @@
   become: yes
   when: update == "false"
 
-- name: Start InfluxDB Service service
+- name: Start InfluxDB service
   systemd:
     state: started
     name: influxdb
