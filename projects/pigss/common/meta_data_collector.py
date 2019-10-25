@@ -10,7 +10,7 @@ import requests
 REST_API_PORT = 8000  # this port is being hardcoded since there is no proper way to import it at this moment
 SUPERVISOR_ADDRESS = f"http://localhost:{REST_API_PORT}"
 DEVICE_MAP_PATH = f"{SUPERVISOR_ADDRESS}/supervisor/device_map"
-PICARRO_SOFTWARE_VERSION_FILEPATH = "/etc/os-release-picarro"
+PICARRO_OS_VERSION_FILEPATH = "/etc/os-release-picarro"
 
 
 def get_metadata_ready_for_db(pkg_meta=None, picarro_version=False):
