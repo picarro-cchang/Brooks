@@ -3,7 +3,7 @@ Configuration: # This is for high level information
     config_file: rpc_tunnel_configs.json
   Simulation: 
     enabled: true
-    ui_enabled: true
+    ui_enabled: false
     random_ids: false
     analyzers:
       - ip_address: 192.168.10.101
@@ -64,3 +64,26 @@ Services:
       raw_filter_conditions: 
         - ["valve_stable_time", ">", 15]
       start: true
+
+Plugins:
+  GrafanaLogger:
+    sqlite:
+      table_name: 'Events'
+      columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
+    limit: 20
+    interval: 3
+    timeout: 300
+    retries: 1
+
+  GrafanaDataGenerator:
+    database:
+      host: 0.0.0.0
+      port: 8086
+      database: "pigss_data"
+      timeout: 300
+      retries: 1
+      measurements: "crds"
+    server:
+      user_keys: ["H20", "CO2", "NH3", "CH4", "HF", "HCl"]
+      data_dir: "/tmp"
+      file_type: "csv"

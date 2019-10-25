@@ -108,3 +108,11 @@ class PigssConfig:
         and if the file name is non-empty, it is used to specify the plan file
         (without the .pln extension)"""
         return self.config["Settings"]["startup_plan"]
+
+    @default([])
+    def get_glogger_plugin_config(self):
+        return self.config["Plugins"]["GrafanaLogger"]
+
+    @default([])
+    def get_gdg_plugin_config(self):
+        return self.config["Plugins"]["GrafanaDataGenerator"]

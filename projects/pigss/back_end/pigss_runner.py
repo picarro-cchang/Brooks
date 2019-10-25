@@ -19,6 +19,9 @@ from back_end.servers.port_history_service import PortHistoryService
 from back_end.servers.supervisor_service import SupervisorService
 from back_end.servers.system_status_service import SystemStatusService
 from back_end.servers.time_aggregation_sevice import TimeAggregationService
+from back_end.servers.grafana_logger_service import GrafanaLoggerService
+from back_end.servers.grafana_data_generator_service import GrafanaDataGeneratorService
+from back_end.servers.customer_api_server import CustomerAPIService
 from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
 
@@ -99,6 +102,18 @@ class PigssRunner:
         time_aggregation_service = TimeAggregationService()
         time_aggregation_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/time_aggregation/", time_aggregation_service.app)
+
+        grafana_logger_service = GrafanaLoggerService()
+        grafana_logger_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/grafana_logger/", grafana_logger_service.app)
+
+        grafana_data_generator_service = GrafanaDataGeneratorService()
+        grafana_data_generator_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/grafana_data_generator/", grafana_data_generator_service.app)
+
+        customer_api_service = CustomerAPIService()
+        customer_api_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/public/", customer_api_service.app)
 
         setup_swagger(self.app)
 
