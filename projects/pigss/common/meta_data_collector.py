@@ -93,7 +93,7 @@ def get_pkg_verions(pkg):
 
 
 def get_picarro_version():
-    if os.path.exists(PICARRO_SOFTWARE_VERSION_FILEPATH):
+    if os.path.exists(PICARRO_OS_VERSION_FILEPATH):
         with open(PICARRO_SOFTWARE_VERSION_FILEPATH) as f:
             version = f.read()
         return version
