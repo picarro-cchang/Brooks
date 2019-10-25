@@ -30,7 +30,7 @@ export class LogPanel extends PureComponent<Props, State> {
   ws: WebSocket = new WebSocket(SocketURL);
   componentDidMount() {
     this.ws.onopen = () => {
-      notifySuccess('Web socket connected');
+      // notifySuccess('Web socket connected');
       const queryObj = this.getQueryObj(this.props);
       this.updateLogsData(queryObj);
     };

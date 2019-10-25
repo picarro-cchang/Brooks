@@ -93,7 +93,7 @@
           "color": "#8F3BB8"
         },
         {
-          "alias": "H2S",
+          "alias": "H2O",
           "color": "#56A64B"
         }
       ],
@@ -239,7 +239,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -408,7 +408,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -577,7 +577,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -746,7 +746,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -915,7 +915,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1084,7 +1084,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1253,7 +1253,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1422,7 +1422,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1591,7 +1591,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1760,7 +1760,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1929,7 +1929,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1571176111116,
+      "repeatIteration": 1572029996256,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -2201,7 +2201,6 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
           "text": "NH3",
           "value": "NH3"
         },
@@ -2218,8 +2217,8 @@
           },
           {
             "selected": false,
-            "text": "H2S",
-            "value": "H2S"
+            "text": "H2O",
+            "value": "H2O"
           },
           {
             "selected": false,
@@ -2232,7 +2231,7 @@
             "value": "HCl"
           }
         ],
-        "query": "NH3, H2S, HF, HCl",
+        "query": "NH3, H2O, HF, HCl",
         "skipUrlSync": false,
         "type": "custom"
       },
@@ -2290,5 +2289,5 @@
   "timezone": "",
   "title": "Concentration By Channel",
   "uid": "GTo10zcZz",
-  "version": 2
+  "version": 3
 }
