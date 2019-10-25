@@ -10,16 +10,17 @@ import requests
 REST_API_PORT = 8000  # this port is being hardcoded since there is no proper way to import it at this moment
 SUPERVISOR_ADDRESS = f"http://localhost:{REST_API_PORT}"
 DEVICE_MAP_PATH = f"{SUPERVISOR_ADDRESS}/supervisor/device_map"
+PICARRO_SOFTWARE_VERSION_FILEPATH = "/etc/os-release-picarro"
 
 
-def get_metadata_ready_for_db(pkg_meta=None):
+def get_metadata_ready_for_db(pkg_meta=None, picarro_version=False):
     """ Prepare metadata for database. """
-    metadata = collect_metadata(pkg_meta)
+    metadata = collect_metadata(pkg_meta,  picarro_version)
     metadata_tpl = [(k, metadata[k]) for k in metadata]
     return metadata_tpl
 
 
-def collect_metadata(pkg_meta=None):
+def collect_metadata(pkg_meta=None,  picarro_version=False):
     """
         Method to collect metadata:
         - package versions specified in pkg_meta argument
@@ -65,6 +66,10 @@ def collect_metadata(pkg_meta=None):
 
     # last reboot
     meta_dict["last_reboot"] = get_last_reboot_time()
+
+    # picarro software version
+    if picarro_version:
+        meta_dict["os-release-picarro"] = get_picarro_version()
     return meta_dict
 
 
@@ -84,6 +89,14 @@ def get_pkg_verions(pkg):
     line = _run_command(command=["dpkg", "-s", pkg], line_trigger=line_trigger)
     if line is not None:
         return line.replace(line_trigger, "")
+    return None
+
+
+def get_picarro_version():
+    if os.path.exists(PICARRO_SOFTWARE_VERSION_FILEPATH):
+        with open(PICARRO_SOFTWARE_VERSION_FILEPATH) as f:
+            version = f.read()
+        return version
     return None
 
 
