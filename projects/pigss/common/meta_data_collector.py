@@ -81,7 +81,7 @@ def get_time_zone():
 
 
 def get_last_reboot_time():
-    return _run_command(command=["last", "reboot"], line_trigger="still running")
+    return "\n".join(_run_command(command=["last", "reboot"], line_trigger="", get_last_lines=5))
 
 
 def get_pkg_verions(pkg):
@@ -100,7 +100,7 @@ def get_picarro_version():
     return None
 
 
-def _run_command(command, line_trigger):
+def _run_command(command, line_trigger, get_last_lines=None):
     """
         A method to run a command as subprocess and return
         line from stdout that contains line_trigger
@@ -109,6 +109,8 @@ def _run_command(command, line_trigger):
         output = subprocess.check_output(command, universal_newlines=True)
     except subprocess.CalledProcessError:
         return None
+    if get_last_lines is not None:
+        return output.splitlines()[:get_last_lines]
     # search for trigger in the line
     for line in output.splitlines():
         if line_trigger in line:

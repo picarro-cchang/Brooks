@@ -13,8 +13,10 @@ Type=simple
 # -pr ----- Prefix for db filename                                        #
 # -prh ----- Prefix for db filename to be hostname                        #
 # -pkg ---- List of dpkg packages and versions to include in db metadata  #
+# -pv ----- Collect Picarro software Version as metadata                  #
+# -pol ---- Purge log files older than supplied amount of months          #
 ###########################################################################
-ExecStart=/usr/bin/lologger -meta -j -prh -pkg lologger pigss-meta
+ExecStart=/usr/bin/lologger -meta -j -prh -pkg lologger pigss-meta -pv -pol 12
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -HUP $MAINPID
 Restart=always
