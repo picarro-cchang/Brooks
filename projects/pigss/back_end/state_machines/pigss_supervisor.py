@@ -268,7 +268,7 @@ class PigssSupervisor(Ahsm):
             Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=sorted(self.bank_list),
                                                                mad_mapper_result=self.device_dict)))
 
-    @log_async_exception(log_func=log.error)
+    @log_async_exception(log_func=log.error, stop_loop=True)
     async def perform_mapping(self):
         # Run the MadMapper after a specified delay
         delay = self.farm.config.get_madmapper_startup_delay()
@@ -428,13 +428,13 @@ class PigssSupervisor(Ahsm):
             else:
                 log.info(f"Unknown service {service} ignored")
 
-    @log_async_exception(log_func=log.warning)
+    @log_async_exception(log_func=log.warning, stop_loop=True)
     async def startup_services(self):
         await self.setup_services(at_start=True)
         await asyncio.sleep(1.0)
         Framework.publish(Event(Signal.SERVICES_STARTED, None))
 
-    @log_async_exception(log_func=log.warning)
+    @log_async_exception(log_func=log.warning, stop_loop=True)
     async def startup_drivers(self):
         if not self.simulation:
             picarro_analyzer_ips = [

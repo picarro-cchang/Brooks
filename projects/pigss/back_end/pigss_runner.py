@@ -62,7 +62,7 @@ class PigssRunner:
         log.info("PigssRunner is cleaning up")
         self.terminate_event.set()
 
-    @log_async_exception(log_func=log.error)
+    @log_async_exception(log_func=log.error, stop_loop=True)
     async def server_init(self, config_filename):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
@@ -181,7 +181,6 @@ async def async_main(config_filename):
     finally:
         if service and service.runner is not None:
             await service.runner.cleanup()
-            await service.terminate_event.wait()
     log.info('PigssRunner stopped')
 
 
