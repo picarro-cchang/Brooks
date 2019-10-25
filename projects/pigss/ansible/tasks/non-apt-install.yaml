@@ -19,6 +19,13 @@
   become: yes
   when: update == "false"
 
+- name: Download telegraf
+  get_url:
+    url: https://dl.influxdata.com/telegraf/releases/telegraf_1.12.4-1_amd64.deb
+    dest: /tmp/
+  become: yes
+  when: update == "false"
+
 - name: Install downloaded debian packages
   apt:
     deb: '{{ item }}'
@@ -27,6 +34,28 @@
     - /tmp/bat_0.11.0_amd64.deb
     - /tmp/influxdb_1.7.7_amd64.deb
     - /tmp/VNC-Viewer-6.19.923-Linux-x64.deb
+    - /tmp/telegraf_1.12.4-1_amd64.deb
+  become: yes
+  when: update == "false"
+
+- name: Stop telegraf service
+  systemd:
+    state: stopped
+    name: telegraf
+  become: yes
+  when: update == "false"
+
+- name: Configure telegraf
+  copy:
+    src: files/telegraf.conf
+    dest: /etc/telegraf/telegraf.conf
+  become: yes
+  when: update == "false"
+
+- name: Start telegraf service
+  systemd:
+    state: started
+    name: telegraf
   become: yes
   when: update == "false"
 
