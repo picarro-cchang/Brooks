@@ -18,12 +18,59 @@
   "links": [],
   "panels": [
     {
-      "datasource": null,
+      "datasource": "system status server",
+      "description": "",
       "gridPos": {
-        "h": 11,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 0
+      },
+      "header_js": "{}",
+      "id": 4,
+      "links": [
+        {
+          "title": "",
+          "url": ""
+        }
+      ],
+      "method": "GET",
+      "mode": "template",
+      "options": {},
+      "params_js": "{}",
+      "request": "datasource",
+      "responseType": "json",
+      "showErrors": true,
+      "showTime": false,
+      "showTimeFormat": "LTS",
+      "showTimePrefix": null,
+      "showTimeValue": "request",
+      "skipSameURL": false,
+      "targets": [
+        {
+          "data": "",
+          "hide": false,
+          "refId": "A",
+          "target": "select metric",
+          "type": "timeseries"
+        }
+      ],
+      "template": "<div class=\"table-panel-container\">\n  <table class=\"table-panel-table\">\n    <thead>\n      <tr>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Analyzer Name\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\"> Warm Box Temperature\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Cavity Temperature\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Cavity Pressure\n          </div>\n        </th>\n        <th style=\"text-align:center\">\n          <div class=\"table-panel-table-header-inner\">\n            Status\n          </div>\n        </th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr  ng-repeat=\"value in response\">\n        <td><div>{{value.name}}</div></td>\n        <td><div>{{value.warm_box_temp | number:2 }} / {{value.warm_box_temp_setpoint | number:2}}</div></td>\n        <td><div>{{value.cavity_temp | number:2}} / {{value.cavity_temp_setpoint | number:2}}</div></td>\n        <td><div>{{value.cavity_pressure | number:1}} / {{value.cavity_pressure_setpoint | number:1}}</div></td>\n        <td><div>{{value.status}}</div></td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+      "templateResponse": true,
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "type": "ryantxu-ajax-panel",
+      "url": "/analyzer_status",
+      "withCredentials": false
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 5
       },
       "id": 2,
       "options": {
@@ -186,5 +233,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 2
+  "version": 3
 }

@@ -98,11 +98,6 @@ export class LogPanel extends PureComponent<Props, State> {
     }
   };
 
-  componentWillUnmount() {
-    this.ws.send('CLOSE');
-    this.ws.close(1000, 'Client Initiated Connection Termination');
-  }
-
   render() {
     const { options } = this.props;
     return (
