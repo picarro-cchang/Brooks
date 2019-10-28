@@ -59,10 +59,10 @@ class ControllerService(ServiceTemplate):
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
 
     async def on_shutdown(self, app):
-        for task in self.tasks:
-            task.cancel()
         for ws in app['websockets']:
             await ws.close(code=1001, message='Server shutdown')
+        for task in self.tasks:
+            task.cancel()
         log.info("Controller service is shutting down")
 
     async def handle_errors(self, request):
@@ -243,8 +243,11 @@ class ControllerService(ServiceTemplate):
         self.socket_stats['ws_connections'] += 1
         request.app['websockets'].append(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])
-        async for msg in ws:
-            await farm.receive_queue.put(msg.data)
+        try:
+            async for msg in ws:
+                await farm.receive_queue.put(msg.data)
+        except asyncio.CancelledError:
+            log.info("Web socket disconnection caused coroutine cancellation in handler.")
         request.app['websockets'].remove(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         self.socket_stats['ws_disconnections'] += 1
