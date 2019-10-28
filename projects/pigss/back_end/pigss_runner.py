@@ -17,6 +17,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.controller_service import ControllerService
 from back_end.servers.port_history_service import PortHistoryService
 from back_end.servers.supervisor_service import SupervisorService
+from back_end.servers.system_status_service import SystemStatusService
 from back_end.servers.time_aggregation_sevice import TimeAggregationService
 from back_end.servers.grafana_logger_service import GrafanaLoggerService
 from back_end.servers.grafana_data_generator_service import GrafanaDataGeneratorService
@@ -89,6 +90,10 @@ class PigssRunner:
         supervisor_service = SupervisorService()
         supervisor_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/supervisor/", supervisor_service.app)
+
+        system_status_service = SystemStatusService()
+        system_status_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/system_status/", system_status_service.app)
 
         port_history_service = PortHistoryService()
         port_history_service.app['farm'] = self.app['farm']
@@ -176,7 +181,6 @@ async def async_main(config_filename):
     finally:
         if service and service.runner is not None:
             await service.runner.cleanup()
-            await service.terminate_event.wait()
     log.info('PigssRunner stopped')
 
 

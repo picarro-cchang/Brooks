@@ -29,8 +29,9 @@ class SerialMapper(object):
                 serial_interface.config(port=device.get('DEVNAME'), baudrate=19200)
                 try:
                     serial_interface.open()
-                    time.sleep(0.5)
+                    time.sleep(1.0)
                     serial_interface.write('id get\r')
+                    time.sleep(0.5)
                     serial_interface.read()  # Remove echoed command
                     numato_id = int(serial_interface.read().strip())
                     serial_interface.close()

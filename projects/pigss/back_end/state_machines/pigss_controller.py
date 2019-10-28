@@ -444,8 +444,8 @@ class PigssController(Ahsm):
                             return PlanError(True, f"Unavailable port at step {row}", row, 1)
         return PlanError(False)
 
-    def save_plan_to_file(self):
-        fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
+    def save_plan_to_file(self, filename):
+        fname = os.path.join(PLAN_FILE_DIR, filename + ".pln")
         plan = {}
         for i in range(self.plan["last_step"]):
             row = i + 1
@@ -455,6 +455,7 @@ class PigssController(Ahsm):
             plan[str(row)] = s
         with open(fname, "w") as fp:
             json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
+            log.info(f"Plan file saved {fname}")
 
     def load_plan_from_file(self):
         # Exceptions raised here are signalled back to the front end
@@ -491,6 +492,8 @@ class PigssController(Ahsm):
         self.set_plan(["last_step"], last_step)
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
         self.set_plan(["bank_names"], bank_names)
+        log.info(f"Plan file loaded {fname}")
+
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -1096,7 +1099,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                self.save_plan_to_file()
+                self.save_plan_to_file(self.plan["plan_filename"])
                 self.postFIFO(Event(Signal.PLAN_SAVE_SUCCESSFUL, None))
             except Exception:
                 self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, traceback.format_exc()))
@@ -1301,6 +1304,7 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
         elif sig == Signal.MODAL_CLOSE:
@@ -1442,6 +1446,7 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._loop_plan2)
         elif sig == Signal.MODAL_CLOSE:
@@ -1575,7 +1580,8 @@ class PigssController(Ahsm):
         if plan_filename_no_ext is not None:
             fname = os.path.join(PLAN_FILE_DIR, f"{plan_filename_no_ext}.pln")
             if not os.path.exists(fname):
-                raise FileNotFoundError(f"No such file: {fname}")
+                plan_filename_no_ext = None
+                log.warning(f"Startup plan file {fname} not found")
 
         if self.get_status()["standby"] != UiStatus.ACTIVE:
             while self.get_status()["standby"] != UiStatus.READY:
