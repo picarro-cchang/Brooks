@@ -78,7 +78,9 @@ class LOLogger(object):
                  verbose=True,
                  redundant_json=False,
                  meta_table=False,
-                 pkg_meta=None):
+                 pkg_meta=None,
+                 picarro_version=False,
+                 purge_old_logs=None):
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
         self.db_filename_hostname = db_filename_hostname
@@ -102,6 +104,8 @@ class LOLogger(object):
 
         self.meta_table = meta_table
         self.pkg_meta = pkg_meta
+        self.picarro_version = picarro_version
+        self.purge_old_logs = purge_old_logs
 
         self.server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
                                             ServerName=self.rpc_server_name,
@@ -121,7 +125,9 @@ class LOLogger(object):
                                               do_database_transition=self.do_database_transition,
                                               redundant_json=self.redundant_json,
                                               meta_table=self.meta_table,
-                                              pkg_meta=self.pkg_meta)
+                                              pkg_meta=self.pkg_meta,
+                                              picarro_version=self.picarro_version,
+                                              purge_old_logs=self.purge_old_logs)
 
         self.register_rpc_functions()
 
@@ -216,7 +222,9 @@ class LOLoggerThread(threading.Thread):
                  do_database_transition=DO_DATABASE_TRANSITION,
                  redundant_json=False,
                  meta_table=False,
-                 pkg_meta=None):
+                 pkg_meta=None,
+                 picarro_version=False,
+                 purge_old_logs=None):
         threading.Thread.__init__(self, name="LOLoggerThread")
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
@@ -244,6 +252,8 @@ class LOLoggerThread(threading.Thread):
         self.start_time = time.time()
         self.meta_table = meta_table
         self.pkg_meta = pkg_meta
+        self.picarro_version = picarro_version
+        self.purge_old_logs = purge_old_logs
 
         self.setDaemon(True)
         self.start()
@@ -259,7 +269,9 @@ class LOLoggerThread(threading.Thread):
     def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname):
         """Create a filename for the new sqlite file."""
         db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
+        self.full_prefix = f"{db_filename_prefix}_"
         if db_filename_hostname is not None:
+            self.full_prefix = f"{os.uname()[1]}_{self.full_prefix}"
             db_filename = f"{os.uname()[1]}_{db_filename}"
         return os.path.join(db_folder_path, db_filename)
 
@@ -296,6 +308,8 @@ class LOLoggerThread(threading.Thread):
             db_extension = os.path.splitext(db_path)[1]
             json_file_path = db_path.replace(db_extension, ".json")
             self.json_file = open(json_file_path, "a")
+        if self.purge_old_logs is not None:
+            self.get_purging_old_logs_done()
 
     def check_if_need_to_switch_file(self):
         """Check if year or month has changed."""
@@ -337,13 +351,45 @@ class LOLoggerThread(threading.Thread):
         """
             Prepare metadata for database
         """
-        meta_dict = get_metadata_ready_for_db(self.pkg_meta)
+        meta_dict = get_metadata_ready_for_db(self.pkg_meta, self.picarro_version)
         meta_dict.append(("lologger_start_time", self.start_time))
         return meta_dict
+
+    def get_purging_old_logs_done(self):
+        """
+            Delete old logs files if they are older than self.duration
+        """
+        if not self.purge_old_logs.isdigit():
+            return False
+        # get list of files
+        filelist = [f for f in os.listdir(self.db_folder_path) if os.path.isfile(os.path.join(self.db_folder_path, f))]
+
+        today = datetime.today()
+        current_month_count = today.year * 12 + today.month
+
+        for filename in filelist:
+            # check if actual log file
+            if filename.startswith(self.db_filename_prefix) and filename.endswith(".db"):
+                # check if old enough
+                year, month = [k for k in filename[len(self.full_prefix): -3].split("_") if k]
+                if current_month_count - (int(year) * 12 + int(month)) >= int(self.purge_old_logs):
+                    # the file appeared to be older than purge period - gonna be deleted
+                    db_filepath = os.path.join(self.db_folder_path, filename)
+                    print(f"File {db_filepath} gonna be deleted as too old")
+                    os.remove(db_filepath)
+                    json_filepath = db_filepath.replace(".db", ".json")
+                    if os.path.exists(json_filepath):
+                        print(f"File {json_filepath} gonna be deleted as too old")
+                        os.remove(json_filepath)
+
+        return True
 
     def run(self):
         """Get tuples from queue and flush it to database."""
         self.get_connection(self.db_path)
+
+        if self.purge_old_logs is not None:
+            self.get_purging_old_logs_done()
 
         data_to_flush = []
         time_since_last_flush = time.time()
@@ -450,6 +496,11 @@ def parse_arguments():
     parser.add_argument('-j', '--json', help='Write redundunt logs to json file', default=False, action="store_true")
     parser.add_argument('-meta', '--meta_table', help='Create a table with metadata', default=False, action="store_true")
     parser.add_argument('-pkg', '--pkg_meta', nargs='+', help='Add versions of the passed packages to the metadata table')
+    parser.add_argument('-pv', '--picarro_version',
+                        help='Store version of Picarro OS in metadata',
+                        default=False,
+                        action="store_true")
+    parser.add_argument('-pol', '--purge_old_logs', help='Will delete log files older than provided number of months', default=None)
 
     args = parser.parse_args()
     return args
@@ -474,7 +525,9 @@ def main():
         verbose=args.verbose,
         redundant_json=args.json,
         meta_table=args.meta_table,
-        pkg_meta=args.pkg_meta)
+        pkg_meta=args.pkg_meta,
+        picarro_version=args.picarro_version,
+        purge_old_logs=args.purge_old_logs)
 
 
 if __name__ == "__main__":
