@@ -7,6 +7,7 @@ pluginSourceDir=${HOME}/git/host/projects/pigss/front_end/grafana/picarro/plugin
 # List of plugins to be built
 
 pluginList=('
+    ajax-panel
     analyzerGraphsApp
     concentrationByValveApp
     simpodJsonDatasource
