@@ -15,7 +15,18 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "keepTime": true,
+      "tags": [
+        "pigss"
+      ],
+      "title": "Dashboards",
+      "type": "dashboards"
+    }
+  ],
   "panels": [
     {
       "datasource": null,
@@ -83,7 +94,9 @@
   "refresh": "5s",
   "schemaVersion": 20,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "pigss"
+  ],
   "templating": {
     "list": []
   },
