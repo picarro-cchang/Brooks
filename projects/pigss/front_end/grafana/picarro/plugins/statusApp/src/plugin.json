@@ -1,6 +1,6 @@
 {
     "type": "app",
-    "name": "Status App",
+    "name": "Status",
     "id": "picarro-status-app",
     "info": {
       "author": {
@@ -25,4 +25,3 @@
       "plugins": []
     }
   }
-  
