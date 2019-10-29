@@ -27,7 +27,7 @@ DEPENDS=grafana (>= 6.3.0)
 
 # Make the debian package
 .PHONY: deb
-deb: deb-dirs postinst control
+deb: clean plugins deb-dirs postinst control
 	dpkg-deb --build ${DEB_BUILD_DIR} ${BUILD_DIR}/${PACKAGE_NAME}-${VERSION}.deb
 
 .PHONY: deb-dirs
