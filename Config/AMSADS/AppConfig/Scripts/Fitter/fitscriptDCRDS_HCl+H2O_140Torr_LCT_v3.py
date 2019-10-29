@@ -201,17 +201,6 @@ if INIT:
     delta_loss_hcl = 0
     delta_loss_h2o = 0
 
-# For offline analysis and output to file
-    # out = open("Fit_results.txt","w")
-    # first_fit = 1
-
-# ---------  This section goes to end of file  ----------
-    # if first_fit:
-    # keys = sorted([k for k in RESULT])
-    # print>>out," ".join(keys)
-    # first_fit = 0
-    # print>>out," ".join(["%s" % RESULT[k] for k in keys])
-
 init = InitialValues()
 deps = Dependencies()
 ANALYSIS = []

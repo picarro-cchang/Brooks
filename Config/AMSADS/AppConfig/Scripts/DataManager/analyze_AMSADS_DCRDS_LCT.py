@@ -20,6 +20,7 @@
 #  2019 0920:  Added -2.8 torr offset to normalized pressure correction to account for SADS true pressure to be 137.2torr
 #              measured on golden SADS2004 20190920
 
+
 import os
 import sys
 import inspect
@@ -78,7 +79,7 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["tau_HCl"]=0.0
     _PERSISTENT_["HCl_filter"]=0.0
     
-    _PERSISTENT_["Pressure_save"]= 137.0
+    _PERSISTENT_["Pressure_save"]= 140.0   
     _PERSISTENT_["ignore_count"] = 17
     _PERSISTENT_["init"] = False
 
@@ -133,6 +134,7 @@ H2O_a_CONC = (_INSTR_["concentration_h2o_a_slope"],_INSTR_["concentration_h2o_a_
 CH4_CONC = (_INSTR_["concentration_ch4_slope"],_INSTR_["concentration_ch4_intercept"])
 # Import empirical cross-talk parameters
 C2H4_to_HCl = _INSTR_["c2h4_to_hcl"]
+C3H4_to_HCl = _INSTR_["c3h4_to_hcl"]
 
 # Define linear pressure correction for HCl cavity
 HCl_P_correction = (_INSTR_["pressure_hcl_slope"],_INSTR_["pressure_hcl_intercept"])
@@ -174,7 +176,7 @@ warmboxTempLocked = _INSTR_STATUS_ & INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
 warmingUp =         _INSTR_STATUS_ & INSTMGR_STATUS_WARMING_UP
 systemError =       _INSTR_STATUS_ & INSTMGR_STATUS_SYSTEM_ERROR
 good = pressureLocked and cavityTempLocked and warmboxTempLocked and (not warmingUp) and (not systemError)
-if abs(_DATA_["CavityPressure"]-140.0) > 12: #0.1:
+if abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) > 0.2:
     good = False
 _NEW_DATA_["good"] = good
 try:
@@ -195,7 +197,7 @@ try:
 
         _NEW_DATA_["NH3_broadeningCorrected"] = corrected
         _NEW_DATA_["NH3_dry"] = dry
-        _NEW_DATA_["NH3_raw"] = dry
+        
 
         PF_nh3_corrected = _DATA_["PF_nh3_conc_ave"] + C2H2toNH3*_DATA_["PF_c2h2_conc"] + C3H4toNH3*_DATA_["PF_c3h4_conc"]
         nh3_cal_HCcorrected_wet = applyLinear(PF_nh3_corrected,NH3_CONC)
@@ -210,6 +212,7 @@ try:
         nh3_cal_HCcorrected = pf_corrected/(1.0-0.01*h2o_actual)
         _NEW_DATA_["NH3_HCcorrected"] = nh3_cal_HCcorrected
         _NEW_DATA_["H2O"] = applyLinear(pf_h2o_actual,H2O_CONC)
+        _NEW_DATA_["NH3_raw"] = nh3_cal_HCcorrected
     
         if((_DATA_["species"]==4) and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
             _PERSISTENT_["NH3_filter"] = nh3_cal_HCcorrected  #  "nh3_cal_HCcorrected" replaced "dry" on 19 July 2018 (5 places)
@@ -262,7 +265,6 @@ try:
             _NEW_DATA_["HF_30sec"] = HF30s
             _NEW_DATA_["HF_2min"] = boxAverage(_PERSISTENT_["bufferHF120"],temp,now,120)
             _NEW_DATA_["HF_5min"] = boxAverage(_PERSISTENT_["bufferHF300"],temp,now,300)
-            # Changed operating pressure to 137 torr to match baratron reading
             if ((_DATA_["species"]==60)and (abs(_DATA_["CavityPressure"]-_PERSISTENT_["Pressure_save"]) < 2.0)):
                 _PERSISTENT_["HF_filter"] = temp
                 _PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"], _PERSISTENT_["tau_HF"] = variableExpAverage(_PERSISTENT_["bufferZZ_HF"],_PERSISTENT_["bufferExpAvg_HF"],temp,now,1100,0,_PERSISTENT_["previousS_HF"],_PERSISTENT_["previousNoise_HF"])
@@ -288,8 +290,7 @@ except:
 
 try:
     if "hcl_conc" in _DATA_:  
-        # This is the reference pressure for HCl
-        pressureDiff = _DATA_["Cavity2Pressure"] - (140.0 - 2.8)
+        pressureDiff = _DATA_["Cavity2Pressure"] - 140.0
         tempDiff = _DATA_["Cavity2Temp"] - _DATA_["CavityTemp"]
         HCl_P_corr = applyLinear(pressureDiff,HCl_P_correction) 
         H2O_a_P_corr = applyLinear(pressureDiff,H2O_a_P_correction)
@@ -311,7 +312,7 @@ try:
         _NEW_DATA_["c2h4_conc_correct"] = c2h4_conc
         
         #temp = applyLinear(_DATA_["hcl_conc"]+ C2H4_to_HCl*_DATA_["c2h4_conc"],HCl_CONC) 
-        temp = applyLinear(hcl_conc + C2H4_to_HCl*c2h4_conc,HCl_CONC)
+        temp = applyLinear(hcl_conc + C2H4_to_HCl*c2h4_conc + C3H4_to_HCl*_DATA_["PF_c3h4_conc"],HCl_CONC)
         _NEW_DATA_["HCl_raw"] = temp
         now = _OLD_DATA_["HCl_raw"][-2].time
         _NEW_DATA_["HCl_30sec"] = boxAverage(_PERSISTENT_["bufferHCl30"],temp,now,30)

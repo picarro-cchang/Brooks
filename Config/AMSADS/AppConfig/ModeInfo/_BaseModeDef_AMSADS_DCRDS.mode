@@ -12,13 +12,15 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 6
+ModeCount = 8
 Mode_1 = NH3_mode
 Mode_2 = MADS_mode
 Mode_3 = AMADS_mode
 Mode_4 = AMADS_DCRDS_LCT_mode
 Mode_5 = AMSADS_DCRDS_LCT_mode
-Mode_6 = warming_mode
+Mode_6 = NH3_manometer_mode
+Mode_7 = O2_manometer_mode
+Mode_8 = warming_mode
 
 ############################################################################
 ###
@@ -29,12 +31,14 @@ Mode_6 = warming_mode
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
+NH3_CO2 = 1
 NH3_H2O = 2
 NH3_ONLY = 4
 HF = 60
 O2 = 61
 H2O = 63
 HCl = 64
+O2_pspec = 62
 
 # Default processing to use for any spectra/label can be supplied below.
 # - If the spectrum name is not referred to in the plan file for the active mode, the processing
