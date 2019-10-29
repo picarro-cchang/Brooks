@@ -15,13 +15,25 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "links": [],
+  "links": [
+    {
+      "asDropdown": true,
+      "icon": "external link",
+      "includeVars": false,
+      "keepTime": true,
+      "tags": [
+        "pigss"
+      ],
+      "title": "Dashboards",
+      "type": "dashboards"
+    }
+  ],
   "panels": [
     {
       "datasource": "system status server",
       "description": "",
       "gridPos": {
-        "h": 5,
+        "h": 6,
         "w": 24,
         "x": 0,
         "y": 0
@@ -55,11 +67,12 @@
           "type": "timeseries"
         }
       ],
-      "template": "<div class=\"table-panel-container\">\n  <table class=\"table-panel-table\">\n    <thead>\n      <tr>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Analyzer Name\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\"> Warm Box Temperature\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Cavity Temperature\n          </div>\n        </th>\n        <th>\n          <div class=\"table-panel-table-header-inner\">\n            Cavity Pressure\n          </div>\n        </th>\n        <th style=\"text-align:center\">\n          <div class=\"table-panel-table-header-inner\">\n            Status\n          </div>\n        </th>\n      </tr>\n    </thead>\n    <tbody>\n      <tr  ng-repeat=\"value in response\">\n        <td><div>{{value.name}}</div></td>\n        <td><div>{{value.warm_box_temp | number:2 }} / {{value.warm_box_temp_setpoint | number:2}}</div></td>\n        <td><div>{{value.cavity_temp | number:2}} / {{value.cavity_temp_setpoint | number:2}}</div></td>\n        <td><div>{{value.cavity_pressure | number:1}} / {{value.cavity_pressure_setpoint | number:1}}</div></td>\n        <td><div>{{value.status}}</div></td>\n      </tr>\n    </tbody>\n  </table>\n</div>",
+      "template": "<div class=\"table-panel-container\">\n\t<div class=\"table-panel-header-bg\"></div>\n\t<div class=\"table-panel-scroll\">\n\t\t<table class=\"table-panel-table\">\n\t\t\t<thead>\n\t\t\t\t<tr>\n\t\t\t\t\t<th>\n            <div class=\"table-panel-table-header-inner\">\n              Analyzer Name\n            </div>\n          </th>\n          <th>\n            <div class=\"table-panel-table-header-inner\"> \n              Warm Box Temperature\n            </div>\n          </th>\n          <th>\n            <div class=\"table-panel-table-header-inner\">\n              Cavity Temperature\n            </div>\n          </th>\n          <th>\n            <div class=\"table-panel-table-header-inner\">\n              Cavity Pressure\n            </div>\n          </th>\n          <th style=\"text-align:center\">\n            <div class=\"table-panel-table-header-inner\">\n              Status\n            </div>\n          </th>\n\t\t\t\t</tr>\n\t\t\t</thead>\n\t\t\t<tbody>\n\t\t\t   <tr  ng-repeat=\"value in response\">\n          <td>\n            <div>\n              {{value.name}}\n            </div>\n          </td>\n          <td>\n            <div ng-style=\"(value.warm_box_temp >= (value.warm_box_temp_setpoint - 0.05) && value.warm_box_temp <= (value.warm_box_temp_setpoint + 0.05)) && {'color':'rgb(86, 166, 75)'} || {'color':'white'}\">\n              {{value.warm_box_temp | number:2 }} \n              <!--/ {{value.warm_box_temp_setpoint | number:2}}-->\n            </div>\n          </td>\n          <td>\n            <div ng-style=\"(value.cavity_temp >= (value.cavity_temp_setpoint - 0.1) && value.cavity_temp <= (value.cavity_temp_setpoint + 0.1)) && {'color':'rgb(86, 166, 75)'} || {'color':'white'}\">\n              {{value.cavity_temp | number:2}} \n              <!--/ {{value.cavity_temp_setpoint | number:2}}-->\n            </div>\n          </td>\n          <td>\n            <div ng-style=\"(value.cavity_pressure >= (value.cavity_pressure_setpoint*0.95) && value.cavity_pressure <= (value.cavity_pressure_setpoint*1.05)) && {'color':'rgb(86, 166, 75)'} || {'color':'white'}\">\n              {{value.cavity_pressure | number:1}} \n              <!--/ {{value.cavity_pressure_setpoint | number:1}}-->\n            </div>\n          </td>\n          <td>\n            <div ng-style=\"value.status == 'WARMING' && {'color': 'red'} || value.status =='MEASURING' && {'color': 'rgb(86, 166, 75)'}\">\n              {{value.status}}\n            </div>\n          </td>\n        </tr>\n\t\t\t</tbody>\n\t\t</table>\n\t</div>\n</div>",
       "templateResponse": true,
       "timeFrom": null,
       "timeShift": null,
       "title": "",
+      "transparent": true,
       "type": "ryantxu-ajax-panel",
       "url": "/analyzer_status",
       "withCredentials": false
@@ -67,10 +80,10 @@
     {
       "datasource": null,
       "gridPos": {
-        "h": 8,
+        "h": 14,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 6
       },
       "id": 2,
       "options": {
@@ -149,13 +162,16 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "",
+      "transparent": true,
       "type": "logger-panel"
     }
   ],
-  "refresh": "5s",
+  "refresh": "",
   "schemaVersion": 20,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "pigss"
+  ],
   "templating": {
     "list": [
       {
@@ -233,5 +249,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 3
+  "version": 4
 }
