@@ -23,7 +23,7 @@ def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True, publ
         async def wrapper(*args, **kwargs):
             try:
                 await coroutine(*args, **kwargs)
-            # Bare exception intended to be a catch-all for any unhandled exceptuin
+            # Bare exception intended to be a catch-all for any unhandled exception
             except Exception as e:  # noqa
                 if ignore_cancel and isinstance(e, asyncio.CancelledError):
                     pass
