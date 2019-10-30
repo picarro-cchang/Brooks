@@ -62,7 +62,7 @@ class PigssRunner:
         log.info("PigssRunner is cleaning up")
         self.terminate_event.set()
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error, publish_terminate=True)
     async def server_init(self, config_filename):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
