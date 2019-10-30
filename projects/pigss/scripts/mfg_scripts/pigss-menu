@@ -19,6 +19,7 @@ cat << !
 2. Reboot
 3. Shutdown
 4. Mount Network Drives
+5. Relocate InfluxDB To Secondary SSD
 
 !
 
@@ -31,6 +32,7 @@ case $choice in
 	2) shutdown -r now ;;
 	3) shutdown -h now ;;
 	4) sudo ./pigss-network || sudo /usr/bin/pigss-network;;
+	5) sudo ./pigss-influx-relocating;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac
 done
