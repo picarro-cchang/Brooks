@@ -47,6 +47,11 @@
   apt: name=python-psutil
   become: yes
 
+
+- name: Install virtualenv package
+  apt: name=virtualenv
+  become: yes
+
 - name: Install openssh-server
   apt: name=openssh-server
   become: yes
