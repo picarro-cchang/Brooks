@@ -140,6 +140,7 @@ if INIT:
     hf_minBasePoints = 0
     hf_maxBasePoints = 0
     hf_meanBasePoints = 0
+    hf_current_threshold = cavityParams['AUTOCAL']['th_HF']
 
     counter = -20
     ignore_count = 8
@@ -235,7 +236,7 @@ else:
     d.defineFitData(freq=d.groupMeans["waveNumber"],loss=1000*d.groupMeans["uncorrectedAbsorbance"],sdev=1/sqrt(d.groupSizes))
     P = d["cavitypressure"]
     T = d["cavitytemperature"]
-    current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
+    #current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
     tunerMean = mean(d.tunerValue)
     tunerStdev = std(d.tunerValue)
     solValves = d.sensorDict["ValveMask"]
@@ -245,6 +246,7 @@ else:
     RESULT = {}
     r = None
     if d["spectrumId"]==60 and d["ngroups"]>6:
+        hf_current_threshold = np.mean(d.ringdownThreshold)
         incomplete_hf_spectrum = 0
         #  Fit water-HF doublet at 7823.8
         r = anHF[0](d,init,deps)
@@ -390,7 +392,7 @@ else:
               "hf_baseQuadCurvature":hf_baseQuadCurvature,"hf_minBasePoints":hf_minBasePoints,
               "hf_maxBasePoints":hf_maxBasePoints,"hf_meanBasePoints":hf_meanBasePoints,
               "pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,"degraded_hf_performance":degraded_hf_performance,
-              "hf_threshold":current_threshold}
+              "hf_threshold":hf_current_threshold}
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                    "cavity_pressure":P,"cavity_temperature":T,"solenoid_valves":solValves,
                    "das_temp":dasTemp})

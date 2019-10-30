@@ -169,7 +169,7 @@ if INIT:
     tuner2stdev = 0
     tuner4mean = 32768
     tuner4stdev = 0
-
+    nh3_current_threshold = cavityParams['AUTOCAL']['th_NH3']
     incomplete_nh3_spectrum = 0
     """
     Placeholder until conditions are agreed upon
@@ -314,7 +314,6 @@ else:
                     "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
     P = d["cavitypressure"]
     T = d["cavitytemperature"]
-    current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
     tunerMean = mean(d.tunerValue)
     tunerStdev = std(d.tunerValue)
     solValves = d.sensorDict["ValveMask"]
@@ -325,6 +324,7 @@ else:
     r = None
     badshot_nh3 = 0
     if d["spectrumId"] == 2 and d["ngroups"] > 5:
+        nh3_current_threshold = np.mean(d.ringdownThreshold)
         incomplete_nh3_spectrum = 0
     #   Fit CO2 and water lines
         initialize_Baseline()
@@ -611,7 +611,7 @@ else:
               "PF_res_a": PF_res_a, "PF_res": PF_res, "PF_res_11": PF_res_11, "PF_res_12": PF_res_12,
               "PF_nh3_peak_11": PF_nh3_peak_11, "PF_nh3_peak_12": PF_nh3_peak_12, "PF_nh3_conc_ave": PF_nh3_conc_ave,
               "ngroups": d["ngroups"], "numRDs": d["datapoints"], "degraded_nh3_performance": degraded_nh3_performance,
-              "nh3_threshold":current_threshold}
+              "nh3_threshold":nh3_current_threshold}
     RESULT.update({"species": d["spectrumId"], "fittime": time.clock() - tstart,
                    "cavity_pressure": P, "cavity_temperature": T, "solenoid_valves": solValves,
                    "das_temp": dasTemp})
