@@ -14,7 +14,7 @@
 echo "let's move your influx yo"
 echo
 drive_trigger="ata-QEMU_HARDDISK_QM00005"
-mount_path="/second_drive"
+mount_path="/mnt/onetb
 new_influx_path="${mount_path}/influxdb/"
 drive_to_be_used="NULL"
 
