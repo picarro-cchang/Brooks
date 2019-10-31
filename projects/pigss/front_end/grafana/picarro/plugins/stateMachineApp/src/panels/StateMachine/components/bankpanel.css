@@ -1,5 +1,4 @@
 .bank-btn {
-  /*border-radius: 25%;*/
   border: 2px solid hsla(0, 0%, 100%, 0.61);
   height: 90px;
   width: 90px;
@@ -19,9 +18,7 @@
 }
 .btn-clean {
   width: 100%;
-  /*border: 3px solid hsla(0, 0%, 100%, 0.34);*/
   color: black;
-  /*border-radius: 10px;*/
 }
 .btn-clean-act {
   border: none;
@@ -88,7 +85,6 @@
 }
 .panel-plan {
   height: 640px;
-  /*background-color: #464646;*/
   background-color: #bbbbbb8c;
   padding: 10px;
   border-radius: 2px;
@@ -138,7 +134,6 @@
 .panel-bank {
   border: 2px solid #1111117a;
   margin-right: 2%;
-  /*border-radius: 10px;*/
   padding: 10px;
   float: left;
   background-color: rgba(136, 136, 136, 0.51);
@@ -165,10 +160,8 @@
   border: 2px solid hsl(0, 0%, 42%);
   grid-row-start: 2;
   grid-column-start: 1;
-  /*border-radius: 5px;*/
   color: black;
   height: 60px;
-  /*width: 20%;*/
 }
 .ref-div {
   height: 15%;

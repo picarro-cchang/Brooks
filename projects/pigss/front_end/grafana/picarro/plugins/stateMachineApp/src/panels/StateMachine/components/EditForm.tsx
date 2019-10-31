@@ -39,7 +39,7 @@ export class EditForm extends Component<EditPanelOptions> {
               />
             </div>
             <div className="row">
-              <label className="edit-label "> Channel 1 </label>
+              <label className="edit-label"> Channel 1 </label>
               <input
                 name={"bank" + key + "1"}
                 className="col-sm-6 edit-input"
