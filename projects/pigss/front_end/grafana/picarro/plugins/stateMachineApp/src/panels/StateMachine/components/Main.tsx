@@ -106,17 +106,6 @@ export class Main extends Component<any, any> {
   componentDidMount() {
     this.getDataViaApi();
 
-    this.ws.onopen = () => {
-      // on connecting, do nothing
-      // notifySuccess(
-      //     <div>
-      //       <h6>
-      //         <b>Web Socket Connected!</b>
-      //       </h6>
-      //     </div>
-      // );
-    };
-
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       this.handleData(evt.data);
