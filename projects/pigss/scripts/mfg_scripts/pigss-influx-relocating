@@ -137,7 +137,7 @@ fi
 # DO THE INFLUX STUFF
 # create folder for influx
 mkdir -p $new_influx_path
-chown influxdb:influxdb $new_influx_path
+chown -R influxdb:influxdb $new_influx_path
 
 # change influx config file
 echo "Modifying /etc/influxdb/influxdb.conf"
