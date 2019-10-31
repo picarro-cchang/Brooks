@@ -149,7 +149,7 @@ sed -i "s|/var/lib/influxdb/wal|${new_influx_path}/wal|g" /etc/influxdb/influxdb
 echo "Restarting influxdb"
 service influxdb restart
 
-echo "All done, good job, gg ez"
+echo "Secondary SSD Configured..."
 
 # TODO fix drive_trigger string and new_influx_path before using in production
 # TODO allow user to pick a drive if non been triggered. make sure user don't pick main drive
