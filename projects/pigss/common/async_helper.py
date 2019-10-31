@@ -66,6 +66,7 @@ class SyncWrapper:
 
     See https://gist.github.com/dmfigol/3e7d5b84a16d076df02baa9f53271058
     """
+
     def __init__(self, cls, *a, **k):
         self.__class_to_wrap = cls
         self.__args = a

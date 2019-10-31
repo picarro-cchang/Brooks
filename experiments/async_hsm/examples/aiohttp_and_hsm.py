@@ -221,6 +221,7 @@ class HsmPool:
     the HSM in which an exception occurs is identified and so that an
     error in one does not cause all machines to be killed
     """
+
     def __init__(self):
         self.hsm1 = MyHsm(self, 'alpha', 3)
         self.hsm2 = MyHsm(self, 'beta', 5)

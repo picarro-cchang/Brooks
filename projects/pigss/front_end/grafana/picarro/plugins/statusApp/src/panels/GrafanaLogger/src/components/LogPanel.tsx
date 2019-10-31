@@ -30,7 +30,6 @@ export class LogPanel extends PureComponent<Props, State> {
   ws: WebSocket = new WebSocket(SocketURL);
   componentDidMount() {
     this.ws.onopen = () => {
-      notifySuccess('Web socket connected');
       const queryObj = this.getQueryObj(this.props);
       this.updateLogsData(queryObj);
     };
@@ -98,11 +97,6 @@ export class LogPanel extends PureComponent<Props, State> {
       this.ws.send(JSON.stringify(query));
     }
   };
-
-  componentWillUnmount() {
-    this.ws.send('CLOSE');
-    this.ws.close(1000, 'Client Initiated Connection Termination');
-  }
 
   render() {
     const { options } = this.props;

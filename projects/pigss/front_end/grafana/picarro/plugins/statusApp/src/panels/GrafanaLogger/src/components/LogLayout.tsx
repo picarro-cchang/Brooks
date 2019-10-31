@@ -18,7 +18,7 @@ export class LogLayout extends Component<Props, any> {
 
     return (
       <Fragment>
-        <h3 className="text-center" style={{ marginTop: '24px' }}>
+        <h3 className="text-center">
           Logs
         </h3>
         <div className="container-fluid" style={styleObj}>

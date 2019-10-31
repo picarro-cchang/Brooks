@@ -150,6 +150,7 @@ def state(func):
     to determine which methods inside a class are actually states.
     Other uses of the attribute may come in the future.
     """
+
     @wraps(func)
     def func_wrap(self, evt):
         result = func(self, evt)
@@ -604,6 +605,7 @@ class Framework(object):
         and the class name in which the exception occured, so that it can be
         dealt with appropriately.
         """
+
         def getPriority(x):
             return x.priority
 
@@ -686,6 +688,7 @@ class Ahsm(Hsm):
     """An Augmented Hierarchical State Machine (AHSM); a.k.a. ActiveObject/AO.
     Adds a priority, message queue and methods to work with the queue.
     """
+
     def start(self, priority):
         # must set the priority before Framework.add() which uses the priority
         self.priority = priority
@@ -779,6 +782,7 @@ class TimeEvent(object):
     A one-shot TimeEvent is created by calling either postAt() or postIn().
     A periodic TimeEvent is created by calling the postEvery() method.
     """
+
     def __init__(self, signame):
         assert type(signame) == str
         self.signal = Signal.register(signame)

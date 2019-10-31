@@ -15,6 +15,7 @@ class SimAlicatDriver(object):
     Alicat Quickstart Guide:
         https://documents.alicat.com/Alicat-Serial-Primer.pdf
     """
+
     def __init__(self, port, rpc_port, carriage_return='\r', mfc_id='A', baudrate=19200, enable_ui=True):
 
         self.mass_flow = 0.0

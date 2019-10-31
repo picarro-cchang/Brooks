@@ -18,6 +18,7 @@ GPIO_MODES = ["D_IN", "D_OUT", "A_IN"]
 
 class UsbRelay:
     """A class to control a Numato USB relay module."""
+
     def __init__(self, port_name, relay_count=4, gpio_count=4, debug=False, logger=None):
         """Init function."""
         self.port_name = port_name
@@ -177,6 +178,7 @@ class SimNumatoDriver(object):
     """
         This is an RPC wrapper for Numato Relay Driver
     """
+
     def __init__(self,
                  device_port_name,
                  rpc_server_port,

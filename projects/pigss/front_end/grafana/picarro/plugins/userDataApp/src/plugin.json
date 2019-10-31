@@ -1,6 +1,6 @@
 {
     "type": "app",
-    "name": "User Data App",
+    "name": "User Data File Generator",
     "id": "picarro-user-data-app",
     "info": {
       "author": {
@@ -14,7 +14,7 @@
     "includes": [
       {
         "type": "dashboard",
-        "name": "User Data",
+        "name": "User Data File Generator",
         "path": "dashboards/userDataApp.json",
         "addToNav": true,
         "defaultNav": true
@@ -25,4 +25,3 @@
       "plugins": []
     }
   }
-  

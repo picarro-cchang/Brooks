@@ -65,13 +65,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
       <div className="gf-form-inline" key={row}>
         {row < 10 ? (
           <label
-            className="col-sm-1"
-            style={{ color: "#fff", marginLeft: "7px", marginRight: "-7px" }}
+            className="col-sm-1 panel-plan-text"
+            style={{ fontSize: "17px", marginTop: "5px" }}
           >
             {row + ". "}
           </label>
         ) : (
-          <label className="col-sm-1" style={{ color: "#fff" }}>
+          <label className="col-sm-1 panel-plan-text" style={{marginLeft: "-7px", marginRight: "7px", fontSize: "17px", marginTop: "5px"}}>
             {row + ". "}
           </label>
         )}
@@ -84,7 +84,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               this.manageFocus(input)
             }
             type="text"
-            className="form-control plan-input"
+            className="form-control plan-input panel-plan-text"
             id={"plan-port-" + row}
             onFocus={e => {
               this.props.ws_sender({
@@ -125,7 +125,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             maxLength={8}
             minLength={1}
             type="text"
-            className="form-control input-small plan-input"
+            className="form-control input-small plan-input panel-plan-text"
             id={"plan-duration-" + row}
             style={{ maxWidth: "100%" }}
             value={durationString}
@@ -133,7 +133,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
           />
         </div>
         <label
-          style={{ marginLeft: "-15px", paddingRight: "5px", color: "#fff" }}
+            className="panel-plan-text"
+            style={{ marginLeft: "-15px", paddingRight: "5px"}}
         >
           s
         </label>
@@ -163,24 +164,21 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
     return (
       <div>
         <div className="panel-plan">
-          <h2 style={{ color: "#fff" }}>Schedule</h2>
+          <h2 className="panel-plan-text">Schedule</h2>
           <span
-            className="cancel"
-            onClick={e => {
-              this.props.ws_sender({ element: "plan_cancel" });
-            }}
-            style={{ color: "#fff" }}
-          ></span>
-          <h6 style={{ color: "#fff" }}>
+            className="cancel panel-plan-text"
+            onClick={e => this.props.ws_sender({ element: "plan_cancel" })}
+            ></span>
+          <h6 className="panel-plan-text">
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
           {this.props.plan.plan_filename && !this.props.isChanged ? (
-            <h6 style={{ color: "#fff" }}>
+            <h6 className="panel-plan-text">
               Currently viewing File: {file_name}
             </h6>
           ) : (
-            <h6 style={{ color: "#fff" }}>
+            <h6 className="panel-plan-text">
               Currently not viewing a saved file
             </h6>
           )}
