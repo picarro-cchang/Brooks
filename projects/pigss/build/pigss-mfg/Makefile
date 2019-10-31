@@ -23,7 +23,7 @@ ARCHITECTURE=amd64
 MAINTAINER=gsornsen@picarro.com
 PRIORITY=optional
 DESCRIPTION=MFG tools for PiGSS
-DEPENDS=cifs-utils (>= 2:6.8-2)
+DEPENDS=cifs-utils (>= 2:6.8-1)
 
 # Make the debian package
 .PHONY: deb
