@@ -23,7 +23,7 @@ for drive_path in $(ls /dev/sd*)
 do
     if [ ${#drive_path} -eq 8 ] # sort out drives from partitions
     then 
-        echo "found physical drive $drive_path"
+        echo "Found physical drive $drive_path"
         if  udevadm info $drive_path | grep -q $drive_trigger ;
         then
             drive_to_be_used=$drive_path
