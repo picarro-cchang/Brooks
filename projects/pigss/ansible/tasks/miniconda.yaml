@@ -1,3 +1,9 @@
+- name: Create pip.conf dir
+  file:
+    path: "{{ playbook_home }}"/.pip
+    state: directory
+    mode: '0755'
+
 - name: Configure pip
   copy:
     src: files/pip.conf
