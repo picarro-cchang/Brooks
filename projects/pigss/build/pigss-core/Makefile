@@ -11,6 +11,7 @@ SIMULATION_CONFIGS=${SOURCE_DIR}simulation
 INSTALL_DIR=/usr/bin
 CONFIG_INSTALL_DIR=/tmp/config/pigss-core
 SERVICE_INSTALL_DIR=/etc/systemd/system
+TIME_INSTALL_DIR=/usr/local/share/picarro
 BUILD_DIR=dist
 DEB_BUILD_DIR=${BUILD_DIR}/.debian
 # BUILD_NUMBER can be overridden by passing in a build number
@@ -21,6 +22,7 @@ GIT_HASH=$(shell git rev-parse --short HEAD)
 ASSETS=${BUILD_DIR}/pigss-core
 CONFIG_ASSETS=${SOURCE_CONFIGS}/*.yaml ${SOURCE_CONFIGS}/*.json ${SIMULATION_CONFIGS}/*.json
 SERVICE_ASSETS=systemd/pigss-core.service
+TIME_ASSETS=${SOURCE_DIR}back_end/time_synchronization/setup_client.py
 
 # Meta data for DEBIAN/control
 # PACKAGE_NAME can be overriden by passing in a name
@@ -44,9 +46,11 @@ deb-dirs:
 	@ mkdir -p ${DEB_BUILD_DIR}${INSTALL_DIR}
 	@ mkdir -p ${DEB_BUILD_DIR}${CONFIG_INSTALL_DIR}
 	@ mkdir -p ${DEB_BUILD_DIR}${SERVICE_INSTALL_DIR}
+	@ mkdir -p ${DEB_BUILD_DIR}${TIME_INSTALL_DIR}
 	@ cp -r ${ASSETS} ${DEB_BUILD_DIR}${INSTALL_DIR}
 	@ cp -rv ${CONFIG_ASSETS} ${DEB_BUILD_DIR}${CONFIG_INSTALL_DIR}
 	@ cp -rv ${SERVICE_ASSETS} ${DEB_BUILD_DIR}${SERVICE_INSTALL_DIR}
+	@ cp -rv ${TIME_ASSETS} ${DEB_BUILD_DIR}${TIME_INSTALL_DIR}
 
 # Make the pigss-core binary file
 .PHONY: binary
