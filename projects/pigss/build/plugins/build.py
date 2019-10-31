@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-from core.utilities.grootilities.src.grootility import GROOTility
+from grootilities.grootility import GROOTility
 # TODO: Replace import -- pip install package and remove submodule
 
 
 def build():
-    with GROOTility('build') as GROOT:
+    with GROOTility('production') as GROOT:
         GROOT.build_plugins()
         GROOT._deploy_plugins()
 
