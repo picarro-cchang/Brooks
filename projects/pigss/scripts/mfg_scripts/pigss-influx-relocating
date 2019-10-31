@@ -147,7 +147,7 @@ sed -i "s|/var/lib/influxdb/wal|${new_influx_path}/wal|g" /etc/influxdb/influxdb
 
 # restart influx
 echo "Restarting influxdb"
-service influxdb restart
+systemctl restart influxdb.service
 
 echo "Secondary SSD Configured..."
 
