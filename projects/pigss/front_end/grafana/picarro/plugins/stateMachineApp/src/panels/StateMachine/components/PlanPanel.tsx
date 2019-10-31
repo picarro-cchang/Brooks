@@ -66,7 +66,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
         {row < 10 ? (
           <label
             className="col-sm-1 panel-plan-text"
-            style={{ fontSize: "17px", marginTop: "5px"}}
+            style={{ fontSize: "17px", marginTop: "5px" }}
           >
             {row + ". "}
           </label>
