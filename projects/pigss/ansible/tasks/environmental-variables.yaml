@@ -21,3 +21,7 @@
 - name: Add PIGSS_CONFIG
   shell: echo "export PIGSS_CONFIG=${HOME}/.config/pigss" >> ${HOME}/.bashrc
   when: update == "false"
+
+- name: Add PIGSS_CLIENT_ACCESS
+  shell: echo "export PIGSS_CLIENT_ACCESS={{ picarropass }}" >> ${HOME}/.bashrc
+  when: update == "false"

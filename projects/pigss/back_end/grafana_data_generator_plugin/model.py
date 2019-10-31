@@ -33,7 +33,7 @@ class Model:
             if not (cls.is_dt(time_from) or cls.is_dt(time_to)):
                 raise InfluxDBClientError()
 
-            keys = [f"last({key}) as {key}" for key in keys]
+            keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
 
             query = (f"SELECT {keys} FROM {measurements} "
@@ -47,7 +47,7 @@ class Model:
 
             return result
         except ConnectionError as ex:
-            log.error("Error while retrieving points from measurement", ex)
+            log.error(f"Error while retrieving points from measurement {ex}")
 
     @classmethod
     async def get_field_keys(cls, client, log):
@@ -64,4 +64,4 @@ class Model:
             cls.__keys = [field["fieldKey"] for field in result]
             return cls.__keys if result is not None else []
         except ConnectionError as ex:
-            log.error("Error while retrieving points from measurement", ex)
+            log.error(f"Error while retrieving points from measurement {ex}")

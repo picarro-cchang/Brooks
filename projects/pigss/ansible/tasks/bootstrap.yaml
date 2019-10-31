@@ -47,12 +47,31 @@
   apt: name=python-psutil
   become: yes
 
+
+- name: Install virtualenv package
+  apt: name=virtualenv
+  become: yes
+
 - name: Install openssh-server
   apt: name=openssh-server
   become: yes
 
 - name: Install vino (vnc server)
   apt: name=vino
+  become: yes
+
+- name: Install chrony
+  apt: name=chrony
+  become: yes
+
+- name: Install htop
+  apt: name=htop
+  become: yes
+
+- name: Start chrony service
+  systemd:
+    state: started
+    name: chrony
   become: yes
 
 - name: Install cifs-utils
@@ -157,6 +176,10 @@
 
 - name: Install dconf-editor
   apt: name=dconf-editor
+  become: yes
+
+- name: Configure firewall for ntp server
+  shell: ufw allow from any to any port 123 proto udp
   become: yes
 
 - name: Upgrade all packages to the latest version

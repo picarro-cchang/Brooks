@@ -26,6 +26,8 @@ from back_end.mfc_driver.alicat.alicat_driver import AlicatDriver
 from back_end.piglet.piglet_driver import PigletDriver
 from back_end.relay_driver.numato.numato_driver import NumatoDriver
 from back_end.state_machines.pigss_payloads import SystemConfiguration
+from back_end.time_synchronization.setup_timesync_client import \
+    time_sync_analyzers
 from common import CmdFIFO
 from common.async_helper import log_async_exception
 from common.rpc_ports import rpc_ports
@@ -95,7 +97,7 @@ class ProcessWrapper:
             self.stop_reason = stop_reason
         await self.process.join()
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def pinger(self, period):
         try:
             while True:
@@ -434,10 +436,15 @@ class PigssSupervisor(Ahsm):
 
     @log_async_exception(log_func=log.warning, stop_loop=True)
     async def startup_drivers(self):
+        if not self.simulation:
+            picarro_analyzer_ips = [
+                device["IP"] for device in self.device_dict["Devices"]["Network_Devices"].values() if device["Driver"] == "IDriver"
+            ]
+            await time_sync_analyzers(picarro_analyzer_ips)
         await self.setup_drivers(at_start=True)
         Framework.publish(Event(Signal.DRIVERS_STARTED, None))
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning)
     async def monitor_processes(self):
         await self.setup_services(at_start=False)
         await self.setup_drivers(at_start=False)

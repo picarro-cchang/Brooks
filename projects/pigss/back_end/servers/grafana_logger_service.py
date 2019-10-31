@@ -28,10 +28,6 @@ class GrafanaLoggerService(ServiceTemplate):
     def setup_routes(self):
         self.app.router.add_route("GET", "/ws", self.websocket_handler)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
-        self.app.router.add_route('GET', '/hello', self.hello)
-
-    async def hello(self, request):
-        return web.json_response(text="Hello")
 
     async def on_startup(self, app):
         log.info("GrafanaLoggerService is starting up")
@@ -171,7 +167,7 @@ class GrafanaLoggerService(ServiceTemplate):
                 is_new_interval = current_time + timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
-            log.error("Error in should_send_task", ve)
+            log.error(f"Error in should_send_task {ve}")
 
     @log_async_exception(log_func=log.error, stop_loop=True)
     async def listener(self, app, DEFAULT_INTERVAL=1.0):
@@ -192,4 +188,4 @@ class GrafanaLoggerService(ServiceTemplate):
                         for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
                     ])
             except ConnectionError as e:
-                log.error(f"{e} in listener")
+                log.error(f"Error in Logger Service Listener {e}")

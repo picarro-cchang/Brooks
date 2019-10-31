@@ -7,3 +7,4 @@ ALL ALL=NOPASSWD: /usr/bin/unmount-shared-drive
 ALL ALL=NOPASSWD: /usr/bin/pigss-hostname
 ALL ALL=NOPASSWD: /usr/bin/pigss-network
 ALL ALL=NOPASSWD: /usr/bin/pigss-menu
+ALL ALL=NOPASSWD: /usr/bin/pigss-influx-relocating

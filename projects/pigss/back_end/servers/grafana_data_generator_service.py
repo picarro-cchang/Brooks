@@ -2,7 +2,7 @@
 """ Provides an API for generating and downloading user data files
 """
 
-from os import listdir, path, stat, environ
+from os import listdir, path, stat, uname
 from urllib.parse import parse_qs
 import csv
 from datetime import datetime
@@ -26,10 +26,6 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app.router.add_get("/api/getfile", self.send_file)
         self.app.router.add_get("/api/getkeys", self.get_user_keys)
         self.app.router.add_get("/api/generatefile", self.generate_file)
-        self.app.router.add_route('GET', '/hello', self.hello)
-
-    async def hello(self, request):
-        return web.json_response(text="Hello")
 
     async def on_startup(self, app):
         log.info("GrafanaDataGeneratorService is starting up")
@@ -163,7 +159,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             return web.json_response(data=data, status=200)
 
         try:
-            host_name = environ["HOSTNAME"]
+            host_name = uname()[1]
             data_dir = self.app["config"]["server"]["data_dir"]
 
             # python's epoch time is in seconds
@@ -179,7 +175,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             if success:
                 return web.json_response({"filename": file_name})
         except KeyError as ke:
-            log.error("HOSTNAME enveironment variable is not defined.", ke)
+            log.error(f"HOSTNAME enveironment variable is not defined. {ke}")
 
     async def get_user_keys(self, request):
         """ Return the keys to the user which are not in admin_keys config

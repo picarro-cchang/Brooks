@@ -62,10 +62,10 @@ class EventsModel:
                 query += f'{limit_tpl}'
             query += ';'
         except ValueError as ve:
-            log.error("Error in building query", ve)
+            log.error(f"Error in building query {ve}")
             return None
         except TypeError as te:
-            log.error("Error in building query", te)
+            log.error(f"Error in building query {te}")
             return None
         return query, tuple(values)
 
