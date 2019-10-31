@@ -33,7 +33,7 @@
       "datasource": "system status server",
       "description": "",
       "gridPos": {
-        "h": 6,
+        "h": 4,
         "w": 24,
         "x": 0,
         "y": 0
@@ -72,7 +72,6 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "",
-      "transparent": true,
       "type": "ryantxu-ajax-panel",
       "url": "/analyzer_status",
       "withCredentials": false
@@ -83,7 +82,7 @@
         "h": 14,
         "w": 24,
         "x": 0,
-        "y": 6
+        "y": 4
       },
       "id": 2,
       "options": {
@@ -162,7 +161,6 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "",
-      "transparent": true,
       "type": "logger-panel"
     }
   ],
@@ -249,5 +247,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 4
+  "version": 2
 }
