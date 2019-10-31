@@ -11,7 +11,7 @@
     # modify the influxdb config file, so it will be using that partition for storage
 # OR do all missed steps from the above if any of them were previously made
 
-echo "let's move your influx yo"
+echo "Configuring secondary SSD..."
 echo
 drive_trigger="ata-QEMU_HARDDISK_QM00005"
 mount_path="/mnt/onetb
