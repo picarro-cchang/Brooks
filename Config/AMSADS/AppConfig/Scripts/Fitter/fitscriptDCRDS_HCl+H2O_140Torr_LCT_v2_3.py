@@ -226,10 +226,10 @@ current_threshold_factor = Driver.rdDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3")
 current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
 # If ringdown rate is less than 75rd/s lower the threshold and return empty result
 rd_rate = -1
-if (len(d.timestamp) > 1) and (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
+
+if (len(d.timestamp) > 1) and (d["spectrumId"] == 63): #and (ngroups < spectrum_min_groups):
     ms_between_rds = d.timestamp.ptp() / (len(d.timestamp) - 1)  # Ringdowns / second
     rd_rate = 1000.0 / ms_between_rds
-
 
 if not(disable_dynamic_threshold) and (rd_rate != -1) and (rd_rate < min_rd_rate) and (current_threshold_factor > min_rd_threshold_factor):
     degraded_hcl_performance = 1
@@ -407,14 +407,14 @@ else:
                 "h2o_a_conc_raw":h2o_a_conc_raw,"ch4_conc_raw":ch4_conc_raw,
                 "delta_loss_hcl":delta_loss_hcl, "delta_loss_h2o":delta_loss_h2o,
                 "ngroups":d["ngroups"],"numRDs":d["datapoints"],"interval":interval,
-                "hcl_baseMean":1000*baseMean,"hcl_baseStdev":1000*baseStdev,
-                "hcl_baseLinIntercept":baseLinIntercept,"hcl_baseLinSlope":baseLinSlope,
-                "hcl_baseQuadIntercept":baseQuadIntercept,"hcl_baseQuadSlope":baseQuadSlope,"hcl_baseQuadCurvature":baseQuadCurvature,
+                "baseMean":1000*baseMean,"baseStdev":1000*baseStdev,
+                "baseLinIntercept":baseLinIntercept,"baseLinSlope":baseLinSlope,
+                "baseQuadIntercept":baseQuadIntercept,"baseQuadSlope":baseQuadSlope,"baseQuadCurvature":baseQuadCurvature,
                 "noBaseline":noBaseline,"incomplete_hcl_spectrum":incomplete_hcl_spectrum,
-                "hcl_minBasePoints":minBasePoints,"hcl_maxBasePoints":maxBasePoints,"hcl_meanBasePoints":meanBasePoints,
+                "minBasePoints":minBasePoints,"maxBasePoints":maxBasePoints,"meanBasePoints":meanBasePoints,
                 "ch3oh_conc":ch3oh_conc,"c2h4_conc":c2h4_conc,
-                "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,"hcl_rd_rate":rd_rate,
-                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":current_threshold
+                "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,
+                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"threshold":current_threshold
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                     "cavity2_pressure":P,"cavity2_temperature":T,"solenoid_valves":solValves,

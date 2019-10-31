@@ -194,23 +194,13 @@ if INIT:
     ignore_count = 3
     last_time = None
     hcl_interval = 0.0
+    hcl_current_threshold = cavityParams['AUTOCAL']['th_HCl']
 
     # Keep unsued keys for Pfieffer's APA so that they
     # don't have to reprogram their system for the beta test
     # RSF 26JUN2018
     delta_loss_hcl = 0
     delta_loss_h2o = 0
-
-# For offline analysis and output to file
-    # out = open("Fit_results.txt","w")
-    # first_fit = 1
-
-# ---------  This section goes to end of file  ----------
-    # if first_fit:
-    # keys = sorted([k for k in RESULT])
-    # print>>out," ".join(keys)
-    # first_fit = 0
-    # print>>out," ".join(["%s" % RESULT[k] for k in keys])
 
 init = InitialValues()
 deps = Dependencies()
@@ -222,19 +212,17 @@ tempT = d.sensorDict["CavityTemp"]
 d.sensorDict["CavityTemp"] = d.sensorDict["Cavity2Temp"]
 d.cavityPressure += (d.sensorDict["Cavity2Pressure"]-d.sensorDict["CavityPressure"])
 current_threshold_factor = Driver.rdDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3") 
-current_threshold = Driver.rdFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD")
 # If ringdown rate is less than 75rd/s lower the threshold and return empty result
 rd_rate = -1
 if (len(d.timestamp) > 1) and (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
     ms_between_rds = d.timestamp.ptp() / (len(d.timestamp) - 1)  # Ringdowns / second
     rd_rate = 1000.0 / ms_between_rds
-#print d["spectrumId"]
-#print rd_rate
+    hcl_current_threshold = np.mean(d.ringdownThreshold)
 
 if not(disable_dynamic_threshold) and (rd_rate != -1) and (rd_rate < min_rd_rate) and (current_threshold_factor > min_rd_threshold_factor):
     degraded_hcl_performance = 1
     Driver.wrDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3", min_rd_threshold_factor)
-    #Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", min_rd_threshold)
+    
     Log ("Fitter changes threshold factor to %f" % min_rd_threshold_factor)
     RESULT = {}
 elif rd_rate != -1:
@@ -289,7 +277,6 @@ elif rd_rate != -1:
         meanBasePoints = mean(basePoints)
     else:
         minBasePoints = maxBasePoints = meanBasePoints = 0
-    #print (minBase, maxBase)
 
     d.badRingdownFilter("uncorrectedAbsorbance", minVal=0.1, maxVal=20.0)
     d.sparse(maxPoints=2000, width=0.005, height=100000.0, xColumn="waveNumber",
@@ -298,9 +285,7 @@ elif rd_rate != -1:
     d.defineFitData(freq=d.groupMeans["waveNumber"], loss=1000 * d.groupMeans[
                     "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
     P = d["cavitypressure"]
-    #P = d.sensorDict["Cavity2Pressure"]
     T = d["cavitytemperature"]
-    #T = d.sensorDict["Cavity2Temp"] 
     tunerMean = mean(d.tunerValue)
     solValves = d.sensorDict["ValveMask"]
     dasTemp = d.sensorDict["DasTemp"]
@@ -333,7 +318,6 @@ elif rd_rate != -1:
             while (f0 - f70) > 0.5*fsr:
                 f0 -= fsr
             sigma0 = d.groupStdDevs["waveNumber"][i0]
-            #print "%2d %8.5f %8.5f" % (i0, f0 - f70, sigma0)
             d.waveNumber = f0 + fsr*round_((d.waveNumber - f0)/fsr)
             d.badRingdownFilter("uncorrectedAbsorbance",minVal=0.20,maxVal=20.0)
             d.sparse(maxPoints=1000,width=0.003,height=100000.0,xColumn="waveNumber",yColumn="uncorrectedAbsorbance",outlierThreshold=4.0)
@@ -414,7 +398,7 @@ elif rd_rate != -1:
                 "hcl_minBasePoints":minBasePoints,"hcl_maxBasePoints":maxBasePoints,"hcl_meanBasePoints":meanBasePoints,
                 "ch3oh_conc":ch3oh_conc,"c2h4_conc":c2h4_conc,
                 "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,"hcl_rd_rate":rd_rate,
-                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":current_threshold
+                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":hcl_current_threshold
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                     "cavity2_pressure":P,"cavity2_temperature":T,"solenoid_valves":solValves,
@@ -427,6 +411,5 @@ elif rd_rate != -1:
             if current_threshold_factor != original_rd_threshold_factor:
                 degraded_hcl_performance = 0
                 Driver.wrDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3", original_rd_threshold_factor)
-                #Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", original_rd_threshold)
                 Log("Fitter changes threshold factor to %d" % original_rd_threshold_factor)
                 #print "Fitter changes threshold factor to %d" % original_rd_threshold_factor
