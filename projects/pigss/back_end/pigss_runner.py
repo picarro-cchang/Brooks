@@ -43,7 +43,7 @@ class PigssRunner:
         self.runner = None
         self.port = None
         self.addr = None
-        self.terminate_event = asyncio.Event()
+        self.terminate_event = None
 
     def set_host(self, port, addr='0.0.0.0'):
         self.port = port
@@ -51,6 +51,7 @@ class PigssRunner:
 
     async def on_startup(self, app):
         await app['farm'].startup()
+        self.terminate_event = asyncio.Event()
         return
 
     async def on_shutdown(self, app):
@@ -62,7 +63,7 @@ class PigssRunner:
         log.info("PigssRunner is cleaning up")
         self.terminate_event.set()
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error, publish_terminate=True)
     async def server_init(self, config_filename):
         self.app = web.Application()
         self.app.on_startup.append(self.on_startup)
@@ -181,6 +182,11 @@ async def async_main(config_filename):
     finally:
         if service and service.runner is not None:
             await service.runner.cleanup()
+        if service.terminate_event is not None:
+            try:
+                await asyncio.wait_for(service.terminate_event.wait(), timeout=2)
+            except asyncio.TimeoutError:
+                pass  # We have timed out waiting for all processes to terminate cleanly
     log.info('PigssRunner stopped')
 
 

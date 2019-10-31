@@ -268,7 +268,7 @@ class PigssSupervisor(Ahsm):
             Event(Signal.SYSTEM_CONFIGURE, SystemConfiguration(bank_list=sorted(self.bank_list),
                                                                mad_mapper_result=self.device_dict)))
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error, publish_terminate=True)
     async def perform_mapping(self):
         # Run the MadMapper after a specified delay
         delay = self.farm.config.get_madmapper_startup_delay()
@@ -298,7 +298,24 @@ class PigssSupervisor(Ahsm):
         self.wrapped_processes[key] = wrapped_process
         self.farm.RPC[rpc_name] = await wrapped_process.start(**process_kwargs)
         if at_start:
-            self.tasks.append(self.run_async(wrapped_process.pinger(ping_interval)))
+            # Try to send the first ping and kill the system if there is no response
+            #  within a certain interval
+            start_ok = True
+            try:
+                if await asyncio.wait_for(wrapped_process.rpc_wrapper.CmdFIFO.PingFIFO(), timeout=2 * ping_interval) != 'Ping OK':
+                    raise ValueError("Bad response to ping")
+            except CmdFIFO.RemoteException:
+                start_ok = False
+            except asyncio.TimeoutError:
+                start_ok = False
+            except ValueError:
+                start_ok = False
+            if start_ok:
+                self.tasks.append(self.run_async(wrapped_process.pinger(ping_interval)))
+            else:
+                log.error(f"Cannot start {wrapped_process.name}, aborting. Check configuration information.")
+                Framework.publish(Event(Signal.TERMINATE, None))
+                return
         else:
             name = wrapped_process.driver.__name__
             if "PigletDriver" in name:
@@ -426,15 +443,15 @@ class PigssSupervisor(Ahsm):
                                                 rpc_port=rpc_port,
                                                 **service.get("Parameters", {}))
             else:
-                log.info(f"Unknown service {service} ignored")
+                raise ValueError(f"Unknown service {name}. Terminating.")
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning, publish_terminate=True)
     async def startup_services(self):
         await self.setup_services(at_start=True)
         await asyncio.sleep(1.0)
         Framework.publish(Event(Signal.SERVICES_STARTED, None))
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning, publish_terminate=True)
     async def startup_drivers(self):
         if not self.simulation:
             picarro_analyzer_ips = [

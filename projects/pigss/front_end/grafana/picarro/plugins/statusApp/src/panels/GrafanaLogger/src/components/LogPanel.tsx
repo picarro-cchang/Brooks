@@ -56,9 +56,10 @@ export class LogPanel extends PureComponent<Props, State> {
 
   componentDidUpdate(prevProps: Props, prevState: State) {
 
-    const isDateTimeFromChanged = this.props.data.request.range.raw.from !== prevProps.data.request.range.raw.from;
-    const isDateTimeToChanged = this.props.data.request.range.raw.to !== prevProps.data.request.range.raw.to;
-    const isIntervalChanged = this.props.data.request.interval !== prevProps.data.request.interval;
+    // @ts-ignore
+    const isDateTimeFromChanged = this.props.data.request.range.from._d.getTime() !== prevProps.data.request.range.from._d.getTime();
+    // @ts-ignore
+    const isDateTimeToChanged = this.props.data.request.range.to._d.getTime() !== prevProps.data.request.range.to._d.getTime();
     const interval = parseInt(this.props.replaceVariables('$interval'), 10);
 
     if (

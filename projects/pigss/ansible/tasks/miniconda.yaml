@@ -1,3 +1,9 @@
+- name: Configure pip
+  copy:
+    src: files/pip.conf
+    dest: "{{ playbook_home }}/.pip/pip.conf"
+  when: update == "false"
+
 - name: Download miniconda3
   get_url:
     url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh

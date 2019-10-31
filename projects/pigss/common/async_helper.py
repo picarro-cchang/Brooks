@@ -9,7 +9,7 @@ import traceback
 from threading import Thread
 
 
-def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True):
+def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True, publish_terminate=False):
     """
     A decorator that wraps a coroutine, logs any uncaught exception by calling
     `log_func` and optionally stops the event loop (if `stop_loop` is True).
@@ -23,7 +23,7 @@ def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True):
         async def wrapper(*args, **kwargs):
             try:
                 await coroutine(*args, **kwargs)
-            # Bare exception intended to be a catch-all for any unhandled exceptuin
+            # Bare exception intended to be a catch-all for any unhandled exception
             except Exception as e:  # noqa
                 if ignore_cancel and isinstance(e, asyncio.CancelledError):
                     pass
@@ -31,6 +31,11 @@ def log_async_exception(log_func=None, stop_loop=False, ignore_cancel=True):
                     # log the exception and stop everything
                     log_func(f'\nCoroutine "{coroutine.__qualname__}" terminated due to exception\n' + " |"
                              "\n  | ".join(traceback.format_exc().splitlines()))
+                    if publish_terminate:
+                        # Import is here so that this helper can be used even if async_hsm is not available
+                        #  (Just do not set publish_terminate to True)
+                        from async_hsm import Event, Framework, Signal
+                        Framework.publish(Event(Signal.TERMINATE, None))
                     if stop_loop:
                         log_func("Stopping event loop due to exception in coroutine")
                         loop = asyncio.get_event_loop()
