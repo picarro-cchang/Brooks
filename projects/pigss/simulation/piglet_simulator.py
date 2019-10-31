@@ -135,7 +135,7 @@ class PigletSimulator:
         log.info(f"Stopping piglet simulator at bank {self.bank}")
         self.task.cancel()
 
-    @log_async_exception(log_func=log.warning, stop_loop=True)
+    @log_async_exception(log_func=log.warning, publish_terminate=True)
     async def fsm(self):
         self.opstate_changed.set()
         while True:

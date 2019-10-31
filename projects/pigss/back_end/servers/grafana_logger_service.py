@@ -169,7 +169,7 @@ class GrafanaLoggerService(ServiceTemplate):
         except ValueError as ve:
             log.error(f"Error in should_send_task {ve}")
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error, publish_terminate=True)
     async def listener(self, app, DEFAULT_INTERVAL=1.0):
         """
         The following code handles multiple clients connected to the server.

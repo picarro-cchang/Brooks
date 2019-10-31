@@ -33,7 +33,7 @@ class ControllerService(ServiceTemplate):
         self.app.router.add_route('GET', '/uistatus', self.handle_uistatus)
         self.app.router.add_route('GET', '/ws', self.websocket_handler)
 
-    @log_async_exception(log_func=log.error, stop_loop=True)
+    @log_async_exception(log_func=log.error, publish_terminate=True)
     async def websocket_send_task(self, app):
         """
         The following code handles multiple clients connected to the server. A single send task is
@@ -59,10 +59,10 @@ class ControllerService(ServiceTemplate):
         self.tasks.append(asyncio.create_task(self.websocket_send_task(app)))
 
     async def on_shutdown(self, app):
-        for ws in app['websockets']:
-            await ws.close(code=1001, message='Server shutdown')
         for task in self.tasks:
             task.cancel()
+        for ws in app['websockets']:
+            await ws.close(code=1001, message='Server shutdown')
         log.info("Controller service is shutting down")
 
     async def handle_errors(self, request):
