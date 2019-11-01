@@ -53,7 +53,7 @@ export class SupervisorStatusLayout extends PureComponent<Props, any> {
 
     return (
       <Fragment>
-        <h3 className="text-center">Supervisor Status</h3>
+        <h3 className="text-center">Connected Hardware</h3>
         <div className="container-fluid padding-bottom-24" style={styleObj}>
           <JSONTree data={this.state.status} theme={theme} invertTheme={false} />
         </div>
