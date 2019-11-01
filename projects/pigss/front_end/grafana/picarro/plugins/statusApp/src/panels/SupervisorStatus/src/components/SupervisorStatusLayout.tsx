@@ -18,7 +18,6 @@ export class SupervisorStatusLayout extends PureComponent<Props, any> {
   componentWillMount() {
     SupervisorStatusService.getStatus().then((response: any) => {
       response.json().then((status: any) => {
-        console.log(status);
         this.setState({ status });
       });
     });
