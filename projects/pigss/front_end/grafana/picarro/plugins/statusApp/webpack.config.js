@@ -12,7 +12,8 @@ module.exports = {
   context: path.join(__dirname, "src"),
   entry: {
     "./module": "./module.tsx",
-    "panels/GrafanaLogger/module": "./panels/GrafanaLogger/module.tsx"
+    "panels/GrafanaLogger/module": "./panels/GrafanaLogger/module.tsx",
+    "panels/SupervisorStatus/module": "./panels/SupervisorStatus/module.tsx"
   },
   devtool: "source-map",
   output: {
@@ -29,6 +30,7 @@ module.exports = {
       { from: "../README.md", to: "." },
       { from: "img", to: "./img" },
       { from: "panels/GrafanaLogger/*.json", to: "." },
+      { from: "panels/SupervisorStatus/*.json", to: "." },
       { from: "dashboards", to: "./dashboards" }
     ])
   ],
