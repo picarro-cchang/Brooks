@@ -3,7 +3,7 @@ from grootilities.grootility import GROOTility
 
 
 def build():
-    with GROOTility('production') as GROOT:
+    with GROOTility('build') as GROOT:
         GROOT.build_plugins()
         GROOT._deploy_plugins()
 
