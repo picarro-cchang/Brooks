@@ -52,7 +52,7 @@ Configuration: # This is for high level information
     port: 8000
 
 Settings:
-  maximum_mfc_flow: 40.0
+  maximum_mfc_flow: 50.0
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
   madmapper_startup_delay: 30
