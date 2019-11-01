@@ -16,7 +16,6 @@ export class SupervisorStatusLayout extends PureComponent<Props, any> {
   }
 
   componentWillMount() {
-    console.log("Make API call here");
     SupervisorStatusService.getStatus().then((response: any) => {
       response.json().then((status: any) => {
         console.log(status);
