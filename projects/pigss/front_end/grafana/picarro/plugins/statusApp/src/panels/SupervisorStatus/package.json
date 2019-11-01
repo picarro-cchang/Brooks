@@ -1,0 +1,27 @@
+{
+  "name": "picarr-supervisor-status-plugin",
+  "version": "1.0.0",
+  "description": "Picarro Supervisor Status Plugin",
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch"
+  },
+  "author": "Picarro Inc.",
+  "license": "",
+  "devDependencies": {
+    "@grafana/data": "latest",
+    "@grafana/toolkit": "next",
+    "@grafana/ui": "latest"
+  },
+  "dependencies": {
+    "@types/socket.io-client": "^1.4.32",
+    "@types/styled-components": "^4.1.18",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-toastify": "^5.4.0",
+    "socket.io-client": "^2.2.0",
+    "styled-components": "^4.3.2"
+  }
+}

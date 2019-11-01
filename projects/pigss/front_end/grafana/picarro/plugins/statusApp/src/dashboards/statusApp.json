@@ -79,8 +79,8 @@
     {
       "datasource": null,
       "gridPos": {
-        "h": 14,
-        "w": 24,
+        "h": 11,
+        "w": 16,
         "x": 0,
         "y": 4
       },
@@ -162,6 +162,21 @@
       "timeShift": null,
       "title": "",
       "type": "logger-panel"
+    },
+    {
+      "datasource": null,
+      "id": 3,
+      "gridPos": {
+        "h": 11,
+        "w": 8,
+        "x": 16,
+        "y": 4
+      },
+      "options": {},
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "type": "picarro-supervisor-status-plugin"
     }
   ],
   "refresh": "",
