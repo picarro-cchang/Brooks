@@ -11,6 +11,7 @@ import aiohttp_cors
 import click
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
+import yamale
 
 from async_hsm import Framework
 from back_end.lologger.lologger_client import LOLoggerClient
@@ -160,20 +161,42 @@ async def setup_dummy_interfaces(num_interfaces):
         retcode, out, err = await run_and_raise(f'sudo ip addr add 192.168.10.{101 + i}/24 brd + dev dummy{i}')
 
 
-async def async_main(config_filename):
+async def async_main(config_filename, validate):
     try:
         service = None
-        found = False
+        schema_filename = "config_schema.yaml"
+        config_found = False
+        schema_found = False
         for p in config_path:
-            filename = os.path.normpath(os.path.join(p, config_filename))
-            if os.path.exists(filename):
-                found = True
+            config_full_filename = os.path.normpath(os.path.join(p, config_filename))
+            if os.path.exists(config_full_filename):
+                config_found = True
                 break
-        if found:
-            log.info(f"Starting PigssRunner with configuration file {filename}")
-            service = PigssRunner()
-            await service.server_init(filename)
-            await Framework.done()
+        for p in config_path:
+            schema_full_filename = os.path.normpath(os.path.join(p, schema_filename))
+            if os.path.exists(schema_full_filename):
+                schema_found = True
+                break
+        if config_found:
+            ok = True
+            if validate:
+                if schema_found:
+                    try:
+                        yamale.validate(yamale.make_schema(schema_full_filename, parser='ruamel'),
+                                        yamale.make_data(config_full_filename, parser='ruamel'),
+                                        strict=True)
+                    except ValueError as ve:
+                        log.error(f"Configuration file {config_filename} fails validation")
+                        log.error(f"{ve}")
+                        ok = False
+                else:
+                    log.error(f"Cannot find schema for validating configuration")
+                    ok = False
+            if ok:
+                log.info(f"Starting PigssRunner with configuration file {config_full_filename}")
+                service = PigssRunner()
+                await service.server_init(config_full_filename)
+                await Framework.done()
         else:
             log.error(f"Configuration file {config_filename} was not found")
     except Exception as e:  # noqa
@@ -182,18 +205,19 @@ async def async_main(config_filename):
     finally:
         if service and service.runner is not None:
             await service.runner.cleanup()
-        if service.terminate_event is not None:
-            try:
-                await asyncio.wait_for(service.terminate_event.wait(), timeout=2)
-            except asyncio.TimeoutError:
-                pass  # We have timed out waiting for all processes to terminate cleanly
+            if service.terminate_event is not None:
+                try:
+                    await asyncio.wait_for(service.terminate_event.wait(), timeout=2)
+                except asyncio.TimeoutError:
+                    pass  # We have timed out waiting for all processes to terminate cleanly
     log.info('PigssRunner stopped')
 
 
 @click.command()
 @click.option('--config', '-c', 'config_filename', default='pigss_config.yaml', help='Name of configuration file in yaml format')
-def main(config_filename):
-    asyncio.run(async_main(config_filename))
+@click.option('--validate/--no-validate', default=True, help='Use schema for validating configuration')
+def main(config_filename, validate):
+    asyncio.run(async_main(config_filename, validate))
 
 
 if __name__ == "__main__":
