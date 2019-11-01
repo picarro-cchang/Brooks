@@ -21,14 +21,18 @@ my_path = os.path.dirname(os.path.abspath(__file__))
 
 
 async def time_sync_analyzers(analyzer_ips):
-    netmask = 24
+    netmask = 24  # This defines what it means for the analyzer and rack server to be on the same network
     access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
     for ip in analyzer_ips:
         client_address = ip
         client = int.from_bytes(ipaddress.IPv4Address(client_address).packed, 'big')
-        ip_addresses = [(ifname, ifaddresses(ifname)[AF_INET][0]['addr']) for ifname in interfaces()]
+        ip_addresses = []
         # Find the IP address of the time server by iterating through the IP addresses on its
         #  network interfaces and finding one which is on the same subnet as the client
+        for ifname in interfaces():
+            addresses = ifaddresses(ifname)
+            if AF_INET in addresses:
+                ip_addresses.append((ifname, addresses[AF_INET][0]['addr']))
         for ifname, ifaddr in ip_addresses:
             server = int.from_bytes(ipaddress.IPv4Address(ifaddr).packed, 'big')
             if (client ^ server) < (1 << (32 - netmask)):
