@@ -71,6 +71,10 @@ class PigssConfig:
     def get_time_series_database(self):
         return self.config["Configuration"]["Database"]
 
+    @default(50.0)
+    def get_maximum_mfc_flow(self):
+        return float(self.config["Settings"]["maximum_mfc_flow"])
+
     @default(40.0)
     def get_reference_mfc_flow(self):
         return float(self.config["Settings"]["reference_mfc_flow"])
