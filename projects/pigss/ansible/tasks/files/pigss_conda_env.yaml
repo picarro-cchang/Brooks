@@ -152,5 +152,6 @@ dependencies:
     - ruamel.yaml-clib==0.1.2
     - setproctitle==1.1.10
     - shiboken2==5.13.1
+    - yamale==2.0.1
 prefix: /home/picarro/miniconda3
 

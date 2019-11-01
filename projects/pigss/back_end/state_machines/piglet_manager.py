@@ -244,9 +244,9 @@ class PigletManager(Ahsm):
         self.reference_pending = False
 
     async def set_mfc_setpoint(self, set_point):
-        # TODO: Remove this!
-        if set_point > 20.0:
-            set_point = 20.0
+        max_flow = self.farm.config.get_maximum_mfc_flow()
+        if set_point > max_flow:
+            set_point = max_flow
         await self.farm.RPC["MFC"].set_set_point(set_point)
 
     async def set_exhaust_valve(self, state):
