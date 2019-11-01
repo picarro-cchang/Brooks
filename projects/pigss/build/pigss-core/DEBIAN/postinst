@@ -10,14 +10,16 @@ sudo cp -r $TMP_DIR/pigss_config.yaml $CONFIG_DIR
 sudo cp -r $TMP_DIR/pigss_sim_config.yaml $CONFIG_DIR
 sudo cp -r $TMP_DIR/rpc_tunnel_configs.json $CONFIG_DIR
 sudo cp -r $TMP_DIR/sim_serial_map.json $CONFIG_DIR
+sudo cp -r $TMP_DIR/config_schema.yaml $CONFIG_DIR
 
 # Make sure files and folders are owned by $SUDO_USER
 sudo chown -R $SUDO_USER:$SUDO_USER $CONFIG_DIR
 
 # Enable and Start the systemd system service
 sudo systemctl daemon-reload
-sudo systemctl enable pigss-core.service
-sudo systemctl start pigss-core.service
+# Fix these below in another for bug PIG-313
+# sudo systemctl enable pigss-core.service
+# sudo systemctl start pigss-core.service
 
 # Clean up the tmp directory
 sudo rm -rf /tmp/config/pigss-core
