@@ -108,7 +108,12 @@ class PigletManager(Ahsm):
             self.run_async(self.send_to_piglets(payload.command, payload.bank_list))
             return self.handled(e)
         elif sig == Signal.PIGLET_SAFE_STANDBY:
-            self.piglets_for_safe_standby = e.value  # List of piglets to place in safe standby
+
+            async def set_piglets_for_safe_standby(piglet_list):
+                async with self.status_lock:
+                    self.piglets_for_safe_standby = piglet_list
+
+            self.run_async(set_piglets_for_safe_standby(e.value))
             return self.handled(e)
         elif sig == Signal.PIGLET_STATUS_TIMER:
             self.run_async(self.get_status(self.bank_list))
@@ -140,7 +145,7 @@ class PigletManager(Ahsm):
             return
         when = piglet_status["time"]
         delay = self.farm.config.get_flow_settle_delay()
-        all_standby = all([piglet_status[bank]['OPSTATE'] == 'standby' for bank in self.bank_list])             
+        all_standby = all([piglet_status[bank]['OPSTATE'] == 'standby' for bank in self.bank_list])
         async with self.status_lock:
             if self.target_reference_valve_state != self.reference_open:
                 await self.set_reference(self.target_reference_valve_state)
@@ -150,7 +155,7 @@ class PigletManager(Ahsm):
                 mfc_total = 0
             if mfc_total == 0:
                 if not self.exhaust_open:
-                    await self.open_exhaust_then_set_mfc(mfc_total, delay=0)
+                    await self.open_exhaust_then_set_mfc(mfc_total, delay=1)
                 else:
                     Framework.publish(Event(Signal.MFC_SET, {"time": when, "mfc_setpoint": mfc_total}))
                 if self.piglets_for_safe_standby:
@@ -160,13 +165,12 @@ class PigletManager(Ahsm):
                         await asyncio.sleep(delay)
                         await self.send_to_piglets("STANDBY", self.piglets_for_safe_standby)
                         await asyncio.sleep(delay)
-                self.piglets_for_safe_standby = []
+                    self.piglets_for_safe_standby = []
             elif mfc_total > 0:
                 if self.exhaust_open:
                     await self.set_mfc_then_close_exhaust(mfc_total, delay=delay)
                 else:
                     Framework.publish(Event(Signal.MFC_SET, {"time": when, "mfc_setpoint": mfc_total}))
-
 
     @state
     def _exit(self, e):

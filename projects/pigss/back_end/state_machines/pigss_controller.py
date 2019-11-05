@@ -552,6 +552,7 @@ class PigssController(Ahsm):
         self.filename_to_delete = ""
         self.state_after_delete = self._plan_load
         self.button_states = {}
+        self.buttons_disabled = False
         self.clean_button_states = {}
 
         # Keyed by bank. Its values are the masks corresponding to active channels
@@ -619,12 +620,14 @@ class PigssController(Ahsm):
         for bank in self.all_banks:
             self.clean_button_states[bank] = self.status["clean"][bank]
             self.set_status(["clean", bank], UiStatus.DISABLED)
+        self.buttons_disabled = True
 
     def restore_buttons(self):
         for button in self.button_states:
             self.set_status([button], self.button_states[button])
         for bank in self.clean_button_states:
             self.set_status(["clean", bank], self.clean_button_states[bank])
+        self.buttons_disabled = False
 
     @state
     def _configure(self, e):
@@ -694,7 +697,8 @@ class PigssController(Ahsm):
                 self.bank = e.value["bank"]
                 return self.tran(self._clean)
         elif sig == Signal.BTN_EDIT:
-            return self.tran(self._edit)
+            if not self.buttons_disabled:
+                return self.tran(self._edit)
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
@@ -1283,6 +1287,8 @@ class PigssController(Ahsm):
                     else:
                         self.chan_active[bank] = 0
                 return self.tran(self._run111)
+            else:
+                return self.handled(e)
         return self.super(self._run1)
 
     @state
