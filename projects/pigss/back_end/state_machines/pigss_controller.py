@@ -340,6 +340,17 @@ class PigssController(Ahsm):
     def add_to_plan(self, bank_config, reference):
         row = self.plan["focus"]["row"]
         column = self.plan["focus"]["column"]
+        if row >= self.plan["max_steps"] and column == 2:
+            max_steps = self.plan["max_steps"]
+            msg = f"Only {max_steps} steps are currently allowed"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Max Steps Reached</h2><p>{msg}</p>",
+                    "num_buttons": 0,
+                    "buttons": {}
+                })
+            return
         if column == 2:
             row += 1
         if row <= self.plan["last_step"]:
