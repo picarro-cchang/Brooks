@@ -23,12 +23,27 @@ class EditPanel extends PureComponent<EditPanelOptions> {
   banks: any;
   bank_list: any;
 
-  validateForm = (name: string) => {
-    if (name.length < 1) {
-      return false
-    } else {
-      return true
+  validateForm = (bank_list, targets) => {
+    let bankName, bankValue;
+    const length = targets.length;
+    for (let key in bank_list) {
+      let bankNum = bank_list[key];
+      bankName = "bank" + bankNum;
+      bankValue = targets[bankName].value;
+      if (bankValue.length < 1) {
+        return false
+      } else
+      {
+        for (let i = 1; i < 9; i++) {
+          const chanName = bankName + i;
+          const chanValue = targets[chanName].value;
+          if (chanValue.length < 1 ) {
+            return false
+          }
+        }
+      }
     }
+    return true
   };
 
   handleSubmit = event => {
@@ -44,41 +59,32 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     }
     const targets = event.target;
     const length = targets.length;
+    console.log(this.validateForm(this.bank_list, targets));
+    if (!this.validateForm(this.bank_list, targets)) {
+      alert("Please make names longer")
+      return
+    }
     for (let key in this.bank_list) {
       let bankNum = this.bank_list[key];
       bankName = "bank" + bankNum;
       bankValue = targets[bankName].value;
       const { bank_names } = { ...this.state.plan };
-      if (this.validateForm(bankValue)) {
-        console.log("YES");
         const currentName = bank_names[bankNum];
         currentName.name = bankValue;
         this.setState({
           ...this.state.plan.bank_names,
           [bankNum]: { name: bankValue }
         });
-      } else {
-        console.log("NAH")
-        return
-      }
       const { channels } = { ...this.state.plan.bank_names[bankNum] };
       const currentNames = channels;
       for (let i = 1; i < 9; i++) {
         const chanName = bankName + i;
         const chanValue = targets[chanName].value;
-        if (this.validateForm(chanValue)) {
-          console.log("YES channel")
           currentNames[i] = chanValue;
           this.setState({
             ...this.state.plan.bank_names[bankNum].channels,
             [i]: chanValue
           });
-        } else {
-          alert("please make names longer")
-          console.log("NAH channel")
-          return
-        }
-
       }
     }
     const channels1 = this.state.plan.bank_names[1].channels;

@@ -36,15 +36,6 @@ export class EditForm extends Component<EditPanelOptions> {
                 type="text"
                 defaultValue={this.state.plan.bank_names[key].name}
                 maxLength={14}
-                // onChange={(e)=>{
-                //     let name_change = e.target.value;
-                //     if (name_change.length < 1) {
-                //         document.getElementById("submit-edit").className = "btn btn-green btn-edit-panel btn-group-2 disabled"
-                //     }
-                //     else {
-                //         document.getElementById("submit-edit").className = "btn btn-green btn-edit-panel btn-group-2"
-                //     }
-                // }}
               />
             </div>
             <div className="row">
