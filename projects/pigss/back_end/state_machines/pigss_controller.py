@@ -1096,7 +1096,7 @@ class PigssController(Ahsm):
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FILENAME:
             # Remove non alphanumeric characters
-            self.set_plan(["plan_filename"], re.sub(r"\W", "", e.value["name"]))
+            self.set_plan(["plan_filename"], re.sub(r'[^\w-]', "", e.value["name"]))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_SAVE_OK:
             fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
