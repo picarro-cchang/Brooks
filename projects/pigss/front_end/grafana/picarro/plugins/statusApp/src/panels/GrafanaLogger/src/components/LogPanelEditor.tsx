@@ -23,12 +23,10 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
           <div className="gf-form col-md-3 col-sm-3">
             <FormLabel width={labelWidth}>Level</FormLabel>
             <Select
-              width={selectWidth}
               options={LEVEL_OPTIONS}
               onChange={this.onLevelChange}
               value={level}
               backspaceRemovesValue
-              isLoading
               isMulti={true}
             />
           </div>
@@ -40,7 +38,6 @@ export class LogPanelEditor extends PureComponent<PanelEditorProps<LogProps>> {
               onChange={this.onLimitChange}
               value={LIMIT_OPTIONS.find(option => option.value === limit.toString())}
               backspaceRemovesValue
-              isLoading
             />
           </div>
         </div>

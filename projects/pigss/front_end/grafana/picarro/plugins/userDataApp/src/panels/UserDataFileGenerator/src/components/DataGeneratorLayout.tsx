@@ -9,9 +9,10 @@ import { DataGeneratorService } from '../services/DataGeneratorService';
 
 import './Layout.css';
 
-interface Props extends DataGeneratorLayoutProps {}
+interface Props extends DataGeneratorLayoutProps { }
 
-const labelWidth = 6;
+const labelWidth_6 = 6;
+const labelWidth_7 = 7;
 const selectWidth = 12;
 
 export default class DataGeneratorLayout extends PureComponent<Props, any> {
@@ -145,7 +146,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         <PanelOptionsGroup title="Generate New File">
           <div className="row">
             <div className="gf-form col-md-3 col-sm-12">
-              <FormLabel width={labelWidth}>Keys</FormLabel>
+              <FormLabel width={labelWidth_6}>Keys</FormLabel>
               <Select
                 width={selectWidth}
                 options={keyOptions}
@@ -153,11 +154,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 value={keyOptions.find((option: any) => option.value === 'key')}
                 isMulti={true}
                 backspaceRemovesValue
-                isLoading
               />
             </div>
             <div className="gf-form col-md-6 col-sm-12 time-picker-container">
-              <FormLabel width={labelWidth}>Date</FormLabel>
+              <FormLabel width={labelWidth_7}>Time Range</FormLabel>
               <TimePicker
                 timeZone="browser"
                 selectOptions={DEFAULT_TIME_OPTIONS}
