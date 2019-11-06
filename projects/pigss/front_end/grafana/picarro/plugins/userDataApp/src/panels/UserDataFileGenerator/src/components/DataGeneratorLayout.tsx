@@ -154,7 +154,6 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 value={keyOptions.find((option: any) => option.value === 'key')}
                 isMulti={true}
                 backspaceRemovesValue
-                isLoading
               />
             </div>
             <div className="gf-form col-md-6 col-sm-12 time-picker-container">
