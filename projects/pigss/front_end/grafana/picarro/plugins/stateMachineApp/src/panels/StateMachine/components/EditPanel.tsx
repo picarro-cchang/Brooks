@@ -23,6 +23,14 @@ class EditPanel extends PureComponent<EditPanelOptions> {
   banks: any;
   bank_list: any;
 
+  validateForm = (name: string) => {
+    if (name.length < 1) {
+      return false
+    } else {
+      return true
+    }
+  };
+
   handleSubmit = event => {
     event.preventDefault();
     let bankName, bankValue;
@@ -41,22 +49,36 @@ class EditPanel extends PureComponent<EditPanelOptions> {
       bankName = "bank" + bankNum;
       bankValue = targets[bankName].value;
       const { bank_names } = { ...this.state.plan };
-      const currentName = bank_names[bankNum];
-      currentName.name = bankValue;
-      this.setState({
-        ...this.state.plan.bank_names,
-        [bankNum]: { name: bankValue }
-      });
+      if (this.validateForm(bankValue)) {
+        console.log("YES");
+        const currentName = bank_names[bankNum];
+        currentName.name = bankValue;
+        this.setState({
+          ...this.state.plan.bank_names,
+          [bankNum]: { name: bankValue }
+        });
+      } else {
+        console.log("NAH")
+        return
+      }
       const { channels } = { ...this.state.plan.bank_names[bankNum] };
       const currentNames = channels;
       for (let i = 1; i < 9; i++) {
         const chanName = bankName + i;
         const chanValue = targets[chanName].value;
-        currentNames[i] = chanValue;
-        this.setState({
-          ...this.state.plan.bank_names[bankNum].channels,
-          [i]: chanValue
-        });
+        if (this.validateForm(chanValue)) {
+          console.log("YES channel")
+          currentNames[i] = chanValue;
+          this.setState({
+            ...this.state.plan.bank_names[bankNum].channels,
+            [i]: chanValue
+          });
+        } else {
+          alert("please make names longer")
+          console.log("NAH channel")
+          return
+        }
+
       }
     }
     const channels1 = this.state.plan.bank_names[1].channels;
@@ -77,7 +99,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     return (
       <div className="panel-edit">
         <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={this.handleSubmit} >
           <EditForm
             uistatus={this.props.uistatus}
             plan={this.props.plan}
@@ -86,11 +108,9 @@ class EditPanel extends PureComponent<EditPanelOptions> {
           <div className="row text-center button-edit">
             <div className="col-sm-4">
               <button
+                  id={"submit-edit"}
                 type="submit"
-                className={"btn  btn-green btn-edit-panel btn-group-2"}
-              >
-                Ok
-              </button>
+                className={"btn  btn-green btn-edit-panel btn-group-2"}>Ok</button>
             </div>
             <div className="col-sm-4">
               <button
