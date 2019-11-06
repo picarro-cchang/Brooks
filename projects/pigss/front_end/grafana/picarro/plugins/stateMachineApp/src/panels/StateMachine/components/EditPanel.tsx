@@ -1,4 +1,5 @@
 import React, { Component, PureComponent, ReactText } from "react";
+import Modal from "react-responsive-modal";
 import { EditPanelOptions } from "../types";
 import { EditForm } from "./EditForm";
 
@@ -14,7 +15,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     uistatus: {},
     plan: {
       bank_names: this.props.plan.bank_names
-    }
+    },
+    show: false
   };
   constructor(props) {
     super(props);
@@ -32,19 +34,30 @@ class EditPanel extends PureComponent<EditPanelOptions> {
       bankValue = targets[bankName].value;
       if (bankValue.length < 1) {
         return false
-      } else
+      }
+      else if (bankValue.replace(/\s/g, '').length < 1) {
+        return false;
+      }
+      else
       {
         for (let i = 1; i < 9; i++) {
           const chanName = bankName + i;
           const chanValue = targets[chanName].value;
-          if (chanValue.length < 1 ) {
+          if (chanValue.length < 1) {
             return false
+          }
+          else if (chanValue.replace(/\s/g, '').length < 1) {
+            return false;
           }
         }
       }
     }
     return true
   };
+
+  handClose = () => {
+    this.setState({show: false})
+  }
 
   handleSubmit = event => {
     event.preventDefault();
@@ -59,9 +72,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     }
     const targets = event.target;
     const length = targets.length;
-    console.log(this.validateForm(this.bank_list, targets));
     if (!this.validateForm(this.bank_list, targets)) {
-      alert("Please make names longer")
+      this.setState({show: true});
       return
     }
     for (let key in this.bank_list) {
@@ -102,6 +114,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     });
   };
   render() {
+    const {show} = this.state;
     return (
       <div className="panel-edit">
         <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
@@ -130,7 +143,12 @@ class EditPanel extends PureComponent<EditPanelOptions> {
               </button>
             </div>
           </div>
+
         </form>
+        <Modal open={show} onClose={this.handClose} center >
+          <h2 style={{color: "black"}}>Uh Oh!</h2>
+          <p style={{color: "black"}}>Each Label must be at least one character in length.</p>
+        </Modal>
       </div>
     );
   }
