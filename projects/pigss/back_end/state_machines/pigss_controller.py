@@ -964,8 +964,9 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_PLAN_CANCEL:
             return self.tran(self._operational)
         elif sig == Signal.BTN_PLAN_CLEAR:
-            self.plan_clear()
-            return self.handled(e)
+            return self.tran(self._plan_clear)
+            # self.plan_clear()
+            # return self.handled(e)
         elif sig == Signal.BTN_PLAN_DELETE:
             self.plan_row_delete(e.value)
             return self.handled(e)
@@ -992,6 +993,39 @@ class PigssController(Ahsm):
                 return self.tran(self._plan_plan1)
         elif sig == Signal.BTN_PLAN_LOAD:
             return self.tran(self._plan_load)
+        return self.super(self._plan)
+
+    @state
+    def _plan_clear(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            msg = "Are you sure you want to Clear Plan?"
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h2 class='test'>Clear Plan?</h2><p>{msg}</p>",
+                "num_buttons": 2,
+                "buttons": {
+                    1: {
+                        "caption": "Clear Plan",
+                        "className": "btn btn-success btn-large",
+                        "response": "modal_ok"
+                    },
+                    2: {
+                        "caption": "Cancel",
+                        "className": "btn btn-danger btn-large",
+                        "response": "modal_close"
+                    }
+                }
+            })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_modal_info(["show"], False)
+            return self.handled(e)
+        elif sig == Signal.MODAL_OK:
+            self.plan_clear()
+            return self.tran(self._plan_plan)
+        elif sig == Signal.MODAL_CLOSE:
+            return self.tran(self._plan_plan)
         return self.super(self._plan)
 
     @state

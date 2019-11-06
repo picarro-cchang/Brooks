@@ -253,10 +253,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                   onClick={e => {
                     this.props.updateFileName(true);
                     this.props.ws_sender({ element: "plan_clear" });
-                    // for (let i = 0; i < this.props.plan.focus.row; i++ ){
-                    //     console.log("Hello");
-                    //     this.props.ws_sender({element: "plan_delete"})
-                    // }
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
