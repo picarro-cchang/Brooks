@@ -1248,6 +1248,12 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             for bank in self.all_banks:
+                if not self.status["bank"][bank] == UiStatus.READY:
+                    self.set_status(["bank", bank], UiStatus.READY)
+                if not self.status["clean"][bank] == UiStatus.READY:
+                    self.set_status(["clean", bank], UiStatus.READY)
+                if not self.status["reference"] == UiStatus.READY:
+                    self.set_status(["reference"], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
                         self.set_status(["channel", bank, j + 1], UiStatus.READY)
