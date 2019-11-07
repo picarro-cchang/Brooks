@@ -146,7 +146,8 @@ Request object passed to datasource.annotationQuery function:
     "datasource": "generic datasource",
     "enable": true,
     "name": "annotation name"
-  }
+  },
+  "dashboard": DashboardModel
 }
 ```
 
@@ -163,7 +164,7 @@ Expected result from datasource.annotationQuery:
     "title": "Cluster outage",
     "time": 1457075272576,
     "text": "Joe causes brain split",
-    "tags": "joe, cluster, failure"
+    "tags": ["joe", "cluster", "failure"]
   }
 ]
 ```

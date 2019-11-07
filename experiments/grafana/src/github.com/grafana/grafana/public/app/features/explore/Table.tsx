@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import React, { PureComponent } from 'react';
-import ReactTable from 'react-table';
+import ReactTable, { RowInfo } from 'react-table';
 
 import TableModel from 'app/core/table_model';
 
@@ -14,19 +14,19 @@ interface TableProps {
   onClickCell?: (columnKey: string, rowValue: string) => void;
 }
 
-function prepareRows(rows, columnNames) {
+function prepareRows(rows: any[], columnNames: string[]) {
   return rows.map(cells => _.zipObject(columnNames, cells));
 }
 
 export default class Table extends PureComponent<TableProps> {
-  getCellProps = (state, rowInfo, column) => {
+  getCellProps = (state: any, rowInfo: RowInfo, column: any) => {
     return {
       onClick: (e: React.SyntheticEvent) => {
         // Only handle click on link, not the cell
         if (e.target) {
           const link = e.target as HTMLElement;
           if (link.className === 'link') {
-            const columnKey = column.Header;
+            const columnKey = column.Header().props.title;
             const rowValue = rowInfo.row[columnKey];
             this.props.onClickCell(columnKey, rowValue);
           }
@@ -40,11 +40,15 @@ export default class Table extends PureComponent<TableProps> {
     const tableModel = data || EMPTY_TABLE;
     const columnNames = tableModel.columns.map(({ text }) => text);
     const columns = tableModel.columns.map(({ filterable, text }) => ({
-      Header: text,
+      Header: () => <span title={text}>{text}</span>,
       accessor: text,
       className: VALUE_REGEX.test(text) ? 'text-right' : '',
       show: text !== 'Time',
-      Cell: row => <span className={filterable ? 'link' : ''}>{row.value}</span>,
+      Cell: (row: any) => (
+        <span className={filterable ? 'link' : ''} title={text + ': ' + row.value}>
+          {typeof row.value === 'string' ? row.value : JSON.stringify(row.value)}
+        </span>
+      ),
     }));
     const noDataText = data ? 'The queries returned no data for a table.' : '';
 

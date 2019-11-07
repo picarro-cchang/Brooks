@@ -32,7 +32,7 @@
  *
  * HISTORY:
  *   10-Nov-2012  sze  Initial version.
- *
+ *   09-06-2019   HBC  add second detector gain and offset adjust
  *  Copyright (c) 2012 Picarro, Inc. All rights reserved
  */
 #include "interface.h"
@@ -44,9 +44,12 @@
 
 #define rddBalance      (*(r->rddBalance_))
 #define rddGain         (*(r->rddGain_))
+#define rdd2Balance      (*(r->rdd2Balance_))
+#define rdd2Gain         (*(r->rdd2Gain_))
 
 RddCntrl rddCntrl;
 int readBack = 1;
+int read2Back = 1;
 
 int rddCntrlStep(void)
 {
@@ -73,6 +76,32 @@ int rddCntrlStep(void)
     return STATUS_OK;
 }
 
+int rdd2CntrlStep(void)
+{
+    RddCntrl *r = &rddCntrl;
+    if (read2Back) {
+        unsigned int gains = rdd_read(RDD2_POTENTIOMETERS);
+        rdd2Balance = r->current2Balance = (gains>>16) & 0xFF;
+        rdd2Gain = r->current2Gain = gains & 0xFF;
+        read2Back = 0;
+    }
+    if (rdd2Balance != r->current2Balance) {
+        rdd_write(RDD2_POTENTIOMETERS,(rdd2Balance & 0xFF)<<8 | 1,2);
+        read2Back = 1;
+    }
+    if (rdd2Gain != r->current2Gain) {
+        rdd_write(RDD2_POTENTIOMETERS,((rdd2Gain & 0xFF)<<8) | 3,2);
+        read2Back = 1;
+    }
+    if (r->pending2Command >= 0) {
+        rdd_write(RDD2_POTENTIOMETERS,(r->pending2Command & 0xFF),1);
+        read2Back = 1;
+        r->pending2Command = -1;
+    }
+    return STATUS_OK;
+}
+
+
 int rddCntrlInit(void)
 {
     unsigned int gains;
@@ -86,6 +115,20 @@ int rddCntrlInit(void)
     return STATUS_OK;
 }
 
+int rdd2CntrlInit(void)
+{
+    unsigned int gains;
+    RddCntrl *r = &rddCntrl;
+    r->rdd2Balance_ = (unsigned int *)registerAddr(RDD2_BALANCE_REGISTER);
+    r->rdd2Gain_ = (unsigned int *)registerAddr(RDD2_GAIN_REGISTER);
+    gains = rdd_read(RDD2_POTENTIOMETERS);
+    r->pending2Command = -1; // No command pending
+    r->current2Balance = (gains>>16) & 0xFF;
+    r->current2Gain = gains & 0xFF;
+    return STATUS_OK;
+}
+
+
 int rddCntrlDoCommand(int command)
 {
     RddCntrl *r = &rddCntrl;
@@ -93,5 +136,14 @@ int rddCntrlDoCommand(int command)
     return STATUS_OK;
 }
 
+int rdd2CntrlDoCommand(int command)
+{
+    RddCntrl *r = &rddCntrl;
+    r->pending2Command = command;
+    return STATUS_OK;
+}
+
 #undef  rddBalance
 #undef  rddGain
+#undef  rdd2Balance
+#undef  rdd2Gain

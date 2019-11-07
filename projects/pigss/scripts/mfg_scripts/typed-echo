@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# This is a script that echos one character at a time.
+# It attempts to mimic a human typing, and is intended to be
+# used at crucial steps you want a user to read a prompt.
+#
+#
+# Example: "./typed-echo 'Howdy doody, partner!'"
+# Be sure to put your string inside single quotes.
+# Double quotes will allow for exit characters to cause issues.
+
+arg=${@}
+for (( i=0; i < ${#arg}; i+=1 )); do
+echo -n "${arg:$i:1}"
+random1=`shuf -i500-1000 -n1`
+random2=`shuf -i1-299 -n1`
+randomSleep="$((${random1}-${random2}))"
+sleepms="0.0${randomSleep}"
+sleep ${sleepms}
+done
+echo

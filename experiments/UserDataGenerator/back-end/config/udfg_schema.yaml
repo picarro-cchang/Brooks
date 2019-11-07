@@ -1,0 +1,16 @@
+influxdb:
+  database: str()
+  measurements: list(str())
+  host: ip()
+  port: int()
+  timeout: int()
+  retries: int()
+
+# Config for server
+server:
+  host: ip()
+  port: int()
+  data_dir: str()
+  file_type: str()
+
+user_keys: list(str())

@@ -1,0 +1,256 @@
+.bank-btn {
+    border-radius: 25%;
+    /*border: 4px solid #bbbbbbbd;*/
+    border: 3px solid hsla(0, 0%, 100%, 0.34);
+    height: 90px;
+    width: 90px;
+    color: black;
+    position: relative;
+}
+.chn-label {
+    position: absolute;
+    top: 20px;
+    left: -0.37em;
+    bottom: 0;
+    right: 0;
+}
+.btn-clean {
+    width:100%;
+    border: 3px solid hsla(0, 0%, 100%, 0.34);
+    color: black;
+    border-radius: 10px;
+}
+.btn-clean-act {
+    border: none;
+}
+
+.test {
+    color: black;
+}
+.btn-group {
+    width: 100%;
+    /*height: 35px;*/
+    border-radius: 10%;
+    text-align: center;
+    /*margin-right: 20px;*/
+    margin-left: -20px;
+    font-size: 17px;
+}
+
+.btn-row-1 {
+    margin-top: 10px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+.btn-row-2 {
+    margin-top: 10px;
+    align-items: center;
+    display: flex;
+    justify-content: center;
+}
+.btn-row-3 {
+    margin-top: 10px;
+    align-items: center;
+    style: flex;
+    justify-content: center;
+}
+.panel-plan {
+    height: 640px;
+    /*background-color: #888;*/
+    /*border: 3px solid #111;*/
+    /*border-radius: 7px;*/
+    /*background-color: #82828287;*/
+    background-color: #cacaca;
+    padding: 10px;
+    /*border: 2px solid #1111117a;*/
+    border-radius: 5px;
+}
+.panel-plan-inner {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: 420px;
+    border-radius: 3px;
+}
+.plan-input {
+    background-color: white;
+    border: 1px solid black;
+    border-radius: 2px;
+    /*margin-right: -20px;*/
+    color: black;
+    margin-bottom: 5px;
+}
+.panel-bank {
+    /*border: 2px solid #111;*/
+    border: 2px solid #1111117a;
+    margin-right: 2%;
+    border-radius: 10px;
+    padding:10px;
+    float: left;
+    background-color: rgba(136, 136, 136, 0.51);
+
+}
+.grid-bank {
+    display: grid;
+    grid-gap: 10px;
+    grid-template-columns: 1fr 1fr;
+    padding-bottom: 10px;
+}
+.btn-green {
+    background-color:  rgb(86, 166, 75);
+}
+.btn-1-3 {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    width: 100%;
+}
+.reference-btn {
+    display: inline-block;
+}
+.ref-btn {
+    width: 400px;
+    /*margin-top: -100px;*/
+}
+
+.btn-command {
+    border-radius: 5px;
+    color: black;
+    height: 80px;
+}
+.btn-edit {
+    border-radius: 5px;
+    color: white;
+    height: 55px;
+    width: 100px;
+    margin-right: 20px;
+    background-color: red;
+    background-image: none;
+}
+.btn-cancel {
+    background-image: none;
+    background-color: red;
+}
+.edit-panel {
+    color: black;
+    background: white;
+    border: 1px solid black;
+    border-radius: 2px;
+}
+.edit-label {
+    margin-left: 30px;
+    margin-right: 10px;
+    font-size: 15px;
+    color: black;
+}
+.panel-edit {
+    height: 550px;
+    background-color: #cacaca;
+    padding: 10px;
+    border: 3px solid #111;
+    border-radius: 7px;
+}
+.btn-edit-panel {
+    margin-bottom: 10px;
+    width: 95px;
+    height: 40px;
+    border-radius: 5px;
+    text-align: center;
+    font-size: 20px;
+}
+.btn-run {
+    width: 100%;
+}
+.btn-inverse.disabled {
+    background-color: #333;
+    opacity: .9;
+}
+.btn-success {
+    /*background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);*/
+    background-color: green;
+}
+
+.btn-success:active, .btn-success:focus {
+    /*background-image: -webkit-linear-gradient(top,#6fe28c,#23843b);*/
+    background-color: green;
+
+}
+.btn-run-active {
+    background-color: rgba(98, 100, 104, 0.86);
+}
+.btn-run-issue {
+    background-color: #716e6e;
+}
+.btn-chann {
+     background-color:  rgb(86, 166, 75);
+ }
+.col-bank-name {
+    /*max-width: 45%;*/
+    /*min-width: 20%;*/
+    text-align:left;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.input-small {
+    width: 70px;
+    margin-left: -10px;
+}
+
+.radio-btn {
+    display: block;
+    position: relative;
+    /*padding-left: 35px;*/
+    margin-bottom: 12px;
+    /*margin-left: 20px;*/
+    cursor: pointer;
+    font-size: 22px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+.radio-btn input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.checkmark {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 25px;
+    width: 25px;
+    background-color: #eee;
+    border-radius: 50%;
+}
+
+.radio-btn:hover input ~ .checkmark {
+    background-color: #565657;
+}
+
+.radio-btn input:checked ~ .checkmark {
+    background-color: rgb(31, 96, 196);
+}
+
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.radio-btn input:checked ~ .checkmark:after {
+    display: block;
+}
+
+.radio-btn .checkmark:after {
+    top: 9px;
+    left: 9px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+}
+.button-edit {
+    justify-content: center;
+}

@@ -1,10 +1,15 @@
 // Libraries
 import _ from 'lodash';
-
-// Types
+// Utils
 import { Emitter } from 'app/core/utils/emitter';
-import { DataQuery, TimeSeries, Threshold } from '@grafana/ui';
-import { TableData } from '@grafana/ui/src';
+import { getNextRefIdChar } from 'app/core/utils/query';
+// Types
+import { DataQuery, DataQueryResponseData, PanelPlugin } from '@grafana/ui';
+import { DataLink, DataTransformerConfig, ScopedVars } from '@grafana/data';
+
+import config from 'app/core/config';
+
+import { PanelQueryRunner } from './PanelQueryRunner';
 
 export interface GridPos {
   x: number;
@@ -18,15 +23,17 @@ const notPersistedProperties: { [str: string]: boolean } = {
   events: true,
   fullscreen: true,
   isEditing: true,
+  isInView: true,
   hasRefreshed: true,
   cachedPluginOptions: true,
+  plugin: true,
+  queryRunner: true,
 };
 
 // For angular panels we need to clean up properties when changing type
 // To make sure the change happens without strange bugs happening when panels use same
 // named property with different type / value expectations
 // This is not required for react panels
-
 const mustKeepProps: { [str: string]: boolean } = {
   id: true,
   gridPos: true,
@@ -55,11 +62,13 @@ const mustKeepProps: { [str: string]: boolean } = {
   cacheTimeout: true,
   cachedPluginOptions: true,
   transparent: true,
+  pluginVersion: true,
+  queryRunner: true,
+  transformations: true,
 };
 
 const defaults: any = {
   gridPos: { x: 0, y: 0, h: 3, w: 6 },
-  datasource: null,
   targets: [{ refId: 'A' }],
   cachedPluginOptions: {},
   transparent: false,
@@ -71,7 +80,7 @@ export class PanelModel {
   type: string;
   title: string;
   alert?: any;
-  scopedVars?: any;
+  scopedVars?: ScopedVars;
   repeat?: string;
   repeatIteration?: number;
   repeatPanelId?: number;
@@ -82,10 +91,12 @@ export class PanelModel {
   panels?: any;
   soloMode?: boolean;
   targets: DataQuery[];
+  transformations?: DataTransformerConfig[];
   datasource: string;
   thresholds?: any;
+  pluginVersion?: string;
 
-  snapshotData?: TimeSeries[] | [TableData];
+  snapshotData?: DataQueryResponseData[];
   timeFrom?: any;
   timeShift?: any;
   hideTimeOverride?: any;
@@ -96,58 +107,52 @@ export class PanelModel {
   maxDataPoints?: number;
   interval?: string;
   description?: string;
-  links?: [];
+  links?: DataLink[];
   transparent: boolean;
 
   // non persisted
   fullscreen: boolean;
   isEditing: boolean;
+  isInView: boolean;
   hasRefreshed: boolean;
   events: Emitter;
   cacheTimeout?: any;
   cachedPluginOptions?: any;
+  legend?: { show: boolean };
+  plugin?: PanelPlugin;
+  private queryRunner?: PanelQueryRunner;
 
-  constructor(model) {
+  constructor(model: any) {
     this.events = new Emitter();
+
+    // should not be part of defaults as defaults are removed in save model and
+    // this should not be removed in save model as exporter needs to templatize it
+    this.datasource = null;
 
     // copy properties from persisted model
     for (const property in model) {
-      this[property] = model[property];
+      (this as any)[property] = model[property];
     }
 
     // defaults
     _.defaultsDeep(this, _.cloneDeep(defaults));
+
     // queries must have refId
     this.ensureQueryIds();
-
-    this.restoreInfintyForThresholds();
   }
 
   ensureQueryIds() {
-    if (this.targets) {
+    if (this.targets && _.isArray(this.targets)) {
       for (const query of this.targets) {
         if (!query.refId) {
-          query.refId = this.getNextQueryLetter();
+          query.refId = getNextRefIdChar(this.targets);
         }
       }
     }
   }
 
-  restoreInfintyForThresholds() {
-    if (this.options && this.options.thresholds) {
-      this.options.thresholds = this.options.thresholds.map((threshold: Threshold) => {
-        // JSON serialization of -Infinity is 'null' so lets convert it back to -Infinity
-        if (threshold.index === 0 && threshold.value === null) {
-          return { ...threshold, value: -Infinity };
-        }
-
-        return threshold;
-      });
-    }
-  }
-
-  getOptions(panelDefaults) {
-    return _.defaultsDeep(this.options || {}, panelDefaults);
+  getOptions() {
+    return this.options;
   }
 
   updateOptions(options: object) {
@@ -168,7 +173,6 @@ export class PanelModel {
 
       model[property] = _.cloneDeep(this[property]);
     }
-
     return model;
   }
 
@@ -223,29 +227,48 @@ export class PanelModel {
       }
       return {
         ...acc,
-        [property]: this[property],
+        [property]: (this as any)[property],
       };
     }, {});
-  }
-
-  private saveCurrentPanelOptions() {
-    this.cachedPluginOptions[this.type] = this.getOptionsToRemember();
   }
 
   private restorePanelOptions(pluginId: string) {
     const prevOptions = this.cachedPluginOptions[pluginId] || {};
 
     Object.keys(prevOptions).map(property => {
-      this[property] = prevOptions[property];
+      (this as any)[property] = prevOptions[property];
     });
   }
 
-  changeType(pluginId: string, fromAngularPanel: boolean) {
-    this.saveCurrentPanelOptions();
-    this.type = pluginId;
+  private applyPluginOptionDefaults(plugin: PanelPlugin) {
+    if (plugin.angularConfigCtrl) {
+      return;
+    }
+    this.options = _.defaultsDeep({}, this.options || {}, plugin.defaults);
+  }
 
-    // for angular panels only we need to remove all events and let angular panels do some cleanup
-    if (fromAngularPanel) {
+  pluginLoaded(plugin: PanelPlugin) {
+    this.plugin = plugin;
+
+    if (plugin.panel && plugin.onPanelMigration) {
+      const version = getPluginVersion(plugin);
+      if (version !== this.pluginVersion) {
+        this.options = plugin.onPanelMigration(this);
+        this.pluginVersion = version;
+      }
+    }
+
+    this.applyPluginOptionDefaults(plugin);
+  }
+
+  changePlugin(newPlugin: PanelPlugin) {
+    const pluginId = newPlugin.meta.id;
+    const oldOptions: any = this.getOptionsToRemember();
+    const oldPluginId = this.type;
+    const wasAngular = !!this.plugin.angularPanelCtrl;
+
+    // for angular panels we must remove all events and let angular panels do some cleanup
+    if (wasAngular) {
       this.destroy();
     }
 
@@ -255,26 +278,39 @@ export class PanelModel {
         continue;
       }
 
-      delete this[key];
+      delete (this as any)[key];
     }
 
+    this.cachedPluginOptions[oldPluginId] = oldOptions;
     this.restorePanelOptions(pluginId);
+
+    // Let panel plugins inspect options from previous panel and keep any that it can use
+    if (newPlugin.onPanelTypeChanged) {
+      let old: any = {};
+
+      if (wasAngular) {
+        old = { angular: oldOptions };
+      } else if (oldOptions && oldOptions.options) {
+        old = oldOptions.options;
+      }
+      this.options = this.options || {};
+      Object.assign(this.options, newPlugin.onPanelTypeChanged(this.options, oldPluginId, old));
+    }
+
+    // switch
+    this.type = pluginId;
+    this.plugin = newPlugin;
+    this.applyPluginOptionDefaults(newPlugin);
+
+    if (newPlugin.onPanelMigration) {
+      this.pluginVersion = getPluginVersion(newPlugin);
+    }
   }
 
   addQuery(query?: Partial<DataQuery>) {
     query = query || { refId: 'A' };
-    query.refId = this.getNextQueryLetter();
+    query.refId = getNextRefIdChar(this.targets);
     this.targets.push(query as DataQuery);
-  }
-
-  getNextQueryLetter(): string {
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-
-    return _.find(letters, refId => {
-      return _.every(this.targets, other => {
-        return other.refId !== refId;
-      });
-    });
   }
 
   changeQuery(query: DataQuery, index: number) {
@@ -290,8 +326,38 @@ export class PanelModel {
     });
   }
 
+  getQueryRunner(): PanelQueryRunner {
+    if (!this.queryRunner) {
+      this.queryRunner = new PanelQueryRunner();
+      this.setTransformations(this.transformations);
+    }
+    return this.queryRunner;
+  }
+
+  hasTitle() {
+    return this.title && this.title.length > 0;
+  }
+
+  isAngularPlugin(): boolean {
+    return this.plugin && !!this.plugin.angularPanelCtrl;
+  }
+
   destroy() {
     this.events.emit('panel-teardown');
     this.events.removeAllListeners();
+
+    if (this.queryRunner) {
+      this.queryRunner.destroy();
+      this.queryRunner = null;
+    }
   }
+
+  setTransformations(transformations: DataTransformerConfig[]) {
+    this.transformations = transformations;
+    this.getQueryRunner().setTransformations(transformations);
+  }
+}
+
+function getPluginVersion(plugin: PanelPlugin): string {
+  return plugin && plugin.meta.info.version ? plugin.meta.info.version : config.buildInfo.version;
 }

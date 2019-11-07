@@ -1,0 +1,19 @@
+{
+  "type": "panel",
+  "name": "Multi Panel",
+  "id": "image-panel",
+
+  "dataFormats": [],
+
+  "info": {
+    "description": "Grafana panel introduction",
+    "author": {
+      "name": "Emma Peatfield"
+    },
+    "keywords": [],
+    "links": [],
+    "screenshots": [],
+    "version": "0.0.1",
+    "updated": "2019-07-17"
+  }
+}

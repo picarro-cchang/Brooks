@@ -61,6 +61,7 @@ export interface State {
   isFullscreen: boolean;
   fullscreenPanel: PanelModel | null;
   scrollTop: number;
+  updateScrollTop: number;
   rememberScrollTop: number;
   showLoadingState: boolean;
 }
@@ -73,6 +74,7 @@ export class DashboardPage extends PureComponent<Props, State> {
     showLoadingState: false,
     fullscreenPanel: null,
     scrollTop: 0,
+    updateScrollTop: null,
     rememberScrollTop: 0,
   };
 
@@ -105,7 +107,8 @@ export class DashboardPage extends PureComponent<Props, State> {
 
     // if we just got dashboard update title
     if (!prevProps.dashboard) {
-      document.title = dashboard.title + ' - Grafana';
+      // document.title = dashboard.title + ' - Grafana';
+      document.title = dashboard.title + ' - Picarro';
     }
 
     // Due to the angular -> react url bridge we can ge an update here with new uid before the container unmounts
@@ -168,7 +171,7 @@ export class DashboardPage extends PureComponent<Props, State> {
         isEditing: false,
         isFullscreen: false,
         fullscreenPanel: null,
-        scrollTop: this.state.rememberScrollTop,
+        updateScrollTop: this.state.rememberScrollTop,
       },
       this.triggerPanelsRendering.bind(this)
     );
@@ -204,7 +207,7 @@ export class DashboardPage extends PureComponent<Props, State> {
 
   setScrollTop = (e: MouseEvent<HTMLElement>): void => {
     const target = e.target as HTMLElement;
-    this.setState({ scrollTop: target.scrollTop });
+    this.setState({ scrollTop: target.scrollTop, updateScrollTop: null });
   };
 
   onAddPanel = () => {
@@ -243,7 +246,7 @@ export class DashboardPage extends PureComponent<Props, State> {
         <AlertBox
           severity={AppNotificationSeverity.Error}
           title={initError.message}
-          text={getMessageFromError(initError.error)}
+          body={getMessageFromError(initError.error)}
         />
       </div>
     );
@@ -251,7 +254,7 @@ export class DashboardPage extends PureComponent<Props, State> {
 
   render() {
     const { dashboard, editview, $injector, isInitSlow, initError } = this.props;
-    const { isSettingsOpening, isEditing, isFullscreen, scrollTop } = this.state;
+    const { isSettingsOpening, isEditing, isFullscreen, scrollTop, updateScrollTop } = this.state;
 
     if (!dashboard) {
       if (isInitSlow) {
@@ -270,6 +273,9 @@ export class DashboardPage extends PureComponent<Props, State> {
       'dashboard-container--has-submenu': dashboard.meta.submenuEnabled,
     });
 
+    // Only trigger render when the scroll has moved by 25
+    const approximateScrollTop = Math.round(scrollTop / 25) * 25;
+
     return (
       <div className={classes}>
         <DashNav
@@ -282,10 +288,11 @@ export class DashboardPage extends PureComponent<Props, State> {
         />
         <div className="scroll-canvas scroll-canvas--dashboard">
           <CustomScrollbar
-            autoHeightMin={'100%'}
+            autoHeightMin="100%"
             setScrollTop={this.setScrollTop}
-            scrollTop={scrollTop}
+            scrollTop={updateScrollTop}
             updateAfterMountMs={500}
+            className="custom-scrollbar--page"
           >
             {editview && <DashboardSettings dashboard={dashboard} />}
 
@@ -293,7 +300,12 @@ export class DashboardPage extends PureComponent<Props, State> {
 
             <div className={gridWrapperClasses}>
               {dashboard.meta.submenuEnabled && <SubMenu dashboard={dashboard} />}
-              <DashboardGrid dashboard={dashboard} isEditing={isEditing} isFullscreen={isFullscreen} />
+              <DashboardGrid
+                dashboard={dashboard}
+                isEditing={isEditing}
+                isFullscreen={isFullscreen}
+                scrollTop={approximateScrollTop}
+              />
             </div>
           </CustomScrollbar>
         </div>

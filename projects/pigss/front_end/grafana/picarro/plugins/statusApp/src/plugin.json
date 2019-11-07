@@ -1,0 +1,27 @@
+{
+    "type": "app",
+    "name": "Status",
+    "id": "picarro-status-app",
+    "info": {
+      "author": {
+        "name": "Picarro, Inc."
+      },
+      "logos": {
+        "small": "img/diagnostic icon_dark theme.svg",
+        "large": "img/diagnostic icon_dark theme.svg"
+      }
+    },
+    "includes": [
+      {
+        "type": "dashboard",
+        "name": "Status",
+        "path": "dashboards/statusApp.json",
+        "addToNav": true,
+        "defaultNav": true
+      }
+    ],
+    "dependencies": {
+      "grafanaVersion": "6.4.x",
+      "plugins": []
+    }
+  }

@@ -1,0 +1,13 @@
+# Config for database
+sqlite:
+  database: "Logs.db"
+  db_dir: "./"
+  table: "Events"
+  columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
+  limit: 20
+  interval: 3
+
+# Config for server
+server:
+  host: 0.0.0.0
+  port: 8004

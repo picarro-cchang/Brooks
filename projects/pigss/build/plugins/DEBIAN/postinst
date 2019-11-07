@@ -1,0 +1,4 @@
+#!/bin/bash -i
+
+source /home/$SUDO_USER/.bashrc
+/home/$SUDO_USER/miniconda3/bin/python3 /tmp/pigss_plugins_postinst.py

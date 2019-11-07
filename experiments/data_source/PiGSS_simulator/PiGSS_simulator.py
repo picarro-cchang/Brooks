@@ -35,7 +35,7 @@ SimEvent = namedtuple('SimEvent', ['when', 'seq', 'gen'])
 
 def scale_func(N, phi):
     sphi = np.sin(phi)
-    return N*np.exp(-0.5*N*sphi**2)
+    return N * np.exp(-0.5 * N * sphi**2)
     # return np.sin(N * phi) / sphi if abs(sphi) > 1.0e-12 else float(N)
 
 
@@ -161,11 +161,7 @@ class PiGSS(object):
             yield sim.sim_time + analyzer.interval
 
     def make_data_manager_dict(self, unix_time, analyzer, measurements):
-        result = {'time': unix_time,
-                  'source': analyzer.source,
-                  'mode': analyzer.mode,
-                  'good': 1,
-                  'data': {}}
+        result = {'time': unix_time, 'source': analyzer.source, 'mode': analyzer.mode, 'good': 1, 'data': {}}
         for species, measurement in zip(analyzer.species, measurements):
             result['data'][species] = measurement
         return result
@@ -225,19 +221,22 @@ class Simulator(object):
                 self.enqueue_task(next_time, gen)
         print("Simulation complete")
 
+
 def printer(x):
     print(x)
     return x
 
+
 def main():
-    db_writer = InfluxDBWriter("localhost", "pigss_data", batch_size=500)
+    db_writer = InfluxDBWriter("localhost", "pigss_sim_data", batch_size=500)
     sim = Simulator(real_time=True)
     num_pos = 16
     sim.sim_time = time.time() - 2 * 60 * num_pos**2
     analyzers = [
         Analyzer('AMADS3001', ['NH3', 'HF'], 'analyze_AMADS_LCT', 'AMADS_LCT_mode', 1.1),
         Analyzer('SBDS3002', ['HCl'], 'analyze_SADS', 'HCl_mode', 1.2),
-        Analyzer('BFADS3003', ['H2S'], 'analyze_BFADS', 'BFADS_mode', 1.3)]
+        Analyzer('BFADS3003', ['H2S'], 'analyze_BFADS', 'BFADS_mode', 1.3)
+    ]
 
     pigss = PiGSS(analyzers, sim, num_pos, valve_period=60)
     if pigss.valve_mode < 0:
@@ -264,13 +263,14 @@ def main():
     rpc_thread.daemon = True
     rpc_thread.start()
 
-    th = Thread(target=db_writer.run, args=(pigss.data_gen,))
+    th = Thread(target=db_writer.run, args=(pigss.data_gen, ))
     th.daemon = True
     th.start()
     sim.run()
     pigss.running = False
     print("Waiting for sending to database to complete")
     th.join()
+
 
 if __name__ == "__main__":
     main()

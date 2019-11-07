@@ -1,0 +1,22 @@
+.file-item {
+  width: auto;
+  padding: 8px;
+  margin-bottom: 2px;
+}
+
+.file-item:hover {
+  cursor: pointer;
+  color: #3bd2f8;
+  text-decoration: underline;
+  background-color: #fffdfd14;
+}
+
+/* Fix for grafana panel scrolling issue */
+/* Have to figure out what's wrong with grafana or the panel! */
+.panel-content {
+  overflow: auto;
+}
+
+.time-picker-container .navbar-button--zoom {
+  display: none;
+}

@@ -1,0 +1,73 @@
+.btn-panel-link {
+    /*border: 2px solid #054405;*/
+    background-color: #161719;
+    border-radius: 15%;
+    color: white;
+    padding: 34px 34px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 20px;
+    margin: 4px 2px;
+    cursor: pointer;
+    width: 92px;
+    height: 60%;
+}
+.btn-container {
+    margin-top: 25px;
+    /*display: grid;*/
+    /*grid-template-columns: 1fr 1fr;*/
+    /*grid-gap: 5px;*/
+    height:100%;
+    text-align: center;
+}
+.btn-label-container {
+    /*margin-top: 25px;*/
+    height: 15%;
+}
+
+.btn-sampler {
+
+    background-image: url("../img/setup_icon_dark.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-analyzer {
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
+    background-image: url("../img/analyzer_graph_icon_dark.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-valve-graphs {
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
+    background-image: url("../img/plot_graph_icon_dark.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.btn-tables {
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
+    background-image: url("../img/tables_icon_dark.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+.btn-values {
+    /*border: 2px solid #054405;*/
+    /*background-color: rgb(167, 208, 166);*/
+    background-image: url("../img/tables_icon_dark.svg");
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.row-test{
+    /*margin-top: 20%;*/
+    /*!*margin-left: 15%;*!*/
+    /*width: 70%;*/
+    height: 100%;
+}
+

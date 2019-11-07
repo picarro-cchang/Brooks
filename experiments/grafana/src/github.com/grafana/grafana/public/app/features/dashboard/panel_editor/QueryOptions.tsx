@@ -1,21 +1,23 @@
 // Libraries
-import React, { PureComponent, ChangeEvent, FocusEvent } from 'react';
+import React, { PureComponent, ChangeEvent, FocusEvent, ReactText } from 'react';
 
 // Utils
-import { isValidTimeSpan } from 'app/core/utils/rangeutil';
+import { rangeUtil } from '@grafana/data';
 
 // Components
-import { Switch } from '@grafana/ui';
-import { Input } from 'app/core/components/Form';
-import { EventsWithValidation } from 'app/core/components/Form/Input';
-import { InputStatus } from 'app/core/components/Form/Input';
+import {
+  DataSourceSelectItem,
+  EventsWithValidation,
+  Input,
+  InputStatus,
+  Switch,
+  ValidationEvents,
+  FormLabel,
+} from '@grafana/ui';
 import { DataSourceOption } from './DataSourceOption';
-import { FormLabel } from '@grafana/ui';
 
 // Types
-import { PanelModel } from '../state/PanelModel';
-import { DataSourceSelectItem } from '@grafana/ui/src/types';
-import { ValidationEvents } from 'app/types';
+import { PanelModel } from '../state';
 
 const timeRangeValidationEvents: ValidationEvents = {
   [EventsWithValidation.onBlur]: [
@@ -24,7 +26,7 @@ const timeRangeValidationEvents: ValidationEvents = {
         if (!value) {
           return true;
         }
-        return isValidTimeSpan(value);
+        return rangeUtil.isValidTimeSpan(value);
       },
       errorMessage: 'Not a valid timespan',
     },
@@ -44,13 +46,13 @@ interface State {
   relativeTime: string;
   timeShift: string;
   cacheTimeout: string;
-  maxDataPoints: string;
+  maxDataPoints: string | ReactText;
   interval: string;
   hideTimeOverride: boolean;
 }
 
 export class QueryOptions extends PureComponent<Props, State> {
-  allOptions = {
+  allOptions: any = {
     cacheTimeout: {
       label: 'Cache timeout',
       placeholder: '60',
@@ -69,7 +71,8 @@ export class QueryOptions extends PureComponent<Props, State> {
       tooltipInfo: (
         <>
           The maximum data points the query should return. For graphs this is automatically set to one data point per
-          pixel.
+          pixel. For some data sources this can also be capped in the datasource settings page. With streaming data,
+          this value is used for the rolling buffer.
         </>
       ),
     },
@@ -89,7 +92,7 @@ export class QueryOptions extends PureComponent<Props, State> {
     },
   };
 
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {
@@ -145,6 +148,7 @@ export class QueryOptions extends PureComponent<Props, State> {
   onDataSourceOptionBlur = (panelKey: string) => () => {
     const { panel } = this.props;
 
+    // @ts-ignore
     panel[panelKey] = this.state[panelKey];
     panel.refresh();
   };
@@ -153,26 +157,33 @@ export class QueryOptions extends PureComponent<Props, State> {
     this.setState({ ...this.state, [panelKey]: event.target.value });
   };
 
+  /**
+   * Show options for any value that is set, or values that the
+   * current datasource says it will use
+   */
   renderOptions = () => {
     const { datasource } = this.props;
-    const { queryOptions } = datasource.meta;
+    const queryOptions: any = datasource.meta.queryOptions || {};
 
-    if (!queryOptions) {
-      return null;
-    }
-
-    return Object.keys(queryOptions).map(key => {
+    return Object.keys(this.allOptions).map(key => {
       const options = this.allOptions[key];
       const panelKey = options.panelKey || key;
-      return (
-        <DataSourceOption
-          key={key}
-          {...options}
-          onChange={this.onDataSourceOptionChange(panelKey)}
-          onBlur={this.onDataSourceOptionBlur(panelKey)}
-          value={this.state[panelKey]}
-        />
-      );
+
+      // @ts-ignore
+      const value = this.state[panelKey];
+
+      if (queryOptions[key]) {
+        return (
+          <DataSourceOption
+            key={key}
+            {...options}
+            onChange={this.onDataSourceOptionChange(panelKey)}
+            onBlur={this.onDataSourceOptionBlur(panelKey)}
+            value={value}
+          />
+        );
+      }
+      return null; // nothing to render
     });
   };
 
@@ -210,10 +221,11 @@ export class QueryOptions extends PureComponent<Props, State> {
             value={timeShift}
           />
         </div>
-
-        <div className="gf-form-inline">
-          <Switch label="Hide time info" checked={hideTimeOverride} onChange={this.onToggleTimeOverride} />
-        </div>
+        {(timeShift || relativeTime) && (
+          <div className="gf-form-inline">
+            <Switch label="Hide time info" checked={hideTimeOverride} onChange={this.onToggleTimeOverride} />
+          </div>
+        )}
       </div>
     );
   }

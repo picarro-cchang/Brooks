@@ -1,0 +1,59 @@
+.log-row {
+  padding-left: 12px;
+  margin-bottom: 6px;
+  border-left: 6px solid #828282;
+  border-radius: 6px;
+}
+
+.log-fields {
+  margin: 4px;
+}
+
+.timestamp {
+}
+
+.client-name {
+  background-color: #00a3da;
+  color: #3c3c3cf7;
+  padding: 0px 8px 0px 8px;
+  font-weight: 600;
+}
+
+.severity-level-10 {
+  background-color: #ff9e20;
+  color: #3c3c3cf7;
+  font-weight: 600;
+  padding: 0px 8px 0px 8px;
+}
+
+.severity-level-20 {
+  background-color: #74fdb8;
+  color: #3c3c3cf7;
+  font-weight: 600;
+  padding: 0px 8px 0px 8px;
+}
+
+.severity-level-30 {
+  background-color: #ff9292;
+  color: #000;
+  font-weight: 600;
+  padding: 0px 8px 0px 8px;
+}
+
+.severity-level-40 {
+  background-color: rgb(250, 87, 87);
+  color: #000;
+  font-weight: 600;
+  padding: 0px 8px 0px 8px;
+}
+
+.severity-level-50 {
+  background-color: #fa1919;
+  color: #fff;
+  font-weight: 600;
+  padding: 0px 8px 0px 8px;
+}
+
+.log-message {
+  border-bottom: 2px solid #5f5f5f;
+}

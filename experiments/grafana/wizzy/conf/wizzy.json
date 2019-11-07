@@ -1,0 +1,16 @@
+{
+  "config": {
+    "grafana": {
+      "envs": {
+        "local": {
+          "url": "http://localhost:3000",
+          "username": "picarro",
+          "password": "picarro"
+        }
+      }
+    },
+    "context": {
+      "grafana": "local"
+    }
+  }
+}

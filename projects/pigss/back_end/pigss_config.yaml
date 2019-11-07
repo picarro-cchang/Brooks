@@ -1,0 +1,51 @@
+Configuration: # This is for high level information
+  RpcTunnel:
+    config_file: rpc_tunnel_configs.json
+  Database:
+    server: 0.0.0.0
+    port: 8086
+    name: pigss_data
+  HttpServer:
+    listen_address: 0.0.0.0
+    port: 8000
+
+Settings:
+  maximum_mfc_flow: 50.0
+  reference_mfc_flow: 40.0
+  flow_settle_delay: 2.0
+  madmapper_startup_delay: 30
+  startup_plan: __default__  # Do NOT include extension or directory
+
+Services:
+  - Name: DBDecimator
+    RPC_Port: 33052
+    Parameters: # These are passed to the constructor
+      db_name: pigss_data
+      rpc_server_name: DBDecimator
+      rpc_server_description: DBDecimator
+      raw_filter_conditions: 
+        - ["valve_stable_time", ">", 15]
+      start: true
+
+Plugins:
+  GrafanaLogger:
+    sqlite:
+      table_name: 'Events'
+      columns: ['rowid', 'ClientTimestamp', 'ClientName', 'LogMessage', 'Level']
+    limit: 20
+    interval: 3
+    timeout: 300
+    retries: 1
+
+  GrafanaDataGenerator:
+    database:
+      host: 0.0.0.0
+      port: 8086
+      database: "pigss_data"
+      timeout: 300
+      retries: 1
+      measurements: "crds"
+    server:
+      user_keys: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]
+      data_dir: "/tmp"
+      file_type: "csv"

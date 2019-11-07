@@ -86,3 +86,33 @@ func Auth(options *AuthOptions) macaron.Handler {
 		}
 	}
 }
+
+// AdminOrFeatureEnabled creates a middleware that allows access
+// if the signed in user is either an Org Admin or if the
+// feature flag is enabled.
+// Intended for when feature flags open up access to APIs that
+// are otherwise only available to admins.
+func AdminOrFeatureEnabled(enabled bool) macaron.Handler {
+	return func(c *m.ReqContext) {
+		if c.OrgRole == m.ROLE_ADMIN {
+			return
+		}
+
+		if !enabled {
+			accessForbidden(c)
+		}
+	}
+}
+
+func SnapshotPublicModeOrSignedIn() macaron.Handler {
+	return func(c *m.ReqContext) {
+		if setting.SnapshotPublicMode {
+			return
+		}
+
+		_, err := c.Invoke(ReqSignedIn)
+		if err != nil {
+			c.JsonApiErr(500, "Failed to invoke required signed in middleware", err)
+		}
+	}
+}

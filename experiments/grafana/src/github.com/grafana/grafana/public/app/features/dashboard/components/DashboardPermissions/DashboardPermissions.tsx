@@ -1,6 +1,6 @@
 import React, { PureComponent } from 'react';
 import { Tooltip } from '@grafana/ui';
-import SlideDown from 'app/core/components/Animations/SlideDown';
+import { SlideDown } from 'app/core/components/Animations/SlideDown';
 import { StoreState, FolderInfo } from 'app/types';
 import { DashboardAcl, PermissionLevel, NewDashboardAclItem } from 'app/types/acl';
 import {
@@ -29,7 +29,7 @@ export interface State {
 }
 
 export class DashboardPermissions extends PureComponent<Props, State> {
-  constructor(props) {
+  constructor(props: Props) {
     super(props);
 
     this.state = {

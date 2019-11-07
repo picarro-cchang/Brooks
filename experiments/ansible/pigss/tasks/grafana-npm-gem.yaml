@@ -1,0 +1,30 @@
+- name: Install node-gyp
+  npm:
+    name: node-gyp
+    global: yes
+    state: latest
+  become: yes
+
+- name: Install yarn
+  npm:
+    name: yarn
+    global: yes
+    state: latest
+  become: yes
+
+# fpm fails when installing using the gem ansible module
+# We'll use a shell command instead
+- name: Install fpm
+  shell: gem install fpm
+  become: yes
+#   gem:
+#     name: fpm
+#     state: latest
+#   become: yes
+
+- name: Install wizzy
+  npm:
+    name: wizzy
+    global: yes
+    state: latest
+  become: yes

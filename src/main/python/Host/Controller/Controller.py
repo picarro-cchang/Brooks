@@ -109,10 +109,15 @@ class Controller(ControllerFrameGui):
             tec=self.warmBoxPanel.tecWfm)
         waveforms["HotBox"] = dict(
             cavityTemperature=self.hotBoxPanel.cavityTemperatureWfm,
+            cavity2Temperature=self.hotBoxPanel.cavity2TemperatureWfm,
             cavityTemperature1=self.hotBoxPanel.cavityTemperature1Wfm,
             cavityTemperature2=self.hotBoxPanel.cavityTemperature2Wfm,
             cavityTemperature3=self.hotBoxPanel.cavityTemperature3Wfm,
             cavityTemperature4=self.hotBoxPanel.cavityTemperature4Wfm,
+            cavity2Temperature1=self.hotBoxPanel.cavity2Temperature1Wfm,
+            cavity2Temperature2=self.hotBoxPanel.cavity2Temperature2Wfm,
+            cavity2Temperature3=self.hotBoxPanel.cavity2Temperature3Wfm,
+            cavity2Temperature4=self.hotBoxPanel.cavity2Temperature4Wfm,
             heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
             dasTemperature=self.hotBoxPanel.dasTemperatureWfm,
             tec=self.hotBoxPanel.tecWfm,
@@ -123,6 +128,8 @@ class Controller(ControllerFrameGui):
         waveforms["Pressure"] = dict(
             ambientPressure=self.pressurePanel.ambientPressureWfm,
             cavityPressure=self.pressurePanel.cavityPressureWfm,
+            ambient2Pressure=self.pressurePanel.ambient2PressureWfm,
+            cavity2Pressure=self.pressurePanel.cavity2PressureWfm,
             flow1=self.pressurePanel.flow1Wfm,
             inletValve=self.pressurePanel.inletValveWfm,
             outletValve=self.pressurePanel.outletValveWfm)
