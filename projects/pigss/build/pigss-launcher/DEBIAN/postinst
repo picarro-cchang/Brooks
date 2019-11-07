@@ -1,4 +1,11 @@
 #!/bin/bash
 
+# Update icon cache
+gtk-update-icon-cache
+
+# Copy .desktop file to home autostart directory
+mkdir -p /home/$SUDO_USER/.config/autostart
+cp -r /tmp/pigss-launcher/pigss-launcher.desktop /home/$SUDO_USER/.config/autostart/
+
 # Set favorite apps to only display pigss-launcher
 dconf write /org/gnome/shell/favorite-apps "['pigss-launcher.desktop']"

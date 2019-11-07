@@ -1,5 +1,11 @@
 #!/bin/bash
 
 # Remove files and folders created on install
-sudo rm -rf /usr/local/share/picarro || echo "Nothing here"
-sudo rm -rf /usr/share/applications/pigss-launcher.desktop || echo "Nothing here"
+sudo rm -rf /usr/local/share/picarro >> /dev/null
+sudo rm -rf /home/$SUDO_USER/.config/autostart/pigss-launcher.desktop >> /dev/null
+
+# Remove pigss-launcher from favorite-apps list
+dconf write /org/gnome/shell/favorite-apps "['']"
+
+# Update icon cache
+gtk-update-icon-cache
