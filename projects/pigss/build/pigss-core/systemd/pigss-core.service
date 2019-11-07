@@ -12,10 +12,11 @@ Type=simple
 # -c --- Configuration file for pigss_runner                              #
 #                                                                         #
 ###########################################################################
-ExecStart=/usr/bin/pigss-core
+# Systemd system services require a full path to work
+ExecStart=/usr/bin/pigss-core -c /home/picarro/.config/pigss/pigss_config.yaml
 # Switch ExecStart to run in simulation mode
 # It seems silly to maintain a separate package for the simulators
-# ExecStart=/usr/bin/pigss-core -c pigss_sim_config.yaml
+# ExecStart=/usr/bin/pigss-core -c /home/picarro/.config/pigss/pigss_sim_config.yaml
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -HUP $MAINPID
 Restart=always
