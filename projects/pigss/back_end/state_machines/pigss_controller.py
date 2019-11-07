@@ -307,11 +307,6 @@ class PigssController(Ahsm):
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
         self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
-    # def set_reference(self, value):
-    #     if self.reference_active != value:
-    #         self.reference_active = value
-    #         Framework.publish(Event(Signal.SET_REFERENCE, value))
-
     def plan_panel_update(self, msg):
         """Handle change of focus and edits in the duration column of the plan panel"""
         if "focus" in msg:
@@ -564,9 +559,7 @@ class PigssController(Ahsm):
         Signal.register("PLAN_SAVE_SUCCESSFUL")
         Signal.register("PLAN_SAVE_FAILED")
         Signal.register("PROCEED")
-        # Signal.register("SET_REFERENCE")
         Framework.subscribe("PIGLET_REQUEST", self)
-        # Framework.subscribe("PIGLET_SAFE_STANDBY", self)
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
         Framework.subscribe("BTN_STANDBY", self)
@@ -720,7 +713,6 @@ class PigssController(Ahsm):
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
-            # Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("STANDBY", self.all_banks)))
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()

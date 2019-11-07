@@ -49,22 +49,18 @@ class PigletManager(Ahsm):
 
     @state
     def _initial(self, e):
+        self.mfc_override = None
         self.publish_errors = True
         self.piglet_status_te = TimeEvent("PIGLET_STATUS_TIMER")
         Framework.subscribe("MFC_SET", self)
         Framework.subscribe("PERFORM_VALVE_TRANSITION", self)
         Framework.subscribe("PIGLET_REQUEST", self)
-        # Framework.subscribe("PIGLET_SAFE_STANDBY", self)
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
-        # Framework.subscribe("SET_REFERENCE", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("VALVE_POSITION", self)
         Framework.subscribe("VALVE_TRANSITION_DONE", self)
         Framework.subscribe("TERMINATE", self)
-        # self.exhaust_open = False
-        # self.reference_open = False
-        # self.piglets_for_safe_standby = []
         self.old_valve = "exhaust"
         self.old_settings = {}
         return self.tran(self._configure)
@@ -97,23 +93,10 @@ class PigletManager(Ahsm):
             return self.handled(e)
         elif sig == Signal.TERMINATE:
             return self.tran(self._exit)
-        # elif sig == Signal.SET_REFERENCE:
-        #     payload = e.value
-        #     self.target_reference_valve_state = (payload != 0)
-        #     return self.handled(e)
-        # elif sig == Signal.SET_REFERENCE_VALVE:
-        #     self.run_async(self.set_reference_valve(e.value["value"]))
-        #     return self.handled(e)
         elif sig == Signal.PIGLET_REQUEST:
             payload = e.value
             self.run_async(self.send_to_piglets(payload.command, payload.bank_list))
             return self.handled(e)
-        # elif sig == Signal.PIGLET_SAFE_STANDBY:
-        #    async def set_piglets_for_safe_standby(piglet_list):
-        #        async with self.status_lock:
-        #            self.piglets_for_safe_standby = piglet_list
-        #    self.run_async(set_piglets_for_safe_standby(e.value))
-        #    return self.handled(e)
         elif sig == Signal.PIGLET_STATUS_TIMER:
             self.run_async(self.get_status(self.bank_list))
             return self.handled(e)
@@ -130,15 +113,11 @@ class PigletManager(Ahsm):
             self.run_async(self.perform_valve_transition(e.value))
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
-            print(f"Valve transition performed {e.value}")
             return self.handled(e)
         elif sig == Signal.MFC_SET:
             set_point = e.value['mfc_setpoint']
             self.run_async(self.set_mfc_setpoint(set_point))
             return self.handled(e)
-        # elif sig == Signal.SET_EXHAUST_VALVE:
-        #     self.run_async(self.set_exhaust_valve(e.value["value"]))
-        #     return self.handled(e)
         elif sig == Signal.VALVE_POSITION:
             self.run_async(self.handle_valve_position(e.value))
             return self.handled(e)
@@ -149,40 +128,6 @@ class PigletManager(Ahsm):
             mfc_total = self.mfc_override
         when = piglet_status["time"]
         Framework.publish(Event(Signal.MFC_SET, {"time": when, "mfc_setpoint": mfc_total}))
-
-    """
-    # If previous processing is not done, just return
-    if self.status_lock.locked():
-        return
-    when = piglet_status["time"]
-    delay = self.farm.config.get_flow_settle_delay()
-    all_standby = all([piglet_status[bank]['OPSTATE'] == 'standby' for bank in self.bank_list])
-    async with self.status_lock:
-        if self.target_reference_valve_state != self.reference_open:
-            await self.set_reference(self.target_reference_valve_state)
-        if self.reference_open:
-            mfc_total = self.farm.config.get_reference_mfc_flow()
-        if self.piglets_for_safe_standby:
-            mfc_total = 0
-        if mfc_total == 0:
-            if not self.exhaust_open:
-                await self.open_exhaust_then_set_mfc(mfc_total, delay=1)
-            else:
-                Framework.publish(Event(Signal.MFC_SET, {"time": when, "mfc_setpoint": mfc_total}))
-            if self.piglets_for_safe_standby:
-                if all_standby:
-                    Framework.publish(Event(Signal.PIGLET_RESPONSE, {}))
-                else:
-                    await asyncio.sleep(delay)
-                    await self.send_to_piglets("STANDBY", self.piglets_for_safe_standby)
-                    await asyncio.sleep(delay)
-                self.piglets_for_safe_standby = []
-        elif mfc_total > 0:
-            if self.exhaust_open:
-                await self.set_mfc_then_close_exhaust(mfc_total, delay=delay)
-            else:
-                Framework.publish(Event(Signal.MFC_SET, {"time": when, "mfc_setpoint": mfc_total}))
-    """
 
     @state
     def _exit(self, e):
@@ -196,9 +141,9 @@ class PigletManager(Ahsm):
         return self.super(self.top)
 
     async def perform_valve_transition(self, valve_transition_payload):
-        # Perform a valve transition following the protocol:
-        # 1) Assert the new valve states
-        # 2) Assert MFC override if necessary
+        # Perform a valve transition according to the following protocol:
+        # 1) Assert the new valve settings
+        # 2) Assert MFC override for new settings if necessary
         # 3) Delay for a specified period
         # 4) Deassert the old valve states
         # 5) Save new settings as old
@@ -244,18 +189,6 @@ class PigletManager(Ahsm):
 
         Framework.publish(Event(Signal.VALVE_TRANSITION_DONE, valve_transition_payload))
 
-    """
-    async def open_exhaust_then_set_mfc(self, mfc_total, delay):
-        Framework.publish(Event(Signal.SET_EXHAUST_VALVE, {"time": time.time(), "value": "open"}))
-        await asyncio.sleep(delay)
-        Framework.publish(Event(Signal.MFC_SET, {"time": time.time(), "mfc_setpoint": mfc_total}))
-
-    async def set_mfc_then_close_exhaust(self, mfc_total, delay):
-        Framework.publish(Event(Signal.MFC_SET, {"time": time.time(), "mfc_setpoint": mfc_total}))
-        await asyncio.sleep(delay)
-        Framework.publish(Event(Signal.SET_EXHAUST_VALVE, {"time": time.time(), "value": "closed"}))
-    """
-
     async def command_handler(self, command, bank):
         return await self.farm.RPC[f"Piglet_{bank}"].send(command)
 
@@ -283,8 +216,6 @@ class PigletManager(Ahsm):
         response["MFCFLOW"] = float(mfc_data["m_flow"])
         response["EXHAUST"] = "close" if await self.farm.RPC["Relay_0"].NUMATO_get_relay_status(0) else "open"
         response["REFERENCE"] = "open" if await self.farm.RPC["Relay_0"].NUMATO_get_relay_status(1) else "closed"
-        # self.exhaust_open = response["EXHAUST"] == "open"
-        # self.reference_open = response["REFERENCE"] == "open"
         now = time.time()
         # Calculate the states of all the solenoid valves
         _valve_mask = 0
@@ -313,19 +244,6 @@ class PigletManager(Ahsm):
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
             # The next line is for the simulator
             await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
-
-    """
-    async def set_reference(self, reference_active):
-        Framework.publish(
-            Event(Signal.SET_REFERENCE_VALVE, {
-                "time": time.time(),
-                "value": "open" if reference_active else "closed"
-            }))
-        for analyzer_rpc_name in self.picarro_analyzers:
-            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"reference": reference_active})
-            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time")
-        await asyncio.sleep(self.farm.config.get_flow_settle_delay())
-    """
 
     async def set_mfc_setpoint(self, set_point):
         max_flow = self.farm.config.get_maximum_mfc_flow()

@@ -9,20 +9,21 @@ import traceback
 
 import aiohttp_cors
 import click
+import yamale
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
-import yamale
 
 from async_hsm import Framework
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.controller_service import ControllerService
+from back_end.servers.customer_api_server import CustomerAPIService
+from back_end.servers.grafana_data_generator_service import \
+    GrafanaDataGeneratorService
+from back_end.servers.grafana_logger_service import GrafanaLoggerService
 from back_end.servers.port_history_service import PortHistoryService
 from back_end.servers.supervisor_service import SupervisorService
 from back_end.servers.system_status_service import SystemStatusService
 from back_end.servers.time_aggregation_sevice import TimeAggregationService
-from back_end.servers.grafana_logger_service import GrafanaLoggerService
-from back_end.servers.grafana_data_generator_service import GrafanaDataGeneratorService
-from back_end.servers.customer_api_server import CustomerAPIService
 from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
 
