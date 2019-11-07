@@ -8,7 +8,8 @@ pigss_data_source = {
     "orgId": 1,
     "name": "PiGSS data source",
     "type": "influxdb",
-    "typeLogoUrl": "public/app/plugins/datasource/influxdb/img/influxdb_logo.svg",
+    "typeLogoUrl":
+    "public/app/plugins/datasource/influxdb/img/influxdb_logo.svg",
     "access": "proxy",
     "url": "http://localhost:8086",
     "password": "",
@@ -18,7 +19,7 @@ pigss_data_source = {
     "isDefault": True,
     "jsonData": {},
     "readOnly": False
-  }
+}
 
 port_history_data_source = {
     "id": 2,
@@ -35,14 +36,15 @@ port_history_data_source = {
     "isDefault": False,
     "jsonData": {},
     "readOnly": False
-  }
+}
 
 telegraf_data_source = {
-  "id": 3,
+    "id": 3,
     "orgId": 1,
     "name": "telegraf",
     "type": "influxdb",
-    "typeLogoUrl": "public/app/plugins/datasource/influxdb/img/influxdb_logo.svg",
+    "typeLogoUrl":
+    "public/app/plugins/datasource/influxdb/img/influxdb_logo.svg",
     "access": "proxy",
     "url": "http://localhost:8086",
     "password": "",
@@ -52,7 +54,7 @@ telegraf_data_source = {
     "isDefault": True,
     "jsonData": {},
     "readOnly": False
-  }
+}
 
 system_status_data_source = {
     "id": 4,
@@ -69,16 +71,13 @@ system_status_data_source = {
     "isDefault": False,
     "jsonData": {},
     "readOnly": False
-  }
+}
 
 # TODO: Improve grootilities to not rely on a list of app ids for production
 apps = [
-  'picarro-analyzer-page',
-  'current-concentration-values',
-  'picarro-user-data-app',
-  'picarro-concentration-page',
-  'picarro-status-app',
-  'flow-setup-app'
+    'picarro-analyzer-page', 'current-concentration-values',
+    'picarro-user-data-app', 'picarro-concentration-page',
+    'picarro-status-app', 'flow-setup-app'
 ]
 
 
@@ -91,9 +90,18 @@ def main():
         GROOT.add_datasource(system_status_data_source)
         # TODO: Improve grootilities to not rely on a list of app ids for production
         for app in apps:
-          GROOT.api.POST(f'/plugins/{app}/settings', json={"enabled": False, "pinned": False, "jsonData": None})
-          GROOT.api.POST(f'/plugins/{app}/settings', json={"enabled": True, "pinned": True, "jsonData": None})
-
+            GROOT.api.POST(f'/plugins/{app}/settings',
+                           json={
+                               "enabled": False,
+                               "pinned": False,
+                               "jsonData": None
+                           })
+            GROOT.api.POST(f'/plugins/{app}/settings',
+                           json={
+                               "enabled": True,
+                               "pinned": True,
+                               "jsonData": None
+                           })
 
 
 if __name__ == '__main__':
