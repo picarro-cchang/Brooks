@@ -8,7 +8,12 @@ export const DEFAULT_TIME_RANGE: TimeRange = {
   to: dateTime(),
   raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment },
 };
-const DEFAULT_LEVEL: object[] = [{ value: '10', label: '10' }];
+const DEFAULT_LEVEL: object[] = [
+  { value: '20', label: '20' },
+  { value: '30', label: '30' },
+  { value: '40', label: '40' },
+  { value: '50', label: '50' }];
+
 export const DEFAULT_LOG_PROPS: LogProps = {
   level: DEFAULT_LEVEL,
   limit: 20,

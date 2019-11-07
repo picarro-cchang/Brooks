@@ -73,7 +73,7 @@ class SerialMapper(object):
                     self.piglet_count += 1
                 except Exception as e:
                     self.logger.critical(f'Unhandled Exception: {e}')
-            elif 'FTDI_FT232R_USB_UART_' in device.get('ID_SERIAL'):
+            elif 'FTDI_FT232R_USB_UART_' in device.get('ID_SERIAL') or "FTDI_USB-RS232_Cable_" in device.get('ID_SERIAL'):
                 mfc_rpc_port = self.mfc_port + self.mfc_count
                 self.devices['Serial_Devices'].update({
                     f'{device.get("DEVNAME")}': {

@@ -8,7 +8,6 @@
   copy:
     src: files/pip.conf
     dest: "{{ playbook_home }}/.pip/pip.conf"
-  when: update == "false"
 
 - name: Download miniconda3
   get_url:

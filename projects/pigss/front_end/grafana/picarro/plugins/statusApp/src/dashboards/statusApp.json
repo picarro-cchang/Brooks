@@ -472,12 +472,7 @@
       },
       "header_js": "{}",
       "id": 4,
-      "links": [
-        {
-          "title": "",
-          "url": ""
-        }
-      ],
+      "links": [],
       "method": "GET",
       "mode": "template",
       "options": {},
@@ -522,10 +517,6 @@
           []
         ],
         "level": [
-          {
-            "label": "10",
-            "value": "10"
-          },
           {
             "label": "20",
             "value": "20"
@@ -694,5 +685,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 5
+  "version": 6
 }
