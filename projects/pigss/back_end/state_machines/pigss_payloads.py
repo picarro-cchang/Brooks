@@ -42,3 +42,9 @@ class ValvePositionPayload:
     valve_pos = attr.ib(int)
     valve_mask = attr.ib(int)
     clean_mask = attr.ib(int)
+
+
+@attr.s
+class ValveTransitionPayload:
+    new_valve = attr.ib("exhaust")
+    new_settings = attr.ib(factory=dict)

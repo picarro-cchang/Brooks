@@ -21,8 +21,7 @@ import ntpath
 from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
 from back_end.database_access.aio_influx_database import AioInfluxDBWriter
 from back_end.lologger.lologger_client import LOLoggerClient
-from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
-                                                    PlanError)
+from back_end.state_machines.pigss_payloads import (PigletRequestPayload, PlanError, ValveTransitionPayload)
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
@@ -308,10 +307,10 @@ class PigssController(Ahsm):
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
         self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
 
-    def set_reference(self, value):
-        if self.reference_active != value:
-            self.reference_active = value
-            Framework.publish(Event(Signal.SET_REFERENCE, value))
+    # def set_reference(self, value):
+    #     if self.reference_active != value:
+    #         self.reference_active = value
+    #         Framework.publish(Event(Signal.SET_REFERENCE, value))
 
     def plan_panel_update(self, msg):
         """Handle change of focus and edits in the duration column of the plan panel"""
@@ -560,21 +559,16 @@ class PigssController(Ahsm):
         self.chan_active = {1: 0, 2: 0, 3: 0, 4: 0}
         self.clean_active = {1: 0, 2: 0, 3: 0, 4: 0}
         self.reference_active = None
-        Signal.register("PC_SEND")
         Signal.register("PLAN_LOAD_SUCCESSFUL")
         Signal.register("PLAN_LOAD_FAILED")
         Signal.register("PLAN_SAVE_SUCCESSFUL")
         Signal.register("PLAN_SAVE_FAILED")
-        Signal.register("SET_REFERENCE")
+        Signal.register("PROCEED")
+        # Signal.register("SET_REFERENCE")
         Framework.subscribe("PIGLET_REQUEST", self)
-        Framework.subscribe("PIGLET_SAFE_STANDBY", self)
+        # Framework.subscribe("PIGLET_SAFE_STANDBY", self)
         Framework.subscribe("PIGLET_STATUS", self)
         Framework.subscribe("PIGLET_RESPONSE", self)
-        Framework.subscribe("PIGLET_SEQUENCE", self)
-        Framework.subscribe("PIGLET_SEQUENCE_COMPLETE", self)
-        Framework.subscribe("PC_ERROR", self)
-        Framework.subscribe("PC_TIMEOUT", self)
-        Framework.subscribe("PC_RESPONSE", self)
         Framework.subscribe("BTN_STANDBY", self)
         Framework.subscribe("BTN_IDENTIFY", self)
         Framework.subscribe("BTN_PLAN", self)
@@ -607,6 +601,8 @@ class PigssController(Ahsm):
         Framework.subscribe("EDIT_SAVE", self)
         Framework.subscribe("BTN_PLAN_LOOP", self)
         Framework.subscribe("BTN_PLAN_RUN", self)
+        Framework.subscribe("PERFORM_VALVE_TRANSITION", self)
+        Framework.subscribe("VALVE_TRANSITION_DONE", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._configure)
 
@@ -721,12 +717,13 @@ class PigssController(Ahsm):
     def _standby1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
             # Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("STANDBY", self.all_banks)))
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
             return self.tran(self._standby2)
         return self.super(self._standby)
 
@@ -734,7 +731,6 @@ class PigssController(Ahsm):
     def _standby2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.restore_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
             return self.handled(e)
         return self.super(self._standby)
@@ -744,7 +740,6 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.EXIT:
             self.set_status(["reference"], UiStatus.READY)
-            self.set_reference(0)
             for bank in self.all_banks:
                 self.set_status(["bank", bank], UiStatus.READY)
             return self.handled(e)
@@ -758,11 +753,12 @@ class PigssController(Ahsm):
     def _reference1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             self.disable_buttons()
             self.set_status(["reference"], UiStatus.ACTIVE)
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
             return self.tran(self._reference2)
         return self.super(self._reference)
 
@@ -770,9 +766,7 @@ class PigssController(Ahsm):
     def _reference2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.restore_buttons()
             self.set_status(["reference"], UiStatus.ACTIVE)
-            self.set_reference(1)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["bank", bank], UiStatus.REFERENCE)
@@ -784,8 +778,6 @@ class PigssController(Ahsm):
     def _clean(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
-            self.disable_buttons()
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -795,13 +787,7 @@ class PigssController(Ahsm):
                 self.set_status(["bank", bank], UiStatus.READY)
                 self.clean_active[bank] = 0
             return self.handled(e)
-        elif sig == Signal.BTN_CLEAN:
-            if self.status["clean"][e.value["bank"]] != UiStatus.DISABLED:
-                self.new_bank = e.value["bank"]
-                if self.new_bank != self.bank:
-                    return self.tran(self._clean3)
-            return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.INIT:
             return self.tran(self._clean1)
         return self.super(self._operational)
 
@@ -809,10 +795,13 @@ class PigssController(Ahsm):
     def _clean1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("CLEAN", [self.bank])))
-            self.clean_active[self.bank] = 0
+            banks_to_clean = {bank: (bank == self.bank) for bank in self.all_banks}
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", banks_to_clean)))
+            self.disable_buttons()
+            self.clean_active[self.bank] = 1
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
             return self.tran(self._clean2)
         return self.super(self._clean)
 
@@ -821,29 +810,16 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             # Use 1-origin for numbering banks and channels
-            self.restore_buttons()
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             self.set_status(["bank", self.bank], UiStatus.CLEAN)
             return self.handled(e)
         return self.super(self._clean)
 
     @state
-    def _clean3(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("STANDBY", [self.bank])))
-            return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
-            self.set_status(["bank", self.bank], UiStatus.READY)
-            self.bank = self.new_bank
-            return self.tran(self._clean1)
-        return self.super(self._clean)
-
-    @state
     def _identify(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["identify"], UiStatus.ACTIVE)
             self.banks_to_process = self.all_banks.copy()
@@ -860,7 +836,7 @@ class PigssController(Ahsm):
                 self.set_status(["clean", bank], UiStatus.READY)
                 self.set_status(["bank", bank], UiStatus.READY)
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.VALVE_TRANSITION_DONE:
             return self.tran(self._identify1)
         elif sig == Signal.BTN_IDENTIFY:
             return self.handled(e)
@@ -985,7 +961,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_plan(["panel_to_show"], int(PlanPanelType.PLAN))
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_OK:
             self.plan_error = self.validate_plan(check_avail=True)
@@ -1198,7 +1174,7 @@ class PigssController(Ahsm):
     def _sampling(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_SAFE_STANDBY, self.all_banks))
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1221,10 +1197,9 @@ class PigssController(Ahsm):
             return self.tran(self._run_plan1)
         elif sig == Signal.BTN_PLAN_LOOP:
             return self.tran(self._loop_plan1)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
-            self.postFIFO(Event(Signal.PIGLET_SEQUENCE_COMPLETE, None))
-            return self.handled(e)
+            self.postFIFO(Event(Signal.PROCEED, None))
         return self.super(self._operational)
 
     @state
@@ -1238,7 +1213,7 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_RUN:
             return self.handled(e)
-        elif sig == Signal.PIGLET_SEQUENCE_COMPLETE:
+        elif sig == Signal.PROCEED:
             return self.tran(self._run1)
         return self.super(self._sampling)
 
@@ -1265,7 +1240,6 @@ class PigssController(Ahsm):
     def _run11(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.restore_buttons()
             self.set_status(["run"], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.BTN_CHANNEL:
@@ -1286,9 +1260,12 @@ class PigssController(Ahsm):
                         self.chan_active[bank] = mask
                     else:
                         self.chan_active[bank] = 0
-                return self.tran(self._run111)
-            else:
-                return self.handled(e)
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                self.disable_buttons()
+            return self.handled(e)
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
+            return self.tran(self._run111)
         return self.super(self._run1)
 
     @state
@@ -1296,14 +1273,11 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             mask = self.chan_active[self.bank_to_update]
-            if mask == 0:
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
-            else:
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
             for j in setbits(mask):
                 self.set_status(["channel", self.bank_to_update, j + 1], UiStatus.ACTIVE)
+            self.postFIFO(Event(Signal.PROCEED, None))
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
+        elif sig == Signal.PROCEED:
             if self.banks_to_process:
                 self.bank_to_update = self.banks_to_process.pop(0)
                 return self.tran(self._run111)
@@ -1322,7 +1296,7 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_RUN:
             return self.handled(e)
-        elif sig == Signal.PIGLET_SEQUENCE_COMPLETE:
+        elif sig == Signal.PROCEED:
             return self.tran(self._run_plan1)
         return self.super(self._sampling)
 
@@ -1365,7 +1339,6 @@ class PigssController(Ahsm):
     def _run_plan2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.restore_buttons()
             self.set_status(["plan_run"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]
@@ -1398,7 +1371,7 @@ class PigssController(Ahsm):
             self.bank_to_update = self.banks_to_process.pop(0)
             current_step = self.plan["current_step"]
             bank_config = self.plan["steps"][current_step]["banks"]
-            self.set_reference(self.plan["steps"][current_step]["reference"])
+            self.reference_active = self.plan["steps"][current_step]["reference"]
             for bank in self.all_banks:
                 self.clean_active[bank] = bank_config[bank]["clean"]
                 self.chan_active[bank] = bank_config[bank]["chan_mask"]
@@ -1440,21 +1413,18 @@ class PigssController(Ahsm):
     def _run_plan211(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            if self.clean_active[self.bank_to_update] != 0:
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
+            some_clean_active = any([self.clean_active[bank] for bank in self.clean_active])
+            if self.reference_active:
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
+            elif some_clean_active:
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
             else:
-                mask = self.chan_active[self.bank_to_update]
-                if mask == 0:
-                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
-                else:
-                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+            self.disable_buttons()
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
-            if self.banks_to_process:
-                self.bank_to_update = self.banks_to_process.pop(0)
-                return self.tran(self._run_plan211)
-            else:
-                return self.handled(e)
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
+            return self.handled(e)
         return self.super(self._run_plan21)
 
     @state
@@ -1468,7 +1438,7 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_LOOP:
             return self.handled(e)
-        elif sig == Signal.PIGLET_SEQUENCE_COMPLETE:
+        elif sig == Signal.PROCEED:
             return self.tran(self._loop_plan1)
         return self.super(self._sampling)
 
@@ -1511,7 +1481,6 @@ class PigssController(Ahsm):
     def _loop_plan2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.restore_buttons()
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]
@@ -1540,7 +1509,7 @@ class PigssController(Ahsm):
             self.bank_to_update = self.banks_to_process.pop(0)
             current_step = self.plan["current_step"]
             bank_config = self.plan["steps"][current_step]["banks"]
-            self.set_reference(self.plan["steps"][current_step]["reference"])
+            self.reference_active = self.plan["steps"][current_step]["reference"]
             for bank in self.all_banks:
                 self.clean_active[bank] = bank_config[bank]["clean"]
                 self.chan_active[bank] = bank_config[bank]["chan_mask"]
@@ -1582,21 +1551,18 @@ class PigssController(Ahsm):
     def _loop_plan211(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            if self.clean_active[self.bank_to_update] != 0:
-                Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CLEAN", [self.bank_to_update])))
+            some_clean_active = any([self.clean_active[bank] for bank in self.clean_active])
+            if self.reference_active:
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
+            elif some_clean_active:
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
             else:
-                mask = self.chan_active[self.bank_to_update]
-                if mask == 0:
-                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"STANDBY", [self.bank_to_update])))
-                else:
-                    Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload(f"CHANSET {mask}", [self.bank_to_update])))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+            self.disable_buttons()
             return self.handled(e)
-        elif sig == Signal.PIGLET_RESPONSE:
-            if self.banks_to_process:
-                self.bank_to_update = self.banks_to_process.pop(0)
-                return self.tran(self._loop_plan211)
-            else:
-                return self.handled(e)
+        elif sig == Signal.VALVE_TRANSITION_DONE:
+            self.restore_buttons()
+            return self.handled(e)
         return self.super(self._loop_plan21)
 
     @state
@@ -1634,8 +1600,15 @@ class PigssController(Ahsm):
             time_elapsed += 0.5
             if time_elapsed > timeout:
                 raise TimeoutError(msg)
-            Framework.publish(Event(button_signal, None))
-            break
+        Framework.publish(Event(button_signal, None))
+
+    async def wait_for_state(self, state, msg="Timeout", timeout=5.0):
+        time_elapsed = 0
+        while self.state != state:
+            await asyncio.sleep(0.5)
+            time_elapsed += 0.5
+            if time_elapsed > timeout:
+                raise TimeoutError(msg)
 
     async def auto_setup_flow(self, plan_filename_no_ext=None):
         """This runs the channel identification procedure and then loops a plan specified
@@ -1658,33 +1631,18 @@ class PigssController(Ahsm):
                 await asyncio.sleep(1.0)
             if plan_filename_no_ext is not None:
                 await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
-                await asyncio.sleep(1.0)
-                if self.state != self._plan_plan:
-                    msg = "Unexpected inability to reach _plan_plan state before loading plan file"
-                    log.warning(msg)
-                    return msg
+                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
                 Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
-            await asyncio.sleep(1.0)
-            if self.state != self._plan_load:
-                msg = "Unexpected inability to reach _plan_load state"
-                log.warning(msg)
-                return msg
-            Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
-            await asyncio.sleep(1.0)
-            if self.state != self._plan_plan:
-                msg = "Unexpected inability to reach _plan_plan state after loading plan file"
-                log.warning(msg)
-                return msg
-            Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
-            await asyncio.sleep(1.0)
-            Framework.publish(Event(Signal.BTN_PLAN_OK, None))
-            await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
-            await asyncio.sleep(1.0)
-            if self.state != self._loop_plan1:
-                msg = "Unexpected inability to reach _loop_plan1 state"
-                log.warning(msg)
-                return msg
-            Framework.publish(Event(Signal.MODAL_OK, None))
+                await self.wait_for_state(self._plan_load, "Timeout reaching _plan_load state")
+                Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
+                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state")
+                Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
+                await asyncio.sleep(1.0)
+                Framework.publish(Event(Signal.BTN_PLAN_OK, None))
+                await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
+                await asyncio.sleep(1.0)
+                await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
+                Framework.publish(Event(Signal.MODAL_OK, None))
         except TimeoutError as e:
             log.warning(repr(e))
             return repr(e)
