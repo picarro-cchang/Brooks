@@ -67,16 +67,10 @@ import socket
 def get_ip_address():
     '''
     Method use to get eth0 ip address and run modbus server using ip address for Modbus over TCPIP
+    Method been simplified.
     :return:
     '''
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip_address = s.getsockname()[0]
-        s.close()
-        return ip_address
-    except Exception, e:
-        return "0.0.0.0"
+    return "0.0.0.0"
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
