@@ -5,220 +5,206 @@
   <class name="PiGSSController" superclass="qpc::QHsm">
    <statechart properties="0x01">
     <state name="configure">
-     <tran trig="SYSTEM_CONFIGURE" target="../1">
+     <entry brief="Disable buttons"/>
+     <tran trig="SYSTEM_CONFIGURE" target="../2">
       <action brief="save bank and configuration info"/>
-      <tran_glyph conn="12,8,3,0,56,4">
+      <tran_glyph conn="12,8,3,0,56,2">
        <action box="0,-2,42,2"/>
       </tran_glyph>
      </tran>
+     <tran trig="TERMINATE" target="../../1">
+      <action brief="terminate">Framework.stop()</action>
+      <tran_glyph conn="116,10,1,3,18">
+       <action box="0,-2,20,2"/>
+      </tran_glyph>
+     </tran>
      <state name="operational">
-      <entry brief="init_status">self.set_status([&quot;standby&quot;], UiStatus.READY)
-self.set_status([&quot;identify&quot;], UiStatus.READY)
-self.set_status([&quot;run&quot;], UiStatus.DISABLED)
-self.set_status([&quot;plan&quot;], UiStatus.DISABLED)
-self.set_status([&quot;reference&quot;], UiStatus.DISABLED)
-for i in range(self.num_banks):
-     # Use 1-origin for numbering banks and channels
-     self.set_status([&quot;clean&quot;, i+1], UiStatus.READY)
-     self.set_status([&quot;bank&quot;, i+1], UiStatus.READY)
-     for j in range(self.num_chans_per_bank):
-         self.set_status([&quot;channel&quot;, i+1, j+1], UiStatus.ACTIVE)
-</entry>
-      <initial target="../13">
-       <initial_glyph conn="37,91,5,0,4,2">
+      <entry brief="initialize button status, STANDBY, IDENTIFY, EDIT, CLEAN and REFERENCE to ready, rest disabled"/>
+      <initial target="../14">
+       <initial_glyph conn="61,82,5,0,4,4">
         <action box="0,-2,10,2"/>
        </initial_glyph>
       </initial>
-      <tran trig="BTN_STANDBY" target="../13">
-       <tran_glyph conn="17,89,3,0,34,4">
+      <tran trig="BTN_STANDBY" target="../14">
+       <tran_glyph conn="17,82,3,0,34,4">
         <action box="0,-2,12,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_IDENTIFY" target="../10">
-       <tran_glyph conn="17,26,3,0,51,4">
+      <tran trig="BTN_IDENTIFY" target="../11">
+       <tran_glyph conn="17,21,3,0,51,2">
         <action box="0,-2,14,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="TERMINATE">
-       <action brief="terminate">Framework.stop()</action>
-       <tran_glyph conn="17,21,3,-1,21">
-        <action box="0,-2,20,2"/>
-       </tran_glyph>
-      </tran>
-      <tran trig="BTN_REFERENCE" target="../12">
-       <tran_glyph conn="17,119,3,0,43,2">
+      <tran trig="BTN_REFERENCE" target="../13">
+       <tran_glyph conn="17,112,3,0,43,2">
         <action box="1,-2,17,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_CLEAN(bank)" target="../11">
-       <tran_glyph conn="17,146,3,0,43,3">
+      <tran trig="BTN_CLEAN(bank)" target="../12">
+       <tran_glyph conn="17,139,3,0,43,3">
         <action box="1,-2,17,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_PLAN" target="../14">
-       <tran_glyph conn="17,180,3,0,49,2">
+      <tran trig="BTN_PLAN" target="../15">
+       <tran_glyph conn="17,164,3,0,49,4">
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_RUN" target="../15/5">
-       <tran_glyph conn="17,361,3,3,11">
+      <tran trig="BTN_RUN" target="../16/5">
+       <tran_glyph conn="17,354,3,3,10">
         <action box="0,-2,10,2"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_PLAN_RUN" target="../15/4">
-       <tran_glyph conn="17,413,3,3,10">
+      <tran trig="BTN_PLAN_RUN" target="../16/4">
+       <tran_glyph conn="17,411,3,3,9">
         <action box="0,-2,12,3"/>
        </tran_glyph>
       </tran>
-      <tran trig="BTN_PLAN_LOOP" target="../15/6">
-       <tran_glyph conn="17,472,3,3,8,15,3">
+      <tran trig="BTN_PLAN_LOOP" target="../16/6">
+       <tran_glyph conn="17,480,3,3,10">
         <action box="0,-2,13,3"/>
        </tran_glyph>
       </tran>
+      <tran trig="MODAL_CLOSE">
+       <action brief="hide modal dialog"/>
+       <tran_glyph conn="17,16,3,-1,36">
+        <action box="0,-2,27,2"/>
+       </tran_glyph>
+      </tran>
+      <tran trig="ERROR">
+       <action brief="handle_error_signal"/>
+       <tran_glyph conn="17,18,3,-1,36">
+        <action box="0,-2,10,2"/>
+       </tran_glyph>
+      </tran>
       <state name="identify">
-       <entry brief="Set self.bank to 1, UI status of &quot;Identify&quot; to ACTIVE"/>
-       <exit brief="Set UI status of &quot;Identify&quot; button to READY, banks to READY, stop timer events and publish PC_ABORT"/>
-       <initial target="../2">
-        <initial_glyph conn="27,41,5,3,3">
-         <action box="0,-2,10,2"/>
-        </initial_glyph>
-       </initial>
+       <entry brief="Pop self.bank off list of all banks, PERFORM_VALVE_TRANSITION to &quot;exhaust&quot;, disable buttons, Set &quot;Identify&quot; button to ACTIVE"/>
+       <exit brief="Set identify, standby, run, plan and reference to READY"/>
        <tran trig="BTN_IDENTIFY">
-        <tran_glyph conn="25,79,3,-1,14">
+        <tran_glyph conn="20,72,3,-1,19">
          <action box="0,-2,13,2"/>
         </tran_glyph>
        </tran>
-       <state name="identify1">
-        <entry brief="Send identify command to piglet for bank"/>
-        <tran trig="PIGLET_RESPONSE" target="../../3">
-         <tran_glyph conn="30,50,3,3,31">
-          <action box="0,-2,16,2"/>
-         </tran_glyph>
-        </tran>
-        <state_glyph node="30,39,25,13">
-         <entry box="1,2,24,5"/>
-        </state_glyph>
-       </state>
+       <tran trig="VALVE_TRANSITION_DONE" target="../5">
+        <action brief="restore buttons"/>
+        <tran_glyph conn="20,33,3,0,23,2">
+         <action box="0,-2,17,4"/>
+        </tran_glyph>
+       </tran>
        <state name="identify2">
         <entry brief="Set UI status of &quot;bank&quot; to ACTIVE"/>
         <tran trig="PIGLET_STATUS">
-         <choice target="../../../5">
+         <choice target="../../../4">
           <guard brief="OPSTATE [bank]==&quot;ident&quot;"/>
-          <choice_glyph conn="70,50,5,0,-6,5,-22,4">
-           <action box="-24,3,18,2"/>
+          <choice_glyph conn="78,44,5,0,-8,5,-28,4">
+           <action box="-30,3,18,2"/>
           </choice_glyph>
          </choice>
          <choice>
           <guard brief="else"/>
-          <choice_glyph conn="70,50,5,-1,7">
+          <choice_glyph conn="78,44,5,-1,7">
            <action box="1,0,10,2"/>
           </choice_glyph>
          </choice>
-         <tran_glyph conn="61,47,3,-1,9,3">
+         <tran_glyph conn="61,41,3,-1,17,3">
           <action box="0,-2,13,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="61,39,30,13">
+        <state_glyph node="61,35,35,11">
          <entry box="1,2,29,4"/>
         </state_glyph>
        </state>
        <state name="identify4">
-        <entry brief="Send &quot;CHANACTIVE?&quot; to selected piglet"/>
+        <entry brief="Send &quot;ACTIVECH?&quot; to selected piglet"/>
         <tran trig="PIGLET_RESPONSE">
-         <action brief="Set UI status of active channels in bank to READY, set bank to READY, add 1 to bank"/>
-         <choice target="../../../2">
-          <guard brief="bank &lt;= NUM_PIGLETS"/>
-          <choice_glyph conn="95,69,4,3,-12,-67,-9,2">
-           <action box="-18,-14,19,3"/>
+         <action brief="Set UI status of active channels in bank to READY, set bank to READY, pop off next bank"/>
+         <choice target="../../../5">
+          <guard brief="bank_successfully_popped"/>
+          <choice_glyph conn="102,62,4,3,-11,-74,-9,2">
+           <action box="-20,-14,21,3"/>
           </choice_glyph>
          </choice>
          <choice target="../../../..">
           <guard brief="else"/>
           <action brief="Set UI status of &quot;Run&quot; and &quot;Plan&quot; to READY"/>
-          <choice_glyph conn="95,69,4,1,11,16">
+          <choice_glyph conn="102,62,4,1,11,9">
            <action box="-11,7,11,9"/>
           </choice_glyph>
          </choice>
-         <tran_glyph conn="61,69,3,-1,34">
-          <action box="0,-2,30,7"/>
+         <tran_glyph conn="61,62,3,-1,41">
+          <action box="0,-2,35,6"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="61,59,30,16">
-         <entry box="1,2,29,4"/>
+        <state_glyph node="61,53,35,16">
+         <entry box="1,2,34,2"/>
         </state_glyph>
        </state>
        <state name="identify3">
         <tran trig="PIGLET_STATUS">
-         <choice target="../../../4">
+         <choice target="../../../3">
           <guard brief="OPSTATE[bank]==&quot;standby&quot;"/>
-          <choice_glyph conn="38,67,5,3,23">
+          <choice_glyph conn="38,61,5,3,23">
            <action box="1,-2,20,2"/>
           </choice_glyph>
          </choice>
          <choice>
           <guard brief="else"/>
-          <choice_glyph conn="38,67,5,-1,-7">
+          <choice_glyph conn="38,61,5,-1,-7">
            <action box="-5,-2,10,2"/>
           </choice_glyph>
          </choice>
-         <tran_glyph conn="30,64,3,-1,8,3">
+         <tran_glyph conn="30,58,3,-1,8,3">
           <action box="0,-2,14,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="30,59,25,16"/>
+        <state_glyph node="30,53,25,16"/>
        </state>
-       <state_glyph node="25,30,81,55">
-        <entry box="1,2,39,2"/>
-        <exit box="1,4,70,4"/>
+       <state name="identify1">
+        <entry brief="Send identify command to piglet for bank"/>
+        <tran trig="PIGLET RESPONSE" target="../../2">
+         <action brief="restore buttons"/>
+         <tran_glyph conn="30,44,3,3,31">
+          <action box="0,-2,25,4"/>
+         </tran_glyph>
+        </tran>
+        <state_glyph node="30,35,25,11">
+         <entry box="1,2,24,5"/>
+        </state_glyph>
+       </state>
+       <state_glyph node="20,23,88,55">
+        <entry box="1,2,87,4"/>
+        <exit box="1,6,87,3"/>
        </state_glyph>
       </state>
       <state name="clean">
-       <exit brief="Set UI status of all &quot;Clean&quot; buttons to READY and all banks to READY">for i in range(self.num_banks):
-    # Use 1-origin for numbering banks and channels
-    self.set_status([&quot;clean&quot;, i+1], UiStatus.READY)
-    self.set_status([&quot;bank&quot;, i+1], UiStatus.READY)
-</exit>
-       <initial target="../3">
-        <initial_glyph conn="26,157,5,3,4">
+       <entry brief="Set selected clean button to CLEAN"/>
+       <exit brief="Set UI status of all &quot;Clean&quot; buttons to READY and all banks to READY"/>
+       <initial target="../2">
+        <initial_glyph conn="26,150,5,3,4">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
-       <tran trig="BTN_CLEAN(bank)">
-        <choice target="../../3">
-         <guard brief="not_already_cleaning"/>
-         <choice_glyph conn="40,171,4,2,-5">
-          <action box="1,-4,17,2"/>
-         </choice_glyph>
-        </choice>
-        <choice>
-         <guard brief="else"/>
-         <choice_glyph conn="40,171,4,-1,4">
-          <action box="1,1,10,2"/>
-         </choice_glyph>
-        </choice>
-        <tran_glyph conn="24,171,3,-1,16">
-         <action box="0,-2,14,2"/>
-        </tran_glyph>
-       </tran>
        <state name="clean2">
         <entry brief="Set UI status of selected &quot;Clean&quot; button to ACTIVE and selected bank to CLEAN"/>
-        <state_glyph node="68,155,32,11">
+        <state_glyph node="70,148,32,11">
          <entry box="1,2,31,4"/>
         </state_glyph>
        </state>
        <state name="clean1">
-        <entry brief="send &quot;OPSTATE clean&quot; to specified piglet"/>
-        <tran trig="PIGLET_RESPONSE" target="../../2">
-         <tran_glyph conn="30,163,3,3,38">
-          <action box="0,-2,17,2"/>
+        <entry brief="PERFORM_VALVE_TRANSITION to clean on selected bank, disable buttons"/>
+        <tran trig="VALVE_TRANSITION_DONE" target="../../1">
+         <action brief="restore buttons"/>
+         <tran_glyph conn="30,156,3,3,40">
+          <action box="0,-2,22,4"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="30,155,30,11">
+        <state_glyph node="30,148,36,11">
          <entry box="1,2,29,4"/>
         </state_glyph>
        </state>
-       <state_glyph node="24,149,82,28">
-        <exit box="1,2,51,2"/>
+       <state_glyph node="24,142,82,20">
+        <entry box="1,2,30,2"/>
+        <exit box="1,4,51,2"/>
        </state_glyph>
       </state>
       <state name="reference">
@@ -228,12 +214,12 @@ for i in range(self.num_banks):
     self.set_status([&quot;bank&quot;, i+1], UiStatus.READY)
 </exit>
        <initial target="../3">
-        <initial_glyph conn="26,130,5,3,4">
+        <initial_glyph conn="26,123,5,3,4">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
        <tran trig="BTN_REFERENCE">
-        <tran_glyph conn="24,140,3,-1,16">
+        <tran_glyph conn="20,133,3,-1,20">
          <action box="0,-2,17,2"/>
         </tran_glyph>
        </tran>
@@ -243,57 +229,57 @@ for i in range(self.num_banks):
     # Use 1-origin for numbering banks and channels
     self.set_status([&quot;bank&quot;, i+1], UiStatus.REFERENCE)
 </entry>
-        <state_glyph node="68,128,32,10">
+        <state_glyph node="70,119,32,12">
          <entry box="1,2,31,4"/>
         </state_glyph>
        </state>
        <state name="reference1">
-        <entry brief="send &quot;OPSTATE reference&quot; to all piglets">asyncio.create_task(self.piglet_manager.send_to_all_piglets(&quot;OPSTATE reference&quot;))</entry>
-        <tran trig="PIGLET_RESPONSE" target="../../2">
-         <tran_glyph conn="30,135,3,3,38">
-          <action box="0,-2,17,2"/>
+        <entry brief="PERFORM_VALVE_TRANSITION to reference, disable buttons, set reference ACTIVE"/>
+        <tran trig="VALVE_TRANSITION_DONE" target="../../2">
+         <action brief="restore buttons"/>
+         <tran_glyph conn="30,128,3,3,40">
+          <action box="0,-2,34,4"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="30,128,30,10">
-         <entry box="1,2,29,3"/>
+        <state_glyph node="30,119,36,12">
+         <entry box="1,2,34,4"/>
         </state_glyph>
        </state>
-       <state_glyph node="24,121,82,21">
+       <state_glyph node="20,114,88,21">
         <exit box="1,2,51,3"/>
        </state_glyph>
       </state>
       <state name="standby">
-       <exit brief="Set UI status of &quot;Standby&quot; button to READY and publish PC_ABORT">self.set_status([&quot;standby&quot;], UiStatus.READY)
-Framework.publish(Event(Signal.PC_ABORT, None))</exit>
+       <exit brief="Set UI status of &quot;Standby&quot; button to READY"/>
        <initial target="../3">
-        <initial_glyph conn="26,100,5,3,4">
+        <initial_glyph conn="26,93,5,3,4">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
        <tran trig="BTN_STANDBY">
-        <tran_glyph conn="24,113,3,-1,27">
+        <tran_glyph conn="20,106,3,-1,31">
          <action box="0,-2,13,2"/>
         </tran_glyph>
        </tran>
        <state name="standby2">
         <entry brief="Set UI status of &quot;Standby&quot; button to ACTIVE">self.set_status([&quot;standby&quot;], UiStatus.ACTIVE)</entry>
-        <state_glyph node="68,98,32,13">
+        <state_glyph node="70,91,32,13">
          <entry box="1,2,26,5"/>
         </state_glyph>
        </state>
        <state name="standby1">
-        <entry brief="send &quot;OPSTATE standby&quot; to all piglets">asyncio.create_task(self.piglet_manager.send_to_all_piglets(&quot;OPSTATE standby&quot;))
-</entry>
-        <tran trig="PIGLET_RESPONSE" target="../../2">
-         <tran_glyph conn="30,108,3,3,38">
-          <action box="0,-2,16,2"/>
+        <entry brief="Publish PERFORM_VALVE_TRANSITION to exhaust, disable buttons, set standby ACTIVE"/>
+        <tran trig="VALVE_TRANSITION_DONE" target="../../2">
+         <action brief="restore buttons"/>
+         <tran_glyph conn="30,101,3,3,40">
+          <action box="0,-2,34,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="30,98,30,13">
-         <entry box="1,2,29,2"/>
+        <state_glyph node="30,91,36,13">
+         <entry box="1,2,33,4"/>
         </state_glyph>
        </state>
-       <state_glyph node="24,93,82,22">
+       <state_glyph node="20,86,88,22">
         <exit box="1,2,50,2"/>
        </state_glyph>
       </state>
@@ -301,98 +287,116 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
        <entry brief="Set CLEAN buttons to DISABLED, make AVAILABLE channel buttons READY."/>
        <exit brief="Hide the plan panel, make READY channel buttons AVAILABLE, set CLEAN buttons to READY"/>
        <initial target="../2">
-        <initial_glyph conn="54,190,5,0,7,2">
+        <initial_glyph conn="54,176,5,0,7,2">
          <action box="0,-2,10,2"/>
         </initial_glyph>
        </initial>
        <tran trig="BTN_PLAN">
-        <tran_glyph conn="24,191,3,-1,11">
+        <tran_glyph conn="24,176,3,-1,14">
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
        <state name="plan_plan">
-        <entry brief=" Show the plan panel. "/>
+        <entry brief=" Show the plan panel, PERFORM_VALVE_TRANSITION to &quot;exhaust&quot;"/>
         <tran trig="BTN_PLAN_OK">
          <action brief="Call validate_plan(True)"/>
          <choice target="../../../..">
           <guard brief="Validation passed"/>
           <action brief="Set start row from focus line"/>
-          <choice_glyph conn="43,207,5,1,68">
+          <choice_glyph conn="62,192,5,1,49">
            <action box="1,-2,35,2"/>
           </choice_glyph>
          </choice>
-         <choice target="../../7">
+         <choice target="../../10">
           <guard brief="Validation failed"/>
-          <choice_glyph conn="43,207,4,0,4">
+          <choice_glyph conn="62,192,4,0,5">
            <action box="0,1,13,3"/>
           </choice_glyph>
          </choice>
-         <tran_glyph conn="26,207,3,-1,17">
-          <action box="0,-2,14,6"/>
+         <tran_glyph conn="26,192,3,-1,36">
+          <action box="0,-2,30,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_CHANNEL">
          <action brief="add_channel_to_plan"/>
-         <tran_glyph conn="26,204,3,-1,35">
+         <tran_glyph conn="26,190,3,-1,35">
           <action box="0,-2,34,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_PANEL_UPDATE">
          <action brief="plan_panel_update"/>
-         <tran_glyph conn="26,202,3,-1,35">
+         <tran_glyph conn="26,188,3,-1,35">
           <action box="0,-2,39,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_INSERT">
          <action brief="plan_row_insert"/>
-         <tran_glyph conn="26,200,3,-1,35">
+         <tran_glyph conn="26,186,3,-1,35">
           <action box="0,-2,29,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_DELETE">
          <action brief="plan_row_delete"/>
-         <tran_glyph conn="26,198,3,-1,35">
+         <tran_glyph conn="26,184,3,-1,35">
           <action box="0,-2,30,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_SAVE">
          <action brief="Call validate_plan(False)"/>
-         <choice target="../../7">
+         <choice target="../../10">
           <guard brief="Validation failed"/>
-          <choice_glyph conn="51,227,4,2,-5">
-           <action box="1,-3,14,2"/>
+          <choice_glyph conn="62,213,4,2,-5">
+           <action box="1,-4,14,2"/>
           </choice_glyph>
          </choice>
          <choice target="../../../4/2">
           <guard brief="Validation passed"/>
-          <choice_glyph conn="51,227,4,0,13">
-           <action box="0,1,14,3"/>
+          <choice_glyph conn="62,213,4,0,15">
+           <action box="1,1,14,3"/>
           </choice_glyph>
          </choice>
-         <tran_glyph conn="26,227,3,-1,25">
+         <tran_glyph conn="26,213,3,-1,36">
           <action box="0,-2,24,4"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_LOAD" target="../../4/3">
-         <tran_glyph conn="26,234,3,3,4,44,7">
+         <tran_glyph conn="26,218,3,3,6,50,6">
           <action box="0,-2,14,2"/>
+         </tran_glyph>
+        </tran>
+        <tran trig="BTN_PLAN_CLEAR">
+         <action brief="Call plan_clear()"/>
+         <tran_glyph conn="26,194,3,-1,32">
+          <action box="0,-2,29,3"/>
+         </tran_glyph>
+        </tran>
+        <tran trig="BTN_CLEAN">
+         <action brief="add_bank_to_clean_to_plan"/>
+         <tran_glyph conn="26,196,3,-1,32">
+          <action box="0,-2,32,2"/>
+         </tran_glyph>
+        </tran>
+        <tran trig="BTN_REFERENCE">
+         <action brief="add_reference_to_plan"/>
+         <tran_glyph conn="26,198,3,-1,20">
+          <action box="0,-2,20,4"/>
          </tran_glyph>
         </tran>
         <state name="plan_plan1">
          <entry brief="Show error modal"/>
          <exit brief="Hide modal. Set focus to error row and column"/>
          <tran trig="MODAL_CLOSE" target="../../..">
-          <tran_glyph conn="30,220,3,1,78">
+          <tran_glyph conn="52,206,3,1,56">
            <action box="0,-2,20,5"/>
           </tran_glyph>
          </tran>
-         <state_glyph node="30,211,32,11">
+         <state_glyph node="52,197,29,11">
           <entry box="1,2,18,2"/>
           <exit box="1,4,27,2"/>
          </state_glyph>
         </state>
-        <state_glyph node="26,192,74,44">
-         <entry box="1,2,24,3"/>
+        <state_glyph node="26,178,77,43">
+         <entry box="1,2,63,2"/>
         </state_glyph>
        </state>
        <state name="plan_delete_file">
@@ -400,68 +404,68 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
         <exit brief="Hide confirmation modal"/>
         <tran trig="MODAL_OK" target="../../4" cpref="../../4/0">
          <action brief="delete file"/>
-         <tran_glyph conn="46,321,3,3,-18,-28,3">
+         <tran_glyph conn="54,308,3,3,-23,-29,3">
           <action box="-17,-3,36,2"/>
          </tran_glyph>
         </tran>
         <tran trig="MODAL_CLOSE" target="../../4" cpref="../../4/0">
-         <tran_glyph conn="46,323,3,3,-20,-30,5">
+         <tran_glyph conn="54,311,3,3,-26,-32,6">
           <action box="-16,-2,31,2"/>
          </tran_glyph>
         </tran>
-        <state_glyph node="46,314,45,10">
+        <state_glyph node="54,303,29,10">
          <entry box="1,2,19,2"/>
          <exit box="1,4,25,3"/>
         </state_glyph>
        </state>
        <state name="plan_file">
         <history type="shallow" target="../3">
-         <history_glyph conn="32,293,3,3,5"/>
+         <history_glyph conn="35,279,3,3,3"/>
         </history>
         <tran trig="BTN_PLAN_DELETE_FILENAME" target="../../3">
-         <tran_glyph conn="96,312,2,1,10,-5">
-          <action box="-10,6,23,2"/>
+         <tran_glyph conn="99,301,2,1,10,-16">
+          <action box="-15,7,23,2"/>
          </tran_glyph>
         </tran>
         <state name="plan_save">
          <entry brief="show plan save panel, save state in state_after_delete"/>
          <tran trig="BTN_PLAN_SAVE_CANCEL" target="../../..">
-          <tran_glyph conn="37,247,3,1,71">
+          <tran_glyph conn="38,235,3,1,70">
            <action box="0,-2,21,2"/>
           </tran_glyph>
          </tran>
          <tran trig="PLAN_SAVE_FILENAME">
           <action brief="Update self.plan[&quot;plan_filename&quot;]"/>
-          <tran_glyph conn="37,250,3,-1,25">
+          <tran_glyph conn="38,238,3,-1,27">
            <action box="0,-2,29,4"/>
           </tran_glyph>
          </tran>
          <tran trig="BTN_PLAN_SAVE_OK">
           <choice target="../../4">
            <guard brief="file exists"/>
-           <choice_glyph conn="56,255,4,0,4">
+           <choice_glyph conn="59,243,4,0,4">
             <action box="-10,1,10,2"/>
            </choice_glyph>
           </choice>
           <choice target="../../3">
            <guard brief="else"/>
-           <choice_glyph conn="56,255,5,3,13">
+           <choice_glyph conn="59,243,5,3,13">
             <action box="1,0,10,2"/>
            </choice_glyph>
           </choice>
-          <tran_glyph conn="37,255,3,-1,19">
+          <tran_glyph conn="38,243,3,-1,21">
            <action box="0,-2,17,3"/>
           </tran_glyph>
          </tran>
          <state name="plan_save2">
           <entry brief="Write plan to file"/>
           <tran trig="PLAN_SAVE_SUCCESSFUL" target="../../../..">
-           <tran_glyph conn="69,254,3,1,39">
+           <tran_glyph conn="72,242,3,1,36">
             <action box="0,-2,20,2"/>
            </tran_glyph>
           </tran>
           <tran trig="PLAN_SAVE_FAILED" target="../2">
-           <tran_glyph conn="69,257,3,0,14,1">
+           <tran_glyph conn="72,245,3,0,14,1">
             <action box="0,-2,18,3"/>
            </tran_glyph>
           </tran>
@@ -469,16 +473,16 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
            <entry brief="Show error modal"/>
            <exit brief="set_modal([&quot;show&quot;],False)"/>
            <tran trig="MODAL_CLOSE" target="../../..">
-            <tran_glyph conn="71,267,3,1,26">
+            <tran_glyph conn="74,255,3,1,26">
              <action box="0,-2,14,3"/>
             </tran_glyph>
            </tran>
-           <state_glyph node="71,258,22,11">
+           <state_glyph node="74,246,22,11">
             <entry box="1,2,17,2"/>
             <exit box="1,4,21,2"/>
            </state_glyph>
           </state>
-          <state_glyph node="69,248,26,22">
+          <state_glyph node="72,236,26,22">
            <entry box="1,2,17,2"/>
           </state_glyph>
          </state>
@@ -486,46 +490,46 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
           <entry brief="Show overwrite confirmation modal"/>
           <exit brief="set_modal([&quot;show&quot;], False)"/>
           <tran trig="MODAL_CLOSE" target="../..">
-           <tran_glyph conn="39,271,3,1,58">
+           <tran_glyph conn="42,259,3,1,58">
             <action box="0,-2,19,5"/>
            </tran_glyph>
           </tran>
           <tran trig="MODAL_OK" target="../../3">
-           <tran_glyph conn="39,268,3,3,30">
+           <tran_glyph conn="42,256,3,3,30">
             <action box="0,-2,10,2"/>
            </tran_glyph>
           </tran>
-          <state_glyph node="39,259,28,14">
+          <state_glyph node="42,247,28,14">
            <entry box="1,2,27,2"/>
            <exit box="1,4,25,2"/>
           </state_glyph>
          </state>
-         <state_glyph node="37,240,60,34">
+         <state_glyph node="38,228,62,34">
           <entry box="1,2,50,3"/>
          </state_glyph>
         </state>
         <state name="plan_load">
          <entry brief="show plan load panel, save state in state_after_delete"/>
          <tran trig="BTN_PLAN_LOAD_CANCEL" target="../../..">
-          <tran_glyph conn="37,284,3,1,71">
+          <tran_glyph conn="38,272,3,1,70">
            <action box="0,-2,21,2"/>
           </tran_glyph>
          </tran>
          <tran trig="PLAN_LOAD_FILENAME" target="../2">
           <action brief="Update self.plan[&quot;plan_filename&quot;]"/>
-          <tran_glyph conn="37,286,3,0,19,3">
+          <tran_glyph conn="38,274,3,0,21,3">
            <action box="0,-2,43,2"/>
           </tran_glyph>
          </tran>
          <state name="plan_load1">
           <entry brief="Load plan from file"/>
           <tran trig="PLAN_LOAD_SUCCESSFUL" target="../../../..">
-           <tran_glyph conn="39,295,3,1,69">
+           <tran_glyph conn="42,283,3,1,66">
             <action box="0,-2,21,2"/>
            </tran_glyph>
           </tran>
           <tran trig="PLAN_LOAD_FAILED" target="../2">
-           <tran_glyph conn="39,297,3,0,28,2">
+           <tran_glyph conn="42,285,3,0,28,2">
             <action box="0,-2,17,2"/>
            </tran_glyph>
           </tran>
@@ -533,63 +537,64 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
            <entry brief="Show error modal"/>
            <exit brief="set_modal([&quot;show&quot;], False)"/>
            <tran trig="MODAL_CLOSE" target="../../..">
-            <tran_glyph conn="42,307,3,1,55">
+            <tran_glyph conn="45,295,3,1,55">
              <action box="0,-2,14,2"/>
             </tran_glyph>
            </tran>
-           <state_glyph node="42,299,50,10">
+           <state_glyph node="45,287,50,10">
             <entry box="1,2,17,2"/>
             <exit box="1,4,23,2"/>
            </state_glyph>
           </state>
-          <state_glyph node="39,289,56,21">
+          <state_glyph node="42,277,56,21">
            <entry box="1,2,18,2"/>
           </state_glyph>
          </state>
-         <state_glyph node="37,276,60,35">
+         <state_glyph node="38,264,62,35">
           <entry box="1,2,42,2"/>
          </state_glyph>
         </state>
-        <state_glyph node="32,237,68,75"/>
+        <state_glyph node="35,224,68,77"/>
        </state>
-       <state_glyph node="24,182,84,145">
-        <entry box="1,2,71,3"/>
-        <exit box="1,5,71,4"/>
+       <state_glyph node="24,168,84,147">
+        <entry box="1,2,71,2"/>
+        <exit box="1,4,71,2"/>
        </state_glyph>
       </state>
       <state name="sampling">
-       <entry brief="Clear active channels. Setup piglet sequence to send CHANSET 0 to all piglets followed by OPSTATE sampling"/>
-       <exit brief="Set RUN, PLAN, RUN_PLAN and LOOP_PLAN buttons to READY, channel buttons which were READY or ACTIVE  to AVAILABLE, , send OPSTATE standby to all piglets"/>
-       <tran trig="PIGLET_SEQUENCE, PIGLET_RESPONSE">
-        <action brief="Send next command in sequence, publiish PIGLET_SEQUENCE_COMPLETE when done"/>
-        <tran_glyph conn="24,340,3,-1,64">
+       <entry brief="PERFORM_VALVE_TRANSITION to &quot;exhaust&quot;, disable buttons"/>
+       <exit brief="Set RUN, PLAN, RUN_PLAN and LOOP_PLAN buttons to READY, channel buttons which were READY or ACTIVE  to AVAILABLE"/>
+       <tran trig="VALVE_TRANSITION_DONE">
+        <action brief="Restore buttons, postFIFO(PROCEED)"/>
+        <tran_glyph conn="24,329,3,-1,49">
          <action box="0,-2,71,5"/>
         </tran_glyph>
        </tran>
        <tran trig="BTN_RUN" target="../5/2">
-        <tran_glyph conn="24,344,3,0,40,10">
+        <tran_glyph conn="24,331,3,0,39,12">
          <action box="0,-2,10,2"/>
         </tran_glyph>
        </tran>
        <tran trig="BTN_PLAN_RUN" target="../4/2">
-        <tran_glyph conn="24,398,3,0,29,11">
+        <tran_glyph conn="24,390,3,0,31,12">
          <action box="0,-2,13,2"/>
         </tran_glyph>
        </tran>
        <tran trig="BTN_PLAN_LOOP" target="../6/2">
-        <tran_glyph conn="24,469,3,0,31,13">
+        <tran_glyph conn="24,462,3,0,30,13">
          <action box="0,-2,16,2"/>
         </tran_glyph>
        </tran>
        <state name="run_plan">
+        <entry brief="Set plan run button to ACTIVE"/>
         <exit brief="Set plan run button to READY"/>
-        <tran trig="PIGLET_SEQUENCE_COMPLETE" target="../2">
-         <tran_glyph conn="27,407,3,0,17,2">
-          <action box="1,-2,25,3"/>
+        <tran trig="PROCEED" target="../2">
+         <tran_glyph conn="26,400,3,0,20,2">
+          <action box="0,-2,25,3"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_RUN">
-         <tran_glyph conn="27,453,3,-1,14">
+         <tran_glyph conn="26,446,3,-1,14">
           <action box="0,-2,13,2"/>
          </tran_glyph>
         </tran>
@@ -597,103 +602,94 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
          <entry brief="Show confirmation modal"/>
          <exit brief="Hide modal"/>
          <tran trig="MODAL_OK" target="../../3">
-          <tran_glyph conn="29,417,3,3,32">
+          <tran_glyph conn="31,410,3,3,29">
            <action box="0,-2,10,2"/>
           </tran_glyph>
          </tran>
          <tran trig="MODAL_CLOSE" target="../../../..">
-          <tran_glyph conn="58,411,1,1,53">
+          <tran_glyph conn="58,404,1,1,53">
            <action box="0,-2,14,2"/>
           </tran_glyph>
          </tran>
-         <state_glyph node="29,409,29,12">
+         <state_glyph node="31,402,27,12">
           <entry box="1,2,22,2"/>
-          <exit box="1,4,12,3"/>
+          <exit box="1,4,12,2"/>
          </state_glyph>
         </state>
         <state name="run_plan2">
          <entry brief="Set PLAN_RUN button to ACTIVE, set up timer for next step"/>
          <exit brief="Stop step timer"/>
          <initial target="../2">
-          <initial_glyph conn="69,426,5,0,7,3">
+          <initial_glyph conn="68,419,5,0,8,3">
            <action box="0,-2,10,2"/>
           </initial_glyph>
          </initial>
          <tran trig="PLAN_STEP_TIMER">
           <choice target="../..">
            <guard brief="More steps to do"/>
-           <choice_glyph conn="82,424,5,1,22">
+           <choice_glyph conn="81,417,5,1,22">
             <action box="1,-2,12,2"/>
            </choice_glyph>
           </choice>
           <choice target="../../../../..">
-           <choice_glyph conn="82,424,4,1,4,29">
-            <action box="1,0,10,2"/>
+           <guard brief="else"/>
+           <choice_glyph conn="81,417,4,1,3,30">
+            <action box="0,1,10,2"/>
            </choice_glyph>
           </choice>
-          <tran_glyph conn="61,424,3,-1,21">
+          <tran_glyph conn="60,417,3,-1,21">
            <action box="0,-2,15,2"/>
           </tran_glyph>
          </tran>
          <state name="run_plan21">
-          <entry brief="Replace active channels with one for this step, set bank_to_update to 1"/>
+          <entry brief="Determine desired reference state, clean state and channel states for this step"/>
           <initial target="../2">
-           <initial_glyph conn="80,440,5,0,3,2">
+           <initial_glyph conn="77,433,5,0,6,2">
             <action box="0,-2,10,2"/>
            </initial_glyph>
           </initial>
           <tran trig="PIGLET_STATUS">
            <action brief="Update channel button states"/>
-           <tran_glyph conn="62,438,3,-1,28">
+           <tran_glyph conn="62,432,3,-1,29">
             <action box="0,-2,25,4"/>
            </tran_glyph>
           </tran>
           <state name="run_plan211">
-           <entry brief="Send CHANSET mask to piglet at &quot;bank_to_update&quot;,"/>
-           <tran trig="PIGLET_RESPONSE">
-            <action brief="increment &quot;bank to update&quot;"/>
-            <choice target="../..">
-             <guard brief="bank_to_update &lt;= num_banks"/>
-             <choice_glyph conn="82,454,5,1,18">
-              <action box="1,0,22,2"/>
-             </choice_glyph>
-            </choice>
-            <choice>
-             <guard brief="else"/>
-             <choice_glyph conn="82,454,4,-1,3">
-              <action box="-5,2,6,2"/>
-             </choice_glyph>
-            </choice>
-            <tran_glyph conn="64,450,3,-1,18,4">
-             <action box="0,-2,16,7"/>
+           <entry brief="PERFORM_VALVE_TRANSITION appropriate for current step, disable buttons"/>
+           <tran trig="VALVE_TRANSITION_DONE">
+            <action brief="restore buttons"/>
+            <tran_glyph conn="64,443,3,-1,32">
+             <action box="0,-2,35,4"/>
             </tran_glyph>
            </tran>
-           <state_glyph node="64,442,36,18">
-            <entry box="1,2,35,4"/>
+           <state_glyph node="64,435,35,10">
+            <entry box="1,2,33,4"/>
            </state_glyph>
           </state>
-          <state_glyph node="62,429,40,33">
-           <entry box="1,2,39,4"/>
+          <state_glyph node="62,422,39,25">
+           <entry box="1,2,37,4"/>
           </state_glyph>
          </state>
-         <state_glyph node="61,412,43,52">
+         <state_glyph node="60,406,43,43">
           <entry box="1,2,37,4"/>
           <exit box="1,6,35,2"/>
          </state_glyph>
         </state>
-        <state_glyph node="27,401,79,65">
-         <exit box="1,2,25,2"/>
+        <state_glyph node="26,392,79,59">
+         <entry box="1,2,25,2"/>
+         <exit box="1,4,25,2"/>
         </state_glyph>
        </state>
        <state name="run">
+        <entry brief="Set run button to ACTIVE"/>
         <exit brief="Set run button to READY"/>
-        <tran trig="PIGLET_SEQUENCE_COMPLETE" target="../2">
-         <tran_glyph conn="28,352,3,0,31,2">
+        <tran trig="PROOCEED" target="../2">
+         <tran_glyph conn="27,341,3,0,31,2">
           <action box="0,-2,25,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_RUN">
-         <tran_glyph conn="28,393,3,-1,10">
+         <tran_glyph conn="27,384,3,-1,13">
           <action box="0,-2,10,2"/>
          </tran_glyph>
         </tran>
@@ -701,64 +697,71 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
          <entry brief="Set AVAILABLE channels to READY"/>
          <exit brief="Set all READY &quot;Channel&quot; buttons to AVAILABLE"/>
          <initial target="../1">
-          <initial_glyph conn="36,374,5,3,9">
+          <initial_glyph conn="30,363,5,3,5">
            <action box="0,-2,10,2"/>
           </initial_glyph>
          </initial>
          <state name="run11">
           <entry brief="Set run button to ACTIVE"/>
-          <tran trig="BTN_CHAN(bank, channel)" target="../1">
-           <action brief="Replace active channel with newly selected one, reset deselected channel button to READY, set bank_to_update to 1"/>
-           <tran_glyph conn="45,368,3,0,22,4">
-            <action box="0,-2,45,6"/>
+          <tran trig="BTN_CHAN(bank, channel)">
+           <action brief="Replace active channel with newly selected one, reset deselected channel button to READY, PERFORM_VALVE_TRANSITION(&quot;control&quot;, active_channels), disable buttons, save all_banks on a stack"/>
+           <tran_glyph conn="35,357,3,-1,64">
+            <action box="0,-2,67,6"/>
+           </tran_glyph>
+          </tran>
+          <tran trig="VALVE_TRANSITION_DONE" target="../2">
+           <action brief="restore_buttons"/>
+           <tran_glyph conn="35,372,3,3,22">
+            <action box="0,-2,20,5"/>
            </tran_glyph>
           </tran>
           <state name="run111">
-           <entry brief="Send CHANSET mask to piglet at &quot;bank_to_update&quot;, set selected channel button to ACTIVE"/>
-           <tran trig="PIGLET_RESPONSE">
-            <action brief="increment &quot;bank to update&quot;"/>
+           <entry brief="Set button states of active channels in selected bank to ACTIVE, post PROCEED"/>
+           <tran trig="PROCEED">
+            <action brief="pop bank off stack if possible"/>
             <choice target="../..">
-             <guard brief="bank_to_update &lt;= num_banks"/>
-             <choice_glyph conn="64,384,5,1,23">
-              <action box="1,0,22,2"/>
+             <guard brief="bank_is_available"/>
+             <choice_glyph conn="81,373,5,1,18">
+              <action box="2,-2,22,2"/>
              </choice_glyph>
             </choice>
             <choice>
              <guard brief="else"/>
-             <choice_glyph conn="64,384,4,-1,4">
+             <choice_glyph conn="81,373,4,-1,3">
               <action box="-5,2,6,2"/>
              </choice_glyph>
             </choice>
-            <tran_glyph conn="47,380,3,-1,17,4">
-             <action box="0,-2,16,7"/>
+            <tran_glyph conn="57,369,3,-1,24,4">
+             <action box="0,-2,24,4"/>
             </tran_glyph>
            </tran>
-           <state_glyph node="47,372,40,17">
+           <state_glyph node="57,361,42,17">
             <entry box="1,2,39,4"/>
            </state_glyph>
           </state>
-          <state_glyph node="45,361,44,29">
+          <state_glyph node="35,350,66,30">
            <entry box="1,2,20,2"/>
           </state_glyph>
          </state>
-         <state_glyph node="30,354,74,37">
+         <state_glyph node="29,343,74,39">
           <entry box="1,2,67,2"/>
           <exit box="1,4,72,2"/>
          </state_glyph>
         </state>
-        <state_glyph node="28,346,78,49">
-         <exit box="1,2,24,2"/>
+        <state_glyph node="27,333,78,53">
+         <entry box="1,2,23,2"/>
+         <exit box="1,4,24,2"/>
         </state_glyph>
        </state>
        <state name="loop_plan">
         <exit brief="Set plan loop button to READY"/>
         <tran trig="PIGLET_SEQUENCE_COMPLETE" target="../2">
-         <tran_glyph conn="28,480,3,0,17,2">
+         <tran_glyph conn="27,473,3,0,17,2">
           <action box="0,-2,26,2"/>
          </tran_glyph>
         </tran>
         <tran trig="BTN_PLAN_LOOP">
-         <tran_glyph conn="28,526,3,-1,19">
+         <tran_glyph conn="27,513,3,-1,19">
           <action box="0,-2,16,2"/>
          </tran_glyph>
         </tran>
@@ -766,95 +769,88 @@ Framework.publish(Event(Signal.PC_ABORT, None))</exit>
          <entry brief="Show confirmation modal"/>
          <exit brief="Hide modal"/>
          <tran trig="MODAL_OK" target="../../3">
-          <tran_glyph conn="31,490,3,3,31">
+          <tran_glyph conn="30,483,3,3,30">
            <action box="0,-2,10,2"/>
           </tran_glyph>
          </tran>
          <tran trig="MODAL_CLOSE" target="../../../..">
-          <tran_glyph conn="60,484,1,1,51">
+          <tran_glyph conn="58,477,1,1,53">
            <action box="0,-2,13,3"/>
           </tran_glyph>
          </tran>
-         <state_glyph node="31,482,29,12">
+         <state_glyph node="30,475,28,12">
           <entry box="1,2,22,2"/>
           <exit box="1,4,12,3"/>
          </state_glyph>
         </state>
         <state name="loop_plan2">
          <entry brief="Set PLAN_LOOP button to ACTIVE, set up timer for next step"/>
-         <exit brief="Reset channel button states, stop step timer"/>
+         <exit brief="Stop step timer"/>
          <initial target="../2">
-          <initial_glyph conn="72,498,5,0,10,2">
+          <initial_glyph conn="71,491,5,0,11,1">
            <action box="0,-2,10,2"/>
           </initial_glyph>
          </initial>
          <tran trig="PLAN_STEP_TIMER" target="..">
-          <tran_glyph conn="62,496,3,1,43">
+          <tran_glyph conn="60,489,3,1,44">
            <action box="0,-2,15,2"/>
           </tran_glyph>
          </tran>
          <state name="loop_plan21">
-          <entry brief="Replace active channels with one for this step, set bank_to_update to 1"/>
+          <entry brief="Determine desired reference state, clean state and channel states for this step"/>
           <initial target="../2">
-           <initial_glyph conn="81,510,5,0,3,3">
+           <initial_glyph conn="79,502,5,0,5,2">
             <action box="0,-2,10,2"/>
            </initial_glyph>
           </initial>
           <tran trig="PIGLET_STATUS">
            <action brief="Update channel button states"/>
-           <tran_glyph conn="63,508,3,-1,25">
-            <action box="0,-2,25,4"/>
+           <tran_glyph conn="62,500,3,-1,35">
+            <action box="0,-2,34,3"/>
            </tran_glyph>
           </tran>
           <state name="loop_plan211">
-           <entry brief="Send CHANSET mask to piglet at &quot;bank_to_update&quot;,"/>
-           <tran trig="PIGLET_RESPONSE">
-            <action brief="increment &quot;bank to update&quot;"/>
-            <choice target="../..">
-             <guard brief="bank_to_update &lt;= num_banks"/>
-             <choice_glyph conn="82,527,5,1,19">
-              <action box="1,0,22,2"/>
-             </choice_glyph>
-            </choice>
-            <choice>
-             <guard brief="else"/>
-             <choice_glyph conn="82,527,4,-1,3">
-              <action box="-5,2,6,2"/>
-             </choice_glyph>
-            </choice>
-            <tran_glyph conn="65,523,3,-1,17,4">
-             <action box="0,-2,16,7"/>
+           <entry brief="PERFORM_VALVE_TRANSITION appropriate for current step, disable buttons"/>
+           <tran trig="VALVE_TRANSITION_DONE">
+            <action brief="restore buttons"/>
+            <tran_glyph conn="64,514,3,-1,34">
+             <action box="0,-2,33,2"/>
             </tran_glyph>
            </tran>
-           <state_glyph node="65,513,36,19">
+           <state_glyph node="64,504,36,12">
             <entry box="1,2,35,4"/>
            </state_glyph>
           </state>
-          <state_glyph node="63,500,40,34">
+          <state_glyph node="62,492,40,26">
            <entry box="1,2,37,5"/>
           </state_glyph>
          </state>
-         <state_glyph node="62,485,43,51">
+         <state_glyph node="60,478,44,42">
           <entry box="1,2,37,4"/>
           <exit box="1,6,35,2"/>
          </state_glyph>
         </state>
-        <state_glyph node="28,474,79,64">
+        <state_glyph node="27,467,79,55">
          <exit box="1,2,26,2"/>
         </state_glyph>
        </state>
-       <state_glyph node="24,330,85,210">
+       <state_glyph node="24,319,84,205">
         <entry box="1,2,81,2"/>
         <exit box="1,4,82,4"/>
        </state_glyph>
       </state>
-      <state_glyph node="17,12,94,530">
+      <state_glyph node="17,10,94,516">
        <entry box="1,2,37,2"/>
       </state_glyph>
      </state>
-     <state_glyph node="12,2,104,542"/>
+     <state_glyph node="12,2,104,526">
+      <entry box="1,2,16,2"/>
+     </state_glyph>
     </state>
-    <state_diagram size="142,545"/>
+    <state name="_exit">
+     <state_glyph node="134,2,16,15"/>
+    </state>
+    <state_diagram size="153,545"/>
    </statechart>
   </class>
  </package>

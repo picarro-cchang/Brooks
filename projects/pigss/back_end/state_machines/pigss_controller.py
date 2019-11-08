@@ -537,9 +537,7 @@ class PigssController(Ahsm):
     def _initial(self, e):
         self.publish_errors = True
         self.bank = None
-        self.bank_to_update = None
         self.banks_to_process = []
-        self.channel = None
         self.plan_error = None
         self.plan_step_te = TimeEvent("PLAN_STEP_TIMER")
         self.plan_step_timer_target = 0
@@ -600,7 +598,7 @@ class PigssController(Ahsm):
         return self.tran(self._configure)
 
     def disable_buttons(self):
-        button_list = ["standby", "identify", "run", "plan", "plan_run", "plan_loop", "reference"]
+        button_list = ["standby", "identify", "run", "plan", "plan_run", "plan_loop", "reference", "edit"]
         self.button_states = {}
         self.clean_button_states = {}
         for button in button_list:
@@ -629,6 +627,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_run"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.DISABLED)
+            self.set_status(["edit"], UiStatus.DISABLED)
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
@@ -650,6 +649,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_run"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
+            self.set_status(["edit"], UiStatus.READY)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -663,9 +663,11 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.BTN_STANDBY:
-            return self.tran(self._standby)
+            if self.status["standby"] != UiStatus.DISABLED:
+                return self.tran(self._standby)
         elif sig == Signal.BTN_IDENTIFY:
-            return self.tran(self._identify)
+            if self.status["identify"] != UiStatus.DISABLED:
+                return self.tran(self._identify)
         elif sig == Signal.BTN_RUN:
             if self.status["run"] != UiStatus.DISABLED:
                 return self.tran(self._run)
@@ -762,7 +764,6 @@ class PigssController(Ahsm):
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["bank", bank], UiStatus.REFERENCE)
-
             return self.handled(e)
         return self.super(self._reference)
 
@@ -790,6 +791,7 @@ class PigssController(Ahsm):
             banks_to_clean = {bank: (bank == self.bank) for bank in self.all_banks}
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", banks_to_clean)))
             self.disable_buttons()
+            self.set_status(["clean", self.bank], UiStatus.CLEAN)
             self.clean_active[self.bank] = 1
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
@@ -861,6 +863,7 @@ class PigssController(Ahsm):
         if sig == Signal.PIGLET_STATUS:
             if e.value[self.bank]['OPSTATE'] == 'standby':
                 return self.tran(self._identify4)
+            return self.handled(e)
         return self.super(self._identify)
 
     @state
@@ -882,6 +885,7 @@ class PigssController(Ahsm):
                 self.bank = self.banks_to_process.pop(0)
                 return self.tran(self._identify1)
             else:
+                self.restore_buttons()
                 # Otherwise, enable run and plan buttons and go back to standby since identification is complete
                 self.set_status(["run"], UiStatus.READY)
                 self.set_status(["plan"], UiStatus.READY)
@@ -1236,11 +1240,7 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_CHANNEL:
             if self.status["channel"][e.value["bank"]][e.value["channel"]] == UiStatus.READY:
-                self.banks_to_process = self.all_banks.copy()
-                self.bank_to_update = self.banks_to_process.pop(0)
-                self.bank = e.value["bank"]
-                self.channel = e.value["channel"]
-                mask = 1 << (self.channel - 1)
+                mask = 1 << (e.value["channel"] - 1)
                 # For this version, we can only have one active channel, so
                 #  replace the currently active channel with the selected one
                 for bank in self.all_banks:
@@ -1248,7 +1248,7 @@ class PigssController(Ahsm):
                     for j in setbits(self.chan_active[bank]):
                         self.set_status(["channel", bank, j + 1], UiStatus.READY)
                     # Replace with the selected channel
-                    if bank == self.bank:
+                    if bank == e.value["bank"]:
                         self.chan_active[bank] = mask
                     else:
                         self.chan_active[bank] = 0
@@ -1257,25 +1257,12 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
-            return self.tran(self._run111)
-        return self.super(self._run1)
-
-    @state
-    def _run111(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            mask = self.chan_active[self.bank_to_update]
-            for j in setbits(mask):
-                self.set_status(["channel", self.bank_to_update, j + 1], UiStatus.ACTIVE)
-            self.postFIFO(Event(Signal.PROCEED, None))
+            for bank in self.all_banks:
+                mask = self.chan_active[bank]
+                for j in setbits(mask):
+                    self.set_status(["channel", bank, j + 1], UiStatus.ACTIVE)
             return self.handled(e)
-        elif sig == Signal.PROCEED:
-            if self.banks_to_process:
-                self.bank_to_update = self.banks_to_process.pop(0)
-                return self.tran(self._run111)
-            else:
-                return self.handled(e)
-        return self.super(self._run11)
+        return self.super(self._run1)
 
     @state
     def _run_plan(self, e):
@@ -1359,8 +1346,6 @@ class PigssController(Ahsm):
     def _run_plan21(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.banks_to_process = self.all_banks.copy()
-            self.bank_to_update = self.banks_to_process.pop(0)
             current_step = self.plan["current_step"]
             bank_config = self.plan["steps"][current_step]["banks"]
             self.reference_active = self.plan["steps"][current_step]["reference"]
@@ -1497,8 +1482,6 @@ class PigssController(Ahsm):
     def _loop_plan21(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.banks_to_process = self.all_banks.copy()
-            self.bank_to_update = self.banks_to_process.pop(0)
             current_step = self.plan["current_step"]
             bank_config = self.plan["steps"][current_step]["banks"]
             self.reference_active = self.plan["steps"][current_step]["reference"]

@@ -86,7 +86,7 @@ class ProcessWrapper:
         setproctitle("python aiomultiprocess support")
         self.rpc_raw = CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{self.rpc_port}", "PigssSupervisor")
         self.rpc_wrapper = AsyncWrapper(self.rpc_raw)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(1.0)
         return self.rpc_wrapper
 
     async def stop_process(self, stop_reason="Unknown"):

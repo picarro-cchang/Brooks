@@ -152,9 +152,11 @@ class PigletManager(Ahsm):
         new_settings = valve_transition_payload.new_settings
         if new == "exhaust":
             await self.set_exhaust_valve("open")
+            await asyncio.sleep(0.5)
             self.mfc_override = 0.0
         elif new == "reference":
             await self.set_reference_valve("open")
+            await asyncio.sleep(0.5)
             self.mfc_override = self.farm.config.get_reference_mfc_flow()
         elif new == "clean":
             banks = [bank for bank in new_settings if new_settings[bank] != 0 and bank in self.bank_list]
@@ -165,7 +167,10 @@ class PigletManager(Ahsm):
         elif new == "control":
             for bank in new_settings:
                 if bank in self.bank_list:
-                    await self.command_handler(f"CHANSET {new_settings[bank]}", bank)
+                    if new_settings[bank] != 0:
+                        await self.command_handler(f"CHANSET {new_settings[bank]}", bank)
+                    else:
+                        await self.command_handler(f"STANDBY", bank)
             rest = [bank for bank in self.bank_list if bank not in new_settings]
             await self.exec_on_banks(lambda bank: self.command_handler("STANDBY", bank), rest)
             self.mfc_override = None
@@ -176,7 +181,7 @@ class PigletManager(Ahsm):
             old = "control"
 
         if new != old:
-            await asyncio.sleep(2.0)
+            await asyncio.sleep(0.5)
             if old == "exhaust":
                 await self.set_exhaust_valve("close")
             elif old == "reference":
