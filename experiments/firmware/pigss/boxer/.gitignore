@@ -18,3 +18,8 @@ bin/*.hex
 
 # Ignore log files from the tests
 tests/log
+
+# Ignore fuse data
+src/extfuse
+src/highfuse
+src/lowfuse

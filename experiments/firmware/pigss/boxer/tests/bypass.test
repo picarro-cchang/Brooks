@@ -1,0 +1,62 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the bypass valve commands
+unset -nocomplain inlet_channel_list
+set inlet_channel_list [list 1 2 3 4 5 6 7 8]
+foreach inlet_channel $inlet_channel_list {
+    # Each channel will have a unique proportional valve setting
+    dict set inlet_channel_dict $inlet_channel setting [expr $inlet_channel * 100]
+}
+
+# Test setting the proportional valve values
+foreach inlet_channel [dict keys $inlet_channel_dict] {
+    tcltest::test "ch${inlet_channel}.bypass.set" {
+	Test setting the proportional valve.
+    } -setup {
+	# You can manually adjust the proportional valves in any mode.
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	set setting [dict get $inlet_channel_dict $inlet_channel setting]
+	boxer::sendcmd $channel "ch${inlet_channel}.byp.dac $setting"
+	# Return should be 0 for a recognized and executed command
+	set return_string [boxer::readline $channel]
+	return $return_string
+    } -cleanup {
+
+    } -match regexp -result 0   
+}
+
+# Test querying the valve values
+foreach inlet_channel [dict keys $inlet_channel_dict] {
+    tcltest::test "ch${inlet_channel}.bypass.ask" {
+	Test querying the proportional valve.
+    } -setup {	
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	boxer::sendcmd $channel "byp.dac? $inlet_channel"
+	# Return should be 0 for a recognized and executed command
+	set return_string [boxer::readline $channel]
+	return $return_string
+    } -cleanup {
+
+    } -match regexp -result [dict get $inlet_channel_dict $inlet_channel setting] 
+}
+
+# Enabling a channel should zero the bypass valve
+tcltest::test bypass.zero {
+    Enabling a channel should set its bypass to zero.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Enable a channel
+    boxer::sendcmd $channel "chanset 1"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "byp.dac? 1"
+    set return_string [boxer::readline $channel]
+    # The setting should be zero
+    return $return_string
+} -cleanup {
+    # Go back to standby
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -match regexp -result 0

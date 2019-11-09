@@ -1,0 +1,30 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the identify command
+
+tcltest::test identify.recognize {
+    Test recognizing the identify command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Make sure we're in standby mode
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "identify"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+    # The only way to get out of identify mode is to wait for it to finish
+    boxer::sendcmd $channel "opstate?"
+    set opstate [boxer::readline $channel]
+    while {![string equal -nocase "standby" $opstate]} {
+	boxer::sendcmd $channel "opstate?"
+	set opstate [boxer::readline $channel]
+	boxer::sendcmd $channel "idstate?"
+	set idstate [boxer::readline $channel]
+	puts $opstate.$idstate
+	after 500
+    }
+} -match regexp -result 1

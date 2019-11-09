@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.0.5"
+set firmware_version "1.1.4"
 
 ############################### *idn? ################################
 
@@ -111,7 +111,6 @@ tcltest::test "[string toupper $command]" "$description" -body {
     return $return_string
 } -match regexp -result $ok_result
 
-
 set command "chanena?"
 set description "Query enable status of channels 1-8"
 set ok_result 1
@@ -146,37 +145,95 @@ tcltest::test "[string toupper $command]" "$description" -body {
     return $return_string
 } -match regexp -result $ok_result
 
-set command "chanset"
-set description "Set channel enable status"
-set ok_result 0
-set channel_byte 170
-tcltest::test "[string tolower $command]" "$description" -body {
-    boxer::sendcmd $channel "[string tolower $command] $channel_byte"
-    set return_string [boxer::readline $channel]
-    # Command should return 0 on successful completion
-    return $return_string
-} -match regexp -result $ok_result
+############################## chanset ###############################
 
-tcltest::test "[string toupper $command]" "$description" -body {
-    boxer::sendcmd $channel "[string toupper $command] $channel_byte"
+# Test recognizing the command
+tcltest::test chanset.recognize {
+    Test recognizing the chanset command
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset 10"
     set return_string [boxer::readline $channel]
     return $return_string
-} -match regexp -result $ok_result
+} -cleanup {
 
-set command "chanset?"
-set description "Query channel enable status"
-set ok_result 170
-tcltest::test "[string tolower $command]" "$description" -body {
-    boxer::sendcmd $channel "[string tolower $command]"
-    set return_string [boxer::readline $channel]
-    return $return_string
-} -match regexp -result $ok_result
+} -match regexp -result 0
 
-tcltest::test "[string toupper $command]" "$description" -body {
-    boxer::sendcmd $channel "[string toupper $command]"
+# System should go into control when a channel is enabled
+tcltest::test chanset.control {
+    Make sure system goes into control when a channel is enabled.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "opstate?"
     set return_string [boxer::readline $channel]
     return $return_string
-} -match regexp -result $ok_result
+} -cleanup {
+
+} -match regexp -result "control"
+
+# System should go back to standby when no channels are enabled
+tcltest::test chanset.standby {
+    Make sure system goes into standby when all channels are disabled
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 0"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "opstate?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+
+} -match regexp -result "standby"
+
+
+
+############################## chanset? ##############################
+
+tcltest::test chanset? {
+    Test using chanset? to query the channel configuration
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 10"
+    set return_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+
+} -match regexp -result 10
+
+############################## standby ###############################
+
+tcltest::test standby.recognize {
+    Test recognizing the standby command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 0
+
+tcltest::test standby.shutoff {
+    All channels should go disabled with the standby
+} -setup {
+    boxer::sendcmd $channel "chanena 1"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset?"
+    set return_string [boxer::readline $channel]
+    return $return_string 
+} -cleanup {
+    
+} -match regexp -result 0
 
 ############################### slotid ###############################
 
@@ -229,7 +286,7 @@ tcltest::test "slotid" "Check new slot ID" -body {
     return $return_string
 } -match regexp -result $slot_id
 
-############################## opstate ###############################
+############################## opstate? ##############################
 
 set command "opstate?"
 set description "Query the operational state"
@@ -250,3 +307,67 @@ tcltest::test "[string toupper $command]" "$description" -body {
     set return_string [boxer::readline $channel]
     return $return_string
 } -match regexp -result $ok_result
+
+############################### tza.sn ###############################
+
+tcltest::test tza.sn_query_old {
+    Test querying the serial number for Topaz A.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.sn?"
+    set return_string [boxer::readline $channel]
+    set tza_old_serial_number $return_string
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result {^[1-9]\d*$}
+
+tcltest::test tza.sn_set {
+    Test setting the serial number for Topaz A.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.sn [expr $tza_old_serial_number + 1]"
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "tza.sn?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    # Set the serial number back to what it was
+    boxer::sendcmd $channel "tza.sn $tza_old_serial_number"
+    set return_string [boxer::readline $channel]
+} -match regexp -result [expr $tza_old_serial_number + 1]
+
+############################### tzb.sn ###############################
+
+tcltest::test tzb.sn_query_old {
+    Test querying the serial number for Topaz B.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.sn?"
+    set return_string [boxer::readline $channel]
+    set tzb_old_serial_number $return_string
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result {^[1-9]\d*$}
+
+tcltest::test tzb.sn_set {
+    Test setting the serial number for Topaz B.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.sn [expr $tzb_old_serial_number + 1]"
+    set return_string [boxer::readline $channel]
+    boxer::sendcmd $channel "tzb.sn?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    # Set the serial number back to what it was
+    boxer::sendcmd $channel "tzb.sn $tzb_old_serial_number"
+    set return_string [boxer::readline $channel]
+} -match regexp -result [expr $tzb_old_serial_number + 1]
+
+
