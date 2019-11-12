@@ -105,6 +105,7 @@
     "to": "now"
   },
   "timepicker": {
+    "hidden": true,
     "refresh_intervals": [
       "5s",
       "10s",
@@ -121,5 +122,5 @@
   "timezone": "",
   "title": "User Data File Generator",
   "uid": "DbA8q_oZz",
-  "version": 3
+  "version": 2
 }
