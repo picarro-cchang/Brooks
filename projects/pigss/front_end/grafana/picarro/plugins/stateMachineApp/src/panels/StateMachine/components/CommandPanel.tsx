@@ -3,9 +3,14 @@ import { CommandPanelOptions } from "./../types";
 
 class CommandPanel extends PureComponent<CommandPanelOptions> {
   classNameOpt = {
-    DISABLED: "btn-inverse disabled command-disabled",
+    DISABLED: "btn-outline-success",
     READY: "btn-outline-success",
     ACTIVE: "btn-green"
+  };
+
+  classNameOptEdit = {
+      DISABLED: "btn btn-large btn-edit edit-disabled",
+      READY: "btn btn-large btn-edit btn-danger",
   };
 
   getDisabled = (element: string): boolean => {
@@ -21,7 +26,11 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
     let classNames = "";
     const status_dict = this.props.uistatus as any;
     if (element in status_dict) {
-      classNames = (this.classNameOpt as any)[status_dict[element]];
+        if (element === "edit") {
+            classNames = (this.classNameOptEdit as any)[status_dict[element]]
+        } else {
+            classNames = (this.classNameOpt as any)[status_dict[element]];
+        }
     }
     return classNames;
   };
@@ -121,8 +130,11 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
             </button>
             <button
               value="edit"
-              className={"btn btn-large btn-edit btn-danger"}
+              className={
+                  this.getClassNameOpt("edit")
+              }
               onClick={e => this.props.ws_sender({ element: "edit" })}
+              disabled={this.getDisabled("edit")}
             >
               Edit Labels
             </button>
