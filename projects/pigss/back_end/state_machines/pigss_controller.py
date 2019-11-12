@@ -450,6 +450,11 @@ class PigssController(Ahsm):
                             return PlanError(True, f"Unavailable port at step {row}", row, 1)
         return PlanError(False)
 
+    def validate_plan_filename(self, filename, check_avail=True):
+        if len(filename) == 0:
+            return False
+        return True
+
     def save_plan_to_file(self, filename):
         fname = os.path.join(PLAN_FILE_DIR, filename + ".pln")
         plan = {}
@@ -1120,11 +1125,21 @@ class PigssController(Ahsm):
             self.set_plan(["plan_filename"], re.sub(r'[^\w-]', "", e.value["name"]))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_SAVE_OK:
-            fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
-            if os.path.isfile(fname):
-                return self.tran(self._plan_save1)
+            self.valid_plan = self.validate_plan_filename(self.plan["plan_filename"])
+
+            if self.valid_plan:
+                fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
+                if os.path.isfile(fname):
+                    return self.tran(self._plan_save1)
+                else:
+                    return self.tran(self._plan_save2)
             else:
-                return self.tran(self._plan_save2)
+                self.set_modal_info([], {
+                    "show": True,
+                    "html": f"<h3 class='test'>Please Enter a Valid Filename</h3>",
+                    "num_buttons": 0
+                })
+            return self.handled(e)
         return self.super(self._plan_file)
 
     @state

@@ -55,6 +55,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
                 name: e.target.value
               })
             }
+            maxLength={28}
             value={this.props.plan.plan_filename}
             type="text"
             className="form-control input-large"
