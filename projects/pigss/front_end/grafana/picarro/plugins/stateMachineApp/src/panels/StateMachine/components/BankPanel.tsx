@@ -76,10 +76,8 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
             style={{ color: "black" }}
           >
-
             <p className="chn-label">
-              <u>
-              {this.props.plan.bank_names[this.props.bank].channels[i]}</u>
+              <u>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
             </p>
             <p className="chn-status"> {test[i]} </p>
           </button>
@@ -97,7 +95,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
           >
             <p className="chn-label">
-              {this.props.plan.bank_names[this.props.bank].channels[i]}
+              <u>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
             </p>
 
             <p className="chn-status"> {test[i]}</p>

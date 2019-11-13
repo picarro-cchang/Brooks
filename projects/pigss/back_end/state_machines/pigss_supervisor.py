@@ -86,7 +86,7 @@ class ProcessWrapper:
         setproctitle("python aiomultiprocess support")
         self.rpc_raw = CmdFIFO.CmdFIFOServerProxy(f"http://localhost:{self.rpc_port}", "PigssSupervisor")
         self.rpc_wrapper = AsyncWrapper(self.rpc_raw)
-        await asyncio.sleep(0.1)
+        await asyncio.sleep(1.0)
         return self.rpc_wrapper
 
     async def stop_process(self, stop_reason="Unknown"):
@@ -301,19 +301,23 @@ class PigssSupervisor(Ahsm):
             # Try to send the first ping and kill the system if there is no response
             #  within a certain interval
             start_ok = True
+            err_msg = ""
             try:
                 if await asyncio.wait_for(wrapped_process.rpc_wrapper.CmdFIFO.PingFIFO(), timeout=2 * ping_interval) != 'Ping OK':
                     raise ValueError("Bad response to ping")
-            except CmdFIFO.RemoteException:
+            except CmdFIFO.RemoteException as e:
                 start_ok = False
-            except asyncio.TimeoutError:
+                err_msg = repr(e)
+            except asyncio.TimeoutError as e:
                 start_ok = False
-            except ValueError:
+                err_msg = repr(e)
+            except ValueError as e:
                 start_ok = False
+                err_msg = repr(e)
             if start_ok:
                 self.tasks.append(self.run_async(wrapped_process.pinger(ping_interval)))
             else:
-                log.error(f"Cannot start {wrapped_process.name}, aborting. Check configuration information.")
+                log.error(f"Cannot start {wrapped_process.name}, aborting due to {err_msg}. Check configuration information.")
                 Framework.publish(Event(Signal.TERMINATE, None))
                 return
         else:

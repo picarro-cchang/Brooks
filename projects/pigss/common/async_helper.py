@@ -91,7 +91,7 @@ class SyncWrapper:
         self.__loop = asyncio.new_event_loop()
         t = Thread(target=self.__start_background_loop, daemon=True)
         t.start()
-        time.sleep(0.01)
+        time.sleep(0.1)
         return self
 
     def raw_access(self):

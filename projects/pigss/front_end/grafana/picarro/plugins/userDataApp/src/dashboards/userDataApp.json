@@ -20,9 +20,7 @@
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
-      "tags": [
-        "pigss"
-      ],
+      "tags": ["pigss"],
       "title": "Dashboards",
       "type": "dashboards"
     }
@@ -51,15 +49,11 @@
         {
           "groupBy": [
             {
-              "params": [
-                "$__interval"
-              ],
+              "params": ["$__interval"],
               "type": "time"
             },
             {
-              "params": [
-                "null"
-              ],
+              "params": ["null"],
               "type": "fill"
             }
           ],
@@ -70,9 +64,7 @@
           "select": [
             [
               {
-                "params": [
-                  "value"
-                ],
+                "params": ["value"],
                 "type": "field"
               },
               {
@@ -94,9 +86,7 @@
   "refresh": "5s",
   "schemaVersion": 20,
   "style": "dark",
-  "tags": [
-    "pigss"
-  ],
+  "tags": ["pigss"],
   "templating": {
     "list": []
   },
@@ -105,6 +95,7 @@
     "to": "now"
   },
   "timepicker": {
+    "hidden": true,
     "refresh_intervals": [
       "5s",
       "10s",
@@ -121,5 +112,5 @@
   "timezone": "",
   "title": "User Data File Generator",
   "uid": "DbA8q_oZz",
-  "version": 3
+  "version": 2
 }
