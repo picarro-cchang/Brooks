@@ -214,7 +214,7 @@ d.cavityPressure += (d.sensorDict["Cavity2Pressure"]-d.sensorDict["CavityPressur
 current_threshold_factor = Driver.rdDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3") 
 # If ringdown rate is less than 75rd/s lower the threshold and return empty result
 rd_rate = -1
-if (len(d.timestamp) > 1) and (d["spectrumId"] == 63) and (d["ngroups"] < spectrum_min_groups):
+if (len(d.timestamp) > 1) and (d["spectrumId"] == 63): # and (d["ngroups"] < spectrum_min_groups):
     ms_between_rds = d.timestamp.ptp() / (len(d.timestamp) - 1)  # Ringdowns / second
     rd_rate = 1000.0 / ms_between_rds
     hcl_current_threshold = np.mean(d.ringdownThreshold)
@@ -223,7 +223,7 @@ if not(disable_dynamic_threshold) and (rd_rate != -1) and (rd_rate < min_rd_rate
     degraded_hcl_performance = 1
     Driver.wrDasReg("THRESHOLD_FACTOR_VIRTUAL_LASER3", min_rd_threshold_factor)
     
-    Log ("Fitter changes threshold factor to %f" % min_rd_threshold_factor)
+    Log("Fitter changes threshold factor to %f" % min_rd_threshold_factor)
     RESULT = {}
 elif rd_rate != -1:
     # Ringdown rate is appropriate for correct operation
@@ -398,7 +398,9 @@ elif rd_rate != -1:
                 "hcl_minBasePoints":minBasePoints,"hcl_maxBasePoints":maxBasePoints,"hcl_meanBasePoints":meanBasePoints,
                 "ch3oh_conc":ch3oh_conc,"c2h4_conc":c2h4_conc,
                 "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,"hcl_rd_rate":rd_rate,
-                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":hcl_current_threshold
+                "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":hcl_current_threshold, "rd_rate":rd_rate,
+                "current_threshold_factor":current_threshold_factor,"min_rd_threshold_factor":min_rd_threshold_factor,
+                "min_rd_rate":min_rd_rate,"disable_dynamic_threshold":disable_dynamic_threshold,
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                     "cavity2_pressure":P,"cavity2_temperature":T,"solenoid_valves":solValves,
