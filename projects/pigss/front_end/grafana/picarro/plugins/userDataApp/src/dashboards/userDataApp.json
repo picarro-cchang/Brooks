@@ -37,16 +37,7 @@
         "y": 0
       },
       "id": 2,
-      "options": {
-        "timeRange": {
-          "from": "2019-10-21T16:20:10.343Z",
-          "raw": {
-            "from": "now-6h",
-            "to": "now"
-          },
-          "to": "2019-10-21T22:20:10.345Z"
-        }
-      },
+      "options": {},
       "targets": [
         {
           "groupBy": [
