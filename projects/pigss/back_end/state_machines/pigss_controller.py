@@ -464,17 +464,26 @@ class PigssController(Ahsm):
             # Not strictly necessary to convert row to a string here, but is here to remind the
             # reader that serializing a dictionary via JSON turns all keys into strings
             plan[str(row)] = s
-        with open(fname, "w") as fp:
-            json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
-            log.info(f"Plan file saved {fname}")
+        try:
+            with open(fname, "w") as fp:
+                json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
+                log.info(f"Plan file saved {fname}")
+        except FileNotFoundError as fe:
+            log.critical(f"Plan save error {fe}")
+            raise
 
     def load_plan_from_file(self):
         # Exceptions raised here are signalled back to the front end
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
-        with open(fname, "r") as fp:
-            data = json.load(fp)
-            plan = data["plan"]
-            bank_names = data["bank_names"]
+        try:
+            with open(fname, "r") as fp:
+                data = json.load(fp)
+                plan = data["plan"]
+                bank_names = data["bank_names"]
+        except FileNotFoundError as fe:
+            log.critical(f"Plan load error {fe}")
+            raise
+            return
         if not isinstance(plan, dict):
             raise ValueError("Plan should be a dictionary")
         steps = {}
