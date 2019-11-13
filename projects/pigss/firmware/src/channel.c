@@ -92,6 +92,10 @@ void channel_init() {
 }
 
 int8_t channel_set( uint8_t setting ) {
+  if ( channel_get() == setting ) {
+    // There's nothing to do
+    return 0;
+  }
   uint8_t channel_array_index = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if ((1 << channel_array_index) & setting) {
@@ -104,6 +108,18 @@ int8_t channel_set( uint8_t setting ) {
   }
   channel_update();
   return 0;
+}
+
+uint8_t channel_get() {
+  uint8_t channel_settings = 0;
+  uint8_t channel_array_index = 0;
+  while ((channel_array[channel_array_index].number) != 0) {
+    if (channel_array[channel_array_index].enabled == true) {
+      channel_settings += 1 << channel_array_index;
+    }
+    channel_array_index++;
+  }
+  return channel_settings;
 }
 
 int8_t channel_update() {
@@ -219,7 +235,8 @@ int8_t channel_update() {
     new_led_value = aloha_clear_clean_led_bits(new_led_value);
   } else {
     // There are no enabled channels.  This means we're in standby.
-    set_system_state(system_state_STANDBY);
+    // set_system_state(system_state_STANDBY);
+    system_enter_standby();
   }
 
   // Update hardware solenoids.  Disabled channels are energized.
@@ -404,3 +421,5 @@ void cmd_chanset_q( command_arg_t *command_arg_ptr ) {
 	       channel_settings, LINE_TERMINATION_CHARACTERS);
   return;
 }
+
+
