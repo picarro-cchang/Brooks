@@ -77,19 +77,21 @@ system_status_data_source = {
 apps = [
     'picarro-analyzer-page', 'current-concentration-values',
     'picarro-user-data-app', 'picarro-concentration-page',
-    'picarro-status-app', 'flow-setup-app'
+    'picarro-status-app', '1flow-setup-app'
 ]
 
 
 def main():
     with GROOTility('production') as GROOT:
         # TODO: Handle provisioning existing datasources without throwing warning
+        print(f'Provisioning datasources')
         GROOT.add_datasource(pigss_data_source)
         GROOT.add_datasource(port_history_data_source)
         GROOT.add_datasource(telegraf_data_source)
         GROOT.add_datasource(system_status_data_source)
         # TODO: Improve grootilities to not rely on a list of app ids for production
         for app in apps:
+            print(f'Provisioning: {app}')
             GROOT.api.POST(f'/plugins/{app}/settings',
                            json={
                                "enabled": False,
