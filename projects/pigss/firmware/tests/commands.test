@@ -9,7 +9,7 @@
 # We need to test both the upper and lower case forms of each command.
 
 # Firmware version code
-set firmware_version "1.1.4"
+set firmware_version "1.1.5"
 
 ############################### *idn? ################################
 

@@ -135,6 +135,7 @@ int8_t aloha_show_clean_leds(void) {
 
 int8_t aloha_clear_clean_leds(void) {
   uint32_t new_led_value = system_state_get_fp_led_value();
+  logger_msg_p("aloha", log_level_DEBUG, PSTR("Clearing blue LEDs"));
   new_led_value &= ( ~( (uint32_t) 1<<CH1_BLUE ) &
 		     ~( (uint32_t) 1<<CH2_BLUE ) &
 		     ~( (uint32_t) 1<<CH3_BLUE ) &

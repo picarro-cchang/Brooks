@@ -86,16 +86,12 @@ channel_t channel_array[] = {
 channel_config_t channel_config;
 channel_config_t *channel_config_ptr = &channel_config;
 
-void channel_init() {
+void channel_init(void) {
   // Disable all channels
   channel_set(0);
 }
 
 int8_t channel_set( uint8_t setting ) {
-  if ( channel_get() == setting ) {
-    // There's nothing to do
-    return 0;
-  }
   uint8_t channel_array_index = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if ((1 << channel_array_index) & setting) {
@@ -119,6 +115,7 @@ uint8_t channel_get() {
     }
     channel_array_index++;
   }
+  logger_msg_p("channel", log_level_DEBUG, PSTR("Channel setting is %i"), channel_settings);
   return channel_settings;
 }
 
@@ -387,17 +384,12 @@ void cmd_chanset( command_arg_t *command_arg_ptr ) {
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
-  uint8_t channel_array_index = 0;
-  while ((channel_array[channel_array_index].number) != 0) {
-    if ((1 << channel_array_index) & channel_settings) {
-      // Turn this channel on
-      channel_array[channel_array_index].enabled = true;
-    } else {
-      channel_array[channel_array_index].enabled = false;
-    }
-    channel_array_index++;
+  if ( channel_settings == 0 ) {
+    // This is the same as system_enter_standby()
+    retval = system_enter_standby();
+  } else {
+    retval = channel_set( (uint8_t) channel_settings);    
   }
-  retval = channel_update();
   if (retval < 0) {
     // There was a problem setting the channel configuration
     command_nack(NACK_COMMAND_FAILED);

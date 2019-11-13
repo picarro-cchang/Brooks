@@ -143,8 +143,10 @@ int8_t system_enter_standby(void) {
   case system_state_INIT:
     // Transition from INIT to STANDBY
     //
-    // All channels --> OFF
+    // All channels --> OFF, if they aren't already
+    if (channel_get() != 0) {
       channel_set(0);
+    }
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
     logger_msg_p("system",log_level_INFO,PSTR("State change INIT to STANDBY"));
@@ -154,7 +156,9 @@ int8_t system_enter_standby(void) {
   case system_state_STANDBY:
     // We're already in standby, but disabling all channels resets the
     // proportional valves.
-    channel_set(0);
+    if (channel_get() != 0) {
+      channel_set(0);
+    }
     break;
   case system_state_SHUTDOWN:
     // SHUTDOWN to STANDBY only happens with a reset
@@ -165,8 +169,9 @@ int8_t system_enter_standby(void) {
     // Transition from CONTROL to STANDBY
     //
     // All channels --> OFF
-    channel_set(0);
-
+    if (channel_get() != 0) {
+      channel_set(0);
+    }
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
     // MFC value --> 0
@@ -179,7 +184,9 @@ int8_t system_enter_standby(void) {
     // Transition from CLEAN to STANDBY
     //
     // All channels --> OFF
-    channel_set(0);
+    if (channel_get() != 0) {
+      channel_set(0);
+    }
     // Clean solenoid --> OFF
     vernon_set_clean_solenoid(0);
     // MFC value --> 0
@@ -194,7 +201,9 @@ int8_t system_enter_standby(void) {
     // Transition from IDENTIFY to STANDBY
     //
     // All channels --> OFF
-    channel_set(0);
+    if (channel_get() != 0) {
+      channel_set(0);
+    }
     // MFC value --> 0
     identify_state_set_mfc_value(0.0);
     // Actually set the system state

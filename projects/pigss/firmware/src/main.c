@@ -178,7 +178,7 @@ int main(void) {
 
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
-  logger_setsystem( "pressure" );
+  // logger_setsystem( "pressure" );
   logger_setsystem( "vernon" );
   logger_setsystem( "whitfield" );
   logger_setsystem( "aloha" );
