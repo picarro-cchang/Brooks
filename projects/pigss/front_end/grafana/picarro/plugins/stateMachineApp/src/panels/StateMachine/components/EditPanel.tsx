@@ -1,4 +1,5 @@
 import React, { Component, PureComponent, ReactText } from "react";
+import Modal from "react-responsive-modal";
 import { EditPanelOptions } from "../types";
 import { EditForm } from "./EditForm";
 
@@ -14,7 +15,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     uistatus: {},
     plan: {
       bank_names: this.props.plan.bank_names
-    }
+    },
+    show: false
   };
   constructor(props) {
     super(props);
@@ -22,6 +24,36 @@ class EditPanel extends PureComponent<EditPanelOptions> {
 
   banks: any;
   bank_list: any;
+
+  validateForm = (bank_list, targets) => {
+    let bankName, bankValue;
+    const length = targets.length;
+    for (let key in bank_list) {
+      let bankNum = bank_list[key];
+      bankName = "bank" + bankNum;
+      bankValue = targets[bankName].value;
+      if (bankValue.length < 1) {
+        return false;
+      } else if (bankValue.replace(/\s/g, "").length < 1) {
+        return false;
+      } else {
+        for (let i = 1; i < 9; i++) {
+          const chanName = bankName + i;
+          const chanValue = targets[chanName].value;
+          if (chanValue.length < 1) {
+            return false;
+          } else if (chanValue.replace(/\s/g, "").length < 1) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
+  };
+
+  handClose = () => {
+    this.setState({ show: false });
+  };
 
   handleSubmit = event => {
     event.preventDefault();
@@ -36,6 +68,10 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     }
     const targets = event.target;
     const length = targets.length;
+    if (!this.validateForm(this.bank_list, targets)) {
+      this.setState({ show: true });
+      return;
+    }
     for (let key in this.bank_list) {
       let bankNum = this.bank_list[key];
       bankName = "bank" + bankNum;
@@ -74,6 +110,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     });
   };
   render() {
+    const { show } = this.state;
     return (
       <div className="panel-edit">
         <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
@@ -86,6 +123,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
           <div className="row text-center button-edit">
             <div className="col-sm-4">
               <button
+                id={"submit-edit"}
                 type="submit"
                 className={"btn  btn-green btn-edit-panel btn-group-2"}
               >
@@ -105,6 +143,12 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             </div>
           </div>
         </form>
+        <Modal open={show} onClose={this.handClose} center>
+          <h2 style={{ color: "black" }}>Uh Oh!</h2>
+          <p style={{ color: "black" }}>
+            Each Label must be at least one character in length.
+          </p>
+        </Modal>
       </div>
     );
   }
