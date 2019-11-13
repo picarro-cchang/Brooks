@@ -13,7 +13,7 @@ DEB_BUILD_DIR=${BUILD_DIR}/.debian
 BUILD_NUMBER=0.0.1
 GIT_HASH=$(shell git rev-parse --short HEAD)
 # Assets to include in the Debian file
-ASSETS=assets/pigss-launcher.desktop
+ASSETS=assets/pigss-launcher.desktop assets/pigss-auto-launcher.desktop
 LOGO=assets/picarro_logo.svg
 
 # Meta data for DEBIAN/control
