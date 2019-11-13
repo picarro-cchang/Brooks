@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/home/picarro/miniconda3/bin/python3
 
 import json
 from grootilities.grootility import GROOTility, gronf
