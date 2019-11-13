@@ -400,6 +400,8 @@ elif rd_rate != -1:
                 "pzt3_adjust":pzt3_adjust,"pzt_per_fsr":pzt_per_fsr,"goodLCT":goodLCT,"hcl_rd_rate":rd_rate,
                 "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":hcl_current_threshold, "rd_rate":rd_rate,
                 "current_threshold_factor":current_threshold_factor,"min_rd_threshold_factor":min_rd_threshold_factor,
+                "min_rd_rate":min_rd_rate,"disable_dynamic_threshold":disable_dynamic_threshold,"rd_rate":rd_rate,
+                "current_threshold_factor":current_threshold_factor,"min_rd_threshold_factor":min_rd_threshold_factor,
                 "min_rd_rate":min_rd_rate,"disable_dynamic_threshold":disable_dynamic_threshold,
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
