@@ -167,10 +167,7 @@ class PigletManager(Ahsm):
         elif new == "control":
             for bank in new_settings:
                 if bank in self.bank_list:
-                    if new_settings[bank] != 0:
-                        await self.command_handler(f"CHANSET {new_settings[bank]}", bank)
-                    else:
-                        await self.command_handler(f"STANDBY", bank)
+                    await self.command_handler(f"CHANSET {new_settings[bank]}", bank)
             rest = [bank for bank in self.bank_list if bank not in new_settings]
             await self.exec_on_banks(lambda bank: self.command_handler("STANDBY", bank), rest)
             self.mfc_override = None

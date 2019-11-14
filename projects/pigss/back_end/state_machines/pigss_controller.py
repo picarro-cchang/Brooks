@@ -21,7 +21,9 @@ import ntpath
 from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
 from back_end.database_access.aio_influx_database import AioInfluxDBWriter
 from back_end.lologger.lologger_client import LOLoggerClient
-from back_end.state_machines.pigss_payloads import (PigletRequestPayload, PlanError, ValveTransitionPayload)
+from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
+                                                    PlanError,
+                                                    ValveTransitionPayload)
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
@@ -514,7 +516,6 @@ class PigssController(Ahsm):
         self.set_plan(["bank_names"], bank_names)
         log.info(f"Plan file loaded {fname}")
 
-
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
         column = self.plan["focus"]["column"]
@@ -654,7 +655,6 @@ class PigssController(Ahsm):
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.DISABLED)
             self.set_status(["edit"], UiStatus.DISABLED)
-
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
@@ -800,7 +800,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             return self.handled(e)
-        if sig == Signal.EXIT:
+        elif sig == Signal.EXIT:
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -1275,7 +1275,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["run"], UiStatus.ACTIVE)
             return self.handled(e)
-        if sig == Signal.EXIT:
+        elif sig == Signal.EXIT:
             self.set_status(["run"], UiStatus.READY)
             return self.handled(e)
         elif sig == Signal.BTN_RUN:
@@ -1471,11 +1471,9 @@ class PigssController(Ahsm):
             if self.reference_active:
                 Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             elif some_clean_active:
-                Framework.publish(
-                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
             else:
-                Framework.publish(
-                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
@@ -1489,7 +1487,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
             return self.handled(e)
-        if sig == Signal.EXIT:
+        elif sig == Signal.EXIT:
             self.set_status(["plan_loop"], UiStatus.READY)
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_LOOP:
@@ -1609,11 +1607,9 @@ class PigssController(Ahsm):
             if self.reference_active:
                 Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             elif some_clean_active:
-                Framework.publish(
-                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
             else:
-                Framework.publish(
-                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
