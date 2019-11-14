@@ -15,9 +15,27 @@ export class SupervisorStatusLayout extends PureComponent<Props, any> {
     }
   }
 
+  replaceCustomerFacingValues(status: object, pairs: [string, string][]) {
+    let statusStr = JSON.stringify(status);
+    for (const [i, j] of pairs) {
+      statusStr = statusStr.replace(new RegExp(i, 'g'), j);
+    }
+    return JSON.parse(statusStr);
+  }
+
   componentWillMount() {
     SupervisorStatusService.getStatus().then((response: any) => {
       response.json().then((status: any) => {
+        // Modify JS Object, by replacing customer facing string values PIG-406
+        const pairs: [string, string][] = [
+          ["AlicatDriver", "MFCDriver"],
+          ["PigletDriver", "ManifoldDriver"],
+          ["Topaz_A_HW_Rev", "Manifold_A_HW_Rev"],
+          ["Topaz_B_HW_Rev", "Manifold_B_HW_Rev"],
+          ["Whitfield_HW_Rev", "System_HW_Rev"],
+          ["NumatoDriver", "RelayDriver"]
+        ];
+        status = this.replaceCustomerFacingValues(status, pairs);
         this.setState({ status });
       });
     });
