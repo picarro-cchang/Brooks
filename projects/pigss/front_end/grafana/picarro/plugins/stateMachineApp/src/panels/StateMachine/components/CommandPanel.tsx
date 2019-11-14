@@ -3,7 +3,7 @@ import { CommandPanelOptions } from "./../types";
 
 class CommandPanel extends PureComponent<CommandPanelOptions> {
   classNameOpt = {
-    DISABLED: "btn-inverse disabled command-disabled",
+    DISABLED: "",
     READY: "btn-outline-success",
     ACTIVE: "btn-green"
   };
@@ -123,6 +123,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
               onClick={e => this.props.ws_sender({ element: "edit" })}
+              disabled={this.getDisabled("edit")}
             >
               Edit Labels
             </button>

@@ -169,7 +169,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             from_formatted = time_from.strftime("%m-%d-%Y_%H%M%S")
             to_formatted = time_to.strftime("%m-%d-%Y_%H%M%S")
 
-            file_name = f"{host_name}-{from_formatted}->{to_formatted}.csv"
+            file_name = f"{host_name}-{from_formatted}-{to_formatted}.csv"
 
             success = await self.write_csv_file(result, data_dir, file_name)
             if success:

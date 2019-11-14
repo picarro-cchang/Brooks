@@ -71,7 +71,15 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             {row + ". "}
           </label>
         ) : (
-          <label className="col-sm-1 panel-plan-text" style={{marginLeft: "-7px", marginRight: "7px", fontSize: "17px", marginTop: "5px"}}>
+          <label
+            className="col-sm-1 panel-plan-text"
+            style={{
+              marginLeft: "-7px",
+              marginRight: "7px",
+              fontSize: "17px",
+              marginTop: "5px"
+            }}
+          >
             {row + ". "}
           </label>
         )}
@@ -133,8 +141,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
           />
         </div>
         <label
-            className="panel-plan-text"
-            style={{ marginLeft: "-15px", paddingRight: "5px"}}
+          className="panel-plan-text"
+          style={{ marginLeft: "-15px", paddingRight: "5px" }}
         >
           s
         </label>
@@ -168,7 +176,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
           <span
             className="cancel panel-plan-text"
             onClick={e => this.props.ws_sender({ element: "plan_cancel" })}
-            ></span>
+          ></span>
           <h6 className="panel-plan-text">
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
@@ -253,10 +261,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                   onClick={e => {
                     this.props.updateFileName(true);
                     this.props.ws_sender({ element: "plan_clear" });
-                    // for (let i = 0; i < this.props.plan.focus.row; i++ ){
-                    //     console.log("Hello");
-                    //     this.props.ws_sender({element: "plan_delete"})
-                    // }
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >

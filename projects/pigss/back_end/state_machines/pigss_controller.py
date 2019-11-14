@@ -21,7 +21,9 @@ import ntpath
 from async_hsm import Ahsm, Event, Framework, Signal, TimeEvent, state
 from back_end.database_access.aio_influx_database import AioInfluxDBWriter
 from back_end.lologger.lologger_client import LOLoggerClient
-from back_end.state_machines.pigss_payloads import (PigletRequestPayload, PlanError, ValveTransitionPayload)
+from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
+                                                    PlanError,
+                                                    ValveTransitionPayload)
 
 log = LOLoggerClient(client_name="PigssController", verbose=True)
 
@@ -335,6 +337,17 @@ class PigssController(Ahsm):
     def add_to_plan(self, bank_config, reference):
         row = self.plan["focus"]["row"]
         column = self.plan["focus"]["column"]
+        if row >= self.plan["max_steps"] and column == 2:
+            max_steps = self.plan["max_steps"]
+            msg = f"Only {max_steps} steps are currently allowed"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Max Steps Reached</h2><p>{msg}</p>",
+                    "num_buttons": 0,
+                    "buttons": {}
+                })
+            return
         if column == 2:
             row += 1
         if row <= self.plan["last_step"]:
@@ -439,6 +452,11 @@ class PigssController(Ahsm):
                             return PlanError(True, f"Unavailable port at step {row}", row, 1)
         return PlanError(False)
 
+    def validate_plan_filename(self, filename, check_avail=True):
+        if len(filename) == 0:
+            return False
+        return True
+
     def save_plan_to_file(self, filename):
         fname = os.path.join(PLAN_FILE_DIR, filename + ".pln")
         plan = {}
@@ -448,17 +466,26 @@ class PigssController(Ahsm):
             # Not strictly necessary to convert row to a string here, but is here to remind the
             # reader that serializing a dictionary via JSON turns all keys into strings
             plan[str(row)] = s
-        with open(fname, "w") as fp:
-            json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
-            log.info(f"Plan file saved {fname}")
+        try:
+            with open(fname, "w") as fp:
+                json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
+                log.info(f"Plan file saved {fname}")
+        except FileNotFoundError as fe:
+            log.critical(f"Plan save error {fe}")
+            raise
 
     def load_plan_from_file(self):
         # Exceptions raised here are signalled back to the front end
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
-        with open(fname, "r") as fp:
-            data = json.load(fp)
-            plan = data["plan"]
-            bank_names = data["bank_names"]
+        try:
+            with open(fname, "r") as fp:
+                data = json.load(fp)
+                plan = data["plan"]
+                bank_names = data["bank_names"]
+        except FileNotFoundError as fe:
+            log.critical(f"Plan load error {fe}")
+            raise
+            return
         if not isinstance(plan, dict):
             raise ValueError("Plan should be a dictionary")
         steps = {}
@@ -972,8 +999,9 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_PLAN_CANCEL:
             return self.tran(self._operational)
         elif sig == Signal.BTN_PLAN_CLEAR:
-            self.plan_clear()
-            return self.handled(e)
+            return self.tran(self._plan_clear)
+            # self.plan_clear()
+            # return self.handled(e)
         elif sig == Signal.BTN_PLAN_DELETE:
             self.plan_row_delete(e.value)
             return self.handled(e)
@@ -1000,6 +1028,39 @@ class PigssController(Ahsm):
                 return self.tran(self._plan_plan1)
         elif sig == Signal.BTN_PLAN_LOAD:
             return self.tran(self._plan_load)
+        return self.super(self._plan)
+
+    @state
+    def _plan_clear(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            msg = "Are you sure you want to Clear Plan?"
+            self.set_modal_info([], {
+                "show": True,
+                "html": f"<h2 class='test'>Clear Plan?</h2><p>{msg}</p>",
+                "num_buttons": 2,
+                "buttons": {
+                    1: {
+                        "caption": "Clear Plan",
+                        "className": "btn btn-success btn-large",
+                        "response": "modal_ok"
+                    },
+                    2: {
+                        "caption": "Cancel",
+                        "className": "btn btn-danger btn-large",
+                        "response": "modal_close"
+                    }
+                }
+            })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_modal_info(["show"], False)
+            return self.handled(e)
+        elif sig == Signal.MODAL_OK:
+            self.plan_clear()
+            return self.tran(self._plan_plan)
+        elif sig == Signal.MODAL_CLOSE:
+            return self.tran(self._plan_plan)
         return self.super(self._plan)
 
     @state
@@ -1070,14 +1131,24 @@ class PigssController(Ahsm):
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FILENAME:
             # Remove non alphanumeric characters
-            self.set_plan(["plan_filename"], re.sub(r"\W", "", e.value["name"]))
+            self.set_plan(["plan_filename"], re.sub(r'[^\w-]', "", e.value["name"]))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_SAVE_OK:
-            fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
-            if os.path.isfile(fname):
-                return self.tran(self._plan_save1)
+            self.valid_plan = self.validate_plan_filename(self.plan["plan_filename"])
+
+            if self.valid_plan:
+                fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
+                if os.path.isfile(fname):
+                    return self.tran(self._plan_save1)
+                else:
+                    return self.tran(self._plan_save2)
             else:
-                return self.tran(self._plan_save2)
+                self.set_modal_info([], {
+                    "show": True,
+                    "html": f"<h3 class='test'>Please Enter a Valid Filename</h3>",
+                    "num_buttons": 0
+                })
+            return self.handled(e)
         return self.super(self._plan_file)
 
     @state
@@ -1218,6 +1289,12 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             for bank in self.all_banks:
+                if not self.status["bank"][bank] == UiStatus.READY:
+                    self.set_status(["bank", bank], UiStatus.READY)
+                if not self.status["clean"][bank] == UiStatus.READY:
+                    self.set_status(["clean", bank], UiStatus.READY)
+                if not self.status["reference"] == UiStatus.READY:
+                    self.set_status(["reference"], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
                         self.set_status(["channel", bank, j + 1], UiStatus.READY)
