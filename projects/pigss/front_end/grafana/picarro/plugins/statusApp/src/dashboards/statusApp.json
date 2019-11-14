@@ -21,14 +21,16 @@
       "icon": "external link",
       "includeVars": false,
       "keepTime": true,
-      "tags": ["pigss"],
+      "tags": [
+        "pigss"
+      ],
       "title": "Dashboards",
       "type": "dashboards"
     }
   ],
   "panels": [
     {
-      "datasource": "Telegraf",
+      "datasource": "telegraf",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -38,7 +40,9 @@
       "id": 6,
       "options": {
         "fieldOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "defaults": {
             "mappings": [],
             "max": 120,
@@ -70,11 +74,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -86,7 +94,9 @@
           "select": [
             [
               {
-                "params": ["usage_system"],
+                "params": [
+                  "usage_system"
+                ],
                 "type": "field"
               },
               {
@@ -104,7 +114,7 @@
       "type": "gauge"
     },
     {
-      "datasource": "Telegraf",
+      "datasource": "telegraf",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -114,7 +124,9 @@
       "id": 11,
       "options": {
         "fieldOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "defaults": {
             "mappings": [],
             "max": 120,
@@ -146,11 +158,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -162,7 +178,9 @@
           "select": [
             [
               {
-                "params": ["temp"],
+                "params": [
+                  "temp"
+                ],
                 "type": "field"
               },
               {
@@ -180,7 +198,7 @@
       "type": "gauge"
     },
     {
-      "datasource": "Telegraf",
+      "datasource": "telegraf",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -190,7 +208,9 @@
       "id": 8,
       "options": {
         "fieldOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "defaults": {
             "mappings": [],
             "max": 120,
@@ -222,11 +242,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -238,7 +262,9 @@
           "select": [
             [
               {
-                "params": ["used_percent"],
+                "params": [
+                  "used_percent"
+                ],
                 "type": "field"
               },
               {
@@ -262,7 +288,7 @@
       "type": "gauge"
     },
     {
-      "datasource": "Telegraf",
+      "datasource": "telegraf",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -272,7 +298,9 @@
       "id": 9,
       "options": {
         "fieldOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "defaults": {
             "mappings": [],
             "max": 120,
@@ -304,11 +332,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -320,7 +352,9 @@
           "select": [
             [
               {
-                "params": ["used_percent"],
+                "params": [
+                  "used_percent"
+                ],
                 "type": "field"
               },
               {
@@ -344,7 +378,7 @@
       "type": "gauge"
     },
     {
-      "datasource": "Telegraf",
+      "datasource": "telegraf",
       "gridPos": {
         "h": 6,
         "w": 4,
@@ -354,7 +388,9 @@
       "id": 10,
       "options": {
         "fieldOptions": {
-          "calcs": ["lastNotNull"],
+          "calcs": [
+            "lastNotNull"
+          ],
           "defaults": {
             "mappings": [],
             "max": 120,
@@ -386,11 +422,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -402,7 +442,9 @@
           "select": [
             [
               {
-                "params": ["used_percent"],
+                "params": [
+                  "used_percent"
+                ],
                 "type": "field"
               },
               {
@@ -471,8 +513,14 @@
       },
       "id": 2,
       "options": {
-        "data": [[]],
+        "data": [
+          []
+        ],
         "level": [
+          {
+            "label": "10",
+            "value": "10"
+          },
           {
             "label": "20",
             "value": "20"
@@ -504,11 +552,15 @@
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -519,7 +571,9 @@
           "select": [
             [
               {
-                "params": ["value"],
+                "params": [
+                  "value"
+                ],
                 "type": "field"
               },
               {
@@ -555,7 +609,9 @@
   "refresh": "5s",
   "schemaVersion": 20,
   "style": "dark",
-  "tags": ["pigss"],
+  "tags": [
+    "pigss"
+  ],
   "templating": {
     "list": [
       {
@@ -633,5 +689,5 @@
   "timezone": "",
   "title": "Status",
   "uid": "1qNps_oWk",
-  "version": 8
+  "version": 9
 }
