@@ -113,6 +113,10 @@ class PigssConfig:
         (without the .pln extension)"""
         return self.config["Settings"]["startup_plan"]
 
+    @default(None)
+    def get_min_plan_interval(self):
+        return self.config["Settings"]["interval"]
+
     @default([])
     def get_glogger_plugin_config(self):
         return self.config["Plugins"]["GrafanaLogger"]
