@@ -19,6 +19,7 @@ import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
+import numpy
 import sys
 from time import localtime, strftime
 from Host.QuickGui.UserCalGui import UserCalGui
