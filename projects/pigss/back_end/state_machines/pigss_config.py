@@ -115,7 +115,7 @@ class PigssConfig:
 
     @default(None)
     def get_min_plan_interval(self):
-        return self.config["Settings"]["interval"]
+        return self.config["Settings"]["min_plan_interval"]
 
     @default([])
     def get_glogger_plugin_config(self):

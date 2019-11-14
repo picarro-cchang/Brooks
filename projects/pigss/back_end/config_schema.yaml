@@ -23,7 +23,7 @@ Settings:
   flow_settle_delay: num(required=False)
   madmapper_startup_delay: num(required=False)
   startup_plan: regex('[A-Za-z_]+', required=False)
-  interval: num(required=True)
+  min_plan_interval: num(required=True)
 ---
 Simulation:
   enabled: bool(required=False)

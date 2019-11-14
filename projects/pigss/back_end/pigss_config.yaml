@@ -15,7 +15,7 @@ Settings:
   flow_settle_delay: 2.0
   madmapper_startup_delay: 30
   startup_plan: __default__ # Do NOT include extension or directory
-  interval: 20
+  min_plan_interval: 20
 
 Services:
   - Name: DBDecimator
