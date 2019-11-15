@@ -93,6 +93,7 @@ void channel_init(void) {
 
 int8_t channel_set( uint8_t setting ) {
   uint8_t channel_array_index = 0;
+  int8_t retval = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if ((1 << channel_array_index) & setting) {
       // Turn this channel on
@@ -102,8 +103,8 @@ int8_t channel_set( uint8_t setting ) {
     }
     channel_array_index++;
   }
-  channel_update();
-  return 0;
+  retval += channel_update();
+  return retval;
 }
 
 uint8_t channel_get() {
@@ -233,7 +234,7 @@ int8_t channel_update() {
   } else {
     // There are no enabled channels.  This means we're in standby.
     // set_system_state(system_state_STANDBY);
-    system_enter_standby();
+    // system_enter_standby();
   }
 
   // Update hardware solenoids.  Disabled channels are energized.

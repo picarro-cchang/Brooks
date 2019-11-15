@@ -27,3 +27,22 @@ tcltest::test standby.shutoff {
 } -cleanup {
     
 } -match regexp -result 0
+
+tcltest::test standby_leds {
+    All Topaz LEDs should be on, all front panel should be off in standby.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set command_response [boxer::readline $channel]
+    puts -nonewline "All manifold board LEDs on and front panel channel LEDs off? (y/n) > "
+    flush stdout
+    set user_response [gets stdin]
+    if { $command_response == 0 && $user_response == y } {
+	return 0
+    } else {
+	return -1
+    }
+} -cleanup {
+    
+} -match regexp -result 0

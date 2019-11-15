@@ -3,7 +3,7 @@
 project_name = boxer
 
 # Project version code.  This will set the REVCODE symbol in the image
-REVCODE = 1.1.5
+REVCODE = 1.1.6
 
 # Log level
 #

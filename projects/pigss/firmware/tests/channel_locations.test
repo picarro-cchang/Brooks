@@ -1,3 +1,5 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
 # Light up channel 1
 tcltest::test chanset.light1 {
     Make sure channel 1 is in the correct location

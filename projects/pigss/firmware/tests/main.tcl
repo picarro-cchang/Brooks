@@ -21,7 +21,7 @@ set revcode 1.0
 # critical
 # alert
 # emergency
-set loglevel debug
+set loglevel info
 
 set root_directory [file dirname $argv0]
 
@@ -31,7 +31,8 @@ set usage "usage: [file tail $argv0] \[options]"
 
 set options {
     {b.arg "mega" "Board name"}
-    {o.arg "all" "Single test file to run"}
+    {f.arg "all" "Single test file to run"}
+    {o.arg "lastrun.log" "Output file"}
 }
 
 try {
@@ -102,9 +103,9 @@ ${log}::warn "Warn message"
 package require tcltest
 tcltest::configure -singleproc true
 
-if {$params(o) != "all"} {
+if {$params(f) != "all"} {
     # Only run tests in the file specified from the command line
-    tcltest::configure -file "$params(o)"
+    tcltest::configure -file "$params(f)"
 }
 
 # Skip pressure commands
@@ -116,6 +117,10 @@ if {$params(o) != "all"} {
 
 # Set verbosity to print output when a test passes
 tcltest::configure -verbose {body pass start error}
+
+# Delete the log file
+file delete -force $params(o)
+tcltest::configure -outfile $params(o)
 
 source connection.tcl
 source boxer.tcl
