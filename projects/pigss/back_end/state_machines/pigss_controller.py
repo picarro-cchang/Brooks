@@ -431,13 +431,15 @@ class PigssController(Ahsm):
             return PlanError(True, f"Plan is empty", 1, 1)
         if not 1 <= self.plan["current_step"] <= self.plan["last_step"]:
             return PlanError(True, f"Pending step must be between 1 and {self.plan['last_step']}", 1, 1)
+        min_plan_interval = self.farm.config.get_min_plan_interval()
         for i in range(self.plan["last_step"]):
             row = i + 1
             s = self.plan["steps"][row]
             if "duration" not in s or "reference" not in s or "banks" not in s:
                 return PlanError(True, f"Malformed data at step {row}", row, 1)
-            if not s["duration"] > 0:
-                return PlanError(True, f"Invalid duration at step {row}", row, 2)
+            if not s["duration"] > 0 or s["duration"] < min_plan_interval:
+                return PlanError(True, f"Invalid duration at step {row}. Duration must be greater than {min_plan_interval}.",
+                                 row, 2)
             for bank in s["banks"]:
                 if bank not in self.all_banks:
                     return PlanError(True, f"Invalid bank at step {row}", row, 1)
