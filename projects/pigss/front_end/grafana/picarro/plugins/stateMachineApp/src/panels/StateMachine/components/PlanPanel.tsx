@@ -182,11 +182,14 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             on the radio button to select starting position.
           </h6>
           {this.props.plan.plan_filename && !this.props.isChanged ? (
-            <h6 className="panel-plan-text">
-              Currently viewing File: {file_name}
-            </h6>
+            <div>
+              <h6 className="panel-plan-text">
+                Currently viewing File:{" "}
+                <span style={{ color: "white" }}>{file_name}</span>
+              </h6>
+            </div>
           ) : (
-            <h6 className="panel-plan-text">
+            <h6 style={{ color: "white" }}>
               Currently not viewing a saved file
             </h6>
           )}
