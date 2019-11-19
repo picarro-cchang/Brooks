@@ -518,7 +518,7 @@ class ModbusServer(object):
             
     def controller(self):
         # Some time LogExc does not find reference in thread so importing in thread
-        from Host.Common.EventManagerProxy import LogExc
+        from Host.Common.EventManagerProxy import LogExc, Log
         try:
             addr_func_map = {}
             for v in self.register_variables[COIL-1]['variables']:
@@ -528,7 +528,10 @@ class ModbusServer(object):
                 time.sleep(1)
                 while not self.command_queue.empty():
                     addr = self.command_queue.get(False)
-                    ret = addr_func_map[addr]()
+                    if addr in addr_func_map:
+                        ret = addr_func_map[addr]()
+                    else:
+                        Log("Modbus Client attempted to access non-existent register: {}".format(addr), Level=0)
         except Exception as ex:
             LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
                 
