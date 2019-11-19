@@ -183,10 +183,13 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
           </h6>
           {this.props.plan.plan_filename && !this.props.isChanged ? (
             <div>
-              <h6 className="panel-plan-text">Currently viewing File: <span style={{color: "white"}}>{file_name}</span></h6>
+              <h6 className="panel-plan-text">
+                Currently viewing File:{" "}
+                <span style={{ color: "white" }}>{file_name}</span>
+              </h6>
             </div>
           ) : (
-            <h6  style={{color: "white"}}>
+            <h6 style={{ color: "white" }}>
               Currently not viewing a saved file
             </h6>
           )}
