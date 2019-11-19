@@ -1,0 +1,22 @@
+# Ignore tags files
+src/GPATH
+src/GRTAGS
+src/GTAGS
+src/TAGS
+
+# Ignore fuse files
+src/extfuse
+src/highfuse
+src/lowfuse
+
+# Ignore log files from tests
+tests/log
+
+# Ignore object files
+obj
+
+# Ignore compiler output
+src/main.eep
+src/main.elf
+src/main.hex
+src/main.map

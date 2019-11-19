@@ -194,6 +194,58 @@ int8_t aloha_blank_channel_leds(void) {
 
 }
 
+int8_t aloha_set_com_led_red(void) {
+  uint32_t new_led_value = system_state_get_fp_led_value();
+  // Clear the colors
+  new_led_value &= ( ~( (uint32_t) 1<<COM_RED ) &
+		     ~( (uint32_t) 1<<COM_GREEN ) &
+		     ~( (uint32_t) 1<<COM_BLUE )
+		     );
+  // Set red color
+  new_led_value |= ( (uint32_t) 1<<COM_RED );
+  aloha_write(new_led_value);
+  return 0;
+}
+
+int8_t aloha_set_com_led_green(void) {
+  uint32_t new_led_value = system_state_get_fp_led_value();
+  // Clear the colors
+  new_led_value &= ( ~( (uint32_t) 1<<COM_RED ) &
+		     ~( (uint32_t) 1<<COM_GREEN ) &
+		     ~( (uint32_t) 1<<COM_BLUE )
+		     );
+  // Set red color
+  new_led_value |= ( (uint32_t) 1<<COM_GREEN );
+  aloha_write(new_led_value);
+  return 0;
+}
+
+int8_t aloha_set_status_led_red(void) {
+  uint32_t new_led_value = system_state_get_fp_led_value();
+  // Clear the colors
+  new_led_value &= ( ~( (uint32_t) 1<<STATUS_RED ) &
+		     ~( (uint32_t) 1<<STATUS_GREEN ) &
+		     ~( (uint32_t) 1<<STATUS_BLUE )
+		     );
+  // Set red color
+  new_led_value |= ( (uint32_t) 1<<STATUS_RED );
+  aloha_write(new_led_value);
+  return 0;
+}
+
+int8_t aloha_set_status_led_green(void) {
+  uint32_t new_led_value = system_state_get_fp_led_value();
+  // Clear the colors
+  new_led_value &= ( ~( (uint32_t) 1<<STATUS_RED ) &
+		     ~( (uint32_t) 1<<STATUS_GREEN ) &
+		     ~( (uint32_t) 1<<STATUS_BLUE )
+		     );
+  // Set red color
+  new_led_value |= ( (uint32_t) 1<<STATUS_GREEN );
+  aloha_write(new_led_value);
+  return 0;
+}
+
 int8_t aloha_write( uint32_t data ) {
   int8_t retval = 0;
 

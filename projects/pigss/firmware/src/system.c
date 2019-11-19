@@ -89,8 +89,7 @@ void system_init( void ) {
   DDRF &= ~( _BV(DDF7) );
 
   // Set the OK status on the front panel
-  uint32_t led_value = system_state_get_fp_led_value();
-  aloha_write( (uint32_t) 1<<STATUS_GREEN | led_value);
+  aloha_set_status_led_green();
 
   // Create and schedule a task for checking USB communication
   //
@@ -111,13 +110,11 @@ void system_init( void ) {
     logger_msg_p("system", log_level_ERROR, PSTR("Comm check task id not found"));
   }
 
-  // Check for USB connection.  We only have to do this at startup,
-  // since the system always goes through a reset when a USB channel is opened
-  led_value = system_state_get_fp_led_value();
+  // Check for USB connection.
   if ( system_usb_is_connected() ) {
-    aloha_write( (uint32_t) 1<<COM_GREEN | led_value);
+    aloha_set_com_led_green();
   } else {
-    aloha_write( (uint32_t) 1<<COM_RED | led_value);
+    aloha_set_com_led_red();
   }
 }
 
@@ -566,6 +563,7 @@ void system_comcheck_task( void ) {
     return;
   } else {
     logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
+    aloha_set_com_led_red();
     system_enter_standby();
     return;
   }
