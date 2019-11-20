@@ -52,7 +52,7 @@ class ControllerService(ServiceTemplate):
                     pass
 
     async def on_startup(self, app):
-        log.info("Controller service is starting up")
+        log.debug("Controller service is starting up")
         self.tasks = []
         self.app['websockets'] = []
         self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
@@ -63,7 +63,7 @@ class ControllerService(ServiceTemplate):
             task.cancel()
         for ws in app['websockets']:
             await ws.close(code=1001, message='Server shutdown')
-        log.info("Controller service is shutting down")
+        log.debug("Controller service is shutting down")
 
     async def handle_errors(self, request):
         """
@@ -108,7 +108,7 @@ class ControllerService(ServiceTemplate):
         body = await request.json()
         if not body:  # Missing argument gives an empty dictionary
             body = None
-        log.info(f"Handling /auto_setup_flow: {body}")
+        log.debug(f"Handling /auto_setup_flow: {body}")
         plan_filename = body
 
         controller = request.app['farm'].controller
@@ -151,7 +151,7 @@ class ControllerService(ServiceTemplate):
                 description: unrecognized event."
         """
         body = await request.json()
-        log.info(f"Handling /event: {body}")
+        log.debug(f"Handling /event: {body}")
         payload = body.get("value", None)
         try:
             event = Event(getattr(Signal, body["signal"]), payload)
@@ -247,7 +247,7 @@ class ControllerService(ServiceTemplate):
             async for msg in ws:
                 await farm.receive_queue.put(msg.data)
         except asyncio.CancelledError:
-            log.info("Web socket disconnection caused coroutine cancellation in handler.")
+            log.error("Web socket disconnection caused coroutine cancellation in handler.")
         request.app['websockets'].remove(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         self.socket_stats['ws_disconnections'] += 1

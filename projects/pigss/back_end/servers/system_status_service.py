@@ -22,10 +22,10 @@ class SystemStatusService(ServiceTemplate):
         self.app.router.add_route('GET', '/analyzer_status', self.handle_analyzer_status)
 
     async def on_startup(self, app):
-        log.info("System status service is starting up")
+        log.debug("System status service is starting up")
 
     async def on_shutdown(self, app):
-        log.info("System status service is shutting down")
+        log.debug("System status service is shutting down")
 
     async def handle_analyzer_status(self, request):
         """

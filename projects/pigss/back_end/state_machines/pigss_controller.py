@@ -25,7 +25,7 @@ from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
                                                     PlanError,
                                                     ValveTransitionPayload)
 
-log = LOLoggerClient(client_name="PigssController", verbose=True)
+log = LOLoggerClient(client_name="AppController", verbose=True)
 
 PLAN_FILE_DIR = os.path.join(os.getenv("HOME"), ".config", "pigss", "plan_files")
 if not os.path.isdir(PLAN_FILE_DIR):
@@ -469,7 +469,7 @@ class PigssController(Ahsm):
         try:
             with open(fname, "w") as fp:
                 json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
-                log.info(f"Plan file saved {fname}")
+                log.debug(f"Plan file saved {fname}")
         except FileNotFoundError as fe:
             log.critical(f"Plan save error {fe}")
             raise
@@ -514,7 +514,7 @@ class PigssController(Ahsm):
         self.set_plan(["last_step"], last_step)
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
         self.set_plan(["bank_names"], bank_names)
-        log.info(f"Plan file loaded {fname}")
+        log.debug(f"Plan file loaded {fname}")
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -1700,5 +1700,5 @@ class PigssController(Ahsm):
             return repr(e)
 
         msg = "Successfully initialized flow state"
-        log.info(msg)
+        log.debug(msg)
         return msg

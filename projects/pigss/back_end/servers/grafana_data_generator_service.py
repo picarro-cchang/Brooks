@@ -6,6 +6,7 @@ from os import listdir, path, stat, uname
 from urllib.parse import parse_qs
 import csv
 from datetime import datetime
+from traceback import format_exc
 
 from aiohttp import web
 
@@ -28,7 +29,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app.router.add_get("/api/generatefile", self.generate_file)
 
     async def on_startup(self, app):
-        log.info("GrafanaDataGeneratorService is starting up")
+        log.debug("GrafanaDataGeneratorService is starting up")
 
         self.app["config"] = self.app["farm"].config.get_gdg_plugin_config()
 
@@ -36,7 +37,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app["db_client"] = InfluxDBInstance(self.app["config"]["database"]).get_instance()
 
     async def on_shutdown(self, app):
-        log.info("GrafanaDataGeneratorService is shutting down")
+        log.debug("GrafanaDataGeneratorService is shutting down")
 
     async def on_cleanup(self, app):
         # Close influxdb connection
@@ -67,8 +68,10 @@ class GrafanaDataGeneratorService(ServiceTemplate):
                 dict_writer.writerows(result)
             return True
         except IOError:
+            log.error(f"Error in Grafana Data Generator Service {format_exc()}")
             return web.json_response(text="IO Error while writing the file.", status=503)
         except PermissionError:
+            log.error(f"Error in Grafana Data Generator Service {format_exc()}")
             return web.json_response(text="Permission error occured while writing the file.", status=403)
         return False
 
@@ -99,6 +102,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             # Filter only CSV files
             files = [f for f in listdir(data_dir) if f.endswith(self.app["config"]["server"]["file_type"])]
         except PermissionError:
+            log.error(f"Error in Grafana Data Generator Service {format_exc()}")
             return web.json_response(text="OS Permission Error", status=404)
 
         files.sort(key=lambda name: name.lower())
@@ -129,14 +133,18 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         res.content_type = file_type
         res.content_length = stats.st_size
 
-        with open(file_path, "rb") as fl:
-            await res.prepare(request)
-            for chunk in self.chunks(fl):
-                await res.write(chunk)
-                await res.drain()
-            await res.write_eof()
-            res.force_close()
-            return res
+        try:
+            with open(file_path, "rb") as fl:
+                await res.prepare(request)
+                for chunk in self.chunks(fl):
+                    await res.write(chunk)
+                    await res.drain()
+                await res.write_eof()
+                res.force_close()
+                return res
+        except FileNotFoundError:
+            log.error(f"Error in Grafana Data Generator Service {format_exc()}")
+            return web.json_response(text="Unable to locate the file on server.", status=403)
 
     async def generate_file(self, request):
         """Save the file on data_dir folder
@@ -175,7 +183,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             if success:
                 return web.json_response({"filename": file_name})
         except KeyError as ke:
-            log.error(f"HOSTNAME enveironment variable is not defined. {ke}")
+            log.critical(f"HOSTNAME enveironment variable is not defined. {ke}")
 
     async def get_user_keys(self, request):
         """ Return the keys to the user which are not in admin_keys config

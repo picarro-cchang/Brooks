@@ -24,12 +24,12 @@ class UsbRelay:
         self.gpio_modes = []
         self.gpio_output_status = []
         self.serial_port = serial.Serial(port=self.port_name,
-                                     baudrate=19200,
-                                     bytesize=serial.EIGHTBITS,
-                                     parity=serial.PARITY_NONE,
-                                     stopbits=serial.STOPBITS_ONE,
-                                     write_timeout=0,
-                                     inter_byte_timeout=0)
+                                         baudrate=19200,
+                                         bytesize=serial.EIGHTBITS,
+                                         parity=serial.PARITY_NONE,
+                                         stopbits=serial.STOPBITS_ONE,
+                                         write_timeout=0,
+                                         inter_byte_timeout=0)
 
         if isinstance(logger, str):
             self.logger = LOLoggerClient(client_name=logger)
@@ -118,7 +118,7 @@ class UsbRelay:
 
     def do_full_disco(self, cycles):
         for k in range(cycles):
-            self.logger.info(f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
+            self.logger.debug(f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
             for i in range(self.relay_count):
                 self.do_disco(i)
 
@@ -273,7 +273,11 @@ def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-s", "--serial_port_name", help="serial port name of the Numato relay board", default="/dev/ttyACM0")
-    parser.add_argument("-r", "--rpc_server_port", type=int, help="port for an rpc server to accept client", default=rpc_ports["relay_drivers"])
+    parser.add_argument("-r",
+                        "--rpc_server_port",
+                        type=int,
+                        help="port for an rpc server to accept client",
+                        default=rpc_ports["relay_drivers"])
     parser.add_argument("-n", "--name", help="name for an rpc server", default="NumatoDriver")
     parser.add_argument("-rc", "--relay_count", help="how many relays in this board", default=4)
     parser.add_argument("-gc", "--gpio_count", help="how many gpios in this board", default=4)
@@ -299,15 +303,15 @@ def main():
                                  relay_count=args.relay_count,
                                  gpio_count=args.gpio_count,
                                  logger=logger)
-    logger.info(f"Numato Relay Board Driver for {args.serial_port_name} created.")
-    logger.info(f"RPC server will be available at {args.rpc_server_port} in a sec.")
+    logger.info(f"Relay Board Driver for {args.serial_port_name} created.")
+    logger.debug(f"RPC server will be available at {args.rpc_server_port} in a sec.")
 
     try:
         numato_driver.rpc_serve_forever()
     except KeyboardInterrupt:
-        logger.info("RPC server has ended from a Keyboard Interrupt.")
+        logger.debug("RPC server has ended from a Keyboard Interrupt.")
 
-    logger.info("RPC server has ended")
+    logger.debug("RPC server has ended")
 
 
 if __name__ == "__main__":

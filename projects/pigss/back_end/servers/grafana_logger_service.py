@@ -30,7 +30,7 @@ class GrafanaLoggerService(ServiceTemplate):
         self.app.router.add_route('GET', '/stats', self.handle_stats)
 
     async def on_startup(self, app):
-        log.info("GrafanaLoggerService is starting up")
+        log.debug("GrafanaLoggerService is starting up")
 
         self.app["config"] = self.app["farm"].config.get_glogger_plugin_config()
 
@@ -49,7 +49,7 @@ class GrafanaLoggerService(ServiceTemplate):
         for ws in self.app["websockets"]:
             await ws.close(code=WSCloseCode.GOING_AWAY, message='Server shutdown')
 
-        log.info("GrafanaLoggerService is shutting down")
+        log.debug("GrafanaLoggerService is shutting down")
 
     async def on_cleanup(self, app):
         """
