@@ -21,8 +21,8 @@ class UsbRelay:
         self.debug = debug
         self.relay_count = relay_count
         self.gpio_count = gpio_count
-        self.gpio_modes = []
-        self.gpio_output_status = []
+        self.gpio_modes = ["D_OUT"]*self.gpio_count
+        self.gpio_output_status = [False]*self.gpio_count
         self.serial_port = serial.Serial(port=self.port_name,
                                      baudrate=19200,
                                      bytesize=serial.EIGHTBITS,
@@ -47,8 +47,6 @@ class UsbRelay:
             self.set_relay(i, False)
         # set all gpio off
         for i in range(self.gpio_count):
-            self.gpio_modes.append("D_OUT")
-            self.gpio_output_status.append(False)
             self.set_gpio_status(i, False)
 
     def __wait_for_echo(self, command):
