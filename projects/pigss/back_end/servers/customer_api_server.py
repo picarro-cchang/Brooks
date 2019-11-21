@@ -17,12 +17,14 @@ log = LOLoggerClient(client_name="CustomerAPIServer")
 
 
 class CustomerAPIService(ServiceTemplate):
+
     def __init__(self):
         super().__init__()
+        self._keys = None
 
     def setup_routes(self):
-        self.app.router.add_get("/api/v0.1/getkeys", self.get_keys)
-        self.app.router.add_get("/api/v0.1/getpoints", self.get_points)
+        self.app.router.add_get("/api/v0.1/getkeys", self.handle_get_keys)
+        self.app.router.add_get("/api/v0.1/getpoints", self.handle_get_points)
 
     async def on_startup(self, app):
         log.debug("CustomerAPIServer is starting up")
@@ -40,7 +42,12 @@ class CustomerAPIService(ServiceTemplate):
         if self.app["db_client"] is not None:
             InfluxDBInstance.close_connection()
 
-    async def get_keys(self, request):
+    async def get_common_keys(self, keys):
+        if self._keys is None:
+            self._keys = await self.get_keys()
+        return list(set(self._keys) & set(keys))
+
+    async def get_keys(self):
         """ Fetches field keys from measurement
 
         Arguments:
@@ -50,9 +57,21 @@ class CustomerAPIService(ServiceTemplate):
             JSON -- JSON object containing list of keys from measurement
         """
         measurement = self.app["config"]["database"]["measurements"]
-        return web.json_response({"keys": await Model.get_keys(self.app["db_client"], log, measurement)})
+        self._keys =  await Model.get_keys(self.app["db_client"], log, measurement)
+        return self._keys
 
-    async def get_points(self, request):
+    async def handle_get_keys(self, request):
+        """ Fetches field keys from measurement
+
+        Arguments:
+            request  -- request object
+
+        Returns:
+            JSON -- JSON object containing list of keys from measurement
+        """
+        return web.json_response({"keys": await self.get_keys()})
+
+    async def handle_get_points(self, request):
         """ Returns list of points in measurements based on provided constraints
 
         It can parse two different time formats: UTC and unix epoch
@@ -66,7 +85,7 @@ class CustomerAPIService(ServiceTemplate):
 
         query_params = parse_qs(request.query_string)
         measurement = self.app["config"]["database"]["measurements"]
-        keys = query_params["keys"]
+        keys = await self.get_common_keys(query_params["keys"])
         time_from = time_to = None
         latest = False
         is_epoch = query_params["epoch"][0] if "epoch" in query_params else None
@@ -105,4 +124,4 @@ class CustomerAPIService(ServiceTemplate):
             latest = True
 
         return web.json_response(
-            {"keys": await Model.get_points(self.app["db_client"], log, keys, measurement, time_from, time_to, latest)})
+            {"points": await Model.get_points(self.app["db_client"], log, keys, measurement, time_from, time_to, latest)})
