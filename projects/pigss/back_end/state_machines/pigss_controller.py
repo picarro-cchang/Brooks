@@ -1123,7 +1123,7 @@ class PigssController(Ahsm):
             self.run_async(self.save_port_history())
             return self.tran(self._plan)
         elif sig == Signal.PLAN_LOAD_FAILED:
-            self.plan_error = PlanError(True, f'<div>Unexpected Error. Please contact support.</div>')
+            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_load11)
         return self.super(self._plan_load)
 
@@ -1222,7 +1222,7 @@ class PigssController(Ahsm):
             self.get_plan_filenames()
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FAILED:
-            self.plan_error = PlanError(True, f'<div>Unexpected Error. Please contact support.</div>')
+            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_save21)
         return self.super(self._plan_save)
 
