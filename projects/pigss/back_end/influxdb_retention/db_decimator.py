@@ -232,7 +232,7 @@ class DBDecimator(object):
             Start RPC server and serve it forever.
             this is a blocking method - call once you are done setting tags
         """
-        self.logger.info(f"Starting RPC server to serve forever on port {self.rpc_server_port}")
+        self.logger.debug(f"Starting RPC server to serve forever on port {self.rpc_server_port}")
         self.server.serve_forever()
 
     def start_decimator_loop_thread(self):
@@ -249,7 +249,7 @@ class DBDecimator(object):
                                                        time_sleep=self.time_sleep,
                                                        logger=self.logger)
             self.thread_created = True
-            self.logger.info("DBDecimatorThread loop has started")
+            self.logger.debug("DBDecimatorThread loop has started")
         else:
             self.DBDecimatorThread.unpause()
 
@@ -261,16 +261,16 @@ class DBDecimator(object):
             return
         if not self.DBDecimatorThread.is_paused():
             self.DBDecimatorThread.pause()
-            self.logger.info("DBDecimatorThread loop is paused")
+            self.logger.debug("DBDecimatorThread loop is paused")
         else:
             self.DBDecimatorThread.unpause()
-            self.logger.info("DBDecimatorThread loop is unpaused")
+            self.logger.debug("DBDecimatorThread loop is unpaused")
 
     def stop_decimator_loop_thread(self):
         """
             Finish the deimator loop
         """
-        self.logger.info("Decimator instance closed")
+        self.logger.debug("Decimator instance closed")
         self.DBDecimatorThread.stop()
         self.thread_created = False
 
@@ -323,9 +323,9 @@ class DBDecimator(object):
                     self.durations.remove(duration)
                     removed_duraions.append(duration)
             self.generate_durations_meta()
-        self.logger.info(f"Durations {removed_duraions} has been removed")
+        self.logger.debug(f"Durations {removed_duraions} has been removed")
         with self.compression_in_progress_lock:
-            self.logger.info(f"New durations are {self.durations}")
+            self.logger.debug(f"New durations are {self.durations}")
 
     def remove_all_durations(self):
         """
@@ -335,7 +335,7 @@ class DBDecimator(object):
         with self.compression_in_progress_lock:
             self.durations = []
             self.generate_durations_meta()
-        self.logger.info(f"All durations for data compressing have been removed")
+        self.logger.debug(f"All durations for data compressing have been removed")
 
     def add_durations(self, durations):
         """
@@ -351,9 +351,9 @@ class DBDecimator(object):
                     self.durations.append(duration)
                     added_durations.append(duration)
             self.generate_durations_meta()
-        self.logger.info(f"Durations {added_durations} has been added")
+        self.logger.debug(f"Durations {added_durations} has been added")
         with self.compression_in_progress_lock:
-            self.logger.info(f"New durations are {self.durations}")
+            self.logger.debug(f"New durations are {self.durations}")
 
     def get_raw_data_filter(self):
         """Return current filters, which are being applied to a raw data during decimation."""
@@ -365,7 +365,7 @@ class DBDecimator(object):
         """Remove all current filters, which are being applied to a raw data during decimation."""
         with self.compression_in_progress_lock:
             self.raw_filter_conditions = []
-        self.logger.info("All raw data conditions have been removed")
+        self.logger.debug("All raw data conditions have been removed")
 
     def add_raw_data_filter(self, condition):
         """
@@ -380,7 +380,7 @@ class DBDecimator(object):
 
         with self.compression_in_progress_lock:
             self.raw_filter_conditions.append(condition)
-        self.logger.info(f"Raw data condition {condition} was added")
+        self.logger.debug(f"Raw data condition {condition} was added")
         return True
 
     def add_raw_data_filters(self, conditions):
@@ -610,7 +610,7 @@ class DBDecimatorThread(threading.Thread):
                             self.record_decimation_timestamp(timestamp=stop_time_ms, src_meas=src_meas)
             time.sleep(self.time_sleep)
         self.clien.close()
-        self.logger.info("DBDecimator loop has ended")
+        self.logger.debug("DBDecimator loop has ended")
 
 
 # generate_human_readable_decimation_message
@@ -674,8 +674,8 @@ def main():
 
         log = LOLoggerClient(client_name="DBDecimator", verbose=True)
 
-        log.info(f"DBDecimator is about to start.")
-        log.info(f"RPC server will be available at {args.rpc_port} in a sec.")
+        log.debug(f"DBDecimator is about to start.")
+        log.debug(f"RPC server will be available at {args.rpc_port} in a sec.")
 
         db_decimator = DBDecimator(db_host_address=args.address,
                                    db_port=args.port,

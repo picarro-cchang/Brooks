@@ -62,7 +62,7 @@ class PigssRunner:
         await app['farm'].shutdown()
 
     async def on_cleanup(self, app):
-        log.info("PigssRunner is cleaning up")
+        log.debug("PigssRunner is cleaning up")
         self.terminate_event.set()
 
     @log_async_exception(log_func=log.error, publish_terminate=True)
@@ -187,14 +187,13 @@ async def async_main(config_filename, validate):
                                         yamale.make_data(config_full_filename, parser='ruamel'),
                                         strict=True)
                     except ValueError as ve:
-                        log.error(f"Configuration file {config_filename} fails validation")
-                        log.error(f"{ve}")
+                        log.error(f"Configuration file {config_filename} fails validation: {ve}")
                         ok = False
                 else:
                     log.error(f"Cannot find schema for validating configuration")
                     ok = False
             if ok:
-                log.info(f"Starting PigssRunner with configuration file {config_full_filename}")
+                log.info(f"Starting application with configuration file {config_full_filename}.")
                 service = PigssRunner()
                 await service.server_init(config_full_filename)
                 await Framework.done()
@@ -211,7 +210,7 @@ async def async_main(config_filename, validate):
                     await asyncio.wait_for(service.terminate_event.wait(), timeout=2)
                 except asyncio.TimeoutError:
                     pass  # We have timed out waiting for all processes to terminate cleanly
-    log.info('PigssRunner stopped')
+    log.info('Application stopped.')
 
 
 @click.command()

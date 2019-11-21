@@ -41,7 +41,7 @@ class PigssFarm:
 
     async def startup(self):
         try:
-            log.info(f"Starting up farm of state machines")
+            log.debug(f"Starting up farm of state machines")
             self.controller.set_queues(self.send_queue, self.receive_queue)
             # Uncomment the next lines to debug transitions in the state machines
             # from async_hsm.SimpleSpy import SimpleSpy

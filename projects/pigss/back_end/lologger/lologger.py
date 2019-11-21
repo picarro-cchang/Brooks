@@ -149,7 +149,7 @@ class LOLogger(object):
             self.queue.put_nowait(values)
             self.logs_passed_to_queue += 1
             if self.verbose:
-                print(f"{client_timestamp}:::{client_name}  -  {log_message}")
+                print(f"{client_timestamp}:::{client_name} :: L-{level} :: -  {log_message}")
 
     def register_rpc_functions(self):
         self.server.register_function(self.LogEvent)
@@ -371,7 +371,7 @@ class LOLoggerThread(threading.Thread):
             # check if actual log file
             if filename.startswith(self.db_filename_prefix) and filename.endswith(".db"):
                 # check if old enough
-                year, month = [k for k in filename[len(self.full_prefix): -3].split("_") if k]
+                year, month = [k for k in filename[len(self.full_prefix):-3].split("_") if k]
                 if current_month_count - (int(year) * 12 + int(month)) >= int(self.purge_old_logs):
                     # the file appeared to be older than purge period - gonna be deleted
                     db_filepath = os.path.join(self.db_folder_path, filename)
@@ -496,7 +496,8 @@ def parse_arguments():
     parser.add_argument('-j', '--json', help='Write redundunt logs to json file', default=False, action="store_true")
     parser.add_argument('-meta', '--meta_table', help='Create a table with metadata', default=False, action="store_true")
     parser.add_argument('-pkg', '--pkg_meta', nargs='+', help='Add versions of the passed packages to the metadata table')
-    parser.add_argument('-pv', '--picarro_version',
+    parser.add_argument('-pv',
+                        '--picarro_version',
                         help='Store version of Picarro OS in metadata',
                         default=False,
                         action="store_true")

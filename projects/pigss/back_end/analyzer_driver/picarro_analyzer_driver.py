@@ -34,6 +34,7 @@ DEFAULT_DATABASE_NAME = "pigss_data"
 # A UTC class.
 class UTC(tzinfo):
     """UTC"""
+
     def utcoffset(self, dt):
         return ZERO
 
@@ -53,6 +54,7 @@ class PicarroAnalyzerDriver:
         it pipelines measurement point from instrument to the database and
         is responsible for passing to the instrument commands from upper layer
     """
+
     def __init__(self,
                  instrument_ip_address,
                  database_writer,
@@ -136,7 +138,7 @@ class PicarroAnalyzerDriver:
             Start RPC server and serve it forever.
             this is a blocking method - call once you are done setting tags
         """
-        self.logger.info(f"Starting RPC server to serve forever")
+        self.logger.info(f"Starting RPC server.")
         self.server.serve_forever()
 
     def start_idriver_loop_thread(self):
@@ -149,7 +151,7 @@ class PicarroAnalyzerDriver:
                                                flushing_batch_size=self.flushing_batch_size,
                                                flushing_timeout=self.flushing_timeout)
             self.thread_created = True
-            self.logger.info("IDriver loop has started")
+            self.logger.debug("IDriver loop has started")
         else:
             self.IDriverThread.unpause()
 
@@ -162,13 +164,13 @@ class PicarroAnalyzerDriver:
             self.logger.error("can't stop thread, it doesn't exist yet")
             return
         self.IDriverThread.pause()
-        self.logger.info("IDriver loop is paused")
+        self.logger.debug("IDriver loop is paused")
 
     def stop_idriver_loop_thread(self):
         """
         Method use to cleaning close all connections and close HW if requires
         """
-        self.logger.info("Driver instance closed")
+        self.logger.debug("Driver instance closed")
         self.IDriverThread.stop()
         self.thread_created = False
 
@@ -184,7 +186,7 @@ class PicarroAnalyzerDriver:
         with self.database_tags_lock:
             for tag in tags:
                 self.database_tags.pop(tag, None)
-        self.logger.info(f"Static tags {tags} have been removed")
+        self.logger.debug(f"Static tags {tags} have been removed")
 
     def remove_all_tags(self):
         """
@@ -192,7 +194,7 @@ class PicarroAnalyzerDriver:
         """
         with self.database_tags_lock:
             self.database_tags = {}
-        self.logger.info(f"All static tags have been removed")
+        self.logger.debug(f"All static tags have been removed")
 
     def get_tags(self):
         """
@@ -214,7 +216,7 @@ class PicarroAnalyzerDriver:
         with self.database_tags_lock:
             for tag in tags:
                 self.database_tags[tag] = tags[tag]
-        self.logger.info(f"Static tags {tags} have been added")
+        self.logger.debug(f"Static tags {tags} have been added")
 
     def adjust_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
         """
@@ -240,7 +242,7 @@ class PicarroAnalyzerDriver:
             for tag in tags:
                 if tag in self.dynamic_database_tags:
                     self.dynamic_database_tags.remove(tag)
-        self.logger.info(f"Dynamic tags {tags} have been removed")
+        self.logger.debug(f"Dynamic tags {tags} have been removed")
 
     def remove_all_dynamic_tags(self):
         """
@@ -248,7 +250,7 @@ class PicarroAnalyzerDriver:
         """
         with self.dynamic_database_tags_lock:
             self.dynamic_database_tags = []
-        self.logger.info(f"All Dynamic tags have been removed")
+        self.logger.debug(f"All Dynamic tags have been removed")
 
     def get_dynamic_tags(self):
         """
@@ -271,7 +273,7 @@ class PicarroAnalyzerDriver:
         with self.dynamic_database_tags_lock:
             for tag in tags:
                 self.dynamic_database_tags.append(tag)
-        self.logger.info(f"Dynamic tags {tags} have been added")
+        self.logger.debug(f"Dynamic tags {tags} have been added")
 
     def adjust_dynamic_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
         """
@@ -373,6 +375,7 @@ class IDriverThread(threading.Thread):
         A thread which is meant to collect measurement points from
         an instrument and when unpaused - write it to database
     """
+
     def __init__(self, parent_idriver, flushing_mode=BATCHING, flushing_batch_size=10, flushing_timeout=1, logger=None):
         threading.Thread.__init__(self, name="IDriverThread")
         self.parent_idriver = parent_idriver
@@ -565,11 +568,12 @@ def main():
     log = LOLoggerClient(client_name=f"{rpc_server_name}__main__", verbose=True)
 
     db_writer = InfluxDBWriter(db_name=args.database_name, address=args.database_ip, db_port=args.database_port)
-    log.info(f"Connected to Database '{db_writer.get_db_name()}' on {db_writer.get_db_address()}:{db_writer.get_db_port()}")
+    log.debug(f"Connected to Database '{db_writer.get_db_name()}' on {db_writer.get_db_address()}:{db_writer.get_db_port()}")
+    log.info(f"Connected to Database.")
 
     with open(args.tunnel_configs, "r") as f:
         rpc_tunnel_config = json.loads(f.read())
-    log.info(f"RPC Tunnel settings loaded from {args.tunnel_configs}")
+    log.debug(f"RPC Tunnel settings loaded from {args.tunnel_configs}")
 
     ipdriver = PicarroAnalyzerDriver(instrument_ip_address=args.instrument_ip_address,
                                      database_writer=db_writer,
@@ -581,22 +585,22 @@ def main():
                                      flushing_mode=args.flushing_mode,
                                      dynamic_database_tags=args.dynamic_database_tags)
 
-    log.info(f"Picarro Instrument Driver for {args.instrument_ip_address} created.")
-    log.info(f"RPC server will be available at {args.rpc_server_port} in a sec.")
+    log.debug(f"Picarro Instrument Driver for {args.instrument_ip_address} created.")
+    log.debug(f"RPC server will be available at {args.rpc_server_port} in a sec.")
 
     if args.add_default_tags:
         tags = {'analyzer': "AMADS2002", 'chassis': "2633"}
         ipdriver.add_tags(tags)
-        log.info(f"Static tags added: {tags}")
+        log.debug(f"Static tags added: {tags}")
 
-    log.info(f"Dynamic tags added: {args.dynamic_database_tags}")
+    log.debug(f"Dynamic tags added: {args.dynamic_database_tags}")
 
     ipdriver.start_idriver_loop_thread()
-    log.info("Quering from Instrument and flushing to Database has started")
+    log.info("Querying from Instrument and flushing to Database has started")
     try:
         ipdriver.rpc_serve_forever()
     except KeyboardInterrupt:
-        log.info("RPC server has ended it's lifecycle after brutal KeyboardInterrupt, good job.")
+        log.debug("RPC server stopped by Keyboard Interrupt.")
 
     log.info("RPC server has ended")
 

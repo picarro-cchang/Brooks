@@ -25,7 +25,7 @@ from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
                                                     PlanError,
                                                     ValveTransitionPayload)
 
-log = LOLoggerClient(client_name="PigssController", verbose=True)
+log = LOLoggerClient(client_name="AppController", verbose=True)
 
 PLAN_FILE_DIR = os.path.join(os.getenv("HOME"), ".config", "pigss", "plan_files")
 if not os.path.isdir(PLAN_FILE_DIR):
@@ -471,7 +471,7 @@ class PigssController(Ahsm):
         try:
             with open(fname, "w") as fp:
                 json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
-                log.info(f"Plan file saved {fname}")
+                log.debug(f"Plan file saved {fname}")
         except FileNotFoundError as fe:
             log.critical(f"Plan save error {fe}")
             raise
@@ -516,7 +516,7 @@ class PigssController(Ahsm):
         self.set_plan(["last_step"], last_step)
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
         self.set_plan(["bank_names"], bank_names)
-        log.info(f"Plan file loaded {fname}")
+        log.debug(f"Plan file loaded {fname}")
 
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
@@ -645,6 +645,25 @@ class PigssController(Ahsm):
             self.set_status(["clean", bank], self.clean_button_states[bank])
         self.buttons_disabled = False
 
+    def log_transition(self, payload):
+        """Log valve transition to clean, reference, exhaust, and control states.
+        Currently the control states correspond to a single port (i.e. a bank 
+        and channel combination) but in the future, any collection of ports may be
+        enabled"""
+        if payload.new_valve in ("exhaust", "reference"):
+            log.info(f"Activating {payload.new_valve} valve.")
+        elif payload.new_valve == "clean":
+            for bank in payload.new_settings:
+                if payload.new_settings[bank]:
+                    log.info(f"Activating clean valve on bank {bank}.")
+        elif payload.new_valve == "control":
+            for bank in payload.new_settings:
+                valve_mask = payload.new_settings[bank]
+                # Find first set bit to give channel in bank
+                if valve_mask != 0:
+                    valve_pos = (valve_mask & (-valve_mask)).bit_length()
+                    log.info(f"Activating bank {bank}, channel {valve_pos}.")
+
     @state
     def _configure(self, e):
         sig = e.signal
@@ -722,6 +741,9 @@ class PigssController(Ahsm):
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
+            return self.handled(e)
+        elif sig == Signal.PERFORM_VALVE_TRANSITION:
+            self.log_transition(e.value)
             return self.handled(e)
         return self.super(self._configure)
 
@@ -1702,5 +1724,5 @@ class PigssController(Ahsm):
             return repr(e)
 
         msg = "Successfully initialized flow state"
-        log.info(msg)
+        log.debug(msg)
         return msg
