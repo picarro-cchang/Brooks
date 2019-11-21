@@ -643,6 +643,25 @@ class PigssController(Ahsm):
             self.set_status(["clean", bank], self.clean_button_states[bank])
         self.buttons_disabled = False
 
+    def log_transition(self, payload):
+        """Log valve transition to clean, reference, exhaust, and control states.
+        Currently the control states correspond to a single port (i.e. a bank 
+        and channel combination) but in the future, any collection of ports may be
+        enabled"""
+        if payload.new_valve in ("exhaust", "reference"):
+            log.info(f"Activating {payload.new_valve} valve.")
+        elif payload.new_valve == "clean":
+            for bank in payload.new_settings:
+                if payload.new_settings[bank]:
+                    log.info(f"Activating clean valve on bank {bank}.")
+        elif payload.new_valve == "control":
+            for bank in payload.new_settings:
+                valve_mask = payload.new_settings[bank]
+                # Find first set bit to give channel in bank
+                if valve_mask != 0:
+                    valve_pos = (valve_mask & (-valve_mask)).bit_length()
+                    log.info(f"Activating bank {bank}, channel {valve_pos}.")
+
     @state
     def _configure(self, e):
         sig = e.signal
@@ -720,6 +739,9 @@ class PigssController(Ahsm):
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
+            return self.handled(e)
+        elif sig == Signal.PERFORM_VALVE_TRANSITION:
+            self.log_transition(e.value)
             return self.handled(e)
         return self.super(self._configure)
 
