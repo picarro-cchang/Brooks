@@ -1,3 +1,4 @@
+from datetime import datetime
 from common.sqlite_connection import SQLiteInstance
 
 
@@ -29,6 +30,9 @@ class EventsModel:
             if "limit" in query_params:
                 limit = query_params["limit"]
 
+            # To Do: Remove
+            if __debug__:
+                print(f"\nTime: {datetime.fromtimestamp(start / 1000)} - {datetime.fromtimestamp(end / 1000)}")
             # Sequential Query Building, careful
             query = ""
             constraints = []
@@ -70,8 +74,22 @@ class EventsModel:
         return query, tuple(values)
 
     @classmethod
-    def build_select_default(cls, table_name, log):
-        return (f"SELECT rowid, ClientTimestamp, ClientName, LogMessage, Level" f"FROM {table_name} ORDER BY rowid ASC LIMIT 20")
+    def print_query(cls, query, values):
+        """ Prints executed sql query, to be used for debug purpose
+
+        Arguments:
+            query {str} -- [description]
+            values {[str]} -- [description]
+        """
+        new_query = ""
+        j = k = 0
+        for i, ch in enumerate(query):
+            if ch == "?":
+                new_query += str(f" {values[k]}")
+                k += 1
+            else:
+                new_query += ch
+        print(f"-> {new_query}")
 
     @classmethod
     def execute_query(cls, sqlite_path, query, values, table_name, log):
@@ -85,6 +103,8 @@ class EventsModel:
         return:
             dict of rows
         """
+        if __debug__:
+            cls.print_query(query, values)
         try:
             connection = SQLiteInstance(sqlite_path).get_instance()
             cursor = connection.cursor()

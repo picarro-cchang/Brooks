@@ -46,11 +46,11 @@ class RTPolicyManager(object):
             raise ValueError(f"Bad duration: {duration}")
         if self.check_if_policy_exists(name):
             # if policy already exists - just change it
-            self.logger.info(f"Retention policy {name} already exists")
+            self.logger.debug(f"Retention policy {name} already exists")
             self.alter_retention_policy(name, duration)
         else:
             self.client.create_retention_policy(name=name, duration=duration, replication=1, shard_duration='0s')
-            self.logger.info(f"Retention policy {name} with duration {duration} has been created")
+            self.logger.debug(f"Retention policy {name} with duration {duration} has been created")
         return True
 
     def alter_retention_policy(self, name, duration):
@@ -62,7 +62,7 @@ class RTPolicyManager(object):
         if not dt.check_for_valid_literal_duration(duration):
             raise ValueError(f"Bad duration: {duration}")
 
-        self.logger.info(f"Altering retention_policies {name} to be {duration}")
+        self.logger.debug(f"Altering retention_policies {name} to be {duration}")
         self.client.alter_retention_policy(name, duration=duration, shard_duration=self._calculate_shard_policy_duraion(duration))
 
     def check_if_policy_exists(self, policy):
@@ -81,7 +81,7 @@ class RTPolicyManager(object):
                 # passed policy doesn't exist - so we gonna create it
                 self.create_retention_policy(name=policy, duration=p_policies[policy])
             elif not (dt.generate_duration_in_seconds(e_policies[policy]) == dt.generate_duration_in_seconds(p_policies[policy])):
-                self.logger.info(f"policy {policy} found to be {e_policies[policy]}, fixing it to be {p_policies[policy]}")
+                self.logger.debug(f"policy {policy} found to be {e_policies[policy]}, fixing it to be {p_policies[policy]}")
                 # passed policy doesn't match existed one - so we gonna alter existed
                 self.alter_retention_policy(name=policy, duration=p_policies[policy])
 
@@ -105,7 +105,7 @@ class RTPolicyManager(object):
             That will delete all the data, that belongs to this retention policy,
             so only use it if you are aware of what is the data do be dropped and you are sure.
         """
-        self.logger.info(f"Droping retention policy {name}")
+        self.logger.debug(f"Droping retention policy {name}")
         self.client.drop_retention_policy(name)
 
     def make_sure_policy_exists(self, policy):

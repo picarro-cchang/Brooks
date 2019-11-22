@@ -117,7 +117,7 @@ class ProcessWrapper:
 
 class PigssSupervisor(Ahsm):
     def __init__(self, farm=None):
-        log.info("Starting PigssSupervisor")
+        log.debug("Starting PigssSupervisor")
         super().__init__()
         self.farm = farm
         self.simulation = self.farm.config.get_simulation_enabled()
@@ -134,7 +134,7 @@ class PigssSupervisor(Ahsm):
         self.mon_task = None
         with open(self.tunnel_config_filename, "r") as f:
             self.rpc_tunnel_config = json.loads(f.read())
-            log.info(f"RPC Tunnel settings loaded from {self.tunnel_config_filename}")
+            log.debug(f"RPC Tunnel settings loaded from {self.tunnel_config_filename}")
 
     def get_device_map(self):
         return self.device_dict
@@ -278,7 +278,7 @@ class PigssSupervisor(Ahsm):
         self.wrapped_processes["MadMapper"] = wrapped_process
         madmapper_rpc = await wrapped_process.start(simulation=self.simulation)
         self.device_dict = await madmapper_rpc.map_devices(True)
-        log.info(f"\nResult of MadMapper.map_devices {self.device_dict}")
+        log.debug(f"\nResult of MadMapper.map_devices {self.device_dict}")
         Framework.publish(Event(Signal.MADMAPPER_DONE, self.device_dict))
         # Once done, stop the process
         await madmapper_rpc.CmdFIFO.StopServer()
@@ -324,9 +324,11 @@ class PigssSupervisor(Ahsm):
             name = wrapped_process.driver.__name__
             if "PigletDriver" in name:
                 self.run_async(self.reconfigure(10.0))
-                log.info(f"Restarted {name} at {key}. Recovery and reconfiguration scheduled.")
+                log.debug(f"Restarted {name} at {key}. Recovery and reconfiguration scheduled.")
+                log.info(f"Restarted process. Recovery and reconfiguration scheduled.")
             else:
-                log.info(f"Restarted {name} at {key}")
+                log.debug(f"Restarted {name} at {key}")
+                log.info(f"Restarted process.")
         return
 
     async def setup_drivers(self, at_start=True):

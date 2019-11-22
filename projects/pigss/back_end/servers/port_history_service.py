@@ -27,7 +27,7 @@ class PortHistoryService(ServiceTemplate):
         self.app.router.add_route("POST", "/search", self.search)
 
     async def on_startup(self, app):
-        log.info("Port history service is starting up")
+        log.debug("Port history service is starting up")
         db_config = self.app['farm'].config.get_time_series_database()
         self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
         self.bank_names = None
@@ -92,7 +92,7 @@ class PortHistoryService(ServiceTemplate):
 
     async def on_shutdown(self, app):
         await self.db_writer.close_connection()
-        log.info("Port history service is shutting down")
+        log.debug("Port history service is shutting down")
 
     async def health_check(self, request):
         """

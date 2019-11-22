@@ -20,13 +20,13 @@ class SupervisorService(ServiceTemplate):
         self.app.router.add_route('GET', '/processes', self.handle_processes)
 
     async def on_startup(self, app):
-        log.info("Supervisor service is starting up")
+        log.debug("Supervisor service is starting up")
         self.tasks = []
 
     async def on_shutdown(self, app):
         for task in self.tasks:
             task.cancel()
-        log.info("Supervisor service is shutting down")
+        log.debug("Supervisor service is shutting down")
 
     async def handle_device_map(self, request):
         """
