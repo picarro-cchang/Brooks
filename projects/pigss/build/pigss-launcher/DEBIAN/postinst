@@ -11,4 +11,4 @@ sudo cp -r /tmp/pigss-launcher/pigss-launcher.desktop /usr/share/applications/
 # Set favorite apps to only display pigss-launcher
 FAVORITE_APP="'pigss-launcher.desktop'"
 DCONF_CMD="dconf write /org/gnome/shell/favorite-apps "\"[$FAVORITE_APP]"\""
-sudo -H -u gerald bash -c "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus && $DCONF_CMD"
+sudo -H -u picarro bash -c "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus && $DCONF_CMD"
