@@ -21,7 +21,8 @@ class AioInfluxDBWriter:
         self._client = InfluxDBClient(host=self.address, port=self.db_port, database=self.db_name)
 
     async def ensure_database_present(self):
-        if self.db_name not in await self._client.query("SHOW DATABASES"):
+        databases = [results[0] for results in iterpoints(await self._client.query("SHOW DATABASES"))]
+        if self.db_name not in databases:
             await self._client.query(f"CREATE DATABASE {self.db_name}")
 
     async def write_data(self, data_dict):
