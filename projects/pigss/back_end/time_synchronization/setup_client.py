@@ -20,7 +20,7 @@ def run(cmd):
 
 
 if __name__ == "__main__":
-    print(sudo_run("cp /tmp/timesyncd.conf /etc/timesyncd.conf")[0])
+    print(sudo_run("cp /tmp/timesyncd.conf /etc/systemd/timesyncd.conf")[0])
     print(sudo_run("timedatectl set-ntp true")[0])
     print(sudo_run("systemctl restart systemd-timesyncd")[0])
     print("== After restarting timesyncd service ==")
