@@ -1,0 +1,46 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the activech? query
+
+tcltest::test activech.recognize {
+    Test recognizing the activech? query.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Make sure we're in standby mode
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "activech?"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+
+# Interim systems need to return 255 for active channels after
+# identify is run
+tcltest::test activech.all_active {
+    activech? should return 255 after identify is run.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    # Run identify
+    boxer::sendcmd $channel "identify"
+    set return_string [boxer::readline $channel]
+    # The only way to get out of identify mode is to wait for it to finish
+    boxer::sendcmd $channel "opstate?"
+    set opstate [boxer::readline $channel]
+    while {![string equal -nocase "standby" $opstate]} {
+	boxer::sendcmd $channel "opstate?"
+	set opstate [boxer::readline $channel]
+	after 500
+    }		 
+} -body {
+    boxer::sendcmd $channel "activech?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 255

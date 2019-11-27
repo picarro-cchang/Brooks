@@ -1,0 +1,48 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the standby command
+tcltest::test standby.recognize {
+    Test recognizing the standby command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 0
+
+tcltest::test standby.shutoff {
+    All channels should go disabled with the standby command.
+} -setup {
+    boxer::sendcmd $channel "chanena 1"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset?"
+    set return_string [boxer::readline $channel]
+    return $return_string 
+} -cleanup {
+    
+} -match regexp -result 0
+
+tcltest::test standby_leds {
+    All Topaz LEDs should be on, all front panel should be off in standby.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "standby"
+    set command_response [boxer::readline $channel]
+    puts -nonewline "All manifold board LEDs on and front panel channel LEDs off? (y/n) > "
+    flush stdout
+    set user_response [gets stdin]
+    if { $command_response == 0 && $user_response == y } {
+	return 0
+    } else {
+	return -1
+    }
+} -cleanup {
+    
+} -match regexp -result 0
