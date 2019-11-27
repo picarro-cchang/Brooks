@@ -45,8 +45,6 @@
 #define STATUS_RED 29
 #define STATUS_BLUE 30
 
-
-
 //********************** Function prototypes ***********************//
 
 // Set up Aloha
@@ -66,6 +64,18 @@ int8_t aloha_show_clean_leds(void);
 
 // Clear the channel blue leds
 int8_t aloha_clear_clean_leds(void);
+
+// Set red communication LED
+int8_t aloha_set_com_led_red(void);
+
+// Set green communication LED
+int8_t aloha_set_com_led_green(void);
+
+// Set red status LED
+int8_t aloha_set_status_led_red(void);
+
+// Set green status LED
+int8_t aloha_set_status_led_green(void);
 
 // Clear the channel blue leds in the led bitfield, returning the new
 // bitfield.
