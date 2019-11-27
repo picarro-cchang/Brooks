@@ -148,7 +148,7 @@ int main(void) {
   logger_setsystem( "channel" );
 
   // Enable MPR pressure sensor module logging
-  // logger_setsystem( "mpr" );
+  logger_setsystem( "mpr" );
 
   logger_setsystem( "rxchar" ); // Enable received character logging
   logger_setsystem( "command" ); // Enable command system logging
@@ -178,7 +178,7 @@ int main(void) {
 
   logger_setsystem( "main" );
   logger_setsystem( "topaz" );
-  // logger_setsystem( "pressure" );
+  logger_setsystem( "pressure" );
   logger_setsystem( "vernon" );
   logger_setsystem( "whitfield" );
   logger_setsystem( "aloha" );
