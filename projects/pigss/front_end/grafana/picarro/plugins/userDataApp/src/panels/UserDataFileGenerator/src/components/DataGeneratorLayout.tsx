@@ -146,7 +146,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         <PanelOptionsGroup title="Generate New File">
           <div className="row">
             <div className="gf-form col-md-3 col-sm-12">
-              <FormLabel width={labelWidth_6}>Keys</FormLabel>
+              <FormLabel width={labelWidth_6}>Species</FormLabel>
               <Select
                 width={selectWidth}
                 options={keyOptions}
