@@ -1,4 +1,7 @@
 #!/bin/bash -i
 
+# Restart grafana server after installing plugins
+sudo systemctl restart grafana-server.service
+# Provision the plugins, apps, etc.
 source /home/$SUDO_USER/.bashrc
 /home/$SUDO_USER/miniconda3/bin/python3 /tmp/pigss_plugins_postinst.py
