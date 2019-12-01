@@ -266,7 +266,7 @@ class LOLoggerThread(threading.Thread):
         else:
             return last_row_id
 
-    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname):
+    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname=None):
         """Create a filename for the new sqlite file."""
         db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
         self.full_prefix = f"{db_filename_prefix}_"
@@ -446,7 +446,7 @@ class LOLoggerThread(threading.Thread):
                                 self.transition_to_new_database(self.db_path)
                             if self.redundant_json:
                                 self.json_file.close()
-                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix)
+                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
                             self.get_connection(self.db_path)
 
                         if self._sigint_event.is_set():
