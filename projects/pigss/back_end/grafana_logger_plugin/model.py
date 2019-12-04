@@ -30,7 +30,6 @@ class EventsModel:
             if "limit" in query_params:
                 limit = query_params["limit"]
 
-            # To Do: Remove
             if __debug__:
                 print(f"\nTime: {datetime.fromtimestamp(start / 1000)} - {datetime.fromtimestamp(end / 1000)}")
             # Sequential Query Building, careful

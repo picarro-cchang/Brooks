@@ -1,9 +1,7 @@
 import { TimeOption, TimeRange, dateTime, TimeFragment } from '@grafana/data';
-import { LogProps } from '../components/types';
 
 // Constants for LogService
 export const SocketURL = `ws://${window.location.hostname}:8000/grafana_logger/ws`;
-export const GET_LOGS_URL = `http://${window.location.hostname}:8000/grafana_logger/getlogs`;
 export const DEFAULT_TIME_RANGE: TimeRange = {
   from: dateTime(),
   to: dateTime(),
@@ -15,17 +13,9 @@ const DEFAULT_LEVEL: object[] = [
   { value: '40', label: '40' },
   { value: '50', label: '50' }];
 
-export const DEFAULT_LOG_PROPS: LogProps = {
-  level: DEFAULT_LEVEL,
-  limit: 20,
-  timeRange: DEFAULT_TIME_RANGE,
-  data: [[]],
-};
-
 // Constants for LogPanel
-export const LOG_LIMIT = 1000;
-export const REFRESH_INTERVAL = 5;
-export const storageKey = 'picarroStorage';
+export const LOG_LIMIT = 100;
+export const REFRESH_INTERVAL = 1;
 
 // Constants for LogPanelEditor
 export const LEVEL_OPTIONS = [
