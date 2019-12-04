@@ -32,4 +32,4 @@ if __name__ == "__main__":
             f.write(current_cron)
             f.write("* * * * * systemctl restart systemd-timesyncd\n")
         print(sudo_run("crontab tmp_cron.txt")[0])
-        print(sudo_run("rm -rf tmp_cron,txt")[0])
+        print(sudo_run("rm -rf tmp_cron.txt")[0])
