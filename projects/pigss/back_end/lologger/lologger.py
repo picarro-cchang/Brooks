@@ -369,7 +369,7 @@ class LOLoggerThread(threading.Thread):
 
         for filename in filelist:
             # check if actual log file
-            if filename.startswith(self.db_filename_prefix) and filename.endswith(".db"):
+            if filename.startswith(self.full_prefix) and filename.endswith(".db"):
                 # check if old enough
                 year, month = [k for k in filename[len(self.full_prefix):-3].split("_") if k]
                 if current_month_count - (int(year) * 12 + int(month)) >= int(self.purge_old_logs):
@@ -413,8 +413,11 @@ class LOLoggerThread(threading.Thread):
 
                 if gonna_flush_now and len(data_to_flush) > 0:
                     placeholders = f'({",".join("?"*len(db_fields))})'
+                    print("about to execute many queries1")
                     self.connection.executemany(f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
+                    print(f"queries executed, data_to_flush: {len(data_to_flush)}")
                     self.connection.commit()
+                    print("changes commited3")
                     if self.meta_table:
                         # insert metadata here
                         self.connection.executemany(f"REPLACE INTO metadata VALUES (?, ?)", self.collect_metadata())
@@ -428,8 +431,11 @@ class LOLoggerThread(threading.Thread):
                             self.rowid += 1
                             string_row = json.dumps(obj_for_json)
                             string_to_flush = f"{string_to_flush}{string_row}\n"
-                        self.json_file.write(string_to_flush)
-                        self.json_file.flush()
+                        try:
+                            self.json_file.write(string_to_flush)
+                            self.json_file.flush()
+                        except ValueError as e:
+                            print(f"ValueError while tried to write to json file: {e}")
 
                     gonna_flush_now = False
                     flushed_counter += len(data_to_flush)
