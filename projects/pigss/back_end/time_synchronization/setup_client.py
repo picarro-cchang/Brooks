@@ -10,7 +10,8 @@ access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
 
 
 def sudo_run(cmd):
-    p = subprocess.Popen(shlex.split("sudo -S %s" % cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) return p.communicate(access_str + "\n")
+    p = subprocess.Popen(shlex.split("sudo -S %s" % cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
+    return p.communicate(access_str + "\n")
 
 
 def run(cmd):
