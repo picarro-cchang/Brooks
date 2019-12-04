@@ -126,7 +126,7 @@ class GrafanaLoggerService(ServiceTemplate):
         if __debug__:
             print(f"\nGrafanaLoggerService: {query_params} and {request.query_string}\n")
         logs = await self.get_logs(query_params)
-        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logd")
+        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs")
 
     @log_async_exception(log_func=log.error, stop_loop=False)
     async def websocket_handler(self, request):
