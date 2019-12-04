@@ -10,7 +10,7 @@ access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
 
 
 def sudo_run(cmd):
-    p = subprocess.Popen(shlex.split("sudo -S %s" % cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE) 
+    p = subprocess.Popen(shlex.split("sudo -S %s" % cmd), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return p.communicate(access_str + "\n")
 
 
@@ -32,3 +32,4 @@ if __name__ == "__main__":
             f.write(current_cron)
             f.write("* * * * * systemctl restart systemd-timesyncd\n")
         print(sudo_run("crontab tmp_cron.txt")[0])
+        print(sudo_run("rm -rf tmp_cron,txt")[0])
