@@ -6,6 +6,7 @@ import asyncio
 import time
 from json import loads
 from datetime import datetime, timedelta
+from urllib.parse import parse_qs
 
 from aiohttp import web, WSMsgType, WSCloseCode
 
@@ -26,14 +27,17 @@ class GrafanaLoggerService(ServiceTemplate):
         super().__init__()
 
     def setup_routes(self):
-        self.app.router.add_route("GET", "/ws", self.websocket_handler)
+        self.app.router.add_route('GET', '/ws', self.websocket_handler)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
+        self.app.router.add_route('GET', '/getlogs', self.handle_getlogs)
 
     async def on_startup(self, app):
         log.debug("GrafanaLoggerService is starting up")
 
         self.app["config"] = self.app["farm"].config.get_glogger_plugin_config()
 
+        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        self.sqlite_path = lologger_proxy.get_sqlite_path()
         self.app["websockets"] = []
         self.tasks = []
         self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
@@ -83,6 +87,47 @@ class GrafanaLoggerService(ServiceTemplate):
         }
         return web.json_response(result)
 
+    def set_predefined_config(self, query_dict):
+        query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
+        query_dict["limit"] = self.app["config"]["limit"]
+        query_dict["interval"] = self.app["config"]["interval"]
+        return query_dict
+
+    async def get_logs(self, query_params={}):
+        """
+        description: Returns logs as a json to caller
+        params:
+            query_params: dict
+        returns:
+            row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage",
+             "Level"]
+        """
+        try:
+            query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], log)
+            return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], log)
+        except TypeError as te:
+            log.error(f"Error in GrafanaLoggerService {te}")
+
+    async def handle_getlogs(self, request):
+        """[summary]
+
+        Arguments:
+            request {[type]} -- [description]
+        """
+        parsed_query_params = parse_qs(request.query_string)
+        query_params = {}
+        for key, val in parsed_query_params.items():
+            if key == 'level':
+                query_params[key] = val
+            elif len(val) == 1:
+                query_params[key] = int(val[0])
+
+        query_params = {**self.set_predefined_config(query_params), **query_params}
+        if __debug__:
+            print(f"\nGrafanaLoggerService: {query_params} and {request.query_string}\n")
+        logs = await self.get_logs(query_params)
+        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logd")
+
     @log_async_exception(log_func=log.error, stop_loop=False)
     async def websocket_handler(self, request):
 
@@ -94,13 +139,7 @@ class GrafanaLoggerService(ServiceTemplate):
         if "query_params" not in ws:
             ws["query_params"] = {}
 
-        ws["query_params"]["columns"] = self.app["config"]["sqlite"]["columns"]
-
-        if "limit" not in ws["query_params"]:
-            ws["query_params"]["limit"] = self.app["config"]["limit"]
-
-        if "interval" not in ws["query_params"]:
-            ws["query_params"]["interval"] = self.app["config"]["interval"]
+        ws["query_params"] = {**self.set_predefined_config(ws["query_params"]), **ws["query_params"]}
 
         self.app["websockets"].append(ws)
 
@@ -117,6 +156,7 @@ class GrafanaLoggerService(ServiceTemplate):
             elif msg.type == WSMsgType.ERROR:
                 ws.exception()
             elif msg.type == WSMsgType.CLOSE:
+                log.warning()
                 self.app["websockets"].remove(ws)
                 await ws.close(message="Server Shutdown Initiated from Client")
 
@@ -126,36 +166,13 @@ class GrafanaLoggerService(ServiceTemplate):
 
         return ws
 
-    async def get_logs(self, ws, query_params={}):
-        """
-        description: Returns logs as a json to caller
-        params:
-            query_params: dict
-        returns:
-            row of logs ["rowid", "ClientTimestamp", "ClientName", "LogMessage",
-             "Level"]
-        """
-        query = None
-
-        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
-        sqlite_path = lologger_proxy.get_sqlite_path()
-
-        table_name = self.app["config"]["sqlite"]["table_name"]
-        if len(query_params) > 0:
-            query, values = EventsModel.build_sql_select_query(query_params, table_name, log)
-        else:
-            query = EventsModel.build_select_default(table_name, log)
-        ws['query'] = query
-        if query is not None:
-            return EventsModel.execute_query(sqlite_path, query, values, table_name, log)
-
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \
             timedelta(seconds=ws['query_params']['interval'])
         await asyncio.sleep(ws['query_params']['interval'])
 
-        logs = await self.get_logs(ws, ws["query_params"])
-        if len(logs) > 0:
+        logs = await self.get_logs(ws["query_params"])
+        if logs is not None and len(logs) > 0:
             ws["query_params"]["rowid"] = logs[-1][0]
             await ws.send_json(logs)
             await ws.drain()

@@ -6,8 +6,9 @@ import 'react-toastify/dist/ReactToastify.css';
 import { notifyError, notifySuccess } from '../utils/Notifications';
 import { LogProps } from './types';
 import { LogLayout } from './LogLayout';
-import { LOG_LIMIT, REFRESH_INTERVAL } from '../constants';
+import { LOG_LIMIT, REFRESH_INTERVAL, storageKey } from '../constants';
 import { SocketURL } from '../constants';
+import { LogService } from '..//services/LogService';
 
 interface Props extends PanelProps<LogProps> { }
 
@@ -16,71 +17,44 @@ interface State {
   query: object;
   interval: number;
   timeRange: number;
+  ws: WebSocket;
+}
+
+interface picarroStorage {
+  logState: State;
+  logProps: Props;
 }
 
 export class LogPanel extends PureComponent<Props, State> {
   constructor(props: Props) {
     super(props);
+    const rangeFromProps = this.props.data.request.range;
     // @ts-ignore
-    const defaultTimeRange = this.props.data.request.range.to._d.getTime() - this.props.data.request.range.from._d.getTime();
+    const defaultTimeRange = Math.floor((rangeFromProps.to._d.getTime() - rangeFromProps.from._d.getTime()) / 60);
     this.state = {
       data: [],
       query: {},
       interval: this.getInterval(),
-      timeRange: defaultTimeRange
+      timeRange: defaultTimeRange,
+      ws: null
     };
     this.getInterval = this.getInterval.bind(this);
+    this.getLogsData = this.getLogsData.bind(this);
+    this.getQueryObj = this.getQueryObj.bind(this);
   }
 
-  ws: WebSocket = new WebSocket(SocketURL);
-  componentDidMount() {
-    this.ws.onopen = () => {
-      const queryObj = this.getQueryObj(this.props);
-      this.updateLogsData(queryObj);
-    };
-
-    this.ws.onmessage = evt => {
-      // on receiving a message, add it to the list of messages
-      const rows = JSON.parse(evt.data);
-      // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
-      if (this.state.data.length > LOG_LIMIT) {
-        this.setState({ data: [] });
-      }
-      this.setState({ data: [...rows.reverse(), ...this.state.data] });
-    };
-
-    this.ws.onclose = () => {
-      console.log('web socket disconnected');
-      notifyError('Web socket connection closed.');
-      this.ws = new WebSocket(SocketURL);
-      const queryObj = this.getQueryObj(this.props);
-      this.updateLogsData(queryObj);
-    };
+  getPicarroStorage = () => {
+    // get picarroStorage object from sessionStorage
+    if (window.sessionStorage) {
+      return sessionStorage.getItem(storageKey);
+    }
+    return null;
   }
 
-  componentDidUpdate(prevProps: Props, prevState: State) {
-
-
-    // @ts-ignore
-    const isDateTimeFromChanged = this.props.data.request.range.from._d.getTime() !== prevProps.data.request.range.from._d.getTime();
-    // @ts-ignore
-    const isDateTimeToChanged = this.props.data.request.range.to._d.getTime() !== prevProps.data.request.range.to._d.getTime();
-    const interval = this.getInterval();
-    const currentTimeRange = this.props.data.request.range.to._d.getTime() - this.props.data.request.range.from._d.getTime();
-    if (currentTimeRange !== this.state.timeRange) {
-      this.setState({ timeRange: currentTimeRange });
-      const queryObj = this.getQueryObj(this.props);
-      this.getLogsData(queryObj);
-    } else if (
-      JSON.stringify(this.props.options.level) !== JSON.stringify(prevProps.options.level) ||
-      this.props.options.limit !== prevProps.options.limit ||
-      interval !== this.state.interval ||
-      isDateTimeFromChanged ||
-      isDateTimeToChanged
-    ) {
-      this.setState(() => ({ interval }));
-      const queryObj = this.getQueryObj(this.props);
-      this.updateLogsData(queryObj);
+  setPicarroStorage = (logStorage: picarroStorage) => {
+    // set picarroStorage object in sessionStorage
+    if (window.sessionStorage) {
+      sessionStorage.setItem(storageKey, JSON.stringify(logStorage));
     }
   }
 
@@ -99,31 +73,126 @@ export class LogPanel extends PureComponent<Props, State> {
     }
   }
 
-  getQueryObj = (props: any) => {
-    // Removing @ts-ignore gives build err, as it thinks properties "probably" doesn't exist.
+  getQueryObj = (props: any, initial: boolean = false) => {
+    /* 
+    ** Removing @ts-ignore gives build err, as it thinks properties "probably" doesn't exist. 
+    */
     // @ts-ignore
     const start = new Date(this.props.data.request.range.from).getTime();
     // @ts-ignore
     const end = new Date(this.props.data.request.range.to).getTime();
     // @ts-ignore
     const interval = this.getInterval();
-    console.log("interval", interval);
-    // console.log(`Start time ${new Date(start)} End Time ${new Date(end)} --- ${start} - ${end}`);
+    const rowid = this.state.data.length ? this.state.data[0][0] : -1;
+    const limit = initial ? LOG_LIMIT : this.props.options.limit;
     const query: any = {
+      rowid,
       level: this.props.options.level.map((item: any) => item.value),
-      limit: this.props.options.limit,
+      limit,
       start,
       end,
       interval,
     };
     return query;
-  };
+  }
+
+  getLogsData = (queryObj) => {
+    return LogService.getLogs(queryObj).then((response: any) => { return response.json(); });
+  }
 
   updateLogsData = (query: object) => {
-    if (this.ws.readyState) {
-      this.ws.send(JSON.stringify(query));
+    if (this.state.ws.readyState) {
+      this.state.ws.send(JSON.stringify(query));
     }
-  };
+  }
+
+  reInitiateWSComm = () => {
+    this.setState(() => { return { ws: new WebSocket(SocketURL) } });
+    this.setupWSComm();
+    const queryObj = this.getQueryObj(this.props);
+    this.updateLogsData(queryObj);
+  }
+
+  setupWSComm = () => {
+    const ws: WebSocket = new WebSocket(SocketURL);
+    if (this.state.ws === null || this.state.ws === undefined) {
+      this.setState(() => { return { ws } });
+    }
+
+    ws.onopen = () => {
+      notifySuccess("Websocket connection established. Logs will be updated soon.");
+      const queryObj = this.getQueryObj(this.props);
+      this.updateLogsData(queryObj);
+    };
+
+    ws.onmessage = evt => {
+      // on receiving a message, add it to the list of messages
+      const rows = JSON.parse(evt.data).reverse();
+      // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
+      if (this.state.data.length > LOG_LIMIT) {
+        this.setState({ data: [] });
+      }
+      this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: [...rows, ...this.state.data] } });
+      this.setState(() => { return { data: [...rows, ...this.state.data] } });
+    };
+
+    ws.onclose = () => {
+      notifyError('Web socket connection closed.');
+      // Uncomment for reinitating ws communication Check with Gerald
+      // this.reInitiateWSComm();
+    };
+  }
+
+  componentDidMount() {
+    const savedData = this.getPicarroStorage();
+    if (savedData !== null) {
+      this.setState(() => {
+        return {
+          ...JSON.parse(savedData).logState
+        }
+      });
+      this.setupWSComm();
+    } else {
+      this.getLogsData(this.getQueryObj(this.props, true)).then((data: any) => {
+        this.setState(() => { return { data, ws: new WebSocket(SocketURL) } });
+        this.setPicarroStorage({ logProps: this.props, logState: this.state });
+        this.setupWSComm();
+      });
+    }
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    const interval = this.getInterval();
+    const rangeFromProps = this.props.data.request.range;
+    const rangeFromPrevProps = prevProps.data.request.range;
+    // @ts-ignore
+    const isDateTimeFromChanged = rangeFromProps.from._d.getTime() !== rangeFromPrevProps.from._d.getTime();
+    // @ts-ignore
+    const isDateTimeToChanged = rangeFromProps.to._d.getTime() !== rangeFromPrevProps.to._d.getTime();
+    // @ts-ignore
+    const currentTimeRange = Math.floor((rangeFromProps.to._d.getTime() - rangeFromProps.from._d.getTime()) / 60);
+    if (currentTimeRange !== this.state.timeRange) {
+      this.setState({ timeRange: currentTimeRange });
+      const queryObj = this.getQueryObj(this.props, true);
+      this.getLogsData(queryObj);
+    } else if (
+      JSON.stringify(this.props.options.level) !== JSON.stringify(prevProps.options.level) ||
+      this.props.options.limit !== prevProps.options.limit ||
+      interval !== this.state.interval ||
+      isDateTimeFromChanged ||
+      isDateTimeToChanged
+    ) {
+      this.setState(() => ({ interval }));
+      const queryObj = this.getQueryObj(this.props);
+      this.updateLogsData(queryObj);
+    }
+  }
+
+  componentWillUnmount() {
+    // notiffy websocket to stop sending new messages
+    this.setPicarroStorage({ logProps: this.props, logState: this.state });
+    this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
+  }
 
   render() {
     const { options } = this.props;

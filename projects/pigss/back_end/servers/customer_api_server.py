@@ -42,12 +42,16 @@ class CustomerAPIService(ServiceTemplate):
         if self.app["db_client"] is not None:
             InfluxDBInstance.close_connection()
 
+    async def get_keys(self):
+        measurement = self.app["config"]["database"]["measurements"]
+        return await Model.get_keys(self.app["db_client"], log, measurement) 
+
     async def get_common_keys(self, keys):
         if self._keys is None:
-            self._keys = await self.get_keys()
+            self._keys = await get_keys()
         return list(set(self._keys) & set(keys))
 
-    async def get_keys(self):
+    async def handle_get_keys(self, request=None):
         """ Fetches field keys from measurement
 
         Arguments:
@@ -56,20 +60,8 @@ class CustomerAPIService(ServiceTemplate):
         Returns:
             JSON -- JSON object containing list of keys from measurement
         """
-        measurement = self.app["config"]["database"]["measurements"]
-        self._keys =  await Model.get_keys(self.app["db_client"], log, measurement)
-        return self._keys
-
-    async def handle_get_keys(self, request):
-        """ Fetches field keys from measurement
-
-        Arguments:
-            request  -- request object
-
-        Returns:
-            JSON -- JSON object containing list of keys from measurement
-        """
-        return web.json_response({"keys": await self.get_keys()})
+        self._keys =  await self.get_keys()
+        return web.json_response({"keys": self._keys})
 
     async def handle_get_points(self, request):
         """ Returns list of points in measurements based on provided constraints
