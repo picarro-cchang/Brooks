@@ -24,7 +24,7 @@ export const DEFAULT_LOG_PROPS: LogProps = {
 
 // Constants for LogPanel
 export const LOG_LIMIT = 1000;
-export const REFRESH_INTERVAL = 1;
+export const REFRESH_INTERVAL = 5;
 export const storageKey = 'picarroStorage';
 
 // Constants for LogPanelEditor
