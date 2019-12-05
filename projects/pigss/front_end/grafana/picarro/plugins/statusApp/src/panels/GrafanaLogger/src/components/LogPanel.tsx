@@ -2,6 +2,7 @@ import React, { PureComponent, Fragment } from 'react';
 import { PanelProps, ThemeContext } from '@grafana/ui';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { toast } from 'react-toastify';
 
 import { notifyError, notifySuccess } from '../utils/Notifications';
 import { LogProps } from './types';
@@ -38,9 +39,6 @@ export class LogPanel extends PureComponent<Props, State> {
       timeRange: defaultTimeRange,
       ws: null
     };
-    this.getInterval = this.getInterval.bind(this);
-    this.getLogsData = this.getLogsData.bind(this);
-    this.getQueryObj = this.getQueryObj.bind(this);
   }
 
   getPicarroStorage = () => {
@@ -67,7 +65,6 @@ export class LogPanel extends PureComponent<Props, State> {
         }
       });
     } catch (error) {
-      console.log(`Error in reading interval, switching to default value. ${error}`);
     } finally {
       return interval;
     }
@@ -101,23 +98,14 @@ export class LogPanel extends PureComponent<Props, State> {
   }
 
   updateLogsData = (query: object) => {
-    if (this.state.ws.readyState) {
+    if (this.state.ws.readyState === 1) {
       this.state.ws.send(JSON.stringify(query));
     }
   }
 
-  reInitiateWSComm = () => {
-    this.setState(() => { return { ws: new WebSocket(SocketURL) } });
-    this.setupWSComm();
-    const queryObj = this.getQueryObj(this.props);
-    this.updateLogsData(queryObj);
-  }
-
   setupWSComm = () => {
     const ws: WebSocket = new WebSocket(SocketURL);
-    if (this.state.ws === null || this.state.ws === undefined) {
-      this.setState(() => { return { ws } });
-    }
+    this.setState(() => { return { ws } });
 
     ws.onopen = () => {
       notifySuccess("Websocket connection established. Logs will be updated soon.");
@@ -137,9 +125,11 @@ export class LogPanel extends PureComponent<Props, State> {
     };
 
     ws.onclose = () => {
-      notifyError('Web socket connection closed.');
-      // Uncomment for reinitating ws communication Check with Gerald
-      // this.reInitiateWSComm();
+      toast.dismiss();
+      setTimeout(() => {
+        notifyError("Websocket connection closed. Trying to reconnect again.");
+        this.setupWSComm();
+      }, this.state.interval);
     };
   }
 
