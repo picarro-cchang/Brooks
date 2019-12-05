@@ -30,8 +30,8 @@ class EventsModel:
             if "limit" in query_params:
                 limit = query_params["limit"]
 
-            if __debug__:
-                print(f"\nTime: {datetime.fromtimestamp(start / 1000)} - {datetime.fromtimestamp(end / 1000)}")
+            # if __debug__:
+            #     print(f"\nTime: {datetime.fromtimestamp(start / 1000)} - {datetime.fromtimestamp(end / 1000)}")
             # Sequential Query Building, careful
             query = ""
             constraints = []
@@ -102,8 +102,8 @@ class EventsModel:
         return:
             dict of rows
         """
-        if __debug__:
-            cls.print_query(query, values)
+        # if __debug__:
+        #     cls.print_query(query, values)
         try:
             connection = SQLiteInstance(sqlite_path).get_instance()
             cursor = connection.cursor()

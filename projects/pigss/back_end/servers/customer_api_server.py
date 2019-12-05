@@ -52,27 +52,33 @@ class CustomerAPIService(ServiceTemplate):
         return list(set(self._keys) & set(keys))
 
     async def handle_get_keys(self, request=None):
-        """ Fetches field keys from measurement
+        """
+        description: API for fetching keys available to querying measurements
 
-        Arguments:
-            request  -- request object
-
-        Returns:
-            JSON -- JSON object containing list of keys from measurement
+        tags:
+            -   Controller
+        summary: API for fetching keys available to querying measurements
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation returns keys
         """
         self._keys =  await self.get_keys()
         return web.json_response({"keys": self._keys})
 
     async def handle_get_points(self, request):
-        """ Returns list of points in measurements based on provided constraints
+        """
+        description: Fetch points in measurement given keys and time range
 
-        It can parse two different time formats: UTC and unix epoch
-
-        Arguments:
-            request {[type]} -- request object
-
-        Returns:
-            JSON -- returns JSON object of points in measurement for given keys
+        tags:
+            -   Controller
+        summary: Fetch points in measurement given keys and time range
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation returns points in measurement
         """
 
         query_params = parse_qs(request.query_string)

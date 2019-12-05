@@ -65,7 +65,7 @@ class GrafanaLoggerService(ServiceTemplate):
 
     async def handle_stats(self, request):
         """
-        description: Fetch server statistics from PigssController
+        description: Fetch server statistics from GrafanaLoggerServer
 
         tags:
             -   Controller
@@ -74,7 +74,7 @@ class GrafanaLoggerService(ServiceTemplate):
             -   application/json
         responses:
             "200":
-                description: successful operation. Returns statistics
+                description: successful operation returns statistics
         """
         controller = request.app['farm'].controller
         result = {
@@ -109,10 +109,17 @@ class GrafanaLoggerService(ServiceTemplate):
             log.error(f"Error in GrafanaLoggerService {te}")
 
     async def handle_getlogs(self, request):
-        """[summary]
+        """
+        description: Fetch Logs from GrafanaLoggerServer
 
-        Arguments:
-            request {[type]} -- [description]
+        tags:
+            -   Controller
+        summary: Fetch server statistics
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation returns logs
         """
         parsed_query_params = parse_qs(request.query_string)
         query_params = {}
@@ -123,13 +130,25 @@ class GrafanaLoggerService(ServiceTemplate):
                 query_params[key] = int(val[0])
 
         query_params = {**self.set_predefined_config(query_params), **query_params}
-        if __debug__:
-            print(f"\nGrafanaLoggerService: {query_params} and {request.query_string}\n")
+        # if __debug__:
+        #     print(f"\nGrafanaLoggerService: {query_params} and {request.query_string}\n")
         logs = await self.get_logs(query_params)
-        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logd")
+        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
 
     @log_async_exception(log_func=log.error, stop_loop=False)
     async def websocket_handler(self, request):
+        """
+        description: Websocket communication for fetching logs from GrafanaLoggerServer
+
+        tags:
+            -   Controller
+        summary: Fetch server statistics
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation returns logs in websocket messages
+        """
 
         ws = web.WebSocketResponse()
         await ws.prepare(request)
@@ -140,7 +159,6 @@ class GrafanaLoggerService(ServiceTemplate):
             ws["query_params"] = {}
 
         ws["query_params"] = {**self.set_predefined_config(ws["query_params"]), **ws["query_params"]}
-
         self.app["websockets"].append(ws)
 
         async for msg in ws:
