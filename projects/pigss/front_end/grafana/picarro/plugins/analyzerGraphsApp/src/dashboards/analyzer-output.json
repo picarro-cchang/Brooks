@@ -334,7 +334,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1572647547688,
+      "repeatIteration": 1574203670490,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -350,15 +350,15 @@
         },
         {
           "alias": "unstable",
-          "color": "#1F60C4"
+          "color": "rgb(66, 66, 66)"
         },
         {
           "alias": "NH3",
           "color": "#FF780A"
         },
         {
-          "alias": "H2S",
-          "color": "#56A64B"
+          "alias": "H2O",
+          "color": "#1F60C4"
         },
         {
           "alias": "HCl",
@@ -601,7 +601,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1572647547688,
+      "repeatIteration": 1574203670490,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -617,15 +617,15 @@
         },
         {
           "alias": "unstable",
-          "color": "#1F60C4"
+          "color": "rgb(66, 66, 66)"
         },
         {
           "alias": "NH3",
           "color": "#FF780A"
         },
         {
-          "alias": "H2S",
-          "color": "#56A64B"
+          "alias": "H2O",
+          "color": "#1F60C4"
         },
         {
           "alias": "HCl",
@@ -868,7 +868,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1572647547688,
+      "repeatIteration": 1574203670490,
       "repeatPanelId": 2,
       "scopedVars": {
         "species_available": {
@@ -884,15 +884,15 @@
         },
         {
           "alias": "unstable",
-          "color": "#1F60C4"
+          "color": "rgb(66, 66, 66)"
         },
         {
           "alias": "NH3",
           "color": "#FF780A"
         },
         {
-          "alias": "H2S",
-          "color": "#56A64B"
+          "alias": "H2O",
+          "color": "#1F60C4"
         },
         {
           "alias": "HCl",
@@ -1243,7 +1243,6 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
           "text": "All",
           "value": [
             "$__all"
@@ -1339,5 +1338,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "rHPC-eKZz",
-  "version": 3
+  "version": 5
 }

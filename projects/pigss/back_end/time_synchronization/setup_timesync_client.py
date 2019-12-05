@@ -15,6 +15,7 @@ import paramiko
 from netifaces import AF_INET, ifaddresses, interfaces
 
 from back_end.lologger.lologger_client import LOLoggerClient
+from back_end.time_synchronization import setup_client # noqa - for packaging purposes
 
 log = LOLoggerClient(client_name="SetupTimeSyncClient", verbose=True)
 my_path = os.path.dirname(os.path.abspath(__file__))

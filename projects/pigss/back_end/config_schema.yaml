@@ -13,9 +13,9 @@ Configuration:
     port: int(required=False)
 ---
 TimeSeriesDatabase:
-    server: str()
-    port: int()
-    name: str()
+  server: str()
+  port: int()
+  name: str()
 ---
 Settings:
   maximum_mfc_flow: num(required=False)
@@ -23,6 +23,7 @@ Settings:
   flow_settle_delay: num(required=False)
   madmapper_startup_delay: num(required=False)
   startup_plan: regex('[A-Za-z_]+', required=False)
+  min_plan_interval: num(required=True)
 ---
 Simulation:
   enabled: bool(required=False)
@@ -56,7 +57,7 @@ DBDecimatorService:
 ---
 filter_condition: list(str(), num())
 ---
-Plugins: 
+Plugins:
   GrafanaLogger: include('GrafanaLogger')
   GrafanaDataGenerator: include('GrafanaDataGenerator')
 ---

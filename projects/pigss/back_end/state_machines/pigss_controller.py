@@ -431,13 +431,15 @@ class PigssController(Ahsm):
             return PlanError(True, f"Plan is empty", 1, 1)
         if not 1 <= self.plan["current_step"] <= self.plan["last_step"]:
             return PlanError(True, f"Pending step must be between 1 and {self.plan['last_step']}", 1, 1)
+        min_plan_interval = self.farm.config.get_min_plan_interval()
         for i in range(self.plan["last_step"]):
             row = i + 1
             s = self.plan["steps"][row]
             if "duration" not in s or "reference" not in s or "banks" not in s:
                 return PlanError(True, f"Malformed data at step {row}", row, 1)
-            if not s["duration"] > 0:
-                return PlanError(True, f"Invalid duration at step {row}", row, 2)
+            if not s["duration"] > 0 or s["duration"] < min_plan_interval:
+                return PlanError(True, f"Invalid duration at step {row}. Duration must be greater than {min_plan_interval}.",
+                                 row, 2)
             for bank in s["banks"]:
                 if bank not in self.all_banks:
                     return PlanError(True, f"Invalid bank at step {row}", row, 1)
@@ -643,6 +645,25 @@ class PigssController(Ahsm):
             self.set_status(["clean", bank], self.clean_button_states[bank])
         self.buttons_disabled = False
 
+    def log_transition(self, payload):
+        """Log valve transition to clean, reference, exhaust, and control states.
+        Currently the control states correspond to a single port (i.e. a bank 
+        and channel combination) but in the future, any collection of ports may be
+        enabled"""
+        if payload.new_valve in ("exhaust", "reference"):
+            log.info(f"Activating {payload.new_valve} valve.")
+        elif payload.new_valve == "clean":
+            for bank in payload.new_settings:
+                if payload.new_settings[bank]:
+                    log.info(f"Activating clean valve on bank {bank}.")
+        elif payload.new_valve == "control":
+            for bank in payload.new_settings:
+                valve_mask = payload.new_settings[bank]
+                # Find first set bit to give channel in bank
+                if valve_mask != 0:
+                    valve_pos = (valve_mask & (-valve_mask)).bit_length()
+                    log.info(f"Activating bank {bank}, channel {valve_pos}.")
+
     @state
     def _configure(self, e):
         sig = e.signal
@@ -720,6 +741,9 @@ class PigssController(Ahsm):
         elif sig == Signal.ERROR:
             payload = e.value
             self.handle_error_signal(time.time(), payload)
+            return self.handled(e)
+        elif sig == Signal.PERFORM_VALVE_TRANSITION:
+            self.log_transition(e.value)
             return self.handled(e)
         return self.super(self._configure)
 
@@ -1099,7 +1123,7 @@ class PigssController(Ahsm):
             self.run_async(self.save_port_history())
             return self.tran(self._plan)
         elif sig == Signal.PLAN_LOAD_FAILED:
-            self.plan_error = PlanError(True, f'<pre>{html.escape(e.value)}</pre>')
+            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_load11)
         return self.super(self._plan_load)
 
@@ -1198,7 +1222,7 @@ class PigssController(Ahsm):
             self.get_plan_filenames()
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FAILED:
-            self.plan_error = PlanError(True, f'<pre>{html.escape(e.value)}</pre>')
+            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_save21)
         return self.super(self._plan_save)
 

@@ -697,3 +697,10 @@ discovered during channel identification.
     into `standby` instead of `shutdown`.  The system will show a red
     communication light on the front panel while the connection is
     broken, but at least the light will stay on.
+
+### Version 1.1.6 ###
+
+  * Fixed standby state so that solenoid valves stay energized.
+  * The chanset 0 command is now functionally the same as standby.
+  * Fixed COM LED not turning red when the USB cable is yanked.
+  * Pressure sensor read period reduced to 10ms

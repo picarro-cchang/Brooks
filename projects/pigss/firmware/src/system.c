@@ -89,8 +89,7 @@ void system_init( void ) {
   DDRF &= ~( _BV(DDF7) );
 
   // Set the OK status on the front panel
-  uint32_t led_value = system_state_get_fp_led_value();
-  aloha_write( (uint32_t) 1<<STATUS_GREEN | led_value);
+  aloha_set_status_led_green();
 
   // Create and schedule a task for checking USB communication
   //
@@ -111,13 +110,11 @@ void system_init( void ) {
     logger_msg_p("system", log_level_ERROR, PSTR("Comm check task id not found"));
   }
 
-  // Check for USB connection.  We only have to do this at startup,
-  // since the system always goes through a reset when a USB channel is opened
-  led_value = system_state_get_fp_led_value();
+  // Check for USB connection.
   if ( system_usb_is_connected() ) {
-    aloha_write( (uint32_t) 1<<COM_GREEN | led_value);
+    aloha_set_com_led_green();
   } else {
-    aloha_write( (uint32_t) 1<<COM_RED | led_value);
+    aloha_set_com_led_red();
   }
 }
 
@@ -160,7 +157,7 @@ int8_t system_enter_standby(void) {
     // SHUTDOWN to STANDBY only happens with a reset
     logger_msg_p("system",log_level_ERROR,PSTR("Forbidden state change SHUTDOWN to STANDBY"));
     retval += -1;
-    break; 
+    break;
   case system_state_CONTROL:
     // Transition from CONTROL to STANDBY
     //
@@ -231,7 +228,7 @@ int8_t system_enter_control(void) {
     identify_state_set_mfc_value(40.0);
     // Actually set the system state
     set_system_state(system_state_CONTROL);
-    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));    
+    logger_msg_p("system",log_level_INFO,PSTR("State change STANDBY to CONTROL"));
     break;
   case system_state_CLEAN:
     // Transition from CLEAN to CONTROL
@@ -245,9 +242,8 @@ int8_t system_enter_control(void) {
     // Actually set the system state
     set_system_state(system_state_CONTROL);
     logger_msg_p("system",log_level_INFO,PSTR("State change CLEAN to CONTROL"));
-    break; 
-  
-    
+    break;
+
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter control from bad system state %d"),
@@ -308,7 +304,7 @@ int8_t system_enter_clean(void) {
     retval += -1;
     break;
   }
-  return retval; 
+  return retval;
 }
 
 int8_t system_enter_identify(void) {
@@ -353,13 +349,13 @@ int8_t system_enter_identify(void) {
     retval += -1;
     break;
   }
-  return retval; 
+  return retval;
 }
 
 int8_t system_enter_shutdown(void) {
 
   int8_t retval = 0;
- begin:  
+ begin:
   switch( system_state.state_enum ) {
   case system_state_SHUTDOWN:
     // Nothing to do here
@@ -393,7 +389,7 @@ int8_t system_enter_shutdown(void) {
     // Enter standby, then enter shutdown from there
     retval = system_enter_standby();
     goto begin;
-    break; 
+    break;
   default:
     logger_msg_p("system", log_level_ERROR,
 		 PSTR("Enter shutdown from bad system state %d"),
@@ -401,7 +397,7 @@ int8_t system_enter_shutdown(void) {
     retval += -1;
     break;
   }
-  return retval; 
+  return retval;
 }
 
 void cmd_rst( command_arg_t *command_arg_ptr ) {
@@ -441,7 +437,7 @@ void cmd_opstate_q( command_arg_t *command_arg_ptr ) {
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "identify",
 		 LINE_TERMINATION_CHARACTERS );
-    break; 
+    break;
   default:
     usart_printf(USART_CHANNEL_COMMAND, "%s%s",
 		 "none",
@@ -500,7 +496,7 @@ void cmd_clean( command_arg_t *command_arg_ptr ) {
   } else {
     command_nack(NACK_COMMAND_FAILED);
     return;
-  } 
+  }
 }
 
 int8_t system_state_set_topaz_sernum(char board, uint16_t sernum) {
@@ -567,6 +563,7 @@ void system_comcheck_task( void ) {
     return;
   } else {
     logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
+    aloha_set_com_led_red();
     system_enter_standby();
     return;
   }

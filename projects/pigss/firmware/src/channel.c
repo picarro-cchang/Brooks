@@ -86,13 +86,14 @@ channel_t channel_array[] = {
 channel_config_t channel_config;
 channel_config_t *channel_config_ptr = &channel_config;
 
-void channel_init() {
+void channel_init(void) {
   // Disable all channels
   channel_set(0);
 }
 
 int8_t channel_set( uint8_t setting ) {
   uint8_t channel_array_index = 0;
+  int8_t retval = 0;
   while ((channel_array[channel_array_index].number) != 0) {
     if ((1 << channel_array_index) & setting) {
       // Turn this channel on
@@ -102,8 +103,21 @@ int8_t channel_set( uint8_t setting ) {
     }
     channel_array_index++;
   }
-  channel_update();
-  return 0;
+  retval += channel_update();
+  return retval;
+}
+
+uint8_t channel_get() {
+  uint8_t channel_settings = 0;
+  uint8_t channel_array_index = 0;
+  while ((channel_array[channel_array_index].number) != 0) {
+    if (channel_array[channel_array_index].enabled == true) {
+      channel_settings += 1 << channel_array_index;
+    }
+    channel_array_index++;
+  }
+  logger_msg_p("channel", log_level_DEBUG, PSTR("Channel setting is %i"), channel_settings);
+  return channel_settings;
 }
 
 int8_t channel_update() {
@@ -219,7 +233,8 @@ int8_t channel_update() {
     new_led_value = aloha_clear_clean_led_bits(new_led_value);
   } else {
     // There are no enabled channels.  This means we're in standby.
-    set_system_state(system_state_STANDBY);
+    // set_system_state(system_state_STANDBY);
+    // system_enter_standby();
   }
 
   // Update hardware solenoids.  Disabled channels are energized.
@@ -370,17 +385,12 @@ void cmd_chanset( command_arg_t *command_arg_ptr ) {
     command_nack(NACK_ARGUMENT_OUT_OF_RANGE);
     return;
   }
-  uint8_t channel_array_index = 0;
-  while ((channel_array[channel_array_index].number) != 0) {
-    if ((1 << channel_array_index) & channel_settings) {
-      // Turn this channel on
-      channel_array[channel_array_index].enabled = true;
-    } else {
-      channel_array[channel_array_index].enabled = false;
-    }
-    channel_array_index++;
+  if ( channel_settings == 0 ) {
+    // This is the same as system_enter_standby()
+    retval = system_enter_standby();
+  } else {
+    retval = channel_set( (uint8_t) channel_settings);    
   }
-  retval = channel_update();
   if (retval < 0) {
     // There was a problem setting the channel configuration
     command_nack(NACK_COMMAND_FAILED);
@@ -404,3 +414,5 @@ void cmd_chanset_q( command_arg_t *command_arg_ptr ) {
 	       channel_settings, LINE_TERMINATION_CHARACTERS);
   return;
 }
+
+

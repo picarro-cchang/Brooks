@@ -20,9 +20,16 @@ def run(cmd):
 
 
 if __name__ == "__main__":
-    print(sudo_run("cp /tmp/timesyncd.conf /etc/timesyncd.conf")[0])
+    print(sudo_run("cp /tmp/timesyncd.conf /etc/systemd/timesyncd.conf")[0])
     print(sudo_run("timedatectl set-ntp true")[0])
     print(sudo_run("systemctl restart systemd-timesyncd")[0])
     print("== After restarting timesyncd service ==")
     time.sleep(3.0)
     print(sudo_run("systemctl status systemd-timesyncd")[0])
+    current_cron = sudo_run("crontab -l")[0]
+    if "systemctl restart systemd-timesyncd" not in current_cron:
+        with open("tmp_cron.txt", "w+") as f:
+            f.write(current_cron)
+            f.write("* * * * * systemctl restart systemd-timesyncd\n")
+        print(sudo_run("crontab tmp_cron.txt")[0])
+        print(sudo_run("rm -rf tmp_cron.txt")[0])

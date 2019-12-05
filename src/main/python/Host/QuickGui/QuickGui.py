@@ -19,6 +19,7 @@ import requests
 import os
 import wx.lib.mixins.listctrl as listmix
 import subprocess32 as subprocess
+import numpy
 import sys
 from time import localtime, strftime
 from Host.QuickGui.UserCalGui import UserCalGui
@@ -371,6 +372,7 @@ class QuickGui(wx.Frame):
                 if k.startswith("toolName"):
                     idx = int(k[8:])
                     self.externalTools[tools[k]] = {}
+                    self.externalTools[tools[k]]["tool_number"] = int(k[8:])
                     if ("toolCmd%d" % idx) in tools:
                         self.externalTools[tools[k]]["cmd"] = tools["toolCmd%d" % idx]
                     if ("toolUser%d" % idx) in tools:
@@ -385,7 +387,7 @@ class QuickGui(wx.Frame):
             self.iTools.AppendItem(self.iUserCal)
             self.Bind(wx.EVT_MENU, self._OnUserCal, id=self.idUserCal)
 
-        for tool in self.externalTools:
+        for tool in sorted(self.externalTools, key = lambda k: self.externalTools[k]["tool_number"]):
             self.externalTools[tool]['id'] = wx.NewId()
             self.externalTools[tool]['menu'] = wx.MenuItem(self.iTools,
                                                         self.externalTools[tool]['id'], 

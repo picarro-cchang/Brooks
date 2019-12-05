@@ -21,8 +21,8 @@ class UsbRelay:
         self.debug = debug
         self.relay_count = relay_count
         self.gpio_count = gpio_count
-        self.gpio_modes = []
-        self.gpio_output_status = []
+        self.gpio_modes = ["D_OUT"]*self.gpio_count
+        self.gpio_output_status = [False]*self.gpio_count
         self.serial_port = serial.Serial(port=self.port_name,
                                          baudrate=19200,
                                          bytesize=serial.EIGHTBITS,
@@ -47,8 +47,6 @@ class UsbRelay:
             self.set_relay(i, False)
         # set all gpio off
         for i in range(self.gpio_count):
-            self.gpio_modes.append("D_OUT")
-            self.gpio_output_status.append(False)
             self.set_gpio_status(i, False)
 
     def __wait_for_echo(self, command):
@@ -107,20 +105,6 @@ class UsbRelay:
             Returns device ID.
         """
         return self.__send("id get", True)
-
-    def do_disco(self, relay_num=0, times=8, delay=0.05):
-        """
-            Disco
-        """
-        for i in range(times):
-            self.flip_relay(relay_num)
-            time.sleep(delay)
-
-    def do_full_disco(self, cycles):
-        for k in range(cycles):
-            self.logger.debug(f"Cycle {k} in progress, {100*((k+1.)/cycles)}% done")
-            for i in range(self.relay_count):
-                self.do_disco(i)
 
     def __gpio_check(self, gpio_num, required_mode=None):
         """
@@ -237,9 +221,6 @@ class NumatoDriver(object):
 
     def register_numato_driver_rpc_functions(self):
         """Register all public methods to the rpc server."""
-        # disco functions, delete in production
-        self.server.register_function(self.ur.do_full_disco, name="NUMATO_full_disco")
-        self.server.register_function(self.ur.do_disco, name="NUMATO_do_disco")
 
         # relay functions
         self.server.register_function(self.ur.get_relay_status, name="NUMATO_get_relay_status")

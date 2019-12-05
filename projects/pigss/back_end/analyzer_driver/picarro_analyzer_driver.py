@@ -600,7 +600,7 @@ def main():
     try:
         ipdriver.rpc_serve_forever()
     except KeyboardInterrupt:
-        log.debug("RPC server has ended it's lifecycle after brutal Keyboard Interrupt, good job.")
+        log.debug("RPC server stopped by Keyboard Interrupt.")
 
     log.info("RPC server has ended")
 
