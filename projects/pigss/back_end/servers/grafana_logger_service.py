@@ -130,8 +130,6 @@ class GrafanaLoggerService(ServiceTemplate):
                 query_params[key] = int(val[0])
 
         query_params = {**self.set_predefined_config(query_params), **query_params}
-        # if __debug__:
-        #     print(f"\nGrafanaLoggerService: {query_params} and {request.query_string}\n")
         logs = await self.get_logs(query_params)
         return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
 
