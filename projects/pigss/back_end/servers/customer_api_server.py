@@ -48,7 +48,7 @@ class CustomerAPIService(ServiceTemplate):
 
     async def get_common_keys(self, keys):
         if self._keys is None:
-            self._keys = await get_keys()
+            self._keys = await self.get_keys()
         return list(set(self._keys) & set(keys))
 
     async def handle_get_keys(self, request=None):
