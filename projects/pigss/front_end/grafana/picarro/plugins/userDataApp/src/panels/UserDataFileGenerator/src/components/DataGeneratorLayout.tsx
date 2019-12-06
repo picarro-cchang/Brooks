@@ -1,5 +1,5 @@
 import React, { PureComponent, Fragment } from 'react';
-import { TimeRange, TIME_FORMAT, dateTime, dateMath } from '@grafana/data';
+import { TimeRange, dateTime, dateMath } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
 
 import { notifyError, notifySuccess } from '../utils/Notifications';
