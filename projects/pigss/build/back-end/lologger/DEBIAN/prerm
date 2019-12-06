@@ -1,4 +1,4 @@
 #!/bin/bash
 
-sudo rm -rf /usr/bin/lologger* || echo "Nothing here"
-sudo rm -rf /etc/systemd/system/lologger.service || echo "Nothing here"
+sudo rm /usr/bin/lologger* 2>&1 > /dev/null
+sudo rm /etc/systemd/system/lologger.service 2>&1 > /dev/null

@@ -37,6 +37,9 @@ void channel_init(void);
 // enable channel 1 and disable everything else.
 int8_t channel_set( uint8_t setting );
 
+// Return the channel configuration as set with channel_set
+uint8_t channel_get(void);
+
 // Set the solenoids directly
 //
 // Set bits in the setting byte to energize the respective solenoid.

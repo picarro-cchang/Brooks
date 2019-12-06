@@ -2,15 +2,6 @@ from influxdb.exceptions import InfluxDBClientError
 
 
 class Model:
-
-    __keys = None
-
-    @classmethod
-    def get_common_keys(cls, keys):
-        if cls.__keys is None:
-            raise InfluxDBClientError()
-        return list(set(cls.__keys) & set(keys))
-
     @classmethod
     def is_dt(cls, dt):
         return isinstance(dt, int)
@@ -27,9 +18,6 @@ class Model:
             {list(dict)} -- the list of all rows satisfying given conditions
         """
         try:
-            # Filter common keys and create a string
-            keys = cls.get_common_keys(keys)
-
             if latest is False and not (cls.is_dt(time_from) or cls.is_dt(time_to)):
                 raise InfluxDBClientError()
 
@@ -39,7 +27,7 @@ class Model:
             if not latest:
                 query += f"WHERE time >= {time_from} AND time <= {time_to}"
             else:
-                query = (f"SELECT {keys} FROM {measurement}" f" ORDER BY time DESC LIMIT 1", )
+                query = f"SELECT {keys} FROM {measurement} ORDER BY time DESC LIMIT 1"
 
             data_generator = client.query(query=query, epoch="ms").get_points()
             result = []

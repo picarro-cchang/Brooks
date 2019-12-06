@@ -1,5 +1,5 @@
 import React, { PureComponent, Fragment } from 'react';
-import { TimeRange, dateTime } from '@grafana/data';
+import { TimeRange, dateTime, dateMath } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
 
 import { notifyError, notifySuccess } from '../utils/Notifications';
@@ -43,14 +43,25 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
 
   generateFile = () => {
     const { timeRange, keys } = this.state;
-    if (timeRange.from._d.getTime() === timeRange.to._d.getTime() || keys.length === 0) {
+    const {from, to } = {
+      from: dateMath.parse(timeRange.raw.from),
+      to: dateMath.parse(timeRange.raw.to),
+      raw: timeRange.raw
+    } as TimeRange;
+    
+    // @ts-ignore
+    let fromTime = from._d.getTime();
+    // @ts-ignore
+    let toTime = to._d.getTime();
+
+    if (fromTime === toTime || keys.length === 0) {
       notifyError('Invalid Query parameters');
       return;
     }
 
     const queryParams = {
-      from: timeRange.from._d.getTime() * 1000000,
-      to: timeRange.to._d.getTime() * 1000000,
+      from: fromTime * 1000000,
+      to: toTime * 1000000,
       keys: keys,
     };
 
@@ -146,7 +157,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         <PanelOptionsGroup title="Generate New File">
           <div className="row">
             <div className="gf-form col-md-3 col-sm-12">
-              <FormLabel width={labelWidth_6}>Keys</FormLabel>
+              <FormLabel width={labelWidth_6}>Species</FormLabel>
               <Select
                 width={selectWidth}
                 options={keyOptions}
