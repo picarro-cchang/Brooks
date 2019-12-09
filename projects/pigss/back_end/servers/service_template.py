@@ -30,6 +30,11 @@ class ServiceTemplate:
     async def exception_middleware(self, request, handler):
         try:
             resp = await handler(request)
+        except web.HTTPNotFound:
+            return web.HTTPBadRequest(
+                reason="Bad Request",
+                text="Please check for inorrect use of API. The API requested, could not be found."
+            )
         except Exception as e:  # noqa
             # Handle unexpected exception by replying with a traceback and optionally publishing an event
             if self.publish_errors:
