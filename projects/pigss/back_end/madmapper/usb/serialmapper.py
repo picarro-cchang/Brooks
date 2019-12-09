@@ -47,7 +47,7 @@ class SerialMapper(object):
                     })
                     self.relay_count += 1
                 except Exception as e:
-                    self.logger.critical(f'Unhandled Exception: {e}')
+                    self.logger.error(f'Unhandled Exception: {e}')
             elif device.get('ID_SERIAL').startswith('Picarro_Piglet'):
                 serial_interface = SerialInterface()
                 serial_interface.config(port=device.get('DEVNAME'), baudrate=230400)
@@ -72,7 +72,7 @@ class SerialMapper(object):
                     })
                     self.piglet_count += 1
                 except Exception as e:
-                    self.logger.critical(f'Unhandled Exception: {e}')
+                    self.logger.error(f'Unhandled Exception: {e}')
             elif 'FTDI_FT232R_USB_UART_' in device.get('ID_SERIAL') or "FTDI_USB-RS232_Cable_" in device.get('ID_SERIAL'):
                 mfc_rpc_port = self.mfc_port + self.mfc_count
                 self.devices['Serial_Devices'].update({
