@@ -60,7 +60,7 @@ class MadMapper(object):
                 self.logger.debug(f'Writing to ' f'{os.path.join(self.path, self.file_name)}' f':\n{json.dumps(obj, indent=2)}')
                 f.write(f'{json.dumps(obj, indent=2)}\n')
         except Exception as e:
-            self.logger.critical(f'Unhandled Exception: {e}')
+            self.logger.error(f'Unhandled Exception: {e}')
             raise
 
     def read_json(self):
@@ -76,7 +76,7 @@ class MadMapper(object):
         except FileNotFoundError:
             self.logger.warning(f'File does not exist: {json_path}')
         except Exception as e:
-            self.logger.critical(f'Unhandled Exception: {e}')
+            self.logger.error(f'Unhandled Exception: {e}')
             raise
 
     def register_rpc_functions(self):

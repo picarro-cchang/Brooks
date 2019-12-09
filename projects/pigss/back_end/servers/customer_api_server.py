@@ -109,14 +109,14 @@ class CustomerAPIService(ServiceTemplate):
                     time_from = (int)(parse(time_from, fuzzy=True).timestamp() * i)
                     time_to = (int)(parse(time_to, fuzzy=True).timestamp() * i)
             except OverflowError:
-                log.error(f"Error in Customer API Service {format_exc()}")
+                log.critical(f"Error in Customer API Service {format_exc()}")
                 return web.json_response(
                     text="""There is an issue with passed time from and to epoch
                     fields""",
                     status=400,
                 )
             except ValueError:
-                log.error(f"Error in Customer API Service {format_exc()}")
+                log.critical(f"Error in Customer API Service {format_exc()}")
                 return web.json_response(text="There is an issue with passed from and to fields.", status=400)
         else:
             latest = True
