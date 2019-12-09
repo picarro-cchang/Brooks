@@ -82,6 +82,11 @@ void logger_setlevel( logger_level_t loglevel );
 */
 void cmd_loglevel( command_arg_t *command_arg_ptr );
 
+// Function called by the remote command "loglev?"
+//
+// Returns ISR, DEBUG, INFO, WARNING, or ERROR
+void cmd_loglevel_q( command_arg_t *command_arg_ptr );
+
 
 // Set the corresponding bit in the logger enable bitfield.  This
 // enables logging for that system.
