@@ -15,7 +15,6 @@ class MadMapper(object):
     """
 
     def __init__(self, simulation=False):
-        self.device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
         if simulation:
             self.networkmapper = SimNetworkMapper()
             self.serialmapper = SimSerialMapper()
@@ -41,12 +40,13 @@ class MadMapper(object):
         """
         network_devices = self.networkmapper.get_all_picarro_hosts()
         serial_devices = self.serialmapper.get_usb_serial_devices()
-        self.device_dict['Devices'].update(network_devices)
-        self.device_dict['Devices'].update(serial_devices)
-        self.logger.debug(f'Devices found: \n' f'{json.dumps(self.device_dict, indent=2)}')
+        device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
+        device_dict['Devices'].update(network_devices)
+        device_dict['Devices'].update(serial_devices)
+        self.logger.debug(f'Devices found: \n' f'{json.dumps(device_dict, indent=2)}')
         if should_write is True:
-            self._write_json(self.device_dict)
-        return self.device_dict
+            self._write_json(device_dict)
+        return device_dict
 
     def _write_json(self, obj=None):
         """
