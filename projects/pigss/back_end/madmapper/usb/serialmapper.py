@@ -29,8 +29,10 @@ class SerialMapper(object):
                 port = device.get('DEVNAME')
                 try:
                     usb_relay = UsbRelay(port_name=port, logger=self.logger)
+                    # Fix for PIG-467
+                    # Numato sends garbage data on first query after initial power-on
                     usb_relay.send_garbage("garbage")
-                    numato_id = usb_relay.get_id()
+                    numato_id = int(usb_relay.get_id())
                     usb_relay.serial_port.close()
                     relay_rpc_port = self.relay_port + int(numato_id)
                     devices['Serial_Devices'].update({

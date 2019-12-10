@@ -2,6 +2,7 @@ from collections import deque as deque
 import common.CmdFIFO as CmdFIFO
 import common.timeutils as timeutils
 from common.rpc_ports import rpc_ports
+import time
 
 ATTEMPT_TO_RECONNECT_AFTER_N_LOGS = 1
 
@@ -72,6 +73,7 @@ class LOLoggerClient():
         if self.connected:
             for log_message in self.local_logs:
                 self.lologger.LogEvent(**log_message)
+                time.sleep(0.2)
             self.local_logs = deque([], self.local_logs_storage)
 
     def __connect_to_lollogger(self, verbose=False):
