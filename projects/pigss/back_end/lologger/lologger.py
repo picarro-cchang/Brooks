@@ -491,7 +491,7 @@ class LOLoggerThread(threading.Thread):
                 if not os.path.exists(self.db_path):
                     self.get_connection(self.db_path)
                     self.flush_internal_log_messages(traceback.format_exc(), level=30)
-                    self.flush_internal_log_messages("Seems like the database file has been deleted, don't worry, gonna create new one", level=30)
+                    self.flush_internal_log_messages("Creating new db file", level=30)
 
             except Exception:
                 import traceback
