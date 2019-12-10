@@ -45,7 +45,6 @@ class EventsModel:
                 constraints.append(f'ClientName = ?')
                 values.append(client)
             if level:
-                print(f"\nCheckout devil level {level}\n")
                 # int values, so no issue of sql injection
                 constraints.append(f'Level in ({", ".join([str(i) for i in level])})')
             if start and isinstance(start, int):
