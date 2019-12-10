@@ -376,7 +376,7 @@ class LOLoggerThread(threading.Thread):
                 if current_month_count - (int(year) * 12 + int(month)) >= int(self.purge_old_logs):
                     # the file appeared to be older than purge period - gonna be deleted
                     db_filepath = os.path.join(self.db_folder_path, filename)
-                    self.flush_internal_log_messages(f"File {db_filepath} gonna be deleted as too old", level=20)
+                    self.flush_internal_log_messages(f"Deleting file: {db_filepath}", level=20)
                     os.remove(db_filepath)
                     json_filepath = db_filepath.replace(".db", ".json")
                     if os.path.exists(json_filepath):
