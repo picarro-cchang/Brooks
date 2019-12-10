@@ -63,6 +63,10 @@ class UsbRelay:
             time.sleep(wait_after)
             return answer_line
 
+    def send_garbage(self, command="garbage"):
+        """Send garbage"""
+        self.__send(command)
+
     def get_relay_status(self, relay_num):
         """
             Returns relay status as boolean.
