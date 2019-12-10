@@ -388,7 +388,7 @@ class LOLoggerThread(threading.Thread):
 
     def flush_internal_log_messages(self, message, level=10):
         client_timestamp = str(timeutils.get_local_timestamp())
-        EpochTime = int(1000 * timeutils.get_epoch_timestamp())
+        epoch_time = int(1000 * timeutils.get_epoch_timestamp())
         data_to_flush = [client_timestamp, "LOLogger", EpochTime, message, level, "localhost"]
 
         if self.parent.verbose:
