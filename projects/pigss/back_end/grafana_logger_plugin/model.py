@@ -1,4 +1,6 @@
 from datetime import datetime
+from traceback import format_exc
+
 from common.sqlite_connection import SQLiteInstance
 
 
@@ -30,8 +32,6 @@ class EventsModel:
             if "limit" in query_params:
                 limit = query_params["limit"]
 
-            if __debug__:
-                print(f"\nTime: {datetime.fromtimestamp(start / 1000)} - {datetime.fromtimestamp(end / 1000)}")
             # Sequential Query Building, careful
             query = ""
             constraints = []
@@ -45,12 +45,13 @@ class EventsModel:
                 constraints.append(f'ClientName = ?')
                 values.append(client)
             if level:
+                print(f"\nCheckout devil level {level}\n")
                 # int values, so no issue of sql injection
                 constraints.append(f'Level in ({", ".join([str(i) for i in level])})')
-            if start:
+            if start and isinstance(start, int):
                 constraints.append(f'EpochTime >= ?')
                 values.append(start)
-            if end:
+            if end and isinstance(end, int):
                 constraints.append(f'EpochTime <= ?')
                 values.append(end)
             if limit and isinstance(limit, int):
@@ -65,11 +66,13 @@ class EventsModel:
                 query += f'{limit_tpl}'
             query += ';'
         except ValueError as ve:
-            log.error(f"Error in building query {ve}")
-            return None
+            log.error(f"Error in building query {ve} with query params {query_params} and table_name {table_name}")
+            log.debug(f"Error in building query {ve} with query params {query_params} and table_name {table_name}", format_exc())
+            return (None, None)
         except TypeError as te:
-            log.error(f"Error in building query {te}")
-            return None
+            log.error(f"Error in building query {te} with query params {query_params} and table_name {table_name}")
+            log.debug(f"Error in building query {te} with query params {query_params} and table_name {table_name}", format_exc())
+            return (None, None)
         return query, tuple(values)
 
     @classmethod

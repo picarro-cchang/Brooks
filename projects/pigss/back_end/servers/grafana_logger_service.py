@@ -7,6 +7,7 @@ import time
 from json import loads
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs
+from traceback import format_exc
 
 from aiohttp import web, WSMsgType, WSCloseCode
 
@@ -104,9 +105,12 @@ class GrafanaLoggerService(ServiceTemplate):
         """
         try:
             query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], log)
+            if query is None or values is None:
+                return None
             return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], log)
         except TypeError as te:
             log.error(f"Error in GrafanaLoggerService {te}")
+            log.debug(f"Error in GrafanaLoggerService {te} {format_exc()}")
 
     async def handle_getlogs(self, request):
         """
@@ -168,7 +172,7 @@ class GrafanaLoggerService(ServiceTemplate):
                     query_params = {}
                     if msg.data is not None:
                         query_params = loads(msg.data)
-                    self.app["websockets"][i]['query_params'] = {**self.app["websockets"][i]['query_params'], **query_params}
+                        self.app["websockets"][i]['query_params'] = {**self.app["websockets"][i]['query_params'], **query_params}
             elif msg.type == WSMsgType.ERROR:
                 ws.exception()
             elif msg.type == WSMsgType.CLOSE:
