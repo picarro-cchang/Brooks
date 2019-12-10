@@ -144,7 +144,6 @@ export class LogPanel extends PureComponent<Props, State> {
       this.setupWSComm();
     } else {
       this.getLogsData(this.getQueryObj(this.props, true)).then((data: any) => {
-        this.setState(() => { return { data, ws: new WebSocket(SocketURL) } });
         this.setPicarroStorage({ logProps: this.props, logState: this.state });
         this.setupWSComm();
       });
@@ -182,6 +181,7 @@ export class LogPanel extends PureComponent<Props, State> {
     // notiffy websocket to stop sending new messages
     this.setPicarroStorage({ logProps: this.props, logState: this.state });
     this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
+    this.state.ws.close();
   }
 
   render() {
