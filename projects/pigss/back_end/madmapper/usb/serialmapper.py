@@ -26,7 +26,7 @@ class SerialMapper(object):
         for device in context.list_devices(subsystem='tty', ID_BUS='usb'):
             self.logger.debug(f'Device found: {dict(device)}')
             if 'Numato' in device.get('ID_SERIAL'):
-                port=device.get('DEVNAME')
+                port = device.get('DEVNAME')
                 try:
                     usb_relay = UsbRelay(port_name=port, logger=self.logger)
                     usb_relay.send_garbage("garbage")
