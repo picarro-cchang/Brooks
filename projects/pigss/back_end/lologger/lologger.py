@@ -341,7 +341,7 @@ class LOLoggerThread(threading.Thread):
         """
         self._sigint_event.set()
 
-    def exit_sequance(self):
+    def exit_sequence(self):
         """Close connection to db and json file if needed"""
         self.flush_internal_log_messages("Last message before closing connection")
         self.connection.close()
@@ -496,7 +496,7 @@ class LOLoggerThread(threading.Thread):
             except Exception:
                 import traceback
                 self.flush_internal_log_messages(traceback.format_exc(), level=40)
-        self.exit_sequance()
+        self.exit_sequence()
 
 
 def parse_arguments():
