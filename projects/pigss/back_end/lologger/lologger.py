@@ -380,7 +380,7 @@ class LOLoggerThread(threading.Thread):
                     os.remove(db_filepath)
                     json_filepath = db_filepath.replace(".db", ".json")
                     if os.path.exists(json_filepath):
-                        self.flush_internal_log_messages(f"File {json_filepath} gonna be deleted as too old", level=20)
+                        self.flush_internal_log_messages(f"Deleting file: {json_filepath}", level=20)
                         os.remove(json_filepath)
 
         return True
