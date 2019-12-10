@@ -266,7 +266,7 @@ class LOLoggerThread(threading.Thread):
         else:
             return last_row_id
 
-    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname):
+    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname=None):
         """Create a filename for the new sqlite file."""
         db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
         self.full_prefix = f"{db_filename_prefix}_"
@@ -343,6 +343,7 @@ class LOLoggerThread(threading.Thread):
 
     def exit_sequance(self):
         """Close connection to db and json file if needed"""
+        self.flush_internal_log_messages("Last message before closing connection")
         self.connection.close()
         if self.redundant_json:
             self.json_file.close()
@@ -369,20 +370,67 @@ class LOLoggerThread(threading.Thread):
 
         for filename in filelist:
             # check if actual log file
-            if filename.startswith(self.db_filename_prefix) and filename.endswith(".db"):
+            if filename.startswith(self.full_prefix) and filename.endswith(".db"):
                 # check if old enough
                 year, month = [k for k in filename[len(self.full_prefix):-3].split("_") if k]
                 if current_month_count - (int(year) * 12 + int(month)) >= int(self.purge_old_logs):
                     # the file appeared to be older than purge period - gonna be deleted
                     db_filepath = os.path.join(self.db_folder_path, filename)
-                    print(f"File {db_filepath} gonna be deleted as too old")
+                    self.flush_internal_log_messages(f"Deleting file: {db_filepath}", level=20)
                     os.remove(db_filepath)
                     json_filepath = db_filepath.replace(".db", ".json")
                     if os.path.exists(json_filepath):
-                        print(f"File {json_filepath} gonna be deleted as too old")
+                        self.flush_internal_log_messages(f"Deleting file: {json_filepath}", level=20)
                         os.remove(json_filepath)
 
         return True
+
+
+    def flush_internal_log_messages(self, message, level=10):
+        client_timestamp = str(timeutils.get_local_timestamp())
+        epoch_time = int(1000 * timeutils.get_epoch_timestamp())
+        data_to_flush = [client_timestamp, "LOLogger", epoch_time, message, level, "localhost"]
+
+        if self.parent.verbose:
+            print(f"{client_timestamp}:::LOLogger :: L-{level} :: -  {message}")
+
+        self.flush_log(data_to_flush, executemany=False)
+
+    def flush_log(self, data_to_flush, executemany=True):
+        placeholders = f'({",".join("?"*len(db_fields))})'
+        if not executemany:
+            data_to_flush = [data_to_flush]
+        try:
+            self.connection.executemany(f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
+            self.connection.commit()
+
+            if self.meta_table:
+                # insert metadata here
+                self.connection.executemany(f"REPLACE INTO metadata VALUES (?, ?)", self.collect_metadata())
+                self.connection.commit()
+
+            if self.redundant_json:
+                string_to_flush = ""
+                for data in data_to_flush:
+                    obj_for_json = {col_name[0]: value for col_name, value in zip(db_fields, data)}
+                    obj_for_json["rowid"] = self.rowid
+                    self.rowid += 1
+                    string_row = json.dumps(obj_for_json)
+                    string_to_flush = f"{string_to_flush}{string_row}\n"
+                try:
+                    self.json_file.write(string_to_flush)
+                    self.json_file.flush()
+                except ValueError as e:
+                    self.flush_internal_log_messages(f"""ValueError while tried to write to json file: {e}\n
+                                                         Going to stop writing logs to json file""", level=40)
+        except Exception as e:
+                # absolute panic mode! logs can't be flushed
+                # i don't know what possibly can lead to this place and 
+                # i honesty don't know what cource of action i should implement here.
+                import traceback
+                print(traceback.format_exc())
+
+
 
     def run(self):
         """Get tuples from queue and flush it to database."""
@@ -395,6 +443,8 @@ class LOLoggerThread(threading.Thread):
         time_since_last_flush = time.time()
         gonna_flush_now = False
         flushed_counter = 0
+
+        self.flush_internal_log_messages("Starting lologger")
 
         while True:
             try:
@@ -412,24 +462,8 @@ class LOLoggerThread(threading.Thread):
                     gonna_flush_now = True
 
                 if gonna_flush_now and len(data_to_flush) > 0:
-                    placeholders = f'({",".join("?"*len(db_fields))})'
-                    self.connection.executemany(f"INSERT INTO {db_table_name} VALUES {placeholders}", data_to_flush)
-                    self.connection.commit()
-                    if self.meta_table:
-                        # insert metadata here
-                        self.connection.executemany(f"REPLACE INTO metadata VALUES (?, ?)", self.collect_metadata())
-                        self.connection.commit()
 
-                    if self.redundant_json:
-                        string_to_flush = ""
-                        for data in data_to_flush:
-                            obj_for_json = {col_name[0]: value for col_name, value in zip(db_fields, data)}
-                            obj_for_json["rowid"] = self.rowid
-                            self.rowid += 1
-                            string_row = json.dumps(obj_for_json)
-                            string_to_flush = f"{string_to_flush}{string_row}\n"
-                        self.json_file.write(string_to_flush)
-                        self.json_file.flush()
+                    self.flush_log(data_to_flush)
 
                     gonna_flush_now = False
                     flushed_counter += len(data_to_flush)
@@ -446,7 +480,7 @@ class LOLoggerThread(threading.Thread):
                                 self.transition_to_new_database(self.db_path)
                             if self.redundant_json:
                                 self.json_file.close()
-                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix)
+                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
                             self.get_connection(self.db_path)
 
                         if self._sigint_event.is_set():
@@ -454,14 +488,14 @@ class LOLoggerThread(threading.Thread):
                     time.sleep(0.005)
             except sqlite3.OperationalError:
                 import traceback
-                print(traceback.format_exc())
                 if not os.path.exists(self.db_path):
-                    print("Seems like the database file has been deleted, don't worry, gonna create new one")
                     self.get_connection(self.db_path)
+                    self.flush_internal_log_messages(traceback.format_exc(), level=30)
+                    self.flush_internal_log_messages("Creating new db file", level=30)
 
             except Exception:
                 import traceback
-                print(traceback.format_exc())
+                self.flush_internal_log_messages(traceback.format_exc(), level=40)
         self.exit_sequance()
 
 
