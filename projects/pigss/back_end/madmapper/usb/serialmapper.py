@@ -53,17 +53,30 @@ class SerialMapper(object):
                 try:
                     serial_interface.open()
                     time.sleep(2.0)
+                    # Get slot id of sample module
                     serial_interface.write('slotid?\r')
                     slot_id = int(serial_interface.read().strip())
+                    # Get serial number of Topaz A board
+                    serial_interface.write('tza.sn?\r')
+                    topaz_a_sn = serial_interface.read().strip()
+                    # get serial number of Topaz B board
+                    serial_interface.write('tzb.sn?\r')
+                    topaz_b_sn = serial_interface.read().strip()
+                    # get manifold firmware version
+                    serial_interface.write('*idn?\r')
+                    # Response string example:
+                    #     Picarro,Boxer,SN65000,1.1.5
+                    fw_ver = serial_interface.read().split(',')[-1]
                     serial_interface.close()
                     piglet_rpc_port = self.piglet_port + (slot_id - 1)
                     devices['Serial_Devices'].update({
                         f'{device.get("DEVNAME")}': {
                             'Driver': 'PigletDriver',
-                            'Bank_ID': slot_id,
-                            'Topaz_A_HW_Rev': 'Null',
-                            'Topaz_B_HW_Rev': 'Null',
-                            'Whitfield_HW_Rev': 'Null',
+                            'Slot_ID': slot_id,
+                            'Topaz_A_SN': topaz_a_sn,
+                            'Topaz_B_SN': topaz_b_sn,
+                            'Manifold_SN': device.get('ID_SERIAL_SHORT'),
+                            'Manifold_FW': fw_ver.strip(),
                             'Path': device.get('DEVNAME'),
                             'Baudrate': 230400,
                             'RPC_Port': piglet_rpc_port
