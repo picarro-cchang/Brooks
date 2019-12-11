@@ -66,7 +66,9 @@ class SerialMapper(object):
                     serial_interface.write('*idn?\r')
                     # Response string example:
                     #     Picarro,Boxer,SN65000,1.1.5
-                    fw_ver = serial_interface.read().split(',')[-1]
+                    whitfield_str = serial_interface.read().strip().split(',')
+                    whitfield_fw = whitfield_str[-1]
+                    whitfield_sn = whitfield_str[-2]
                     serial_interface.close()
                     piglet_rpc_port = self.piglet_port + (slot_id - 1)
                     devices['Serial_Devices'].update({
@@ -76,7 +78,8 @@ class SerialMapper(object):
                             'Topaz_A_SN': topaz_a_sn,
                             'Topaz_B_SN': topaz_b_sn,
                             'Manifold_SN': device.get('ID_SERIAL_SHORT'),
-                            'Manifold_FW': fw_ver.strip(),
+                            'Manifold_FW': whitfield_fw,
+                            'Whitfield_SN': whitfield_sn,
                             'Path': device.get('DEVNAME'),
                             'Baudrate': 230400,
                             'RPC_Port': piglet_rpc_port
