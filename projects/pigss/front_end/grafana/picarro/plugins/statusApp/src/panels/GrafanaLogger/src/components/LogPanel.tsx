@@ -1,10 +1,11 @@
 import React, { PureComponent, Fragment } from 'react';
 import { PanelProps, ThemeContext } from '@grafana/ui';
+import { dateMath } from '@grafana/data';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 
-import { notifyError, notifySuccess } from '../utils/Notifications';
+import { notifyError } from '../utils/Notifications';
 import { LogProps } from './types';
 import { LogLayout } from './LogLayout';
 import { LOG_LIMIT, REFRESH_INTERVAL, storageKey } from '../constants';
@@ -14,11 +15,11 @@ import { LogService } from '..//services/LogService';
 interface Props extends PanelProps<LogProps> { }
 
 interface State {
-  data: string[][];
-  query: object;
-  interval: number;
-  timeRange: number;
-  ws: WebSocket;
+  data?: string[][];
+  query?: object;
+  interval?: number;
+  timeRange?: number;
+  ws?: WebSocket;
 }
 
 interface picarroStorage {
@@ -56,6 +57,10 @@ export class LogPanel extends PureComponent<Props, State> {
     }
   }
 
+  clearPicarroStorage = () => {
+    sessionStorage.removeItem(storageKey);
+  }
+
   getInterval = () => {
     let interval = REFRESH_INTERVAL;
     try {
@@ -80,7 +85,7 @@ export class LogPanel extends PureComponent<Props, State> {
     const end = new Date(this.props.data.request.range.to).getTime();
     // @ts-ignore
     const interval = this.getInterval();
-    const rowid = this.state.data.length ? this.state.data[0][0] : -1;
+    const rowid = initial ? -1 : this.state.data.length ? this.state.data[0][0] : -1;
     const limit = initial ? LOG_LIMIT : this.props.options.limit;
     const query: any = {
       rowid,
@@ -98,9 +103,15 @@ export class LogPanel extends PureComponent<Props, State> {
   }
 
   updateLogsData = (query: object) => {
-    if (this.state.ws.readyState === 1) {
+    if (this.state.ws && this.state.ws.readyState === 1) {
       this.state.ws.send(JSON.stringify(query));
     }
+  }
+
+  filterLogs = (logs: any, from?: Date) => {
+    return logs.filter((elem) => {
+      return new Date(elem[1]) >= from;
+    });
   }
 
   setupWSComm = () => {
@@ -108,7 +119,6 @@ export class LogPanel extends PureComponent<Props, State> {
     this.setState(() => { return { ws } });
 
     ws.onopen = () => {
-      notifySuccess("Websocket connection established. Logs will be updated soon.");
       const queryObj = this.getQueryObj(this.props);
       this.updateLogsData(queryObj);
     };
@@ -116,38 +126,74 @@ export class LogPanel extends PureComponent<Props, State> {
     ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       const rows = JSON.parse(evt.data).reverse();
+      let logs = [...rows, ...this.state.data];
+      if (this.state.data.length > 0) {
+        // filter messages from front-end that doesn't fall in the timerange
+        // @ts-ignore
+        const fromDate = new Date(dateMath.parse(this.props.data.request.range.raw.from));
+        this.setState(() => {
+          const filteredLogs = this.filterLogs(logs, fromDate);
+          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+          return { data: filteredLogs };
+        });
+      } else {
+        this.setState(() => { return { data: logs } });
+        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+      }
       // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
       if (this.state.data.length > LOG_LIMIT) {
-        this.setState({ data: [] });
+        this.state.data.length = LOG_LIMIT;
       }
-      this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: [...rows, ...this.state.data] } });
-      this.setState(() => { return { data: [...rows, ...this.state.data] } });
     };
 
     ws.onclose = () => {
       toast.dismiss();
-      setTimeout(() => {
-        notifyError("Websocket connection closed. Trying to reconnect again.");
+      let i: number = 1;
+      setTimeout((i) => {
+        setTimeout((i) => notifyError("Websocket connection closed. Trying to reconnect again."), i * this.state.interval);
+        i *= 2;
         this.setupWSComm();
       }, this.state.interval);
     };
   }
 
-  componentDidMount() {
+  getStateFromSavedData = () => {
     const savedData = this.getPicarroStorage();
     if (savedData !== null) {
-      this.setState(() => {
-        return {
-          ...JSON.parse(savedData).logState
-        }
-      });
-      this.setupWSComm();
+      return { ...(JSON.parse(savedData).logState) };
+    }
+    return null;
+  }
+
+  isSavedDataCurrent = (fromTime: Date, logState: State) => {
+    if (logState !== null && logState.data !== undefined) {
+      return logState.data.length ? new Date(logState.data[logState.data.length - 1][1]) <= fromTime : false;
+    }
+    return false;
+  }
+
+  fetchSavedData = () => {
+
+  }
+
+  componentDidMount() {
+    // @ts-ignore
+    const fromTime = new Date(dateMath.parse(this.props.data.request.range.raw.from));
+    const logState = { ...this.getStateFromSavedData() };
+    if (this.isSavedDataCurrent(fromTime, logState)) {
+      // Filter data according to timeRange
+      logState.data = this.filterLogs(logState.data, fromTime)
+      this.setState(() => { return { ...logState } });
     } else {
       this.getLogsData(this.getQueryObj(this.props, true)).then((data: any) => {
-        this.setPicarroStorage({ logProps: this.props, logState: this.state });
-        this.setupWSComm();
+        const orderedLogs = data.reverse();
+        this.setState(() => {
+          return { data: orderedLogs };
+        });
+        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: orderedLogs } });
       });
     }
+    this.setupWSComm();
   }
 
   componentDidUpdate(prevProps: Props, prevState: State) {
@@ -160,28 +206,43 @@ export class LogPanel extends PureComponent<Props, State> {
     const isDateTimeToChanged = rangeFromProps.to._d.getTime() !== rangeFromPrevProps.to._d.getTime();
     // @ts-ignore
     const currentTimeRange = Math.floor((rangeFromProps.to._d.getTime() - rangeFromProps.from._d.getTime()) / 60);
-    if (currentTimeRange !== this.state.timeRange) {
-      this.setState({ timeRange: currentTimeRange });
-      const queryObj = this.getQueryObj(this.props, true);
-      this.getLogsData(queryObj);
+    if (currentTimeRange !== this.state.timeRange ||
+      JSON.stringify(this.props.options.level) !== JSON.stringify(prevProps.options.level)) {
+      // @ts-ignore
+      const fromTime = new Date(dateMath.parse(this.props.data.request.range.raw.from));
+      const logState = { ...this.getStateFromSavedData() };
+      if (this.isSavedDataCurrent(fromTime, logState)) {
+        // Filter data according to timeRange
+        logState.data = this.filterLogs(logState.data, fromTime)
+        this.setState(() => { return { ...logState, timeRange: currentTimeRange } });
+      } else {
+        this.setState({ timeRange: currentTimeRange });
+        const queryObj = this.getQueryObj(this.props, true);
+        this.getLogsData(queryObj).then((data: any) => {
+          const logs = data.reverse();
+          this.setState(() => { return { data: logs } });
+          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: logs } });
+        });
+      }
     } else if (
-      JSON.stringify(this.props.options.level) !== JSON.stringify(prevProps.options.level) ||
       this.props.options.limit !== prevProps.options.limit ||
       interval !== this.state.interval ||
       isDateTimeFromChanged ||
       isDateTimeToChanged
     ) {
       this.setState(() => ({ interval }));
-      const queryObj = this.getQueryObj(this.props);
-      this.updateLogsData(queryObj);
     }
+    const queryObj = this.getQueryObj(this.props);
+    this.updateLogsData(queryObj);
   }
 
   componentWillUnmount() {
     // notiffy websocket to stop sending new messages
     this.setPicarroStorage({ logProps: this.props, logState: this.state });
-    this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
-    this.state.ws.close();
+    if (this.state.ws !== null) {
+      this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
+      this.state.ws.close();
+    }
   }
 
   render() {

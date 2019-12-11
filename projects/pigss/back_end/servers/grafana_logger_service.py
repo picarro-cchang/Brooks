@@ -88,7 +88,8 @@ class GrafanaLoggerService(ServiceTemplate):
         }
         return web.json_response(result)
 
-    def set_predefined_config(self, query_dict):
+    def set_predefined_config(self):
+        query_dict = {}
         query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
         query_dict["limit"] = self.app["config"]["limit"]
         query_dict["interval"] = self.app["config"]["interval"]
@@ -132,8 +133,8 @@ class GrafanaLoggerService(ServiceTemplate):
                 query_params[key] = val
             elif len(val) == 1:
                 query_params[key] = int(val[0])
-
-        query_params = {**self.set_predefined_config(query_params), **query_params}
+        predefined_params = self.set_predefined_config()
+        query_params = { **predefined_params, **query_params}
         logs = await self.get_logs(query_params)
         return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
 
@@ -158,7 +159,8 @@ class GrafanaLoggerService(ServiceTemplate):
 
         if "query_params" not in ws:
             ws["query_params"] = {}
-        ws["query_params"] = {**self.set_predefined_config(ws["query_params"]), **ws["query_params"]}
+        predefined_params = self.set_predefined_config()
+        ws["query_params"] = {**predefined_params, **ws["query_params"]}
         self.app["websockets"].append(ws)
 
         try:
