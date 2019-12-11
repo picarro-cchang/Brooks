@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
 import "./bankpanel.css";
 
-interface BankPanelOptions {
+export interface BankPanelOptions {
   bank: number;
   uistatus: {
     bank?: { [bankNum: string]: string };
@@ -77,9 +77,9 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             style={{ color: "black" }}
           >
             <p className="chn-label">
-              <u>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
+              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
             </p>
-            <p className="chn-status"> {test[i]} </p>
+            <p className={"chn-status-" + i}> {test[i]} </p>
           </button>
         ) : (
           <button
@@ -95,10 +95,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
           >
             <p className="chn-label">
-              <u>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
+              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
             </p>
 
-            <p className="chn-status"> {test[i]}</p>
+            <p className={"chn-status-" + i}> {test[i]}</p>
           </button>
         )
       );

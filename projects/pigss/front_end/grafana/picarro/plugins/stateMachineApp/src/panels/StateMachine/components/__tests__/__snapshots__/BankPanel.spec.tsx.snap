@@ -1,0 +1,252 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<BankPanel /> Renders correctly 1`] = `
+<div>
+  <div
+    className="panel-bank"
+    style={
+      Object {
+        "backgroundColor": "#56a64b",
+        "color": "#fff",
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "width": "100%",
+        }
+      }
+    >
+      <h2
+        style={
+          Object {
+            "color": "#424242",
+            "marginBottom": "10px",
+          }
+        }
+      >
+        B 1
+      </h2>
+      <div
+        className="grid-bank"
+      >
+        <button
+          className="btn btn-large bank-btn btn-ready"
+          key="1"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-1"
+            >
+              Ch A
+            </u>
+          </p>
+          <p
+            className="chn-status-1"
+          >
+             
+            AVAILABLE
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          key="2"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-2"
+            >
+              Channel 2
+            </u>
+          </p>
+          <p
+            className="chn-status-2"
+          >
+             
+            DISABLED
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-ready"
+          key="3"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-3"
+            >
+              Ch 3
+            </u>
+          </p>
+          <p
+            className="chn-status-3"
+          >
+             
+            AVAILABLE
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          key="4"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-4"
+            >
+              Ch 4
+            </u>
+          </p>
+          <p
+            className="chn-status-4"
+          >
+             
+            DISABLED
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-ready"
+          key="5"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-5"
+            >
+              Ch 5
+            </u>
+          </p>
+          <p
+            className="chn-status-5"
+          >
+             
+            AVAILABLE
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          key="6"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-6"
+            >
+              Ch 6
+            </u>
+          </p>
+          <p
+            className="chn-status-6"
+          >
+             
+            DISABLED
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-ready"
+          key="7"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-7"
+            >
+              Ch 7
+            </u>
+          </p>
+          <p
+            className="chn-status-7"
+          >
+             
+            AVAILABLE
+             
+          </p>
+        </button>
+        <button
+          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          key="8"
+          style={
+            Object {
+              "color": "black",
+            }
+          }
+        >
+          <p
+            className="chn-label"
+          >
+            <u
+              className="chn-name-8"
+            >
+              Ch 8
+            </u>
+          </p>
+          <p
+            className="chn-status-8"
+          >
+             
+            DISABLED
+             
+          </p>
+        </button>
+      </div>
+      <button
+        className="btn btn-large btn-clean btn-ready"
+        onClick={[Function]}
+      >
+        Clean
+      </button>
+    </div>
+  </div>
+</div>
+`;

@@ -1,12 +1,18 @@
 module.exports = {
   transform: {
-    "^.+\\.(ts|tsx)$": "ts-jest"
+    '^.+\\.tsx?$': 'ts-jest',
   },
+  globals: {
+    "ts-jest": {
+      tsConfigFile: "tsconfig.json"
+    }
+  },
+  testRegex: '(/__tests__/.*|(\\.|/)(test|spec))\\.tsx?$',
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'css'],
   roots: ["<rootDir>/src/panels/StateMachine/components"],
+  snapshotSerializers: ["enzyme-to-json/serializer"],
+  setupFilesAfterEnv: ["<rootDir>/setupEnzyme.ts"],
   moduleNameMapper: {
-    "\\.(css|less)$": "<rootDir>/__mocks__/styleMock.js",
-    "\\.(gif|ttf|eot|svg)$": "<rootDir>/__mocks__/fileMock.js"
+    "\\.(css|sass)$": "identity-obj-proxy",
   },
-  setupFiles: ["./test/jest-shim.ts", "./test/jest-setup.ts"],
-  snapshotSerializers: ["enzyme-to-json/serializer"]
 };
