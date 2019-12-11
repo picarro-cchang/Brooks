@@ -42,6 +42,9 @@ import { shallow, mount } from 'enzyme';
         }
     };
 
+const apiLoc = `${window.location.hostname}:8000/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
+
 describe('<BankPanel />', () => {
   it('Renders correctly', async () => {
     const tree = shallow(<BankPanel {...defaultProps} />)
@@ -75,4 +78,5 @@ describe('<BankPanel />', () => {
   //check onclick for channels
 
   //check onclick for buttons
-});
+
+  // it('Connect WS response');
