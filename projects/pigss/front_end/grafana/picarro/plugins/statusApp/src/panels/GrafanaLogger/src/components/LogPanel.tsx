@@ -148,10 +148,8 @@ export class LogPanel extends PureComponent<Props, State> {
 
     ws.onclose = () => {
       toast.dismiss();
-      let i: number = 1;
-      setTimeout((i) => {
-        setTimeout((i) => notifyError("Websocket connection closed. Trying to reconnect again."), i * this.state.interval);
-        i *= 2;
+      setTimeout(() => {
+        setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval);
         this.setupWSComm();
       }, this.state.interval);
     };
@@ -170,10 +168,6 @@ export class LogPanel extends PureComponent<Props, State> {
       return logState.data.length ? new Date(logState.data[logState.data.length - 1][1]) <= fromTime : false;
     }
     return false;
-  }
-
-  fetchSavedData = () => {
-
   }
 
   componentDidMount() {
@@ -241,7 +235,7 @@ export class LogPanel extends PureComponent<Props, State> {
     this.setPicarroStorage({ logProps: this.props, logState: this.state });
     if (this.state.ws !== null) {
       this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
-      this.state.ws.close();
+      this.state.ws.close(1001, "Going Away");
     }
   }
 
