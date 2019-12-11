@@ -72,7 +72,7 @@ class SerialMapper(object):
                     devices['Serial_Devices'].update({
                         f'{device.get("DEVNAME")}': {
                             'Driver': 'PigletDriver',
-                            'Slot_ID': slot_id,
+                            'Bank_ID': slot_id,
                             'Topaz_A_SN': topaz_a_sn,
                             'Topaz_B_SN': topaz_b_sn,
                             'Manifold_SN': device.get('ID_SERIAL_SHORT'),
