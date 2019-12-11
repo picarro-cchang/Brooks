@@ -7,6 +7,7 @@ import time
 from json import loads
 from datetime import datetime, timedelta
 from urllib.parse import parse_qs
+from traceback import format_exc
 
 from aiohttp import web, WSMsgType, WSCloseCode
 
@@ -87,13 +88,14 @@ class GrafanaLoggerService(ServiceTemplate):
         }
         return web.json_response(result)
 
-    def set_predefined_config(self, query_dict):
+    def set_predefined_config(self):
+        query_dict = {}
         query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
         query_dict["limit"] = self.app["config"]["limit"]
         query_dict["interval"] = self.app["config"]["interval"]
         return query_dict
 
-    async def get_logs(self, query_params={}):
+    async def get_logs(self, query_params):
         """
         description: Returns logs as a json to caller
         params:
@@ -104,9 +106,12 @@ class GrafanaLoggerService(ServiceTemplate):
         """
         try:
             query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], log)
+            if query is None or values is None:
+                return None
             return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], log)
         except TypeError as te:
             log.error(f"Error in GrafanaLoggerService {te}")
+            log.debug(f"Error in GrafanaLoggerService {te} {format_exc()}")
 
     async def handle_getlogs(self, request):
         """
@@ -128,8 +133,8 @@ class GrafanaLoggerService(ServiceTemplate):
                 query_params[key] = val
             elif len(val) == 1:
                 query_params[key] = int(val[0])
-
-        query_params = {**self.set_predefined_config(query_params), **query_params}
+        predefined_params = self.set_predefined_config()
+        query_params = { **predefined_params, **query_params}
         logs = await self.get_logs(query_params)
         return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
 
@@ -150,37 +155,40 @@ class GrafanaLoggerService(ServiceTemplate):
 
         ws = web.WebSocketResponse()
         await ws.prepare(request)
-
         self.socket_stats['ws_connections'] += 1
 
         if "query_params" not in ws:
             ws["query_params"] = {}
-
-        ws["query_params"] = {**self.set_predefined_config(ws["query_params"]), **ws["query_params"]}
+        predefined_params = self.set_predefined_config()
+        ws["query_params"] = {**predefined_params, **ws["query_params"]}
         self.app["websockets"].append(ws)
 
-        async for msg in ws:
-            if msg.type == WSMsgType.TEXT:
-                if msg.data == "CLOSE":
-                    await ws.close()
-                else:
-                    i = self.app["websockets"].index(ws)
-                    query_params = {}
-                    if msg.data is not None:
-                        query_params = loads(msg.data)
-                    self.app["websockets"][i]['query_params'] = {**self.app["websockets"][i]['query_params'], **query_params}
-            elif msg.type == WSMsgType.ERROR:
-                ws.exception()
-            elif msg.type == WSMsgType.CLOSE:
-                log.warning()
-                self.app["websockets"].remove(ws)
-                await ws.close(message="Server Shutdown Initiated from Client")
-
-        self.app["websockets"].remove(ws)
-        self.socket_stats['ws_open'] = len(self.app["websockets"])
-        self.socket_stats['ws_disconnections'] += 1
-
-        return ws
+        try:
+            async for msg in ws:
+                if msg.type == WSMsgType.TEXT:
+                    if msg.data == "CLOSE":
+                        await ws.close()
+                    else:
+                        i = self.app["websockets"].index(ws)
+                        query_params = ws["query_params"]
+                        if msg.data is not None:
+                            query_params = loads(msg.data)
+                            self.app["websockets"][i]['query_params'] = {**self.app["websockets"][i]['query_params'], **query_params}
+                elif msg.type == WSMsgType.ERROR:
+                    ws.exception()
+                elif msg.type == WSMsgType.CLOSE:
+                    log.warning(message="Client terminated websocket connection.")
+                    self.app["websockets"].remove(ws)
+                    await ws.close(code=1000, message="Client terminated websocket connection.")
+        except asyncio.CancelledError as ce:
+            log.error("Web socket disconnection caused coroutine cancellation in handler.")
+            log.debug(f"Web socket disconnection caused coroutine cancellation in handler. {ce}")
+        finally:
+            self.app["websockets"].remove(ws)
+            self.socket_stats['ws_open'] = len(self.app["websockets"])
+            self.socket_stats['ws_disconnections'] += 1
+            return ws
+        
 
     async def send_task(self, ws, current_time):
         ws['next_run'] = current_time + \
@@ -202,8 +210,8 @@ class GrafanaLoggerService(ServiceTemplate):
         except ValueError as ve:
             log.error(f"Error in should_send_task {ve}")
 
-    @log_async_exception(log_func=log.error, publish_terminate=True)
-    async def listener(self, app, DEFAULT_INTERVAL=1.0):
+    @log_async_exception(log_func=log.error, publish_terminate=False)
+    async def listener(self, app):
         """
         The following code handles multiple clients connected to the server.
         It sends out the logs by reading query parameters.
@@ -219,6 +227,6 @@ class GrafanaLoggerService(ServiceTemplate):
                     asyncio.gather(*[
                         self.send_task(ws, current_time)
                         for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
-                    ])
+                    ], return_exceptions=True)
             except ConnectionError as e:
                 log.error(f"Error in Logger Service Listener {e}")
