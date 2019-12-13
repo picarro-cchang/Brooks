@@ -6,8 +6,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
     className="panel-bank"
     style={
       Object {
-        "backgroundColor": "#56a64b",
-        "color": "#fff",
+        "backgroundColor": "#e4e4e4",
+        "color": "#424242",
       }
     }
   >
@@ -33,6 +33,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
       >
         <button
           className="btn btn-large bank-btn btn-ready"
+          id="bank-1"
           key="1"
           style={
             Object {
@@ -59,6 +60,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
+          id="bank-2"
           key="2"
           style={
             Object {
@@ -85,12 +87,10 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
+          disabled={false}
+          id="bank-3"
           key="3"
-          style={
-            Object {
-              "color": "black",
-            }
-          }
+          onClick={[Function]}
         >
           <p
             className="chn-label"
@@ -99,18 +99,19 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               className="chn-name-3"
             >
               Ch 3
+               
             </u>
           </p>
           <p
             className="chn-status-3"
           >
              
-            AVAILABLE
-             
+            READY
           </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
+          id="bank-4"
           key="4"
           style={
             Object {
@@ -137,6 +138,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
+          id="bank-5"
           key="5"
           style={
             Object {
@@ -163,6 +165,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
+          id="bank-6"
           key="6"
           style={
             Object {
@@ -189,6 +192,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
+          id="bank-7"
           key="7"
           style={
             Object {
@@ -215,6 +219,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
+          id="bank-8"
           key="8"
           style={
             Object {

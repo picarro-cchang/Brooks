@@ -73,6 +73,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         getChannelDisabled(i) ? (
           <button
             key={i}
+            id={"bank-" + i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
             style={{ color: "black" }}
           >
@@ -90,6 +91,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                 channel: i
               })
             }
+            id={"bank-" + i}
             disabled={getChannelDisabled(i)}
             key={i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
