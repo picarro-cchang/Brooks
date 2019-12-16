@@ -6,7 +6,9 @@ import 'jest-styled-components';
 import WS from "jest-websocket-mock";
 import { element } from 'prop-types';
 
-const mockClick = jest.fn();
+const mockClick = jest.fn((element) => {return element;});
+const apiLoc = `${window.location.hostname}:8000/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
 
 const defaultProps: CommandPanelOptions = {
     uistatus: {
@@ -299,7 +301,7 @@ describe('<CommandPannel />', () => {
     const wrapper = shallow(<CommandPannel {...defaultProps} />);
     const short = mount(<CommandPannel {...defaultProps} />);
     
-    it('Match Snapshot', () => {
+    it('Renders Correctly', () => {
         expect(wrapper).toMatchSnapshot();
     });
 
@@ -316,15 +318,18 @@ describe('<CommandPannel />', () => {
 
     });
 
-    it('onClick functionality for all buttons', () => {
-        wrapper.find('button#standby').simulate('click');
-        console.log(mockClick.mock.calls);
-        console.log(mockClick.mock.results);
-        // expect(mockClick.mock.calls.)
+    it('WS onClick functionality', async () => {
+        const server = new WS(socketURL);
+        const client = new WebSocket(socketURL);
+        await server.connected;
+
+        wrapper.find('button#identify').simulate('click');
+        const element = mockClick.mock.calls[0][0]['element'];
+        
+        client.send(element);
         expect(mockClick).toHaveBeenCalled();
-    });
-
-    it('WS functionality', () => {
-
+        await expect(server).toReceiveMessage("identify");
+        expect(mockClick).toHaveReturnedWith({element: "identify"})
+        expect(server).toHaveReceivedMessages(["identify"]);
     });
 });

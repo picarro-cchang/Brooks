@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<CommandPannel /> Match Snapshot 1`] = `
+exports[`<CommandPannel /> Renders Correctly 1`] = `
 <div
   className="panel-command"
 >

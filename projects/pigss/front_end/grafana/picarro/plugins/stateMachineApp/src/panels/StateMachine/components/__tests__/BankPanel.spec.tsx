@@ -4,7 +4,10 @@ import { shallow, mount } from 'enzyme';
 import 'jest-styled-components';
 import WS from "jest-websocket-mock";
 
-const mockClick = jest.fn();
+const mockClick = jest.fn((element) => {return element;});
+const apiLoc = `${window.location.hostname}:8000/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
+
 const defaultProps: BankPanelOptions = {
     bank: 1,
     uistatus: {
@@ -43,13 +46,13 @@ const defaultProps: BankPanelOptions = {
         }
     };
 
-const apiLoc = `${window.location.hostname}:8000/controller`;
-const socketURL = `ws://${apiLoc}/ws`;
+
 
 describe('<BankPanel />', () => {
   const part = mount(<BankPanel {...defaultProps} />);
   const wrapper = shallow(<BankPanel {...defaultProps} />);
-  it('Renders correctly', async () => {
+
+  it('Renders correctly', () => {
     expect(wrapper).toMatchSnapshot();
   });
   
@@ -71,25 +74,25 @@ describe('<BankPanel />', () => {
   });
 
   it('Check for  disabled/enabled property', () => {
-    const value = part.find("button#bank-1").hasClass('disabled');
-    const value2 = part.find("button#bank-2").hasClass('disabled');
+    const value = part.find("button#channel-1").hasClass('disabled');
+    const value2 = part.find("button#channel-2").hasClass('disabled');
     expect(value).toEqual(false);
     expect(value2).toEqual(true);
   });
 
-  it("WS Test", async () => {
+  it("'WS onClick functionality'", async () => {
     const server = new WS(socketURL);
     const client = new WebSocket(socketURL);
-
     await server.connected;
-    client.send("Hello");
-    await expect(server).toReceiveMessage("Hello");
-    expect(server).toHaveReceivedMessages(["Hello"]);
-  });
 
-  it('Test Click', () => {
-    wrapper.find('button#bank-3').simulate('click');
+    wrapper.find('button#channel-3').simulate('click');
+    const element = mockClick.mock.calls[0][0];
+
+    client.send(element);
     expect(mockClick).toHaveBeenCalled();
+    await expect(server).toReceiveMessage({element: "channel", bank: 1, channel: 3});
+    expect(mockClick).toHaveReturnedWith({bank: 1, channel: 3, element: "channel"})
+    expect(server).toHaveReceivedMessages([{element: "channel", bank: 1, channel: 3}]);
   });
 });
 
