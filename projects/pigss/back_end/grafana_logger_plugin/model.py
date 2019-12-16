@@ -65,12 +65,12 @@ class EventsModel:
                 query += f'{limit_tpl}'
             query += ';'
         except ValueError as ve:
-            log.error(f"Error in building query {ve} with query params {query_params} and table_name {table_name}")
-            log.debug(f"Error in building query {ve} with query params {query_params} and table_name {table_name}", format_exc())
+            log.error(f"Error in building query {ve} with query params {query_params}")
+            log.debug(f"Error in building query {ve} with query params {query_params}", format_exc())
             return (None, None)
         except TypeError as te:
-            log.error(f"Error in building query {te} with query params {query_params} and table_name {table_name}")
-            log.debug(f"Error in building query {te} with query params {query_params} and table_name {table_name}", format_exc())
+            log.error(f"Error in building query {te} with query params {query_params}")
+            log.debug(f"Error in building query {te} with query params {query_params}", format_exc())
             return (None, None)
         return query, tuple(values)
 
