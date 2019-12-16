@@ -7,7 +7,7 @@ Provides an API for interacting with and querying the pigss_controller
 """
 import asyncio
 import time
-import traceback
+from traceback import format_exc
 
 from aiohttp import web
 
@@ -117,7 +117,7 @@ class ControllerService(ServiceTemplate):
             return web.Response(text=result)
         except Exception as e:  # noqa
             # Report unexpected exception with traceback back to initiator
-            return web.Response(text=f"{e}\n{traceback.format_exc()}")
+            return web.Response(text=f"{e}\n{format_exc()}")
 
     async def handle_event(self, request):
         """
@@ -246,9 +246,9 @@ class ControllerService(ServiceTemplate):
         try:
             async for msg in ws:
                 await farm.receive_queue.put(msg.data)
-        except asyncio.CancelledError as ce:
+        except asyncio.CancelledError:
             log.error("Web socket disconnection caused coroutine cancellation in handler.")
-            log.debug(f"Web socket disconnection caused coroutine cancellation in handler. {ce}")
+            log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
         request.app['websockets'].remove(ws)
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         self.socket_stats['ws_disconnections'] += 1
