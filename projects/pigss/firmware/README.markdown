@@ -18,60 +18,63 @@ hardware will be a custom PCB.
             - [\*IDN?](#idn)
                 - [Parameter](#parameter)
                 - [Typical Return](#typical-return)
-            - [\*RST](#rst)
+            - [LOGLEV?](#loglev)
                 - [Parameter](#parameter-1)
                 - [Typical Return](#typical-return-1)
+            - [\*RST](#rst)
+                - [Parameter](#parameter-2)
+                - [Typical Return](#typical-return-2)
         - [System-level commands](#system-level-commands)
             - [SERNUM n](#sernum-n)
                 - [Parameter (n)](#parameter-n)
-                - [Typical Return](#typical-return-2)
+                - [Typical Return](#typical-return-3)
             - [SLOTID n](#slotid-n)
                 - [Parameter (n)](#parameter-n-1)
-                - [Typical Return](#typical-return-3)
-            - [SLOTID?](#slotid)
                 - [Typical Return](#typical-return-4)
-            - [OPSTATE?](#opstate)
+            - [SLOTID?](#slotid)
                 - [Typical Return](#typical-return-5)
-            - [STANDBY](#standby)
+            - [OPSTATE?](#opstate)
                 - [Typical Return](#typical-return-6)
-            - [CLEAN](#clean)
+            - [STANDBY](#standby)
                 - [Typical Return](#typical-return-7)
+            - [CLEAN](#clean)
+                - [Typical Return](#typical-return-8)
             - [TZA.SN n](#tzasn-n)
                 - [Parameter (n)](#parameter-n-2)
-                - [Typical Return](#typical-return-8)
-            - [TZA.SN?](#tzasn)
                 - [Typical Return](#typical-return-9)
+            - [TZA.SN?](#tzasn)
+                - [Typical Return](#typical-return-10)
             - [TZB.SN n](#tzbsn-n)
                 - [Parameter (n)](#parameter-n-3)
-                - [Typical Return](#typical-return-10)
-            - [TZB.SN?](#tzbsn)
                 - [Typical Return](#typical-return-11)
+            - [TZB.SN?](#tzbsn)
+                - [Typical Return](#typical-return-12)
         - [Channel commands](#channel-commands)
             - [CHANENA n](#chanena-n)
                 - [Parameter (n)](#parameter-n-4)
-                - [Typical Return](#typical-return-12)
+                - [Typical Return](#typical-return-13)
             - [CHANENA? n](#chanena-n)
                 - [Parameter (n)](#parameter-n-5)
-                - [Typical Return](#typical-return-13)
+                - [Typical Return](#typical-return-14)
             - [CHANOFF n](#chanoff-n)
                 - [Parameter (n)](#parameter-n-6)
-                - [Typical Return](#typical-return-14)
+                - [Typical Return](#typical-return-15)
             - [CHANSET n](#chanset-n)
                 - [Parameter (n)](#parameter-n-7)
-                - [Typical Return](#typical-return-15)
-            - [CHANSET?](#chanset)
                 - [Typical Return](#typical-return-16)
+            - [CHANSET?](#chanset)
+                - [Typical Return](#typical-return-17)
         - [Pressure commands](#pressure-commands)
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-8)
-                - [Typical Return](#typical-return-17)
-            - [PRS.OUT.RAW? n](#prsoutraw-n)
                 - [Typical Return](#typical-return-18)
+            - [PRS.OUT.RAW? n](#prsoutraw-n)
+                - [Typical Return](#typical-return-19)
             - [PRS.ALPHA n](#prsalpha-n)
                 - [Parameter (n)](#parameter-n-9)
-                - [Typical Return](#typical-return-19)
-            - [PRS.ALPHA?](#prsalpha)
                 - [Typical Return](#typical-return-20)
+            - [PRS.ALPHA?](#prsalpha)
+                - [Typical Return](#typical-return-21)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-10)
@@ -81,13 +84,13 @@ hardware will be a custom PCB.
                 - [Typical return](#typical-return-1)
         - [Channel identification commands](#channel-identification-commands)
             - [MFCVAL?](#mfcval)
-                - [Typical Return](#typical-return-21)
-            - [IDENTIFY](#identify)
                 - [Typical Return](#typical-return-22)
-            - [IDSTATE?](#idstate)
+            - [IDENTIFY](#identify)
                 - [Typical Return](#typical-return-23)
-            - [ACTIVECH?](#activech)
+            - [IDSTATE?](#idstate)
                 - [Typical Return](#typical-return-24)
+            - [ACTIVECH?](#activech)
+                - [Typical Return](#typical-return-25)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -105,6 +108,8 @@ hardware will be a custom PCB.
         - [Version 1.1.2](#version-112)
         - [Version 1.1.3](#version-113)
         - [Version 1.1.4](#version-114)
+        - [Version 1.1.6](#version-116)
+        - [Version 1.1.7](#version-117)
 
 <!-- markdown-toc end -->
 
@@ -209,6 +214,21 @@ None
 ##### Typical Return #####
 
 `Picarro,Boxer,SN0,1.0.0`
+
+#### LOGLEV? ####
+
+Query the system's log message severity threshold.  Pressure readings
+only happen at full speed (100 Hz) when the threshold is set to
+"error."  This level is hard-coded.  Return values are `isr`, `debug`,
+`info`, `warning`, and `error`.
+
+##### Parameter #####
+
+None
+
+##### Typical Return #####
+
+`error`
 
 #### \*RST ####
 
@@ -704,3 +724,11 @@ discovered during channel identification.
   * The chanset 0 command is now functionally the same as standby.
   * Fixed COM LED not turning red when the USB cable is yanked.
   * Pressure sensor read period reduced to 10ms
+  
+### Version 1.1.7 ###
+
+This version adds the [LOGLEV?](#loglev) query for the logger severity
+threshold.  Log messages aren't available over the command interface,
+but they still slow the system down.  Deployed firmware applications
+should have this level set to `error`.
+

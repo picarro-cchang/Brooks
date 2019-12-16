@@ -212,7 +212,7 @@ class DBDecimator(object):
             if key[0] == "retention_policies":
                 return self.rt_policy_manager.create_retention_policy(key[1], value)
         except Exception:  # if fails for any reason - return False, don't fail the process
-            self.logger.error(f"Unhandled exception while setting new setting {traceback.format_exc()}")
+            self.logger.critical(f"Unhandled exception while setting new setting {traceback.format_exc()}")
             return False
         return False
 

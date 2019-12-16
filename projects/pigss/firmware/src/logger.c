@@ -189,6 +189,38 @@ void cmd_loglevel( command_arg_t *command_arg_ptr ) {
   }
 }
 
+void cmd_loglevel_q(command_arg_t *command_arg_ptr ) {
+  switch(logger_config.loglevel) {
+  case log_level_ISR:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "isr",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  case log_level_DEBUG:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "debug",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  case log_level_INFO:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "info",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  case log_level_WARNING:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "warning",
+		 LINE_TERMINATION_CHARACTERS );
+    break;
+  case log_level_ERROR:
+    usart_printf(USART_CHANNEL_COMMAND, "%s%s",
+		 "error",
+		 LINE_TERMINATION_CHARACTERS );
+    break; 
+  default:
+    break;
+  }
+}
+
 /* Function called by the remote command "logreg."
 
    Sets the logger configuration enable byte directly.  You have to

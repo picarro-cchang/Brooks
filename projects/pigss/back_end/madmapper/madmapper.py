@@ -15,7 +15,6 @@ class MadMapper(object):
     """
 
     def __init__(self, simulation=False):
-        self.device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
         if simulation:
             self.networkmapper = SimNetworkMapper()
             self.serialmapper = SimSerialMapper()
@@ -41,12 +40,13 @@ class MadMapper(object):
         """
         network_devices = self.networkmapper.get_all_picarro_hosts()
         serial_devices = self.serialmapper.get_usb_serial_devices()
-        self.device_dict['Devices'].update(network_devices)
-        self.device_dict['Devices'].update(serial_devices)
-        self.logger.debug(f'Devices found: \n' f'{json.dumps(self.device_dict, indent=2)}')
+        device_dict = {'Name': f'{__class__.__name__}', 'Devices': {}}
+        device_dict['Devices'].update(network_devices)
+        device_dict['Devices'].update(serial_devices)
+        self.logger.debug(f'Devices found: \n' f'{json.dumps(device_dict, indent=2)}')
         if should_write is True:
-            self._write_json(self.device_dict)
-        return self.device_dict
+            self._write_json(device_dict)
+        return device_dict
 
     def _write_json(self, obj=None):
         """
@@ -60,7 +60,7 @@ class MadMapper(object):
                 self.logger.debug(f'Writing to ' f'{os.path.join(self.path, self.file_name)}' f':\n{json.dumps(obj, indent=2)}')
                 f.write(f'{json.dumps(obj, indent=2)}\n')
         except Exception as e:
-            self.logger.error(f'Unhandled Exception: {e}')
+            self.logger.critical(f'Unhandled Exception: {e}')
             raise
 
     def read_json(self):
@@ -76,7 +76,7 @@ class MadMapper(object):
         except FileNotFoundError:
             self.logger.warning(f'File does not exist: {json_path}')
         except Exception as e:
-            self.logger.error(f'Unhandled Exception: {e}')
+            self.logger.critical(f'Unhandled Exception: {e}')
             raise
 
     def register_rpc_functions(self):

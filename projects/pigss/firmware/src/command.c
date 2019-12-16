@@ -73,6 +73,11 @@ command_t command_array[] = {
    "uint16",
    1,
    &cmd_loglevel},
+  //loglev? -- Query the logger severity level.
+  {"loglev?",
+   "none",
+   0,
+   &cmd_loglevel_q},
   // logreg -- Set the logger enable register.
   {"logreg",
    "uint16",
