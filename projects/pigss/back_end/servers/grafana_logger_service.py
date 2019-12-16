@@ -138,7 +138,7 @@ class GrafanaLoggerService(ServiceTemplate):
         logs = await self.get_logs(query_params)
         return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
 
-    @log_async_exception(log_func=log.error, stop_loop=False)
+    @log_async_exception(log_func=log.error, stop_loop=False, publish_terminate=False)
     async def websocket_handler(self, request):
         """
         description: Websocket communication for fetching logs from GrafanaLoggerServer
@@ -182,7 +182,7 @@ class GrafanaLoggerService(ServiceTemplate):
                     await ws.close(code=1000, message="Client terminated websocket connection.")
         except asyncio.CancelledError as ce:
             log.error("Web socket disconnection caused coroutine cancellation in handler.")
-            log.debug(f"Web socket disconnection caused coroutine cancellation in handler. {ce}")
+            log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
         finally:
             self.app["websockets"].remove(ws)
             self.socket_stats['ws_open'] = len(self.app["websockets"])
@@ -228,5 +228,5 @@ class GrafanaLoggerService(ServiceTemplate):
                         self.send_task(ws, current_time)
                         for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
                     ], return_exceptions=True)
-            except ConnectionError as e:
-                log.error(f"Error in Logger Service Listener {e}")
+            except ConnectionError:
+                log.error(f"Error in Logger Service Listener \n{format_exc()}")
