@@ -1,7 +1,7 @@
 import React, { Component, PureComponent } from "react";
 import { CommandPanelOptions } from "./../types";
 
-class CommandPanel extends PureComponent<CommandPanelOptions> {
+class CommandPanel extends PureComponent<CommandPanelOptions, any> {
   classNameOpt = {
     DISABLED: "",
     READY: "btn-outline-success",
@@ -40,8 +40,10 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
             }}
           >
             <button
-              onClick={e => this.props.ws_sender({ element: "standby" })}
-              disabled={this.getDisabled("standby")}
+              id={"standby"}
+              onClick={e => {
+                this.props.ws_sender({ element: "standby" });
+              }}              disabled={this.getDisabled("standby")}
               value="standby"
               className={
                 "btn btn-large btn-command btn-1-3 " +
@@ -51,6 +53,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Standby
             </button>
             <button
+              id={"identify"}
               onClick={e => this.props.ws_sender({ element: "identify" })}
               disabled={this.getDisabled("identify")}
               value="identify"

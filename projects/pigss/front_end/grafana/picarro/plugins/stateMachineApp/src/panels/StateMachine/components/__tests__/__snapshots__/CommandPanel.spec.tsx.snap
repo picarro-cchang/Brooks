@@ -1,0 +1,95 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<CommandPannel /> Match Snapshot 1`] = `
+<div
+  className="panel-command"
+>
+  <div
+    style={
+      Object {
+        "marginTop": 20,
+        "width": "100%",
+      }
+    }
+  >
+    <div
+      className="grid-command"
+      style={
+        Object {
+          "display": "grid",
+          "gridGap": 5,
+          "gridTemplateColumns": "1fr 1fr 1fr",
+          "padding": 20,
+        }
+      }
+    >
+      <button
+        className="btn btn-large btn-command btn-1-3 undefined"
+        disabled={false}
+        id="standby"
+        onClick={[Function]}
+        value="standby"
+      >
+        Standby
+      </button>
+      <button
+        className="btn btn-large btn-command btn-1-3 "
+        disabled={true}
+        id="identify"
+        onClick={[Function]}
+        value="identify"
+      >
+        Identify Available Channels
+      </button>
+      <button
+        className="btn btn-large btn-command btn-1-3 btn-outline-success"
+        disabled={false}
+        onClick={[Function]}
+        value="plan"
+      >
+        Edit Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run btn-outline-success"
+        disabled={false}
+        onClick={[Function]}
+        value="run"
+      >
+        Run Channel
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run btn-outline-success"
+        disabled={false}
+        onClick={[Function]}
+        value="plan_run"
+      >
+        Run Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run btn-outline-success"
+        disabled={false}
+        onClick={[Function]}
+        value="plan_loop"
+      >
+        Loop Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-1-3 btn-outline-success"
+        disabled={false}
+        onClick={[Function]}
+        value="reference"
+      >
+        Reference
+      </button>
+      <button
+        className="btn btn-large btn-edit btn-danger"
+        disabled={false}
+        onClick={[Function]}
+        value="edit"
+      >
+        Edit Labels
+      </button>
+    </div>
+  </div>
+</div>
+`;
