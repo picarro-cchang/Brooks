@@ -209,7 +209,9 @@ class LOLogger(object):
             This function will return current system's metadata, 
             as well as flush this metadata to Events table
         """
-        return self.lologger_thread.flush_metadata_as_event()
+        metadata = self.lologger_thread.collect_metadata()
+        self.LogEvent(json.dumps(metadata), client_name="LOLogger", level=10)
+        return metadata
 
 class LOLoggerThread(threading.Thread):
     """
