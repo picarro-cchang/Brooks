@@ -158,6 +158,8 @@ class LOLogger(object):
         self.server.register_function(self.set_log_level)
         self.server.register_function(self.get_log_level)
         self.server.register_function(self.get_sqlite_path)
+        self.server.register_function(self.get_metadata)
+
 
     def flip_verbose(self):
         """Switch verbose value to opposite from current."""
@@ -178,9 +180,9 @@ class LOLogger(object):
         elif Level in LOG_LEVELS:
             self.LogLevel = LOG_LEVELS[Level]
         else:
-            raise ValueError(f"Level passed: {Level}; "
-                             f"should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]} "
-                             f"or one of {list(LOG_LEVELS.keys())}")
+            message = f"""Level passed: {Level}; Should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]}"""
+            self.flush_internal_log_messages(message, level=40)
+            raise ValueError(message)
         return True
 
     def get_log_level(self):
@@ -202,6 +204,12 @@ class LOLogger(object):
         self.lologger_thread._sigint_handler()
         self.lologger_thread.join()
 
+    def get_metadata(self):
+        """
+            This function will return current system's metadata, 
+            as well as flush this metadata to Events table
+        """
+        return self.lologger_thread.flush_metadata_as_event()
 
 class LOLoggerThread(threading.Thread):
     """
@@ -356,6 +364,12 @@ class LOLoggerThread(threading.Thread):
         meta_dict.append(("lologger_start_time", self.start_time))
         return meta_dict
 
+    def flush_metadata_as_event(self):
+        self.flush_internal_log_messages("Current metadata:")
+        metadata = self.collect_metadata()
+        self.flush_internal_log_messages(json.dumps(metadata))
+        return metadata
+
     def get_purging_old_logs_done(self):
         """
             Delete old logs files if they are older than self.duration
@@ -445,6 +459,8 @@ class LOLoggerThread(threading.Thread):
         flushed_counter = 0
 
         self.flush_internal_log_messages("Starting lologger")
+
+        self.flush_metadata_as_event()
 
         while True:
             try:
