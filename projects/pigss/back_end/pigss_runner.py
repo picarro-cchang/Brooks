@@ -27,7 +27,7 @@ from back_end.servers.time_aggregation_sevice import TimeAggregationService
 from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
 
-log = LOLoggerClient(client_name="PigssRunner", verbose=True)
+log = LOLoggerClient(client_name="AppRunner", verbose=True)
 
 # Get a prioritized list of places to look for the config file
 config_path = [

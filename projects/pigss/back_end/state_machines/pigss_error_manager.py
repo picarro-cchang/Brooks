@@ -11,7 +11,7 @@ import common.timeutils as timeutils
 from async_hsm import Ahsm, Framework, Signal, state
 from back_end.lologger.lologger_client import LOLoggerClient
 
-log = LOLoggerClient(client_name="PigssErrorManager", verbose=True)
+log = LOLoggerClient(client_name="AppErrorManager", verbose=True)
 
 
 class PigssErrorManager(Ahsm):

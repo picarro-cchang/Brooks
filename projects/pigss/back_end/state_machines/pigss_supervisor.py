@@ -39,7 +39,7 @@ from simulation.sim_piglet_driver import SimPigletDriver
 port = rpc_ports.get('madmapper')
 ping_interval = 2.0
 
-log = LOLoggerClient(client_name="PigssSupervisor", verbose=True)
+log = LOLoggerClient(client_name="AppSupervisor", verbose=True)
 
 
 class AsyncWrapper:
