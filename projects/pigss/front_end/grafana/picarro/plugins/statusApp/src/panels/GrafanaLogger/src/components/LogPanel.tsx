@@ -24,7 +24,6 @@ interface State {
 
 interface picarroStorage {
   logState: State;
-  logProps: Props;
 }
 
 export class LogPanel extends PureComponent<Props, State> {
@@ -53,7 +52,11 @@ export class LogPanel extends PureComponent<Props, State> {
   setPicarroStorage = (logStorage: picarroStorage) => {
     // set picarroStorage object in sessionStorage
     if (window.sessionStorage) {
-      sessionStorage.setItem(storageKey, JSON.stringify(logStorage));
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(logStorage));
+      } catch (error) {
+        this.clearPicarroStorage();
+      }
     }
   }
 
@@ -133,12 +136,12 @@ export class LogPanel extends PureComponent<Props, State> {
         const fromDate = new Date(dateMath.parse(this.props.data.request.range.raw.from));
         this.setState(() => {
           const filteredLogs = this.filterLogs(logs, fromDate);
-          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+          this.setPicarroStorage({ logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
           return { data: filteredLogs };
         });
       } else {
         this.setState(() => { return { data: logs } });
-        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+        this.setPicarroStorage({ logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
       }
       // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
       if (this.state.data.length > LOG_LIMIT) {
@@ -146,11 +149,14 @@ export class LogPanel extends PureComponent<Props, State> {
       }
     };
 
-    ws.onclose = () => {
+    ws.onclose = (event) => {
       toast.dismiss();
       setTimeout(() => {
-        setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval);
-        this.setupWSComm();
+        // If client did not initiated close event, spawn a new websocket connection
+        if (event.code !== 1000) {
+          setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval);
+          this.setupWSComm();
+        }
       }, this.state.interval);
     };
   }
@@ -184,7 +190,7 @@ export class LogPanel extends PureComponent<Props, State> {
         this.setState(() => {
           return { data: orderedLogs };
         });
-        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: orderedLogs } });
+        this.setPicarroStorage({ logState: { ...this.state, data: orderedLogs } });
       });
     }
     this.setupWSComm();
@@ -215,7 +221,7 @@ export class LogPanel extends PureComponent<Props, State> {
         this.getLogsData(queryObj).then((data: any) => {
           const logs = data.reverse();
           this.setState(() => { return { data: logs } });
-          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: logs } });
+          this.setPicarroStorage({ logState: { ...this.state, data: logs } });
         });
       }
     } else if (
@@ -232,10 +238,10 @@ export class LogPanel extends PureComponent<Props, State> {
 
   componentWillUnmount() {
     // notiffy websocket to stop sending new messages
-    this.setPicarroStorage({ logProps: this.props, logState: this.state });
+    this.setPicarroStorage({ logState: this.state });
     if (this.state.ws !== null) {
       this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
-      this.state.ws.close(1001, "Going Away");
+      this.state.ws.close(1000, "Normal Closure");
     }
   }
 
