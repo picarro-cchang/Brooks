@@ -1,3 +1,5 @@
+import { any } from "prop-types";
+
 export interface ButtonInfo {
   caption: string;
   className: string;
@@ -85,8 +87,8 @@ export interface PlanStep {
 }
 
 export interface EditPanelOptions {
-  uistatus: {
-    [key: string]: string;
+  uistatus?: {
+    [key: string]: any;
   };
   ws_sender: (o: object) => void;
   plan: Plan;

@@ -22,99 +22,99 @@ export class EditForm extends Component<EditPanelOptions> {
     let edit_list = [];
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
-    for (let key in this.banks) {
-      let value = this.banks[key];
+    for (let num in this.banks) {
+      let value = this.banks[num];
       if (value === "READY") {
-        this.bank_list.push(key);
+        this.bank_list.push(num);
         edit_list.push(
           <div className="gf-form-group">
             <div className="row">
-              <label className="edit-label"> Bank {key}</label>
+              <label className="edit-label"> Bank {num}</label>
               <input
-                name={"bank" + key}
+                name={"bank" + num}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].name}
+                defaultValue={this.state.plan.bank_names[num].name}
                 maxLength={14}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 1 </label>
               <input
-                name={"bank" + key + "1"}
+                name={"bank" + num + "1"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[1]}
+                defaultValue={this.state.plan.bank_names[num].channels[1]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 2 </label>
               <input
-                name={"bank" + key + "2"}
+                name={"bank" + num + "2"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[2]}
+                defaultValue={this.state.plan.bank_names[num].channels[2]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 3 </label>
               <input
-                name={"bank" + key + "3"}
+                name={"bank" + num + "3"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[3]}
+                defaultValue={this.state.plan.bank_names[num].channels[3]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 4 </label>
               <input
-                name={"bank" + key + "4"}
+                name={"bank" + num + "4"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[4]}
+                defaultValue={this.state.plan.bank_names[num].channels[4]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 5 </label>
               <input
-                name={"bank" + key + "5"}
+                name={"bank" + num + "5"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[5]}
+                defaultValue={this.state.plan.bank_names[num].channels[5]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 6 </label>
               <input
-                name={"bank" + key + "6"}
+                name={"bank" + num + "6"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[6]}
+                defaultValue={this.state.plan.bank_names[num].channels[6]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 7 </label>
               <input
-                name={"bank" + key + "7"}
+                name={"bank" + num + "7"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[7]}
+                defaultValue={this.state.plan.bank_names[num].channels[7]}
                 maxLength={8}
               />
             </div>
             <div className="row">
               <label className="edit-label"> Channel 8 </label>
               <input
-                name={"bank" + key + "8"}
+                name={"bank" + num + "8"}
                 className="col-sm-6 edit-input"
                 type="text"
-                defaultValue={this.state.plan.bank_names[key].channels[8]}
+                defaultValue={this.state.plan.bank_names[num].channels[8]}
                 maxLength={8}
               />
             </div>

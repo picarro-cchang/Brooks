@@ -1,0 +1,306 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<EditForm /> Renders correctly 1`] = `
+<div
+  className="panel-plan-inner"
+>
+  <div
+    className="gf-form-group"
+  >
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Bank 
+        1
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Loser 1"
+        maxLength={14}
+        name="bank1"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 1 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Channel 1"
+        maxLength={8}
+        name="bank11"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 2 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Channel 2"
+        maxLength={8}
+        name="bank12"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 3 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 3"
+        maxLength={8}
+        name="bank13"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 4 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 4"
+        maxLength={8}
+        name="bank14"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 5 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 5"
+        maxLength={8}
+        name="bank15"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 6 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 6"
+        maxLength={8}
+        name="bank16"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 7 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 7"
+        maxLength={8}
+        name="bank17"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 8 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 8"
+        maxLength={8}
+        name="bank18"
+        type="text"
+      />
+    </div>
+  </div>
+  <div
+    className="gf-form-group"
+  >
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Bank 
+        2
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Bank 2"
+        maxLength={14}
+        name="bank2"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 1 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 1"
+        maxLength={8}
+        name="bank21"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 2 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 2"
+        maxLength={8}
+        name="bank22"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 3 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 3"
+        maxLength={8}
+        name="bank23"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 4 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 4"
+        maxLength={8}
+        name="bank24"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 5 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 5"
+        maxLength={8}
+        name="bank25"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 6 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 6"
+        maxLength={8}
+        name="bank26"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 7 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 7"
+        maxLength={8}
+        name="bank27"
+        type="text"
+      />
+    </div>
+    <div
+      className="row"
+    >
+      <label
+        className="edit-label"
+      >
+         Channel 8 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        defaultValue="Ch. 8"
+        maxLength={8}
+        name="bank28"
+        type="text"
+      />
+    </div>
+  </div>
+</div>
+`;
