@@ -154,10 +154,10 @@ export class LogPanel extends PureComponent<Props, State> {
       setTimeout(() => {
         // If client did not initiated close event, spawn a new websocket connection
         if (event.code !== 1000) {
-          setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval);
+          setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval * 1000);
           this.setupWSComm();
         }
-      }, this.state.interval);
+      }, this.state.interval * 1000);
     };
   }
 
