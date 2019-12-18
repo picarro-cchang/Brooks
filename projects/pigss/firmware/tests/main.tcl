@@ -91,7 +91,7 @@ proc source_script {file args} {
 
 # Testing the logger
 
-puts "Current loglevel is: [${log}::currentloglevel] \n"
+puts "Current loglevel is: [${log}::currentloglevel]"
 ${log}::info "Trying to log to [dict get $state exelog]"
 ${log}::info "Known log levels: [logger::levels]"
 ${log}::info "Known services: [logger::services]"
@@ -121,6 +121,7 @@ tcltest::configure -verbose {body pass start error}
 # Delete the log file
 file delete -force $params(o)
 tcltest::configure -outfile $params(o)
+${log}::info "Writing output to $params(o)"
 
 source connection.tcl
 source boxer.tcl

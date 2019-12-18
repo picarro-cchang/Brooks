@@ -45,5 +45,10 @@ bool vernon_is_connected(void);
 // 0 de-energizes (closes) the clean solenoid
 int8_t vernon_set_clean_solenoid(uint8_t setting);
 
+// Command to get the temperature on Vernon
+//
+// This will return a positive temperature in C with 1C resolution.
+void cmd_vernon_temperature_q( command_arg_t *command_arg_ptr );
+
 
 #endif

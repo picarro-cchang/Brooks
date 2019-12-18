@@ -483,6 +483,19 @@ Query the exponential averaging factor used for pressure readings.
 
 65535
 
+### Temperature commands ###
+
+#### VER.TMP? ####
+
+Query the temperature at the surface of the Vernon (power
+distribution) board in Celsius.  Temperatures are always positive
+integers.
+
+##### Typical Return #####
+
+28
+
+
 ### Proportional bypass valve commands ###
 
 #### CHx.BYP.DAC n ####
