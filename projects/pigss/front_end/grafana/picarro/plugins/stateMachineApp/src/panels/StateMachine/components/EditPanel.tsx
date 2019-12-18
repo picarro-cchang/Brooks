@@ -22,11 +22,75 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     plan: {
       bank_names: this.props.plan.bank_names
     },
-    show: false
+    show: false,
+    prevState: {
+      bank_names: {
+        1: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        2: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        3: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        4: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+      }
+    }
   };
 
   banks: any;
   bank_list: any;
+
+  componentDidMount = () => {
+    //Store bank values in previous state
+    this.setState({
+      ...this.state,
+      prevState: this.props.plan.bank_names
+    });
+  }
 
   handleBankChange = (value, num: string) => {
     this.setState({
@@ -41,7 +105,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
           }
         }
       }
-    }, () => console.log(this.state.plan.bank_names[num].name));
+    });
   }
 
   handleChannelNameChange(value, num: string, num2) {
@@ -49,35 +113,32 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         ...this.state,
         plan:{
           ...this.state.plan,
-          bank_names: {
-            ...this.state.plan.bank_names,
-            [num]: {
-              ...this.state.plan.bank_names[num],
-              channels: {
-                ...this.state.plan.bank_names[num].channels,
-                [num2]: value
+            bank_names: {  
+              ...this.state.plan.bank_names,
+              [num]: {
+                ...this.state.plan.bank_names[num],
+                channels: {
+                  ...this.state.plan.bank_names[num].channels,
+                  [num2]: value
+                }
               }
             }
           }
-        }
-      }, () => console.log(this.state.plan.bank_names[num].channels))
-    }
+        });
+  }
 
-  validateForm = (bank_list, targets) => {
-    let bankName, bankValue;
-    const length = targets.length;
+  validateForm = (bank_list) => {
+    let bankValue;
     for (let key in bank_list) {
       let bankNum = bank_list[key];
-      bankName = "bank" + bankNum;
-      bankValue = targets[bankName].value;
+      bankValue = this.state.plan.bank_names[bankNum].name;
       if (bankValue.length < 1) {
         return false;
       } else if (bankValue.replace(/\s/g, "").length < 1) {
         return false;
       } else {
         for (let i = 1; i < 9; i++) {
-          const chanName = bankName + i;
-          const chanValue = targets[chanName].value;
+          const chanValue = this.state.plan.bank_names[bankNum].channels[i];
           if (chanValue.length < 1) {
             return false;
           } else if (chanValue.replace(/\s/g, "").length < 1) {
@@ -87,10 +148,6 @@ class EditPanel extends PureComponent<EditPanelOptions> {
       }
     }
     return true;
-  };
-
-  handleClose = () => {
-    this.setState({ show: false });
   };
 
   handleSubmit = event => {
@@ -104,12 +161,10 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         this.bank_list.push(key);
       }
     }
-    // const targets = event.target;
-    // const length = targets.length;
-    // if (!this.validateForm(this.bank_list, targets)) {
-    //   this.setState({ show: true });
-    //   return;
-    // }
+    if (!this.validateForm(this.bank_list)) {
+      this.setState({ show: true });
+      return;
+    }
     const channels1 = this.state.plan.bank_names[1].channels;
     const channels2 = this.state.plan.bank_names[2].channels;
     const channels3 = this.state.plan.bank_names[3].channels;
@@ -124,6 +179,23 @@ class EditPanel extends PureComponent<EditPanelOptions> {
       }
     });
   };
+
+  handleClose = () => {
+    this.setState({ show: false });
+  }; 
+
+  handleCancel = () => {
+    //Set State to Previous Values
+    this.setState({
+      ...this.state, 
+      plan: {
+        ...this.state.plan,
+        bank_names: this.state.prevState
+      }
+    });
+    this.props.ws_sender({ element: "edit_cancel" });
+  };
+
   render() {
     const { show } = this.state;
     return (
@@ -150,9 +222,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             <div className="col-sm-4">
               <button
                 type="button"
-                onClick={e => {
-                  this.props.ws_sender({ element: "edit_cancel" });
-                }}
+                onClick={this.handleCancel}
                 className={"btn btn-cancel btn-edit-panel btn-group-2"}
               >
                 Cancel

@@ -17,6 +17,8 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
     onSubmit={[Function]}
   >
     <EditForm
+      handleBankChange={[Function]}
+      handleChannelNameChange={[Function]}
       plan={
         Object {
           "bank_names": Object {
@@ -58,33 +60,6 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
                 "8": "Ch. 8",
               },
               "name": "Bank 3",
-            },
-          },
-          "current_step": 1,
-          "focus": Object {
-            "column": 2,
-            "row": 1,
-          },
-          "last_step": 1,
-          "max_steps": 32,
-          "num_plan_files": 0,
-          "panel_to_show": 3,
-          "plan_filename": "",
-          "plan_files": Object {},
-          "steps": Object {
-            "1": Object {
-              "banks": Object {
-                "1": Object {
-                  "chan_mask": 1,
-                  "clean": 0,
-                },
-                "2": Object {
-                  "chan_mask": 0,
-                  "clean": 0,
-                },
-              },
-              "duration": 30,
-              "reference": 0,
             },
           },
         }
@@ -192,6 +167,8 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
     onSubmit={[Function]}
   >
     <EditForm
+      handleBankChange={[Function]}
+      handleChannelNameChange={[Function]}
       plan={
         Object {
           "bank_names": Object {
@@ -233,33 +210,6 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
                 "8": "Ch. 8",
               },
               "name": "Bank 3",
-            },
-          },
-          "current_step": 1,
-          "focus": Object {
-            "column": 2,
-            "row": 1,
-          },
-          "last_step": 1,
-          "max_steps": 32,
-          "num_plan_files": 0,
-          "panel_to_show": 3,
-          "plan_filename": "",
-          "plan_files": Object {},
-          "steps": Object {
-            "1": Object {
-              "banks": Object {
-                "1": Object {
-                  "chan_mask": 1,
-                  "clean": 0,
-                },
-                "2": Object {
-                  "chan_mask": 0,
-                  "clean": 0,
-                },
-              },
-              "duration": 30,
-              "reference": 0,
             },
           },
         }

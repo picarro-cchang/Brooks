@@ -18,10 +18,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="B 1"
         maxLength={14}
         name="bank1"
+        onChange={[Function]}
         type="text"
+        value="B 1"
       />
     </div>
     <div
@@ -34,10 +35,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Channel 1"
         maxLength={8}
         name="bank11"
+        onChange={[Function]}
         type="text"
+        value="Channel 1"
       />
     </div>
     <div
@@ -50,10 +52,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Channel 2"
         maxLength={8}
         name="bank12"
+        onChange={[Function]}
         type="text"
+        value="Channel 2"
       />
     </div>
     <div
@@ -66,10 +69,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 3"
         maxLength={8}
         name="bank13"
+        onChange={[Function]}
         type="text"
+        value="Ch. 3"
       />
     </div>
     <div
@@ -82,10 +86,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 4"
         maxLength={8}
         name="bank14"
+        onChange={[Function]}
         type="text"
+        value="Ch. 4"
       />
     </div>
     <div
@@ -98,10 +103,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 5"
         maxLength={8}
         name="bank15"
+        onChange={[Function]}
         type="text"
+        value="Ch. 5"
       />
     </div>
     <div
@@ -114,10 +120,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 6"
         maxLength={8}
         name="bank16"
+        onChange={[Function]}
         type="text"
+        value="Ch. 6"
       />
     </div>
     <div
@@ -130,10 +137,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 7"
         maxLength={8}
         name="bank17"
+        onChange={[Function]}
         type="text"
+        value="Ch. 7"
       />
     </div>
     <div
@@ -146,10 +154,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 8"
         maxLength={8}
         name="bank18"
+        onChange={[Function]}
         type="text"
+        value="Ch. 8"
       />
     </div>
   </div>
@@ -167,10 +176,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Bank 2"
         maxLength={14}
         name="bank2"
+        onChange={[Function]}
         type="text"
+        value="Bank 2"
       />
     </div>
     <div
@@ -183,10 +193,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 1"
         maxLength={8}
         name="bank21"
+        onChange={[Function]}
         type="text"
+        value="Ch. 1"
       />
     </div>
     <div
@@ -199,10 +210,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 2"
         maxLength={8}
         name="bank22"
+        onChange={[Function]}
         type="text"
+        value="Ch. 2"
       />
     </div>
     <div
@@ -215,10 +227,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 3"
         maxLength={8}
         name="bank23"
+        onChange={[Function]}
         type="text"
+        value="Ch. 3"
       />
     </div>
     <div
@@ -231,10 +244,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 4"
         maxLength={8}
         name="bank24"
+        onChange={[Function]}
         type="text"
+        value="Ch. 4"
       />
     </div>
     <div
@@ -247,10 +261,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 5"
         maxLength={8}
         name="bank25"
+        onChange={[Function]}
         type="text"
+        value="Ch. 5"
       />
     </div>
     <div
@@ -263,10 +278,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 6"
         maxLength={8}
         name="bank26"
+        onChange={[Function]}
         type="text"
+        value="Ch. 6"
       />
     </div>
     <div
@@ -279,10 +295,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 7"
         maxLength={8}
         name="bank27"
+        onChange={[Function]}
         type="text"
+        value="Ch. 7"
       />
     </div>
     <div
@@ -295,10 +312,11 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Ch. 8"
         maxLength={8}
         name="bank28"
+        onChange={[Function]}
         type="text"
+        value="Ch. 8"
       />
     </div>
   </div>

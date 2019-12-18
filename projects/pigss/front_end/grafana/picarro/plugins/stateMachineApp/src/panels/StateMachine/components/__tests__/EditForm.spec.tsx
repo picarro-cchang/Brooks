@@ -288,8 +288,8 @@ describe('<EditForm />', () => {
   });
 
   it('Renders with correct bank/channel Names', () => {
-      const value = wrapper.find('input[name="bank1"]').props().defaultValue;
-      const chn2value = wrapper.find('input[name="bank12"]').props().defaultValue;
+      const value = wrapper.find('input[name="bank1"]').props().value;
+      const chn2value = wrapper.find('input[name="bank12"]').props().value;
 
       expect(value).toEqual('B 1');
       expect(chn2value).toEqual('Channel 2');
