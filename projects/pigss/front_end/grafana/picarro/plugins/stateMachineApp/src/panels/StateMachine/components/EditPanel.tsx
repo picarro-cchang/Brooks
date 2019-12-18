@@ -4,6 +4,12 @@ import { EditPanelOptions } from "../types";
 import { EditForm } from "./EditForm";
 
 class EditPanel extends PureComponent<EditPanelOptions> {
+  constructor(props) {
+    super(props);
+    this.handleBankChange = this.handleBankChange.bind(this);
+    this.handleChannelNameChange = this.handleChannelNameChange.bind(this);
+  }
+
   state = {
     initialized: false,
     modal_info: {
@@ -18,12 +24,44 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     },
     show: false
   };
-  constructor(props) {
-    super(props);
-  }
 
   banks: any;
   bank_list: any;
+
+  handleBankChange = (value, num: string) => {
+    this.setState({
+      ...this.state,
+      plan: {
+        ...this.state.plan,
+        bank_names: {
+          ...this.state.plan.bank_names,
+          [num]: {
+            ...this.state.plan.bank_names[num],
+            name: value
+          }
+        }
+      }
+    }, () => console.log(this.state.plan.bank_names[num].name));
+  }
+
+  handleChannelNameChange(value, num: string, num2) {
+      this.setState({
+        ...this.state,
+        plan:{
+          ...this.state.plan,
+          bank_names: {
+            ...this.state.plan.bank_names,
+            [num]: {
+              ...this.state.plan.bank_names[num],
+              channels: {
+                ...this.state.plan.bank_names[num].channels,
+                [num2]: value
+              }
+            }
+          }
+        }
+      }, () => console.log(this.state.plan.bank_names[num].channels))
+    }
 
   validateForm = (bank_list, targets) => {
     let bankName, bankValue;
@@ -51,7 +89,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     return true;
   };
 
-  handClose = () => {
+  handleClose = () => {
     this.setState({ show: false });
   };
 
@@ -66,35 +104,12 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         this.bank_list.push(key);
       }
     }
-    const targets = event.target;
-    const length = targets.length;
-    if (!this.validateForm(this.bank_list, targets)) {
-      this.setState({ show: true });
-      return;
-    }
-    for (let key in this.bank_list) {
-      let bankNum = this.bank_list[key];
-      bankName = "bank" + bankNum;
-      bankValue = targets[bankName].value;
-      const { bank_names } = { ...this.state.plan };
-      const currentName = bank_names[bankNum];
-      currentName.name = bankValue;
-      this.setState({
-        ...this.state.plan.bank_names,
-        [bankNum]: { name: bankValue }
-      });
-      const { channels } = { ...this.state.plan.bank_names[bankNum] };
-      const currentNames = channels;
-      for (let i = 1; i < 9; i++) {
-        const chanName = bankName + i;
-        const chanValue = targets[chanName].value;
-        currentNames[i] = chanValue;
-        this.setState({
-          ...this.state.plan.bank_names[bankNum].channels,
-          [i]: chanValue
-        });
-      }
-    }
+    // const targets = event.target;
+    // const length = targets.length;
+    // if (!this.validateForm(this.bank_list, targets)) {
+    //   this.setState({ show: true });
+    //   return;
+    // }
     const channels1 = this.state.plan.bank_names[1].channels;
     const channels2 = this.state.plan.bank_names[2].channels;
     const channels3 = this.state.plan.bank_names[3].channels;
@@ -116,8 +131,10 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
         <form onSubmit={this.handleSubmit}>
           <EditForm
+            handleBankChange = {this.handleBankChange}
+            handleChannelNameChange = {this.handleChannelNameChange}
             uistatus={this.props.uistatus}
-            plan={this.props.plan}
+            plan={this.state.plan}
             ws_sender={this.props.ws_sender}
           />
           <div className="row text-center button-edit">
@@ -143,7 +160,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             </div>
           </div>
         </form>
-        <Modal open={show} onClose={this.handClose} center>
+        <Modal open={show} onClose={this.handleClose} center>
           <h2 style={{ color: "black" }}>Uh Oh!</h2>
           <p style={{ color: "black" }}>
             Each Label must be at least one character in length.

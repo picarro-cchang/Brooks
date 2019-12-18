@@ -93,3 +93,11 @@ export interface EditPanelOptions {
   ws_sender: (o: object) => void;
   plan: Plan;
 }
+
+// export interface EditFormOptions {
+//   uistatus?: {
+//     [key: string]: any;
+//   };
+//   ws_sender: (o: object) => void;
+//   plan: Plan;
+// }

@@ -18,7 +18,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        defaultValue="Loser 1"
+        defaultValue="B 1"
         maxLength={14}
         name="bank1"
         type="text"

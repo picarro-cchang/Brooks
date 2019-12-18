@@ -236,7 +236,7 @@ const defaultProps: EditPanelOptions = {
         "plan_filename": "__default__",
         "bank_names": {
             "1": {
-            "name": "Loser 1",
+            "name": "B 1",
             "channels": {
                 "1": "Channel 1",
                 "2": "Channel 2",
@@ -291,7 +291,7 @@ describe('<EditForm />', () => {
       const value = wrapper.find('input[name="bank1"]').props().defaultValue;
       const chn2value = wrapper.find('input[name="bank12"]').props().defaultValue;
 
-      expect(value).toEqual('Loser 1');
+      expect(value).toEqual('B 1');
       expect(chn2value).toEqual('Channel 2');
 
   });
