@@ -69,7 +69,7 @@ describe('<BankPanel />', () => {
   });
 
   it('Contains correct status on channels', () => {
-    const value = part.find('p.chn-status-1').text();
+    const value = part.find('p#chn-status-1').text();
     expect(value).toEqual(' AVAILABLE ');
   });
 

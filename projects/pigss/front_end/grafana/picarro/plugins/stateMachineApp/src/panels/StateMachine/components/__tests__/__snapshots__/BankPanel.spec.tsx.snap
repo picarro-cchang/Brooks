@@ -51,7 +51,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-1"
+            className="chn-status"
+            id="chn-status-1"
           >
              
             AVAILABLE
@@ -78,7 +79,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-2"
+            className="chn-status"
+            id="chn-status-2"
           >
              
             DISABLED
@@ -103,7 +105,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-3"
+            className="chn-status"
+            id="chn-status-3"
           >
              
             READY
@@ -129,7 +132,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-4"
+            className="chn-status"
+            id="chn-status-4"
           >
              
             DISABLED
@@ -156,7 +160,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-5"
+            className="chn-status"
+            id="chn-status-5"
           >
              
             AVAILABLE
@@ -183,7 +188,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-6"
+            className="chn-status"
+            id="chn-status-6"
           >
              
             DISABLED
@@ -210,7 +216,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-7"
+            className="chn-status"
+            id="chn-status-7"
           >
              
             AVAILABLE
@@ -237,7 +244,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             </u>
           </p>
           <p
-            className="chn-status-8"
+            className="chn-status"
+            id="chn-status-8"
           >
              
             DISABLED

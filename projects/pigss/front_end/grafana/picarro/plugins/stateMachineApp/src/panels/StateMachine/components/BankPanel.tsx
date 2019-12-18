@@ -80,7 +80,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             <p className="chn-label">
               <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
             </p>
-            <p className={"chn-status-" + i}> {test[i]} </p>
+            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]} </p>
           </button>
         ) : (
           <button
@@ -100,7 +100,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
               <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
             </p>
 
-            <p className={"chn-status-" + i}> {test[i]}</p>
+            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]}</p>
           </button>
         )
       );
