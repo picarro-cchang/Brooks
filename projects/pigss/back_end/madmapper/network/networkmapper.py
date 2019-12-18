@@ -99,7 +99,7 @@ class NetworkMapper(object):
                         })
                         instrument_count += 1
                 except Exception as e:
-                    self.logger.error(f'Unhandled Exception: {e}')
+                    self.logger.critical(f'Unhandled Exception: {e}')
         self.logger.debug(f'Picarro hosts: {self.picarro_hosts}\n')
         return self.picarro_hosts
 

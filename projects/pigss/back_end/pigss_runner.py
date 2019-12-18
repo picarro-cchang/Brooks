@@ -131,7 +131,7 @@ class PigssRunner:
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
-        log.error(f"Unhandled exception:\n{msg}\n{traceback.format_exc()}")
+        log.critical(f"Unhandled exception:\n{msg}\n{traceback.format_exc()}")
         asyncio.create_task(self.on_shutdown)
         loop.stop()
 
@@ -201,7 +201,7 @@ async def async_main(config_filename, validate):
             log.error(f"Configuration file {config_filename} was not found")
     except Exception as e:  # noqa
         # Catch unhandled exceptions to be logged
-        log.error(f"Exception in main()\n{e}\n{traceback.format_exc()}")
+        log.critical(f"Exception in main()\n{e}\n{traceback.format_exc()}")
     finally:
         if service and service.runner is not None:
             await service.runner.cleanup()
