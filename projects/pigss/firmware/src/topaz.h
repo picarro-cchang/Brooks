@@ -19,6 +19,9 @@
 // GPIO expander I2C address
 #define TOPAZ_I2C_GPIO_ADDRESS 0x74
 
+// Temperature sensor I2C address
+#define TOPAZ_I2C_TSENSOR_ADDRESS 0x48
+
 // Valve bitshifts in the GPIO register
 #define TOPAZ_SOLENOID_1_SHIFT 0
 #define TOPAZ_SOLENOID_2_SHIFT 1
@@ -63,6 +66,15 @@ uint16_t topaz_get_serial_number(char board);
 // Set the serial number 
 int8_t topaz_set_serial_number(char board, uint16_t serial_number);
 
+// Get the temperature
+//
+// Arguments:
+//   board -- Either a or b
+//
+// The LM75B on the Topaz board will output -55C to +125C with 1C
+// resolution.  We'll simply use the range 0 to 125.
+int8_t topaz_get_temperature(char board);
+
 // Command to set the serial number for Topaz A
 void cmd_topaz_a_set_serial_number( command_arg_t *command_arg_ptr);
 
@@ -74,6 +86,16 @@ void cmd_topaz_b_set_serial_number( command_arg_t *command_arg_ptr);
 
 // Command to get the serial number for Topaz B
 void cmd_topaz_b_get_serial_number( command_arg_t *command_arg_ptr);
+
+// Command to get the temperature on Topaz A
+//
+// Temperature will be a positive integer indicating temperature in C
+void cmd_topaz_a_temperature_q( command_arg_t *command_arg_ptr );
+
+// Command to get the temperature on Topaz B
+//
+// Temperature will be a positive integer indicating temperature in C
+void cmd_topaz_b_temperature_q( command_arg_t *command_arg_ptr );
 
 // Set the I2C mux(s) to talk to Topaz A
 int8_t topaz_a_connect(void);

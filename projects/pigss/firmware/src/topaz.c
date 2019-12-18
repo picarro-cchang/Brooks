@@ -220,6 +220,23 @@ int8_t topaz_set_serial_number(char board, uint16_t serial_number) {
   return retval;
 }
 
+int8_t topaz_get_temperature(char board) {
+  int8_t retval = 0;
+
+  // Enable I2C communication on the chosen board
+  retval = topaz_connect(board);
+  uint8_t temperature_reading = lm75a_get_temperature(TOPAZ_I2C_TSENSOR_ADDRESS);
+
+  // The usable range of the lm75 is -55C to +125C.  I'm already
+  // ignoring negative temperatures, and it's OK to cast the output as int8.
+  if (retval >= 0) {
+    return (int8_t) temperature_reading;
+  } else {
+    return retval;
+  }
+  
+}
+
 uint16_t topaz_get_serial_number(char board) {
   uint8_t i2c_address;
   int8_t retval = 0;
@@ -307,6 +324,31 @@ void cmd_topaz_b_get_serial_number( command_arg_t *command_arg_ptr ) {
 	       LINE_TERMINATION_CHARACTERS );
 }
 
+void cmd_topaz_a_temperature_q( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('a')) {
+    // There's no Topaz A
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+  uint8_t temperature_reading = topaz_get_temperature('a');
+  usart_printf( USART_CHANNEL_COMMAND, "%i%s",
+		temperature_reading,
+		LINE_TERMINATION_CHARACTERS );
+  
+}
+
+void cmd_topaz_b_temperature_q( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('b')) {
+    // There's no Topaz B
+    command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+  uint8_t temperature_reading = topaz_get_temperature('b');
+  usart_printf( USART_CHANNEL_COMMAND, "%i%s",
+		temperature_reading,
+		LINE_TERMINATION_CHARACTERS );
+  
+}
 
 bool topaz_is_connected(char board) {
   uint16_t sernum = system_state_get_topaz_sernum(board);

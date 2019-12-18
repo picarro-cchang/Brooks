@@ -495,6 +495,23 @@ integers.
 
 28
 
+#### TZA.TMP? ####
+
+Query the temperature at the surface of the Topaz A (manifold) board
+in Celsius.  Temperatures are always positive integers.
+
+##### Typical Return #####
+
+25
+
+#### TZB.TMP? ####
+
+Query the temperature at the surface of the Topaz B (manifold) board
+in Celsius.  Temperatures are always positive integers.
+
+##### Typical Return #####
+
+25
 
 ### Proportional bypass valve commands ###
 

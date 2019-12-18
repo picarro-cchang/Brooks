@@ -264,6 +264,16 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_vernon_temperature_q},
+  // tza.tmp? -- Query the temperature on the Topaz A board
+  {"tza.tmp?",
+   "none",
+   0,
+   &cmd_topaz_a_temperature_q},
+  // tzb.tmp? -- Query the temperature on the Topaz B board
+  {"tzb.tmp?",
+   "none",
+   0,
+   &cmd_topaz_b_temperature_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
