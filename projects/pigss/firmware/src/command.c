@@ -1,37 +1,31 @@
-/* bx_command.c */
 
-// ----------------------- Include files ------------------------------
 #include <stdio.h>
 #include <string.h>
 
-/* pgmspace.h
-
-   Provides macros and functions for saving and reading data out of
-   flash. */
+// Provides macros and functions for saving and reading data out of
+// flash.
 #include <avr/pgmspace.h>
 
+/* command.h
 
-/* command.h 
- 
    Provides the extern declaration of command_array -- an array
    containing all the commands understood by the system. */
 #include "command.h"
 
-
 #include "system.h"
 
-/* usart.h 
+/* usart.h
 
    Provides functions for transmitting characters over the usart. */
 #include "usart.h"
 
 /* ascii.h
- 
+
    Provides lowstring() for converting strings to lower case. */
 #include "ascii.h"
 
 /* logger.h
- 
+
    Provides logger_msg and logger_msg_p for log messages tagged with a
    system and severity. */
 #include "logger.h"
@@ -48,12 +42,14 @@
 // Provides commands to work with Topaz PCBs
 #include "topaz.h"
 
+// Provides commands to work with the Vernon power distribution board
+#include "vernon.h"
+
 // Provides commands to work with pressure sensors
 #include "pressure.h"
 
 // Provides system identification commands
 #include "identify.h"
-
 
 /* Define the remote commands recognized by the system.
  */
@@ -263,6 +259,21 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_activech_q},
+  // ver.tmp? -- Query the temperature on the Vernon board
+  {"ver.tmp?",
+   "none",
+   0,
+   &cmd_vernon_temperature_q},
+  // tza.tmp? -- Query the temperature on the Topaz A board
+  {"tza.tmp?",
+   "none",
+   0,
+   &cmd_topaz_a_temperature_q},
+  // tzb.tmp? -- Query the temperature on the Topaz B board
+  {"tzb.tmp?",
+   "none",
+   0,
+   &cmd_topaz_b_temperature_q},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
@@ -272,19 +283,14 @@ command_t command_array[] = {
 command_arg_t command_arg;
 command_arg_t *command_arg_ptr = &command_arg;
 
-
-
-
-
 // ----------------------- Functions ----------------------------------
 
-
-/* command_init( received command state pointer ) 
+/* command_init( received command state pointer )
 
    Making this function explicitly take a pointer to the received
    command state structure makes it clear that it modifies this
    structure.
- 
+
 */
 void command_init( recv_cmd_state_t *recv_cmd_state_ptr ) {
     memset((recv_cmd_state_ptr -> rbuffer),0,RECEIVE_BUFFER_SIZE);
@@ -298,11 +304,10 @@ void command_init( recv_cmd_state_t *recv_cmd_state_ptr ) {
     return;
 }
 
-
 /* check_argsize( pointer to received command state,
  *                pointer to list of commands )
  * Returns 0 if the argument size is less than or equal to the number
- * of characters specified in the command list.  Returns -1 otherwise. 
+ * of characters specified in the command list.  Returns -1 otherwise.
  */
 uint8_t check_argsize(recv_cmd_state_t *recv_cmd_state_ptr ,
                       struct command_struct *command_array) {
@@ -331,7 +336,7 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
     // Parse buffer is locked -- there's a command to process
     logger_msg_p("command",log_level_INFO,
 		 PSTR("The parse buffer is locked."));
-    recv_cmd_state_ptr -> pbuffer_arg_ptr = 
+    recv_cmd_state_ptr -> pbuffer_arg_ptr =
       strchr(recv_cmd_state_ptr -> pbuffer,' ');
     if (recv_cmd_state_ptr -> pbuffer_arg_ptr != NULL) {
       // Parse buffer contains a space -- there's an argument
@@ -409,7 +414,6 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
   return;
 }
 
-
 /* command_exec( remote command string, argument string,
                  command argument structure pointer )
 
@@ -419,7 +423,7 @@ void command_process_pbuffer( recv_cmd_state_t *recv_cmd_state_ptr ,
    to that argument type string to figure out how to convert the
    argument string to a number.
 */
-void command_exec( command_t *command, char *argument, 
+void command_exec( command_t *command, char *argument,
 		   command_arg_t *command_arg_ptr ) {
   if (strcmp( command -> arg_type,"none" ) == 0) {
     // There's no argument

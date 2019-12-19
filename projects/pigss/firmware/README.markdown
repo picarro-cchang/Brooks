@@ -75,6 +75,13 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-20)
             - [PRS.ALPHA?](#prsalpha)
                 - [Typical Return](#typical-return-21)
+        - [Temperature commands](#temperature-commands)
+            - [VER.TMP?](#vertmp)
+                - [Typical Return](#typical-return-22)
+            - [TZA.TMP?](#tzatmp)
+                - [Typical Return](#typical-return-23)
+            - [TZB.TMP?](#tzbtmp)
+                - [Typical Return](#typical-return-24)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-10)
@@ -84,13 +91,13 @@ hardware will be a custom PCB.
                 - [Typical return](#typical-return-1)
         - [Channel identification commands](#channel-identification-commands)
             - [MFCVAL?](#mfcval)
-                - [Typical Return](#typical-return-22)
-            - [IDENTIFY](#identify)
-                - [Typical Return](#typical-return-23)
-            - [IDSTATE?](#idstate)
-                - [Typical Return](#typical-return-24)
-            - [ACTIVECH?](#activech)
                 - [Typical Return](#typical-return-25)
+            - [IDENTIFY](#identify)
+                - [Typical Return](#typical-return-26)
+            - [IDSTATE?](#idstate)
+                - [Typical Return](#typical-return-27)
+            - [ACTIVECH?](#activech)
+                - [Typical Return](#typical-return-28)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -110,6 +117,7 @@ hardware will be a custom PCB.
         - [Version 1.1.4](#version-114)
         - [Version 1.1.6](#version-116)
         - [Version 1.1.7](#version-117)
+        - [Version 1.1.8](#version-118)
 
 <!-- markdown-toc end -->
 
@@ -483,6 +491,36 @@ Query the exponential averaging factor used for pressure readings.
 
 65535
 
+### Temperature commands ###
+
+#### VER.TMP? ####
+
+Query the temperature at the surface of the Vernon (power
+distribution) board in Celsius.  Temperatures are always positive
+integers.
+
+##### Typical Return #####
+
+28
+
+#### TZA.TMP? ####
+
+Query the temperature at the surface of the Topaz A (manifold) board
+in Celsius.  Temperatures are always positive integers.
+
+##### Typical Return #####
+
+25
+
+#### TZB.TMP? ####
+
+Query the temperature at the surface of the Topaz B (manifold) board
+in Celsius.  Temperatures are always positive integers.
+
+##### Typical Return #####
+
+25
+
 ### Proportional bypass valve commands ###
 
 #### CHx.BYP.DAC n ####
@@ -732,3 +770,11 @@ threshold.  Log messages aren't available over the command interface,
 but they still slow the system down.  Deployed firmware applications
 should have this level set to `error`.
 
+### Version 1.1.8 ###
+
+This version adds the [VER.TMP?](#vertmp), [TZA.TMP?](#tzatmp), and
+[TZB.TMP?](#tzbtmp) queries for temperatures on the Vernon (power
+distribution) board, Topaz A (manifold A) board, and Topaz B (manifold
+B) board.  These commands query hardware sensors on the I2C bus, and
+thus can be used to detect problems with I2C communication over ribbon
+cables.
