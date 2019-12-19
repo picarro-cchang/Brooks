@@ -195,7 +195,7 @@ class PigssController(Ahsm):
             },
             "time": time.time_ns()
         }]
-        await self.db_writer.write_data(data)
+        await asyncio.shield(self.db_writer.write_data(data))
 
     async def process_receive_queue_task(self):
         event_by_element = dict(standby=Signal.BTN_STANDBY,
