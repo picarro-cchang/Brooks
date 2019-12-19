@@ -43,7 +43,8 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               id={"standby"}
               onClick={e => {
                 this.props.ws_sender({ element: "standby" });
-              }}              disabled={this.getDisabled("standby")}
+              }}              
+              disabled={this.getDisabled("standby")}
               value="standby"
               className={
                 "btn btn-large btn-command btn-1-3 " +

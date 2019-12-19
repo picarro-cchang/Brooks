@@ -1,7 +1,7 @@
 import React, { Component, PureComponent, ReactText } from "react";
 import Modal from "react-responsive-modal";
 import { EditPanelOptions } from "../types";
-import { EditForm } from "./EditForm";
+import  EditForm  from "./EditForm";
 
 class EditPanel extends PureComponent<EditPanelOptions> {
   constructor(props) {
@@ -152,7 +152,6 @@ class EditPanel extends PureComponent<EditPanelOptions> {
 
   handleSubmit = event => {
     event.preventDefault();
-    let bankName, bankValue;
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
     for (let key in this.banks) {
@@ -221,6 +220,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             </div>
             <div className="col-sm-4">
               <button
+                id={'cancel-btn'}
                 type="button"
                 onClick={this.handleCancel}
                 className={"btn btn-cancel btn-edit-panel btn-group-2"}

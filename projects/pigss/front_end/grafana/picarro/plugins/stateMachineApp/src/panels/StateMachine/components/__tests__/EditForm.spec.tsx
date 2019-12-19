@@ -3,7 +3,7 @@ import { shallow, mount } from 'enzyme';
 import 'jest-styled-components';
 import WS from "jest-websocket-mock";
 import { EditPanelOptions } from '../../types';
-import { EditForm } from '../EditForm';
+import EditForm from '../EditForm';
 
 const mockClick = jest.fn((element) => {return element;});
 

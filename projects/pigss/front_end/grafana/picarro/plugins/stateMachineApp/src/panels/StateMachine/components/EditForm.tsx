@@ -1,8 +1,12 @@
 import React, { Component, PureComponent, ReactText } from "react";
 import { EditPanelOptions } from "../types";
 
-export class EditForm extends Component<any, any> {
-
+class EditForm extends Component<any, any> {
+  state = {
+    plan: {
+      bank_names: this.props.plan.bank_names
+    }
+  };
   banks: any;
   bank_list: any;
 
@@ -122,3 +126,5 @@ export class EditForm extends Component<any, any> {
     return <div className="panel-plan-inner">{edit_list}</div>;
   }
 }
+
+export default EditForm;
