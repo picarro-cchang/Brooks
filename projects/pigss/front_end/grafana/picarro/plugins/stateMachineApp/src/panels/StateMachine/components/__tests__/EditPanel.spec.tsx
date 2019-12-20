@@ -4,8 +4,6 @@ import Modal from 'react-responsive-modal';
 import 'jest-styled-components'
 import EditPanel from '../EditPanel';
 import { EditPanelOptions } from '../../types';
-import EditForm from '../EditForm';
-import { bool } from 'prop-types';
 import WS from 'jest-websocket-mock';
  
 const mockClick = jest.fn((element) => {return element});
