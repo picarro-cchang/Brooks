@@ -1,5 +1,4 @@
 import React, { ReactText } from 'react';
-import Modal from 'react-responsive-modal';
 import { shallow, mount, render } from 'enzyme';
 import WS from 'jest-websocket-mock';
 import 'jest-styled-components';

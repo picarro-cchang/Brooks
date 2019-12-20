@@ -1,0 +1,587 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<PlanPanel /> ReactList renders 1`] = `
+<PlanPanel
+  isChanged={false}
+  plan={
+    Object {
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "B1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "B1",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 2",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 3",
+        },
+      },
+      "current_step": 1,
+      "focus": Object {
+        "column": 2,
+        "row": 1,
+      },
+      "last_step": 1,
+      "max_steps": 32,
+      "num_plan_files": 1,
+      "panel_to_show": 3,
+      "plan_filename": "test.pln",
+      "plan_files": Object {
+        "1": "test.pln",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 1,
+              "clean": 0,
+            },
+            "2": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 30,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  setFocus={[MockFunction]}
+  uistatus={Object {}}
+  updateFileName={[MockFunction]}
+  ws_sender={[MockFunction]}
+>
+  <div>
+    <div
+      className="panel-plan"
+    >
+      <h2
+        className="panel-plan-text"
+      >
+        Schedule
+      </h2>
+      <span
+        className="cancel panel-plan-text"
+        onClick={[Function]}
+      />
+      <h6
+        className="panel-plan-text"
+      >
+        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
+      <div
+        className="panel-plan-inner"
+      >
+        <form>
+          <ReactList
+            axis="y"
+            itemRenderer={[Function]}
+            itemsRenderer={[Function]}
+            length={32}
+            minSize={1}
+            pageSize={10}
+            scrollParentGetter={[Function]}
+            scrollParentViewportSizeGetter={[Function]}
+            threshold={100}
+            type="uniform"
+            useStaticSize={false}
+            useTranslate3d={false}
+          >
+            <div
+              style={
+                Object {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "WebkitTransform": "translate(0px, 0px)",
+                    "msTransform": "translate(0px, 0px)",
+                    "transform": "translate(0px, 0px)",
+                  }
+                }
+              >
+                <div>
+                  <div
+                    key="0"
+                  >
+                    <div
+                      className="gf-form-inline"
+                      key="1"
+                    >
+                      <label
+                        className="col-sm-1 panel-plan-text"
+                        style={
+                          Object {
+                            "fontSize": "17px",
+                            "marginTop": "5px",
+                          }
+                        }
+                      >
+                        1. 
+                      </label>
+                      <div
+                        className="col-sm-6 col-bank-name"
+                      >
+                        <input
+                          className="form-control plan-input panel-plan-text"
+                          id="plan-port-1"
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Select port"
+                          style={
+                            Object {
+                              "float": "left",
+                              "marginLeft": "2px",
+                              "maxWidth": "90%",
+                            }
+                          }
+                          type="text"
+                          value="B1, Channel 1"
+                        />
+                      </div>
+                      <div
+                        className="col-sm-3"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      >
+                        <input
+                          className="form-control input-small plan-input panel-plan-text"
+                          id="plan-duration-1"
+                          maxLength={8}
+                          minLength={1}
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Duration"
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="text"
+                          value="30"
+                        />
+                      </div>
+                      <label
+                        className="panel-plan-text"
+                        style={
+                          Object {
+                            "marginLeft": "-15px",
+                            "paddingRight": "5px",
+                          }
+                        }
+                      >
+                        s
+                      </label>
+                      <label
+                        className="col-sm-1 radio-btn"
+                      >
+                        <input
+                          checked={true}
+                          id="plan-row-1"
+                          onChange={[Function]}
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="radio"
+                        />
+                        <span
+                          className="checkmark"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ReactList>
+        </form>
+      </div>
+      <div
+        className="container"
+      >
+        <div
+          className="row text-center btn-row-1"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-group"
+              disabled={false}
+              onClick={[Function]}
+              type="button"
+            >
+              Insert
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              onClick={[Function]}
+              type="button"
+            >
+              Save
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              onClick={[Function]}
+              type="button"
+            >
+              Load
+            </button>
+          </div>
+        </div>
+        <div
+          className="row btn-row-2"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={false}
+              onClick={[Function]}
+              type="button"
+            >
+              Delete
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={false}
+              onClick={[Function]}
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-green btn-group"
+              onClick={[Function]}
+              type="button"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</PlanPanel>
+`;
+
+exports[`<PlanPanel /> Snapshot 1`] = `
+<div>
+  <div
+    className="panel-plan"
+  >
+    <h2
+      className="panel-plan-text"
+    >
+      Schedule
+    </h2>
+    <span
+      className="cancel panel-plan-text"
+      onClick={[Function]}
+    />
+    <h6
+      className="panel-plan-text"
+    >
+      Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+    </h6>
+    <div>
+      <h6
+        className="panel-plan-text"
+      >
+        Currently viewing File:
+         
+        <span
+          style={
+            Object {
+              "color": "white",
+            }
+          }
+        >
+          test.pln
+        </span>
+      </h6>
+    </div>
+    <div
+      className="panel-plan-inner"
+    >
+      <form>
+        <ReactList
+          axis="y"
+          itemRenderer={[Function]}
+          itemsRenderer={[Function]}
+          length={32}
+          minSize={1}
+          pageSize={10}
+          scrollParentGetter={[Function]}
+          scrollParentViewportSizeGetter={[Function]}
+          threshold={100}
+          type="uniform"
+          useStaticSize={false}
+          useTranslate3d={false}
+        />
+      </form>
+    </div>
+    <div
+      className="container"
+    >
+      <div
+        className="row text-center btn-row-1"
+      >
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-group"
+            disabled={false}
+            onClick={[Function]}
+            type="button"
+          >
+            Insert
+          </button>
+        </div>
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-light btn-group"
+            onClick={[Function]}
+            type="button"
+          >
+            Save
+          </button>
+        </div>
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-light btn-group"
+            onClick={[Function]}
+            type="button"
+          >
+            Load
+          </button>
+        </div>
+      </div>
+      <div
+        className="row btn-row-2"
+      >
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-cancel btn-group"
+            disabled={false}
+            onClick={[Function]}
+            type="button"
+          >
+            Delete
+          </button>
+        </div>
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-cancel btn-group"
+            disabled={false}
+            onClick={[Function]}
+            type="button"
+          >
+            Clear
+          </button>
+        </div>
+        <div
+          className="col-sm-3"
+        >
+          <button
+            className="btn btn-block btn-green btn-group"
+            onClick={[Function]}
+            type="button"
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<PlanPanel /> makePlanRow 1`] = `
+<div
+  className="gf-form-inline"
+>
+  <label
+    className="col-sm-1 panel-plan-text"
+    style={
+      Object {
+        "fontSize": "17px",
+        "marginTop": "5px",
+      }
+    }
+  >
+    5. 
+  </label>
+  <div
+    className="col-sm-6 col-bank-name"
+  >
+    <input
+      className="form-control plan-input panel-plan-text"
+      id="plan-port-5"
+      onChange={[Function]}
+      onFocus={[Function]}
+      placeholder="Select port"
+      style={
+        Object {
+          "float": "left",
+          "marginLeft": "2px",
+          "maxWidth": "90%",
+        }
+      }
+      type="text"
+      value=""
+    />
+  </div>
+  <div
+    className="col-sm-3"
+    style={
+      Object {
+        "paddingLeft": "0px",
+      }
+    }
+  >
+    <input
+      className="form-control input-small plan-input panel-plan-text"
+      id="plan-duration-5"
+      maxLength={8}
+      minLength={1}
+      onChange={[Function]}
+      onFocus={[Function]}
+      placeholder="Duration"
+      style={
+        Object {
+          "maxWidth": "100%",
+        }
+      }
+      type="text"
+      value=""
+    />
+  </div>
+  <label
+    className="panel-plan-text"
+    style={
+      Object {
+        "marginLeft": "-15px",
+        "paddingRight": "5px",
+      }
+    }
+  >
+    s
+  </label>
+  <label
+    className="col-sm-1 radio-btn"
+  >
+    <input
+      checked={false}
+      id="plan-row-5"
+      onChange={[Function]}
+      style={
+        Object {
+          "maxWidth": "100%",
+        }
+      }
+      type="radio"
+    />
+    <span
+      className="checkmark"
+    />
+  </label>
+</div>
+`;
+
+exports[`<PlanPanel /> renderItem 1`] = `<div />`;
