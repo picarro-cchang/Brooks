@@ -245,9 +245,7 @@ class ControllerService(ServiceTemplate):
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         try:
             async for msg in ws:
-                log.debug(f"Received {msg} from web socket")
                 await farm.receive_queue.put(msg.data)
-                log.debug(f"Successfully put onto receive queue")
         except asyncio.CancelledError:
             log.error("Web socket disconnection caused coroutine cancellation in handler.")
             log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
