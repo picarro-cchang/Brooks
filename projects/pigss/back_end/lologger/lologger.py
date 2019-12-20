@@ -96,7 +96,7 @@ class LOLogger(object):
         self.zip_old_file = zip_old_file
         self.do_database_transition = do_database_transition
 
-        self.queue = queue.Queue(200)
+        self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
         self.LogLevel = 1
         self.logs_passed_to_queue = 0
@@ -146,7 +146,17 @@ class LOLogger(object):
             EpochTime = int(1000 * timeutils.get_epoch_timestamp())
 
             values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
-            self.queue.put_nowait(values)
+            try:
+                self.queue.put_nowait(values)
+            except queue.Full:
+                temp_queue = queue.Queue(maxsize=2 * self.queue.qsize())
+                while not self.queue.empty():
+                    temp_queue.put(self.queue.get())
+                self.queue = temp_queue
+            except MemoryError:
+                # TO DO
+                print("IF THIS HAS REACHED, WE MIGHT NEED NEW STRATEGY")
+
             self.logs_passed_to_queue += 1
             if self.verbose:
                 print(f"{client_timestamp}:::{client_name} :: L-{level} :: -  {log_message}")
