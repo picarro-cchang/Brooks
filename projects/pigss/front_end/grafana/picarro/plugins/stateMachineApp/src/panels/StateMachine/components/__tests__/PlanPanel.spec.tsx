@@ -5,16 +5,19 @@ import WS from 'jest-websocket-mock';
 import Modal from 'react-responsive-modal';
 import PlanPanel from '../PlanPanel';
 import {PlanPanelOptions, Plan} from '../../types';
+import { Server } from 'mock-socket';
 
 const mockSetFocus = jest.fn();
-const mockWSSender = jest.fn();
 const mockUpdateFilename = jest.fn();
+const mockWSSender = jest.fn((element) => {return element});
+const apiLoc = `${window.location.hostname}:8000/controller`;
+const socketURL = `ws://${apiLoc}/ws`;
 
 const defaultProps: PlanPanelOptions = {
     uistatus: {},
     plan: {
         max_steps: 32,
-        panel_to_show: 3,
+        panel_to_show: 1,
         current_step: 1,
         focus: {
             row: 1,
@@ -106,6 +109,9 @@ const defaultProps: PlanPanelOptions = {
 describe('<PlanPanel />', () => {
     const wrapper = shallow(<PlanPanel {...defaultProps} />);
     const instance = wrapper.instance() as PlanPanel;
+    const server = new WS(socketURL);
+    const client = new WebSocket(socketURL);
+    instance.manageFocus = jest.fn();
 
     it('Snapshot', () => {
         expect(wrapper).toMatchSnapshot();
@@ -117,6 +123,85 @@ describe('<PlanPanel />', () => {
     });
 
     it('manageFocus', ()=> {
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-port-1');
+        elem.simulate('click');
+        expect(shallow.props().plan.focus).toEqual({"column": 2, "row": 1});
+    });
+
+    it('onFocus for Plan Channel', async ()=> {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-port-1');
+        elem.simulate('focus');
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_panel", "focus" : {"column": 1, "row": 1}})
+        expect(server).toHaveReceivedMessages([{element: "plan_panel", "focus" : {"column": 1, "row": 1}}])
+        mockWSSender.mockClear();
+        server.close;
+    });
+
+    it('onChange for Plan Channel', ()=> {
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-port-1');
+        elem.simulate('change');
+        expect(mockUpdateFilename).toHaveBeenCalled();
+    });
+
+    it('onFocus for Plan Duration', async ()=> {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-duration-1');
+        elem.simulate('focus');
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_panel", "focus" : {"column": 2, "row": 1}})
+        expect(server).toHaveReceivedMessages([{element: "plan_panel", "focus" : {"column": 2, "row": 1}}])
+        mockWSSender.mockClear();
+        server.close;
+    });
+
+    it('onChange for Plan Duration', async ()=> {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-duration-1');
+        elem.simulate('change');
+        expect(mockUpdateFilename).toHaveBeenCalled();
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_panel", row: 1, duration: "30"})
+        expect(server).toHaveReceivedMessages([{element: "plan_panel", row: 1, duration: "30"}])
+        mockWSSender.mockClear();
+        server.close;
+    });
+
+    it('onChange for Plan Radio', async ()=> {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const planList = shallow.find('ReactList');
+        const elem = planList.find('input#plan-row-1');
+        elem.simulate('change');
+        expect(mockUpdateFilename).toHaveBeenCalled();
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_panel", current_step: 1})
+        expect(server).toHaveReceivedMessages([{element: "plan_panel", current_step: 1}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
     it('renderItem', ()=> {
@@ -129,33 +214,113 @@ describe('<PlanPanel />', () => {
     it('ReactList renders', ()=> {
         const planList = mount(<PlanPanel {...defaultProps} />);
         expect(planList).toMatchSnapshot();
-        const channelInput = planList.find('input').at(0)
-        channelInput.simulate('keyDown');
-        // expect(channelInput.props().onFocus).toHaveBeenCalled();
-        // expect(mockWSSender).toHaveBeenCalled();
     });
 
-    it('Insert Button', () => {
-
+    it('Cancel X', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const insertButton = shallow.find("span#cancel-x");
+        insertButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_cancel"})
+        expect(server).toHaveReceivedMessages([{element: "plan_cancel"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
-    it('Save Button', () => {
-
+    it('Insert Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const insertButton = shallow.find("button#insert-btn");
+        insertButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_insert"})
+        expect(server).toHaveReceivedMessages([{element: "plan_insert"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
-    it('Load Button', () => {
-
+    it('Save Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const saveButton = shallow.find("button#save-btn");
+        saveButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_save"})
+        expect(server).toHaveReceivedMessages([{element: "plan_save"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
-    it('Delete Button', () => {
-
+    it('Load Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const loadButton = shallow.find("button#load-btn");
+        loadButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_load"})
+        expect(server).toHaveReceivedMessages([{element: "plan_load"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
-    it('Clear Button', () => {
-
+    it('Delete Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const deleteButton = shallow.find("button#delete-btn");
+        deleteButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        expect(mockUpdateFilename).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_delete"})
+        expect(server).toHaveReceivedMessages([{element: "plan_delete"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 
-    it('Ok Button', () => {
+    it('Clear Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const clearButton = shallow.find("button#clear-btn");
+        clearButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        expect(mockUpdateFilename).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_clear"})
+        expect(server).toHaveReceivedMessages([{element: "plan_clear"}])
+        mockWSSender.mockClear();
+        server.close;
+    });
 
+    it('Ok Button', async () => {
+        mockWSSender.mockClear();
+        await server.connected;
+        const shallow = mount(<PlanPanel {...defaultProps} />)
+        const okButton = shallow.find("button#ok-btn");
+        okButton.simulate("click");
+        const element = mockWSSender.mock.calls[0][0];
+        client.send(element);
+        expect(mockWSSender).toHaveBeenCalled();
+        expect(mockUpdateFilename).toHaveBeenCalled();
+        await expect(server).toReceiveMessage({element: "plan_ok"})
+        expect(server).toHaveReceivedMessages([{element: "plan_ok"}])
+        mockWSSender.mockClear();
+        server.close;
     });
 });
