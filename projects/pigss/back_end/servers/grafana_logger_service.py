@@ -34,11 +34,7 @@ class GrafanaLoggerService(ServiceTemplate):
 
     async def on_startup(self, app):
         log.debug("GrafanaLoggerService is starting up")
-
         self.app["config"] = self.app["farm"].config.get_glogger_plugin_config()
-
-        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
-        self.sqlite_path = lologger_proxy.get_sqlite_path()
         self.app["websockets"] = []
         self.tasks = []
         self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
@@ -89,6 +85,8 @@ class GrafanaLoggerService(ServiceTemplate):
         return web.json_response(result)
 
     def set_predefined_config(self):
+        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        self.sqlite_path = lologger_proxy.get_sqlite_path()
         query_dict = {}
         query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
         query_dict["limit"] = self.app["config"]["limit"]
