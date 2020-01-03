@@ -3,7 +3,7 @@ import os.path
 import time
 
 if INIT:
-    fname = os.path.join(BASEPATH,r"./NH3/spectral library v1_045_AXDS4_D5.ini")
+    fname = os.path.join(BASEPATH,r"./NH3/spectral library v1_045_AADS4_D5.ini")
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
@@ -41,11 +41,19 @@ z74 = r[74,"z"]
 v74 = r[74,"v"]
 now = time.clock()
 fit_time = now-tstart
-lastShift = 0.95*offset + 0.05*lastShift
-if lastShift > 0.04: lastShift = 0.04
-if lastShift < -0.04: lastShift = -0.04
+co2adjust=0.0
+print "peak74=", peak74
+if peak74>5 and peak74<500 and offset < 0.02:  
+    co2adjust = offset
+lastShift = 0.95*co2adjust + 0.05*lastShift
+if lastShift > 0.04: 
+    lastShift = 0.04
 
-RESULT = {"y_parameter":y74,"peak74":peak74,"str74":str74,"freq_offset":offset,"y74":y74,"z74":z74,"v74":v74,
+if lastShift < -0.04: 
+    lastShift = -0.04
+
+#lashShift was offset 
+RESULT = {"y_parameter":y74,"peak74":peak74,"str74":str74,"freq_offset":co2adjust,"y74":y74,"z74":z74,"v74":v74,
            "tuner_mean":tunerMean,"pzt_mean":pztMean,
            "tuner_std":std(d.tunerValue),"pzt_mean":std(d.pztValue),
            "fittime":fit_time}

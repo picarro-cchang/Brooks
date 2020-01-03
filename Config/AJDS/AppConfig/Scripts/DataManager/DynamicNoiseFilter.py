@@ -12,20 +12,21 @@ from math import fabs, pow
 import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-#if sys.platform == 'win32':
-#    Paras=CustomConfigObj("C:\Picarro\G2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
-#else:
-#    try:
-#        Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
-#    except Exception as e:
-#        print("Exception:",e)
-#        raise 
-		
-Paras=CustomConfigObj("../../AppConfig/Config/DataManager/DynamicFilter.ini")
+if sys.platform == 'win32':
+    Paras=CustomConfigObj("/home/picarro/I2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
+else:
+    try:
+        #Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+        # Set path to work on a running analyzer without git.
+        # We'll have to come up with a 'running from source method' later.
+        Paras=CustomConfigObj("/home/picarro/I2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+    except Exception as e:
+        print("Exception:",e)
+        raise 
 
 N_max=Paras.getint("Dynamic filter","N_max") # ini
 r_0=Paras.getfloat("Dynamic filter","r_0") #ini
-minNoise = [0.002, 0.05, 0.01,0.1]
+minNoise = [0.002, 0.05, 0.01]
 minNoise[0] = Paras.getfloat("Dynamic filter","MinNoiseHF")
 minNoise[1] = Paras.getfloat("Dynamic filter","MinNoiseNH3")
 minNoise[2] = Paras.getfloat("Dynamic filter","MinNoiseHCl")
@@ -113,8 +114,8 @@ def variableExpAverage(bufferZZ,buffer,y, t, length, MinNoiseID, previousS,previ
     MinNoise = minNoise[MinNoiseID]
 
     if MinNoise < 0.002: MinNoise = 0.002
-    if MinNoise > 0.5:  MinNoise = 0.5
-    #print MinNoise
+    if MinNoise > 0.05:  MinNoise = 0.05
+    # print MinNoise
     
     buffer.append((y,t))
     
