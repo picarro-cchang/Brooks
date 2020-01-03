@@ -712,27 +712,35 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_STANDBY:
             if self.status["standby"] != UiStatus.DISABLED:
+                log.debug("Entering Standby State")
                 return self.tran(self._standby)
         elif sig == Signal.BTN_IDENTIFY:
             if self.status["identify"] != UiStatus.DISABLED:
+                log.debug("Entering Identify State")
                 return self.tran(self._identify)
         elif sig == Signal.BTN_RUN:
             if self.status["run"] != UiStatus.DISABLED:
+                log.debug("Entering Run State")
                 return self.tran(self._run)
         elif sig == Signal.BTN_PLAN:
             if self.status["plan"] != UiStatus.DISABLED:
+                log.debug("Entering Plan State")
                 return self.tran(self._plan)
         elif sig == Signal.BTN_PLAN_RUN:
             if self.status["plan_run"] != UiStatus.DISABLED:
+                log.debug("Entering Plan Run State")
                 return self.tran(self._run_plan)
         elif sig == Signal.BTN_PLAN_LOOP:
             if self.status["plan_loop"] != UiStatus.DISABLED:
+                log.debug("Entering Plan Loop State")
                 return self.tran(self._loop_plan)
         elif sig == Signal.BTN_REFERENCE:
             if self.status["reference"] != UiStatus.DISABLED:
+                log.debug("Entering Reference State")
                 return self.tran(self._reference)
         elif sig == Signal.BTN_CLEAN:
             if self.status["clean"][e.value["bank"]] != UiStatus.DISABLED:
+                log.debug("Entering Clean State")
                 self.bank = e.value["bank"]
                 return self.tran(self._clean)
         elif sig == Signal.BTN_EDIT:
@@ -745,6 +753,8 @@ class PigssController(Ahsm):
         elif sig == Signal.PERFORM_VALVE_TRANSITION:
             self.log_transition(e.value)
             return self.handled(e)
+        else:
+            log.debug("Unknown State")
         return self.super(self._configure)
 
     @state
