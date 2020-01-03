@@ -753,8 +753,6 @@ class PigssController(Ahsm):
         elif sig == Signal.PERFORM_VALVE_TRANSITION:
             self.log_transition(e.value)
             return self.handled(e)
-        else:
-            log.debug("Unknown State")
         return self.super(self._configure)
 
     @state
