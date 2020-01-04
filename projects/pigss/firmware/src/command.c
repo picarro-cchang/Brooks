@@ -274,6 +274,16 @@ command_t command_array[] = {
    "none",
    0,
    &cmd_topaz_b_temperature_q},
+  // tza.rst -- Reset Topaz A
+  {"tza.rst",
+   "none",
+   0,
+   &cmd_topaz_a_reset},
+  // tzb.rst -- Reset Topaz B
+  {"tzb.rst",
+   "none",
+   0,
+   &cmd_topaz_b_reset},
   // End of table indicator.  Must be last.
   {"","",0,0}
 };
