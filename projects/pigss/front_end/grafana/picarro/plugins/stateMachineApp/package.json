@@ -18,7 +18,7 @@
     "prettier": "^1.18.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-list": "^0.8.11",
+    "react-list": "^0.8.13",
     "react-responsive-modal": "^4.0.1",
     "react-toastify": "^5.4.0",
     "style-loader": "^1.0.0"
