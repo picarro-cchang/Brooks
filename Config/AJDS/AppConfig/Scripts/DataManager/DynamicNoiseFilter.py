@@ -30,7 +30,6 @@ minNoise = [0.002, 0.05, 0.01]
 minNoise[0] = Paras.getfloat("Dynamic filter","MinNoiseHF")
 minNoise[1] = Paras.getfloat("Dynamic filter","MinNoiseNH3")
 minNoise[2] = Paras.getfloat("Dynamic filter","MinNoiseHCl")
-minNoise[3] = Paras.getfloat("Dynamic filter","MinNoiseH2S")
 
 # Operating parameters for the negative number filter.
 # See http://confluence.picarro.int/x/_gY4
@@ -40,7 +39,6 @@ nnfParams["alpha"] = Paras.getfloat("Negative Number Filter", "alpha")
 nnfParams["b_HF"] = Paras.getfloat("Negative Number Filter", "b_HF")
 nnfParams["b_HCl"] = Paras.getfloat("Negative Number Filter", "b_HCl")
 nnfParams["b_NH3"] = Paras.getfloat("Negative Number Filter", "b_NH3")
-nnfParams["b_H2S"] = Paras.getfloat("Negative Number Filter", "b_H2S")
 Max_len=2**(N_max+1)+4
 
 
@@ -180,8 +178,6 @@ def negative_number_filter(moleculeName, x):
         b = nnfParams["b_HCl"]
     elif moleculeName is "NH3":
         b = nnfParams["b_NH3"]
-    elif moleculeName is "H2S":
-        b = nnfParams["b_H2S"]	
     else:
         print("Molecule name:", moleculeName, " in DynamicNoiseFilter.py is an invalid key.")
     tmp = pow((pow(fabs(x), a) + pow((2*b), a) ), (1/a))
