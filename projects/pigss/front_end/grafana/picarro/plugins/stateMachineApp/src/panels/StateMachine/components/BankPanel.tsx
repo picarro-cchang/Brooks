@@ -112,6 +112,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       </div>
     ) : (
       <button
+      id = "clean"
         onClick={e =>
           this.props.ws_sender({ element: "clean", bank: this.props.bank })
         }
