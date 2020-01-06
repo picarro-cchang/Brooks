@@ -254,7 +254,7 @@ int main(void) {
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
 
-    // Reset the watchdog
+    // Reset the watchdog.  wdt_reset() is a macro provided by avr/wdt.h
     wdt_reset();
 
   }// end main for loop

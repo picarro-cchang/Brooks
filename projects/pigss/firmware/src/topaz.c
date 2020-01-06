@@ -200,11 +200,17 @@ int8_t topaz_reset(char board) {
   tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		TCA9539_OUTPUT_PORT_1_REG,
 		0);
-  _delay_ms(1);
+
+  // Wait for MPR devices to reset.  Honeywell claims this can take 250ms
+  _delay_ms(250);
+  
   // Bring the reset line back up
   tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
 		TCA9539_OUTPUT_PORT_1_REG,
 		_BV(TOPAZ_CLR_SHIFT));
+
+  // Wait for the power-on reset time
+  _delay_ms(5);
 
   // Start the pressure triggers and reads again
   OS_SetTaskState(pressure_state_get_trigger_task_number(), BLOCKED);
