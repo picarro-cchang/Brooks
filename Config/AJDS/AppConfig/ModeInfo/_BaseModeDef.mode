@@ -12,9 +12,10 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 2
+ModeCount = 3
 Mode_1 = NH3_mode
-Mode_2 = warming_mode
+Mode_2 = NH3_LCT_mode
+Mode_3 = warming_mode
 
 ############################################################################
 ###
@@ -27,6 +28,8 @@ Mode_2 = warming_mode
 #Specify logical names for referencing each SubSchemeID...
 NH3_H2O = 2
 NH3_ONLY = 4
+HF = 60
+O2 = 61
 
 # Default processing to use for any spectra/label can be supplied below.
 # - If the spectrum name is not referred to in the plan file for the active mode, the processing
