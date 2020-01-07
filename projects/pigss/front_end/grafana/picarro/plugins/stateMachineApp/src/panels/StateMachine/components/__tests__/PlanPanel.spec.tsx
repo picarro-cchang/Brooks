@@ -122,13 +122,13 @@ describe('<PlanPanel />', () => {
         expect(value).toMatchSnapshot();
     });
 
-    it('manageFocus', ()=> {
-        const shallow = mount(<PlanPanel {...defaultProps} />)
-        const planList = shallow.find('ReactList');
-        const elem = planList.find('input#plan-port-1');
-        elem.simulate('click');
-        expect(shallow.props().plan.focus).toEqual({"column": 2, "row": 1});
-    });
+    // it('manageFocus', ()=> {
+    //     const shallow = mount(<PlanPanel {...defaultProps} />)
+    //     const planList = shallow.find('ReactList');
+    //     const elem = planList.find('input#plan-port-1');
+    //     elem.simulate('focus');
+    //     expect(shallow.props().plan.focus).toEqual({"column": 1, "row": 1});
+    // });
 
     it('onFocus for Plan Channel', async ()=> {
         mockWSSender.mockClear();
@@ -322,5 +322,440 @@ describe('<PlanPanel />', () => {
         expect(server).toHaveReceivedMessages([{element: "plan_ok"}])
         mockWSSender.mockClear();
         server.close;
+    });
+
+    
+});
+describe('<PlanPanel /> 2', () => {
+    const defaultPropsRefFail: PlanPanelOptions = {
+        uistatus: {},
+        plan: {
+            max_steps: 32,
+            panel_to_show: 1,
+            current_step: 1,
+            focus: {
+                row: 1,
+                column: 2
+            },
+            last_step: 1,
+            steps: {
+                "1": {
+                    "banks": {
+                        "1": {
+                        "clean": 0,
+                        "chan_mask": 1
+                        },
+                        "2": {
+                        "clean": 0,
+                        "chan_mask": 0
+                        }
+                    },
+                    "reference": 1,
+                    "duration": 30
+                }
+            },
+            num_plan_files: 1,
+            plan_filename: "test.pln",
+            plan_files: {
+                "1": "test.pln"
+            },
+            bank_names: {
+                "1": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "2": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "3": {
+                    "name": "Bank 2",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "4": {
+                    "name": "Bank 3",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+            }
+        },
+        setFocus: mockSetFocus,
+        ws_sender: mockWSSender,
+        isChanged: true,
+        updateFileName: mockUpdateFilename
+    };
+
+    const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
+    const instance = wrapper.instance() as PlanPanel;
+
+    it('Snapshot', () => {
+        expect(wrapper).toMatchSnapshot();
+    })
+    it('renderItem', ()=> {
+        instance.makePlanRow = jest.fn();
+        const listItem = instance.renderItem(1,1);
+        expect(instance.makePlanRow).toHaveBeenCalled();
+        expect(listItem).toMatchSnapshot();
+    });
+
+    it('ReactList renders', ()=> {
+        const planList = mount(<PlanPanel {...defaultPropsRefFail} />);
+        expect(planList).toMatchSnapshot();
+    });
+});
+describe('<PlanPanel /> 3', () => {
+    const defaultPropsRefFail: PlanPanelOptions = {
+        uistatus: {},
+        plan: {
+            max_steps: 32,
+            panel_to_show: 1,
+            current_step: 1,
+            focus: {
+                row: 1,
+                column: 2
+            },
+            last_step: 1,
+            steps: {
+                "1": {
+                    "banks": {
+                        "1": {
+                            "clean": 10,
+                            "chan_mask": 0
+                            },
+                            "2": {
+                            "clean": 10,
+                            "chan_mask": 0
+                            }
+                    },
+                    "reference": 0,
+                    "duration": 20
+                }
+            },
+            num_plan_files: 1,
+            plan_filename: "test.pln",
+            plan_files: {
+                "1": "test.pln"
+            },
+            bank_names: {
+                "1": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "2": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "3": {
+                    "name": "Bank 2",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "4": {
+                    "name": "Bank 3",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+            }
+        },
+        setFocus: mockSetFocus,
+        ws_sender: mockWSSender,
+        isChanged: false,
+        updateFileName: mockUpdateFilename
+    };
+
+    const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
+    const instance = wrapper.instance() as PlanPanel;
+
+    it('renderItem', ()=> {
+        instance.makePlanRow = jest.fn();
+        const listItem = instance.renderItem(1,1);
+        expect(instance.makePlanRow).toHaveBeenCalled();
+        expect(listItem).toMatchSnapshot();
+    });
+
+    it('ReactList renders', ()=> {
+        const planList = mount(<PlanPanel {...defaultPropsRefFail} />);
+        expect(planList).toMatchSnapshot();
+    });
+});
+
+describe('<PlanPanel /> 4', () => {
+    const defaultPropsRefFail: PlanPanelOptions = {
+        uistatus: {},
+        plan: {
+            max_steps: 32,
+            panel_to_show: 1,
+            current_step: 1,
+            focus: {
+                row: 1,
+                column: 2
+            },
+            last_step: 1,
+            steps: {
+                "1": {
+                    "banks": {
+                        "1": {
+                            "clean": 0,
+                            "chan_mask": 0
+                            },
+                            "2": {
+                            "clean": 0,
+                            "chan_mask": 0
+                            }
+                    },
+                    "reference": 0,
+                    "duration": 20
+                }
+            },
+            num_plan_files: 1,
+            plan_filename: "test.pln",
+            plan_files: {
+                "1": "test.pln"
+            },
+            bank_names: {
+                "1": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "2": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "3": {
+                    "name": "Bank 2",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "4": {
+                    "name": "Bank 3",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+            }
+        },
+        setFocus: mockSetFocus,
+        ws_sender: mockWSSender,
+        isChanged: false,
+        updateFileName: mockUpdateFilename
+    };
+
+    const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
+    const instance = wrapper.instance() as PlanPanel;
+
+    it('ReactList renders', ()=> {
+        const planList = mount(<PlanPanel {...defaultPropsRefFail} />);
+        expect(planList).toMatchSnapshot();
+    });
+});
+
+describe('<PlanPanel /> 5', () => {
+    const defaultPropsRefFail: PlanPanelOptions = {
+        uistatus: {},
+        plan: {
+            max_steps: 32,
+            panel_to_show: 1,
+            current_step: 1,
+            focus: {
+                row: 1,
+                column: 2
+            },
+            last_step: 1,
+            steps: {
+                "1": {
+                    "banks": {
+                        "1": {
+                            "clean": 0,
+                            "chan_mask": 10
+                            },
+                            "2": {
+                            "clean": 0,
+                            "chan_mask": 10
+                            }
+                    },
+                    "reference": 0,
+                    "duration": 0
+                }
+            },
+            num_plan_files: 1,
+            plan_filename: "test.pln",
+            plan_files: {
+                "1": "test.pln"
+            },
+            bank_names: {
+                "1": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "2": {
+                    "name": "B1",
+                    "channels": {
+                        "1": "Channel 1",
+                        "2": "Channel 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "3": {
+                    "name": "Bank 2",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+                "4": {
+                    "name": "Bank 3",
+                    "channels": {
+                        "1": "Ch. 1",
+                        "2": "Ch. 2",
+                        "3": "Ch. 3",
+                        "4": "Ch. 4",
+                        "5": "Ch. 5",
+                        "6": "Ch. 6",
+                        "7": "Ch. 7",
+                        "8": "Ch. 8"
+                    }
+                },
+            }
+        },
+        setFocus: mockSetFocus,
+        ws_sender: mockWSSender,
+        isChanged: false,
+        updateFileName: mockUpdateFilename
+    };
+
+    const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
+    const instance = wrapper.instance() as PlanPanel;
+
+    it('', () => {
+        const test = new PlanPanel(defaultProps);
+        const result = test.makePlanRow(10);
+        expect(result).toMatchSnapshot();
+    })
+
+    it('ReactList renders', ()=> {
+        const planList = mount(<PlanPanel {...defaultPropsRefFail} />);
+        expect(planList).toMatchSnapshot();
     });
 });
