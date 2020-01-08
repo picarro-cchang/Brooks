@@ -6,9 +6,12 @@ import WS from 'jest-websocket-mock';
 import {Main} from '../Main';
 import PicarroAPI from '../../api/PicarroAPI';
 import 'jest-fetch-mock';
+
 const defaultProps = {
 
 };
+
+
 
 describe('<Main />', () => {
     const wrapper = shallow(<Main />);
@@ -34,7 +37,7 @@ describe('<Main />', () => {
     });
 
     it('updateFileName', () => {
-
+        
     });
 
     it('Modal', () => {
