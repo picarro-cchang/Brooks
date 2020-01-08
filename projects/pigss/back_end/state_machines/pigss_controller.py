@@ -291,7 +291,10 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"modal_info": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"modal_info": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def set_plan(self, path, value):
         """Set the portion of self.plan specified by `path` to the given `value`.
@@ -299,7 +302,10 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"plan": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"plan": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
@@ -307,7 +313,10 @@ class PigssController(Ahsm):
         the change is sent via a websocket to inform the UI of the change of status.
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"uistatus": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def plan_panel_update(self, msg):
         """Handle change of focus and edits in the duration column of the plan panel"""
