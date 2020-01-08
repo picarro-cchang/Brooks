@@ -46,6 +46,7 @@ class PigssRunner:
         self.port = None
         self.addr = None
         self.terminate_event = None
+        self.publish_errors = True
 
     def set_host(self, port, addr='0.0.0.0'):
         self.port = port
@@ -67,7 +68,7 @@ class PigssRunner:
 
     @log_async_exception(log_func=log.error, publish_terminate=True)
     async def server_init(self, config_filename):
-        self.app = web.Application()
+        self.app = web.Application(middlewares=[self.error_middleware])
         self.app.on_startup.append(self.on_startup)
         self.app.on_shutdown.append(self.on_shutdown)
         self.app.on_cleanup.append(self.on_cleanup)
@@ -128,6 +129,32 @@ class PigssRunner:
         site = web.TCPSite(self.runner, self.addr, self.port)
         await site.start()
         log.info(f"======== Running on http://{site._host}:{site._port} ========")
+
+    @web.middleware
+    async def error_middleware(self, request, handler):
+        try:
+            resp = await handler(request)
+        except web.HTTPNotFound:
+            return web.HTTPBadRequest(
+                reason="Bad Request",
+                text="Please check for inorrect use of API. The API requested, could not be found."
+            )
+        except Exception as e:  
+            # noqa
+            # Handle unexpected exception by replying with a traceback and optionally publishing an event
+            if self.publish_errors:
+                Framework.publish(
+                    Event(
+                        Signal.ERROR, {
+                            "type": "service",
+                            "exc": str(e),
+                            "traceback": traceback.format_exc(),
+                            "location": self.__class__.__name__,
+                            "request": str(request.url)
+                        }))
+                log.debug(f"Error hanadling the request {str(request.url)}. \n{format_exc()}")
+            raise HTTPInternalServerError(text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
+        return resp
 
     def handle_exception(self, loop, context):
         msg = context.get("exception", context["message"])
