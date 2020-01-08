@@ -5,19 +5,16 @@ import Modal from 'react-responsive-modal';
 import WS from 'jest-websocket-mock';
 import {Main} from '../Main';
 import PicarroAPI from '../../api/PicarroAPI';
-
+import 'jest-fetch-mock';
 const defaultProps = {
 
 };
 
-
-
 describe('<Main />', () => {
-    // const wrapper = shallow(<Main />);
+    const wrapper = shallow(<Main />);
 
     it('Snapshot', () => {
-        
-        // expect(wrapper).toMatchSnapshot();
+        expect(wrapper).toMatchSnapshot();
     });
 
     it('Check correct left panel is showing', () => {

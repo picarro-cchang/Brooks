@@ -42,6 +42,7 @@
     "fetch-mock": "^8.2.0-beta.2",
     "jest": "^24.9.0",
     "jest-extended": "^0.11.2",
+    "jest-fetch-mock": "^3.0.1",
     "jest-styled-components": "^6.3.4",
     "jest-websocket-mock": "^2.0.0",
     "mock-socket": "^9.0.2",
@@ -57,6 +58,9 @@
   },
   "jest": {
     "collectCoverage": true,
-    "coverageReporters": ["json", "html"]
-}
+    "coverageReporters": [
+      "json",
+      "html"
+    ]
+  }
 }
