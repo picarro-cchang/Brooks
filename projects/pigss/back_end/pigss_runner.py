@@ -137,7 +137,7 @@ class PigssRunner:
         except web.HTTPNotFound:
             return web.HTTPBadRequest(
                 reason="Bad Request",
-                text="Please check for inorrect use of API. The API requested, could not be found."
+                text="Please check for incorrect use of API. The API requested, could not be found."
             )
         except Exception as e:  
             # noqa
