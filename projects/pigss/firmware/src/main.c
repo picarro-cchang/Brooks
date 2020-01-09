@@ -113,7 +113,7 @@ int main(void) {
   // Set the system state to INIT
   set_system_state(system_state_INIT);
 
-  LED_init();
+  led_init();
 
   //  Set up the USART before setting up the logger -- the logger uses
   //  the USART for output.
@@ -217,10 +217,6 @@ int main(void) {
   // Set up the identify module.  This has to be done after
   // registering tasks so it can populate task IDs.
   identify_init();
-
-
-
-  // cs_manifold_a_sr_noe(1);
 
   // The main loop
   for(;;) {

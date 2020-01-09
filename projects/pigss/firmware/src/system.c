@@ -31,6 +31,9 @@
 // Provides commands for writing to SPI
 #include "spi.h"
 
+// Provides led-pulsing functions
+#include "led.h"
+
 // Provides definitions and functions for using the Topaz manifold boards
 #include "topaz.h"
 
@@ -558,6 +561,7 @@ bool system_usb_is_connected( void ) {
 }
 
 void system_comcheck_task( void ) {
+  led_pulse_arduino_led();
   if ( system_usb_is_connected() ) {
     // Everything is OK
     return;
