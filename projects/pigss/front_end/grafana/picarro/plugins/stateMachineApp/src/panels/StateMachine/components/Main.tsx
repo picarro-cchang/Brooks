@@ -293,6 +293,7 @@ export class Main extends React.Component<any, any> {
                 <div className="ref-div">
                   <button
                     type="button"
+                    id="reference"
                     onClick={e => this.ws_sender({ element: "reference" })}
                     className={"btn btn-large ref-btn"}
                     style={{ color: "black" }}

@@ -101,7 +101,7 @@ const defaultState = {
     uistatus: {},
     plan: {
       max_steps: 10,
-      panel_to_show: 0,
+      panel_to_show: 1,
       current_step: 1,
       focus: { row: 0, column: 0 },
       last_step: 0,
@@ -167,14 +167,132 @@ const defaultState = {
     options: {
       panel_to_show: 0
     },
-    isPlan: false,
+    isPlan: true,
     isChanged: false
   };
+
+  const uistatus = {
+    initialized: true,
+    uistatus: {
+      bank: {"1": "READY", "3": "READY", "4": "READY"}, 
+      channel: {
+        "1": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}, 
+        "3": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}, 
+        "4": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}
+      }, 
+      clean: {"1": "READY", "3": "READY", "4": "READY"}, edit: "READY", identify: "READY", 
+      plan: "READY", plan_loop: "DISABLED", plan_run: "DISABLED", reference: "READY", run: "READY", standby: "ACTIVE"
+    },
+  };
+
+  const modal_info = {
+    initialized: false,
+    modal_info: {
+      "show": false,
+      "html": "<h2 class='test'>Example Modal Dialog</h2><p>Test message</p>",
+      "num_buttons": 2,
+      "buttons": {
+        "1": {
+          "caption": "OK",
+          "className": "btn btn-success btn-large",
+          "response": "modal_ok"
+        },
+        "2": {
+          "caption": "Cancel",
+          "className": "btn btn-danger btn-large",
+          "response": "modal_close"
+        }
+      }
+    }
+  };
+
+  const plan = {
+    initialized: true,
+    plan: {
+      "max_steps": 32,
+      "panel_to_show": 0,
+      "current_step": 1,
+      "looping": false,
+      "focus": {
+        "row": 1,
+        "column": 1
+      },
+      "last_step": 0,
+      "steps": {},
+      "num_plan_files": 0,
+      "plan_files": {},
+      "plan_filename": "",
+      "bank_names": {
+        "1": {
+          "name": "Bank 1",
+          "channels": {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8"
+          }
+        },
+        "2": {
+          "name": "Bank 2",
+          "channels": {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8"
+          }
+        },
+        "3": {
+          "name": "Bank 3",
+          "channels": {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8"
+          }
+        },
+        "4": {
+          "name": "Bank 4",
+          "channels": {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8"
+          }
+        }
+      },
+      "available_ports": {
+        "1": 170,
+        "2": 0,
+        "3": 170,
+        "4": 170
+      }
+    }
+  };
+
+  const apiLoc = `${window.location.hostname}:8000/controller`;
+    const socketURL = `ws://${apiLoc}/ws`;
 
 describe('<Main />', () => {
     const wrapper = mount(<Main />);
     wrapper.setState({...defaultState});
     const instance = wrapper.instance() as Main;
+    
 
     it('Snapshot', () => {
         expect(wrapper).toMatchSnapshot();
@@ -189,8 +307,6 @@ describe('<Main />', () => {
         //     panel_to_show: 1
         //   }
         // });
-        // expect(wrapper.state()["plan"].panel_to_show).toEqual(1);
-        // expect(PlanPanelTypes.PLAN).toEqual(wrapper.state()["plan"].panel_to_show);
         // expect(wrapper).toMatchSnapshot();
         wrapper.setState({
           ...defaultState,
@@ -214,36 +330,122 @@ describe('<Main />', () => {
         });
         expect(wrapper.state()["plan"].panel_to_show).toEqual(4);
         wrapper.setState({
-          ...defaultState,
-          plan: {
-            panel_to_show: 0
-          }
+          ...defaultState
         });
     });
 
-    it('API test', () => {
+    it('ComponentDidMount', () => {
+      const spy = jest.spyOn(Main.prototype, 'componentDidMount');
+      const wrapper = mount(<Main />);
+      expect(spy).toHaveBeenCalled();
+      spy.mockReset();
+      spy.mockRestore();
+    });
 
+    it('getDataViaApi', () => {
+
+      // instance.getDataViaApi.call(defaultState);
+      
+    });
+
+    it('API test', async () => {
+      const response = await (await PicarroAPI.getRequest(`http://${apiLoc}/uistatus`)).json()
+      expect(response).toEqual(uistatus.uistatus);
     });
 
     it('handleData', () => {
-
+      instance.handleData(JSON.stringify(uistatus));
+      instance.handleData(JSON.stringify(plan));
+      instance.handleData(JSON.stringify(modal_info));
+      instance.handleData(JSON.stringify({}))
+      instance.setState({initialized: false});
+      instance.handleData(JSON.stringify({}))
     });
 
     it('WS', () => {
+      instance.ws_sender(uistatus);
+      expect(instance.ws.send).toBeTruthy();
+    });
 
+    it('setFocus', () => {
+      instance.setFocus(1, 2);
+      expect(instance.state.plan.focus).toEqual({row: 1, column: 2})
     });
 
     it('updateFileName', () => {
         instance.updateFileName.call(defaultState, true);
-        // expect(instance.state.isChanged).toEqual(true);
+        expect(instance.state.isChanged).toEqual(true);
         instance.updateFileName.call(defaultState, false);
     });
 
     it('Modal', () => {
+      wrapper.setState({
+        ...defaultState,
+        modal_info: {
+          show: true,
+          html: "<div>Hello<div>"
+        }
+      });
+      const modal = wrapper.find('Modal');
+      const closeBtn = modal.find('CloseIcon').find('button');
+      closeBtn.simulate('click');
+      //expect a ws to be called on close
+      // expect(wrapper.state()["modal_info"].show).toEqual(false);
 
+      wrapper.setState({
+        ...defaultState,
+        modal_info: {
+          "show": true,
+          "html": "<h2 class='test'>Confirm file overwrite</h2><p>File exists. Overwrite?</p>",
+          "num_buttons": 2,
+          "buttons": {
+            "1": {
+              "caption": "OK",
+              "className": "btn btn-success btn-large",
+              "response": "modal_ok"
+            },
+            "2": {
+              "caption": "Cancel",
+              "className": "btn btn-danger btn-large",
+              "response": "modal_close"
+            }
+          }
+        }
+      });
+
+      //test onclick will send a message to ws
     });
 
     it('Check banks render', () => {
 
     });
+});
+describe('<Main w/ PlanPanel />', () => {
+  const wrapper = mount(<Main />);
+  wrapper.setState({...defaultState1});
+
+  it('Snapshot', () => {
+      expect(wrapper).toMatchSnapshot();
+  });
+
+  it('Check reference button appears', async () => {
+    const server = new WS(socketURL);
+    const client = new WebSocket(socketURL);
+    const instance = wrapper.instance() as Main;
+    const mockWS = jest.fn();
+    instance.ws_sender = mockWS;
+    
+
+    await server.connected;
+
+    const refBtn = wrapper.find('button#reference')
+    refBtn.simulate('click');    
+    const element = mockWS.mock.calls[0][0];
+
+    client.send(element);
+    expect(instance.ws_sender).toHaveBeenCalled();
+    await expect(server).toReceiveMessage({element: "reference"});
+    expect(server).toHaveReceivedMessages([{element: "reference"}]);
+    server.close;
+  });
 });
