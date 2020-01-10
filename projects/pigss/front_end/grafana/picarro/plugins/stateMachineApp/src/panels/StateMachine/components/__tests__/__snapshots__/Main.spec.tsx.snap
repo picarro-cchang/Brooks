@@ -290,6 +290,70 @@ exports[`<Main /> Snapshot 1`] = `
 </Main>
 `;
 
+exports[`<Main /> Test Toast 1`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;
+
+exports[`<Main /> Test Toast 2`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;
+
 exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
 <Main>
   <div

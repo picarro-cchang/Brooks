@@ -7,7 +7,9 @@ import {Main} from '../Main';
 import PicarroAPI from '../../api/PicarroAPI';
 import 'jest-fetch-mock';
 import {PlanPanelTypes} from '../../types';
-import PlanPanel from '../PlanPanel';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import {notifyError, notifySuccess} from '../../utils/Notifications';
 
 const defaultState = {
     initialized: false,
@@ -286,9 +288,15 @@ const defaultState = {
   };
 
   const apiLoc = `${window.location.hostname}:8000/controller`;
-    const socketURL = `ws://${apiLoc}/ws`;
+  const socketURL = `ws://${apiLoc}/ws`;
+  const mockWS = jest.fn((element) => {return element});
+  const server = new WS(socketURL);
+  const client = new WebSocket(socketURL);
+
 
 describe('<Main />', () => {
+  
+  
     const wrapper = mount(<Main />);
     wrapper.setState({...defaultState});
     const instance = wrapper.instance() as Main;
@@ -334,23 +342,18 @@ describe('<Main />', () => {
         });
     });
 
-    it('ComponentDidMount', () => {
+    it('ComponentDidMount', async () => {
       const spy = jest.spyOn(Main.prototype, 'componentDidMount');
       const wrapper = mount(<Main />);
       expect(spy).toHaveBeenCalled();
       spy.mockReset();
       spy.mockRestore();
-    });
-
-    it('getDataViaApi', () => {
-
-      // instance.getDataViaApi.call(defaultState);
-      
-    });
+    })
 
     it('API test', async () => {
       const response = await (await PicarroAPI.getRequest(`http://${apiLoc}/uistatus`)).json()
       expect(response).toEqual(uistatus.uistatus);
+      // const response1 = await (await PicarroAPI.getRequest(`http://${apiLoc}/ui`)).json()
     });
 
     it('handleData', () => {
@@ -378,7 +381,8 @@ describe('<Main />', () => {
         instance.updateFileName.call(defaultState, false);
     });
 
-    it('Modal', () => {
+    it('Modal', async () => {
+      await server.connected;
       wrapper.setState({
         ...defaultState,
         modal_info: {
@@ -386,12 +390,16 @@ describe('<Main />', () => {
           html: "<div>Hello<div>"
         }
       });
-      const modal = wrapper.find('Modal');
+      //expect a ws to be called on close
+      const instance1 = wrapper.instance() as Main;
+      instance1.ws_sender = mockWS;
+      const modal = wrapper.find('Modal')
       const closeBtn = modal.find('CloseIcon').find('button');
       closeBtn.simulate('click');
-      //expect a ws to be called on close
-      // expect(wrapper.state()["modal_info"].show).toEqual(false);
-
+      const element = mockWS.mock.calls[0][0];
+      client.send(element);
+      expect(instance1.ws_sender).toHaveBeenCalled();
+      mockWS.mockClear();
       wrapper.setState({
         ...defaultState,
         modal_info: {
@@ -412,13 +420,47 @@ describe('<Main />', () => {
           }
         }
       });
-
+      const instance2 = wrapper.instance() as Main;
+      instance2.ws_sender = mockWS;
+      const modal2 = wrapper.find('Modal')
+      const cancelBtn = modal2.find('button').at(1);
+      cancelBtn.simulate('click');
+      const element2 = mockWS.mock.calls[0][0];
+      console.log(element2)
+      client.send(element2);
+      expect(instance2.ws_sender).toHaveBeenCalled();
+      mockWS.mockClear();
       //test onclick will send a message to ws
+      wrapper.setState({
+        ...defaultState,
+        modal_info: {
+          show: false
+        }
+      });
     });
 
     it('Check banks render', () => {
 
     });
+
+    it('Test Toast', () => {
+      notifyError( <div>
+        <h6>
+          <b>Web Socket Disconnected!</b>
+        </h6>
+      </div>);
+      const toast = wrapper.find('ToastContainer');
+      expect(toast).toMatchSnapshot();
+      notifySuccess( <div>
+        <h6>
+          <b>Web Socket Connected!</b>
+        </h6>
+      </div>);
+      const toastSuccess = wrapper.find('ToastContainer');
+      expect(toastSuccess).toMatchSnapshot();
+    });
+    server.close;
+    client.close;
 });
 describe('<Main w/ PlanPanel />', () => {
   const wrapper = mount(<Main />);
@@ -429,23 +471,21 @@ describe('<Main w/ PlanPanel />', () => {
   });
 
   it('Check reference button appears', async () => {
-    const server = new WS(socketURL);
-    const client = new WebSocket(socketURL);
     const instance = wrapper.instance() as Main;
-    const mockWS = jest.fn();
     instance.ws_sender = mockWS;
     
 
     await server.connected;
 
     const refBtn = wrapper.find('button#reference')
-    refBtn.simulate('click');    
+    refBtn.simulate('click');  
+    console.log("HEllo", mockWS.mock.calls);
+  
     const element = mockWS.mock.calls[0][0];
-
+    console.log(element)
     client.send(element);
     expect(instance.ws_sender).toHaveBeenCalled();
-    await expect(server).toReceiveMessage({element: "reference"});
-    expect(server).toHaveReceivedMessages([{element: "reference"}]);
-    server.close;
+    server.closed;
+    mockWS.mockClear();
   });
 });

@@ -52,7 +52,7 @@ describe('<BankPanel />', () => {
   const part = mount(<BankPanel {...defaultProps} />);
   const wrapper = shallow(<BankPanel {...defaultProps} />);
   const server = new WS(socketURL);
-    const client = new WebSocket(socketURL);
+  const client = new WebSocket(socketURL);
 
   it('Renders correctly', () => {
     expect(wrapper).toMatchSnapshot();
