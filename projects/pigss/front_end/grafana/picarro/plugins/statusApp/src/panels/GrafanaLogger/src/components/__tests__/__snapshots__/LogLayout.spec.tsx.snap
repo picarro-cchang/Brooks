@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<LogLayout /> Match Snapshot 1`] = `
+<Fragment>
+  <h3
+    className="text-center"
+  >
+    Logs
+  </h3>
+  <div
+    className="container-fluid"
+    style={
+      Object {
+        "height": "inherit",
+        "overflow": "scroll",
+      }
+    }
+  />
+</Fragment>
+`;
