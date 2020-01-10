@@ -87,6 +87,9 @@ bool system_usb_is_connected( void );
 // Set shutdown state if there's no USB communication
 void system_comcheck_task( void );
 
+// Pulse a green LED if the system is still running
+void system_heartbeat_task( void );
+
 // Enter shutdown mode
 int8_t system_enter_shutdown(void);
 

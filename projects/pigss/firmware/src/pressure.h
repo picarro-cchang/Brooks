@@ -129,4 +129,10 @@ void cmd_pressure_set_ema_alpha( command_arg_t *command_arg_ptr );
 // Get the exponential moving average
 void cmd_pressure_get_ema_alpha( command_arg_t *command_arg_ptr );
 
+//****** Set and get members of the pressure state structure *******//
+
+uint8_t pressure_state_get_trigger_task_number(void);
+
+uint8_t pressure_state_get_read_task_number(void);
+
 #endif

@@ -670,3 +670,12 @@ uint32_t pressure_convert_inlet_pascals( uint8_t channel, uint32_t raw ) {
 	       pascals);
   return (uint32_t) pascals;
 }
+
+uint8_t pressure_state_get_trigger_task_number(void) {
+  return pressure_state.pressure_trigger_task_number;
+}
+
+uint8_t pressure_state_get_read_task_number(void) {
+  return pressure_state.pressure_read_task_number;
+}
+

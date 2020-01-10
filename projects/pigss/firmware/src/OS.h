@@ -18,7 +18,7 @@
 #include <stddef.h>
 
 // Maximum number of tasks that can be registered
-#define OS_MAX_TASK_NUM ((uint8_t)10u)
+#define OS_MAX_TASK_NUM ((uint8_t)100u)
 
 // Maximum task period (ms)
 #define OS_MAX_TIME     ((uint16_t)10000u)
