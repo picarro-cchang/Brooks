@@ -40,6 +40,10 @@ void led_init(void) {
   DDRC |= _BV(DDC2);
   led_set_green_led( false );
 
+  // Create a task to allow pulsing this LED
+  OS_TaskCreate(&led_green_led_off_task, LED_GREEN_PULSE_MS, SUSPENDED);
+  led_state.green_led_off_task_number = OS_get_task_number(&led_green_led_off_task);
+
   // Tri-color LED blue channel is on PC1. Set this port pin to be an output and turn it off.
   DDRC |= _BV(DDC1);
   led_set_blue_led(false);
@@ -131,6 +135,16 @@ void led_set_green_led( bool setting ) {
     led_state.green_led_on = false;
   }
   return;
+}
+
+void led_green_led_off_task(void) {
+  led_set_green_led( false );
+  OS_SetTaskState(led_state.green_led_off_task_number, SUSPENDED);
+}
+
+void led_pulse_green_led(void) {
+  led_set_green_led( true );
+  OS_SetTaskState(led_state.green_led_off_task_number, BLOCKED);
 }
 
 void led_set_blue_led( bool setting ) {

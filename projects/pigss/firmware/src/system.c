@@ -113,6 +113,9 @@ void system_init( void ) {
     logger_msg_p("system", log_level_ERROR, PSTR("Comm check task id not found"));
   }
 
+  // Start the system heartbeat LED
+  OS_TaskCreate(&system_heartbeat_task, 1000, BLOCKED);
+
   // Check for USB connection.
   if ( system_usb_is_connected() ) {
     aloha_set_com_led_green();
@@ -569,7 +572,14 @@ void system_comcheck_task( void ) {
     logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
     aloha_set_com_led_red();
     system_enter_standby();
+    // Cancel the connection check.  This will get turned back on when
+    // there's a new connection, and thus a reset.
+    OS_SetTaskState(system_state.comm_check_task_number, SUSPENDED);
     return;
   }
+}
+
+void system_heartbeat_task( void ) {
+  led_pulse_green_led();
 }
 

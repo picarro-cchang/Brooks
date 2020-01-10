@@ -7,6 +7,8 @@
 
 #define LED_DEBUG_PULSE_MS 200
 
+#define LED_GREEN_PULSE_MS 50
+
 typedef struct led_state_struct {
   // Error (red) LED off task
   uint8_t error_led_off_task_number;
@@ -16,6 +18,9 @@ typedef struct led_state_struct {
 
   // Debug LED off task
   uint8_t debug_led_off_task_number;
+
+  // Green LED off task
+  uint8_t green_led_off_task_number;
 
   // Arduino LED on
   bool arduino_led_on;
@@ -74,6 +79,12 @@ void led_error_led_off_task(void);
 // Arguments:
 //   setting -- True for on, False for off
 void led_set_green_led(bool setting);
+
+// Pulse the green LED
+void led_pulse_green_led(void);
+
+// Turn the green LED off
+void led_green_led_off_task(void);
 
 // Set the blue LED
 //
