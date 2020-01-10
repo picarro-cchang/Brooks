@@ -49,39 +49,43 @@ hardware will be a custom PCB.
                 - [Typical Return](#typical-return-11)
             - [TZB.SN?](#tzbsn)
                 - [Typical Return](#typical-return-12)
+            - [TZA.RST](#tzarst)
+                - [Typical Return](#typical-return-13)
+            - [TZB.RST](#tzbrst)
+                - [Typical Return](#typical-return-14)
         - [Channel commands](#channel-commands)
             - [CHANENA n](#chanena-n)
                 - [Parameter (n)](#parameter-n-4)
-                - [Typical Return](#typical-return-13)
+                - [Typical Return](#typical-return-15)
             - [CHANENA? n](#chanena-n)
                 - [Parameter (n)](#parameter-n-5)
-                - [Typical Return](#typical-return-14)
+                - [Typical Return](#typical-return-16)
             - [CHANOFF n](#chanoff-n)
                 - [Parameter (n)](#parameter-n-6)
-                - [Typical Return](#typical-return-15)
+                - [Typical Return](#typical-return-17)
             - [CHANSET n](#chanset-n)
                 - [Parameter (n)](#parameter-n-7)
-                - [Typical Return](#typical-return-16)
+                - [Typical Return](#typical-return-18)
             - [CHANSET?](#chanset)
-                - [Typical Return](#typical-return-17)
+                - [Typical Return](#typical-return-19)
         - [Pressure commands](#pressure-commands)
             - [PRS.IN.RAW? n](#prsinraw-n)
                 - [Parameter (n)](#parameter-n-8)
-                - [Typical Return](#typical-return-18)
+                - [Typical Return](#typical-return-20)
             - [PRS.OUT.RAW? n](#prsoutraw-n)
-                - [Typical Return](#typical-return-19)
+                - [Typical Return](#typical-return-21)
             - [PRS.ALPHA n](#prsalpha-n)
                 - [Parameter (n)](#parameter-n-9)
-                - [Typical Return](#typical-return-20)
+                - [Typical Return](#typical-return-22)
             - [PRS.ALPHA?](#prsalpha)
-                - [Typical Return](#typical-return-21)
+                - [Typical Return](#typical-return-23)
         - [Temperature commands](#temperature-commands)
             - [VER.TMP?](#vertmp)
-                - [Typical Return](#typical-return-22)
-            - [TZA.TMP?](#tzatmp)
-                - [Typical Return](#typical-return-23)
-            - [TZB.TMP?](#tzbtmp)
                 - [Typical Return](#typical-return-24)
+            - [TZA.TMP?](#tzatmp)
+                - [Typical Return](#typical-return-25)
+            - [TZB.TMP?](#tzbtmp)
+                - [Typical Return](#typical-return-26)
         - [Proportional bypass valve commands](#proportional-bypass-valve-commands)
             - [CHx.BYP.DAC n](#chxbypdac-n)
                 - [Parameter (n)](#parameter-n-10)
@@ -91,13 +95,13 @@ hardware will be a custom PCB.
                 - [Typical return](#typical-return-1)
         - [Channel identification commands](#channel-identification-commands)
             - [MFCVAL?](#mfcval)
-                - [Typical Return](#typical-return-25)
-            - [IDENTIFY](#identify)
-                - [Typical Return](#typical-return-26)
-            - [IDSTATE?](#idstate)
                 - [Typical Return](#typical-return-27)
-            - [ACTIVECH?](#activech)
+            - [IDENTIFY](#identify)
                 - [Typical Return](#typical-return-28)
+            - [IDSTATE?](#idstate)
+                - [Typical Return](#typical-return-29)
+            - [ACTIVECH?](#activech)
+                - [Typical Return](#typical-return-30)
     - [Release history](#release-history)
         - [Version 1.0.0](#version-100)
         - [Version 1.0.1](#version-101)
@@ -118,6 +122,7 @@ hardware will be a custom PCB.
         - [Version 1.1.6](#version-116)
         - [Version 1.1.7](#version-117)
         - [Version 1.1.8](#version-118)
+        - [Version 1.1.9](#version-119)
 
 <!-- markdown-toc end -->
 
@@ -372,6 +377,24 @@ Query the serial number for manifold (Topaz) board B.
 | `10`   | Successful return for Topaz board 10 |
 | `-1`   | Topaz A not connected                |
 
+#### TZA.RST ####
+
+Execute a hardware reset of manifold (Topaz) board A.  This does not
+seem to reset the MPR pressure sensors.
+
+##### Typical Return #####
+
+0
+
+#### TZB.RST ####
+
+Execute a hardware reset of manifold (Topaz) board B.  This does not
+seem to reset the MPR pressure sensors.
+
+##### Typical Return #####
+
+0
+
 ### Channel commands ###
 
 Each manifold box (piglet) has 8 channels.  Internally, there are 4 channels on two manifold (topaz) boards.  Channels are arranged on boards as shown below.
@@ -520,6 +543,8 @@ in Celsius.  Temperatures are always positive integers.
 ##### Typical Return #####
 
 25
+
+
 
 ### Proportional bypass valve commands ###
 
@@ -778,3 +803,14 @@ distribution) board, Topaz A (manifold A) board, and Topaz B (manifold
 B) board.  These commands query hardware sensors on the I2C bus, and
 thus can be used to detect problems with I2C communication over ribbon
 cables.
+
+### Version 1.1.9 ###
+
+This version adds the [TZA.RST](#tzarst) and [TZB.RST](#tzbrst)
+commands.  We tried and failed to use these commands to reset
+locked-up MPR pressure sensors.
+
+This version also adds support for LEDs on the system board.  The red
+LED will flash when the system experiences an error.
+
+
