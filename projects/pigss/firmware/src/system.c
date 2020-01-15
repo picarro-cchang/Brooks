@@ -31,6 +31,9 @@
 // Provides commands for writing to SPI
 #include "spi.h"
 
+// Provides led-pulsing functions
+#include "led.h"
+
 // Provides definitions and functions for using the Topaz manifold boards
 #include "topaz.h"
 
@@ -109,6 +112,9 @@ void system_init( void ) {
   } else {
     logger_msg_p("system", log_level_ERROR, PSTR("Comm check task id not found"));
   }
+
+  // Start the system heartbeat LED
+  OS_TaskCreate(&system_heartbeat_task, 1000, BLOCKED);
 
   // Check for USB connection.
   if ( system_usb_is_connected() ) {
@@ -558,6 +564,7 @@ bool system_usb_is_connected( void ) {
 }
 
 void system_comcheck_task( void ) {
+  led_pulse_arduino_led();
   if ( system_usb_is_connected() ) {
     // Everything is OK
     return;
@@ -565,7 +572,14 @@ void system_comcheck_task( void ) {
     logger_msg_p("system",log_level_DEBUG,PSTR("No connection"));
     aloha_set_com_led_red();
     system_enter_standby();
+    // Cancel the connection check.  This will get turned back on when
+    // there's a new connection, and thus a reset.
+    OS_SetTaskState(system_state.comm_check_task_number, SUSPENDED);
     return;
   }
+}
+
+void system_heartbeat_task( void ) {
+  led_pulse_green_led();
 }
 

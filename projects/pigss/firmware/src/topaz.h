@@ -97,6 +97,12 @@ void cmd_topaz_a_temperature_q( command_arg_t *command_arg_ptr );
 // Temperature will be a positive integer indicating temperature in C
 void cmd_topaz_b_temperature_q( command_arg_t *command_arg_ptr );
 
+// Command to reset Topaz A
+void cmd_topaz_a_reset( command_arg_t *command_arg_ptr );
+
+// Command to reset Topaz B
+void cmd_topaz_b_reset( command_arg_t *command_arg_ptr );
+
 // Set the I2C mux(s) to talk to Topaz A
 int8_t topaz_a_connect(void);
 

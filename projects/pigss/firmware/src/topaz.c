@@ -22,6 +22,9 @@
 // Definition of LINE_TERMINATION_CHARACTERS
 #include "usart.h"
 
+// Functions for maintaining a simple schedule
+#include "OS.h"
+
 // Definitions common to i2c devices
 #include "i2c.h"
 
@@ -32,8 +35,14 @@
 // Provides functions for working with the TCA9548 I2C switch
 #include "tca954xa.h"
 
+// Provides functions for working with the LM75A temperature sensor
+#include "lm75a.h"
+
 // Provides setter and getter functions for the system state structure
 #include "system.h"
+
+// Provides functions for working with the pressure sensors
+#include "pressure.h"
 
 // Provides functions and definitions for working with Whitfield boards
 #include "whitfield.h"
@@ -163,8 +172,8 @@ int8_t topaz_reset(char board) {
       retval += whitfield_set_i2c_mux(0);
     }
     if (!topaz_is_connected('a')) {
-	// No Topaz connection
-	return -1;
+      // No Topaz connection
+      return -1;
     }
     break;
   case 'b':
@@ -176,25 +185,41 @@ int8_t topaz_reset(char board) {
       retval += whitfield_set_i2c_mux(1);
     }
     if (!topaz_is_connected('b')) {
-	// No Topaz connection
-	return -1;
+      // No Topaz connection
+      return -1;
     }
     break;
   default:
     retval += -1;
   }
-    // Bring the reset line low
-    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
-		  TCA9539_OUTPUT_PORT_1_REG,
-		  0);
-    _delay_ms(1);
-    // Bring the reset line back up
-    tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
-		  TCA9539_OUTPUT_PORT_1_REG,
-		  _BV(TOPAZ_CLR_SHIFT));
+  // Stop the pressure triggers and reads
+  OS_SetTaskState(pressure_state_get_trigger_task_number(), SUSPENDED);
+  OS_SetTaskState(pressure_state_get_read_task_number(), SUSPENDED);
+  
+  // Bring the reset line low
+  tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		TCA9539_OUTPUT_PORT_1_REG,
+		0);
+
+  // Wait for MPR devices to reset.  Honeywell claims this can take 250ms
+  _delay_ms(250);
+  
+  // Bring the reset line back up
+  tca9539_write(TOPAZ_I2C_GPIO_ADDRESS,
+		TCA9539_OUTPUT_PORT_1_REG,
+		_BV(TOPAZ_CLR_SHIFT));
+
+  // Wait for the power-on reset time
+  _delay_ms(5);
+
+  // Start the pressure triggers and reads again
+  OS_SetTaskState(pressure_state_get_trigger_task_number(), BLOCKED);
+  OS_SetTaskState(pressure_state_get_read_task_number(), BLOCKED);
 
   return retval;
 }
+
+
 
 int8_t topaz_set_serial_number(char board, uint16_t serial_number) {
   uint8_t i2c_address;
@@ -322,6 +347,36 @@ void cmd_topaz_b_get_serial_number( command_arg_t *command_arg_ptr ) {
   usart_printf(USART_CHANNEL_COMMAND, "%u%s",
 	       sernum,
 	       LINE_TERMINATION_CHARACTERS );
+}
+
+void cmd_topaz_a_reset( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('a')) {
+      // There's no Topaz A
+      command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+  int8_t retval = 0;
+  retval += topaz_reset('a');
+  if (retval == 0) {
+    command_ack();
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+  }
+}
+
+void cmd_topaz_b_reset( command_arg_t *command_arg_ptr ) {
+  if (!topaz_is_connected('b')) {
+      // There's no Topaz B
+      command_nack(NACK_COMMAND_FAILED);
+    return;
+  }
+  int8_t retval = 0;
+  retval += topaz_reset('b');
+  if (retval == 0) {
+    command_ack();
+  } else {
+    command_nack(NACK_COMMAND_FAILED);
+  }
 }
 
 void cmd_topaz_a_temperature_q( command_arg_t *command_arg_ptr ) {

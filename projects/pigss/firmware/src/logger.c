@@ -8,19 +8,17 @@
 #include "logger.h"
 #include "usart.h"
 
+// Provides led_pulse_error_led() for error messages
+#include "led.h"
+
 /* pgmspace.h
  * Contains macros and functions for saving and reading data out of
  * flash.
  */
 #include <avr/pgmspace.h>
 
-
-/* command.h
-
-   Contains the definition of command_arg_t -- the data type used to
-   hold arguments to functions executed by remote commands.
-
- */
+// Contains the definition of command_arg_t -- the data type used to
+// hold arguments to functions executed by remote commands.
 #include "command.h"
 
 // Define a pointer to the logging configuration
@@ -342,6 +340,7 @@ void logger_system_filter( char *logsys, logger_level_t loglevel, char *logmsg )
 	  break;
 	case log_level_ERROR:
 	  logger_output("[E]");
+	  led_pulse_error_led();
 	  break;
 	}
 	snprintf(sysname,LOGGER_BUFFERSIZE,"(%s) ", system_array_ptr -> name);

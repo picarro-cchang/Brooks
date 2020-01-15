@@ -113,7 +113,7 @@ int main(void) {
   // Set the system state to INIT
   set_system_state(system_state_INIT);
 
-  LED_init();
+  led_init();
 
   //  Set up the USART before setting up the logger -- the logger uses
   //  the USART for output.
@@ -218,10 +218,6 @@ int main(void) {
   // registering tasks so it can populate task IDs.
   identify_init();
 
-
-
-  // cs_manifold_a_sr_noe(1);
-
   // The main loop
   for(;;) {
 
@@ -254,7 +250,7 @@ int main(void) {
     // received character ISR.
     command_process_pbuffer( recv_cmd_state_ptr, command_array );
 
-    // Reset the watchdog
+    // Reset the watchdog.  wdt_reset() is a macro provided by avr/wdt.h
     wdt_reset();
 
   }// end main for loop
