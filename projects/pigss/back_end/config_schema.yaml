@@ -67,6 +67,7 @@ GrafanaLogger:
     columns: list(str())
   limit: int()
   interval: num()
+  level: list(num())
   timeout: num()
   retries: int()
 ---
