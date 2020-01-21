@@ -1,0 +1,92 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the activech? query
+
+tcltest::test vernon.temperature.recognize {
+    Test recognizing the ver.tmp? query.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "ver.tmp?"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+tcltest::test vernon.temperature.check {
+    Test the temperature on the Vernon board.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "ver.tmp?"
+    set return_string [boxer::readline $channel]
+    # Temperature should be between 20 and 40 C
+    ${log}::info "Vernon temperature is $return_string C"
+    set test_result [expr ($return_string >= 20) && ($return_string <= 40)]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+tcltest::test topaz.a.temperature.recognize {
+    Test recognizing the tza.tmp? query.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.tmp?"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+tcltest::test topaz.a.temperature.check {
+    Test the temperature on the Topaz A board.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tza.tmp?"
+    set return_string [boxer::readline $channel]
+    # Temperature should be between 20 and 40 C
+    ${log}::info "Topaz A temperature is $return_string C"
+    set test_result [expr ($return_string >= 20) && ($return_string <= 40)]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+
+tcltest::test topaz.b.temperature.recognize {
+    Test recognizing the tzb.tmp? query.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.tmp?"
+    set return_string [boxer::readline $channel]
+    # Return string will be greater than zero if the command is recognized.
+    set test_result [expr $return_string >= 0]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1
+
+
+tcltest::test topaz.b.temperature.check {
+    Test the temperature on the Topaz B board.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "tzb.tmp?"
+    set return_string [boxer::readline $channel]
+    # Temperature should be between 20 and 40 C
+    ${log}::info "Topaz B temperature is $return_string C"
+    set test_result [expr ($return_string >= 20) && ($return_string <= 40)]
+    return $test_result
+} -cleanup {
+    
+} -match regexp -result 1

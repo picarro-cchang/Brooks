@@ -20,11 +20,11 @@ interface State {
   interval?: number;
   timeRange?: number;
   ws?: WebSocket;
+  dbReset?: boolean;
 }
 
 interface picarroStorage {
   logState: State;
-  logProps: Props;
 }
 
 export class LogPanel extends PureComponent<Props, State> {
@@ -38,7 +38,8 @@ export class LogPanel extends PureComponent<Props, State> {
       query: {},
       interval: this.getInterval(),
       timeRange: defaultTimeRange,
-      ws: null
+      ws: null,
+      dbReset: false
     };
   }
 
@@ -53,7 +54,11 @@ export class LogPanel extends PureComponent<Props, State> {
   setPicarroStorage = (logStorage: picarroStorage) => {
     // set picarroStorage object in sessionStorage
     if (window.sessionStorage) {
-      sessionStorage.setItem(storageKey, JSON.stringify(logStorage));
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(logStorage));
+      } catch (error) {
+        this.clearPicarroStorage();
+      }
     }
   }
 
@@ -85,7 +90,7 @@ export class LogPanel extends PureComponent<Props, State> {
     const end = new Date(this.props.data.request.range.to).getTime();
     // @ts-ignore
     const interval = this.getInterval();
-    const rowid = initial ? -1 : this.state.data.length ? this.state.data[0][0] : -1;
+    const rowid = initial ? -1 : this.state.dbReset ? -1 : this.state.data.length ? this.state.data[0][0] : -1;
     const limit = initial ? LOG_LIMIT : this.props.options.limit;
     const query: any = {
       rowid,
@@ -124,35 +129,21 @@ export class LogPanel extends PureComponent<Props, State> {
     };
 
     ws.onmessage = evt => {
-      // on receiving a message, add it to the list of messages
-      const rows = JSON.parse(evt.data).reverse();
-      let logs = [...rows, ...this.state.data];
-      if (this.state.data.length > 0) {
-        // filter messages from front-end that doesn't fall in the timerange
-        // @ts-ignore
-        const fromDate = new Date(dateMath.parse(this.props.data.request.range.raw.from));
-        this.setState(() => {
-          const filteredLogs = this.filterLogs(logs, fromDate);
-          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
-          return { data: filteredLogs };
-        });
-      } else {
-        this.setState(() => { return { data: logs } });
-        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
-      }
-      // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
-      if (this.state.data.length > LOG_LIMIT) {
-        this.state.data.length = LOG_LIMIT;
-      }
+      this.handleWSData(ws, evt.data);
     };
 
-    ws.onclose = () => {
-      toast.dismiss();
+    ws.onclose = (event) => {
       setTimeout(() => {
-        setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval);
-        this.setupWSComm();
-      }, this.state.interval);
+        // If client did not initiated close event, initiate a new websocket connection
+        if (event.code !== 1000) {
+          toast.dismiss();
+          this.setupWSComm();
+        }
+      }, this.state.interval * 1000);
     };
+    ws.onerror = (evt) => {
+      notifyError("Websocket connection closed. Trying to reconnect again.");
+    }
   }
 
   getStateFromSavedData = () => {
@@ -170,6 +161,41 @@ export class LogPanel extends PureComponent<Props, State> {
     return false;
   }
 
+  handleWSData = (ws: WebSocket, data: any) => {
+    // Handle cases for RESET, PING, and LOGS
+    const parsed = JSON.parse(data);
+    if (parsed.type === "RESET") {
+      this.setState({ dbReset: true });
+    } else if (parsed.type === "LOGS") {
+      const rows = parsed.logs.reverse();
+      let logs = [...rows, ...this.state.data];
+      if (this.state.data.length > 0) {
+        if (this.state.dbReset) {
+          this.setState({ dbReset: false });
+        }
+        // filter messages from front-end that doesn't fall in the timerange
+        // @ts-ignore
+        const fromDate = new Date(dateMath.parse(this.props.data.request.range.raw.from));
+        this.setState(() => {
+          const filteredLogs = this.filterLogs(logs, fromDate);
+          this.setPicarroStorage({ logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+          return { data: filteredLogs };
+        });
+      } else {
+        this.setState(() => { return { data: logs } });
+        this.setPicarroStorage({ logState: { ...this.state, ws: ws, data: [...logs, ...this.state.data] } });
+      }
+      // Remove the previous logs data on front-end, if the rows are more than LOG_LIMIT.
+      if (this.state.data.length > LOG_LIMIT) {
+        this.state.data.length = LOG_LIMIT;
+      }
+    } else if (parsed.type === "PING") {
+      // send PONG
+    } else if (parsed.type === 'PONG') {
+      // send ping
+    }
+  }
+
   componentDidMount() {
     // @ts-ignore
     const fromTime = new Date(dateMath.parse(this.props.data.request.range.raw.from));
@@ -184,7 +210,7 @@ export class LogPanel extends PureComponent<Props, State> {
         this.setState(() => {
           return { data: orderedLogs };
         });
-        this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: orderedLogs } });
+        this.setPicarroStorage({ logState: { ...this.state, data: orderedLogs } });
       });
     }
     this.setupWSComm();
@@ -215,7 +241,7 @@ export class LogPanel extends PureComponent<Props, State> {
         this.getLogsData(queryObj).then((data: any) => {
           const logs = data.reverse();
           this.setState(() => { return { data: logs } });
-          this.setPicarroStorage({ logProps: this.props, logState: { ...this.state, data: logs } });
+          this.setPicarroStorage({ logState: { ...this.state, data: logs } });
         });
       }
     } else if (
@@ -232,10 +258,10 @@ export class LogPanel extends PureComponent<Props, State> {
 
   componentWillUnmount() {
     // notiffy websocket to stop sending new messages
-    this.setPicarroStorage({ logProps: this.props, logState: this.state });
+    this.setPicarroStorage({ logState: this.state });
     if (this.state.ws !== null) {
       this.state.ws.send(JSON.stringify({ "message": "CLOSE" }));
-      this.state.ws.close(1001, "Going Away");
+      this.state.ws.close(1000, "Normal Closure");
     }
   }
 

@@ -2,7 +2,7 @@
 
 CONFIG_DIR="/home/$SUDO_USER/.config/pigss"
 TMP_DIR=/tmp/config/pigss-core
-SERVICE_DIR=/etc/systemd/system
+SERVICE_DIR=/etc/systemd/user
 SERVICE_FILE=pigss-core.service
 sudo mkdir -p $CONFIG_DIR
 
@@ -17,10 +17,13 @@ sudo cp -r $TMP_DIR/config_schema.yaml $CONFIG_DIR
 # Make sure files and folders are owned by $SUDO_USER
 sudo chown -R $SUDO_USER:$SUDO_USER $CONFIG_DIR
 
-# Enable and Start the systemd system service
+# Reload the systemctl daemon
 sudo systemctl daemon-reload
-sudo systemctl enable $SERVICE_FILE
-sudo systemctl start $SERVICE_FILE
+
+# Prompt the user to enable the user systemd service
+printf "\nEnter the following commands to enable the service:\n"
+printf "systemctl --user enable $SERVICE_FILE\n"
+printf "systemctl --user start $SERVICE_FILE\n"
 
 # Clean up the tmp directory
 sudo rm -rf /tmp/config/pigss-core

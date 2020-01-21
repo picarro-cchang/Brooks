@@ -231,10 +231,6 @@ int8_t channel_update() {
 
     // Clear the blue LED bits
     new_led_value = aloha_clear_clean_led_bits(new_led_value);
-  } else {
-    // There are no enabled channels.  This means we're in standby.
-    // set_system_state(system_state_STANDBY);
-    // system_enter_standby();
   }
 
   // Update hardware solenoids.  Disabled channels are energized.

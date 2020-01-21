@@ -78,7 +78,7 @@ if __name__ == "__main__":
             },
             "time": datetime.datetime.now()
         }]
-        await db_Writer.write_data(data)
+        await asyncio.shield(db_Writer.write_data(data))
         data = await db_Writer.read_data("select * from modbusSettings ")
         print(list(iterpoints(data)))
 

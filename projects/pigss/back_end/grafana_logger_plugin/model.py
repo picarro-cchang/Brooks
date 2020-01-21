@@ -90,7 +90,7 @@ class EventsModel:
                 k += 1
             else:
                 new_query += ch
-        print(f"-> {new_query}")
+        print(f"Query: {new_query}")
 
     @classmethod
     def execute_query(cls, sqlite_path, query, values, table_name, log):
@@ -115,3 +115,7 @@ class EventsModel:
             log.error("DB File does not exist.")
         except ConnectionError:
             log.error("Unable to connect to SQLite DB")
+
+    @classmethod
+    def close_connection(cls):
+        SQLiteInstance.close_connection();

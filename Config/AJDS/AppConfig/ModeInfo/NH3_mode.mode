@@ -7,8 +7,7 @@ Tuning = CavityLength
 #     care of (primarily for the background load/alternate scheme index stuff)
 
 SchemeCount = 1
-#Scheme_1_Path = ../Schemes/_AEDS NH3 FSR and Water FSR.sch
-Scheme_1_Path = ../Schemes/_AXDS-xx NH3+H2O v01.sch
+Scheme_1_Path = ../Schemes/_AEDS-xx NH3+H2O v01.sch
 
 [SPECTRUM_IDS]
 #Specify logical names for referencing each SubSchemeID...
@@ -47,9 +46,9 @@ Analyzer= ../Scripts/DataManager/analyze_NH3.py
 [SYNC_SETUP]
 #Define synchronous executions to be run by the DataManager in this mode
 # - Note that these are in addition to any in _BaseDefinition.ini
-NumSyncAnalyzers = 1
+NumSyncAnalyzers = 0
 
 #Try a generic synchronizer...
 Sync_1_Period_s = 5
 Sync_1_ReportName = SyncNH3
-Sync_1_Script = ../Scripts/DataManager/resyncOnly.py
+Sync_1_Script = ../Scripts/DataManager/resyncOnlyNH3.py

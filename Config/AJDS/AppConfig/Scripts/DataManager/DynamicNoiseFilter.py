@@ -12,24 +12,24 @@ from math import fabs, pow
 import numpy as np
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-#if sys.platform == 'win32':
-#    Paras=CustomConfigObj("C:\Picarro\G2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
-#else:
-#    try:
-#        Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
-#    except Exception as e:
-#        print("Exception:",e)
-#        raise 
-		
-Paras=CustomConfigObj("../../AppConfig/Config/DataManager/DynamicFilter.ini")
+if sys.platform == 'win32':
+    Paras=CustomConfigObj("/home/picarro/I2000\AppConfig\Config\DataManager\DynamicFilter_AMADS.ini")
+else:
+    try:
+        #Paras=CustomConfigObj(os.path.expanduser('~') +"/git/host/Config/AMADS/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+        # Set path to work on a running analyzer without git.
+        # We'll have to come up with a 'running from source method' later.
+        Paras=CustomConfigObj("/home/picarro/I2000/AppConfig/Config/DataManager/DynamicFilter_AMADS.ini")
+    except Exception as e:
+        print("Exception:",e)
+        raise 
 
 N_max=Paras.getint("Dynamic filter","N_max") # ini
 r_0=Paras.getfloat("Dynamic filter","r_0") #ini
-minNoise = [0.002, 0.05, 0.01,0.1]
+minNoise = [0.002, 0.05, 0.01]
 minNoise[0] = Paras.getfloat("Dynamic filter","MinNoiseHF")
 minNoise[1] = Paras.getfloat("Dynamic filter","MinNoiseNH3")
 minNoise[2] = Paras.getfloat("Dynamic filter","MinNoiseHCl")
-minNoise[3] = Paras.getfloat("Dynamic filter","MinNoiseH2S")
 
 # Operating parameters for the negative number filter.
 # See http://confluence.picarro.int/x/_gY4
@@ -39,7 +39,6 @@ nnfParams["alpha"] = Paras.getfloat("Negative Number Filter", "alpha")
 nnfParams["b_HF"] = Paras.getfloat("Negative Number Filter", "b_HF")
 nnfParams["b_HCl"] = Paras.getfloat("Negative Number Filter", "b_HCl")
 nnfParams["b_NH3"] = Paras.getfloat("Negative Number Filter", "b_NH3")
-nnfParams["b_H2S"] = Paras.getfloat("Negative Number Filter", "b_H2S")
 Max_len=2**(N_max+1)+4
 
 
@@ -113,8 +112,8 @@ def variableExpAverage(bufferZZ,buffer,y, t, length, MinNoiseID, previousS,previ
     MinNoise = minNoise[MinNoiseID]
 
     if MinNoise < 0.002: MinNoise = 0.002
-    if MinNoise > 0.5:  MinNoise = 0.5
-    #print MinNoise
+    if MinNoise > 0.05:  MinNoise = 0.05
+    # print MinNoise
     
     buffer.append((y,t))
     
@@ -179,8 +178,6 @@ def negative_number_filter(moleculeName, x):
         b = nnfParams["b_HCl"]
     elif moleculeName is "NH3":
         b = nnfParams["b_NH3"]
-    elif moleculeName is "H2S":
-        b = nnfParams["b_H2S"]	
     else:
         print("Molecule name:", moleculeName, " in DynamicNoiseFilter.py is an invalid key.")
     tmp = pow((pow(fabs(x), a) + pow((2*b), a) ), (1/a))

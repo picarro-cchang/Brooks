@@ -172,3 +172,10 @@ int8_t vernon_set_clean_solenoid(uint8_t setting) {
   }
   return retval;
 }
+
+void cmd_vernon_temperature_q( command_arg_t *command_arg_ptr ) {
+  uint8_t temperature_reading = lm75a_get_temperature(VERNON_I2C_TSENSOR_ADDRESS);
+  usart_printf( USART_CHANNEL_COMMAND, "%i%s",
+		temperature_reading,
+		LINE_TERMINATION_CHARACTERS );
+}

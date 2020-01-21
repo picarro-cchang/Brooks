@@ -96,7 +96,7 @@ class LOLogger(object):
         self.zip_old_file = zip_old_file
         self.do_database_transition = do_database_transition
 
-        self.queue = queue.Queue(200)
+        self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
         self.LogLevel = 1
         self.logs_passed_to_queue = 0
@@ -146,7 +146,17 @@ class LOLogger(object):
             EpochTime = int(1000 * timeutils.get_epoch_timestamp())
 
             values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
-            self.queue.put_nowait(values)
+            try:
+                self.queue.put_nowait(values)
+            except queue.Full:
+                temp_queue = queue.Queue(maxsize=2 * self.queue.qsize())
+                while not self.queue.empty():
+                    temp_queue.put(self.queue.get())
+                self.queue = temp_queue
+            except MemoryError:
+                # TO DO
+                print("IF THIS HAS REACHED, WE MIGHT NEED NEW STRATEGY")
+
             self.logs_passed_to_queue += 1
             if self.verbose:
                 print(f"{client_timestamp}:::{client_name} :: L-{level} :: -  {log_message}")
@@ -158,6 +168,8 @@ class LOLogger(object):
         self.server.register_function(self.set_log_level)
         self.server.register_function(self.get_log_level)
         self.server.register_function(self.get_sqlite_path)
+        self.server.register_function(self.get_metadata)
+
 
     def flip_verbose(self):
         """Switch verbose value to opposite from current."""
@@ -178,9 +190,9 @@ class LOLogger(object):
         elif Level in LOG_LEVELS:
             self.LogLevel = LOG_LEVELS[Level]
         else:
-            raise ValueError(f"Level passed: {Level}; "
-                             f"should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]} "
-                             f"or one of {list(LOG_LEVELS.keys())}")
+            message = f"""Level passed: {Level}; Should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]}"""
+            self.flush_internal_log_messages(message, level=40)
+            raise ValueError(message)
         return True
 
     def get_log_level(self):
@@ -202,6 +214,14 @@ class LOLogger(object):
         self.lologger_thread._sigint_handler()
         self.lologger_thread.join()
 
+    def get_metadata(self):
+        """
+            This function will return current system's metadata, 
+            as well as flush this metadata to Events table
+        """
+        metadata = self.lologger_thread.collect_metadata()
+        self.LogEvent(json.dumps(metadata), client_name="LOLogger", level=10)
+        return metadata
 
 class LOLoggerThread(threading.Thread):
     """
@@ -356,6 +376,12 @@ class LOLoggerThread(threading.Thread):
         meta_dict.append(("lologger_start_time", self.start_time))
         return meta_dict
 
+    def flush_metadata_as_event(self):
+        self.flush_internal_log_messages("Current metadata:")
+        metadata = self.collect_metadata()
+        self.flush_internal_log_messages(json.dumps(metadata))
+        return metadata
+
     def get_purging_old_logs_done(self):
         """
             Delete old logs files if they are older than self.duration
@@ -445,6 +471,8 @@ class LOLoggerThread(threading.Thread):
         flushed_counter = 0
 
         self.flush_internal_log_messages("Starting lologger")
+
+        self.flush_metadata_as_event()
 
         while True:
             try:

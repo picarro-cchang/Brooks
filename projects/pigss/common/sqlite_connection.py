@@ -10,15 +10,20 @@ class SQLiteInstance:
     """ Singleton instance for sqlite db connection
     """
     __instance = None
+    __current_db = None
 
     def __init__(self, DB_FILE_PATH):
 
         if not os.path.isfile(DB_FILE_PATH):
             raise FileNotFoundError(f"Database file does not exist: {DB_FILE_PATH}")
 
-        if SQLiteInstance.__instance is not None:
+        if SQLiteInstance.__instance is not None and SQLiteInstance.__current_db != DB_FILE_PATH:
+            # Close old connection instance
+            SQLiteInstance.close_connection()
+        if SQLiteInstance.__instance is not None and SQLiteInstance.__current_db == DB_FILE_PATH:
             pass
         else:
+            SQLiteInstance.__current_db = DB_FILE_PATH
             SQLiteInstance.__instance = self = sqlite3.connect(DB_FILE_PATH)
 
     @classmethod

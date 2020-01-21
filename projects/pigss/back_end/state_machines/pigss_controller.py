@@ -195,7 +195,7 @@ class PigssController(Ahsm):
             },
             "time": time.time_ns()
         }]
-        await self.db_writer.write_data(data)
+        await asyncio.shield(self.db_writer.write_data(data))
 
     async def process_receive_queue_task(self):
         event_by_element = dict(standby=Signal.BTN_STANDBY,
@@ -291,7 +291,10 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.modal_info, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"modal_info": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"modal_info": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def set_plan(self, path, value):
         """Set the portion of self.plan specified by `path` to the given `value`.
@@ -299,7 +302,10 @@ class PigssController(Ahsm):
         of the change in the plan.
         """
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"plan": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"plan": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
@@ -307,7 +313,10 @@ class PigssController(Ahsm):
         the change is sent via a websocket to inform the UI of the change of status.
         """
         shadow = self.modify_value_in_nested_dict(self.status, path, value)
-        self.run_async(self.send_queue.put(json.dumps({"uistatus": shadow})))
+        try:
+            self.send_queue.put_nowait(json.dumps({"uistatus": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
 
     def plan_panel_update(self, msg):
         """Handle change of focus and edits in the duration column of the plan panel"""
@@ -712,27 +721,35 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.BTN_STANDBY:
             if self.status["standby"] != UiStatus.DISABLED:
+                log.debug("Entering Standby State")
                 return self.tran(self._standby)
         elif sig == Signal.BTN_IDENTIFY:
             if self.status["identify"] != UiStatus.DISABLED:
+                log.debug("Entering Identify State")
                 return self.tran(self._identify)
         elif sig == Signal.BTN_RUN:
             if self.status["run"] != UiStatus.DISABLED:
+                log.debug("Entering Run State")
                 return self.tran(self._run)
         elif sig == Signal.BTN_PLAN:
             if self.status["plan"] != UiStatus.DISABLED:
+                log.debug("Entering Plan State")
                 return self.tran(self._plan)
         elif sig == Signal.BTN_PLAN_RUN:
             if self.status["plan_run"] != UiStatus.DISABLED:
+                log.debug("Entering Plan Run State")
                 return self.tran(self._run_plan)
         elif sig == Signal.BTN_PLAN_LOOP:
             if self.status["plan_loop"] != UiStatus.DISABLED:
+                log.debug("Entering Plan Loop State")
                 return self.tran(self._loop_plan)
         elif sig == Signal.BTN_REFERENCE:
             if self.status["reference"] != UiStatus.DISABLED:
+                log.debug("Entering Reference State")
                 return self.tran(self._reference)
         elif sig == Signal.BTN_CLEAN:
             if self.status["clean"][e.value["bank"]] != UiStatus.DISABLED:
+                log.debug("Entering Clean State")
                 self.bank = e.value["bank"]
                 return self.tran(self._clean)
         elif sig == Signal.BTN_EDIT:
