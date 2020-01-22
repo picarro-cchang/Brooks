@@ -8,5 +8,6 @@
       "jsx": "react",
       "esModuleInterop": true,
       "moduleResolution": "node"
-    }
+    },
+    "exclude": ["./src/panels/GrafanaLogger/src/components/__tests__/*"]
   }

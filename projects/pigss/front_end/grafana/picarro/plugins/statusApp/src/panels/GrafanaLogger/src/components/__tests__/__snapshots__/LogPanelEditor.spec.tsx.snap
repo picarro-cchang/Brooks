@@ -61,7 +61,14 @@ exports[`<LogPanelEditor /> Match Snapshot 1`] = `
           ]
         }
         tabSelectsValue={true}
-        value={Array []}
+        value={
+          Array [
+            Object {
+              "label": "10",
+              "value": "10",
+            },
+          ]
+        }
       />
     </div>
     <div
