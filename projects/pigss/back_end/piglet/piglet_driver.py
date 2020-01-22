@@ -50,7 +50,7 @@ class PigletDriver(object):
             # allow the device to reset. At this time, we cannot disable
             # the re-set functionality as we'll rely on this for flashing
             # firmware to the device.
-            time.sleep(2)
+            time.sleep(3)
         except serial.SerialException:
             raise
 
