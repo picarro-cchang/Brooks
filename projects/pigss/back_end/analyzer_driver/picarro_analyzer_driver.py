@@ -464,6 +464,11 @@ class IDriverThread(threading.Thread):
                 yield data
             except Queue.Empty:
                 yield None
+            except ConnectionRefusedError:
+                timeout = 30
+                import traceback
+                self.logger.error(f"{traceback.format_exc()}\n Try again in {timeout} seconds")
+                time.sleep(timeout)
             except Exception:
                 import traceback
                 self.logger.error(traceback.format_exc())
