@@ -52,7 +52,7 @@ class SerialMapper(object):
                 serial_interface.config(port=device.get('DEVNAME'), baudrate=230400)
                 try:
                     serial_interface.open()
-                    time.sleep(2.0)
+                    time.sleep(3.0)
                     # Get slot id of sample module
                     serial_interface.write('slotid?\r')
                     slot_id = int(serial_interface.read().strip())
