@@ -22,7 +22,7 @@ deb: submodule setup
 submodule:
 	@ cd ${REPO_ROOT_DIR}
 	@ git submodule init
-	@ git submodule update
+	@ git submodule update --remote
 
 .PHONY: go
 go:
