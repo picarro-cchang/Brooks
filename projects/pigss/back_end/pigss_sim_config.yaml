@@ -76,7 +76,8 @@ Plugins:
       table_name: "Events"
       columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
     limit: 20
-    interval: 3
+    interval: 5
+    level: [20, 30, 40, 50]
     timeout: 300
     retries: 1
 
