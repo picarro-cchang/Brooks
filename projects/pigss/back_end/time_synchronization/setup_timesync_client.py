@@ -16,6 +16,7 @@ from netifaces import AF_INET, ifaddresses, interfaces
 
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.time_synchronization import setup_client # noqa - for packaging purposes
+from back_end.time_synchronization import setup_chrony_timesync
 
 log = LOLoggerClient(client_name="SetupTimeSyncClient", verbose=True)
 my_path = os.path.dirname(os.path.abspath(__file__))
@@ -24,6 +25,8 @@ my_path = os.path.dirname(os.path.abspath(__file__))
 async def time_sync_analyzers(analyzer_ips):
     netmask = 24  # This defines what it means for the analyzer and rack server to be on the same network
     access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
+    #Set up the chrony.conf on rack
+    setup_chrony_timesync.timesync_chrony_setup(analyzer_ips)
     for ip in analyzer_ips:
         client_address = ip
         client = int.from_bytes(ipaddress.IPv4Address(client_address).packed, 'big')
@@ -68,3 +71,4 @@ async def time_sync_analyzers(analyzer_ips):
         result = "\n".join([line.rstrip() for line in stdout])
         log.info(f"TimeSyncClient {ip} stdout: {result}")
         client.close()
+
