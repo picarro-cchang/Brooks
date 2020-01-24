@@ -31,6 +31,5 @@ cmd1 = subprocess.Popen(['echo',access_str], stdout=subprocess.PIPE)
 cmd2 = subprocess.Popen(['sudo','-S'] + command, stdin=cmd1.stdout, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 print(cmd2.stdout.read())
 
-if 
 # current_chrony = os.system('echo %s|sudo -S %s' % (access_str, command))[0]
 # print(current_chrony)
