@@ -10,7 +10,7 @@ def timesync_chrony_setup(ip_list):
   permission_cmd = 'chmod 777 /etc/chrony/chrony.conf'
   permission_cmd = permission_cmd.split()
 
-  cmd = subprocess.Popen(['echo', access_str], stdout=subprocess.PIPE)
+  cmd = subprocess.Popen(['echo', access_str], stdout=subprocess.DEVNULL)
   subprocess.run(['sudo','-S'] + permission_cmd, stdin=cmd.stdout)
 
   #append ips that are not stored in chrony.conf
@@ -19,7 +19,6 @@ def timesync_chrony_setup(ip_list):
     for ip in ip_list:
       if 'allow ' + ip not in current_chrony:
           f.write('allow ' + ip + ' \n')
-  f.close()
 
   #return permissions to original state
   permission_cmd2 = 'chmod 644 /etc/chrony/chrony.conf'
