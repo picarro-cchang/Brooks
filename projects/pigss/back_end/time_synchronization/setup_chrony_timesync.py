@@ -1,7 +1,6 @@
 import os
 import sys
 import subprocess
-import json
 
 def timesync_chrony_setup(ip_list):
   access_str = os.environ.get('PIGSS_CLIENT_ACCESS')
@@ -30,4 +29,3 @@ def timesync_chrony_setup(ip_list):
   chrony_cmd = 'systemctl restart chrony'
   chrony_cmd = chrony_cmd.split()
   subprocess.run(['sudo','-S'] + chrony_cmd, stdin=cmd.stdout)
-
