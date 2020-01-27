@@ -106,7 +106,7 @@ def main():
                            })
         # Fetch all of the existing users and create a default viewer
         # user if necessary.S
-        users_api = GROOT.api.GET(f'/users?perpage=10&page=1')
+        users_api = GROOT.api.GET(f'/users?')
         user_list = []
         for user in users_api:
             user_list.append(user['login'])
