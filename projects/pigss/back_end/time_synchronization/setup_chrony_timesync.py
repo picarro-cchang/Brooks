@@ -12,7 +12,7 @@ def timesync_chrony_setup(ip_list):
   with open('/etc/chrony/chrony.conf', 'r+') as f:
     current_chrony = f.read()
     for ip in ip_list:
-      if ('allow ' + ip) not in current_chrony:
+      if 'allow ' + ip not in current_chrony:
           f.write('allow ' + ip + ' \n')
 
   #return permissions to original state
