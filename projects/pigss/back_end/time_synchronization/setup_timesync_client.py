@@ -71,4 +71,3 @@ async def time_sync_analyzers(analyzer_ips):
         result = "\n".join([line.rstrip() for line in stdout])
         log.info(f"TimeSyncClient {ip} stdout: {result}")
         client.close()
-
