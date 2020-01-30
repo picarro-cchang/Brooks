@@ -50,15 +50,15 @@ class Model:
             log.error(f"Error while retrieving points from measurement {ex}")
 
     @classmethod
-    async def get_user_keys(cls, client, log):
+    async def get_user_keys(cls, client, measurements, log):
         """ Returns field keys and tag keys in 'crds' measurement
 
         Returns:
             list[str] -- list of all keys
         """
         try:
-            field_keys = client.query(f"SHOW FIELD KEYS FROM crds")
-            tag_keys = client.query(f"SHOW TAG KEYS FROM crds")
+            field_keys = client.query(f"SHOW FIELD KEYS FROM {measurements}")
+            tag_keys = client.query(f"SHOW TAG KEYS FROM {measurements}")
             datum = None
             
             for datum in field_keys:
