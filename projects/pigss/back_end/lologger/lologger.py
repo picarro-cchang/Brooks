@@ -486,7 +486,7 @@ class LOLoggerThread(threading.Thread):
                         # if batch been waiting for too long
                     (self.flushing_mode == BATCHING and time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
                         # if it is time bit.ly/30RJTbw
-                    (self.flushing_mode == TIMED and time_since_last_flush + self.flushing_timeout <= time.time())):
+                    (self.flushing_mode == TIMED and abs(time.time() - time_since_last_flush) >= self.flushing_timeout )):
                     gonna_flush_now = True
 
                 if gonna_flush_now and len(data_to_flush) > 0:
