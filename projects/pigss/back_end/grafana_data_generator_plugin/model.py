@@ -51,7 +51,7 @@ class Model:
 
     @classmethod
     async def get_user_keys(cls, client, measurements, log):
-        """ Returns field keys and tag keys in 'crds' measurement
+        """ Returns field keys and tag keys in measurements
 
         Returns:
             list[str] -- list of all keys
