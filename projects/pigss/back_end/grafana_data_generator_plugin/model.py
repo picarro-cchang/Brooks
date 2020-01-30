@@ -50,18 +50,26 @@ class Model:
             log.error(f"Error while retrieving points from measurement {ex}")
 
     @classmethod
-    async def get_field_keys(cls, client, log):
-        """ Returns field keys in 'crds' measurement
+    async def get_user_keys(cls, client, log):
+        """ Returns field keys and tag keys in 'crds' measurement
 
         Returns:
             list[str] -- list of all keys
         """
         try:
-            data_generator = client.query(f"SHOW FIELD KEYS FROM crds")
-            result = None
-            for datum in data_generator:
+            field_keys = client.query(f"SHOW FIELD KEYS FROM crds")
+            tag_keys = client.query(f"SHOW TAG KEYS FROM crds")
+            datum = None
+            
+            for datum in field_keys:
                 result = datum
-            cls.__keys = [field["fieldKey"] for field in result]
+            cls.__keys = [field["fieldKey"]for field in result]
+
+            for datum in tag_keys:
+                result = datum
+            cls.__keys.extend([tag["tagKey"]for tag in result])
+            
+            print(cls.__keys)
             return cls.__keys if result is not None else []
         except ConnectionError as ex:
             log.error(f"Error while retrieving points from measurement {ex}")

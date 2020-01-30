@@ -216,6 +216,6 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             "200":
                 description: successful operation returns available keys
         """
-        field_keys = await Model.get_field_keys(self.app["db_client"], log)
+        field_keys = await Model.get_user_keys(self.app["db_client"], log)
         user_keys = self.app["config"]["server"]["user_keys"]
         return web.json_response({"keys": list(filter(lambda x: x in field_keys, user_keys))})
