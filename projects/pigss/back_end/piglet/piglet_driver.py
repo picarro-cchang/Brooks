@@ -5,6 +5,7 @@ from common.serial_interface import SerialInterface
 from common.timeutils import get_local_timestamp
 from common.rpc_ports import rpc_ports
 from common import CmdFIFO
+from back_end.lologger.lologger_client import LOLoggerClient
 
 
 class PigletDriver(object):
@@ -27,6 +28,8 @@ class PigletDriver(object):
                                                 ServerDescription=f'RPC Server for {__class__.__name__}',
                                                 ServerVersion=1.0,
                                                 threaded=True)
+        self.logger = LOLoggerClient(client_name=f'SAMletDriver_{rpc_port}')
+        self.logger.debug(f'Started')
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
@@ -41,8 +44,7 @@ class PigletDriver(object):
         try:
             self.serial = SerialInterface()
             self.serial.config(port=self.port, baudrate=self.baudrate)
-            if __debug__:
-                print(f'\nConnecting to Piglet on {self.port}\n')
+            self.logger.debug(f'\nConnecting to Piglet on {self.port}\n')
             # The Piglet boot loader takes a little less to load. Every time
             # the DTR is toggled, the Piglet will re-set. The DTR is toggled
             # upon enumeration from the Linux Kernel as well as every time
@@ -76,21 +78,17 @@ class PigletDriver(object):
         response = self.serial.read().strip()
         if '-1' in response:
             # Piglet doesn't recognize the command
-            if __debug__:
-                print(f'Command not recognized: {command}')
+            self.logger.debug(f'Command not recognized: {command}')
         elif '-2' in response:
             # Piglet is busy and cannot respond
-            if __debug__:
-                print('Piglet is busy...')
+            self.logger.debug('Piglet is busy...')
             for attempt in range(1, 11):
                 time.sleep(0.01)
-                if __debug__:
-                    print(f'Attempt {attempt} to wait on Piglet...')
+                self.logger.debug(f'Attempt {attempt} to wait on Piglet...')
                 response = self.serial.read().strip()
                 if '-2' not in response:
                     break
-        if __debug__:
-            print(f'Command sent: {command}\nResponse received: {response}')
+        self.logger.debug(f'Command sent: {command}\nResponse received: {response}')
         return response.replace('\n', '')
 
     def close(self):
