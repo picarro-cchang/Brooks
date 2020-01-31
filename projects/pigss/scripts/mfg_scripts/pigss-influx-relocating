@@ -13,7 +13,7 @@
 
 echo "Configuring secondary SSD..."
 echo
-drive_trigger="Samsung_SSD_860_EVO_1TB_"
+drive_trigger="Samsung_SSD_860_PRO_1TB_"
 mount_path="/mnt/onetb"
 new_influx_path="${mount_path}/influxdb/"
 drive_to_be_used="NULL"

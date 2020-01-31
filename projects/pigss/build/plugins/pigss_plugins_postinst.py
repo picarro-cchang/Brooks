@@ -104,6 +104,14 @@ def main():
                                "pinned": True,
                                "jsonData": None
                            })
+        # Fetch all of the existing users and create a default viewer
+        # user if necessary.S
+        users_api = GROOT.api.GET(f'/users?')
+        user_list = []
+        for user in users_api:
+            user_list.append(user['login'])
+        if not 'viewer' in user_list:
+            GROOT.add_user('viewer', 'viewer', 'viewer@localhost', 'viewer')
 
 
 if __name__ == '__main__':
