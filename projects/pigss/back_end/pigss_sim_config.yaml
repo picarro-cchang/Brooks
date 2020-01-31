@@ -76,6 +76,7 @@ Plugins:
       table_name: "Events"
       columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
     limit: 20
+    level: [20, 30, 40, 50]
     interval: 3
     timeout: 300
     retries: 1
@@ -92,3 +93,5 @@ Plugins:
       user_keys: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]
       data_dir: "/tmp"
       file_type: "csv"
+
+Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]

@@ -51,3 +51,5 @@ Plugins:
       user_keys: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]
       data_dir: "/tmp"
       file_type: "csv"
+
+Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]

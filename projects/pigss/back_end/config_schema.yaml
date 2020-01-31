@@ -2,6 +2,7 @@ Configuration: include('Configuration')
 Settings: include('Settings')
 Services: include('Services')
 Plugins: include('Plugins')
+Species: include('Species')
 ---
 Configuration:
   RpcTunnel:
@@ -83,3 +84,5 @@ GrafanaDataGenerator:
     user_keys: list(str())
     data_dir: str()
     file_type: str()
+---
+Species: list(str())
