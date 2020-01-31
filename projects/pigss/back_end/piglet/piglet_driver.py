@@ -28,7 +28,7 @@ class PigletDriver(object):
                                                 ServerDescription=f'RPC Server for {__class__.__name__}',
                                                 ServerVersion=1.0,
                                                 threaded=True)
-        self.logger = LOLoggerClient(client_name='SAMletDriver')
+        self.logger = LOLoggerClient(client_name=f'SAMletDriver_{rpc_port}')
         self.logger.debug(f'Started')
         self.connect()
         self.register_rpc_functions()
