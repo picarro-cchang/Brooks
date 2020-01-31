@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
 Name=PiGSS Launcher
-Exec=sleep 1s; chromium-browser http://localhost:3000 --kiosk --disable-infobars --no-first-run --fast-start --fast --enable-logging --v=1
+Exec=/bin/sh -c "sleep 1s && chromium-browser http://localhost:3000 --kiosk --disable-infobars --no-first-run --fast-start --fast --enable-logging --v=1"
 Icon=/usr/local/share/picarro/icons/picarro_logo.svg
 Comment=Launches browser to PiGSS Software
