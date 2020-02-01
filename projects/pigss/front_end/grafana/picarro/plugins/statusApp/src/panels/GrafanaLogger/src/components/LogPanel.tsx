@@ -20,6 +20,7 @@ interface State {
   interval?: number;
   timeRange?: number;
   ws?: WebSocket;
+  dbReset?: boolean;
 }
 
 interface picarroStorage {
@@ -37,7 +38,8 @@ export class LogPanel extends PureComponent<Props, State> {
       query: {},
       interval: this.getInterval(),
       timeRange: defaultTimeRange,
-      ws: null
+      ws: null,
+      dbReset: false
     };
   }
 
@@ -88,7 +90,7 @@ export class LogPanel extends PureComponent<Props, State> {
     const end = new Date(this.props.data.request.range.to).getTime();
     // @ts-ignore
     const interval = this.getInterval();
-    const rowid = initial ? -1 : this.state.data.length ? this.state.data[0][0] : -1;
+    const rowid = initial ? -1 : this.state.dbReset ? -1 : this.state.data.length ? this.state.data[0][0] : -1;
     const limit = initial ? LOG_LIMIT : this.props.options.limit;
     const query: any = {
       rowid,
@@ -127,10 +129,50 @@ export class LogPanel extends PureComponent<Props, State> {
     };
 
     ws.onmessage = evt => {
-      // on receiving a message, add it to the list of messages
-      const rows = JSON.parse(evt.data).reverse();
+      this.handleWSData(ws, evt.data);
+    };
+
+    ws.onclose = (event) => {
+      setTimeout(() => {
+        // If client did not initiated close event, initiate a new websocket connection
+        if (event.code !== 1000) {
+          toast.dismiss();
+          this.setupWSComm();
+        }
+      }, this.state.interval * 1000);
+    };
+    ws.onerror = (evt) => {
+      notifyError("Websocket connection closed. Trying to reconnect again.");
+    }
+  }
+
+  getStateFromSavedData = () => {
+    const savedData = this.getPicarroStorage();
+    if (savedData !== null) {
+      return { ...(JSON.parse(savedData).logState) };
+    }
+    return null;
+  }
+
+  isSavedDataCurrent = (fromTime: Date, logState: State) => {
+    if (logState !== null && logState.data !== undefined) {
+      return logState.data.length ? new Date(logState.data[logState.data.length - 1][1]) <= fromTime : false;
+    }
+    return false;
+  }
+
+  handleWSData = (ws: WebSocket, data: any) => {
+    // Handle cases for RESET, PING, and LOGS
+    const parsed = JSON.parse(data);
+    if (parsed.type === "RESET") {
+      this.setState({ dbReset: true });
+    } else if (parsed.type === "LOGS") {
+      const rows = parsed.logs.reverse();
       let logs = [...rows, ...this.state.data];
       if (this.state.data.length > 0) {
+        if (this.state.dbReset) {
+          this.setState({ dbReset: false });
+        }
         // filter messages from front-end that doesn't fall in the timerange
         // @ts-ignore
         const fromDate = new Date(dateMath.parse(this.props.data.request.range.raw.from));
@@ -147,33 +189,11 @@ export class LogPanel extends PureComponent<Props, State> {
       if (this.state.data.length > LOG_LIMIT) {
         this.state.data.length = LOG_LIMIT;
       }
-    };
-
-    ws.onclose = (event) => {
-      toast.dismiss();
-      setTimeout(() => {
-        // If client did not initiated close event, spawn a new websocket connection
-        if (event.code !== 1000) {
-          setTimeout(() => notifyError("Websocket connection closed. Trying to reconnect again."), this.state.interval * 1000);
-          this.setupWSComm();
-        }
-      }, this.state.interval * 1000);
-    };
-  }
-
-  getStateFromSavedData = () => {
-    const savedData = this.getPicarroStorage();
-    if (savedData !== null) {
-      return { ...(JSON.parse(savedData).logState) };
+    } else if (parsed.type === "PING") {
+      // send PONG
+    } else if (parsed.type === 'PONG') {
+      // send ping
     }
-    return null;
-  }
-
-  isSavedDataCurrent = (fromTime: Date, logState: State) => {
-    if (logState !== null && logState.data !== undefined) {
-      return logState.data.length ? new Date(logState.data[logState.data.length - 1][1]) <= fromTime : false;
-    }
-    return false;
   }
 
   componentDidMount() {
