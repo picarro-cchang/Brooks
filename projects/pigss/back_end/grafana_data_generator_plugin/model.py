@@ -1,3 +1,5 @@
+from traceback import format_exc
+
 from influxdb.exceptions import InfluxDBClientError
 
 
@@ -6,9 +8,9 @@ class Model:
     __keys = None
 
     @classmethod
-    def get_common_keys(cls, keys):
+    async def get_common_keys(cls, keys, client, measurements, log):
         if cls.__keys is None:
-            raise InfluxDBClientError()
+            cls.__keys = await cls.get_user_keys(client, measurements, log)
         return list(set(cls.__keys) & set(keys))
 
     @classmethod
@@ -25,7 +27,9 @@ class Model:
         """
         try:
             # Filter common keys and create a string
-            keys = cls.get_common_keys(query_params["keys"].split(","))
+            keys = await cls.get_common_keys(
+                query_params["keys"].split(","), client, measurements, log)
+            analyzer = query_params["analyzer"]
 
             # influx epoch times are nanoseconds based
             time_from = query_params["from"]
@@ -36,8 +40,10 @@ class Model:
             keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
 
-            query = (f"SELECT {keys} FROM {measurements} "
-                     f"WHERE time > {time_from} AND time <= {time_to} fill(previous) "
+            query = (f"SELECT {keys}, analyzer FROM {measurements} "
+                     f"WHERE analyzer =~ /{analyzer}/ "
+                     f"AND time > {time_from} AND time <= {time_to} "
+                     f"fill(previous) "
                      f"ORDER BY time DESC")
 
             data_generator = client.query(query=query, epoch="ms").get_points()
@@ -72,4 +78,22 @@ class Model:
             print(cls.__keys)
             return cls.__keys if result is not None else []
         except ConnectionError as ex:
-            log.error(f"Error while retrieving points from measurement {ex}")
+            log.error(f"Error while retrieving points from measurement.")
+            log.debug(f"Error while retrieving points from measurement {ex}")
+
+    @classmethod
+    async def get_analyzers(cls, client, measurement, log):
+        """ Returns list of analyzers available in the SAM setup
+
+        Returns:
+            list[str] -- list of available analyzers
+        """
+        try:
+            analyzers_result_set = client.query(f'SHOW TAG VALUES FROM {measurement} WITH KEY = "analyzer"')
+            analyzers = []
+            for datum in analyzers_result_set:
+                analyzers = datum
+            return [analyzer["value"] for analyzer in analyzers]
+        except ConnectionError:
+            log.error(f"Error while retrieving available analyzers.")
+            log.debug(f"Error while retrieving available analyzers {format_exc()}")
