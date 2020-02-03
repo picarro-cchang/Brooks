@@ -79,7 +79,7 @@ class Model:
             return cls.__keys if result is not None else []
         except ConnectionError as ex:
             log.error(f"Error while retrieving points from measurement.")
-            log.error(f"Error while retrieving points from measurement {ex}")
+            log.debug(f"Error while retrieving points from measurement {ex}")
 
     @classmethod
     async def get_analyzers(cls, client, measurement, log):
@@ -95,5 +95,5 @@ class Model:
                 analyzers = datum
             return [analyzer["value"] for analyzer in analyzers]
         except ConnectionError:
-            log.error(f"Error while retrieving available analyzers in UserDataGen Service")
+            log.error(f"Error while retrieving available analyzers.")
             log.debug(f"Error while retrieving available analyzers {format_exc()}")

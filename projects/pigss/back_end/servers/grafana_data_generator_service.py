@@ -217,6 +217,9 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         responses:
             "200":
                 description: successful operation returns available keys
+                {
+                    "keys": [...items]
+                }
         """
         measurements = self.app["config"]["database"]["measurements"]
         field_keys = await Model.get_user_keys(self.app["db_client"], measurements, log)
@@ -234,7 +237,10 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             -   application/json
         responses:
             "200":
-                description: successful operation returns available analyzers in a list
+                description: successful operation returns available analyzers
+                {
+                    "analyzers": [...items]
+                }
         """
         measurements = self.app["config"]["database"]["measurements"]
         analyzers = await Model.get_analyzers(self.app["db_client"], measurements, log)
