@@ -55,7 +55,7 @@ Settings:
   maximum_mfc_flow: 50.0
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
-  madmapper_startup_delay: 60
+  madmapper_startup_delay: 2
   startup_plan: __default__ # Do NOT include extension or directory
   min_plan_interval: 20
 
@@ -90,6 +90,8 @@ Plugins:
       retries: 1
       measurements: "crds"
     server:
-      user_keys: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2", "valve_pos"]
+      user_keys: ["ALARM_STATUS", "CavityPressure", "CavityTemp", "WarmBoxTemp", "NH3","incomplete_nh3_spectrum" , 
+      "degraded_nh3_performance", "HF", "incomplete_hf_spectrum", "degraded_hf_performance", "HCl", 
+      "incomplete_hcl_spectrum", "degraded_hcl_performance", "H2O", "SO2", "CH4", "CO2", "BoxPressure","INST_STATUS" ]
       data_dir: "/tmp"
       file_type: "csv"
