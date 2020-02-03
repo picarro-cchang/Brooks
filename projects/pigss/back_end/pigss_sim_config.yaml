@@ -55,7 +55,7 @@ Settings:
   maximum_mfc_flow: 50.0
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
-  madmapper_startup_delay: 60
+  madmapper_startup_delay: 2
   startup_plan: __default__ # Do NOT include extension or directory
   min_plan_interval: 20
 
