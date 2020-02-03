@@ -217,7 +217,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 />
 
                 <div className="gf-form col-md-1">
-                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={!this.state.keys.length}>
+                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={! (this.state.keys.length && this.state.analyzers.length)}>
                     Generate
               </Button>
                 </div>

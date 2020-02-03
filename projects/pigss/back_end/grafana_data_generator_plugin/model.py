@@ -40,7 +40,7 @@ class Model:
             keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
 
-            query = (f"SELECT {keys}, analyzer FROM {measurements} "
+            query = (f"SELECT time, analyzer, valve_pos, {keys} FROM {measurements} "
                      f"WHERE analyzer =~ /{analyzer}/ "
                      f"AND time > {time_from} AND time <= {time_to} "
                      f"fill(previous) "
@@ -75,7 +75,6 @@ class Model:
                 result = datum
             cls.__keys.extend([tag["tagKey"]for tag in result])
             
-            print(cls.__keys)
             return cls.__keys if result is not None else []
         except ConnectionError as ex:
             log.error(f"Error while retrieving points from measurement.")
