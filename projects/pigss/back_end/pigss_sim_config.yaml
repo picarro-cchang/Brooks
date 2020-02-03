@@ -14,6 +14,10 @@ Configuration: # This is for high level information
           - NH3
           - HF
           - H2O
+          - CO2
+          - O2
+          - CavityPressure
+          - CavityTemp
         source: analyze_AMADS_LCT
         mode: AMADS_LCT_mode
         interval: 1.1
@@ -26,6 +30,9 @@ Configuration: # This is for high level information
         species:
           - HCl
           - H2O
+          - CH4
+          - CavityPressure
+          - CavityTemp
         source: analyze_SADS
         mode: SBDS_mode
         interval: 1.2
@@ -38,10 +45,46 @@ Configuration: # This is for high level information
         species:
           - H2S
           - HDO
+          - CO2
+          - CavityPressure
+          - CavityTemp
         source: analyze_BFADS
         mode: BFADS_mode
         interval: 1.3
         seed: 34567
+        warmup_time: 90.0
+      - ip_address: 192.168.10.104
+        chassis: 4532
+        analyzer: UADS
+        analyzer_num: 3003
+        species:
+          - SO2
+          - H2O
+          - CavityPressure
+          - CavityTemp
+        source: analyze_UADS
+        mode: UADS_mode
+        interval: 1.3
+        seed: 45678
+        warmup_time: 90.0
+      - ip_address: 192.168.10.105
+        chassis: 4532
+        analyzer: AMSADS
+        analyzer_num: 3003
+        species:
+          - HF
+          - NH3
+          - HCl
+          - H2O
+          - CO2
+          - O2
+          - CH4
+          - CavityPressure
+          - CavityTemp
+        source: analyze_AMSADS
+        mode: AMSADS_mode
+        interval: 1.3
+        seed: 56789
         warmup_time: 90.0
   Database:
     server: localhost
@@ -94,4 +137,4 @@ Plugins:
       data_dir: "/tmp"
       file_type: "csv"
 
-Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]
+Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2", "HDO", "H2S", "SO2", "CavityPressure", "CavityTemp"]
