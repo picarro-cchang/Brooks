@@ -135,6 +135,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -186,6 +192,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -229,6 +241,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -380,6 +398,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -431,6 +455,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -474,6 +504,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -625,6 +661,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -676,6 +718,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -719,6 +767,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -870,6 +924,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -921,6 +981,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -964,6 +1030,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1165,6 +1237,7 @@
         "name": "stabilization_time",
         "options": [
           {
+            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -1272,6 +1345,33 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "PiGSS data source",
+        "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instrument",
+        "multi": true,
+        "name": "instrument",
+        "options": [],
+        "query": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
@@ -1309,5 +1409,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "rHPC-eKZz",
-  "version": 5
+  "version": 10
 }

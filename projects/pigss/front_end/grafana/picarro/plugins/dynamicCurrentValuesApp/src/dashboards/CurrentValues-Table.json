@@ -200,6 +200,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -226,7 +232,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -384,6 +390,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -410,7 +422,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -568,6 +580,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -594,7 +612,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -752,6 +770,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -778,7 +802,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -936,6 +960,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -962,7 +992,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1120,6 +1150,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1146,7 +1182,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1304,6 +1340,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1330,7 +1372,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1488,6 +1530,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1514,7 +1562,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1672,6 +1720,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1698,7 +1752,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1856,6 +1910,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1882,7 +1942,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -2040,6 +2100,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -2066,7 +2132,7 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426359153,
+      "repeatIteration": 1580756676785,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -2224,6 +2290,12 @@
               "key": "valve_pos",
               "operator": "=~",
               "value": "/^$ports$/"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -2369,6 +2441,34 @@
         "tagsQuery": "",
         "type": "query",
         "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "AMADS3001 + AMSADS3003",
+          "value": [
+            "AMADS3001",
+            "AMSADS3003"
+          ]
+        },
+        "datasource": "PiGSS data source",
+        "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instrument",
+        "multi": true,
+        "name": "instrument",
+        "options": [],
+        "query": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
@@ -2395,5 +2495,5 @@
   "timezone": "",
   "title": "Current Values",
   "uid": "2Luty8cZk",
-  "version": 6
+  "version": 8
 }

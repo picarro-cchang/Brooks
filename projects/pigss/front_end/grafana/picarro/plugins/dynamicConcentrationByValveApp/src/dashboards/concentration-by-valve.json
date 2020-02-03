@@ -81,20 +81,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -149,6 +136,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -239,7 +232,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -250,20 +243,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -318,6 +298,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -408,7 +394,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -419,20 +405,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -487,6 +460,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -577,7 +556,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -588,20 +567,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -656,6 +622,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -746,7 +718,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -757,20 +729,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -825,6 +784,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -915,7 +880,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -926,20 +891,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -994,6 +946,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1084,7 +1042,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1095,20 +1053,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -1163,6 +1108,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1253,7 +1204,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1264,20 +1215,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -1332,6 +1270,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1422,7 +1366,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1433,20 +1377,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -1501,6 +1432,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1591,7 +1528,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1602,20 +1539,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -1670,6 +1594,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1760,7 +1690,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1771,20 +1701,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -1839,6 +1756,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1929,7 +1852,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1580426485922,
+      "repeatIteration": 1580756721266,
       "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
@@ -1940,20 +1863,7 @@
       },
       "seriesOverrides": [
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
+          "alias": ""
         }
       ],
       "spaceLength": 10,
@@ -2008,6 +1918,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -2201,7 +2117,6 @@
       {
         "allValue": null,
         "current": {
-          "tags": [],
           "text": "NH3",
           "value": "NH3"
         },
@@ -2212,30 +2127,9 @@
         "label": "Species",
         "multi": false,
         "name": "species",
-        "options": [
-          {
-            "selected": false,
-            "text": "H2O",
-            "value": "H2O"
-          },
-          {
-            "selected": true,
-            "text": "NH3",
-            "value": "NH3"
-          },
-          {
-            "selected": false,
-            "text": "HF",
-            "value": "HF"
-          },
-          {
-            "selected": false,
-            "text": "HCl",
-            "value": "HCl"
-          }
-        ],
+        "options": [],
         "query": "",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2262,6 +2156,33 @@
         "query": "15",
         "skipUrlSync": false,
         "type": "textbox"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "AMADS3001",
+          "value": [
+            "AMADS3001"
+          ]
+        },
+        "datasource": "PiGSS data source",
+        "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instruement",
+        "multi": true,
+        "name": "instrument",
+        "options": [],
+        "query": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
@@ -2299,5 +2220,5 @@
   "timezone": "",
   "title": "Concentration By Channel",
   "uid": "GTo10zcZz",
-  "version": 3
+  "version": 8
 }
