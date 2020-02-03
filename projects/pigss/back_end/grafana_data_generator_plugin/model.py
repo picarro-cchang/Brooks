@@ -40,7 +40,7 @@ class Model:
             keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
 
-            query = (f"SELECT {keys}, analyzer FROM {measurements} "
+            query = (f"SELECT time, analyzer, {keys} FROM {measurements} "
                      f"WHERE analyzer =~ /{analyzer}/ "
                      f"AND time > {time_from} AND time <= {time_to} "
                      f"fill(previous) "
