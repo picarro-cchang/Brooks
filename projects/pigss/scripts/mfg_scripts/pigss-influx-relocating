@@ -149,6 +149,10 @@ sed -i "s|/var/lib/influxdb/wal|${new_influx_path}/wal|g" /etc/influxdb/influxdb
 echo "Restarting influxdb"
 systemctl restart influxdb.service
 
+echo "Creating database tables if not exist"
+influx -execute 'show databases' | grep pigss_data || influx -execute 'create database pigss_data'
+influx -execute 'show databases' | grep telegraf || influx -execute 'create database telegraf'
+
 echo "Secondary SSD Configured..."
 
 # TODO fix drive_trigger string and new_influx_path before using in production
