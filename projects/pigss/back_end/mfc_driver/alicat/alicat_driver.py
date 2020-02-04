@@ -7,6 +7,7 @@ from common import CmdFIFO
 from common.rpc_ports import rpc_ports
 from common.serial_interface import SerialInterface
 from common.timeutils import get_local_timestamp
+from back_end.lologger.lologger_client import LOLoggerClient
 
 
 class AlicatDriver(object):
@@ -29,6 +30,8 @@ class AlicatDriver(object):
                                                 ServerDescription=f"RPC Server for {__class__.__name__}",
                                                 ServerVersion=1.0,
                                                 threaded=True)
+        self.logger = LOLoggerClient(client_name='MFCDriver')
+        self.logger.debug(f'Started')
         self.connect()
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
@@ -43,8 +46,7 @@ class AlicatDriver(object):
         try:
             self.serial = SerialInterface()
             self.serial.config(port=self.port, baudrate=self.baudrate, timeout=0.2)
-            if __debug__:
-                print(f'\nConnecting to Alicat on {self.port}\n')
+            self.logger.debug(f'\nConnecting to Alicat on {self.port}\n')
         except serial.SerialException:
             raise
 
@@ -87,13 +89,11 @@ class AlicatDriver(object):
                 response = response[0]
                 if response == '?':
                     # Alicat doesn't recognize the command
-                    if __debug__:
-                        print(f'Command not recognized: {command}')
+                    self.logger.debug(f'Command not recognized: {command}')
                     response = None
         except serial.SerialException:
             response = None
-        if __debug__:
-            print(f'Command sent: {command}\nResponse received: {response}\n')
+        self.logger.debug(f'Command sent: {command}\nResponse received: {response}\n')
         return response
 
     def close(self):

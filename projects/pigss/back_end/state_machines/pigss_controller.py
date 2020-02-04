@@ -647,12 +647,24 @@ class PigssController(Ahsm):
             self.set_status(["clean", bank], UiStatus.DISABLED)
         self.buttons_disabled = True
 
+    def disable_channel_buttons(self):
+        self.channel_button_states = {}
+        for bank in self.all_banks:
+            for j in range(self.num_chans_per_bank):
+                self.channel_button_states[j+1] = self.status["channel"][bank][j + 1]
+                self.set_status(["channel", bank, j + 1], UiStatus.DISABLED)
+
     def restore_buttons(self):
         for button in self.button_states:
             self.set_status([button], self.button_states[button])
         for bank in self.clean_button_states:
             self.set_status(["clean", bank], self.clean_button_states[bank])
         self.buttons_disabled = False
+
+    def restore_channel_buttons(self):
+        for bank in self.all_banks:
+            for channel in self.channel_button_states:
+                self.set_status(["channel", bank, channel], self.channel_button_states[channel])
 
     def log_transition(self, payload):
         """Log valve transition to clean, reference, exhaust, and control states.
@@ -1371,10 +1383,12 @@ class PigssController(Ahsm):
                     else:
                         self.chan_active[bank] = 0
                 Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                self.disable_channel_buttons()
                 self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
+            self.restore_channel_buttons()
             for bank in self.all_banks:
                 mask = self.chan_active[bank]
                 for j in setbits(mask):

@@ -22,6 +22,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       timeRange: this.props.options.timeRange,
       keys: [],
       keyOptions: [],
+      analyzers: [],
+      analyzerOptions: [],
       files: [],
     };
   }
@@ -42,13 +44,13 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   generateFile = () => {
-    const { timeRange, keys } = this.state;
-    const {from, to } = {
+    const { timeRange, keys, analyzers } = this.state;
+    const { from, to } = {
       from: dateMath.parse(timeRange.raw.from),
       to: dateMath.parse(timeRange.raw.to),
       raw: timeRange.raw
     } as TimeRange;
-    
+
     // @ts-ignore
     let fromTime = from._d.getTime();
     // @ts-ignore
@@ -63,6 +65,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       from: fromTime * 1000000,
       to: toTime * 1000000,
       keys: keys,
+      analyzers: analyzers
     };
 
     // Call generate file api
@@ -110,6 +113,12 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     });
   };
 
+  onAnalyzersChange = (analyzers: any) => {
+    this.setState(() => {
+      return { analyzers };
+    });
+  };
+
   componentWillMount() {
     // Get file names
     this.getFileNames();
@@ -126,10 +135,23 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         this.setState({ keyOptions: keyOptions });
       });
     });
+
+    // Get Analyzer Options
+    DataGeneratorService.getAnalyzers().then((response: any) => {
+      response.json().then((data: any) => {
+        const analyzerOptions = data.analyzers.map((x: string) => {
+          return {
+            value: x,
+            label: x,
+          };
+        });
+        this.setState({ analyzerOptions: analyzerOptions });
+      });
+    });
   }
 
   render() {
-    const { files, timeRange, keyOptions } = this.state;
+    const { files, timeRange, keyOptions, analyzerOptions } = this.state;
 
     const styleObj = {
       overflow: 'scroll !important',
@@ -155,11 +177,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       <Fragment>
         <h3 className="text-center">User Data File Generator</h3>
         <PanelOptionsGroup title="Generate New File">
-          <div className="row">
-            <div className="gf-form col-md-3 col-sm-12">
+          <PanelOptionsGroup>
+            <div className="gf-form">
               <FormLabel width={labelWidth_6}>Species</FormLabel>
               <Select
-                width={selectWidth}
                 options={keyOptions}
                 onChange={this.onKeysChange}
                 value={keyOptions.find((option: any) => option.value === 'key')}
@@ -167,25 +188,43 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 backspaceRemovesValue
               />
             </div>
-            <div className="gf-form col-md-6 col-sm-12 time-picker-container">
-              <FormLabel width={labelWidth_7}>Time Range</FormLabel>
-              <TimePicker
-                timeZone="browser"
-                selectOptions={DEFAULT_TIME_OPTIONS}
-                onChange={this.onDateChange}
-                value={this.state.timeRange}
-                onMoveBackward={() => console.log('Move Backward')}
-                onMoveForward={() => console.log('Move forward')}
-                onZoom={() => console.log('Zoom')}
+          </PanelOptionsGroup>
+
+          <PanelOptionsGroup>
+            <div className="gf-form">
+              <FormLabel width={labelWidth_6}>Analyzer</FormLabel>
+              <Select
+                options={analyzerOptions}
+                onChange={this.onAnalyzersChange}
+                value={analyzerOptions.find((option: any) => option.value === 'key')}
+                isMulti={true}
+                backspaceRemovesValue
               />
             </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div className="time-generate-btn">
+              <div className="gf-form time-picker-container">
+                <FormLabel width={labelWidth_7}>Time Range</FormLabel>
+                <TimePicker
+                  timeZone="browser"
+                  selectOptions={DEFAULT_TIME_OPTIONS}
+                  onChange={this.onDateChange}
+                  value={this.state.timeRange}
+                  onMoveBackward={() => console.log('Move Backward')}
+                  onMoveForward={() => console.log('Move forward')}
+                  onZoom={() => console.log('Zoom')}
+                />
 
-            <div className="gf-form col-md-3 col-sm-12">
-              <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={!this.state.keys.length}>
-                Generate
+                <div className="gf-form col-md-1">
+                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={! (this.state.keys.length && this.state.analyzers.length)}>
+                    Generate
               </Button>
+                </div>
+              </div>
             </div>
-          </div>
+          </PanelOptionsGroup>
+
         </PanelOptionsGroup>
         <PanelOptionsGroup title="Recently Generated Files">
           <div className="row" style={styleObj}>
