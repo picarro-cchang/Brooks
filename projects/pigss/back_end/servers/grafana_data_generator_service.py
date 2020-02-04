@@ -175,6 +175,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         query_dict = parse_qs(request.query_string)
         query_params = {
             "keys": ",".join(query_dict["keys"]),
+            "port": "|".join([ f"^{port}$" for port in query_dict["port"]]),
             "analyzer": "|".join(query_dict["analyzer"]),
             "from": int(query_dict["from"][0]),
             "to": int(query_dict["to"][0]),

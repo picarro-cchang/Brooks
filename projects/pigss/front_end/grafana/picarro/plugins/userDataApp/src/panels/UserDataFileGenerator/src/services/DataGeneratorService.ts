@@ -16,19 +16,25 @@ export const DataGeneratorService = (() => {
     getAnalyzers: () => {
       return API.get(URL.GET_ANALYZERS)
     },
+    getPorts: () => {
+      return API.post(URL.GET_PORTS)
+    },
     getFile: (fileName: string) => {
       const url = URL.GET_FILE + '?name=' + fileName;
       return API.get(url);
     },
     generateFile: (params: any) => {
       let url = URL.GENERATE_FILE + '?';
-      const { from, to, keys, analyzers } = params;
+      const { from, to, keys, analyzers, ports } = params;
 
       for (const key of keys) {
         url += `keys=${key['value']}&`;
       }
       for (const analyzer of analyzers) {
         url += `analyzer=${analyzer['value']}&`;
+      }
+      for (const port of ports) {
+        url += `port=${port['value']}&`;
       }
 
       url += `from=${from}`;
