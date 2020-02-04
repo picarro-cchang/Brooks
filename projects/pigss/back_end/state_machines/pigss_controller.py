@@ -1327,7 +1327,6 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["run"], UiStatus.ACTIVE)
-            self.disable_channel_buttons()
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["run"], UiStatus.READY)
@@ -1335,7 +1334,6 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_RUN:
             return self.handled(e)
         elif sig == Signal.PROCEED:
-            self.restore_channel_buttons()
             return self.tran(self._run1)
         return self.super(self._sampling)
 
