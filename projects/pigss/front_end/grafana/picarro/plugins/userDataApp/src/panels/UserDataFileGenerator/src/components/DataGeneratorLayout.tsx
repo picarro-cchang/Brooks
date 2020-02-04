@@ -24,6 +24,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       keyOptions: [],
       analyzers: [],
       analyzerOptions: [],
+      ports: [],
+      portOptions: [],
       files: [],
     };
   }
@@ -44,7 +46,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   generateFile = () => {
-    const { timeRange, keys, analyzers } = this.state;
+    const { timeRange, keys, analyzers, ports } = this.state;
     const { from, to } = {
       from: dateMath.parse(timeRange.raw.from),
       to: dateMath.parse(timeRange.raw.to),
@@ -62,10 +64,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     const queryParams = {
+      ports,
       from: fromTime * 1000000,
       to: toTime * 1000000,
-      keys: keys,
-      analyzers: analyzers
+      keys,
+      analyzers
     };
 
     // Call generate file api
@@ -119,6 +122,12 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     });
   };
 
+  onPortsChange = (ports: any) => {
+    this.setState(() => {
+      return { ports };
+    });
+  };
+
   componentWillMount() {
     // Get file names
     this.getFileNames();
@@ -148,10 +157,24 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         this.setState({ analyzerOptions: analyzerOptions });
       });
     });
+
+    // Get Port Options
+    DataGeneratorService.getPorts().then((response: any) => {
+      response.json().then((data: any) => {
+        console.log("Here is the data", data);
+        const portOptions = data.map((x: any) => {
+          return {
+            value: x["value"],
+            label: x["text"],
+          };
+        });
+        this.setState({ portOptions: portOptions });
+      });
+    });
   }
 
   render() {
-    const { files, timeRange, keyOptions, analyzerOptions } = this.state;
+    const { files, timeRange, keyOptions, analyzerOptions, portOptions } = this.state;
 
     const styleObj = {
       overflow: 'scroll !important',
@@ -203,6 +226,18 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
+            <div className="gf-form">
+              <FormLabel width={labelWidth_6}>Port</FormLabel>
+              <Select
+                options={portOptions}
+                onChange={this.onPortsChange}
+                value={portOptions.find((option: any) => option.value === 'key')}
+                isMulti={true}
+                backspaceRemovesValue
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
             <div className="time-generate-btn">
               <div className="gf-form time-picker-container">
                 <FormLabel width={labelWidth_7}>Time Range</FormLabel>
@@ -217,7 +252,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 />
 
                 <div className="gf-form col-md-1">
-                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={! (this.state.keys.length && this.state.analyzers.length)}>
+                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile}
+                    disabled={!(this.state.keys.length && this.state.analyzers.length && this.state.ports.length)}>
                     Generate
               </Button>
                 </div>
