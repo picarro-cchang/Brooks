@@ -248,6 +248,7 @@ class ControllerService(ServiceTemplate):
                 farm.receive_queue.put_nowait(msg.data)
         except asyncio.queues.QueueFull:
             log.debug(f"Farm receive queue full.\n{format_exc()}")
+            log.error(f"Recieve Queue Full. Please Report.")
         except asyncio.CancelledError:
             log.error("Web socket disconnection caused coroutine cancellation in handler.")
             log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")

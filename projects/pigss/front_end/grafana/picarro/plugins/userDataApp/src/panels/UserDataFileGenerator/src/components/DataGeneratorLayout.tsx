@@ -21,11 +21,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     this.state = {
       timeRange: this.props.options.timeRange,
       keys: [],
-      keyOptions: [],
+      keyOptions: [{ value: "All", label: "All" }],
       analyzers: [],
-      analyzerOptions: [],
+      analyzerOptions: [{ value: "All", label: "All" }],
       ports: [],
-      portOptions: [],
+      portOptions: [{ value: "All", label: "All" }],
       files: [],
     };
   }
@@ -111,21 +111,61 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   onKeysChange = (keys: any) => {
-    this.setState(() => {
-      return { keys };
-    });
+    if (!keys.length) {
+      this.setState({ keys: [] });
+      return;
+    }
+    for (const key of keys) {
+      if (key["value"] === "All") {
+        this.setState(() => {
+          return { keys: this.state.keyOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { keys };
+      });
+
+    }
   };
 
   onAnalyzersChange = (analyzers: any) => {
-    this.setState(() => {
-      return { analyzers };
-    });
+    if (!analyzers.length) {
+      this.setState({ analyzers: [] });
+      return;
+    }
+
+    for (const analyzer of analyzers) {
+      if (analyzer["value"] === "All") {
+        this.setState(() => {
+          return { analyzers: this.state.analyzerOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { analyzers };
+      });
+
+    }
   };
 
   onPortsChange = (ports: any) => {
-    this.setState(() => {
-      return { ports };
-    });
+    if (!ports.length) {
+      this.setState({ ports: [] });
+      return;
+    }
+
+    for (const port of ports) {
+      if (port["value"] === "All") {
+        this.setState(() => {
+          return { ports: this.state.portOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { ports };
+      })
+    }
   };
 
   componentWillMount() {
@@ -141,7 +181,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             label: x,
           };
         });
-        this.setState({ keyOptions: keyOptions });
+        this.setState({ keyOptions: [...this.state.keyOptions, ...keyOptions] });
       });
     });
 
@@ -154,21 +194,20 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             label: x,
           };
         });
-        this.setState({ analyzerOptions: analyzerOptions });
+        this.setState({ analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions] });
       });
     });
 
     // Get Port Options
     DataGeneratorService.getPorts().then((response: any) => {
       response.json().then((data: any) => {
-        console.log("Here is the data", data);
         const portOptions = data.map((x: any) => {
           return {
             value: x["value"],
             label: x["text"],
           };
         });
-        this.setState({ portOptions: portOptions });
+        this.setState({ portOptions: [...this.state.portOptions, ...portOptions] });
       });
     });
   }

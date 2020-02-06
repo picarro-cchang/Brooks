@@ -30,8 +30,8 @@ class PigssFarm:
         self.pigss_error_manager = PigssErrorManager(self)
         self.piglet_manager = PigletManager(self)
         self.pigss_supervisor = PigssSupervisor(self)
-        self.send_queue = asyncio.Queue(maxsize=256)
-        self.receive_queue = asyncio.Queue(maxsize=256)
+        self.send_queue = asyncio.Queue(maxsize=1024)
+        self.receive_queue = asyncio.Queue(maxsize=1024)
         self.tasks = []
         self.RPC = {}
 
