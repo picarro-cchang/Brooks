@@ -67,15 +67,8 @@
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
-      "repeat": "species_available",
+      "repeat": null,
       "repeatDirection": "h",
-      "scopedVars": {
-        "species_available": {
-          "selected": false,
-          "text": "NH3",
-          "value": "NH3"
-        }
-      },
       "seriesOverrides": [
         {
           "alias": "unselected",
@@ -86,20 +79,8 @@
           "color": "rgb(66, 66, 66)"
         },
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
+          "alias": "Species",
+          "color": "#B877D9"
         }
       ],
       "spaceLength": 10,
@@ -107,7 +88,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$species_available",
+          "alias": "Species",
           "groupBy": [
             {
               "params": [
@@ -133,7 +114,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species1"
                 ],
                 "type": "field"
               },
@@ -154,6 +135,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -184,7 +171,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species1"
                 ],
                 "type": "field"
               },
@@ -205,6 +192,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -233,7 +226,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species1"
                 ],
                 "type": "field"
               },
@@ -248,6 +241,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -256,7 +255,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "$species_available",
+      "title": "$species1",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -332,17 +331,7 @@
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
-      "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1574203670490,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "species_available": {
-          "selected": false,
-          "text": "H2O",
-          "value": "H2O"
-        }
-      },
       "seriesOverrides": [
         {
           "alias": "unselected",
@@ -353,20 +342,8 @@
           "color": "rgb(66, 66, 66)"
         },
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "H2O",
+          "alias": "Species",
           "color": "#1F60C4"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
         }
       ],
       "spaceLength": 10,
@@ -374,7 +351,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$species_available",
+          "alias": "Species",
           "groupBy": [
             {
               "params": [
@@ -400,7 +377,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species2"
                 ],
                 "type": "field"
               },
@@ -421,6 +398,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -451,7 +434,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species2"
                 ],
                 "type": "field"
               },
@@ -472,6 +455,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -500,7 +489,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species2"
                 ],
                 "type": "field"
               },
@@ -515,6 +504,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -523,7 +518,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "$species_available",
+      "title": "$species2",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -599,17 +594,7 @@
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
-      "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1574203670490,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "species_available": {
-          "selected": false,
-          "text": "HF",
-          "value": "HF"
-        }
-      },
       "seriesOverrides": [
         {
           "alias": "unselected",
@@ -620,20 +605,8 @@
           "color": "rgb(66, 66, 66)"
         },
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
+          "alias": "Species",
+          "color": "#37872D"
         }
       ],
       "spaceLength": 10,
@@ -641,7 +614,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$species_available",
+          "alias": "Species",
           "groupBy": [
             {
               "params": [
@@ -667,7 +640,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species3"
                 ],
                 "type": "field"
               },
@@ -688,6 +661,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -718,7 +697,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species3"
                 ],
                 "type": "field"
               },
@@ -739,6 +718,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -767,7 +752,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species3"
                 ],
                 "type": "field"
               },
@@ -782,6 +767,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -790,7 +781,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "$species_available",
+      "title": "$species3",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -866,17 +857,7 @@
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
-      "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1574203670490,
-      "repeatPanelId": 2,
-      "scopedVars": {
-        "species_available": {
-          "selected": false,
-          "text": "HCl",
-          "value": "HCl"
-        }
-      },
       "seriesOverrides": [
         {
           "alias": "unselected",
@@ -887,20 +868,8 @@
           "color": "rgb(66, 66, 66)"
         },
         {
-          "alias": "NH3",
-          "color": "#FF780A"
-        },
-        {
-          "alias": "H2O",
-          "color": "#1F60C4"
-        },
-        {
-          "alias": "HCl",
-          "color": "#8F3BB8"
-        },
-        {
-          "alias": "HF",
-          "color": "#F2CC0C"
+          "alias": "Species",
+          "color": "#FA6400"
         }
       ],
       "spaceLength": 10,
@@ -908,7 +877,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "alias": "$species_available",
+          "alias": "Species",
           "groupBy": [
             {
               "params": [
@@ -934,7 +903,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species4"
                 ],
                 "type": "field"
               },
@@ -955,6 +924,12 @@
               "key": "valve_stable_time",
               "operator": ">",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -985,7 +960,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species4"
                 ],
                 "type": "field"
               },
@@ -1006,6 +981,12 @@
               "key": "valve_stable_time",
               "operator": "<",
               "value": "$stabilization_time"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         },
@@ -1034,7 +1015,7 @@
             [
               {
                 "params": [
-                  "$species_available"
+                  "$species4"
                 ],
                 "type": "field"
               },
@@ -1049,6 +1030,12 @@
               "key": "valve_pos",
               "operator": "=",
               "value": "0"
+            },
+            {
+              "condition": "AND",
+              "key": "analyzer",
+              "operator": "=~",
+              "value": "/^$instrument$/"
             }
           ]
         }
@@ -1057,7 +1044,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "$species_available",
+      "title": "$species4",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1241,50 +1228,6 @@
         "useTags": false
       },
       {
-        "allValue": null,
-        "current": {
-          "text": "All",
-          "value": [
-            "$__all"
-          ]
-        },
-        "hide": 0,
-        "includeAll": true,
-        "label": "Species",
-        "multi": true,
-        "name": "species_available",
-        "options": [
-          {
-            "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "NH3",
-            "value": "NH3"
-          },
-          {
-            "selected": false,
-            "text": "H2O",
-            "value": "H2O"
-          },
-          {
-            "selected": false,
-            "text": "HF",
-            "value": "HF"
-          },
-          {
-            "selected": false,
-            "text": "HCl",
-            "value": "HCl"
-          }
-        ],
-        "query": "NH3, H2O, HF, HCl",
-        "skipUrlSync": false,
-        "type": "custom"
-      },
-      {
         "current": {
           "text": "15",
           "value": "15"
@@ -1294,6 +1237,7 @@
         "name": "stabilization_time",
         "options": [
           {
+            "selected": true,
             "text": "15",
             "value": "15"
           }
@@ -1301,6 +1245,133 @@
         "query": "15",
         "skipUrlSync": false,
         "type": "textbox"
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "HF",
+          "value": "HF"
+        },
+        "datasource": "species type service",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Species",
+        "multi": false,
+        "name": "species1",
+        "options": [],
+        "query": "",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "NH3",
+          "value": "NH3"
+        },
+        "datasource": "species type service",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Species",
+        "multi": false,
+        "name": "species2",
+        "options": [],
+        "query": "",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "HCl",
+          "value": "HCl"
+        },
+        "datasource": "species type service",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Species",
+        "multi": false,
+        "name": "species3",
+        "options": [],
+        "query": "",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "H2O",
+          "value": "H2O"
+        },
+        "datasource": "species type service",
+        "definition": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Species",
+        "multi": false,
+        "name": "species4",
+        "options": [],
+        "query": "",
+        "refresh": 2,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "text": "All",
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "PiGSS data source",
+        "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "hide": 0,
+        "includeAll": true,
+        "label": "Instrument",
+        "multi": true,
+        "name": "instrument",
+        "options": [],
+        "query": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
       }
     ]
   },
@@ -1338,5 +1409,5 @@
   "timezone": "",
   "title": "Analyzer Output Graphs",
   "uid": "rHPC-eKZz",
-  "version": 5
+  "version": 10
 }

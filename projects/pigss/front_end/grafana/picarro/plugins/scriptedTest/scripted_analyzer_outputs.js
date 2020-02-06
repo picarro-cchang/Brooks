@@ -4,16 +4,54 @@ var base_url = window.location.hostname;
 
 var species = []
 
+function random_color(species_amount) {
+  let colorArray = []
+// This function generates vibrant, "evenly spaced" colours (i.e. no clustering). This is ideal for creating easily distinguishable vibrant markers in Google Maps and other apps.
+    // Adam Cole, 2011-Sept-14
+    // HSV to RBG adapted from: http://mjijackson.com/2008/02/rgb-to-hsl-and-rgb-to-hsv-color-model-conversion-algorithms-in-javascript  var colorArray = [];
+  for (var step = 0; step < species_amount; step++) {
+    var r, g, b;
+    var h = step / species_amount;
+    var i = ~~(h * 6);
+    var f = h * 6 - i;
+    var q = 1 - f;
+    switch(i % 6){
+        case 0: r = 1; g = f; b = 0; break;
+        case 1: r = q; g = 1; b = 0; break;
+        case 2: r = 0; g = 1; b = f; break;
+        case 3: r = 0; g = q; b = 1; break;
+        case 4: r = f; g = 0; b = 1; break;
+        case 5: r = 1; g = 0; b = q; break;
+    }
+    var c = "#" + ("00" + (~ ~(r * 255)).toString(16)).slice(-2) + ("00" + (~ ~(g * 255)).toString(16)).slice(-2) + ("00" + (~ ~(b * 255)).toString(16)).slice(-2);
+    colorArray.push(c)
+  }
+  return colorArray
+}
+
 function make_panel(result) {
     var measurement = 'autogen.crds'
 
     var speciesArray = result;
+    var colors = random_color(speciesArray.length);
     
+    let customSeriesOverride = [
+      {
+        alias: "Unstable",
+        color: "rgb(66, 66, 66)",
+        legend: false,
+      },
+      {
+        alias: "Unselected",
+        color: "rgb(102, 84, 84)",
+        legend: false
+      }
+    ]
     let customTargets = []
     for(var i = 0; i < speciesArray.length; i++) {
-
         //Species
         let temp = {}
+        let tempColor = {}
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
         temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
@@ -24,7 +62,9 @@ function make_panel(result) {
         temp.hide = false;
         temp.orderByTime = "DESC";
         temp.policy = "autogen";
-
+        tempColor.alias = speciesArray[i];
+        tempColor.color = colors[i];
+        customSeriesOverride.push(tempColor);
 
         //Unstable query
         let temp2 = {}
@@ -58,36 +98,107 @@ function make_panel(result) {
         customTargets.push(temp3)
     }
 
+    //current ports
+    let tempPort = {}
+
+    tempPort = {
+      groupBy: [
+        {
+          "params": [
+            "$__interval"
+          ],
+          "type": "time"
+        }
+      ],
+      limit: "",
+      measurement: "crds",
+      orderByTime: "DESC",
+      policy: "default",
+      query: "SELECT * FROM "+ measurement +" WHERE $timeFilter ORDER BY time DESC LIMIT 1",
+      rawQuery: true,
+      refId: "A",
+      resultFormat: "table",
+      select: [
+        [
+          {
+            "params": [
+              "*"
+            ],
+            "type": "field"
+          }
+        ]
+      ],
+      tags: []
+    }
 
     return {
         title: 'Chart',
         height: '300px',
         panels: [
           {
+            datasource: "PiGSS data source",
+            gridPos: {
+              "x": 0,
+              "y": 0,
+              "h": 1,
+              "w": 24,
+            },
+            mappingTypes: [
+              {
+                "name": "value to text",
+                "value": 1
+              },
+              {
+                "name": "range to text",
+                "value": 2
+              }
+            ],
+            nullPointMode: "connected",
+            postfix: "",
+            postfixFontSize: "50%",
+            prefix: "Current Port:",
+            prefixFontSize: "65%",
+            rangeMaps: [
+              {
+                "from": "null",
+                "text": "N/A",
+                "to": "null"
+              }
+            ],
+            tableColumn: "valve_pos",
+            targets: [
+              tempPort
+            ],
+            title: "",
+            transparent: true,
+            type: "singlestat",
+            valueFontSize: "65%",
+            valueMaps: [
+              {
+                "op": "=",
+                "text": "N/A",
+                "value": "null"
+              }
+            ],
+            valueName: "current"
+          },
+          {
             title: '$species',
             maxPerRow: 2,
             renderer: "flot",
             datasource: 'PiGSS data source',
             transparent: true,
-            fontsize: '120%',
+            fontSize: '120%',
+            repeat: "species",
+            repeatDirection: "h",
+            legend: false,
             type: 'graph',
             span: 12,
             fill: 0,
             linewidth: 0,
             pointradius: 2,
             points: true,
-            seriesOverrides: [
-                {
-                  alias: "Unstable",
-                  color: "rgb(66, 66, 66)",
-                  legend: false,
-                },
-                {
-                  alias: "Unselected",
-                  color: "rgb(102, 84, 84)",
-                  legend: false
-                }
-              ],
+            seriesOverrides: customSeriesOverride,
             targets: customTargets,
             tooltip: {
               shared: true
@@ -109,7 +220,7 @@ return function(callback) {
     };
  
     // Set a title
-    dashboard.title = 'Anazlyer Outputs';
+    dashboard.title = 'Analyzer Outputs';
  
     // Set default time
     dashboard.time = {
@@ -133,7 +244,7 @@ return function(callback) {
     for (var i = 0; i < variableArray.length; i++) {
         let temp = {}
         temp.datasource = "species type service",
-        temp.includeAll = false, 
+        temp.includeAll = true, 
         temp.label = "Species",
         temp.multi = true,
         temp.name = variableArray[i],
@@ -215,6 +326,19 @@ $.when(
     dashboard.templating = {
         list: customVariables
     }
+    dashboard.links = [
+      {
+        asDropdown: true,
+        icon: "external link",
+        keepTime: true,
+        tags: [
+          "pigss"
+        ],
+        title: "Dashboards",
+        type: "dashboards"
+      }
+    ]
+    dashboard.tags = ["pigss"]
 
     dashboard.refresh = "5s";
     dashboard.rows.push(make_panel(globalThis.species));

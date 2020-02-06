@@ -14,7 +14,7 @@ function make_panel(result) {
         //create one target object for each field
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
-        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC"
         temp.groupBy = [{"params": ["null"],"type": "fill"}]
         temp.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp.resultFormat = "time_series"
@@ -23,7 +23,35 @@ function make_panel(result) {
         temp.orderByTime = "DESC";
         temp.policy = "autogen";
 
-        customTargets.push(temp);
+        // let temp2 = {}
+        // //create one target object for each field
+        // temp2.alias = "Unstable"
+        // temp2.measurement = measurement;
+        // temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        // temp2.groupBy = [{"params": ["null"],"type": "fill"}]
+        // temp2.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
+        // temp2.resultFormat = "time_series"
+        // temp2.rawQuery = true;
+        // temp2.hide = false;
+        // temp2.orderByTime = "DESC";
+        // temp2.policy = "autogen";
+
+        // let temp3 = {}
+        // //create one target object for each field
+        // temp3.alias = "Unselected"
+        // temp3.measurement = measurement;
+        // temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE (valve_pos = 0 AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        // temp3.groupBy = [{"params": ["null"],"type": "fill"}]
+        // temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
+        // temp3.resultFormat = "time_series"
+        // temp3.rawQuery = true;
+        // temp3.hide = false;
+        // temp3.orderByTime = "DESC";
+        // temp3.policy = "autogen";
+
+        customTargets.push(temp)
+        // customTargets.push(temp2)
+        // customTargets.push(temp3)
     }
 
 
@@ -35,27 +63,29 @@ function make_panel(result) {
             title: '$ports',
             datasource: 'PiGSS data source',
             fontSize: '120%',
+            maxPerRow: 4,
             repeat: "ports",
             repeatDirection: "h",
-            type: 'graph',
+            styles: [
+              {
+                alias: "Time",
+                dateFormat: "YYYY-MM-DD HH:mm:ss",
+                pattern: "Time",
+                type: "hidden"
+              },
+              {
+                alias: "",
+                decimals: 2,
+                pattern: "/.*/",
+                type: "number",
+                unit: "short"
+              }
+            ],
+            transform: "timeseries_to_rows",
+            type: 'table',
             span: 12,
             fill: 0,
             linewidth: 0,
-            graphTooltip: 0,
-            pointradius: 2,
-            points: true,
-            seriesOverrides: [
-                {
-                  alias: "Unstable",
-                  color: "rgb(66, 66, 66)",
-                  legend: false
-                },
-                {
-                  alias: "Unselected",
-                  color: "rgb(102, 84, 84)",
-                  legend: false
-                }
-              ],
             targets: customTargets,
             tooltip: {
               shared: true,
@@ -78,7 +108,7 @@ return function(callback) {
     };
  
     // Set a title
-    dashboard.title = 'Concentration by Channel';
+    dashboard.title = 'Current Values';
  
     // Set default time
     dashboard.time = {
@@ -102,7 +132,14 @@ return function(callback) {
     for (var i = 0; i < variableArray.length; i++) {
         let temp = {}
         temp.allValue = null,
-        temp.current = {"text": "All", "value": "$__all"},
+        temp.current = {
+          "text": "H2O + CO2 + NH3 + CH4", 
+          "value": [
+            "H2O",
+            "CO2",
+            "NH3",
+            "CH4"
+          ]},
         temp.datasource = "species type service",
         temp.includeAll = true, 
         temp.label = "Species",
@@ -116,30 +153,6 @@ return function(callback) {
 
         customVariables.push(temp)
     }
-
-     //get time stabilization
-    let temp1 = {
-        current: {
-            selected: true,
-            text: "15",
-            value: "15"
-          },
-          hide: 2,
-          label: null,
-          name: "stabilization_time",
-          options: [
-            {
-              selected: true,
-              text: "15",
-              value: "15"
-            }
-          ],
-          query: "15",
-          skipUrlSync: false,
-          type: "textbox"
-    }
-
-    customVariables.push(temp1);
 
     // //get port history service variable
     let temp2 = {}
