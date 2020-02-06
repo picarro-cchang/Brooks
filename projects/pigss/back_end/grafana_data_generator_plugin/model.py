@@ -30,6 +30,7 @@ class Model:
             keys = await cls.get_common_keys(
                 query_params["keys"].split(","), client, measurements, log)
             analyzer = query_params["analyzer"]
+            port = query_params["port"]
 
             # influx epoch times are nanoseconds based
             time_from = query_params["from"]
@@ -40,10 +41,11 @@ class Model:
             keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
 
-            query = (f"SELECT time, analyzer, valve_pos, {keys} FROM {measurements} "
+            query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
                      f"WHERE analyzer =~ /{analyzer}/ "
+                     f"AND valve_pos =~ /{port}/ "
+                     f"AND valve_stable_time > 15 "
                      f"AND time > {time_from} AND time <= {time_to} "
-                     f"fill(previous) "
                      f"ORDER BY time DESC")
 
             data_generator = client.query(query=query, epoch="ms").get_points()

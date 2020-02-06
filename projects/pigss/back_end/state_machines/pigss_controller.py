@@ -13,7 +13,7 @@ import json
 import os
 import re
 import time
-import traceback
+from traceback import format_exc
 from enum import Enum, IntEnum
 
 import ntpath
@@ -295,6 +295,7 @@ class PigssController(Ahsm):
             self.send_queue.put_nowait(json.dumps({"modal_info": shadow}))
         except asyncio.queues.QueueFull:
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
+            log.error(f"Send Queue Full. Please report.")
 
     def set_plan(self, path, value):
         """Set the portion of self.plan specified by `path` to the given `value`.
@@ -306,6 +307,7 @@ class PigssController(Ahsm):
             self.send_queue.put_nowait(json.dumps({"plan": shadow}))
         except asyncio.queues.QueueFull:
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
+            log.error(f"Send Queue Full. Please report.")
 
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
@@ -317,6 +319,7 @@ class PigssController(Ahsm):
             self.send_queue.put_nowait(json.dumps({"uistatus": shadow}))
         except asyncio.queues.QueueFull:
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
+            log.error(f"Send Queue Full. Please report.")
 
     def plan_panel_update(self, msg):
         """Handle change of focus and edits in the duration column of the plan panel"""
@@ -1146,7 +1149,7 @@ class PigssController(Ahsm):
                 self.load_plan_from_file()
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
-                self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, traceback.format_exc()))
+                self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
             self.run_async(self.save_port_history())
@@ -1245,7 +1248,7 @@ class PigssController(Ahsm):
                 self.save_plan_to_file(self.plan["plan_filename"])
                 self.postFIFO(Event(Signal.PLAN_SAVE_SUCCESSFUL, None))
             except Exception:
-                self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, traceback.format_exc()))
+                self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_SAVE_SUCCESSFUL:
             self.get_plan_filenames()

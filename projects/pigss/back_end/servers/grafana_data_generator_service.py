@@ -175,6 +175,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         query_dict = parse_qs(request.query_string)
         query_params = {
             "keys": ",".join(query_dict["keys"]),
+            "port": "|".join([ f"^{port}$" for port in query_dict["port"]]),
             "analyzer": "|".join(query_dict["analyzer"]),
             "from": int(query_dict["from"][0]),
             "to": int(query_dict["to"][0]),
@@ -216,10 +217,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             -   application/json
         responses:
             "200":
-                description: successful operation returns available keys
-                {
-                    "keys": [...items]
-                }
+                description: successful operation returns available keys in a dict
         """
         measurements = self.app["config"]["database"]["measurements"]
         field_keys = await Model.get_user_keys(self.app["db_client"], measurements, log)
@@ -237,10 +235,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             -   application/json
         responses:
             "200":
-                description: successful operation returns available analyzers
-                {
-                    "analyzers": [...items]
-                }
+                description: successful operation returns available analyzers in a dict
         """
         measurements = self.app["config"]["database"]["measurements"]
         analyzers = await Model.get_analyzers(self.app["db_client"], measurements, log)
