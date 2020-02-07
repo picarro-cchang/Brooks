@@ -15,7 +15,7 @@
     {
       "type": "dashboard",
       "name": "Current Values",
-      "path": "dashboards/CurrentValues-Table.json",
+      "path": "dashboards/Curren-Values-Dynamic.json",
       "addToNav": true,
       "defaultNav": true
     }

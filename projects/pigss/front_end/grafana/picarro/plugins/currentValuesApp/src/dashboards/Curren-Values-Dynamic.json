@@ -15,8 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
-  "iteration": 1581017784275,
   "links": [
     {
       "asDropdown": true,
@@ -31,6 +29,113 @@
   ],
   "panels": [
     {
+      "cacheTimeout": null,
+      "colorBackground": false,
+      "colorValue": false,
+      "colors": [
+        "#299c46",
+        "rgba(237, 129, 40, 0.89)",
+        "#d44a3a"
+      ],
+      "datasource": "PiGSS data source",
+      "format": "none",
+      "gauge": {
+        "maxValue": 100,
+        "minValue": 0,
+        "show": false,
+        "thresholdLabels": false,
+        "thresholdMarkers": true
+      },
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 14,
+      "interval": null,
+      "links": [],
+      "mappingType": 1,
+      "mappingTypes": [
+        {
+          "name": "value to text",
+          "value": 1
+        },
+        {
+          "name": "range to text",
+          "value": 2
+        }
+      ],
+      "maxDataPoints": 100,
+      "nullPointMode": "connected",
+      "nullText": null,
+      "options": {},
+      "postfix": "",
+      "postfixFontSize": "50%",
+      "prefix": "Current Port:",
+      "prefixFontSize": "65%",
+      "rangeMaps": [
+        {
+          "from": "null",
+          "text": "N/A",
+          "to": "null"
+        }
+      ],
+      "sparkline": {
+        "fillColor": "rgba(31, 118, 189, 0.18)",
+        "full": false,
+        "lineColor": "rgb(31, 120, 193)",
+        "show": false,
+        "ymax": null,
+        "ymin": null
+      },
+      "tableColumn": "valve_pos",
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "limit": "",
+          "measurement": "crds",
+          "orderByTime": "DESC",
+          "policy": "default",
+          "query": "SELECT * FROM autogen.crds WHERE $timeFilter ORDER BY time DESC LIMIT 1",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "table",
+          "select": [
+            [
+              {
+                "params": [
+                  "*"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "thresholds": "",
+      "title": "",
+      "transparent": true,
+      "type": "singlestat",
+      "valueFontSize": "65%",
+      "valueMaps": [
+        {
+          "op": "=",
+          "text": "N/A",
+          "value": "null"
+        }
+      ],
+      "valueName": "current"
+    },
+    {
       "columns": [],
       "datasource": "PiGSS data source",
       "fill": 0,
@@ -39,7 +144,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 0
+        "y": 1
       },
       "id": 1,
       "linewidth": 0,
@@ -490,16 +595,16 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 0
+        "y": 1
       },
-      "id": 2,
+      "id": 15,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -943,16 +1048,16 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 0
+        "y": 1
       },
-      "id": 3,
+      "id": 16,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -1396,16 +1501,16 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 0
+        "y": 1
       },
-      "id": 4,
+      "id": 17,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -1849,16 +1954,16 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 8
+        "y": 9
       },
-      "id": 5,
+      "id": 18,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -2302,16 +2407,16 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 8
+        "y": 9
       },
-      "id": 6,
+      "id": 19,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -2755,16 +2860,16 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 8
+        "y": 9
       },
-      "id": 7,
+      "id": 20,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -3208,16 +3313,16 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 8
+        "y": 9
       },
-      "id": 8,
+      "id": 21,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -3661,16 +3766,16 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 16
+        "y": 17
       },
-      "id": 9,
+      "id": 22,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -4114,16 +4219,16 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 16
+        "y": 17
       },
-      "id": 10,
+      "id": 23,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -4567,16 +4672,16 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 16
+        "y": 17
       },
-      "id": 11,
+      "id": 24,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -5020,16 +5125,16 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 16
+        "y": 17
       },
-      "id": 12,
+      "id": 25,
       "linewidth": 0,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581017784275,
+      "repeatIteration": 1581112512666,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -5477,6 +5582,7 @@
         "allFormat": "glob",
         "allValue": null,
         "current": {
+          "tags": [],
           "text": "All",
           "value": [
             "$__all"
@@ -5506,9 +5612,7 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "port history server",
         "definition": "[$__from, $__to]",
@@ -5533,10 +5637,8 @@
         "allFormat": "glob",
         "allValue": null,
         "current": {
-          "text": "AMADS3001",
-          "value": [
-            "AMADS3001"
-          ]
+          "text": "All",
+          "value": "$__all"
         },
         "datasource": "PiGSS data source",
         "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
@@ -5579,6 +5681,6 @@
   },
   "timezone": "",
   "title": "Current Values",
-  "uid": null,
-  "version": 0
+  "uid": "2Luty8cZk",
+  "version": 3
 }

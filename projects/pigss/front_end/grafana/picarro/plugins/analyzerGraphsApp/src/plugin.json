@@ -15,7 +15,7 @@
     {
       "type": "dashboard",
       "name": "Analyzer Output Graphs",
-      "path": "dashboards/analyzer-output.json",
+      "path": "dashboards/analyzer-output-dynamic.json",
       "addToNav": true,
       "defaultNav": true
     }

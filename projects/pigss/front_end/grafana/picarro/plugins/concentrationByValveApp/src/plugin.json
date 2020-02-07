@@ -15,7 +15,7 @@
     {
       "type": "dashboard",
       "name": "Concentration By Channel",
-      "path": "dashboards/concentration-by-valve.json",
+      "path": "dashboards/concentration-by-valve-dynamic.json",
       "addToNav": true,
       "defaultNav": true
     }
