@@ -74,7 +74,7 @@ system_status_data_source = {
 }
 
 species_type_data_source = {
-    "id": 4,
+    "id": 5,
     "orgId": 1,
     "name": "species type service",
     "type": "simpod-json-datasource",
