@@ -23,35 +23,7 @@ function make_panel(result) {
         temp.orderByTime = "DESC";
         temp.policy = "autogen";
 
-        // let temp2 = {}
-        // //create one target object for each field
-        // temp2.alias = "Unstable"
-        // temp2.measurement = measurement;
-        // temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
-        // temp2.groupBy = [{"params": ["null"],"type": "fill"}]
-        // temp2.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
-        // temp2.resultFormat = "time_series"
-        // temp2.rawQuery = true;
-        // temp2.hide = false;
-        // temp2.orderByTime = "DESC";
-        // temp2.policy = "autogen";
-
-        // let temp3 = {}
-        // //create one target object for each field
-        // temp3.alias = "Unselected"
-        // temp3.measurement = measurement;
-        // temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE (valve_pos = 0 AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
-        // temp3.groupBy = [{"params": ["null"],"type": "fill"}]
-        // temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
-        // temp3.resultFormat = "time_series"
-        // temp3.rawQuery = true;
-        // temp3.hide = false;
-        // temp3.orderByTime = "DESC";
-        // temp3.policy = "autogen";
-
         customTargets.push(temp)
-        // customTargets.push(temp2)
-        // customTargets.push(temp3)
     }
 
 
