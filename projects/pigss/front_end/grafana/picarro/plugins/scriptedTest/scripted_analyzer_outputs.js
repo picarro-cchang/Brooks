@@ -84,7 +84,7 @@ function make_panel(result) {
         let temp3 = {}
         temp3.alias = "Unselected"
         temp3.measurement = measurement;
-        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE (valve_pos = 0 AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp3.groupBy = [{"params": ["null"],"type": "fill"}]
         temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp3.resultFormat = "time_series"
