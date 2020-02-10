@@ -1,8 +1,6 @@
 import { PluginMeta } from "@grafana/ui";
 
 export class ExampleConfigCtrl {
-  static templateUrl = "legacy/config.html";
-
   appEditCtrl: any;
   appModel: PluginMeta;
 

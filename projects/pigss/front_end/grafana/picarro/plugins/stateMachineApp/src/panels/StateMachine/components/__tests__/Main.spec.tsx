@@ -183,7 +183,7 @@ const defaultState = {
         "4": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}
       }, 
       clean: {"1": "READY", "3": "READY", "4": "READY"}, edit: "READY", identify: "READY", 
-      plan: "READY", plan_loop: "DISABLED", plan_run: "DISABLED", reference: "READY", run: "READY", standby: "ACTIVE"
+      plan: "READY", plan_loop: "READY", plan_run: "READY", reference: "READY", run: "READY", standby: "ACTIVE", loop_plan: "READY", run_plan: "READY"
     },
   };
 
@@ -426,7 +426,6 @@ describe('<Main />', () => {
       const cancelBtn = modal2.find('button').at(1);
       cancelBtn.simulate('click');
       const element2 = mockWS.mock.calls[0][0];
-      console.log(element2)
       client.send(element2);
       expect(instance2.ws_sender).toHaveBeenCalled();
       mockWS.mockClear();
@@ -479,10 +478,8 @@ describe('<Main w/ PlanPanel />', () => {
 
     const refBtn = wrapper.find('button#reference')
     refBtn.simulate('click');  
-    console.log("HEllo", mockWS.mock.calls);
   
     const element = mockWS.mock.calls[0][0];
-    console.log(element)
     client.send(element);
     expect(instance.ws_sender).toHaveBeenCalled();
     server.closed;
