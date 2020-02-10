@@ -25,6 +25,8 @@ export const DEFAULT_TIME_OPTIONS: TimeOption[] = [
 export const URL = {
   GET_SAVED_FILES: `http://${window.location.hostname}:8000/grafana_data_generator/api/getsavedfiles`,
   GET_FIELD_KEYS: `http://${window.location.hostname}:8000/grafana_data_generator/api/getkeys`,
+  GET_ANALYZERS: `http://${window.location.hostname}:8000/grafana_data_generator/api/getanalyzers`,
   GET_FILE: `http://${window.location.hostname}:8000/grafana_data_generator/api/getfile`,
   GENERATE_FILE: `http://${window.location.hostname}:8000/grafana_data_generator/api/generatefile`,
+  GET_PORTS: `http://${window.location.hostname}:8000/port_history/search`
 };

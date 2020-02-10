@@ -14,6 +14,10 @@ Configuration: # This is for high level information
           - NH3
           - HF
           - H2O
+          - CO2
+          - O2
+          - CavityPressure
+          - CavityTemp
         source: analyze_AMADS_LCT
         mode: AMADS_LCT_mode
         interval: 1.1
@@ -26,6 +30,9 @@ Configuration: # This is for high level information
         species:
           - HCl
           - H2O
+          - CH4
+          - CavityPressure
+          - CavityTemp
         source: analyze_SADS
         mode: SBDS_mode
         interval: 1.2
@@ -38,10 +45,46 @@ Configuration: # This is for high level information
         species:
           - H2S
           - HDO
+          - CO2
+          - CavityPressure
+          - CavityTemp
         source: analyze_BFADS
         mode: BFADS_mode
         interval: 1.3
         seed: 34567
+        warmup_time: 90.0
+      - ip_address: 192.168.10.104
+        chassis: 4532
+        analyzer: UADS
+        analyzer_num: 3003
+        species:
+          - SO2
+          - H2O
+          - CavityPressure
+          - CavityTemp
+        source: analyze_UADS
+        mode: UADS_mode
+        interval: 1.3
+        seed: 45678
+        warmup_time: 90.0
+      - ip_address: 192.168.10.105
+        chassis: 4532
+        analyzer: AMSADS
+        analyzer_num: 3003
+        species:
+          - HF
+          - NH3
+          - HCl
+          - H2O
+          - CO2
+          - O2
+          - CH4
+          - CavityPressure
+          - CavityTemp
+        source: analyze_AMSADS
+        mode: AMSADS_mode
+        interval: 1.3
+        seed: 56789
         warmup_time: 90.0
   Database:
     server: localhost
@@ -55,7 +98,7 @@ Settings:
   maximum_mfc_flow: 50.0
   reference_mfc_flow: 40.0
   flow_settle_delay: 2.0
-  madmapper_startup_delay: 30
+  madmapper_startup_delay: 2
   startup_plan: __default__ # Do NOT include extension or directory
   min_plan_interval: 20
 
@@ -76,7 +119,8 @@ Plugins:
       table_name: "Events"
       columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
     limit: 20
-    interval: 3
+    interval: 5
+    level: [20, 30, 40, 50]
     timeout: 300
     retries: 1
 
@@ -89,6 +133,10 @@ Plugins:
       retries: 1
       measurements: "crds"
     server:
-      user_keys: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2"]
+      user_keys: ["ALARM_STATUS", "CavityPressure", "CavityTemp", "WarmBoxTemp", "NH3","incomplete_nh3_spectrum" , 
+      "degraded_nh3_performance", "HF", "incomplete_hf_spectrum", "degraded_hf_performance", "HCl", 
+      "incomplete_hcl_spectrum", "degraded_hcl_performance", "H2O", "SO2", "CH4", "CO2", "BoxPressure","INST_STATUS" ]
       data_dir: "/tmp"
       file_type: "csv"
+
+Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2", "HDO", "H2S", "SO2", "CavityPressure", "CavityTemp"]

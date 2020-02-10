@@ -84,12 +84,13 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           </button>
         ) : (
           <button
-            onClick={e =>
+            onClick={e => {
               this.props.ws_sender({
                 element: "channel",
                 bank: this.props.bank,
                 channel: i
-              })
+              });
+            }
             }
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Remove files and folders created on install
-sudo rm -rf /usr/local/share/picarro >> /dev/null
+sudo rm -rf /usr/local/share/picarro/icons >> /dev/null
 sudo rm -rf /home/$SUDO_USER/.config/autostart/pigss-auto-launcher.desktop >> /dev/null
 sudo rm -rf /usr/share/applications/pigss-launcher.desktop >> /dev/null
 sudo rm -rf /usr/local/share/picarro/icons/picarro_logo.svg >> /dev/null

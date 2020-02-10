@@ -20,3 +20,7 @@
 .time-picker-container .navbar-button--zoom {
   display: none;
 }
+
+.time-generate-btn {
+  /* To be used in future to fix the timerange custom panel alignment */
+}

@@ -26,6 +26,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         self.app.router.add_get("/api/getsavedfiles", self.get_files_meta)
         self.app.router.add_get("/api/getfile", self.send_file)
         self.app.router.add_get("/api/getkeys", self.get_user_keys)
+        self.app.router.add_get("/api/getanalyzers", self.get_analyzers)
         self.app.router.add_get("/api/generatefile", self.generate_file)
 
     async def on_startup(self, app):
@@ -174,6 +175,8 @@ class GrafanaDataGeneratorService(ServiceTemplate):
         query_dict = parse_qs(request.query_string)
         query_params = {
             "keys": ",".join(query_dict["keys"]),
+            "port": "|".join([ f"^{port}$" for port in query_dict["port"]]),
+            "analyzer": "|".join(query_dict["analyzer"]),
             "from": int(query_dict["from"][0]),
             "to": int(query_dict["to"][0]),
         }
@@ -214,8 +217,26 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             -   application/json
         responses:
             "200":
-                description: successful operation returns available keys
+                description: successful operation returns available keys in a dict
         """
-        field_keys = await Model.get_field_keys(self.app["db_client"], log)
+        measurements = self.app["config"]["database"]["measurements"]
+        field_keys = await Model.get_user_keys(self.app["db_client"], measurements, log)
         user_keys = self.app["config"]["server"]["user_keys"]
         return web.json_response({"keys": list(filter(lambda x: x in field_keys, user_keys))})
+
+    async def get_analyzers(self, request):
+        """
+        description: Fetch analyzers for requesting records
+
+        tags:
+            -   Controller
+        summary: Fetch analyzers for requesting records
+        produces:
+            -   application/json
+        responses:
+            "200":
+                description: successful operation returns available analyzers in a dict
+        """
+        measurements = self.app["config"]["database"]["measurements"]
+        analyzers = await Model.get_analyzers(self.app["db_client"], measurements, log)
+        return web.json_response({"analyzers": analyzers})

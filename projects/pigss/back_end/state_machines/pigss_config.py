@@ -124,3 +124,7 @@ class PigssConfig:
     @default([])
     def get_gdg_plugin_config(self):
         return self.config["Plugins"]["GrafanaDataGenerator"]
+
+    @default([])
+    def get_species(self):
+        return self.config["Species"]

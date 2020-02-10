@@ -21,7 +21,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     this.state = {
       timeRange: this.props.options.timeRange,
       keys: [],
-      keyOptions: [],
+      keyOptions: [{ value: "All", label: "All" }],
+      analyzers: [],
+      analyzerOptions: [{ value: "All", label: "All" }],
+      ports: [],
+      portOptions: [{ value: "All", label: "All" }],
       files: [],
     };
   }
@@ -42,13 +46,13 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   generateFile = () => {
-    const { timeRange, keys } = this.state;
-    const {from, to } = {
+    const { timeRange, keys, analyzers, ports } = this.state;
+    const { from, to } = {
       from: dateMath.parse(timeRange.raw.from),
       to: dateMath.parse(timeRange.raw.to),
       raw: timeRange.raw
     } as TimeRange;
-    
+
     // @ts-ignore
     let fromTime = from._d.getTime();
     // @ts-ignore
@@ -60,9 +64,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     const queryParams = {
+      ports,
       from: fromTime * 1000000,
       to: toTime * 1000000,
-      keys: keys,
+      keys,
+      analyzers
     };
 
     // Call generate file api
@@ -105,9 +111,61 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   onKeysChange = (keys: any) => {
-    this.setState(() => {
-      return { keys };
-    });
+    if (!keys.length) {
+      this.setState({ keys: [] });
+      return;
+    }
+    for (const key of keys) {
+      if (key["value"] === "All") {
+        this.setState(() => {
+          return { keys: this.state.keyOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { keys };
+      });
+
+    }
+  };
+
+  onAnalyzersChange = (analyzers: any) => {
+    if (!analyzers.length) {
+      this.setState({ analyzers: [] });
+      return;
+    }
+
+    for (const analyzer of analyzers) {
+      if (analyzer["value"] === "All") {
+        this.setState(() => {
+          return { analyzers: this.state.analyzerOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { analyzers };
+      });
+
+    }
+  };
+
+  onPortsChange = (ports: any) => {
+    if (!ports.length) {
+      this.setState({ ports: [] });
+      return;
+    }
+
+    for (const port of ports) {
+      if (port["value"] === "All") {
+        this.setState(() => {
+          return { ports: this.state.portOptions.filter(x => x["value"] !== "All") };
+        });
+        break;
+      }
+      this.setState(() => {
+        return { ports };
+      })
+    }
   };
 
   componentWillMount() {
@@ -123,13 +181,39 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
             label: x,
           };
         });
-        this.setState({ keyOptions: keyOptions });
+        this.setState({ keyOptions: [...this.state.keyOptions, ...keyOptions] });
+      });
+    });
+
+    // Get Analyzer Options
+    DataGeneratorService.getAnalyzers().then((response: any) => {
+      response.json().then((data: any) => {
+        const analyzerOptions = data.analyzers.map((x: string) => {
+          return {
+            value: x,
+            label: x,
+          };
+        });
+        this.setState({ analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions] });
+      });
+    });
+
+    // Get Port Options
+    DataGeneratorService.getPorts().then((response: any) => {
+      response.json().then((data: any) => {
+        const portOptions = data.map((x: any) => {
+          return {
+            value: x["value"],
+            label: x["text"],
+          };
+        });
+        this.setState({ portOptions: [...this.state.portOptions, ...portOptions] });
       });
     });
   }
 
   render() {
-    const { files, timeRange, keyOptions } = this.state;
+    const { files, timeRange, keyOptions, analyzerOptions, portOptions } = this.state;
 
     const styleObj = {
       overflow: 'scroll !important',
@@ -155,11 +239,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       <Fragment>
         <h3 className="text-center">User Data File Generator</h3>
         <PanelOptionsGroup title="Generate New File">
-          <div className="row">
-            <div className="gf-form col-md-3 col-sm-12">
+          <PanelOptionsGroup>
+            <div className="gf-form">
               <FormLabel width={labelWidth_6}>Species</FormLabel>
               <Select
-                width={selectWidth}
                 options={keyOptions}
                 onChange={this.onKeysChange}
                 value={keyOptions.find((option: any) => option.value === 'key')}
@@ -167,25 +250,56 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 backspaceRemovesValue
               />
             </div>
-            <div className="gf-form col-md-6 col-sm-12 time-picker-container">
-              <FormLabel width={labelWidth_7}>Time Range</FormLabel>
-              <TimePicker
-                timeZone="browser"
-                selectOptions={DEFAULT_TIME_OPTIONS}
-                onChange={this.onDateChange}
-                value={this.state.timeRange}
-                onMoveBackward={() => console.log('Move Backward')}
-                onMoveForward={() => console.log('Move forward')}
-                onZoom={() => console.log('Zoom')}
+          </PanelOptionsGroup>
+
+          <PanelOptionsGroup>
+            <div className="gf-form">
+              <FormLabel width={labelWidth_6}>Analyzer</FormLabel>
+              <Select
+                options={analyzerOptions}
+                onChange={this.onAnalyzersChange}
+                value={analyzerOptions.find((option: any) => option.value === 'key')}
+                isMulti={true}
+                backspaceRemovesValue
               />
             </div>
-
-            <div className="gf-form col-md-3 col-sm-12">
-              <Button size="md" variant="primary" value="Generate" onClick={this.generateFile} disabled={!this.state.keys.length}>
-                Generate
-              </Button>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div className="gf-form">
+              <FormLabel width={labelWidth_6}>Port</FormLabel>
+              <Select
+                options={portOptions}
+                onChange={this.onPortsChange}
+                value={portOptions.find((option: any) => option.value === 'key')}
+                isMulti={true}
+                backspaceRemovesValue
+              />
             </div>
-          </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div className="time-generate-btn">
+              <div className="gf-form time-picker-container">
+                <FormLabel width={labelWidth_7}>Time Range</FormLabel>
+                <TimePicker
+                  timeZone="browser"
+                  selectOptions={DEFAULT_TIME_OPTIONS}
+                  onChange={this.onDateChange}
+                  value={this.state.timeRange}
+                  onMoveBackward={() => console.log('Move Backward')}
+                  onMoveForward={() => console.log('Move forward')}
+                  onZoom={() => console.log('Zoom')}
+                />
+
+                <div className="gf-form col-md-1">
+                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile}
+                    disabled={!(this.state.keys.length && this.state.analyzers.length && this.state.ports.length)}>
+                    Generate
+              </Button>
+                </div>
+              </div>
+            </div>
+          </PanelOptionsGroup>
+
         </PanelOptionsGroup>
         <PanelOptionsGroup title="Recently Generated Files">
           <div className="row" style={styleObj}>
