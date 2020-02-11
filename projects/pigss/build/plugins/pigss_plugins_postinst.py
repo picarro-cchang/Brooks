@@ -73,6 +73,23 @@ system_status_data_source = {
     "readOnly": False
 }
 
+species_type_data_source = {
+    "id": 5,
+    "orgId": 1,
+    "name": "species type service",
+    "type": "simpod-json-datasource",
+    "typeLogoUrl": "public/plugins/simpod-json-datasource/img/json-logo.svg",
+    "access": "proxy",
+    "url": "http://localhost:8000/species/",
+    "password": "",
+    "user": "",
+    "database": "",
+    "basicAuth": False,
+    "isDefault": False,
+    "jsonData": {},
+    "readOnly": False
+}
+
 # TODO: Improve grootilities to not rely on a list of app ids for production
 apps = [
     'picarro-analyzer-page', 'current-concentration-values',
@@ -89,6 +106,7 @@ def main():
         GROOT.add_datasource(port_history_data_source)
         GROOT.add_datasource(telegraf_data_source)
         GROOT.add_datasource(system_status_data_source)
+        GROOT.add_datasource(species_type_data_source)
         # TODO: Improve grootilities to not rely on a list of app ids for production
         for app in apps:
             print(f'Provisioning: {app}')

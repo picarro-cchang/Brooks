@@ -29,125 +29,16 @@
   ],
   "panels": [
     {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
+      "columns": [],
       "datasource": "PiGSS data source",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
+      "fontSize": "120%",
       "gridPos": {
-        "h": 1,
-        "w": 24,
+        "h": 9,
+        "w": 6,
         "x": 0,
         "y": 0
       },
-      "id": 14,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "Current Port:",
-      "prefixFontSize": "65%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "valve_pos",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            }
-          ],
-          "limit": "",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT * FROM autogen.crds WHERE $timeFilter ORDER BY time DESC LIMIT 1",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "*"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "",
-      "title": "",
-      "transparent": true,
-      "type": "singlestat",
-      "valueFontSize": "65%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
-      "columns": [],
-      "datasource": "PiGSS data source",
-      "fill": 0,
-      "fontSize": "120%",
-      "gridPos": {
-        "h": 8,
-        "w": 6,
-        "x": 0,
-        "y": 1
-      },
-      "id": 1,
-      "linewidth": 0,
+      "id": 2,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
@@ -160,6 +51,7 @@
           "value": "2"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -185,34 +77,48 @@
           "mappingType": 1,
           "pattern": "Metric",
           "thresholds": [],
-          "type": "number",
-          "unit": "short"
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
         },
         {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -226,166 +132,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -396,244 +150,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
           ],
-          "tags": []
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ],
-          "tags": []
+          ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 6,
-        "y": 1
+        "y": 0
       },
-      "id": 15,
-      "linewidth": 0,
+      "id": 3,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -641,6 +235,7 @@
           "value": "4"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -654,30 +249,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -691,161 +316,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -856,237 +334,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 12,
-        "y": 1
+        "y": 0
       },
-      "id": 16,
-      "linewidth": 0,
+      "id": 4,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -1094,6 +419,7 @@
           "value": "6"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -1107,30 +433,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1144,161 +500,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -1309,237 +518,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 0
       },
-      "id": 17,
-      "linewidth": 0,
+      "id": 5,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -1547,6 +603,7 @@
           "value": "8"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -1560,30 +617,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -1597,161 +684,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -1762,237 +702,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 0,
         "y": 9
       },
-      "id": 18,
-      "linewidth": 0,
+      "id": 6,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -2000,6 +787,7 @@
           "value": "18"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -2013,30 +801,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2050,161 +868,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -2215,237 +886,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 6,
         "y": 9
       },
-      "id": 19,
-      "linewidth": 0,
+      "id": 7,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -2453,6 +971,7 @@
           "value": "20"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -2466,30 +985,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2503,161 +1052,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -2668,237 +1070,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 12,
         "y": 9
       },
-      "id": 20,
-      "linewidth": 0,
+      "id": 8,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -2906,6 +1155,7 @@
           "value": "22"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -2919,30 +1169,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -2956,161 +1236,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -3121,237 +1254,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 18,
         "y": 9
       },
-      "id": 21,
-      "linewidth": 0,
+      "id": 9,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -3359,6 +1339,7 @@
           "value": "24"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -3372,30 +1353,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -3409,161 +1420,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -3574,237 +1438,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 0,
-        "y": 17
+        "y": 18
       },
-      "id": 22,
-      "linewidth": 0,
+      "id": 10,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -3812,6 +1523,7 @@
           "value": "26"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -3825,30 +1537,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -3862,161 +1604,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -4027,237 +1622,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 6,
-        "y": 17
+        "y": 18
       },
-      "id": 23,
-      "linewidth": 0,
+      "id": 11,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -4265,6 +1707,7 @@
           "value": "28"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -4278,30 +1721,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -4315,161 +1788,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -4480,237 +1806,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 12,
-        "y": 17
+        "y": 18
       },
-      "id": 24,
-      "linewidth": 0,
+      "id": 12,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -4718,6 +1891,7 @@
           "value": "30"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -4731,30 +1905,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -4768,161 +1972,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -4933,237 +1990,84 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     },
     {
       "columns": [],
       "datasource": "PiGSS data source",
-      "fill": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 6,
         "x": 18,
-        "y": 17
+        "y": 18
       },
-      "id": 25,
-      "linewidth": 0,
+      "id": 13,
       "maxPerRow": 4,
       "options": {},
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581446000464,
-      "repeatPanelId": 1,
+      "repeatIteration": 1574203611017,
+      "repeatPanelId": 2,
       "scopedVars": {
         "ports": {
           "selected": false,
@@ -5171,6 +2075,7 @@
           "value": "32"
         }
       },
+      "scroll": true,
       "showHeader": true,
       "sort": {
         "col": 0,
@@ -5184,30 +2089,60 @@
           "type": "hidden"
         },
         {
+          "alias": "Species",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
+          "dateFormat": "YYYY-MM-DD HH:mm:ss",
+          "decimals": 2,
+          "mappingType": 1,
+          "pattern": "Metric",
+          "thresholds": [],
+          "type": "string",
+          "unit": "short",
+          "valueMaps": [
+            {
+              "text": "NH3",
+              "value": "crds.NH3"
+            },
+            {
+              "text": "HF",
+              "value": "crds.HF"
+            },
+            {
+              "text": "HCl",
+              "value": "crds.HCl"
+            },
+            {
+              "text": "H2O",
+              "value": "crds.H2O"
+            }
+          ]
+        },
+        {
           "alias": "",
+          "colorMode": null,
+          "colors": [
+            "rgba(245, 54, 54, 0.9)",
+            "rgba(237, 129, 40, 0.89)",
+            "rgba(50, 172, 45, 0.97)"
+          ],
           "decimals": 2,
           "pattern": "/.*/",
+          "thresholds": [],
           "type": "number",
           "unit": "short"
         }
       ],
       "targets": [
         {
-          "alias": "H2O",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
+          "groupBy": [],
+          "measurement": "crds",
           "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
+          "policy": "default",
           "refId": "A",
           "resultFormat": "time_series",
           "select": [
@@ -5221,161 +2156,14 @@
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "B",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CO2"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "NH3",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "C",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "NH3"
+                  "H2O"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "CH4",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "D",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CH4"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HF",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "E",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "HF"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "HCl",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "F",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
@@ -5386,214 +2174,63 @@
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HCl"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "O2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "G",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "O2"
+                  "HF"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
+              },
+              {
+                "params": [
+                  "HF"
+                ],
+                "type": "alias"
               }
-            ]
-          ]
-        },
-        {
-          "alias": "HDO",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "H",
-          "resultFormat": "time_series",
-          "select": [
+            ],
             [
               {
                 "params": [
-                  "HDO"
+                  "NH3"
                 ],
                 "type": "field"
               },
               {
                 "params": [],
                 "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "H2S",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "I",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "H2S"
-                ],
-                "type": "field"
               },
               {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "SO2",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "J",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
                 "params": [
-                  "SO2"
+                  "NH3"
                 ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
+                "type": "alias"
               }
             ]
-          ]
-        },
-        {
-          "alias": "CavityPressure",
-          "groupBy": [
-            {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
-            }
           ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "K",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityPressure"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
-          ]
-        },
-        {
-          "alias": "CavityTemp",
-          "groupBy": [
+          "tags": [
             {
-              "params": [
-                "null"
-              ],
-              "type": "fill"
+              "key": "valve_pos",
+              "operator": "=~",
+              "value": "/^$ports$/"
             }
-          ],
-          "hide": false,
-          "measurement": "autogen.crds",
-          "orderByTime": "DESC",
-          "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC",
-          "rawQuery": true,
-          "refId": "L",
-          "resultFormat": "time_series",
-          "select": [
-            [
-              {
-                "params": [
-                  "CavityTemp"
-                ],
-                "type": "field"
-              },
-              {
-                "params": [],
-                "type": "last"
-              }
-            ]
           ]
         }
       ],
+      "timeFrom": null,
+      "timeShift": null,
       "title": "$ports",
-      "tooltip": {
-        "shared": true,
-        "value_type": "individual"
-      },
       "transform": "timeseries_to_rows",
       "type": "table"
     }
@@ -5607,35 +2244,6 @@
   "templating": {
     "list": [
       {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {
-          "text": "All",
-          "value": [
-            "$__all"
-          ]
-        },
-        "datasource": "species type service",
-        "definition": "",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Species",
-        "multi": true,
-        "name": "species",
-        "options": [],
-        "query": "",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
         "allValue": null,
         "current": {
           "text": "All",
@@ -5650,33 +2258,7 @@
         "name": "ports",
         "options": [],
         "query": "[$__from, $__to]",
-        "refresh": 1,
-        "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
-        "tagValuesQuery": "",
-        "tags": [],
-        "tagsQuery": "",
-        "type": "query",
-        "useTags": false
-      },
-      {
-        "allFormat": "glob",
-        "allValue": null,
-        "current": {
-          "text": "All",
-          "value": "$__all"
-        },
-        "datasource": "PiGSS data source",
-        "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
-        "hide": 0,
-        "includeAll": true,
-        "label": "Instrument",
-        "multi": true,
-        "name": "instrument",
-        "options": [],
-        "query": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
-        "refresh": 1,
+        "refresh": 2,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -5694,6 +2276,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",
@@ -5709,5 +2293,5 @@
   "timezone": "",
   "title": "Current Values",
   "uid": "2Luty8cZk",
-  "version": 1
+  "version": 4
 }
