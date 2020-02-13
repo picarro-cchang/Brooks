@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { PureComponent } from 'react';
 import DataGeneratorLayout from '../panels/UserDataFileGenerator/src/components/DataGeneratorLayout';
 import { shallow, mount } from 'enzyme';
 import { DataGeneratorLayoutProps } from '../panels/UserDataFileGenerator/src/types';
@@ -8,7 +8,7 @@ import 'jest-styled-components';
 import WS from "jest-websocket-mock";
 import "jest-fetch-mock"
 
-// const mockClick = jest.fn((element) => {return element;});
+const mockgetFile = jest.fn((fileName) => {return fileName;});
 // const apiLoc = `${window.location.hostname}:8000/controller`;
 // const socketURL = `ws://${apiLoc}/ws`;
 
@@ -35,7 +35,7 @@ describe('<DataGeneratorLayout />', () => {
   
 //   it('Generate button disabled until selections are made', () => {});
 
-  it('generateFile functionality', () => {
+  it('DataService generateFile functionality', () => {
       wrapper.setState({
           ...defaultProps,
           timeRange: {
@@ -44,11 +44,33 @@ describe('<DataGeneratorLayout />', () => {
               raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment }
           },
           keys: [{value: "WarmBoxTemp", label: "WarmBoxTemp"}],
-          analyzers: [{value: "", label: ""}],
-          ports: [{value: "", label: ""}]
+          analyzers: [{value: "AMADS3001", label: "AMADS3001"}],
+          ports: [{value: "All", label: "All"}]
       });
-      console.log(wrapper.state())
-  });
-  
+      const { from, to } = {
+        from: dateMath.parse(wrapper.state()["timeRange"].raw.from),
+        to: dateMath.parse(wrapper.state()["timeRange"].raw.to),
+        raw: wrapper.state()["timeRange"].raw
+      } as TimeRange;
+      // @ts-ignore
+      let fromTime = from._d.getTime();
+
+      // @ts-ignore
+      let toTime = to._d.getTime();
+
+      const queryParams = {
+        ports: wrapper.state()["ports"],
+        from: fromTime * 1000000,
+        to: toTime * 1000000,
+        keys: wrapper.state()["keys"],
+        analyzers: wrapper.state()["analyzers"]
+      };
+
+      return DataGeneratorService.generateFile(queryParams).then(response => {
+        expect(response).toEqual({"filename": "picarro-02-12-2020_095753-02-12-2020_155753.csv"})
+      })
+
+});
 });
 
+//{"filename": "picarro-02-12-2020_095753-02-12-2020_155753.csv"}
