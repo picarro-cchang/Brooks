@@ -145,7 +145,7 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 6,
+        "h": 8,
         "w": 12,
         "x": 0,
         "y": 1
@@ -275,8 +275,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -309,8 +308,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -326,7 +324,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -343,8 +341,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -377,8 +374,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -411,8 +407,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -428,7 +423,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -445,8 +440,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -479,8 +473,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -513,8 +506,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -530,7 +522,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -547,8 +539,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -581,8 +572,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -615,8 +605,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -632,7 +621,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -649,8 +638,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -683,8 +671,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -717,8 +704,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -734,7 +720,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -751,8 +737,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -785,8 +770,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -819,8 +803,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -836,7 +819,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -853,8 +836,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -887,8 +869,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -921,8 +902,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -938,7 +918,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -955,8 +935,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -989,8 +968,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -1023,8 +1001,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -1040,7 +1017,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -1057,8 +1034,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -1091,8 +1067,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -1125,8 +1100,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -1142,7 +1116,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -1158,8 +1132,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -1191,8 +1164,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -1224,8 +1196,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -1241,7 +1212,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -1257,8 +1228,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -1290,8 +1260,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -1323,8 +1292,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -1340,7 +1308,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -1356,8 +1324,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -1389,8 +1356,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unstable",
@@ -1422,8 +1388,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "Unselected",
@@ -1439,7 +1404,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -1455,8 +1420,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -1465,7 +1429,7 @@
       "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -1539,7 +1503,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -1692,7 +1656,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -1791,7 +1755,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -1890,7 +1854,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -1989,7 +1953,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -2088,7 +2052,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -2187,7 +2151,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -2286,7 +2250,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -2385,7 +2349,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -2484,7 +2448,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -2580,7 +2544,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -2676,7 +2640,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -2772,7 +2736,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -2846,7 +2810,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 7
+        "y": 9
       },
       "id": 4,
       "legend": {
@@ -2871,7 +2835,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -3024,7 +2988,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -3123,7 +3087,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -3222,7 +3186,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -3321,7 +3285,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -3420,7 +3384,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -3519,7 +3483,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -3618,7 +3582,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -3717,7 +3681,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -3816,7 +3780,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -3912,7 +3876,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -4008,7 +3972,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -4104,7 +4068,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -4203,7 +4167,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -4356,7 +4320,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -4455,7 +4419,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -4554,7 +4518,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -4653,7 +4617,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -4752,7 +4716,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -4851,7 +4815,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -4950,7 +4914,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -5049,7 +5013,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -5148,7 +5112,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -5244,7 +5208,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -5340,7 +5304,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -5436,7 +5400,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -5510,7 +5474,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 15
+        "y": 17
       },
       "id": 6,
       "legend": {
@@ -5535,7 +5499,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -5688,7 +5652,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -5787,7 +5751,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -5886,7 +5850,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -5985,7 +5949,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -6084,7 +6048,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -6183,7 +6147,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -6282,7 +6246,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -6381,7 +6345,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -6480,7 +6444,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -6576,7 +6540,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -6672,7 +6636,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -6768,7 +6732,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -6867,7 +6831,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -7020,7 +6984,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -7119,7 +7083,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -7218,7 +7182,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -7317,7 +7281,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -7416,7 +7380,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -7515,7 +7479,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -7614,7 +7578,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -7713,7 +7677,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -7812,7 +7776,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -7908,7 +7872,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -8004,7 +7968,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -8100,7 +8064,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -8174,7 +8138,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 23
+        "y": 25
       },
       "id": 8,
       "legend": {
@@ -8199,7 +8163,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -8352,7 +8316,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -8451,7 +8415,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -8550,7 +8514,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -8649,7 +8613,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -8748,7 +8712,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -8847,7 +8811,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -8946,7 +8910,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -9045,7 +9009,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -9144,7 +9108,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -9240,7 +9204,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -9336,7 +9300,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -9432,7 +9396,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -9531,7 +9495,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -9684,7 +9648,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -9783,7 +9747,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -9882,7 +9846,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -9981,7 +9945,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -10080,7 +10044,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -10179,7 +10143,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -10278,7 +10242,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -10377,7 +10341,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -10476,7 +10440,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -10572,7 +10536,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -10668,7 +10632,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -10764,7 +10728,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -10826,28 +10790,44 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 31
+        "y": 33
       },
       "id": 10,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -10916,6 +10896,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -10997,7 +10980,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -11096,7 +11079,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -11195,7 +11178,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -11294,7 +11277,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -11393,7 +11376,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -11492,7 +11475,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -11591,7 +11574,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -11690,7 +11673,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -11789,7 +11772,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -11885,7 +11868,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -11981,7 +11964,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -12077,7 +12060,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -12096,16 +12079,56 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 8,
@@ -12115,17 +12138,28 @@
       },
       "id": 11,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -12194,6 +12228,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -12275,7 +12312,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -12374,7 +12411,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -12473,7 +12510,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -12572,7 +12609,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -12671,7 +12708,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -12770,7 +12807,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -12869,7 +12906,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -12968,7 +13005,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -13067,7 +13104,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -13163,7 +13200,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -13259,7 +13296,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -13355,7 +13392,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -13374,36 +13411,87 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 39
+        "y": 41
       },
       "id": 12,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -13472,6 +13560,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -13553,7 +13644,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -13652,7 +13743,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -13751,7 +13842,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -13850,7 +13941,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -13949,7 +14040,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -14048,7 +14139,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -14147,7 +14238,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -14246,7 +14337,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -14345,7 +14436,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -14441,7 +14532,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -14537,7 +14628,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -14633,7 +14724,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -14652,16 +14743,56 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 8,
@@ -14671,17 +14802,28 @@
       },
       "id": 13,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581100756544,
+      "repeatIteration": 1581556273414,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -14750,6 +14892,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -14831,7 +14976,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "C",
           "resultFormat": "time_series",
@@ -14930,7 +15075,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CO2) AS CO2 FROM autogen.crds WHERE ('CO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "F",
           "resultFormat": "time_series",
@@ -15029,7 +15174,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(NH3) AS NH3 FROM autogen.crds WHERE ('NH3' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "I",
           "resultFormat": "time_series",
@@ -15128,7 +15273,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CH4) AS CH4 FROM autogen.crds WHERE ('CH4' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "L",
           "resultFormat": "time_series",
@@ -15227,7 +15372,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HF) AS HF FROM autogen.crds WHERE ('HF' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "O",
           "resultFormat": "time_series",
@@ -15326,7 +15471,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HCl) AS HCl FROM autogen.crds WHERE ('HCl' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "R",
           "resultFormat": "time_series",
@@ -15425,7 +15570,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(O2) AS O2 FROM autogen.crds WHERE ('O2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "U",
           "resultFormat": "time_series",
@@ -15524,7 +15669,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(HDO) AS HDO FROM autogen.crds WHERE ('HDO' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "refId": "X",
           "resultFormat": "time_series",
@@ -15623,7 +15768,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(H2S) AS H2S FROM autogen.crds WHERE ('H2S' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -15719,7 +15864,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(SO2) AS SO2 FROM autogen.crds WHERE ('SO2' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -15815,7 +15960,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityPressure) AS CavityPressure FROM autogen.crds WHERE ('CavityPressure' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -15911,7 +16056,7 @@
           "measurement": "autogen.crds",
           "orderByTime": "DESC",
           "policy": "autogen",
-          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
+          "query": "SELECT last(CavityTemp) AS CavityTemp FROM autogen.crds WHERE ('CavityTemp' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)",
           "rawQuery": true,
           "resultFormat": "time_series",
           "select": [
@@ -15930,12 +16075,47 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "refresh": "5s",
@@ -16050,11 +16230,13 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",
