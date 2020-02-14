@@ -8,20 +8,22 @@ export const DataGeneratorService = (() => {
       return DEFAULT_DATA_GENERATOR_PROPS as DataGeneratorPanelProps;
     },
     getSavedFiles: () => {
-      return API.get(URL.GET_SAVED_FILES);
+      const files = API.get(URL.GET_SAVED_FILES);
+      return Object(files)
     },
     getKeys: () => {
-      return API.get(URL.GET_FIELD_KEYS);
+      const keys = API.get(URL.GET_FIELD_KEYS);
+      return new Promise (() => {API.get(URL.GET_FIELD_KEYS)});
     },
     getAnalyzers: () => {
-      return API.get(URL.GET_ANALYZERS)
+      return new Promise (() => {API.get(URL.GET_ANALYZERS)})
     },
     getPorts: () => {
-      return API.post(URL.GET_PORTS)
+      return new Promise (() => API.post(URL.GET_PORTS))
     },
     getFile: (fileName: string) => {
       const url = URL.GET_FILE + '?name=' + fileName;
-      return API.get(url);      
+      return new Promise (() => API.get(url));      
     },
     generateFile: (params: any) => {
       let url = URL.GENERATE_FILE + '?';
@@ -39,7 +41,7 @@ export const DataGeneratorService = (() => {
 
       url += `from=${from}`;
       url += `&to=${to}`;
-      return API.get(url);
+      return  new Promise (() =>API.get(url));
     },
   };
 })();
