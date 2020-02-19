@@ -13,13 +13,16 @@ export const DataGeneratorService = (() => {
     },
     getKeys: () => {
       const keys = API.get(URL.GET_FIELD_KEYS);
-      return new Promise (() => {API.get(URL.GET_FIELD_KEYS)});
+      // return new Promise (() => {API.get(URL.GET_FIELD_KEYS)});
+      return Promise.resolve(new Response(JSON.stringify(keys)))
     },
     getAnalyzers: () => {
-      return new Promise (() => {API.get(URL.GET_ANALYZERS)})
+      const analyzers = API.get(URL.GET_ANALYZERS)
+      return Promise.resolve(new Response(JSON.stringify(analyzers)))
     },
     getPorts: () => {
-      return new Promise (() => API.post(URL.GET_PORTS))
+      const ports = API.post(URL.GET_PORTS)
+      return Promise.resolve(new Response(JSON.stringify(ports)))
     },
     getFile: (fileName: string) => {
       const url = URL.GET_FILE + '?name=' + fileName;
