@@ -1,11 +1,12 @@
 import {URL} from '../../constants'
+import { dateTime } from '@grafana/data';
 
 export const API = {
     get(url: string) {
       switch(url) {
         case URL.GET_SAVED_FILES: {
-            const prom = Promise.resolve(Object({"files": ["pigss-ms-02-05-2020_121737-02-05-2020_131737.csv", "pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"]}))
-            return prom
+          const data = {"files": ["pigss-ms-02-05-2020_121737-02-05-2020_131737.csv", "pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"]}
+          return data
         }
         case URL.GET_FIELD_KEYS: {
           const promise = new Promise((resolve) => {
@@ -19,15 +20,21 @@ export const API = {
           });
         }
         case URL.GET_FILE + '?name=': {
-          return new Promise((resolve) => {
-          resolve([["time","analyzer","valve_pos","WarmBoxTemp","CavityTemp"], 
+          // return new Promise((resolve) => {
+          // resolve([["time","analyzer","valve_pos","WarmBoxTemp","CavityTemp"], 
+          //   ["1580936855480","AMSADS3003","18","45","80"],
+          //   ["1580936854180","AMSADS3003","18","45","80"],
+          //   ["1580936852880","AMSADS3003","18","45","80"]])
+          // });
+          const data = [["time","analyzer","valve_pos","WarmBoxTemp","CavityTemp"], 
             ["1580936855480","AMSADS3003","18","45","80"],
             ["1580936854180","AMSADS3003","18","45","80"],
-            ["1580936852880","AMSADS3003","18","45","80"]])
-          });
+            ["1580936852880","AMSADS3003","18","45","80"]]
+          return data
         }
         case URL.GENERATE_FILE + '?keys=CavityTemp&analyzer=AMSADS3003&port=2&from=&to=': {
-          return new Promise((resolve) => {resolve({"filename": "pigss-ms-02-13-2020_061135-02-13-2020_121135.csv"})});
+          const data = {"filename": "pigss-ms-02-13-2020_061135-02-13-2020_121135.csv"}
+          return data
         }
       }
     },

@@ -222,7 +222,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
           >
             <Button
               disabled={true}
-              onClick={[Function]}
+              onClick={[MockFunction]}
               size="md"
               value="Generate"
               variant="primary"
@@ -256,7 +256,24 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               "listStyle": "none",
             }
           }
-        />
+        >
+          <li
+            className="file-item"
+            key="pigss-ms-02-05-2020_121737-02-05-2020_131737.csv"
+            onClick={[Function]}
+            value="pigss-ms-02-05-2020_121737-02-05-2020_131737.csv"
+          >
+            pigss-ms-02-05-2020_121737-02-05-2020_131737.csv
+          </li>
+          <li
+            className="file-item"
+            key="pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"
+            onClick={[Function]}
+            value="pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"
+          >
+            pigss-ms-02-05-2020_121814-02-05-2020_131814.csv
+          </li>
+        </ul>
       </div>
     </div>
   </PanelOptionsGroup>

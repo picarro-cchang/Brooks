@@ -19,9 +19,8 @@ describe("DataFileGeneratorService", () => {
     });
 
     it("getSavedFiles", () => {
-        DataGeneratorService.getSavedFiles().then(result => {
-            expect(result).toEqual({"files": ["pigss-ms-02-05-2020_121737-02-05-2020_131737.csv", "pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"]})
-        })
+        const files = DataGeneratorService.getSavedFiles()
+        expect(files).toEqual({"files": ["pigss-ms-02-05-2020_121737-02-05-2020_131737.csv", "pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"]})
     });
 
     it("getKeys", () => {
@@ -41,17 +40,18 @@ describe("DataFileGeneratorService", () => {
         DataGeneratorService.getPorts().then(response => {expect(response).toEqual(mockKeys)})
     });
 
-    it("getFile", async () => {
+    it("getFile", () => {
         const mockKeys =  [
             ["time","analyzer","valve_pos","WarmBoxTemp","CavityTemp"], 
             ["1580936855480","AMSADS3003","18","45","80"],
             ["1580936854180","AMSADS3003","18","45","80"],
             ["1580936852880","AMSADS3003","18","45","80"]
           ]
-        DataGeneratorService.getFile("").then(response => {expect(response).toEqual(mockKeys)})
+        const response = DataGeneratorService.getFile("")
+        expect(response).toEqual(mockKeys)
     });
 
-    it("getPorts", async () => {
+    it("generateFile", () => {
         const params = {
             from: "",
             to: "",
@@ -60,6 +60,7 @@ describe("DataFileGeneratorService", () => {
             ports: [{value: "2", label: "2"}]
         }
         const mockKeys = {"filename": "pigss-ms-02-13-2020_061135-02-13-2020_121135.csv"}
-        DataGeneratorService.generateFile(params).then(response => {expect(response).toEqual(mockKeys)});
+        const response = DataGeneratorService.generateFile(params)
+        expect(response).toEqual(mockKeys);
     });
 });
