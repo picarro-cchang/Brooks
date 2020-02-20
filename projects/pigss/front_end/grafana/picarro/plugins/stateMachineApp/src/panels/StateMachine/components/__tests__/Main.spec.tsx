@@ -11,8 +11,11 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {notifyError, notifySuccess} from '../../utils/Notifications';
 
+jest.mock('./../../api/PicarroAPI.ts')
+
+
 const defaultState = {
-    initialized: false,
+    initialized: true,
     modal_info: {
       show: false,
       html: "",
@@ -288,7 +291,7 @@ const defaultState = {
   };
 
   const apiLoc = `${window.location.hostname}:8000/controller`;
-  const socketURL = `ws://${apiLoc}/ws`;
+  const socketURL = `ws://localhost:1234/ws`;
   const mockWS = jest.fn((element) => {return element});
   const server = new WS(socketURL);
   const client = new WebSocket(socketURL);
@@ -309,13 +312,6 @@ describe('<Main />', () => {
     it('Check correct left panel is showing', () => {
         expect(wrapper.state()["plan"].panel_to_show).toEqual(0);
         expect(PlanPanelTypes.NONE).toEqual(wrapper.state()["plan"].panel_to_show);
-        // wrapper.setState({
-        //   ...defaultState,
-        //   plan: {
-        //     panel_to_show: 1
-        //   }
-        // });
-        // expect(wrapper).toMatchSnapshot();
         wrapper.setState({
           ...defaultState,
           plan: {
@@ -345,7 +341,7 @@ describe('<Main />', () => {
     it('ComponentDidMount', async () => {
       const spy = jest.spyOn(Main.prototype, 'componentDidMount');
       const wrapper = mount(<Main />);
-      expect(spy).toHaveBeenCalled();
+      await expect(spy).toHaveBeenCalled();
       spy.mockReset();
       spy.mockRestore();
     })

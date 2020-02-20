@@ -220,7 +220,6 @@ describe('<EditPanel />', () => {
     it("Validate Form", () => {
         const component = new EditPanel(defaultProps);
         const boo = component.validateForm.call(defaultProps, [1, 3, 4]);
-        console.log(boo)
         expect(boo).toEqual(true);
     });
 });

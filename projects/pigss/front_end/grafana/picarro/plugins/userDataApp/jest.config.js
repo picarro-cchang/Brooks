@@ -12,7 +12,6 @@ module.exports = {
     moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json', 'node', 'css'],
     roots: ["<rootDir>/src/panels/UserDataFileGenerator/src/"],
     snapshotSerializers: ["enzyme-to-json/serializer"],
-    setupFiles: ["<rootDir>/setupFile.js"],
     setupFilesAfterEnv: ["<rootDir>/setupEnzyme.ts"],
     moduleNameMapper: {
       "\\.(css|sass)$": "identity-obj-proxy",

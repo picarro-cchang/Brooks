@@ -4,7 +4,7 @@ module.exports = {
   },
   globals: {
     "ts-jest": {
-      tsConfigFile: "tsconfig.json"
+      tsConfig: "tsconfig.json"
     }
   },
   automock: false,

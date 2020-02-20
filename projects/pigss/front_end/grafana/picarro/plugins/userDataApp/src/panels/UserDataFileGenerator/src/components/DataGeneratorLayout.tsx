@@ -97,9 +97,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
 
   getFileNames = () => {
     // Get file names
-    console.log("here")
     DataGeneratorService.getSavedFiles().then((response: any) => {
-      console.log(response);
       response.json().then((files: any) => {
         this.setState(() => {
           return files;
