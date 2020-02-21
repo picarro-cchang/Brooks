@@ -361,14 +361,6 @@ let PicarroAPI = {
                 return Promise.resolve(new Response(JSON.stringify(info)))
             }
         }
-    //   return fetch(url, {
-    //     method: "GET"
-    //   }).then(response => {
-    //     if (!response.ok) {
-    //       throw Error("Network GET request failed");
-    //     }
-    //     return response;
-    //   });
     }
   };
   
