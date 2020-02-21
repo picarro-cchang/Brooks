@@ -9,6 +9,5 @@ import {LogProps} from '../types';
 describe('<LogPanel />', () => {
     // const wrapper = shallow(<LogPanel />);
     it('Match Snapshot', () => {
-        // expect(wrapper).toMatchSnapshot();
     });
 });
