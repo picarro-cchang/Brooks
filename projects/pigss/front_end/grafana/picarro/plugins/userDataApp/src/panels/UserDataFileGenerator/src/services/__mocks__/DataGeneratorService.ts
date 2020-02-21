@@ -46,7 +46,6 @@ export const DataGeneratorService = (() => {
 
       url += `from=`;
       url += `&to=`;
-      // return  new Promise (() =>API.get(url));
       const response = API.get(url)
       return Promise.resolve(new Response(JSON.stringify(response)))
 
