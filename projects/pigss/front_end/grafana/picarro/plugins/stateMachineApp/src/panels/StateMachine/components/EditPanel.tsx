@@ -1,9 +1,15 @@
 import React, { Component, PureComponent, ReactText } from "react";
 import Modal from "react-responsive-modal";
 import { EditPanelOptions } from "../types";
-import { EditForm } from "./EditForm";
+import  EditForm  from "./EditForm";
 
 class EditPanel extends PureComponent<EditPanelOptions> {
+  constructor(props) {
+    super(props);
+    this.handleBankChange = this.handleBankChange.bind(this);
+    this.handleChannelNameChange = this.handleChannelNameChange.bind(this);
+  }
+
   state = {
     initialized: false,
     modal_info: {
@@ -16,30 +22,123 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     plan: {
       bank_names: this.props.plan.bank_names
     },
-    show: false
+    show: false,
+    prevState: {
+      bank_names: {
+        1: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        2: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        3: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+        4: {
+          name: "",
+          channels: {
+            1: "",
+            2: "",
+            3: "",
+            4: "",
+            5: "",
+            6: "",
+            7: "",
+            8: ""
+          }
+        },
+      }
+    }
   };
-  constructor(props) {
-    super(props);
-  }
 
   banks: any;
   bank_list: any;
 
-  validateForm = (bank_list, targets) => {
-    let bankName, bankValue;
-    const length = targets.length;
+  componentDidMount = () => {
+    //Store bank values in previous state
+    this.setState({
+      ...this.state,
+      prevState: this.props.plan.bank_names
+    });
+  }
+
+  handleBankChange = (value, num: string) => {
+    this.setState({
+      ...this.state,
+      plan: {
+        ...this.state.plan,
+        bank_names: {
+          ...this.state.plan.bank_names,
+          [num]: {
+            ...this.state.plan.bank_names[num],
+            name: value
+          }
+        }
+      }
+    });
+  }
+
+  handleChannelNameChange(value, num: string, num2) {
+      this.setState({
+        ...this.state,
+        plan:{
+          ...this.state.plan,
+            bank_names: {  
+              ...this.state.plan.bank_names,
+              [num]: {
+                ...this.state.plan.bank_names[num],
+                channels: {
+                  ...this.state.plan.bank_names[num].channels,
+                  [num2]: value
+                }
+              }
+            }
+          }
+        });
+  }
+
+  validateForm = (bank_list) => {
+    let bankValue;
     for (let key in bank_list) {
       let bankNum = bank_list[key];
-      bankName = "bank" + bankNum;
-      bankValue = targets[bankName].value;
+      bankValue = this.state.plan.bank_names[bankNum].name;
       if (bankValue.length < 1) {
         return false;
       } else if (bankValue.replace(/\s/g, "").length < 1) {
         return false;
       } else {
         for (let i = 1; i < 9; i++) {
-          const chanName = bankName + i;
-          const chanValue = targets[chanName].value;
+          const chanValue = this.state.plan.bank_names[bankNum].channels[i];
           if (chanValue.length < 1) {
             return false;
           } else if (chanValue.replace(/\s/g, "").length < 1) {
@@ -51,13 +150,8 @@ class EditPanel extends PureComponent<EditPanelOptions> {
     return true;
   };
 
-  handClose = () => {
-    this.setState({ show: false });
-  };
-
   handleSubmit = event => {
     event.preventDefault();
-    let bankName, bankValue;
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
     for (let key in this.banks) {
@@ -66,34 +160,9 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         this.bank_list.push(key);
       }
     }
-    const targets = event.target;
-    const length = targets.length;
-    if (!this.validateForm(this.bank_list, targets)) {
+    if (!this.validateForm(this.bank_list)) {
       this.setState({ show: true });
       return;
-    }
-    for (let key in this.bank_list) {
-      let bankNum = this.bank_list[key];
-      bankName = "bank" + bankNum;
-      bankValue = targets[bankName].value;
-      const { bank_names } = { ...this.state.plan };
-      const currentName = bank_names[bankNum];
-      currentName.name = bankValue;
-      this.setState({
-        ...this.state.plan.bank_names,
-        [bankNum]: { name: bankValue }
-      });
-      const { channels } = { ...this.state.plan.bank_names[bankNum] };
-      const currentNames = channels;
-      for (let i = 1; i < 9; i++) {
-        const chanName = bankName + i;
-        const chanValue = targets[chanName].value;
-        currentNames[i] = chanValue;
-        this.setState({
-          ...this.state.plan.bank_names[bankNum].channels,
-          [i]: chanValue
-        });
-      }
     }
     const channels1 = this.state.plan.bank_names[1].channels;
     const channels2 = this.state.plan.bank_names[2].channels;
@@ -109,6 +178,23 @@ class EditPanel extends PureComponent<EditPanelOptions> {
       }
     });
   };
+
+  handleClose = () => {
+    this.setState({ show: false });
+  }; 
+
+  handleCancel = () => {
+    //Set State to Previous Values
+    this.setState({
+      ...this.state, 
+      plan: {
+        ...this.state.plan,
+        bank_names: this.state.prevState
+      }
+    });
+    this.props.ws_sender({ element: "edit_cancel" });
+  };
+
   render() {
     const { show } = this.state;
     return (
@@ -116,8 +202,10 @@ class EditPanel extends PureComponent<EditPanelOptions> {
         <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
         <form onSubmit={this.handleSubmit}>
           <EditForm
+            handleBankChange = {this.handleBankChange}
+            handleChannelNameChange = {this.handleChannelNameChange}
             uistatus={this.props.uistatus}
-            plan={this.props.plan}
+            plan={this.state.plan}
             ws_sender={this.props.ws_sender}
           />
           <div className="row text-center button-edit">
@@ -132,10 +220,9 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             </div>
             <div className="col-sm-4">
               <button
+                id={'cancel-btn'}
                 type="button"
-                onClick={e => {
-                  this.props.ws_sender({ element: "edit_cancel" });
-                }}
+                onClick={this.handleCancel}
                 className={"btn btn-cancel btn-edit-panel btn-group-2"}
               >
                 Cancel
@@ -143,7 +230,7 @@ class EditPanel extends PureComponent<EditPanelOptions> {
             </div>
           </div>
         </form>
-        <Modal open={show} onClose={this.handClose} center>
+        <Modal open={show} onClose={this.handleClose} center>
           <h2 style={{ color: "black" }}>Uh Oh!</h2>
           <p style={{ color: "black" }}>
             Each Label must be at least one character in length.

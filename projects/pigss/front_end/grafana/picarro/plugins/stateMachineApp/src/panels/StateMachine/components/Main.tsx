@@ -15,7 +15,7 @@ import "react-toastify/dist/ReactToastify.css";
 
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
-export class Main extends Component<any, any> {
+export class Main extends React.Component<any, any> {
   state = {
     initialized: false,
     modal_info: {
@@ -293,6 +293,7 @@ export class Main extends Component<any, any> {
                 <div className="ref-div">
                   <button
                     type="button"
+                    id="reference"
                     onClick={e => this.ws_sender({ element: "reference" })}
                     className={"btn btn-large ref-btn"}
                     style={{ color: "black" }}

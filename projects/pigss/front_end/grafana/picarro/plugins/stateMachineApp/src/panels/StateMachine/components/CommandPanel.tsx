@@ -1,7 +1,7 @@
 import React, { Component, PureComponent } from "react";
 import { CommandPanelOptions } from "./../types";
 
-class CommandPanel extends PureComponent<CommandPanelOptions> {
+class CommandPanel extends PureComponent<CommandPanelOptions, any> {
   classNameOpt = {
     DISABLED: "",
     READY: "btn-outline-success",
@@ -40,7 +40,10 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
             }}
           >
             <button
-              onClick={e => this.props.ws_sender({ element: "standby" })}
+              id={"standby"}
+              onClick={e => {
+                this.props.ws_sender({ element: "standby" });
+              }}              
               disabled={this.getDisabled("standby")}
               value="standby"
               className={
@@ -51,6 +54,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Standby
             </button>
             <button
+              id={"identify"}
               onClick={e => this.props.ws_sender({ element: "identify" })}
               disabled={this.getDisabled("identify")}
               value="identify"
@@ -63,6 +67,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
             </button>
 
             <button
+              id = {"edit-plan"}
               onClick={e => {
                 this.props.ws_sender({ element: "plan" });
               }}
@@ -76,6 +81,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Edit Plan
             </button>
             <button
+              id = {"run-channel"}
               onClick={e => this.props.ws_sender({ element: "run" })}
               disabled={this.getDisabled("run")}
               value="run"
@@ -87,6 +93,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Run Channel
             </button>
             <button
+              id = {"run-plan"}
               onClick={e => this.props.ws_sender({ element: "plan_run" })}
               disabled={this.getDisabled("plan_run")}
               value="plan_run"
@@ -98,6 +105,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Run Plan
             </button>
             <button
+              id = {"loop-plan"}
               onClick={e => this.props.ws_sender({ element: "plan_loop" })}
               disabled={this.getDisabled("plan_loop")}
               value="plan_loop"
@@ -109,6 +117,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Loop Plan
             </button>
             <button
+              id = {"reference"}
               onClick={e => this.props.ws_sender({ element: "reference" })}
               disabled={this.getDisabled("reference")}
               value="reference"
@@ -120,6 +129,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions> {
               Reference
             </button>
             <button
+              id = {"edit-labels"}
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
               onClick={e => this.props.ws_sender({ element: "edit" })}

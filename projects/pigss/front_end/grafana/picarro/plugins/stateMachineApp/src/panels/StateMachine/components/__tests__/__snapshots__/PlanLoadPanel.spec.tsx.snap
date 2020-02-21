@@ -1,0 +1,138 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
+<div
+  className="panel-save"
+>
+  <h2
+    style={
+      Object {
+        "color": "white",
+      }
+    }
+  >
+    Load Plan
+  </h2>
+  <div
+    className="panel-save-inner"
+  >
+    <form>
+      <ReactList
+        axis="y"
+        itemRenderer={[Function]}
+        itemsRenderer={[Function]}
+        length={1}
+        minSize={1}
+        pageSize={10}
+        scrollParentGetter={[Function]}
+        scrollParentViewportSizeGetter={[Function]}
+        threshold={100}
+        type="uniform"
+        useStaticSize={false}
+        useTranslate3d={false}
+      />
+    </form>
+  </div>
+  <div
+    className="container"
+    style={
+      Object {
+        "marginTop": "20px",
+      }
+    }
+  >
+    <div
+      className="row text-center"
+    >
+      <div
+        className="col-sm-12"
+      >
+        <button
+          className="btn btn-group-2 btn-cancel"
+          id="cancel"
+          onClick={[Function]}
+          type="button"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`<PlanLoadPanel /> Renders Items 1`] = `
+<ReactList
+  axis="y"
+  itemRenderer={[Function]}
+  itemsRenderer={[Function]}
+  length={1}
+  minSize={1}
+  pageSize={10}
+  scrollParentGetter={[Function]}
+  scrollParentViewportSizeGetter={[Function]}
+  threshold={100}
+  type="uniform"
+  useStaticSize={false}
+  useTranslate3d={false}
+>
+  <div
+    style={
+      Object {
+        "position": "relative",
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "WebkitTransform": "translate(0px, 0px)",
+          "msTransform": "translate(0px, 0px)",
+          "transform": "translate(0px, 0px)",
+        }
+      }
+    >
+      <div>
+        <div
+          className="container"
+          key="0"
+          style={
+            Object {
+              "paddingTop": "5px",
+            }
+          }
+        >
+          <div
+            className="btn-group d-flex"
+            style={
+              Object {
+                "marginLeft": "0px",
+              }
+            }
+          >
+            <button
+              className="btn w-100 btn-small"
+              onClick={[Function]}
+              style={
+                Object {
+                  "color": "black",
+                }
+              }
+              type="button"
+            >
+              test.pln
+            </button>
+            <button
+              className="btn btn-danger btn-small"
+              onClick={[Function]}
+              type="button"
+            >
+              X
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ReactList>
+`;

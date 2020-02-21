@@ -53,6 +53,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions> {
           <div className="row text-center">
             <div className="col-sm-12">
               <button
+              id = {'cancel'}
                 type="button"
                 onClick={e =>
                   this.props.ws_sender({ element: "plan_load_cancel" })

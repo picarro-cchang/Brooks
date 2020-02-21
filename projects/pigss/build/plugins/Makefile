@@ -27,6 +27,10 @@ PRIORITY=optional
 DESCRIPTION=Grafana Plugins for PiGSS
 DEPENDS=grafana (>= 6.3.0)
 
+#Testing Files
+PLUGIN_DIR=./../../front_end/grafana/picarro/plugins
+TEST_FOLDERS=stateMachineApp userDataApp
+
 # Make the debian package
 .PHONY: deb
 deb: clean plugins deb-dirs postinst control
@@ -67,3 +71,7 @@ plugins:
 .PHONY: clean
 clean:
 	@ rm -rfv dist
+
+.PHONY: test
+test: 
+	${foreach file, ${TEST_FOLDERS}, yarn --cwd ${PLUGIN_DIR}/${file} test --coverage;}

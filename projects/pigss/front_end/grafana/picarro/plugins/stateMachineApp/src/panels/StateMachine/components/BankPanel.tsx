@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
 import "./bankpanel.css";
 
-interface BankPanelOptions {
+export interface BankPanelOptions {
   bank: number;
   uistatus: {
     bank?: { [bankNum: string]: string };
@@ -73,13 +73,14 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         getChannelDisabled(i) ? (
           <button
             key={i}
+            id={"channel-" + i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
             style={{ color: "black" }}
           >
             <p className="chn-label">
-              <u>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
+              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
             </p>
-            <p className="chn-status"> {test[i]} </p>
+            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]} </p>
           </button>
         ) : (
           <button
@@ -91,15 +92,16 @@ class BankPanel extends PureComponent<BankPanelOptions> {
               });
             }
             }
+            id={"channel-" + i}
             disabled={getChannelDisabled(i)}
             key={i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
           >
             <p className="chn-label">
-              <u>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
+              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
             </p>
 
-            <p className="chn-status"> {test[i]}</p>
+            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]}</p>
           </button>
         )
       );
@@ -111,6 +113,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       </div>
     ) : (
       <button
+      id = "clean"
         onClick={e =>
           this.props.ws_sender({ element: "clean", bank: this.props.bank })
         }
