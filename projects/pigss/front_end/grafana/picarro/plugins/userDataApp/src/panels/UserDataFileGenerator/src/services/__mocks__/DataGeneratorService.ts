@@ -26,7 +26,6 @@ export const DataGeneratorService = (() => {
     },
     getFile: (fileName: string) => {
       const url = URL.GET_FILE + '?name=' + fileName;
-      // return new Promise (() => API.get(url));
       const response = API.get(url)
       return Promise.resolve(new Response(JSON.stringify(response)))      
     },
