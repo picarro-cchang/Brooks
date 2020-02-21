@@ -59,7 +59,6 @@ describe('<DataGeneratorLayout />', () => {
   
   it('getFileNames', async () => {
     await instance.getFileNames();
-    // expect(data.state.files).toEqual('files')
     //waiting for Warning: cant call setstate solution
     expect(getFileNames).toHaveBeenCalled();
   });
@@ -158,4 +157,3 @@ describe('<DataGeneratorLayout />', () => {
    });
 
 });
-

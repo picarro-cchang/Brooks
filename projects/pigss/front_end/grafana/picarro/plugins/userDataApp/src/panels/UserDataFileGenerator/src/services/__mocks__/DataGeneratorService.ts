@@ -13,7 +13,6 @@ export const DataGeneratorService = (() => {
     },
     getKeys: () => {
       const keys = API.get(URL.GET_FIELD_KEYS);
-      // return new Promise (() => {API.get(URL.GET_FIELD_KEYS)});
       return Promise.resolve(new Response(JSON.stringify(keys)))
     },
     getAnalyzers: () => {
@@ -26,7 +25,6 @@ export const DataGeneratorService = (() => {
     },
     getFile: (fileName: string) => {
       const url = URL.GET_FILE + '?name=' + fileName;
-      // return new Promise (() => API.get(url));
       const response = API.get(url)
       return Promise.resolve(new Response(JSON.stringify(response)))      
     },
@@ -46,7 +44,6 @@ export const DataGeneratorService = (() => {
 
       url += `from=`;
       url += `&to=`;
-      // return  new Promise (() =>API.get(url));
       const response = API.get(url)
       return Promise.resolve(new Response(JSON.stringify(response)))
 
