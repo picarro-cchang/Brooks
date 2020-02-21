@@ -13,7 +13,6 @@ export const DataGeneratorService = (() => {
     },
     getKeys: () => {
       const keys = API.get(URL.GET_FIELD_KEYS);
-      // return new Promise (() => {API.get(URL.GET_FIELD_KEYS)});
       return Promise.resolve(new Response(JSON.stringify(keys)))
     },
     getAnalyzers: () => {
