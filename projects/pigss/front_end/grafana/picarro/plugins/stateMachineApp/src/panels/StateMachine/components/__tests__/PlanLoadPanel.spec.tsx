@@ -4,97 +4,14 @@ import WS from 'jest-websocket-mock';
 import 'jest-styled-components';
 import PlanLoadPanel from '../PlanLoadPanel';
 import { PlanLoadPanelOptions } from '../../types';
+import mockLoadPanelData from './../../api/__mocks__/mockLoadPanelData.json'
 
 const mockClick = jest.fn((element) => {return element});
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 const mockUpdateFileName = jest.fn();
 const defaultProps: PlanLoadPanelOptions = {
-    plan: {
-        max_steps: 32,
-        panel_to_show: 3,
-        current_step: 1,
-        focus: {
-            row: 1,
-            column: 2
-        },
-        last_step: 1,
-        steps: {
-            "1": {
-                "banks": {
-                    "1": {
-                    "clean": 0,
-                    "chan_mask": 1
-                    },
-                    "2": {
-                    "clean": 0,
-                    "chan_mask": 0
-                    }
-                },
-                "reference": 0,
-                "duration": 30
-            }
-        },
-        num_plan_files: 1,
-        plan_filename: "test.pln",
-        plan_files: {
-            "1": "test.pln"
-        },
-        bank_names: {
-            "1": {
-                "name": "B1",
-                "channels": {
-                    "1": "Channel 1",
-                    "2": "Channel 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
-                }
-            },
-            "2": {
-                "name": "B1",
-                "channels": {
-                    "1": "Channel 1",
-                    "2": "Channel 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
-                }
-            },
-            "3": {
-                "name": "Bank 2",
-                "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
-                }
-            },
-            "4": {
-                "name": "Bank 3",
-                "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
-                }
-            },
-        }
-    },
+    plan: mockLoadPanelData,
     ws_sender: mockClick,
     isChanged: false,
     updateFileName: mockUpdateFileName

@@ -24,8 +24,8 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
           "bank_names": Object {
             "1": Object {
               "channels": Object {
-                "1": "Channel 1",
-                "2": "Channel 2",
+                "1": "Ch. 1",
+                "2": "Ch. 2",
                 "3": "Ch. 3",
                 "4": "Ch. 4",
                 "5": "Ch. 5",
@@ -33,22 +33,9 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
                 "7": "Ch. 7",
                 "8": "Ch. 8",
               },
-              "name": "B1",
+              "name": "Bank 1",
             },
             "2": Object {
-              "channels": Object {
-                "1": "Channel 1",
-                "2": "Channel 2",
-                "3": "Ch. 3",
-                "4": "Ch. 4",
-                "5": "Ch. 5",
-                "6": "Ch. 6",
-                "7": "Ch. 7",
-                "8": "Ch. 8",
-              },
-              "name": "B1",
-            },
-            "3": Object {
               "channels": Object {
                 "1": "Ch. 1",
                 "2": "Ch. 2",
@@ -61,7 +48,7 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
               },
               "name": "Bank 2",
             },
-            "4": Object {
+            "3": Object {
               "channels": Object {
                 "1": "Ch. 1",
                 "2": "Ch. 2",
@@ -73,6 +60,19 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
                 "8": "Ch. 8",
               },
               "name": "Bank 3",
+            },
+            "4": Object {
+              "channels": Object {
+                "1": "Ch. 1",
+                "2": "Ch. 2",
+                "3": "Ch. 3",
+                "4": "Ch. 4",
+                "5": "Ch. 5",
+                "6": "Ch. 6",
+                "7": "Ch. 7",
+                "8": "Ch. 8",
+              },
+              "name": "Bank 4",
             },
           },
         }
@@ -197,8 +197,8 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
           "bank_names": Object {
             "1": Object {
               "channels": Object {
-                "1": "Channel 1",
-                "2": "Channel 2",
+                "1": "Ch. 1",
+                "2": "Ch. 2",
                 "3": "Ch. 3",
                 "4": "Ch. 4",
                 "5": "Ch. 5",
@@ -206,22 +206,9 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
                 "7": "Ch. 7",
                 "8": "Ch. 8",
               },
-              "name": "B1",
+              "name": "Bank 1",
             },
             "2": Object {
-              "channels": Object {
-                "1": "Channel 1",
-                "2": "Channel 2",
-                "3": "Ch. 3",
-                "4": "Ch. 4",
-                "5": "Ch. 5",
-                "6": "Ch. 6",
-                "7": "Ch. 7",
-                "8": "Ch. 8",
-              },
-              "name": "B1",
-            },
-            "3": Object {
               "channels": Object {
                 "1": "Ch. 1",
                 "2": "Ch. 2",
@@ -234,7 +221,7 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
               },
               "name": "Bank 2",
             },
-            "4": Object {
+            "3": Object {
               "channels": Object {
                 "1": "Ch. 1",
                 "2": "Ch. 2",
@@ -246,6 +233,19 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
                 "8": "Ch. 8",
               },
               "name": "Bank 3",
+            },
+            "4": Object {
+              "channels": Object {
+                "1": "Ch. 1",
+                "2": "Ch. 2",
+                "3": "Ch. 3",
+                "4": "Ch. 4",
+                "5": "Ch. 5",
+                "6": "Ch. 6",
+                "7": "Ch. 7",
+                "8": "Ch. 8",
+              },
+              "name": "Bank 4",
             },
           },
         }

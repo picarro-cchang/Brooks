@@ -22,7 +22,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
         name="bank1"
         onChange={[Function]}
         type="text"
-        value="B 1"
+        value="Bank 1"
       />
     </div>
     <div
@@ -39,7 +39,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
         name="bank11"
         onChange={[Function]}
         type="text"
-        value="Channel 1"
+        value="Ch. 1"
       />
     </div>
     <div
@@ -56,7 +56,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
         name="bank12"
         onChange={[Function]}
         type="text"
-        value="Channel 2"
+        value="Ch. 2"
       />
     </div>
     <div

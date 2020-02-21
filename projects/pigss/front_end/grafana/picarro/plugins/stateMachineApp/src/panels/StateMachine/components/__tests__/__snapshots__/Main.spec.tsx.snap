@@ -26,72 +26,281 @@ exports[`<Main /> Snapshot 1`] = `
           <CommandPanel
             plan={
               Object {
+                "available_ports": Object {
+                  "1": 170,
+                  "2": 0,
+                  "3": 170,
+                  "4": 170,
+                },
                 "bank_names": Object {
                   "1": Object {
                     "channels": Object {
-                      "1": "Channel 1",
-                      "2": "Channel 2",
-                      "3": "Channel 3",
-                      "4": "Channel 4",
-                      "5": "Channel 5",
-                      "6": "Channel 6",
-                      "7": "Channel 7",
-                      "8": "Channel 8",
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
                     },
                     "name": "Bank 1",
                   },
                   "2": Object {
                     "channels": Object {
-                      "1": "Channel 1",
-                      "2": "Channel 2",
-                      "3": "Channel 3",
-                      "4": "Channel 4",
-                      "5": "Channel 5",
-                      "6": "Channel 6",
-                      "7": "Channel 7",
-                      "8": "Channel 8",
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
                     },
                     "name": "Bank 2",
                   },
                   "3": Object {
                     "channels": Object {
-                      "1": "Channel",
-                      "2": "Channel",
-                      "3": "Channel",
-                      "4": "Channel",
-                      "5": "Channel",
-                      "6": "Channel",
-                      "7": "Channel",
-                      "8": "Channel",
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
                     },
                     "name": "Bank 3",
                   },
                   "4": Object {
                     "channels": Object {
-                      "1": "Channel",
-                      "2": "Channel",
-                      "3": "Channel",
-                      "4": "Channel",
-                      "5": "Channel",
-                      "6": "Channel",
-                      "7": "Channel",
-                      "8": "Channel",
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
                     },
                     "name": "Bank 4",
                   },
                 },
-                "current_step": 1,
+                "current_step": 11,
                 "focus": Object {
-                  "column": 0,
-                  "row": 0,
+                  "column": 1,
+                  "row": 12,
                 },
-                "last_step": 0,
-                "max_steps": 10,
-                "num_plan_files": 0,
+                "last_step": 11,
+                "looping": false,
+                "max_steps": 32,
+                "num_plan_files": 2,
                 "panel_to_show": 0,
-                "plan_filename": "",
-                "plan_files": Object {},
-                "steps": Object {},
+                "plan_filename": "__default__",
+                "plan_files": Object {
+                  "1": "__default__",
+                  "2": "tr",
+                },
+                "steps": Object {
+                  "1": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 2,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "10": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "11": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "2": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "3": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "4": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "5": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "6": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "7": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "8": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 2,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "9": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                },
               }
             }
             uistatus={Object {}}
@@ -437,16 +646,33 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                 },
                 "current_step": 1,
                 "focus": Object {
-                  "column": 0,
-                  "row": 0,
+                  "column": 2,
+                  "row": 1,
                 },
-                "last_step": 0,
-                "max_steps": 10,
-                "num_plan_files": 0,
+                "last_step": 1,
+                "max_steps": 32,
+                "num_plan_files": 1,
                 "panel_to_show": 1,
-                "plan_filename": "",
-                "plan_files": Object {},
-                "steps": Object {},
+                "plan_filename": "test.pln",
+                "plan_files": Object {
+                  "1": "test.pln",
+                },
+                "steps": Object {
+                  "1": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 1,
+                        "clean": 0,
+                      },
+                      "2": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 30,
+                    "reference": 0,
+                  },
+                },
               }
             }
             setFocus={[Function]}
@@ -473,15 +699,23 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                 >
                   Please click on available channels to set up a schedule, then click on the radio button to select starting position.
                 </h6>
-                <h6
-                  style={
-                    Object {
-                      "color": "white",
-                    }
-                  }
-                >
-                  Currently not viewing a saved file
-                </h6>
+                <div>
+                  <h6
+                    className="panel-plan-text"
+                  >
+                    Currently viewing File:
+                     
+                    <span
+                      style={
+                        Object {
+                          "color": "white",
+                        }
+                      }
+                    >
+                      test.pln
+                    </span>
+                  </h6>
+                </div>
                 <div
                   className="panel-plan-inner"
                 >
@@ -490,7 +724,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                       axis="y"
                       itemRenderer={[Function]}
                       itemsRenderer={[Function]}
-                      length={10}
+                      length={32}
                       minSize={1}
                       pageSize={10}
                       scrollParentGetter={[Function]}
@@ -552,7 +786,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                                       }
                                     }
                                     type="text"
-                                    value=""
+                                    value="Bank 1, Channel 1"
                                   />
                                 </div>
                                 <div
@@ -577,7 +811,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                                       }
                                     }
                                     type="text"
-                                    value=""
+                                    value="30"
                                   />
                                 </div>
                                 <label

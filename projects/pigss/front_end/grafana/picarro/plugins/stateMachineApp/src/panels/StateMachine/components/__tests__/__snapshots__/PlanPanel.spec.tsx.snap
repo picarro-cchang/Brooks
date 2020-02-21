@@ -1812,53 +1812,53 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           "channels": Object {
             "1": "Channel 1",
             "2": "Channel 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
           },
-          "name": "B1",
+          "name": "Bank 1",
         },
         "2": Object {
           "channels": Object {
             "1": "Channel 1",
             "2": "Channel 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8",
-          },
-          "name": "B1",
-        },
-        "3": Object {
-          "channels": Object {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
           },
           "name": "Bank 2",
         },
-        "4": Object {
+        "3": Object {
           "channels": Object {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8",
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
           },
           "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 4",
         },
       },
       "current_step": 1,
@@ -2024,7 +2024,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value="B1, Channel 1"
+                          value="Bank 1, Channel 1"
                         />
                       </div>
                       <div

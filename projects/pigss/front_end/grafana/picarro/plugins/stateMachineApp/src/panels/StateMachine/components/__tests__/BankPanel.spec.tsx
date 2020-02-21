@@ -3,6 +3,7 @@ import BankPanel, {BankPanelOptions} from '../BankPanel';
 import { shallow, mount } from 'enzyme';
 import 'jest-styled-components';
 import WS from "jest-websocket-mock";
+import mockPlan from './../../api/__mocks__/mockPlan.json'
 
 const mockClick = jest.fn((element) => {return element;});
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -27,23 +28,7 @@ const defaultProps: BankPanelOptions = {
             },
         },
         ws_sender: mockClick,
-        plan: {
-          bank_names: {
-            1: {
-              name: "B 1",
-              channels: { 
-                  1: "Ch A",
-                  2: "Channel 2",
-                  3: "Ch 3",
-                  4: "Ch 4",
-                  5: "Ch 5",
-                  6: "Ch 6",
-                  7: "Ch 7",
-                  8: "Ch 8"
-                 },
-            },
-          },
-        }
+        plan: mockPlan
     };
 
 
@@ -61,13 +46,13 @@ describe('<BankPanel />', () => {
   it('Contains Proper Channel Names', () => {
     const value1 = part.find('u.chn-name-1').text()
     const value2 = part.find('u.chn-name-2').text()
-    expect(value1).toEqual('Ch A');
-    expect(value2).toEqual('Channel 2');
+    expect(value1).toEqual('Ch. 1');
+    expect(value2).toEqual('Ch. 2');
   });
 
   it('Contains Proper Bank Name', () => {
     const value1 = part.find('h2').text()
-    expect(value1).toEqual('B 1');
+    expect(value1).toEqual('Bank 1');
   });
 
   it('Contains correct status on channels', () => {

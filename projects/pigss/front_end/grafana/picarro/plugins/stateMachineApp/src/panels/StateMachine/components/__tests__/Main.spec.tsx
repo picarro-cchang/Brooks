@@ -7,9 +7,12 @@ import {Main} from '../Main';
 import PicarroAPI from '../../api/PicarroAPI';
 import 'jest-fetch-mock';
 import {PlanPanelTypes} from '../../types';
-import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import {notifyError, notifySuccess} from '../../utils/Notifications';
+import mockPlan from './../../api/__mocks__/mockPlan.json'
+import mockPlan2 from './../../api/__mocks__/mockPlanPanel.json'
+import data from './../../api/__mocks__/mockData.json'
+import mockModal from './../../api/__mocks__/mockModalInfo.json'
 
 jest.mock('./../../api/PicarroAPI.ts')
 
@@ -23,71 +26,7 @@ const defaultState = {
       buttons: {}
     },
     uistatus: {},
-    plan: {
-      max_steps: 10,
-      panel_to_show: 0,
-      current_step: 1,
-      focus: { row: 0, column: 0 },
-      last_step: 0,
-      steps: {},
-      num_plan_files: 0,
-      plan_files: {},
-      plan_filename: "",
-      bank_names: {
-        1: {
-          name: "Bank 1",
-          channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8"
-          }
-        },
-        2: {
-          name: "Bank 2",
-          channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8"
-          }
-        },
-        3: {
-          name: "Bank 3",
-          channels: {
-            1: "Channel",
-            2: "Channel",
-            3: "Channel",
-            4: "Channel",
-            5: "Channel",
-            6: "Channel",
-            7: "Channel",
-            8: "Channel"
-          }
-        },
-        4: {
-          name: "Bank 4",
-          channels: {
-            1: "Channel",
-            2: "Channel",
-            3: "Channel",
-            4: "Channel",
-            5: "Channel",
-            6: "Channel",
-            7: "Channel",
-            8: "Channel"
-          }
-        }
-      }
-    },
+    plan: mockPlan,
     options: {
       panel_to_show: 0
     },
@@ -104,71 +43,7 @@ const defaultState = {
       buttons: {}
     },
     uistatus: {},
-    plan: {
-      max_steps: 10,
-      panel_to_show: 1,
-      current_step: 1,
-      focus: { row: 0, column: 0 },
-      last_step: 0,
-      steps: {},
-      num_plan_files: 0,
-      plan_files: {},
-      plan_filename: "",
-      bank_names: {
-        1: {
-          name: "Bank 1",
-          channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8"
-          }
-        },
-        2: {
-          name: "Bank 2",
-          channels: {
-            1: "Channel 1",
-            2: "Channel 2",
-            3: "Channel 3",
-            4: "Channel 4",
-            5: "Channel 5",
-            6: "Channel 6",
-            7: "Channel 7",
-            8: "Channel 8"
-          }
-        },
-        3: {
-          name: "Bank 3",
-          channels: {
-            1: "Channel",
-            2: "Channel",
-            3: "Channel",
-            4: "Channel",
-            5: "Channel",
-            6: "Channel",
-            7: "Channel",
-            8: "Channel"
-          }
-        },
-        4: {
-          name: "Bank 4",
-          channels: {
-            1: "Channel",
-            2: "Channel",
-            3: "Channel",
-            4: "Channel",
-            5: "Channel",
-            6: "Channel",
-            7: "Channel",
-            8: "Channel"
-          }
-        }
-      }
-    },
+    plan: mockPlan2,
     options: {
       panel_to_show: 0
     },
@@ -178,116 +53,17 @@ const defaultState = {
 
   const uistatus = {
     initialized: true,
-    uistatus: {
-      bank: {"1": "READY", "3": "READY", "4": "READY"}, 
-      channel: {
-        "1": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}, 
-        "3": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}, 
-        "4": {"1": "DISABLED", "2": "AVAILABLE", "3": "DISABLED", "4": "AVAILABLE", "5": "DISABLED", "6": "AVAILABLE", "7": "DISABLED", "8": "AVAILABLE"}
-      }, 
-      clean: {"1": "READY", "3": "READY", "4": "READY"}, edit: "READY", identify: "READY", 
-      plan: "READY", plan_loop: "READY", plan_run: "READY", reference: "READY", run: "READY", standby: "ACTIVE", loop_plan: "READY", run_plan: "READY"
-    },
+    uistatus: data
   };
 
   const modal_info = {
     initialized: false,
-    modal_info: {
-      "show": false,
-      "html": "<h2 class='test'>Example Modal Dialog</h2><p>Test message</p>",
-      "num_buttons": 2,
-      "buttons": {
-        "1": {
-          "caption": "OK",
-          "className": "btn btn-success btn-large",
-          "response": "modal_ok"
-        },
-        "2": {
-          "caption": "Cancel",
-          "className": "btn btn-danger btn-large",
-          "response": "modal_close"
-        }
-      }
-    }
+    modal_info: mockModal
   };
 
   const plan = {
     initialized: true,
-    plan: {
-      "max_steps": 32,
-      "panel_to_show": 0,
-      "current_step": 1,
-      "looping": false,
-      "focus": {
-        "row": 1,
-        "column": 1
-      },
-      "last_step": 0,
-      "steps": {},
-      "num_plan_files": 0,
-      "plan_files": {},
-      "plan_filename": "",
-      "bank_names": {
-        "1": {
-          "name": "Bank 1",
-          "channels": {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8"
-          }
-        },
-        "2": {
-          "name": "Bank 2",
-          "channels": {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8"
-          }
-        },
-        "3": {
-          "name": "Bank 3",
-          "channels": {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8"
-          }
-        },
-        "4": {
-          "name": "Bank 4",
-          "channels": {
-            "1": "Ch. 1",
-            "2": "Ch. 2",
-            "3": "Ch. 3",
-            "4": "Ch. 4",
-            "5": "Ch. 5",
-            "6": "Ch. 6",
-            "7": "Ch. 7",
-            "8": "Ch. 8"
-          }
-        }
-      },
-      "available_ports": {
-        "1": 170,
-        "2": 0,
-        "3": 170,
-        "4": 170
-      }
-    }
+    plan: mockPlan
   };
 
   const apiLoc = `${window.location.hostname}:8000/controller`;
