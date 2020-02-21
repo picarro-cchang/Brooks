@@ -349,7 +349,6 @@ describe('<Main />', () => {
     it('API test', async () => {
       const response = await (await PicarroAPI.getRequest(`http://${apiLoc}/uistatus`)).json()
       expect(response).toEqual(uistatus.uistatus);
-      // const response1 = await (await PicarroAPI.getRequest(`http://${apiLoc}/ui`)).json()
     });
 
     it('handleData', () => {
