@@ -41,4 +41,3 @@ export const API = {
       // return new Promise((resolve) => resolve([{"text": "2: Bank 1 Ch. 2", "value": "2"}, {"text": "4: Bank 1 Ch. 4", "value": "4"}, {"text": "6: Bank 1 Ch. 6", "value": "6"}, {"text": "8: Bank 1 Ch. 8", "value": "8"}, {"text": "18: Bank 3 Ch. 2", "value": "18"}, {"text": "20: Bank 3 Ch. 4", "value": "20"}, {"text": "22: Bank 3 Ch. 6", "value": "22"}, {"text": "24: Bank 3 Ch. 8", "value": "24"}, {"text": "26: Bank 4 Ch. 2", "value": "26"}, {"text": "28: Bank 4 Ch. 4", "value": "28"}, {"text": "30: Bank 4 Ch. 6", "value": "30"}, {"text": "32: Bank 4 Ch. 8", "value": "32"}]))
     },
   };
-  
