@@ -124,21 +124,21 @@ export class Main extends React.Component<any, any> {
   }
 
   getDataViaApi = () => {
-    let uiStatusData = PicarroAPI.getRequest(`http://${apiLoc}/uistatus`).then(
-      response => {
-        response.json().then(obj => {
-          this.setState(deepmerge(this.state, { uistatus: obj }));
-        });
-      }
-    );
-    let planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
+    const uiStatusData = PicarroAPI.getRequest(
+      `http://${apiLoc}/uistatus`
+    ).then(response => {
+      response.json().then(obj => {
+        this.setState(deepmerge(this.state, { uistatus: obj }));
+      });
+    });
+    const planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
       response => {
         response.json().then(obj => {
           this.setState(deepmerge(this.state, { plan: obj }));
         });
       }
     );
-    let modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
+    const modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
       response => {
         response.json().then(obj => {
           this.setState(deepmerge(this.state, { modal_info: obj }));
@@ -235,7 +235,7 @@ export class Main extends React.Component<any, any> {
         break;
     }
 
-    let modalButtons = [];
+    const modalButtons = [];
     for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
       const modal_info = this.state.modal_info as ModalInfo;
       modalButtons.push(
@@ -251,7 +251,7 @@ export class Main extends React.Component<any, any> {
       );
     }
 
-    let bankPanels = [];
+    const bankPanels = [];
     if (("bank" in this.state.uistatus) as any) {
       for (let i = 1; i <= 4; i++) {
         if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {

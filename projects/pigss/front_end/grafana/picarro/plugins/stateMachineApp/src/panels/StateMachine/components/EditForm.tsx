@@ -11,11 +11,11 @@ class EditForm extends Component<any, any> {
   bank_list: any;
 
   render() {
-    let edit_list = [];
+    const edit_list = [];
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
-    for (let num in this.banks) {
-      let value = this.banks[num];
+    for (const num in this.banks) {
+      const value = this.banks[num];
       if (value === "READY") {
         this.bank_list.push(num);
         edit_list.push(
@@ -27,7 +27,12 @@ class EditForm extends Component<any, any> {
                 className="col-sm-6 edit-input"
                 type="text"
                 value={this.props.plan.bank_names[num].name}
-                onChange={(event) => this.props.handleBankChange(event.target.value,  num.toString())}
+                onChange={event =>
+                  this.props.handleBankChange(
+                    event.target.value,
+                    num.toString()
+                  )
+                }
                 maxLength={14}
               />
             </div>
@@ -37,7 +42,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "1"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 1)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    1
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[1]}
                 maxLength={8}
               />
@@ -49,7 +60,13 @@ class EditForm extends Component<any, any> {
                 className="col-sm-6 edit-input"
                 type="text"
                 value={this.props.plan.bank_names[num].channels[2]}
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 2)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    2
+                  )
+                }
                 maxLength={8}
               />
             </div>
@@ -60,7 +77,13 @@ class EditForm extends Component<any, any> {
                 className="col-sm-6 edit-input"
                 type="text"
                 value={this.props.plan.bank_names[num].channels[3]}
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 3)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    3
+                  )
+                }
                 maxLength={8}
               />
             </div>
@@ -70,7 +93,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "4"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 4)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    4
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[4]}
                 maxLength={8}
               />
@@ -81,7 +110,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "5"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 5)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    5
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[5]}
                 maxLength={8}
               />
@@ -92,7 +127,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "6"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 6)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    6
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[6]}
                 maxLength={8}
               />
@@ -103,7 +144,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "7"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 7)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    7
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[7]}
                 maxLength={8}
               />
@@ -114,7 +161,13 @@ class EditForm extends Component<any, any> {
                 name={"bank" + num + "8"}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={(event) => this.props.handleChannelNameChange(event.target.value,  num.toString(), 8)}
+                onChange={event =>
+                  this.props.handleChannelNameChange(
+                    event.target.value,
+                    num.toString(),
+                    8
+                  )
+                }
                 value={this.props.plan.bank_names[num].channels[8]}
                 maxLength={8}
               />
