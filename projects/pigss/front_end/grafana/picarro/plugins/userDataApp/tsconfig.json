@@ -8,6 +8,5 @@
       "jsx": "react",
       "esModuleInterop": true,
       "moduleResolution": "node"
-    },
-    "exclude": ["__tests__/*"]
+    }
   }

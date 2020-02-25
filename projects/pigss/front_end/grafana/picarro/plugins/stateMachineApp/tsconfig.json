@@ -9,6 +9,5 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-  },
-  "exclude": []
+  }
 }
