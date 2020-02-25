@@ -240,10 +240,12 @@ class PigletManager(Ahsm):
         # We need to add a tag for valve_pos as well as set up the field valve_stable_time
         #  for each analyzer
         for analyzer_rpc_name in self.picarro_analyzers:
-            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"clean_mask": valve_pos_payload.clean_mask})
-            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_mask": valve_pos_payload.valve_mask})
-            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags({"valve_pos": valve_pos_payload.valve_pos})
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
+            new_tags = {"clean_mask": valve_pos_payload.clean_mask,
+                        "valve_mask": valve_pos_payload.valve_mask,
+                        "valve_pos": valve_pos_payload.valve_pos}                                            
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags(new_tags)
+
             # The next line is for the simulator
             await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
 
