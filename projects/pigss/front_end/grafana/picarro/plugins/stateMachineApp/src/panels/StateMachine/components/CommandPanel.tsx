@@ -90,7 +90,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
                 this.getClassNameOpt("run")
               }
             >
-              Run Channel
+              Single Port
             </button>
             <button
               id = {"run-plan"}
