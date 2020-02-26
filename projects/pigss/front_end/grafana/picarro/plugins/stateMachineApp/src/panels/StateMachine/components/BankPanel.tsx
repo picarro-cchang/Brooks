@@ -67,7 +67,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       test = channelStatus;
     }
 
-    let channelButtons = [];
+    const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
       channelButtons.push(
         getChannelDisabled(i) ? (
@@ -78,9 +78,14 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             style={{ color: "black" }}
           >
             <p className="chn-label">
-              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]}</u>
+              <u className={"chn-name-" + i}>
+                {this.props.plan.bank_names[this.props.bank].channels[i]}
+              </u>
             </p>
-            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]} </p>
+            <p id={"chn-status-" + i} className={"chn-status"}>
+              {" "}
+              {test[i]}{" "}
+            </p>
           </button>
         ) : (
           <button
@@ -90,18 +95,22 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                 bank: this.props.bank,
                 channel: i
               });
-            }
-            }
+            }}
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}
             key={i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
           >
             <p className="chn-label">
-              <u className={"chn-name-" + i}>{this.props.plan.bank_names[this.props.bank].channels[i]} </u>
+              <u className={"chn-name-" + i}>
+                {this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+              </u>
             </p>
 
-            <p id={'chn-status-' + i} className={"chn-status"}> {test[i]}</p>
+            <p id={"chn-status-" + i} className={"chn-status"}>
+              {" "}
+              {test[i]}
+            </p>
           </button>
         )
       );
@@ -113,7 +122,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       </div>
     ) : (
       <button
-      id = "clean"
+        id="clean"
         onClick={e =>
           this.props.ws_sender({ element: "clean", bank: this.props.bank })
         }

@@ -1,9 +1,7 @@
-
 export const notifyError = (message: string) => {
-  return ('ERROR '+ message);
+  return "ERROR " + message;
 };
 
 export const notifySuccess = (message: string) => {
-  console.log('SUCCESS ', message);
-
+  console.log("SUCCESS ", message);
 };

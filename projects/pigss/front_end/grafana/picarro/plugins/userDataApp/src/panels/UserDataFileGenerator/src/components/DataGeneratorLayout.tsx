@@ -1,15 +1,21 @@
-import React, { PureComponent, Fragment } from 'react';
-import { TimeRange, dateTime, dateMath } from '@grafana/data';
-import { TimePicker, FormLabel, PanelOptionsGroup, Select, Button } from '@grafana/ui';
+import React, { PureComponent, Fragment } from "react";
+import { TimeRange, dateTime, dateMath } from "@grafana/data";
+import {
+  TimePicker,
+  FormLabel,
+  PanelOptionsGroup,
+  Select,
+  Button
+} from "@grafana/ui";
 
-import { notifyError, notifySuccess } from '../utils/Notifications';
-import { DataGeneratorLayoutProps } from '../types';
-import { DEFAULT_TIME_OPTIONS } from '../constants';
-import { DataGeneratorService } from '../services/DataGeneratorService';
+import { notifyError, notifySuccess } from "../utils/Notifications";
+import { DataGeneratorLayoutProps } from "../types";
+import { DEFAULT_TIME_OPTIONS } from "../constants";
+import { DataGeneratorService } from "../services/DataGeneratorService";
 
-import './Layout.css';
+import "./Layout.css";
 
-interface Props extends DataGeneratorLayoutProps { }
+interface Props extends DataGeneratorLayoutProps {}
 
 const labelWidth_6 = 6;
 const labelWidth_7 = 7;
@@ -26,17 +32,17 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       analyzerOptions: [{ value: "All", label: "All" }],
       ports: [],
       portOptions: [{ value: "All", label: "All" }],
-      files: [],
+      files: []
     };
   }
 
   // Code to download the file
   downloadData = (blob: any, fileName: string) => {
-    const a = document.createElement('a');
+    const a = document.createElement("a");
 
-    document.getElementById('file-list').appendChild(a);
+    document.getElementById("file-list").appendChild(a);
     // @ts-ignore
-    a.style = 'display: none';
+    a.style = "display: none";
     const url = window.URL.createObjectURL(blob);
     a.href = url;
     a.download = fileName;
@@ -54,12 +60,12 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     } as TimeRange;
 
     // @ts-ignore
-    let fromTime = from._d.getTime();
+    const fromTime = from._d.getTime();
     // @ts-ignore
-    let toTime = to._d.getTime();
+    const toTime = to._d.getTime();
 
     if (fromTime === toTime || keys.length === 0) {
-      notifyError('Invalid Query parameters');
+      notifyError("Invalid Query parameters");
       return;
     }
 
@@ -79,7 +85,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           this.getFileNames();
           this.getFile(data.filename);
         } else {
-          if (data !== undefined && data.hasOwnProperty('message')) {
+          if (data !== undefined && data.hasOwnProperty("message")) {
             notifyError(data.message);
           }
         }
@@ -116,16 +122,17 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       return;
     }
     for (const key of keys) {
-      if (key["value"] === "All") {
+      if (key.value === "All") {
         this.setState(() => {
-          return { keys: this.state.keyOptions.filter(x => x["value"] !== "All") };
+          return {
+            keys: this.state.keyOptions.filter(x => x.value !== "All")
+          };
         });
         break;
       }
       this.setState(() => {
         return { keys };
       });
-
     }
   };
 
@@ -136,16 +143,17 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     for (const analyzer of analyzers) {
-      if (analyzer["value"] === "All") {
+      if (analyzer.value === "All") {
         this.setState(() => {
-          return { analyzers: this.state.analyzerOptions.filter(x => x["value"] !== "All") };
+          return {
+            analyzers: this.state.analyzerOptions.filter(x => x.value !== "All")
+          };
         });
         break;
       }
       this.setState(() => {
         return { analyzers };
       });
-
     }
   };
 
@@ -156,15 +164,17 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     for (const port of ports) {
-      if (port["value"] === "All") {
+      if (port.value === "All") {
         this.setState(() => {
-          return { ports: this.state.portOptions.filter(x => x["value"] !== "All") };
+          return {
+            ports: this.state.portOptions.filter(x => x.value !== "All")
+          };
         });
         break;
       }
       this.setState(() => {
         return { ports };
-      })
+      });
     }
   };
 
@@ -178,10 +188,12 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         const keyOptions = data.keys.map((x: string) => {
           return {
             value: x,
-            label: x,
+            label: x
           };
         });
-        this.setState({ keyOptions: [...this.state.keyOptions, ...keyOptions] });
+        this.setState({
+          keyOptions: [...this.state.keyOptions, ...keyOptions]
+        });
       });
     });
 
@@ -191,10 +203,12 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         const analyzerOptions = data.analyzers.map((x: string) => {
           return {
             value: x,
-            label: x,
+            label: x
           };
         });
-        this.setState({ analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions] });
+        this.setState({
+          analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions]
+        });
       });
     });
 
@@ -203,33 +217,46 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       response.json().then((data: any) => {
         const portOptions = data.map((x: any) => {
           return {
-            value: x["value"],
-            label: x["text"],
+            value: x.value,
+            label: x.text
           };
         });
-        this.setState({ portOptions: [...this.state.portOptions, ...portOptions] });
+        this.setState({
+          portOptions: [...this.state.portOptions, ...portOptions]
+        });
       });
     });
   }
 
   render() {
-    const { files, timeRange, keyOptions, analyzerOptions, portOptions } = this.state;
+    const {
+      files,
+      timeRange,
+      keyOptions,
+      analyzerOptions,
+      portOptions
+    } = this.state;
 
     const styleObj = {
-      overflow: 'scroll !important',
-      height: 'inherit',
+      overflow: "scroll !important",
+      height: "inherit"
     };
 
-    if (typeof timeRange.from === 'string') {
+    if (typeof timeRange.from === "string") {
       timeRange.from = dateTime(timeRange.from);
     }
-    if (typeof timeRange.to === 'string') {
+    if (typeof timeRange.to === "string") {
       timeRange.to = dateTime(timeRange.to);
     }
 
     const fileItems = files.map((fn: string, i: number) => {
       return (
-        <li key={fn} className="file-item" value={fn} onClick={() => this.getFile(fn)}>
+        <li
+          key={fn}
+          className="file-item"
+          value={fn}
+          onClick={() => this.getFile(fn)}
+        >
           {fn}
         </li>
       );
@@ -245,7 +272,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
               <Select
                 options={keyOptions}
                 onChange={this.onKeysChange}
-                value={keyOptions.find((option: any) => option.value === 'key')}
+                value={keyOptions.find((option: any) => option.value === "key")}
                 isMulti={true}
                 backspaceRemovesValue
               />
@@ -258,7 +285,9 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
               <Select
                 options={analyzerOptions}
                 onChange={this.onAnalyzersChange}
-                value={analyzerOptions.find((option: any) => option.value === 'key')}
+                value={analyzerOptions.find(
+                  (option: any) => option.value === "key"
+                )}
                 isMulti={true}
                 backspaceRemovesValue
               />
@@ -270,7 +299,9 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
               <Select
                 options={portOptions}
                 onChange={this.onPortsChange}
-                value={portOptions.find((option: any) => option.value === 'key')}
+                value={portOptions.find(
+                  (option: any) => option.value === "key"
+                )}
                 isMulti={true}
                 backspaceRemovesValue
               />
@@ -285,26 +316,36 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                   selectOptions={DEFAULT_TIME_OPTIONS}
                   onChange={this.onDateChange}
                   value={this.state.timeRange}
-                  onMoveBackward={() => console.log('Move Backward')}
-                  onMoveForward={() => console.log('Move forward')}
-                  onZoom={() => console.log('Zoom')}
+                  onMoveBackward={() => console.log("Move Backward")}
+                  onMoveForward={() => console.log("Move forward")}
+                  onZoom={() => console.log("Zoom")}
                 />
 
                 <div className="gf-form col-md-1">
-                  <Button size="md" variant="primary" value="Generate" onClick={this.generateFile}
-                    disabled={!(this.state.keys.length && this.state.analyzers.length && this.state.ports.length)}>
+                  <Button
+                    size="md"
+                    variant="primary"
+                    value="Generate"
+                    onClick={this.generateFile}
+                    disabled={
+                      !(
+                        this.state.keys.length &&
+                        this.state.analyzers.length &&
+                        this.state.ports.length
+                      )
+                    }
+                  >
                     Generate
-              </Button>
+                  </Button>
                 </div>
               </div>
             </div>
           </PanelOptionsGroup>
-
         </PanelOptionsGroup>
         <PanelOptionsGroup title="Recently Generated Files">
           <div className="row" style={styleObj}>
             <div className="gf-form col-md-12 col-sm-12">
-              <ul id="file-list" style={{ listStyle: 'none' }}>
+              <ul id="file-list" style={{ listStyle: "none" }}>
                 {fileItems}
               </ul>
             </div>

@@ -36,7 +36,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
       if (planRow.reference != 0) {
         portString = "Reference";
       } else {
-        for (let bank in planRow.banks) {
+        for (const bank in planRow.banks) {
           if (planRow.banks.hasOwnProperty(bank)) {
             const bank_name = this.props.plan.bank_names[bank].name;
             const bank_config = planRow.banks[bank];
@@ -175,7 +175,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
           <h2 className="panel-plan-text">Schedule</h2>
           <span
             className="cancel panel-plan-text"
-            id = "cancel-x"
+            id="cancel-x"
             onClick={e => this.props.ws_sender({ element: "plan_cancel" })}
           ></span>
           <h6 className="panel-plan-text">
@@ -208,7 +208,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "insert-btn"
+                  id="insert-btn"
                   disabled={
                     this.props.plan.focus.row > this.props.plan.last_step
                   }
@@ -224,7 +224,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "save-btn"
+                  id="save-btn"
                   onClick={e => this.props.ws_sender({ element: "plan_save" })}
                   className={"btn btn-block btn-light btn-group"}
                 >
@@ -235,7 +235,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "load-btn"
+                  id="load-btn"
                   onClick={e => this.props.ws_sender({ element: "plan_load" })}
                   className={"btn btn-block btn-light btn-group"}
                 >
@@ -247,7 +247,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "delete-btn"
+                  id="delete-btn"
                   disabled={
                     this.props.plan.focus.row > this.props.plan.last_step
                   }
@@ -263,7 +263,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "clear-btn"
+                  id="clear-btn"
                   disabled={
                     this.props.plan.focus.row > this.props.plan.last_step
                   }
@@ -280,7 +280,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               <div className="col-sm-3">
                 <button
                   type="button"
-                  id = "ok-btn"
+                  id="ok-btn"
                   onClick={e => {
                     this.props.ws_sender({ element: "plan_ok" });
                   }}

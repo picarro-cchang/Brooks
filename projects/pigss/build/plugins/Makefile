@@ -74,4 +74,4 @@ clean:
 
 .PHONY: test
 test: 
-	${foreach file, ${TEST_FOLDERS}, yarn --cwd ${PLUGIN_DIR}/${file} test --coverage;}
+	${foreach file, ${TEST_FOLDERS}, yarn --cwd ${PLUGIN_DIR}/${file} install && yarn --cwd ${PLUGIN_DIR}/${file} test -u --coverage;}
