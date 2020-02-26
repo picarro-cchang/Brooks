@@ -649,7 +649,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                   "column": 2,
                   "row": 1,
                 },
-                "last_step": 1,
+                "last_step": 4,
                 "max_steps": 32,
                 "num_plan_files": 1,
                 "panel_to_show": 1,
@@ -661,15 +661,73 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                   "1": Object {
                     "banks": Object {
                       "1": Object {
-                        "chan_mask": 1,
+                        "chan_mask": 0,
                         "clean": 0,
                       },
-                      "2": Object {
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
                         "chan_mask": 0,
                         "clean": 0,
                       },
                     },
-                    "duration": 30,
+                    "duration": 1,
+                    "reference": 1,
+                  },
+                  "2": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "3": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 60,
+                    "reference": 0,
+                  },
+                  "4": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 60,
                     "reference": 0,
                   },
                 },
@@ -786,7 +844,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                                       }
                                     }
                                     type="text"
-                                    value="Bank 1, Channel 1"
+                                    value="Reference"
                                   />
                                 </div>
                                 <div
@@ -811,7 +869,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                                       }
                                     }
                                     type="text"
-                                    value="30"
+                                    value="1"
                                   />
                                 </div>
                                 <label
