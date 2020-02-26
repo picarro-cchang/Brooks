@@ -6,13 +6,13 @@ import Modal from "react-responsive-modal";
 import PlanPanel from "../components/PlanPanel";
 import { PlanPanelOptions, Plan } from "../types";
 import mockPlanPanelData from "./../api/__mocks__/mockPlanPanel.json";
-import mockBankNames from "./../api/__mocks__/mockBankNames.json"
-import validate from "./../api/__mocks__/mockValidation"
+import mockBankNames from "./../api/__mocks__/mockBankNames.json";
+import validate from "./../api/__mocks__/mockValidation";
 
 const mockSetFocus = jest.fn();
 const mockUpdateFilename = jest.fn();
 const mockWSSender = jest.fn(element => {
-  //if plan, validate, else
+  // if plan, validate, else
   return element;
 });
 
@@ -108,10 +108,10 @@ describe("<PlanPanel />", () => {
     await expect(server).toReceiveMessage({
       element: "plan_panel",
       row: 1,
-      duration: "1"
+      duration: "20"
     });
     expect(server).toHaveReceivedMessages([
-      { element: "plan_panel", row: 1, duration: "1" }
+      { element: "plan_panel", row: 1, duration: "20" }
     ]);
     mockWSSender.mockClear();
     server.close;
@@ -182,12 +182,12 @@ describe("<PlanPanel />", () => {
   });
 
   it("Save Button", async () => {
-    //need validation
+    // need validation
     mockWSSender.mockClear();
     await server.connected;
     const shallow = mount(<PlanPanel {...defaultProps} />);
-    const validation = validate(shallow.props().plan)
-    expect(validation).toBe(true)
+    const validation = validate(shallow.props().plan);
+    expect(validation).toBe(true);
     const saveButton = shallow.find("button#save-btn");
     saveButton.simulate("click");
     const element = mockWSSender.mock.calls[0][0];
@@ -247,12 +247,12 @@ describe("<PlanPanel />", () => {
   });
 
   it("Ok Button", async () => {
-    //needs validation
+    // needs validation
     mockWSSender.mockClear();
     await server.connected;
     const shallow = mount(<PlanPanel {...defaultProps} />);
-    const validation = validate(shallow.props().plan)
-    expect(validation).toBe(true)    
+    const validation = validate(shallow.props().plan);
+    expect(validation).toBe(true);
     const okButton = shallow.find("button#ok-btn");
     okButton.simulate("click");
     const element = mockWSSender.mock.calls[0][0];
@@ -266,14 +266,13 @@ describe("<PlanPanel />", () => {
   });
 
   it("ReactList renders", () => {
-    const planList = mount(<PlanPanel {...defaultProps}/>);
+    const planList = mount(<PlanPanel {...defaultProps} />);
     planList.setProps({
       isChanged: true
-    })
+    });
     expect(planList).toMatchSnapshot();
   });
 });
-
 
 describe("<PlanPanel /> For Clean not equal to 0", () => {
   const defaultPropsClean: PlanPanelOptions = {
@@ -293,11 +292,11 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
             1: {
               clean: 10,
               chan_mask: 0
-            },
+            }
           },
           reference: 0,
           duration: 1
-        },
+        }
       },
       num_plan_files: 1,
       plan_filename: "test.pln",
@@ -426,184 +425,291 @@ describe("<PlanPanel /> Validation Testing", () => {
   const props: PlanPanelOptions = {
     uistatus: {},
     plan: {
-        max_steps: 32,
-        panel_to_show: 0,
-        current_step: 2,
-        focus: {
-          "row": 1,
-          "column": 2
-        },
-        "last_step": 2,
-        steps: {
-          "1": {
-            "banks": {
-              "1": {
-                "clean": 0,
-                "chan_mask": 2
-              },
-              "3": {
-                "clean": 0,
-                "chan_mask": 0
-              },
-              "4": {
-                "clean": 0,
-                "chan_mask": 0
-              }
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 2,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 2,
+      steps: {
+        "1": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 2
             },
-            "reference": 0,
-            "duration": 20
+            "3": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
           },
-          "2": {
-            "banks": {
-              "1": {
-                "clean": 0,
-                "chan_mask": 32
-              },
-              "3": {
-                "clean": 0,
-                "chan_mask": 0
-              },
-              "4": {
-                "clean": 0,
-                "chan_mask": 0
-              }
-            },
-            "reference": 0,
-            "duration": 20
-          }
+          reference: 0,
+          duration: 20
         },
-        num_plan_files: 0,
-        plan_files: {},
-        plan_filename: "",
-        bank_names: mockBankNames
+        "2": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 32
+            },
+            "3": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
+          },
+          reference: 0,
+          duration: 20
+        }
+      },
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
     },
     setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename
-  }
+  };
   const wrapper = mount(<PlanPanel {...props} />);
-
 });
 
-////add a scenario for each fail for validation
-//empty plann
 it("Empty Plan", () => {
   const props: PlanPanelOptions = {
     uistatus: {},
     plan: {
-        max_steps: 32,
-        panel_to_show: 0,
-        current_step: 2,
-        focus: {
-          "row": 1,
-          "column": 2
-        },
-        last_step: 0,
-        steps: {},
-        num_plan_files: 0,
-        plan_files: {},
-        plan_filename: "",
-        bank_names: mockBankNames
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 2,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 0,
+      steps: {},
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
     },
     setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename
-  }
-  expect(validate(props.plan)).toEqual(Error("Plan is empty"))
+  };
+  expect(validate(props.plan)).toEqual(Error("Plan is empty"));
 });
-//;invalid pending step
+
 it("Invalid Pending Step", () => {
   const props: PlanPanelOptions = {
     uistatus: {},
     plan: {
-        max_steps: 32,
-        panel_to_show: 0,
-        current_step: 3,
-        focus: {
-          "row": 1,
-          "column": 2
-        },
-        "last_step": 2,
-        steps: {
-          "1": {
-            "banks": {
-              "1": {
-                "clean": 0,
-                "chan_mask": 2
-              },
-              "3": {
-                "clean": 0,
-                "chan_mask": 0
-              },
-              "4": {
-                "clean": 0,
-                "chan_mask": 0
-              }
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 3,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 2,
+      steps: {
+        "1": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 2
             },
-            "reference": 0,
-            "duration": 20
-          }
-        },
-        num_plan_files: 0,
-        plan_files: {},
-        plan_filename: "",
-        bank_names: mockBankNames
+            "3": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
+          },
+          reference: 0,
+          duration: 20
+        }
+      },
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
     },
     setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename
-  }
-  expect(validate(props.plan)).toEqual(Error("Pending Step must be in between 1 and " + props.plan.last_step))
+  };
+  expect(validate(props.plan)).toEqual(
+    Error("Pending Step must be in between 1 and " + props.plan.last_step)
+  );
 });
-//no reference, duration, or clean
-it("Invalid Pending Step", () => {
+
+it("Invalid Duration", () => {
   const props: PlanPanelOptions = {
     uistatus: {},
     plan: {
-        max_steps: 32,
-        panel_to_show: 0,
-        current_step: 3,
-        focus: {
-          "row": 1,
-          "column": 2
-        },
-        "last_step": 2,
-        steps: {
-          "1": {
-            "banks": {
-              "1": {
-                "clean": 0,
-                "chan_mask": 2
-              },
-              "3": {
-                "clean": 0,
-                "chan_mask": 0
-              },
-              "4": {
-                "clean": 0,
-                "chan_mask": 0
-              }
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 1,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 1,
+      steps: {
+        "1": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 0
             },
-            "reference": 0,
-            "duration": 20
-          }
+            "3": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
+          },
+          reference: 1,
+          duration: 10
         },
-        num_plan_files: 0,
-        plan_files: {},
-        plan_filename: "",
-        bank_names: mockBankNames
+        "2": {
+          banks: {
+            "1": {
+              clean: 10,
+              chan_mask: 0
+            },
+            "3": {
+              clean: 10,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 10,
+              chan_mask: 0
+            }
+          },
+          reference: 0,
+          duration: 20
+        }
+      },
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
     },
     setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename
-  }
-  expect(validate(props.plan)).toEqual(Error("Pending Step must be in between 1 and " + props.plan.last_step))
+  };
+  expect(validate(props.plan)).toEqual(
+    Error("Duration must be greater than 20")
+  );
 });
-//duration must be greater than 20
-//invalid bank
-//invalid data for bank
-//invalid channel
+
+it("Invalid Bank", () => {
+  const props: PlanPanelOptions = {
+    uistatus: {},
+    plan: {
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 1,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 1,
+      steps: {
+        "1": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "2": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
+          },
+          reference: 1,
+          duration: 30
+        }
+      },
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
+    },
+    setFocus: mockSetFocus,
+    ws_sender: mockWSSender,
+    isChanged: false,
+    updateFileName: mockUpdateFilename
+  };
+  expect(validate(props.plan)).toEqual(Error("Invalid Bank"));
+});
+
+it("Invalid Bank", () => {
+  const props: PlanPanelOptions = {
+    uistatus: {},
+    plan: {
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 1,
+      focus: {
+        row: 1,
+        column: 2
+      },
+      last_step: 1,
+      steps: {
+        "1": {
+          banks: {
+            "1": {
+              clean: 0,
+              chan_mask: 0
+            },
+            "3": {
+              clean: 0,
+              chan_mask: 400
+            },
+            "4": {
+              clean: 0,
+              chan_mask: 0
+            }
+          },
+          reference: 1,
+          duration: 30
+        }
+      },
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: mockBankNames
+    },
+    setFocus: mockSetFocus,
+    ws_sender: mockWSSender,
+    isChanged: false,
+    updateFileName: mockUpdateFilename
+  };
+  expect(validate(props.plan)).toEqual(
+    Error("Invalid channel selection for bank")
+  );
+});

@@ -673,7 +673,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                         "clean": 0,
                       },
                     },
-                    "duration": 1,
+                    "duration": 20,
                     "reference": 1,
                   },
                   "2": Object {
@@ -869,7 +869,7 @@ exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
                                       }
                                     }
                                     type="text"
-                                    value="1"
+                                    value="20"
                                   />
                                 </div>
                                 <label

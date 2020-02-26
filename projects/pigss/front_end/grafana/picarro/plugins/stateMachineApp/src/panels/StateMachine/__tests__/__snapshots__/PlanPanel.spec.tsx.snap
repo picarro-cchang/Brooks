@@ -870,7 +870,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
               "clean": 0,
             },
           },
-          "duration": 1,
+          "duration": 20,
           "reference": 1,
         },
         "2": Object {
@@ -1087,7 +1087,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value="1"
+                          value="20"
                         />
                       </div>
                       <label
@@ -1307,7 +1307,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
               "clean": 0,
             },
           },
-          "duration": 1,
+          "duration": 20,
           "reference": 1,
         },
         "2": Object {
@@ -1530,7 +1530,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
                             }
                           }
                           type="text"
-                          value="1"
+                          value="20"
                         />
                       </div>
                       <label
