@@ -96,7 +96,7 @@ class PicarroAnalyzerDriver:
 
         if database_tags is not None:
             for database_tag in database_tags:
-                self.database_tags[database_tag] = database_tags[database_tag]
+                self.add_tags(database_tags)
         else:
             self.database_tags = {}
 
@@ -204,7 +204,7 @@ class PicarroAnalyzerDriver:
             database_tags_return = self.database_tags.copy()
         return database_tags_return
 
-    def add_tags(self, tags):
+    def add_tags(self, tags, timestamp_of_event=None):
         """
             add given tags to the self.database_tags, so it will
             be passed to database with each measurment
@@ -213,9 +213,19 @@ class PicarroAnalyzerDriver:
         if not isinstance(tags, dict):
             raise ValueError("Method parameter `tags` must be dictionary")
 
+        if timestamp_of_event is None:
+            timestamp_of_event = timeutils.get_epoch_timestamp()
+
         with self.database_tags_lock:
-            for tag in tags:
-                self.database_tags[tag] = tags[tag]
+            for tag_name in tags:
+                tag_with_time = {"tag_name":tag_name,
+                                 "tag_value":tags[tag_name],
+                                 "tag_timestamp":timestamp_of_event }
+                # check if tags exist and has que
+                if tag_name not in self.database_tags:
+                    self.database_tags[tag_name] = deque(maxlen=4)
+
+                self.database_tags[tag_name].appendleft(tag_with_time)
         self.logger.debug(f"Static tags {tags} have been added")
 
     def adjust_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
@@ -413,10 +423,17 @@ class IDriverThread(threading.Thread):
     def stop(self):
         self._stop_event.set()
 
-    def equip_data_object_with_defined_tags(self, data):
+    def equip_data_object_with_defined_tags(self, data, obj):
         with self.parent_idriver.database_tags_lock:
-            for tag in self.parent_idriver.database_tags:
-                data["tags"][tag] = self.parent_idriver.database_tags[tag]
+            for tag_name in self.parent_idriver.database_tags:
+                tag_with_time_to_use = self.parent_idriver.database_tags[tag_name][0]
+                for tag_with_time in self.parent_idriver.database_tags[tag_name]:
+                    time_passed = obj["time"] - tag_with_time["tag_timestamp"]
+                    if time_passed >= 0:
+                        tag_with_time_to_use = tag_with_time
+                        break
+
+                data["tags"][tag_name] = tag_with_time_to_use["tag_value"]
         return data
 
     def equip_data_object_with_dynamic_tags(self, data, obj):
@@ -444,24 +461,25 @@ class IDriverThread(threading.Thread):
         while True:
             try:
                 obj = queue.get(timeout=5.0)
+                if not 'Sensors' in obj['source']:
 
-                data = {'measurement': 'crds', 'fields': {}, 'tags': {}}
+                    data = {'measurement': 'crds', 'fields': {}, 'tags': {}}
 
-                if 'time' in obj:
-                    data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
-                else:
-                    self.logger.error("Measurment with no 'time' value passed - will be ignored")
-                    continue
+                    if 'time' in obj:
+                        data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
+                    else:
+                        self.logger.error("Measurment with no 'time' value passed - will be ignored")
+                        continue
 
-                # equip measurement with tags
-                data = self.equip_data_object_with_defined_tags(data)
-                data = self.equip_data_object_with_dynamic_tags(data, obj)
-                data = self.equip_data_object_with_stopwatch_tags(data, obj)
+                    # equip measurement with tags
+                    data = self.equip_data_object_with_defined_tags(data, obj)
+                    data = self.equip_data_object_with_dynamic_tags(data, obj)
+                    data = self.equip_data_object_with_stopwatch_tags(data, obj)
 
-                # equip measurement with fields
-                for field in obj['data']:
-                    data['fields'][field] = obj['data'][field]
-                yield data
+                    # equip measurement with fields
+                    for field in obj['data']:
+                        data['fields'][field] = obj['data'][field]
+                    yield data
             except Queue.Empty:
                 yield None
             except ConnectionRefusedError:
