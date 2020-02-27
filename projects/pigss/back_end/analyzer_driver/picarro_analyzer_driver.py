@@ -461,24 +461,25 @@ class IDriverThread(threading.Thread):
         while True:
             try:
                 obj = queue.get(timeout=5.0)
+                if not 'Sensors' in obj['source']:
 
-                data = {'measurement': 'crds', 'fields': {}, 'tags': {}}
+                    data = {'measurement': 'crds', 'fields': {}, 'tags': {}}
 
-                if 'time' in obj:
-                    data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
-                else:
-                    self.logger.error("Measurment with no 'time' value passed - will be ignored")
-                    continue
+                    if 'time' in obj:
+                        data['time'] = datetime.fromtimestamp(obj['time'], tz=utc)
+                    else:
+                        self.logger.error("Measurment with no 'time' value passed - will be ignored")
+                        continue
 
-                # equip measurement with tags
-                data = self.equip_data_object_with_defined_tags(data, obj)
-                data = self.equip_data_object_with_dynamic_tags(data, obj)
-                data = self.equip_data_object_with_stopwatch_tags(data, obj)
+                    # equip measurement with tags
+                    data = self.equip_data_object_with_defined_tags(data, obj)
+                    data = self.equip_data_object_with_dynamic_tags(data, obj)
+                    data = self.equip_data_object_with_stopwatch_tags(data, obj)
 
-                # equip measurement with fields
-                for field in obj['data']:
-                    data['fields'][field] = obj['data'][field]
-                yield data
+                    # equip measurement with fields
+                    for field in obj['data']:
+                        data['fields'][field] = obj['data'][field]
+                    yield data
             except Queue.Empty:
                 yield None
             except ConnectionRefusedError:
