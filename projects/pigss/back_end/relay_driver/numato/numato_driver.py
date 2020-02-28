@@ -55,7 +55,7 @@ class UsbRelay:
         while self.serial_port.readline().decode().strip().replace(">", "") != command:
             if timeout > 0 and time.time() - start_time:
                 raise TimeoutError("Failed to get correct echo in {timeout}")
-            time.sleep(0.001)
+            time.sleep(sleep_duration)
 
     def __send(self, command, answer_needed=False, wait_after=0.01):
         self.serial_port.write(str.encode(f"{command}\r"))
