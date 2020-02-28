@@ -1,6 +1,6 @@
 {
     "type": "app",
-    "name": "User Data File Generator",
+    "name": "Export Data",
     "id": "picarro-user-data-app",
     "info": {
       "author": {
@@ -14,7 +14,7 @@
     "includes": [
       {
         "type": "dashboard",
-        "name": "User Data File Generator",
+        "name": "Export Data",
         "path": "dashboards/userDataApp.json",
         "addToNav": true,
         "defaultNav": true
