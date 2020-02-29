@@ -10,9 +10,10 @@ import Modal from "react-responsive-modal";
 import { notifyError, notifySuccess } from "../utils/Notifications";
 import { ModalInfo, PlanPanelTypes } from "./../types";
 import EditPanel from "./EditPanel";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
+const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 export class Main extends React.Component<any, any> {
@@ -102,25 +103,43 @@ export class Main extends React.Component<any, any> {
   }
 
   ws = new WebSocket(socketURL);
-  componentDidMount() {
-    this.getDataViaApi();
 
+  attachWSMethods = (ws:WebSocket) => {
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       this.handleData(evt.data);
     };
 
-    this.ws.onclose = () => {
-      notifyError(
-        <div>
-          <h6>
-            <b>Web Socket Disconnected!</b>
-          </h6>
-        </div>
-      );
-      this.ws = new WebSocket(socketURL);
-      this.getDataViaApi();
+    this.ws.onclose = (event) => {
+      if (event.code !== 1000) {
+        this.setupWSComm();
+      }
     };
+  }
+
+  setupWSComm = () => {
+    if (this.ws.CLOSED || this.ws.readyState === 0) {
+      setTimeout(() => {
+        toast.dismiss();
+        notifyError("Web Socket Disconnected. Retrying to connect the server.");
+        this.ws = new WebSocket(socketURL);
+        this.attachWSMethods(this.ws);
+        this.getDataViaApi();
+      }, REFRESH_INTERVAL * 1000);
+    }
+  }
+
+  componentDidMount() {
+    this.getDataViaApi();
+    this.attachWSMethods(this.ws);
+  }
+
+  componentWillUnmount() {
+    console.log('Component will unmount');
+    if (this.ws && this.ws.readyState === 1) {
+      this.ws.send('CLOSE');
+      this.ws.close(1000, 'Client Initited Connection Termination');
+    }
   }
 
   getDataViaApi = () => {
