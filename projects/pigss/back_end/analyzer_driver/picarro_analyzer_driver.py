@@ -79,6 +79,8 @@ class PicarroAnalyzerDriver:
         self.rpc_server_description = rpc_server_description
         self.database_tags = {}
         self.database_tags_lock = threading.Lock()
+        self.database_dynamic_fields = {}
+        self.database_dynamic_fields_lock = threading.Lock()
         self.dynamic_database_tags = dynamic_database_tags if dynamic_database_tags is not None else []
         self.dynamic_database_tags_lock = threading.Lock()
         self.stopwatch_database_tags = {}
@@ -336,6 +338,34 @@ class PicarroAnalyzerDriver:
             stopwatch_db_tags_return = self.stopwatch_database_tags.copy()
         return stopwatch_db_tags_return
 
+
+
+
+    def add_dynamic_fields(self, fields, timestamp_of_event=None):
+        """
+            add given tags to the self.database_tags, so it will
+            be passed to database with each measurment
+            :param tags: a dictionary
+        """
+        if not isinstance(fields, dict):
+            raise ValueError("Method parameter `fields` must be dictionary")
+
+        if timestamp_of_event is None:
+            timestamp_of_event = timeutils.get_epoch_timestamp()
+
+        with self.database_dynamic_fields_lock:
+            for field_name in fields:
+                field_with_time = {"field_name":field_name,
+                                   "field_value":fields[field_name],
+                                   "field_timestamp":timestamp_of_event }
+                # check if fields exist and has que
+                if field_name not in self.database_dynamic_fields:
+                    self.database_dynamic_fields[field_name] = deque(maxlen=4)
+
+                self.database_dynamic_fields[field_name].appendleft(field_with_time)
+        self.logger.debug(f"Dynamic fields {fields} have been added")
+
+
     def __create_listener(self, ip):
         """
             create an instrument listener by given IP address
@@ -364,6 +394,10 @@ class PicarroAnalyzerDriver:
         self.server.register_function(self.get_tags, name="IDRIVER_get_tags")
         self.server.register_function(self.add_tags, name="IDRIVER_add_tags")
         self.server.register_function(self.adjust_tags, name="IDRIVER_adjust_tags")
+
+
+        # Dynamic field controls - value predefined
+        self.server.register_function(self.add_dynamic_fields, name="IDRIVER_add_dynamic_fields")
 
         # Dynamic tags controls - value taken from each measurement
         self.server.register_function(self.remove_dynamic_tags, name="IDRIVER_remove_dynamic_tags")
@@ -436,6 +470,20 @@ class IDriverThread(threading.Thread):
                 data["tags"][tag_name] = tag_with_time_to_use["tag_value"]
         return data
 
+    def equip_data_object_with_dynamic_fields(self, data, obj):
+        with self.parent_idriver.database_dynamic_fields_lock:
+            for field_name in self.parent_idriver.database_dynamic_fields:
+
+                field_with_time_to_use = self.parent_idriver.database_dynamic_fields[field_name][0]
+                for field_with_time in self.parent_idriver.database_dynamic_fields[field_name]:
+                    time_passed = obj["time"] - field_with_time["field_timestamp"]
+                    if time_passed >= 0:
+                        field_with_time_to_use = field_with_time
+                        break
+
+                data["fields"][field_name] = field_with_time_to_use["field_value"]
+        return data
+
     def equip_data_object_with_dynamic_tags(self, data, obj):
         with self.parent_idriver.dynamic_database_tags_lock:
             for tag in self.parent_idriver.dynamic_database_tags:
@@ -475,6 +523,7 @@ class IDriverThread(threading.Thread):
                     data = self.equip_data_object_with_defined_tags(data, obj)
                     data = self.equip_data_object_with_dynamic_tags(data, obj)
                     data = self.equip_data_object_with_stopwatch_tags(data, obj)
+                    data = self.equip_data_object_with_dynamic_fields(data, obj)
 
                     # equip measurement with fields
                     for field in obj['data']:
