@@ -176,28 +176,6 @@ class PicarroAnalyzerDriver:
         self.IDriverThread.stop()
         self.thread_created = False
 
-    def remove_tags(self, tags):
-        """
-            remove given tags from the self.database_tags, so it won't be passed to database anymore
-            :param tags: a string, a list of strings, or a dictionary
-        """
-        if isinstance(tags, str):
-            tags = [tags]
-        if isinstance(tags, dict):
-            tags = [k for k in tags]
-        with self.database_tags_lock:
-            for tag in tags:
-                self.database_tags.pop(tag, None)
-        self.logger.debug(f"Static tags {tags} have been removed")
-
-    def remove_all_tags(self):
-        """
-            removes all tags, will be writing to database without any tags
-        """
-        with self.database_tags_lock:
-            self.database_tags = {}
-        self.logger.debug(f"All static tags have been removed")
-
     def get_tags(self):
         """
             return a dictionary of current tags
@@ -230,40 +208,6 @@ class PicarroAnalyzerDriver:
                 self.database_tags[tag_name].appendleft(tag_with_time)
         self.logger.debug(f"Static tags {tags} have been added")
 
-    def adjust_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
-        """
-            adjust tags by passing tags to be added, removed or
-            removed all to the corresponging arguments
-        """
-        if remove_tags is not None:
-            self.remove_tags(remove_tags)
-        if add_tags is not None:
-            self.add_tags(add_tags)
-        if remove_all_tags:
-            self.remove_all_tags()
-
-    def remove_dynamic_tags(self, tags):
-        """
-            remove given dynamic tags from the self.database_tags, so
-            it won't be passed to database anymore
-            :param tags: a string or a list of strings
-        """
-        if isinstance(tags, str):
-            tags = [tags]
-        with self.dynamic_database_tags_lock:
-            for tag in tags:
-                if tag in self.dynamic_database_tags:
-                    self.dynamic_database_tags.remove(tag)
-        self.logger.debug(f"Dynamic tags {tags} have been removed")
-
-    def remove_all_dynamic_tags(self):
-        """
-            removes all tags, will be writing to database without any tags
-        """
-        with self.dynamic_database_tags_lock:
-            self.dynamic_database_tags = []
-        self.logger.debug(f"All Dynamic tags have been removed")
-
     def get_dynamic_tags(self):
         """
             return a dictionary of current dynamic tags
@@ -287,18 +231,6 @@ class PicarroAnalyzerDriver:
                 self.dynamic_database_tags.append(tag)
         self.logger.debug(f"Dynamic tags {tags} have been added")
 
-    def adjust_dynamic_tags(self, remove_tags=None, add_tags=None, remove_all_tags=False):
-        """
-            adjust tags by passing tags to be added, removed or
-            removed all to the corresponging arguments
-        """
-        if remove_tags is not None:
-            self.remove_dynamic_tags(remove_tags)
-        if add_tags is not None:
-            self.add_dynamic_tags(add_tags)
-        if remove_all_tags:
-            self.remove_all_dynamic_tags()
-
     def add_stopwatch_tag(self, tag_name, timestamp_of_event=None):
         """
             This will add a stopwatch tag with name `tag_name`, which actually populates
@@ -321,30 +253,16 @@ class PicarroAnalyzerDriver:
             #  time of the data point.
             self.stopwatch_database_tags[tag_name].appendleft(timestamp_of_event)
 
-    def remove_stopwatch_tag(self, tag_name):
-        """Remove a stopwatch tag."""
-        with self.stopwatch_database_tags_lock:
-            if tag_name in self.stopwatch_database_tags:
-                self.stopwatch_database_tags.remove(tag_name)
-
-    def remove_all_stopwatch_tags(self):
-        """Remove all stopwatch tags."""
-        with self.stopwatch_database_tags_lock:
-            self.stopwatch_database_tags = {}
-
     def get_stopwatch_tags(self):
         """Get stopwatch tags, pretty self explanatory."""
         with self.stopwatch_database_tags_lock:
             stopwatch_db_tags_return = self.stopwatch_database_tags.copy()
         return stopwatch_db_tags_return
 
-
-
-
     def add_dynamic_fields(self, fields, timestamp_of_event=None):
         """
-            add given tags to the self.database_tags, so it will
-            be passed to database with each measurment
+            add given fields to the self.database_dynamic_fields, so it will
+            be passed to database with each measurment as a fields and value
             :param tags: a dictionary
         """
         if not isinstance(fields, dict):
@@ -364,6 +282,14 @@ class PicarroAnalyzerDriver:
 
                 self.database_dynamic_fields[field_name].appendleft(field_with_time)
         self.logger.debug(f"Dynamic fields {fields} have been added")
+
+    def get_dynamic_fields(self):
+        """
+            return a dictionary of current dynamic fields
+        """
+        with self.database_dynamic_fields_lock:
+            database_dynamic_fields_return = self.database_dynamic_fields.copy()
+        return database_dynamic_fields_return
 
 
     def __create_listener(self, ip):
@@ -389,27 +315,19 @@ class PicarroAnalyzerDriver:
         self.server.register_function(self.stop_idriver_loop_thread, name="IDRIVER_close_driver")
 
         # Static tags controls - value predifined
-        self.server.register_function(self.remove_tags, name="IDRIVER_remove_tags")
-        self.server.register_function(self.remove_all_tags, name="IDRIVER_remove_all_tags")
         self.server.register_function(self.get_tags, name="IDRIVER_get_tags")
         self.server.register_function(self.add_tags, name="IDRIVER_add_tags")
-        self.server.register_function(self.adjust_tags, name="IDRIVER_adjust_tags")
-
 
         # Dynamic field controls - value predefined
         self.server.register_function(self.add_dynamic_fields, name="IDRIVER_add_dynamic_fields")
+        self.server.register_function(self.get_dynamic_fields, name="IDRIVER_get_dynamic_fields")
 
         # Dynamic tags controls - value taken from each measurement
-        self.server.register_function(self.remove_dynamic_tags, name="IDRIVER_remove_dynamic_tags")
-        self.server.register_function(self.remove_all_dynamic_tags, name="IDRIVER_remove_all_dynamic_tags")
         self.server.register_function(self.get_dynamic_tags, name="IDRIVER_get_dynamic_tags")
         self.server.register_function(self.add_dynamic_tags, name="IDRIVER_add_dynamic_tags")
-        self.server.register_function(self.adjust_dynamic_tags, name="IDRIVER_adjust_dynamic_tags")
 
         # Stopwatch tags controls - value is a time calculated as
         # difference between measurement time and event time
-        self.server.register_function(self.remove_stopwatch_tag, name="IDRIVER_remove_stopwatch_tag")
-        self.server.register_function(self.remove_all_stopwatch_tags, name="IDRIVER_remove_all_stopwatch_tags")
         self.server.register_function(self.get_stopwatch_tags, name="IDRIVER_get_stopwatch_tags")
         self.server.register_function(self.add_stopwatch_tag, name="IDRIVER_add_stopwatch_tag")
 
