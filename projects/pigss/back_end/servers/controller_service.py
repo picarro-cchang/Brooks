@@ -245,7 +245,10 @@ class ControllerService(ServiceTemplate):
         self.socket_stats['ws_open'] = len(request.app['websockets'])
         try:
             async for msg in ws:
-                farm.receive_queue.put_nowait(msg.data)
+                if msg.data == "CLOSE":
+                    await ws.close()
+                else:
+                    farm.receive_queue.put_nowait(msg.data)
         except asyncio.queues.QueueFull:
             log.debug(f"Farm receive queue full.\n{format_exc()}")
             log.error(f"Recieve Queue Full. Please Report.")
