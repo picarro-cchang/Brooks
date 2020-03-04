@@ -1180,7 +1180,16 @@ class QuickGui(wx.Frame):
             renamedSources = [self.sourceSubstDatabase.applySubstitution(source)[0] for source in sources]
             # Sort the sources into alphabetical order for the combo box
             decoratedSources = zip(renamedSources,sources)
-            decoratedSources.sort()
+            # Make sure Sensors is always the last in the list
+            sensorTuple = ("Sensors", "Sensors")
+            if sensorTuple in decoratedSources:
+                index = decoratedSources.index(sensorTuple)
+                del decoratedSources[index]
+                decoratedSources.sort()
+                decoratedSources.append(sensorTuple)
+            else:
+                decoratedSources.sort()
+
             for idx in range(self.numGraphs):
                 self.sourceChoice[idx].SetItems([rS for rS,s in decoratedSources])
                 for i in range(len(sources)):
