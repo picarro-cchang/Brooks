@@ -245,6 +245,7 @@ class PigletManager(Ahsm):
                         "valve_mask": valve_pos_payload.valve_mask,
                         "valve_pos": valve_pos_payload.valve_pos}                                            
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_tags(new_tags)
+            await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_dynamic_fields({"valve_pos": valve_pos_payload.valve_pos})
 
             # The next line is for the simulator
             await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
