@@ -3,6 +3,7 @@ var window, document, ARGS, $, jQuery, moment, kbn;
 var base_url = window.location.hostname;
 
 var species = []
+var currentPortPanel = {}
 
 function random_color(species_amount) {
   let colorArray = []
@@ -42,6 +43,10 @@ function make_panel(result) {
         alias: "Unselected",
         color: "rgb(102, 84, 84)",
         legend: false
+      },
+      {
+        alias: "Port",
+        points: false
       }
     ]
     let customTargets = []
@@ -95,6 +100,20 @@ function make_panel(result) {
         customTargets.push(temp3)
     }
 
+    let port = {}
+    port.alias = "Port"
+    port.measurement = measurement;
+    port.query = "SELECT last(port) AS Port FROM " + measurement + " WHERE $timeFilter GROUP BY time($__interval) fill(none)"
+    port.groupBy = [{"params": ["null"],"type": "fill"}]
+    port.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
+    port.resultFormat = "time_series"
+    port.rawQuery = true;
+    port.hide = false;
+    port.orderByTime = "DESC";
+    port.policy = "autogen";
+
+    customTargets.push(port)
+
     //current ports
     let tempPort = {}
 
@@ -129,81 +148,81 @@ function make_panel(result) {
     }
 
     return {
-        title: 'Chart',
-        height: '300px',
-        panels: [
-          {
-            datasource: "PiGSS data source",
-            gridPos: {
-              "x": 0,
-              "y": 0,
-              "h": 1,
-              "w": 24,
-            },
-            mappingTypes: [
-              {
-                "name": "value to text",
-                "value": 1
+          title: 'Chart',
+          panels: [
+            {
+              datasource: "PiGSS data source",
+              gridPos: {
+                "h": 12,
+                "w": 24,
+                "x": 0,
+                "y": 0
               },
-              {
-                "name": "range to text",
-                "value": 2
-              }
-            ],
-            nullPointMode: "connected",
-            postfix: "",
-            postfixFontSize: "50%",
-            prefix: "Current Port:",
-            prefixFontSize: "65%",
-            rangeMaps: [
-              {
-                "from": "null",
-                "text": "N/A",
-                "to": "null"
-              }
-            ],
-            tableColumn: "valve_pos",
-            targets: [
-              tempPort
-            ],
-            title: "",
-            transparent: true,
-            type: "singlestat",
-            valueFontSize: "65%",
-            valueMaps: [
-              {
-                "op": "=",
-                "text": "N/A",
-                "value": "null"
-              }
-            ],
-            valueName: "current"
+              mappingTypes: [
+                {
+                  "name": "value to text",
+                  "value": 1
+                },
+                {
+                  "name": "range to text",
+                  "value": 2
+                }
+              ],
+              nullPointMode: "connected",
+              postfix: "",
+              postfixFontSize: "50%",
+              prefix: "Current Port:",
+              prefixFontSize: "65%",
+              rangeMaps: [
+                {
+                  "from": "null",
+                  "text": "N/A",
+                  "to": "null"
+                }
+              ],
+              tableColumn: "valve_pos",
+              targets: [
+                tempPort
+              ],
+              title: "",
+              transparent: true,
+              type: "singlestat",
+              valueFontSize: "65%",
+              valueMaps: [
+                {
+                  "op": "=",
+                  "text": "N/A",
+                  "value": "null"
+                }
+              ],
+              valueName: "current"
           },
-          {
-            title: '$species',
-            maxPerRow: 2,
-            renderer: "flot",
-            datasource: 'PiGSS data source',
-            transparent: true,
-            fontSize: '120%',
-            repeat: "species",
-            repeatDirection: "h",
-            legend: false,
-            type: 'graph',
-            span: 12,
-            fill: 0,
-            linewidth: 0,
-            pointradius: 2,
-            points: true,
-            seriesOverrides: customSeriesOverride,
-            targets: customTargets,
-            tooltip: {
-              shared: true
+            {
+              title: '$species',
+              maxPerRow: 2,
+              renderer: "flot",
+              datasource: 'PiGSS data source',
+              transparent: true,
+              fontSize: '120%',
+              repeat: "species",
+              repeatDirection: "h",
+              legend: false,
+              type: 'graph',
+              span: 12,
+              fill: 0,
+              linewidth: 0,
+              pointradius: 2,
+              points: true,
+              seriesOverrides: customSeriesOverride,
+              targets: customTargets,
+              tooltip: {
+                shared: true
+              }
             }
-          }
-        ],
-        style: "dark"
+          ],
+          style: "dark"
       }
+  
 }
  
 return function(callback) {
@@ -224,6 +243,9 @@ return function(callback) {
         from: "now-15m",
         to: "now"
     };
+
+    
+
  
     var rows = 1;
     var seriesName = 'argName';
@@ -338,7 +360,9 @@ $.when(
     dashboard.tags = ["pigss"]
 
     dashboard.refresh = "5s";
+    // dashboard.rows.push(currentPortPanel)
     dashboard.rows.push(make_panel(globalThis.species));
+
     callback(dashboard);
 });
     
