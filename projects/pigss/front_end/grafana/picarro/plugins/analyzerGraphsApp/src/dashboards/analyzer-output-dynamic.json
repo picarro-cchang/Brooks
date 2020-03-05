@@ -145,7 +145,7 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
         "y": 1
@@ -192,6 +192,10 @@
           "legend": false
         },
         {
+          "alias": "Port",
+          "points": false
+        },
+        {
           "alias": "H2O",
           "color": "#ff0000"
         },
@@ -1421,6 +1425,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -1475,7 +1511,7 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
         "y": 1
@@ -1503,7 +1539,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -1522,6 +1558,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -2753,6 +2793,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -2807,10 +2879,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 9
+        "y": 8
       },
       "id": 4,
       "legend": {
@@ -2835,7 +2907,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -2854,6 +2926,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -4085,6 +4161,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -4139,10 +4247,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 9
+        "y": 8
       },
       "id": 5,
       "legend": {
@@ -4167,7 +4275,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -4186,6 +4294,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -5417,6 +5529,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -5471,10 +5615,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 17
+        "y": 15
       },
       "id": 6,
       "legend": {
@@ -5499,7 +5643,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -5518,6 +5662,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -6749,6 +6897,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -6803,10 +6983,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 17
+        "y": 15
       },
       "id": 7,
       "legend": {
@@ -6831,7 +7011,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -6850,6 +7030,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -8081,6 +8265,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -8135,10 +8351,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 25
+        "y": 22
       },
       "id": 8,
       "legend": {
@@ -8163,7 +8379,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -8182,6 +8398,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -9413,6 +9633,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -9467,10 +9719,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 25
+        "y": 22
       },
       "id": 9,
       "legend": {
@@ -9495,7 +9747,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -9514,6 +9766,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -10745,6 +11001,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -10799,10 +11087,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 33
+        "y": 29
       },
       "id": 10,
       "legend": {
@@ -10827,7 +11115,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -10846,6 +11134,10 @@
           "alias": "Unselected",
           "color": "rgb(102, 84, 84)",
           "legend": false
+        },
+        {
+          "alias": "Port",
+          "points": false
         },
         {
           "alias": "H2O",
@@ -12077,6 +12369,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -12131,10 +12455,10 @@
       "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 33
+        "y": 29
       },
       "id": 11,
       "legend": {
@@ -12159,7 +12483,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -12180,6 +12504,10 @@
           "legend": false
         },
         {
+          "alias": "Port",
+          "points": false
+        },
+        {
           "alias": "H2O",
           "color": "#ff0000"
         },
@@ -13409,6 +13737,38 @@
               }
             ]
           ]
+        },
+        {
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
       "thresholds": [],
@@ -13454,44 +13814,28 @@
       }
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
-      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 0,
-        "y": 41
+        "y": 36
       },
       "id": 12,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
+        "show": false
       },
-      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
+      "options": {},
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -13512,6 +13856,10 @@
           "legend": false
         },
         {
+          "alias": "Port",
+          "points": false
+        },
+        {
           "alias": "H2O",
           "color": "#ff0000"
         },
@@ -13560,9 +13908,6 @@
           "color": "#ff007f"
         }
       ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -14741,89 +15086,70 @@
               }
             ]
           ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "$species",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
         },
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "$species",
+      "tooltip": {
+        "shared": true
+      },
+      "transparent": true,
+      "type": "graph"
     },
     {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
-      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
-        "h": 8,
+        "h": 7,
         "w": 12,
         "x": 12,
-        "y": 41
+        "y": 36
       },
       "id": 13,
       "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": false,
-        "total": false,
-        "values": false
+        "show": false
       },
-      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
+      "options": {},
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581556273414,
+      "repeatIteration": 1583446790858,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -14844,6 +15170,10 @@
           "legend": false
         },
         {
+          "alias": "Port",
+          "points": false
+        },
+        {
           "alias": "H2O",
           "color": "#ff0000"
         },
@@ -14892,9 +15222,6 @@
           "color": "#ff007f"
         }
       ],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -16073,49 +16400,46 @@
               }
             ]
           ]
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "$species",
-      "tooltip": {
-        "shared": true,
-        "sort": 0,
-        "value_type": "individual"
-      },
-      "transparent": true,
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
         },
         {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
+          "alias": "Port",
+          "groupBy": [
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "hide": false,
+          "measurement": "autogen.crds",
+          "orderByTime": "DESC",
+          "policy": "autogen",
+          "query": "SELECT last(port) AS Port FROM autogen.crds WHERE $timeFilter GROUP BY time($__interval) fill(none)",
+          "rawQuery": true,
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  null
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "last"
+              }
+            ]
+          ]
         }
       ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
+      "title": "$species",
+      "tooltip": {
+        "shared": true
+      },
+      "transparent": true,
+      "type": "graph"
     }
   ],
   "refresh": "5s",
@@ -16235,8 +16559,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
-      "1s",
-      "2s",
+        "1s",
+        "2s",
       "5s",
       "10s",
       "30s",
