@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Live Data Graphical View",
+  "name": "Graphical View",
   "id": "picarro-analyzer-page",
   "info": {
     "author": {
@@ -14,7 +14,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Live Data Graphical View",
+      "name": "Graphical View",
       "path": "dashboards/analyzer-output-dynamic.json",
       "addToNav": true,
       "defaultNav": true
