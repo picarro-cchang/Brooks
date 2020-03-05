@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Concentration By Channel",
+  "name": "Data Analysis",
   "id": "picarro-concentration-page",
   "info": {
     "author": {
@@ -14,7 +14,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Concentration By Channel",
+      "name": "Data Analysis",
       "path": "dashboards/concentration-by-valve-dynamic.json",
       "addToNav": true,
       "defaultNav": true

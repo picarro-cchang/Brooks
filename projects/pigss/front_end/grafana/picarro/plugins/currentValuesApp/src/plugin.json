@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Current Values",
+  "name": "Numerical View",
   "id": "current-concentration-values",
   "info": {
     "author": {
@@ -14,7 +14,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Current Values",
+      "name": "Numerical View",
       "path": "dashboards/Curren-Values-Dynamic.json",
       "addToNav": true,
       "defaultNav": true

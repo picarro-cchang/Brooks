@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Status",
+  "name": "System Status",
   "id": "picarro-status-app",
   "info": {
     "author": {
@@ -14,7 +14,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Status",
+      "name": "System Status",
       "path": "dashboards/statusApp.json",
       "addToNav": true,
       "defaultNav": true

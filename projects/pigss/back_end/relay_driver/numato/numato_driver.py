@@ -49,9 +49,13 @@ class UsbRelay:
         for i in range(self.gpio_count):
             self.set_gpio_status(i, False)
 
-    def __wait_for_echo(self, command):
+    def __wait_for_echo(self, command, timeout=0.1, sleep_duration=0.001):
+        if timeout>0:
+            start_time = time.time()
         while self.serial_port.readline().decode().strip().replace(">", "") != command:
-            time.sleep(0.001)
+            if timeout > 0 and time.time() - start_time:
+                raise TimeoutError("Failed to get correct echo in {timeout}")
+            time.sleep(sleep_duration)
 
     def __send(self, command, answer_needed=False, wait_after=0.01):
         self.serial_port.write(str.encode(f"{command}\r"))
