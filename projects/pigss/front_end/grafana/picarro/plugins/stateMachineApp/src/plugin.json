@@ -1,6 +1,6 @@
 {
   "type": "app",
-  "name": "Flow Setup",
+  "name": "Setup",
   "id": "1flow-setup-app",
   "enabled": true,
   "info": {
@@ -16,7 +16,7 @@
   "includes": [
     {
       "type": "dashboard",
-      "name": "Flow Setup",
+      "name": "Setup",
       "path": "dashboards/statemachine.json",
       "addToNav": true,
       "defaultNav": true

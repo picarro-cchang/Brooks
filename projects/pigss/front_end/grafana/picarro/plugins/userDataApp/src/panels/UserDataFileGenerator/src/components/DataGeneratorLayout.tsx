@@ -264,7 +264,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
 
     return (
       <Fragment>
-        <h3 className="text-center">User Data File Generator</h3>
+        <h3 className="text-center">Export Data</h3>
         <PanelOptionsGroup title="Generate New File">
           <PanelOptionsGroup>
             <div className="gf-form">
