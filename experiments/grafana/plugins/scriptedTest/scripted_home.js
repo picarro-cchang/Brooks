@@ -63,7 +63,7 @@ function make_panel(result) {
         let temp3 = {}
         temp3.alias = "Unselected"
         temp3.measurement = measurement;
-        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE (valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp3.groupBy = [{"params": ["null"],"type": "fill"}]
         temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp3.resultFormat = "time_series"
@@ -104,6 +104,20 @@ function make_panel(result) {
         customGraphTargets.push(temp3)
     }
 
+    let port = {}
+    port.alias = "Port"
+    port.measurement = measurement;
+    port.query = "SELECT last(port) AS Port FROM " + measurement + " WHERE $timeFilter GROUP BY time($__interval) fill(none)"
+    port.groupBy = [{"params": ["null"],"type": "fill"}]
+    port.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
+    port.resultFormat = "time_series"
+    port.rawQuery = true;
+    port.hide = false;
+    port.orderByTime = "DESC";
+    port.policy = "autogen";
+
+    customGraphTargets.push(port)
+
     //current ports
     let tempPort = {}
 
@@ -141,6 +155,26 @@ function make_panel(result) {
         title: 'Chart',
         height: '300px',
         panels: [
+          {
+            title: 'Analyzer Readings',
+            maxPerRow: 2,
+            renderer: "flot",
+            datasource: 'PiGSS data source',
+            transparent: true,
+            fontSize: '120%',
+            legend: false,
+            type: 'graph',
+            span: 12,
+            fill: 0,
+            linewidth: 0,
+            pointradius: 2,
+            points: true,
+            seriesOverrides: customSeriesOverride,
+            targets: customGraphTargets,
+            tooltip: {
+              shared: true
+            }
+          },
           {
             datasource: "PiGSS data source",
             gridPos: {
@@ -189,26 +223,6 @@ function make_panel(result) {
             valueName: "current"
           },
           {
-            title: 'Analyzer Readings',
-            maxPerRow: 2,
-            renderer: "flot",
-            datasource: 'PiGSS data source',
-            transparent: true,
-            fontSize: '120%',
-            legend: false,
-            type: 'graph',
-            span: 12,
-            fill: 0,
-            linewidth: 0,
-            pointradius: 2,
-            points: true,
-            seriesOverrides: customSeriesOverride,
-            targets: customGraphTargets,
-            tooltip: {
-              shared: true
-            }
-          },
-          {
             title: "",
             maxPerRow: 3,
             datasource: "PiGSS data source",
@@ -218,9 +232,9 @@ function make_panel(result) {
             fontSize: "110%",
             gridPos: {
               h: 3,
-              w: 12,
+              w: 8,
               x: 0,
-              y: 0
+              y: 9
             },
             styles: [
               {
@@ -246,7 +260,7 @@ function make_panel(result) {
             title: "Most Recent Values by Port",
             datasource: "PiGSS data source",
             transparent: true,
-            fontSize: "110%",
+            fontSize: "120%",
             gridPos: {
               h: 3,
               w: 12,

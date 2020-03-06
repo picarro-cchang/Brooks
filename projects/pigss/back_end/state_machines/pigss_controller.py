@@ -1558,7 +1558,7 @@ class PigssController(Ahsm):
     def _loop_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            msg = f"Loop plan starting at step {self.plan['current_step']}"
+            msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
             self.set_modal_info(
                 [], {
                     "show": True,
