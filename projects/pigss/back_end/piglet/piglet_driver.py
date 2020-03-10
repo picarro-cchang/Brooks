@@ -8,31 +8,29 @@ from common import CmdFIFO
 from back_end.lologger.lologger_client import LOLoggerClient
 
 
-class PigletDriver(object):
+class PigletBareDriver(object):
     """
     This class currently covers the Boxer firmware for the
     Piglet OFF (Arduino).
         https://github.com/picarro/I2000-Host/tree/develop-boxer/experiments/firmware/pigss/boxer
     """
 
-    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', **kwargs):
+    def __init__(self, port, baudrate=38400, carriage_return='\r', logger=None, **kwargs):
         self.serial = None
         self.terminate = False
         self.port = port
         self.baudrate = baudrate
         self.carriage_return = carriage_return
         self.id_string = None
-        self.rpc_port = rpc_port
-        self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
-                                                ServerName=__class__.__name__,
-                                                ServerDescription=f'RPC Server for {__class__.__name__}',
-                                                ServerVersion=1.0,
-                                                threaded=True)
-        self.logger = LOLoggerClient(client_name=f'SAMletDriver_{rpc_port}')
-        self.logger.debug(f'Started')
+
+        if isinstance(logger, str):
+            self.logger = LOLoggerClient(client_name=logger)
+        if isinstance(logger, LOLoggerClient):
+            self.logger = logger
+        if logger is None:
+            self.logger = LOLoggerClient(client_name=f"SAMletDriver_{self.port}")
+            self.logger.debug(f'Started')
         self.connect()
-        self.register_rpc_functions()
-        self.rpc_server.serve_forever()
 
     def connect(self):
         """
@@ -333,27 +331,54 @@ class PigletDriver(object):
         timestamp = get_local_timestamp()
         return timestamp
 
+
+
+class PigletDriver(object):
+    """
+    An RPC wrapper for the PigletBareDriver class
+    """
+    def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', **kwargs):
+        self.port = port
+        self.baudrate = baudrate
+        self.carriage_return = carriage_return
+        self.rpc_port = rpc_port
+        self.logger = LOLoggerClient(client_name=f'SAMletDriver_{rpc_port}')
+
+        self.piglet_bare_drivers = PigletBareDriver(port=self.port,
+                                                    baudrate=self.baudrate,
+                                                    carriage_return=self.carriage_return,
+                                                    logger=self.logger)
+
+        self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
+                                                ServerName=__class__.__name__,
+                                                ServerDescription=f'RPC Server for {__class__.__name__}',
+                                                ServerVersion=1.0,
+                                                threaded=True)
+        self.register_rpc_functions()
+        self.rpc_server.serve_forever()
+
+
     def register_rpc_functions(self):
-        self.rpc_server.register_function(self.send)
-        self.rpc_server.register_function(self.connect)
-        self.rpc_server.register_function(self.close)
-        self.rpc_server.register_function(self.get_id_string)
-        self.rpc_server.register_function(self.get_manufacturer)
-        self.rpc_server.register_function(self.get_model_number)
-        self.rpc_server.register_function(self.get_serial_number)
-        self.rpc_server.register_function(self.get_firmware_revision)
-        self.rpc_server.register_function(self.reset_piglet)
-        self.rpc_server.register_function(self.set_serial_number)
-        self.rpc_server.register_function(self.get_slot_id)
-        self.rpc_server.register_function(self.set_slot_id)
-        self.rpc_server.register_function(self.get_operating_state)
-        self.rpc_server.register_function(self.set_operating_state)
-        self.rpc_server.register_function(self.get_channel_status)
-        self.rpc_server.register_function(self.enable_channel)
-        self.rpc_server.register_function(self.disable_channel)
-        self.rpc_server.register_function(self.set_channel_registers)
-        self.rpc_server.register_function(self.get_channel_registers)
-        self.rpc_server.register_function(self.get_timestamp)
+        self.rpc_server.register_function(self.piglet_bare_drivers.send)
+        self.rpc_server.register_function(self.piglet_bare_drivers.connect)
+        self.rpc_server.register_function(self.piglet_bare_drivers.close)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_id_string)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_manufacturer)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_model_number)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_serial_number)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_firmware_revision)
+        self.rpc_server.register_function(self.piglet_bare_drivers.reset_piglet)
+        self.rpc_server.register_function(self.piglet_bare_drivers.set_serial_number)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_slot_id)
+        self.rpc_server.register_function(self.piglet_bare_drivers.set_slot_id)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_operating_state)
+        self.rpc_server.register_function(self.piglet_bare_drivers.set_operating_state)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_channel_status)
+        self.rpc_server.register_function(self.piglet_bare_drivers.enable_channel)
+        self.rpc_server.register_function(self.piglet_bare_drivers.disable_channel)
+        self.rpc_server.register_function(self.piglet_bare_drivers.set_channel_registers)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_channel_registers)
+        self.rpc_server.register_function(self.piglet_bare_drivers.get_timestamp)
 
 
 def get_cli_args():
