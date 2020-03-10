@@ -72,7 +72,7 @@
       "options": {},
       "postfix": "",
       "postfixFontSize": "50%",
-      "prefix": "Current Port:",
+      "prefix": "Measuring Port:",
       "prefixFontSize": "65%",
       "rangeMaps": [
         {
