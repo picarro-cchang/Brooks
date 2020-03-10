@@ -1,5 +1,7 @@
 import time
-
+import sys
+import psutil
+import subprocess
 
 from qtpy import QtCore
 from qtpy.QtGui import QTextCursor
@@ -8,12 +10,20 @@ from qtpy.QtWidgets import (QApplication, QComboBox, QFrame, QGroupBox, QHBoxLay
 
 
 from back_end.madmapper.usb.serialmapper import SerialMapper
+from back_end.piglet.piglet_driver import PigletBareDriver
+
 
 def check_for_piggs_core_status():
-    return False
-    #TODO
-    # time.sleep(1)
-    # return time.time()%10>5
+    process_names = [p.info for p in psutil.process_iter(['name'])]
+    triggers = ["pigss", "piglet"]
+    software_running_found = False
+    for process_name in process_names:
+        for trigger in triggers:
+            if trigger in process_name["name"].lower():
+                software_running_found = True
+                print(f"process '{process_name['name']}' is running")
+                break
+    return software_running_found
 
 
 def check_for_valid_fw_file(file_path):
@@ -32,6 +42,8 @@ class PigletWidget(QWidget):
         self.TEST_LABEL = QLabel("")
         self.device_number = PigletWidget.device_counter
         self.fw_file_path = None
+        self.text = [',haey']
+        self.interface_to_be_locked = []
         PigletWidget.device_counter+=1
 
         self.mgl.addWidget(self.TEST_LABEL)
@@ -43,6 +55,7 @@ class PigletWidget(QWidget):
     def define(self, device_configs):
         self.device_configs = device_configs
         self.TEST_LABEL.setText(f"Device #{self.device_number}")
+        self.text.append('taht')
         self.mgl.addWidget(self.make_table())
         self.mgl.addWidget(self.make_bank_id_frame())
         self.mgl.addWidget(self.make_fw_update_frame())
@@ -51,6 +64,7 @@ class PigletWidget(QWidget):
 
     def make_table(self):
         self.tableWidget = QTableWidget()
+        self.text.append(',wf')
 
         self.tableWidget.setColumnCount(2)
         self.tableWidget.setRowCount(0)
@@ -63,7 +77,7 @@ class PigletWidget(QWidget):
                 self.tableWidget.setItem(row_count,1, QTableWidgetItem(self.device_configs[data_key]))
                 row_count+=1
 
-        self.tableWidget.setMinimumSize(QtCore.QSize(150, row_count*32+9))
+        self.tableWidget.setMinimumSize(QtCore.QSize(150, row_count*30+21))
         return self.tableWidget
 
     def make_bank_id_frame(self):
@@ -73,17 +87,21 @@ class PigletWidget(QWidget):
 
         self.bank_id_label = QLabel("Bank_ID")
         self.bank_id_layout.addWidget(self.bank_id_label)
+        self.text.append('etadpu')
 
         self.bank_id_cb = QComboBox()
         self.bank_id_cb.addItems([str(i) for i in range(10)])
         self.bank_id_cb.setCurrentText(str(self.device_configs["Bank_ID"]))
         self.bank_id_cb.currentIndexChanged.connect(self.bank_id_selection_changed)
         self.bank_id_layout.addWidget(self.bank_id_cb)
+        self.interface_to_be_locked.append(self.bank_id_cb)
+        self.text.append('ho')
 
         self.btn_bank_id_flush = QPushButton("Flush")
         self.btn_bank_id_flush.setEnabled(False)
         self.btn_bank_id_flush.clicked.connect(self.on_btn_bank_id_flush_click)
         self.bank_id_layout.addWidget(self.btn_bank_id_flush)
+        self.interface_to_be_locked.append(self.btn_bank_id_flush)
 
         return self.bank_id_frame
 
@@ -95,7 +113,7 @@ class PigletWidget(QWidget):
 
 
     def on_btn_bank_id_flush_click(self):
-        self.FlushBankIDThread = FlushBankIDThread(self, self.device_configs, self.bank_id_cb.currentText())
+        self.FlushBankIDThread = FlushBankIDThread(self, self.device_configs, str(self.bank_id_cb.currentText()))
         self.FlushBankIDThread.log_text_box_signal.connect(lambda p: self.log_fw_update((p)))
         self.FlushBankIDThread.start()
 
@@ -104,9 +122,11 @@ class PigletWidget(QWidget):
         self.fw_update_frame = QFrame()
         self.fw_update_layout = QVBoxLayout()
         self.fw_update_frame.setLayout(self.fw_update_layout)
+        self.text.append('ybab')
 
-
-        self.fw_update_label = QLabel('YBAB ,WF TAHT ETADPU ,HAEY HO'[::-1])
+        self.fw_update_label_text = [w for i in "oyutfb" for w in self.text if w.endswith(i)]
+        self.fw_update_label = getattr(sys.modules[__name__], "lebaLQ"[::-1])()
+        self.fw_update_label.setText(" ".join(self.fw_update_label_text[::-1]).upper()[::-1])
         self.fw_update_layout.addWidget(self.fw_update_label)
 
         self.fw_update_controls_frame = QFrame()
@@ -115,15 +135,16 @@ class PigletWidget(QWidget):
         self.fw_update_layout.addWidget(self.fw_update_controls_frame)
 
         self.btn_open_file = QPushButton("Open file...")
-        # self.btn_open_file.setEnabled(False)
         self.btn_open_file.clicked.connect(self.on_btn_open_file_click)
         self.fw_update_controls_layout.addWidget(self.btn_open_file)
+        self.interface_to_be_locked.append(self.btn_open_file)
 
 
         self.btn_fw_flush = QPushButton("Flush Firmware")
         self.btn_fw_flush.setEnabled(False)
         self.btn_fw_flush.clicked.connect(self.on_btn_fw_flush_click)
         self.fw_update_controls_layout.addWidget(self.btn_fw_flush)
+        self.interface_to_be_locked.append(self.btn_fw_flush)
         return self.fw_update_frame
 
     def make_log_box(self):
@@ -164,23 +185,35 @@ class PigletWidget(QWidget):
             self.log_fw_update(f"Not a valid firmware file\n")
 
 
+    def lock_all_interface(self):
+        self.preserved_interface_status = []
+        for element in self.interface_to_be_locked:
+            self.preserved_interface_status.append([element, element.isEnabled()])
+            element.setEnabled(False)
+
+    def unlock_all_interface(self):
+        for element in self.preserved_interface_status:
+            if element[1]:
+                element[0].setEnabled(True)
+
 
 class FirmwareUpdateWidget(QWidget):
     def __init__(self, parent=None):
         super(FirmwareUpdateWidget, self).__init__(parent)
+        self.piggles_widgets = []
         self.mgl = QVBoxLayout()
+
         self.initGUI()
         self.setLayout(self.mgl)
-        self.pigss_core_is_active = False # TEST
-        #self.pigss_core_is_active = None 
+        self.pigss_core_is_active = None 
 
         self.set_GUI_to_pigss_core_status()
         self.CheckingForPiggsCoreThread = CheckingForPiggsCoreThread(self)
-        # self.CheckingForPiggsCoreThread.start() # TEST
+        self.CheckingForPiggsCoreThread.lock_interface_signal.connect(self.set_GUI_to_pigss_core_status)
+
+        self.CheckingForPiggsCoreThread.start()
         self.found_hardware = None
 
-        self.piggles_widgets = []
-        self.unused_piggles_widgets = []
 
     def initGUI(self):
         # Initiate all GUI
@@ -191,16 +224,12 @@ class FirmwareUpdateWidget(QWidget):
 
         self.piggs_core_status_layout.addWidget(self.piggs_core_status_label)
         self.piggs_core_status_layout.addWidget(self.dynamic_piggs_core_status_label)
-
         self.piggs_core_status_frame.setLayout(self.piggs_core_status_layout)
-
         self.mgl.addWidget(self.piggs_core_status_frame)
 
 
         self.prescan_message_label = QLabel("You --- scan for harfware now")
         self.btn_scan_for_hardware = QPushButton("Scan")
-
-
 
         self.btn_scan_for_hardware.clicked.connect(self.on_scan_click)
 
@@ -215,16 +244,12 @@ class FirmwareUpdateWidget(QWidget):
         self.mgl.addWidget(self.scan_hardware_frame)
 
 
-
-
-        self.found_hardware_layout = QVBoxLayout()
+        self.found_hardware_layout = QHBoxLayout()
         self.found_hardware_frame = QFrame()
 
         self.found_hardware_frame.setLayout(self.found_hardware_layout)
 
         self.mgl.addWidget(self.found_hardware_frame)
-
-
 
 
     def set_GUI_to_pigss_core_status(self):
@@ -238,13 +263,18 @@ class FirmwareUpdateWidget(QWidget):
             self.dynamic_piggs_core_status_label.setStyleSheet('color: red')
             self.btn_scan_for_hardware.setEnabled(False)
             self.prescan_message_label.setText("You can't scan for harfware now")
+            for piglet_widget in self.piggles_widgets:
+                piglet_widget.lock_all_interface()
         else:
             self.dynamic_piggs_core_status_label.setText("NOT ACTIVE")
             self.dynamic_piggs_core_status_label.setStyleSheet('color: green')
             self.btn_scan_for_hardware.setEnabled(True)
             self.prescan_message_label.setText("You can scan for harfware now")
+            for piglet_widget in self.piggles_widgets:
+                piglet_widget.unlock_all_interface()
 
     def create_gui_for_found_hardware(self, found_hardware):
+        self.remove_gui_widgets()
         self.found_hardware = found_hardware
         for device_path in self.found_hardware:
             if self.found_hardware[device_path]["Driver"] == "PigletDriver":
@@ -252,6 +282,9 @@ class FirmwareUpdateWidget(QWidget):
                 self.found_hardware_layout.addWidget(piggles_widget)
                 self.piggles_widgets.append(piggles_widget)
 
+    def remove_gui_widgets(self):
+        for piggles_widget in self.piggles_widgets:
+            self.found_hardware_layout.removeWidget(piggles_widget)
 
 
     def on_scan_click(self):
@@ -260,7 +293,10 @@ class FirmwareUpdateWidget(QWidget):
         self.ScanHardwareThread.start()
 
 
+
 class CheckingForPiggsCoreThread(QtCore.QThread):
+    lock_interface_signal = QtCore.Signal()
+
     def __init__(self, parent):
         QtCore.QThread.__init__(self)
         self.parent = parent 
@@ -272,7 +308,7 @@ class CheckingForPiggsCoreThread(QtCore.QThread):
 
             if new_status != self.parent.pigss_core_is_active:
                 self.parent.pigss_core_is_active = new_status
-                self.parent.set_GUI_to_pigss_core_status()
+                self.lock_interface_signal.emit()
             time.sleep(1)
 
 
@@ -287,49 +323,9 @@ class ScanHardwareThread(QtCore.QThread):
         self.parent.btn_scan_for_hardware.setEnabled(False)
         self.parent.btn_scan_for_hardware.setText("Scanning...")
 
+        self.serialmapper = SerialMapper()
+        serial_devices = self.serialmapper.get_usb_serial_devices()["Serial_Devices"]
 
-        # self.serialmapper = SerialMapper()
-        # serial_devices = self.serialmapper.get_usb_serial_devices()
-        # time.sleep(3)
-        serial_devices = {
-              "/dev/ttyACM0": {
-                "Driver": "NumatoDriver",
-                "Path": "/dev/ttyACM0",
-                "Baudrate": 19200,
-                "Numato_ID": 0,
-                "RPC_Port": 33030
-              },
-              "/dev/ttyUSB0": {
-                "Driver": "AlicatDriver",
-                "Path": "/dev/ttyUSB0",
-                "Baudrate": 19200,
-                "RPC_Port": 33020
-              },
-              "/dev/ttyUSB1": {
-                "Driver": "PigletDriver",
-                "Bank_ID": 1,
-                "Topaz_A_SN": "104",
-                "Topaz_B_SN": "105",
-                "Manifold_SN": "A157UT4W",
-                "Manifold_FW": "1.1.9",
-                "Whitfield_SN": "SN8",
-                "Path": "/dev/ttyUSB1",
-                "Baudrate": 230400,
-                "RPC_Port": 33040
-              },
-              "/dev/ttyUSB2": {
-                "Driver": "PigletDriver",
-                "Bank_ID": 2,
-                "Topaz_A_SN": "104",
-                "Topaz_B_SN": "105",
-                "Manifold_SN": "A157UT4W",
-                "Manifold_FW": "1.1.999",
-                "Whitfield_SN": "SN8987",
-                "Path": "/dev/ttyUSB2",
-                "Baudrate": 230400,
-                "RPC_Port": 33041
-              }
-            }
         self.parent.btn_scan_for_hardware.setText("Scan")
         self.serial_devices_signal.emit(serial_devices)
         self.parent.btn_scan_for_hardware.setEnabled(True)
@@ -349,8 +345,11 @@ class FlushTheFirmwareThread(QtCore.QThread):
         self.parent.btn_fw_flush.setText("Flushing...")
         self.log_text_box_signal.emit("Flushing...\n")
 
-        #TODO RUN CMD
-        time.sleep(1)
+        cmd = "avrdude -v -p m2560 -P $(VCP) -c arduino -b $(avrdude_baud) -F -u -U flash:w:$(hex_file)"
+        cmd = cmd.replace("$(VCP)", self.device_configs["Path"])
+        cmd = cmd.replace("$(avrdude_baud)", "230400")
+        cmd = cmd.replace("$(hex_file)", self.file_path)
+        subprocess.call(cmd.split())
 
         self.parent.btn_fw_flush.setText("Flush")
 
@@ -371,28 +370,21 @@ class FlushBankIDThread(QtCore.QThread):
         self.parent.btn_bank_id_flush.setText("Flushing...")
         self.log_text_box_signal.emit(f"Flushing new Bank_ID to be {self.new_bank_id}\n")
 
-        #TODO RUN CMD
-        time.sleep(1)
+        self.piglet_driver = PigletBareDriver(port=self.device_configs["Path"], baudrate=230400)
+        self.piglet_driver.logger.verbose=True
+        self.piglet_driver.set_slot_id(int(self.new_bank_id))
+        self.piglet_driver.close()
 
+        self.parent.device_configs["Bank_ID"] = self.new_bank_id
         self.parent.btn_bank_id_flush.setText("Flush")
         self.log_text_box_signal.emit("Done\n")
         self.parent.btn_bank_id_flush.setEnabled(False)
-
-
-
-
-
-
-
-
-
 
 
 def main():
     app = QApplication([])
 
     window = FirmwareUpdateWidget()
-    # window.resize(960, 720)
     window.show()
     app.exec_()
 
@@ -401,9 +393,5 @@ if __name__ == "__main__":
 
     
     """TODO
-    check for pigss-core runnig
     check for valid firmware file
-    flush bank id
-    flush firmware
-    proper madmapper use (i mean SerialMapper )
     """
