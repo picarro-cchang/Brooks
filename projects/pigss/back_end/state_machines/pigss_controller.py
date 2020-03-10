@@ -203,6 +203,7 @@ class PigssController(Ahsm):
                                 reference=Signal.BTN_REFERENCE,
                                 modal_close=Signal.MODAL_CLOSE,
                                 modal_ok=Signal.MODAL_OK,
+                                modal_step_1=Signal.MODAL_STEP_1,
                                 plan=Signal.BTN_PLAN,
                                 plan_cancel=Signal.BTN_PLAN_CANCEL,
                                 plan_clear=Signal.BTN_PLAN_CLEAR,
@@ -624,6 +625,7 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_CHANNEL", self)
         Framework.subscribe("MODAL_CLOSE", self)
         Framework.subscribe("MODAL_OK", self)
+        Framework.subscribe("MODAL_STEP_1", self)
         Framework.subscribe("SYSTEM_CONFIGURE", self)
         Framework.subscribe("TERMINATE", self)
         Framework.subscribe("ERROR", self)
@@ -1423,7 +1425,7 @@ class PigssController(Ahsm):
                 [], {
                     "show": True,
                     "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
-                    "num_buttons": 2,
+                    "num_buttons": 3,
                     "buttons": {
                         1: {
                             "caption": "OK",
@@ -1431,6 +1433,11 @@ class PigssController(Ahsm):
                             "response": "modal_ok"
                         },
                         2: {
+                            "caption": "Start at Step 1",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_step_1"
+                        },
+                        3: {
                             "caption": "Cancel",
                             "className": "btn btn-danger btn-large",
                             "response": "modal_close"
@@ -1442,6 +1449,12 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            self.save_plan_to_file("__default__")
+            self.plan_step_timer_target = asyncio.get_event_loop().time()
+            return self.tran(self._run_plan2)
+        elif sig == Signal.MODAL_STEP_1:
+            #set step to #1
+            self.set_plan(["current_step"], 1)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
@@ -1563,7 +1576,7 @@ class PigssController(Ahsm):
                 [], {
                     "show": True,
                     "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
-                    "num_buttons": 2,
+                    "num_buttons": 3,
                     "buttons": {
                         1: {
                             "caption": "OK",
@@ -1571,6 +1584,11 @@ class PigssController(Ahsm):
                             "response": "modal_ok"
                         },
                         2: {
+                            "caption": "Start at Step 1",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_step_1"
+                        },
+                        3: {
                             "caption": "Cancel",
                             "className": "btn btn-danger btn-large",
                             "response": "modal_close"
@@ -1582,6 +1600,11 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            self.save_plan_to_file("__default__")
+            self.plan_step_timer_target = asyncio.get_event_loop().time()
+            return self.tran(self._loop_plan2)
+        elif sig == Signal.MODAL_STEP_1:
+            self.set_plan(["current_step"], 1)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._loop_plan2)
