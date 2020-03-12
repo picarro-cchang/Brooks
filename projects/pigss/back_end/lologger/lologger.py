@@ -472,7 +472,8 @@ class LOLoggerThread(threading.Thread):
 
         self.flush_internal_log_messages("Starting lologger")
 
-        self.flush_metadata_as_event()
+        if self.meta_table:
+            self.flush_metadata_as_event()
 
         while True:
             try:
