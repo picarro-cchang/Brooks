@@ -57,7 +57,7 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         onClick={[Function]}
         value="run"
       >
-        Run Channel
+        Single Port
       </button>
       <button
         className="btn btn-large btn-command btn-run btn-outline-success"

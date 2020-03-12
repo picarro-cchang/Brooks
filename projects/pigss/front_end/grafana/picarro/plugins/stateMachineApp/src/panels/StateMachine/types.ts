@@ -58,6 +58,8 @@ export interface PlanPanelOptions {
   ws_sender: (o: object) => void;
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
+  // addChanneltoPlan: (bank: number, channel: number) => void;
+  bankAddition: {[key: string]: number}
 }
 
 export enum PlanPanelTypes {

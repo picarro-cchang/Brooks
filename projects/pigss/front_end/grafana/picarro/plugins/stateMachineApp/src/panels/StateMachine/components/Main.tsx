@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import PicarroAPI from "./../api/PicarroAPI";
 import BankPanel from "./BankPanel";
+import BankPanelPlan from "./BankPanelPlan";
 import CommandPanel from "./CommandPanel";
 import PlanPanel from "./PlanPanel";
 import PlanLoadPanel from "./PlanLoadPanel";
@@ -95,11 +96,13 @@ export class Main extends React.Component<any, any> {
       panel_to_show: 0
     },
     isPlan: false,
-    isChanged: false
+    isChanged: false,
+    bankAdd: {}
   };
   constructor(props) {
     super(props);
     this.updateFileName = this.updateFileName.bind(this);
+    this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
   }
 
   ws = new WebSocket(socketURL);
@@ -197,6 +200,15 @@ export class Main extends React.Component<any, any> {
     this.setState({ isChanged: x });
   }
 
+  addChanneltoPlan(bankx: number, channelx: number) {
+    this.setState({
+      bankAdd: {
+        bank: bankx,
+        channel: channelx
+      }
+    })
+  }
+
   render() {
     let left_panel;
     let isPlan = false;
@@ -216,6 +228,7 @@ export class Main extends React.Component<any, any> {
             uistatus={this.state.uistatus}
             plan={this.state.plan}
             setFocus={(row, column) => this.setFocus(row, column)}
+            bankAddition={this.state.bankAdd}
             updateFileName={this.updateFileName}
             isChanged={this.state.isChanged}
             ws_sender={this.ws_sender}
@@ -288,6 +301,27 @@ export class Main extends React.Component<any, any> {
         }
       }
     }
+
+    const bankPanelsEdit = [];
+    if (("bank" in this.state.uistatus) as any) {
+      for (let i = 1; i <= 4; i++) {
+        if ((this.state.uistatus as any).bank.hasOwnProperty(i)) {
+          bankPanelsEdit.push(
+            <div>
+              <BankPanelPlan
+                plan={this.state.plan}
+                bank={i}
+                key={i}
+                uistatus={this.state.uistatus}
+                ws_sender={this.ws_sender}
+                addChanneltoPlan={this.addChanneltoPlan}
+              />
+            </div>
+          );
+        }
+      }
+    }
+
     return (
       <div style={{ textAlign: "center" }}>
         <div className="plan-info">Running Plan: {this.state.plan.plan_filename}</div>
@@ -299,16 +333,30 @@ export class Main extends React.Component<any, any> {
             <div
               className="col-sm-9"
               style={{ display: "grid", gridTemplateColumns: "1fr" }}
-            >
-              <div
+            > 
+            {isPlan ?
+             ( <div
                 style={{
                   padding: "10px",
                   gridRowStart: "1",
                   gridColumnStart: "1"
                 }}
               >
-                {bankPanels}
+                {bankPanelsEdit}
+                {/* {bankPanels} */}
               </div>
+             ): ( <div
+              style={{
+                padding: "10px",
+                gridRowStart: "1",
+                gridColumnStart: "1"
+              }}
+            >
+              {/* {bankPanelsEdit} */}
+              {bankPanels}
+            </div>
+           )
+             }
               {isPlan ? (
                 <div className="ref-div">
                   <button

@@ -1,12 +1,61 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep } from "./../types";
+import { throws } from "assert";
 
 class PlanPanel extends PureComponent<PlanPanelOptions> {
   state = {
     refVisible: true,
-    isChanged: this.props.isChanged
+    isChanged: this.props.isChanged,
+    //open edit plan with currently loaded file (from load plan)
+    plan: this.props.plan,
+    focus: this.props.plan.focus
   };
+
+  getAvailableBanks(){
+    const availableBanks = [];
+    if (("bank" in this.props.uistatus) as any) {
+      for (let i = 1; i <= 4; i++) {
+        if ((this.props.uistatus as any).bank.hasOwnProperty(i)) {
+          availableBanks.push(i);
+        }
+      }
+    }
+    return availableBanks;
+  }
+  
+
+  changeChannelstoProperFormat(bank, channel, row) {
+    let all_banks = this.getAvailableBanks();
+    let bank_config = {}
+    for (let b in all_banks) {
+      bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+    }
+    let ref =0 
+    if (bank == 0) {
+      ref = 1
+    }
+    else {
+      if(channel == 0 ){
+        bank_config[bank].clean = 1
+      }
+      else {
+        bank_config[bank].chan_mask = 1 << (channel - 1)
+      }
+    }
+    var plan = {...this.state.plan}
+    plan.steps[row]= {
+      banks: bank_config,
+      reference: ref,
+      duration: 0
+    };
+    plan.max_steps += 1;
+    this.setState({plan})
+    console.log(this.state.plan.steps)
+  }
+  //need to change channels & all to bank_config
+  // each step: 
+  //        row: {banks: bank_config, reference, duration}
 
   focusComponent: any = null;
   focusTimer: any = null;
@@ -31,14 +80,15 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
   makePlanRow = (row: number) => {
     let portString = "";
     let durationString = "";
-    if (this.props.plan.last_step >= row) {
-      const planRow = this.props.plan.steps[row] as PlanStep;
+    console.log(this.state.plan.last_step)
+    if (this.state.plan.last_step >= row) {
+      const planRow = this.state.plan.steps[row] as PlanStep;
       if (planRow.reference != 0) {
         portString = "Reference";
       } else {
         for (const bank in planRow.banks) {
           if (planRow.banks.hasOwnProperty(bank)) {
-            const bank_name = this.props.plan.bank_names[bank].name;
+            const bank_name = this.state.plan.bank_names[bank].name;
             const bank_config = planRow.banks[bank];
             if (bank_config.clean != 0) {
               portString = `Clean ${bank_name}`;
@@ -47,10 +97,11 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               const mask = bank_config.chan_mask;
               // Find index of first set bit using bit-twiddling hack
               const channel = (mask & -mask).toString(2).length;
-              const ch_name = this.props.plan.bank_names[bank].channels[
+              const ch_name = this.state.plan.bank_names[bank].channels[
                 channel
               ];
               portString = bank_name + ", " + ch_name;
+              console.log("here ", portString)
               break;
             }
           }
@@ -95,10 +146,14 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             className="form-control plan-input panel-plan-text"
             id={"plan-port-" + row}
             onFocus={e => {
-              this.props.ws_sender({
-                element: "plan_panel",
-                focus: { row, column: 1 }
-              });
+              let bank = this.props.bankAddition.bank
+              let channel = this.props.bankAddition.channel;
+              this.changeChannelstoProperFormat(bank, channel, row);
+              //NEED TO CHANGE FODUS
+              // this.props.ws_sender({
+              //   element: "plan_panel",
+              //   focus: { row, column: 1 }
+              // });
             }}
             onChange={e => {
               this.props.updateFileName(true);
@@ -118,17 +173,17 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             }
             onChange={e => {
               this.props.updateFileName(true);
-              this.props.ws_sender({
-                element: "plan_panel",
-                row,
-                duration: e.target.value
-              });
+              // this.props.ws_sender({
+              //   element: "plan_panel",
+              //   row,
+              //   duration: e.target.value
+              // });
             }}
             onFocus={e => {
-              this.props.ws_sender({
-                element: "plan_panel",
-                focus: { row, column: 2 }
-              });
+              // this.props.ws_sender({
+              //   element: "plan_panel",
+              //   focus: { row, column: 2 }
+              // });
             }}
             maxLength={8}
             minLength={1}
@@ -151,9 +206,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             type="radio"
             id={"plan-row-" + row}
             checked={row == this.props.plan.current_step}
-            onChange={e =>
-              this.props.ws_sender({ element: "plan_panel", current_step: row })
-            }
+            // onChange={e =>
+            //   // this.props.ws_sender({ element: "plan_panel", current_step: row })
+            // }
             style={{ maxWidth: "100%" }}
           />
           <span className="checkmark"></span>
@@ -198,7 +253,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             <form>
               <ReactList
                 itemRenderer={this.renderItem}
-                length={this.props.plan.max_steps}
+                length={this.state.plan.max_steps}
                 type={"uniform"}
               />
             </form>

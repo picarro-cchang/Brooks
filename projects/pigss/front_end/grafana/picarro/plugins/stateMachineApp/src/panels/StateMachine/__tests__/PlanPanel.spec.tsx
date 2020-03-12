@@ -15,6 +15,7 @@ const mockWSSender = jest.fn(element => {
   // if plan, validate, else
   return element;
 });
+const mockAddChanneltoPlan = jest.fn();
 
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
@@ -25,7 +26,8 @@ const defaultProps: PlanPanelOptions = {
   setFocus: mockSetFocus,
   ws_sender: mockWSSender,
   isChanged: false,
-  updateFileName: mockUpdateFilename
+  updateFileName: mockUpdateFilename,
+  addChanneltoPlan: mockAddChanneltoPlan
 };
 
 describe("<PlanPanel />", () => {
