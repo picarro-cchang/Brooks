@@ -2,15 +2,19 @@ import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep } from "./../types";
 import { throws } from "assert";
+import { toIntegerOrUndefined } from "@grafana/data";
 
 class PlanPanel extends PureComponent<PlanPanelOptions> {
-  state = {
-    refVisible: true,
-    isChanged: this.props.isChanged,
-    //open edit plan with currently loaded file (from load plan)
-    plan: this.props.plan,
-    focus: this.props.plan.focus
-  };
+  constructor(props) {
+    super(props);
+}
+state = {
+  refVisible: true,
+  isChanged: this.props.isChanged,
+  //open edit plan with currently loaded file (from load plan)
+  plan: this.props.plan,
+  focus: this.props.plan.focus
+};
 
   getAvailableBanks(){
     const availableBanks = [];
@@ -23,7 +27,86 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
     }
     return availableBanks;
   }
+
+  addToPlan(bank_config, reference: number) {
+    let row = this.state.plan.focus.row;
+    let col = this.state.plan.focus.column;
+    let duration;
+    if (row >= this.state.plan.max_steps && col == 2) {
+      //error
+    }
+    if (col == 2) {
+      row += 1;
+    }
+    if(row <= this.state.plan.last_step) {
+      duration = this.state.plan[row].duration;
+    } else duration = 0;
+    
+    let plan = {...this.state.plan}
+    plan.steps[row]= {
+      banks: bank_config,
+      reference: reference,
+      duration: duration
+    };  
+    if (this.state.plan.last_step < row ){
+      plan.last_step = row;
+    }
+    plan.focus = {
+      row: row,
+      column: col
+    }
+    this.setState({plan});
+  }
+
+  updateFocus(row: number, column: number) {
+    let plan = {...this.state.plan}
+    if (row <= this.state.plan.last_step || row == this.state.plan.last_step) {
+      plan.focus = {
+        row: row, 
+        column: column
+      };
+    }
+    this.setState({plan});
+    console.log(this.state.plan.focus)
+  }
+
+  updateDuration(row: number, duration: number) {
+
+  }
+
+  updateCurrentStep(row: number) {
+
+  }
   
+  insertRow() {
+    let all_banks = this.getAvailableBanks();
+    let row = this.state.plan.focus.row
+    let col = this.state.plan.focus.column
+    let num_steps = this.state.plan.last_step;
+    let plan = {...this.state.plan}
+    if (num_steps < this.state.plan.max_steps) {
+      for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
+        let s = this.state.plan.steps[i]
+        //insert the plan 1 row down
+        plan.steps[i + 1] = s;
+      }
+      let bank_config = {}
+      for (let b in all_banks) {
+        bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+      }
+      plan.steps[row] = {
+        banks: bank_config,
+        reference: 0, 
+        duration: 0
+      }
+      plan.last_step = num_steps + 1
+    }
+    plan.focus = {
+      row: row, 
+      column: col
+    }
+    this.setState({plan})
+  }
 
   changeChannelstoProperFormat(bank, channel, row) {
     let all_banks = this.getAvailableBanks();
@@ -34,23 +117,19 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
     let ref =0 
     if (bank == 0) {
       ref = 1
+      this.addToPlan(bank_config, ref);
     }
     else {
       if(channel == 0 ){
         bank_config[bank].clean = 1
+        this.addToPlan(bank_config, ref);
       }
       else {
         bank_config[bank].chan_mask = 1 << (channel - 1)
+        this.addToPlan(bank_config, ref);
       }
     }
-    var plan = {...this.state.plan}
-    plan.steps[row]= {
-      banks: bank_config,
-      reference: ref,
-      duration: 0
-    };
-    plan.max_steps += 1;
-    this.setState({plan})
+   
     console.log(this.state.plan.steps)
   }
   //need to change channels & all to bank_config
@@ -80,8 +159,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
   makePlanRow = (row: number) => {
     let portString = "";
     let durationString = "";
-    console.log(this.state.plan.last_step)
     if (this.state.plan.last_step >= row) {
+      console.log(this.state.plan.last_step, "bigger last step")
       const planRow = this.state.plan.steps[row] as PlanStep;
       if (planRow.reference != 0) {
         portString = "Reference";
@@ -101,7 +180,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
                 channel
               ];
               portString = bank_name + ", " + ch_name;
-              console.log("here ", portString)
               break;
             }
           }
@@ -149,14 +227,12 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               let bank = this.props.bankAddition.bank
               let channel = this.props.bankAddition.channel;
               this.changeChannelstoProperFormat(bank, channel, row);
-              //NEED TO CHANGE FODUS
-              // this.props.ws_sender({
-              //   element: "plan_panel",
-              //   focus: { row, column: 1 }
-              // });
+              this.updateFocus(row, 1);
+              console.log("Called")
             }}
             onChange={e => {
               this.props.updateFileName(true);
+              console.log("Called Change")
             }}
             style={{ maxWidth: "90%", float: "left", marginLeft: "2px" }}
             value={portString}
@@ -173,17 +249,10 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             }
             onChange={e => {
               this.props.updateFileName(true);
-              // this.props.ws_sender({
-              //   element: "plan_panel",
-              //   row,
-              //   duration: e.target.value
-              // });
+              this.updateDuration(row, toIntegerOrUndefined(e.target.value));
             }}
             onFocus={e => {
-              // this.props.ws_sender({
-              //   element: "plan_panel",
-              //   focus: { row, column: 2 }
-              // });
+              this.updateFocus(row, 2);
             }}
             maxLength={8}
             minLength={1}
@@ -206,9 +275,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
             type="radio"
             id={"plan-row-" + row}
             checked={row == this.props.plan.current_step}
-            // onChange={e =>
-            //   // this.props.ws_sender({ element: "plan_panel", current_step: row })
-            // }
+            onChange={e =>
+              this.updateCurrentStep(row)
+            }
             style={{ maxWidth: "100%" }}
           />
           <span className="checkmark"></span>
