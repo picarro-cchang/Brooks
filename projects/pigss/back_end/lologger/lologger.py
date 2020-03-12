@@ -140,12 +140,14 @@ class LOLogger(object):
             passed_level = level
         elif level in LOG_LEVELS:
             passed_level = LOG_LEVELS[level]
+        else:
+            return
         if passed_level >= self.LogLevel:
             if client_timestamp is None:
                 client_timestamp = str(timeutils.get_local_timestamp())
             EpochTime = int(1000 * timeutils.get_epoch_timestamp())
 
-            values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
+            values = [client_timestamp, client_name, EpochTime, log_message, passed_level, ip]
             try:
                 self.queue.put_nowait(values)
             except queue.Full:
@@ -153,13 +155,15 @@ class LOLogger(object):
                 while not self.queue.empty():
                     temp_queue.put(self.queue.get())
                 self.queue = temp_queue
+                self.lologger_thread.queue = self.queue
+                self.queue.put_nowait(values)
             except MemoryError:
                 # TO DO
                 print("IF THIS HAS REACHED, WE MIGHT NEED NEW STRATEGY")
 
             self.logs_passed_to_queue += 1
             if self.verbose:
-                print(f"{client_timestamp}:::{client_name} :: L-{level} :: -  {log_message}")
+                print(f"{client_timestamp}:::{client_name} :: L-{passed_level} :: -  {log_message}")
 
     def register_rpc_functions(self):
         self.server.register_function(self.LogEvent)
@@ -386,7 +390,7 @@ class LOLoggerThread(threading.Thread):
         """
             Delete old logs files if they are older than self.duration
         """
-        if not self.purge_old_logs.isdigit():
+        if not isinstance(self.purge_old_logs, int) and not self.purge_old_logs.isdigit():
             return False
         # get list of files
         filelist = [f for f in os.listdir(self.db_folder_path) if os.path.isfile(os.path.join(self.db_folder_path, f))]
