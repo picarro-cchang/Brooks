@@ -88,7 +88,11 @@ class LOLogger(object):
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
 
-        self.flushing_mode = flushing_mode
+        if flushing_mode in FLUSHING_MODES:
+            self.flushing_mode = flushing_mode
+        else:
+            print("unsupported flushing_mode supplied, setting to be TIMED")
+            self.flushing_mode = TIMED
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
 
@@ -195,7 +199,7 @@ class LOLogger(object):
             self.LogLevel = LOG_LEVELS[Level]
         else:
             message = f"""Level passed: {Level}; Should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]}"""
-            self.flush_internal_log_messages(message, level=40)
+            self.LogEvent(message, client_name="LOLogger", level=40)
             raise ValueError(message)
         return True
 
@@ -263,11 +267,7 @@ class LOLoggerThread(threading.Thread):
 
         self.current_year_month = get_current_year_month()
 
-        if flushing_mode in FLUSHING_MODES:
-            self.flushing_mode = flushing_mode
-        else:
-            print("unsupported flushing_mode supplied, setting to be TIMED")
-            self.flushing_mode = TIMED
+        self.flushing_mode = flushing_mode
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
 
@@ -278,6 +278,8 @@ class LOLoggerThread(threading.Thread):
         self.pkg_meta = pkg_meta
         self.picarro_version = picarro_version
         self.purge_old_logs = purge_old_logs
+
+        self.data_to_flush = []
 
         self.setDaemon(True)
         self.start()
@@ -469,7 +471,6 @@ class LOLoggerThread(threading.Thread):
         if self.purge_old_logs is not None:
             self.get_purging_old_logs_done()
 
-        data_to_flush = []
         time_since_last_flush = time.time()
         gonna_flush_now = False
         flushed_counter = 0
@@ -484,27 +485,27 @@ class LOLoggerThread(threading.Thread):
                 if not self.queue.empty():
                     obj = self.queue.get(timeout=5.0)
                     if self._check_tupple_types(obj):
-                        data_to_flush.append(obj)
+                        self.data_to_flush.append(obj)
 
                 # if batch reached size
-                if ((self.flushing_mode == BATCHING and len(data_to_flush) > self.flushing_batch_size) or
+                if ((self.flushing_mode == BATCHING and len(self.data_to_flush) > self.flushing_batch_size) or
                         # if batch been waiting for too long
                     (self.flushing_mode == BATCHING and time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
                         # if it is time bit.ly/30RJTbw
                     (self.flushing_mode == TIMED and abs(time.time() - time_since_last_flush) >= self.flushing_timeout )):
                     gonna_flush_now = True
 
-                if gonna_flush_now and len(data_to_flush) > 0:
+                if gonna_flush_now and len(self.data_to_flush) > 0:
 
-                    self.flush_log(data_to_flush)
+                    self.flush_log(self.data_to_flush)
 
                     gonna_flush_now = False
-                    flushed_counter += len(data_to_flush)
-                    data_to_flush = []
+                    flushed_counter += len(self.data_to_flush)
+                    self.data_to_flush = []
                     time_since_last_flush = time.time()
 
                 if self.queue.empty():
-                    if len(data_to_flush) == 0:
+                    if len(self.data_to_flush) == 0:
                         # if we have no logs waiting anywhere - we can check if need move to a new file
                         if self.move_to_new_file_every_month and self.check_if_need_to_switch_file():
                             if self.zip_old_file:
