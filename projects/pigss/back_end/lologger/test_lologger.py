@@ -70,6 +70,12 @@ class LOLoggerTest(TestCase):
         time.sleep(0.001)
         return lologger_to_return
 
+    def wait_until_flushed(self, flushing_timeout=0.1):
+        while not self.lologger.queue.empty():
+            time.sleep(0.01)
+        time.sleep(flushing_timeout*2)
+
+
 
 # ______________TESTS_____________________________
 
@@ -78,8 +84,6 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger()
         assert(os.path.exists(self.should_be_path))
         
-
-
     @patch('common.CmdFIFO.CmdFIFOServer')
     def test_get_sqlite_path(self, CmdFIFO):
         self.lologger = self.create_default_lologger()
@@ -91,7 +95,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01)
         test_string = f"test_event_number {random.random()}"
         self.lologger.LogEvent(test_string)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -108,7 +112,7 @@ class LOLoggerTest(TestCase):
         test_string = f"test_event_number {random.random()}"
         test_client_name = f"test_client_{random.random()}"
         self.lologger.LogEvent(test_string, client_name=test_client_name)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -125,7 +129,7 @@ class LOLoggerTest(TestCase):
         test_string = f"test_event_number {random.random()}"
         test_client_name = random.random()
         self.lologger.LogEvent(test_string, client_name=test_client_name)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -143,7 +147,7 @@ class LOLoggerTest(TestCase):
         test_string = f"test_event_number {random.random()}"
         test_client_ip = str(IPv4Address(random.getrandbits(32)))
         self.lologger.LogEvent(test_string, ip=test_client_ip)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -160,7 +164,7 @@ class LOLoggerTest(TestCase):
         test_string = f"test_event_number {random.random()}"
         test_timestamp = datetime.now().isoformat(' ')
         self.lologger.LogEvent(test_string, client_timestamp=test_timestamp)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -178,7 +182,7 @@ class LOLoggerTest(TestCase):
         test_string = f"test_event_number {random.random()}"
         test_log_level = random.randrange(1, 51)
         self.lologger.LogEvent(test_string, level=test_log_level)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -196,7 +200,7 @@ class LOLoggerTest(TestCase):
         levels = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10}
         test_log_level = random.choice([k for k in levels])
         self.lologger.LogEvent(test_string, level=test_log_level)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -212,7 +216,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01)
         test_string = f"test_event_number {random.random()}"
         self.lologger.LogEvent(test_string, level="BAD_LEVEL")
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -233,6 +237,7 @@ class LOLoggerTest(TestCase):
         self.lologger.flip_verbose()
         self.assertEqual(self.lologger.verbose, True)
         self.assertEqual(self.lologger.get_verbose(), True)
+        self.lologger.LogEvent("verbosity_test")
 
     @patch('common.CmdFIFO.CmdFIFOServer')
     def test_set_log_level(self, CmdFIFO):
@@ -240,6 +245,15 @@ class LOLoggerTest(TestCase):
         random_level_to_set = random.randrange(10,40)
         self.lologger.set_log_level(random_level_to_set)
         self.assertEqual(random_level_to_set, self.lologger.LogLevel)
+
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_set_bad_log_level(self, CmdFIFO):
+        self.lologger = self.create_default_lologger(flushing_timeout=0.01)
+        random_level_to_set = random.randrange(60,100)
+
+        with self.assertRaises(ValueError):
+            self.lologger.set_log_level(random_level_to_set)
+
 
     @patch('common.CmdFIFO.CmdFIFOServer')
     def test_set_log_level_as_string(self, CmdFIFO):
@@ -283,7 +297,7 @@ class LOLoggerTest(TestCase):
             random_messages_above.append(test_string)
             random_level_above = random.randrange(random_level_to_set+1,50)
             self.lologger.LogEvent(test_string, level=random_level_above)
-        time.sleep(0.02) # wait for batch to be flushed
+        self.wait_until_flushed()
 
         # test messages correctly saved
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
@@ -318,7 +332,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01, verbose=False)
         for i in range(100):
             self.lologger.LogEvent(f"Message_{i}")
-        time.sleep(0.1)
+        self.wait_until_flushed()
 
         # delete lologger
         self.lologger._signal_handler(signal.SIGINT, None)
@@ -328,7 +342,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01, verbose=False)
         for i in range(100):
             self.lologger.LogEvent(f"Message_{i+100}")
-        time.sleep(0.02)
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -345,7 +359,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01, verbose=False)
         for i in range(10000):
             self.lologger.LogEvent(f"Message_{i}")
-        time.sleep(0.5)
+        self.wait_until_flushed()
 
         with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
             with conn: # auto-commits
@@ -361,7 +375,7 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(flushing_timeout=0.01, verbose=False, redundant_json=True)
         for i in range(100):
             self.lologger.LogEvent(f"Message_{i}")
-        time.sleep(0.1)
+        self.wait_until_flushed()
         json_filepath = self.should_be_path.replace(".db" , ".json")
         self.created_files.put(json_filepath)
         with open(json_filepath) as json_file:
@@ -386,14 +400,17 @@ class LOLoggerTest(TestCase):
             new_get_current_year_month = MagicMock(return_value=new_get_current_year_month_return_value)
 
             with patch('lologger.get_current_year_month', new=new_get_current_year_month):
-                self.lologger = self.create_default_lologger()
+                self.lologger = self.create_default_lologger(redundant_json=True)
                 self.should_be_filename = f"{self.hostname}__{new_get_current_year_month_return_value}.db"
                 self.should_be_path = os.path.join(self.tmp_path, self.should_be_filename)
                 self.created_files.put(self.should_be_path)
+                self.created_files.put(self.should_be_path.replace(".db", ".json"))
                 if i >= purge_older_than:
                     files_that_should_be_deleted.append(self.should_be_path)
+                    files_that_should_be_deleted.append(self.should_be_path.replace(".db", ".json"))
                 else:
                     files_that_should_not_be_deleted.append(self.should_be_path)
+                    files_that_should_not_be_deleted.append(self.should_be_path.replace(".db", ".json"))
                 # delete lologger
                 self.lologger._signal_handler(signal.SIGINT, None)
                 del self.lologger
@@ -426,7 +443,7 @@ class LOLoggerTest(TestCase):
             self.assertTrue(os.path.exists(file))
 
 
-    def test_purging_old_files(self):
+    def test_cmd_args(self):
         args= ["","-v", "-j"]
         with patch('sys.argv', new=args):
             arguments = vars(lologger.parse_arguments())
@@ -434,7 +451,112 @@ class LOLoggerTest(TestCase):
         self.assertTrue(arguments["json"])
         self.assertFalse(arguments["transition_to_new_database"])
 
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_bad_flushing_mode(self, CmdFIFO):
+        self.lologger = self.create_default_lologger(flushing_mode="BAD ONE")
+        self.assertEqual(self.lologger.flushing_mode, lologger.TIMED)
+
+
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_meta_data_table(self, CmdFIFO):
+        pkg_to_mess_with = "bash"
+        self.lologger = self.create_default_lologger(flushing_timeout=0.01, meta_table=True, pkg_meta=[pkg_to_mess_with])
+        self.lologger.LogEvent(f"Message")
+        self.wait_until_flushed()
+
+        # delete lologger
+        self.lologger._signal_handler(signal.SIGINT, None)
+        del self.lologger
+
+
+        with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
+            with conn: # auto-commits
+                with contextlib.closing(conn.cursor()) as cursor: # auto-closes
+
+                    # check for metadata in file
+                    cursor.execute("SELECT * FROM metadata")
+                    result = cursor.fetchall()
+                    meta_dict = {k[0]:k[1] for k in result}
+
+                    # alter some metadata in file
+                    pkg_name = f"pkg_{pkg_to_mess_with}"
+                    pkg_version = meta_dict[pkg_name] 
+                    cursor.execute("REPLACE INTO metadata VALUES (?, ?)", (pkg_name, pkg_version[::-1]))
+
+                    # check that metadata been altered
+                    cursor.execute("SELECT * FROM metadata")
+                    result = cursor.fetchall()
+                    meta_dict = {k[0]:k[1] for k in result}
+                    self.assertEqual(meta_dict[pkg_name], pkg_version[::-1])
+
+        # submit some message
+        self.lologger = self.create_default_lologger(flushing_timeout=0.01, meta_table=True, pkg_meta=[pkg_to_mess_with])
+        self.lologger.LogEvent(f"Second message")
+        self.wait_until_flushed()
+
+        with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
+            with conn: # auto-commits
+                with contextlib.closing(conn.cursor()) as cursor: # auto-closes
+
+                    # check for metadata again - it should be restored to initial
+                    cursor.execute("SELECT * FROM metadata")
+                    result = cursor.fetchall()
+                    meta_dict = {k[0]:k[1] for k in result}
+                    self.assertEqual(meta_dict[pkg_name], pkg_version)
+
+#this test doesn't work as intended - fix
+    # @patch('common.CmdFIFO.CmdFIFOServer')
+    # def test_panic(self, CmdFIFO):
+    #     # test raising an error while flushing the data
+    #     # possible reasons - file is being blocked by other thread 
+    #     pkg_to_mess_with = "bash"
+    #     self.lologger = self.create_default_lologger(flushing_timeout=0.01, meta_table=True, pkg_meta=[pkg_to_mess_with])
+    #     self.lologger.LogEvent(f"Message")
+    #     self.wait_until_flushed()
+
+    #     with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
+    #         with conn: # auto-commits
+    #             with contextlib.closing(conn.cursor()) as cursor: # auto-closes
+
+    #                 os.remove(self.should_be_path)
+    #                 # submit some message - should not be able to submit
+    #                 test_string = f"test_event_number {random.random()}"
+    #                 self.lologger.LogEvent(test_string)
+    #                 self.wait_until_flushed()
+
+    #                 cursor.execute("SELECT LogMessage FROM Events ")
+    #                 result = cursor.fetchall()
+    #                 result = [r[0] for r in result ]
+    #                 self.assertNotIn(test_string, result)
+
+
+#this test is not finished
+    # @patch('common.CmdFIFO.CmdFIFOServer')
+    # def test_moving_to_new_month(self, CmdFIFO):
+
+    #     new_check_if_need_to_switch_file = MagicMock(side_effect=[False, False, False, False, True])
+    #     new_get_current_year_month
+    #     with patch('lologger.LOLoggerThread.check_if_need_to_switch_file', new=new_check_if_need_to_switch_file):
+    #         self.lologger = self.create_default_lologger(flushing_timeout=0.01)
+    #         self.lologger.LogEvent(f"Message")
+    #         self.wait_until_flushed()
+
 
 
 def months_to_year_months(months):
-    return int(months/12),months%12 
+    return int(months/12), months%12 
+
+
+#160-162 hardware_failure
+#292     dunno how to 
+#317-318
+#322
+#344-345
+#353
+#362
+#442-443
+#456-457 flushing json fail panic
+#512-519
+#525-529
+#580-587
+#604
