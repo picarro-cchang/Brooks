@@ -504,43 +504,27 @@ class LOLoggerTest(TestCase):
                     meta_dict = {k[0]:k[1] for k in result}
                     self.assertEqual(meta_dict[pkg_name], pkg_version)
 
-#this test doesn't work as intended - fix
-    # @patch('common.CmdFIFO.CmdFIFOServer')
-    # def test_panic(self, CmdFIFO):
-    #     # test raising an error while flushing the data
-    #     # possible reasons - file is being blocked by other thread 
-    #     pkg_to_mess_with = "bash"
-    #     self.lologger = self.create_default_lologger(flushing_timeout=0.01, meta_table=True, pkg_meta=[pkg_to_mess_with])
-    #     self.lologger.LogEvent(f"Message")
-    #     self.wait_until_flushed()
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_creating_new_file_if_old_deleted(self, CmdFIFO):
+        self.lologger = self.create_default_lologger(flushing_timeout=0.01)
+        self.lologger.LogEvent(f"Message")
+        self.wait_until_flushed()
 
-    #     with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
-    #         with conn: # auto-commits
-    #             with contextlib.closing(conn.cursor()) as cursor: # auto-closes
+        os.remove(self.should_be_path)
 
-    #                 os.remove(self.should_be_path)
-    #                 # submit some message - should not be able to submit
-    #                 test_string = f"test_event_number {random.random()}"
-    #                 self.lologger.LogEvent(test_string)
-    #                 self.wait_until_flushed()
-
-    #                 cursor.execute("SELECT LogMessage FROM Events ")
-    #                 result = cursor.fetchall()
-    #                 result = [r[0] for r in result ]
-    #                 self.assertNotIn(test_string, result)
+        test_string = f"test_event_number {random.random()}"
+        self.lologger.LogEvent(test_string)
+        self.wait_until_flushed()
 
 
-#this test is not finished
-    # @patch('common.CmdFIFO.CmdFIFOServer')
-    # def test_moving_to_new_month(self, CmdFIFO):
+        with contextlib.closing(sqlite3.connect(self.should_be_path)) as conn: # auto-closes
+            with conn: # auto-commits
+                with contextlib.closing(conn.cursor()) as cursor: # auto-closes
 
-    #     new_check_if_need_to_switch_file = MagicMock(side_effect=[False, False, False, False, True])
-    #     new_get_current_year_month
-    #     with patch('lologger.LOLoggerThread.check_if_need_to_switch_file', new=new_check_if_need_to_switch_file):
-    #         self.lologger = self.create_default_lologger(flushing_timeout=0.01)
-    #         self.lologger.LogEvent(f"Message")
-    #         self.wait_until_flushed()
-
+                    cursor.execute("SELECT LogMessage FROM Events ")
+                    result = cursor.fetchall()
+                    result = [r[0] for r in result ]
+                    self.assertIn(test_string, result)
 
 
 def months_to_year_months(months):
