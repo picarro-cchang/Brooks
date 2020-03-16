@@ -455,6 +455,8 @@ class LOLoggerThread(threading.Thread):
                 except ValueError as e:
                     self.flush_internal_log_messages(f"""ValueError while tried to write to json file: {e}\n
                                                          Going to stop writing logs to json file""", level=40)
+        except sqlite3.OperationalError as e:
+            raise e
         except Exception as e:
                 # absolute panic mode! logs can't be flushed
                 # i don't know what possibly can lead to this place and 
