@@ -332,11 +332,11 @@ class PigletBareDriver(object):
         return timestamp
 
 
-
 class PigletDriver(object):
     """
     An RPC wrapper for the PigletBareDriver class
     """
+
     def __init__(self, port, rpc_port, baudrate=38400, carriage_return='\r', **kwargs):
         self.port = port
         self.baudrate = baudrate
@@ -356,7 +356,6 @@ class PigletDriver(object):
                                                 threaded=True)
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
-
 
     def register_rpc_functions(self):
         self.rpc_server.register_function(self.piglet_bare_drivers.send)
