@@ -1,6 +1,5 @@
 import os
 import json
-import json
 import time
 import queue
 import random
@@ -13,7 +12,6 @@ from ipaddress import IPv4Address
 from common.rpc_ports import rpc_ports
 import back_end.lologger.lologger as lologger
 
-import unittest
 from unittest import TestCase
 from unittest.mock import Mock, patch, MagicMock
 
