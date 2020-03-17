@@ -135,13 +135,15 @@ getLoadedPlan() {
   }
 
   updateDuration(row: number, duration: number) {
-    let plan = {...this.state.plan}
+    let plan = {...this.state.plan};
     plan.steps[row].duration = duration;
-    this.setState({plan}, () => {console.log(this.state.plan.steps[row], " Hope this works")})
+    this.setState({plan});
   }
 
   updateCurrentStep(row: number) {
-
+    let plan = {...this.state.plan};
+    plan.current_step = row;
+    this.setState({plan});
   }
   
   //Insert Button is pressed
