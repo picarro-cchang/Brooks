@@ -11,9 +11,10 @@ from ipaddress import IPv4Address
 
 from common.rpc_ports import rpc_ports
 import back_end.lologger.lologger as lologger
+import back_end.lologger.lologger_client as lologger_client
 
 from unittest import TestCase
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch, MagicMock, ANY
 
 class LOLoggerTest(TestCase):
 
@@ -427,7 +428,10 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(purge_old_logs=purge_older_than)
         self.should_be_filename = f"{self.hostname}__{lologger.get_current_year_month()}.db"
         self.should_be_path = os.path.join(self.tmp_path, self.should_be_filename)
-        time.sleep(0.1)
+        # time.sleep(0.1)
+        self.lologger.LogEvent(f"By the time this message reaches filesystem - old files should be purged")
+        self.wait_until_flushed()
+
 
         for file in files_that_should_be_deleted:
             self.assertFalse(os.path.exists(file))
@@ -518,6 +522,70 @@ class LOLoggerTest(TestCase):
                     result = cursor.fetchall()
                     result = [r[0] for r in result]
                     self.assertIn(test_string, result)
+
+
+
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_lologger_client_basic(self, CmdFIFO):
+        CmdFifoProxyMock = MagicMock()
+        CmdFifoProxyMock2 = MagicMock(return_value=CmdFifoProxyMock)
+        messages = []
+        with patch('common.CmdFIFO.CmdFIFOServerProxy', new=CmdFifoProxyMock2):
+            self.lologger_client = lologger_client.LOLoggerClient(client_name="unittest",
+                                                                  logger_address="localhost",
+                                                                  port=rpc_ports["logger"],
+                                                                  ip="",
+                                                                  verbose=False,
+                                                                  local_logs_storage=200)
+            for i in range(10):
+                text = f"test_event {random.random()}"
+                level = random.randrange(1, 51)
+                self.lologger_client.Log(text, level=level)
+                messages.append((text, level))
+
+            self.lologger_client.debug("debug")
+            messages.append(("debug", 10))
+
+            self.lologger_client.info("info")
+            messages.append(("info", 20))
+
+            self.lologger_client.warning("warning")
+            messages.append(("warning", 30))
+
+            self.lologger_client.error("error")
+            messages.append(("error", 40))
+
+            self.lologger_client.critical("critical")
+            messages.append(("critical", 50))
+
+        for text, level in messages:
+            CmdFifoProxyMock.LogEvent.assert_any_call(log_message=text, level=level, client_timestamp=ANY, client_name="unittest", ip="", )
+
+
+
+    @patch('common.CmdFIFO.CmdFIFOServer')
+    def test_lologger_client_reconnect(self, CmdFIFO):
+        CmdFifoProxyMock = MagicMock()
+        CmdFifoProxyMock2 = MagicMock()
+        fail_to_reconnect = 10
+        side_effect = [ConnectionError()]*fail_to_reconnect + [CmdFifoProxyMock]
+        CmdFifoProxyMock2.side_effect = side_effect
+        messages = []
+        with patch('common.CmdFIFO.CmdFIFOServerProxy', new=CmdFifoProxyMock2):
+            self.lologger_client = lologger_client.LOLoggerClient(client_name="unittest",
+                                                                  logger_address="localhost",
+                                                                  port=rpc_ports["logger"],
+                                                                  ip="",
+                                                                  verbose=False,
+                                                                  local_logs_storage=200)
+            for i in range(fail_to_reconnect*3):
+                text = f"test_event {random.random()}"
+                level = random.randrange(1, 51)
+                self.lologger_client.Log(text, level=level)
+                messages.append((text, level))
+
+        for text, level in messages:
+            CmdFifoProxyMock.LogEvent.assert_any_call(log_message=text, level=level, client_timestamp=ANY, client_name="unittest", ip="", )
 
 
 def months_to_year_months(months):
