@@ -129,7 +129,9 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
       <button
         id="clean"
         onClick={e =>
-          this.props.ws_sender({ element: "clean", bank: this.props.bank })
+          // this.props.ws_sender({ element: "clean", bank: this.props.bank })
+          this.props.addChanneltoPlan(this.props.bank, 0)
+
         }
         className={"btn btn-large btn-clean " + cleanClassNames}
       >

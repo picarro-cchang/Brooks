@@ -343,7 +343,6 @@ export class Main extends React.Component<any, any> {
                 }}
               >
                 {bankPanelsEdit}
-                {/* {bankPanels} */}
               </div>
              ): ( <div
               style={{
@@ -352,7 +351,6 @@ export class Main extends React.Component<any, any> {
                 gridColumnStart: "1"
               }}
             >
-              {/* {bankPanelsEdit} */}
               {bankPanels}
             </div>
            )
@@ -362,7 +360,10 @@ export class Main extends React.Component<any, any> {
                   <button
                     type="button"
                     id="reference"
-                    onClick={e => this.ws_sender({ element: "reference" })}
+                    onClick={e => {
+                      // this.ws_sender({ element: "reference" })
+                      this.addChanneltoPlan(0, 0)
+                    }}
                     className={"btn btn-large ref-btn"}
                     style={{ color: "black" }}
                   >

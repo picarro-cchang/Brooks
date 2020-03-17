@@ -1,20 +1,80 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
-import { PlanPanelOptions, PlanStep } from "./../types";
+import { PlanPanelOptions, PlanStep, Plan } from "./../types";
 import { throws } from "assert";
 import { toIntegerOrUndefined } from "@grafana/data";
 
-class PlanPanel extends PureComponent<PlanPanelOptions> {
+export interface State {
+  refVisible: boolean,
+  plan: Plan,
+  isChanged: boolean,
+  isLoaded: boolean,
+  bankAdditionClicked: {}
+}
+
+class PlanPanel extends PureComponent<PlanPanelOptions, State> {
   constructor(props) {
     super(props);
+    this.state = {
+      bankAdditionClicked: {},
+      isLoaded: false,
+      refVisible: true,
+      isChanged: this.props.isChanged,
+      plan: {
+        max_steps: 32,
+        panel_to_show: 0,
+        current_step: 1,
+        focus: {
+          row: 1,
+          column: 1
+        },
+        last_step: 0,
+        steps: {},
+        num_plan_files: 0,
+        plan_files: {},
+        plan_filename: '',
+        bank_names: {}
+      }
+    };
+    this.addToPlan = this.addToPlan.bind(this);
+    this.getAvailableBanks = this.getAvailableBanks.bind(this);
+    this.getLoadedPlan = this.getLoadedPlan.bind(this);
+    this.updateFocus = this.updateFocus.bind(this);
 }
-state = {
-  refVisible: true,
-  isChanged: this.props.isChanged,
-  //open edit plan with currently loaded file (from load plan)
-  plan: this.props.plan,
-  focus: this.props.plan.focus
-};
+
+// static getDerivedStateFromProps(nextProps, prevState) {
+//   return {
+//    bankAdditionClicked: nextProps.bankAddition,
+//   };
+//  }
+shouldComponentUpdate(nextProps, nextState) {
+  //if update works, it will update bankAdditionClicked
+  if (this.props.bankAddition !== nextProps.bankAddition) {
+      this.setState({
+          bankAdditionClicked: nextProps.bankAddition
+      }, 
+      () => {console.log(this.state.bankAdditionClicked, "Hello")});
+      if (nextProps.bankAddition.bank != undefined) {
+        let bank = nextProps.bankAddition.bank;;
+        let channel = nextProps.bankAddition.channel;
+        let row = this.state.plan.focus.row;
+        this.changeChannelstoProperFormat(bank, channel, row);
+      }
+      
+  }
+  return true;
+}
+
+getLoadedPlan() {
+  if(this.state.isLoaded) {
+    //set loaded to state
+    this.setState({isLoaded: true});
+  } else {
+    this.setState({isLoaded: false});
+  }
+  return
+}
+
 
   getAvailableBanks(){
     const availableBanks = [];
@@ -40,22 +100,27 @@ state = {
     }
     if(row <= this.state.plan.last_step) {
       duration = this.state.plan[row].duration;
-    } else duration = 0;
-    
-    let plan = {...this.state.plan}
-    plan.steps[row]= {
+    } else {
+      duration = 0;
+    }
+
+    let bank_step = {
       banks: bank_config,
       reference: reference,
       duration: duration
     };  
+
+    let plan = {...this.state.plan}
+    plan.steps[row] = bank_step;
+
     if (this.state.plan.last_step < row ){
       plan.last_step = row;
     }
     plan.focus = {
       row: row,
-      column: col
+      column: 2
     }
-    this.setState({plan});
+    this.setState({plan}, () => {console.log(this.state.plan, " Hopefully this was added")});
   }
 
   updateFocus(row: number, column: number) {
@@ -67,46 +132,48 @@ state = {
       };
     }
     this.setState({plan});
-    console.log(this.state.plan.focus)
   }
 
   updateDuration(row: number, duration: number) {
-
+    let plan = {...this.state.plan}
+    plan.steps[row].duration = duration;
+    this.setState({plan}, () => {console.log(this.state.plan.steps[row], " Hope this works")})
   }
 
   updateCurrentStep(row: number) {
 
   }
   
-  insertRow() {
-    let all_banks = this.getAvailableBanks();
-    let row = this.state.plan.focus.row
-    let col = this.state.plan.focus.column
-    let num_steps = this.state.plan.last_step;
-    let plan = {...this.state.plan}
-    if (num_steps < this.state.plan.max_steps) {
-      for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
-        let s = this.state.plan.steps[i]
-        //insert the plan 1 row down
-        plan.steps[i + 1] = s;
-      }
-      let bank_config = {}
-      for (let b in all_banks) {
-        bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
-      }
-      plan.steps[row] = {
-        banks: bank_config,
-        reference: 0, 
-        duration: 0
-      }
-      plan.last_step = num_steps + 1
-    }
-    plan.focus = {
-      row: row, 
-      column: col
-    }
-    this.setState({plan})
-  }
+  //Insert Button is pressed
+  // insertRow() {
+  //   let all_banks = this.getAvailableBanks();
+  //   let row = this.state.plan.focus.row
+  //   let col = this.state.plan.focus.column
+  //   let num_steps = this.state.plan.last_step;
+  //   let plan = {...this.state.plan}
+  //   if (num_steps < this.state.plan.max_steps) {
+  //     for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
+  //       let s = this.state.plan.steps[i]
+  //       //insert the plan 1 row down
+  //       plan.steps[i + 1] = s;
+  //     }
+  //     let bank_config = {}
+  //     for (let b in all_banks) {
+  //       bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+  //     }
+  //     plan.steps[row] = {
+  //       banks: bank_config,
+  //       reference: 0, 
+  //       duration: 0
+  //     }
+  //     plan.last_step = num_steps + 1
+  //   }
+  //   plan.focus = {
+  //     row: row, 
+  //     column: col
+  //   }
+  //   this.setState({plan})
+  // }
 
   changeChannelstoProperFormat(bank, channel, row) {
     let all_banks = this.getAvailableBanks();
@@ -114,27 +181,22 @@ state = {
     for (let b in all_banks) {
       bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
     }
-    let ref =0 
     if (bank == 0) {
-      ref = 1
-      this.addToPlan(bank_config, ref);
+      this.addToPlan(bank_config, 1);
     }
     else {
+      console.log(bank, channel)
       if(channel == 0 ){
         bank_config[bank].clean = 1
-        this.addToPlan(bank_config, ref);
+        this.addToPlan(bank_config, 0);
       }
       else {
         bank_config[bank].chan_mask = 1 << (channel - 1)
-        this.addToPlan(bank_config, ref);
+        this.addToPlan(bank_config, 0);
       }
     }
    
-    console.log(this.state.plan.steps)
   }
-  //need to change channels & all to bank_config
-  // each step: 
-  //        row: {banks: bank_config, reference, duration}
 
   focusComponent: any = null;
   focusTimer: any = null;
@@ -155,19 +217,20 @@ state = {
       this.focusTimer = null;
     }, 200);
   };
+  
 
   makePlanRow = (row: number) => {
     let portString = "";
     let durationString = "";
     if (this.state.plan.last_step >= row) {
-      console.log(this.state.plan.last_step, "bigger last step")
       const planRow = this.state.plan.steps[row] as PlanStep;
       if (planRow.reference != 0) {
         portString = "Reference";
       } else {
+        console.log("Hello")
         for (const bank in planRow.banks) {
           if (planRow.banks.hasOwnProperty(bank)) {
-            const bank_name = this.state.plan.bank_names[bank].name;
+            const bank_name = this.props.plan.bank_names[bank].name;
             const bank_config = planRow.banks[bank];
             if (bank_config.clean != 0) {
               portString = `Clean ${bank_name}`;
@@ -176,7 +239,7 @@ state = {
               const mask = bank_config.chan_mask;
               // Find index of first set bit using bit-twiddling hack
               const channel = (mask & -mask).toString(2).length;
-              const ch_name = this.state.plan.bank_names[bank].channels[
+              const ch_name = this.props.plan.bank_names[bank].channels[
                 channel
               ];
               portString = bank_name + ", " + ch_name;
@@ -216,23 +279,19 @@ state = {
           <input
             ref={input =>
               input &&
-              this.props.plan.focus.row === row &&
-              this.props.plan.focus.column === 1 &&
+              this.state.plan.focus.row === row &&
+              this.state.plan.focus.column === 1 &&
               this.manageFocus(input)
             }
             type="text"
             className="form-control plan-input panel-plan-text"
             id={"plan-port-" + row}
             onFocus={e => {
-              let bank = this.props.bankAddition.bank
-              let channel = this.props.bankAddition.channel;
-              this.changeChannelstoProperFormat(bank, channel, row);
+              // this.changeChannelstoProperFormat(bank, channel, row);
               this.updateFocus(row, 1);
-              console.log("Called")
             }}
             onChange={e => {
               this.props.updateFileName(true);
-              console.log("Called Change")
             }}
             style={{ maxWidth: "90%", float: "left", marginLeft: "2px" }}
             value={portString}
@@ -243,8 +302,8 @@ state = {
           <input
             ref={input =>
               input &&
-              this.props.plan.focus.row === row &&
-              this.props.plan.focus.column === 2 &&
+              this.state.plan.focus.row === row &&
+              this.state.plan.focus.column === 2 &&
               this.manageFocus(input)
             }
             onChange={e => {
@@ -274,7 +333,7 @@ state = {
           <input
             type="radio"
             id={"plan-row-" + row}
-            checked={row == this.props.plan.current_step}
+            checked={row == this.state.plan.current_step}
             onChange={e =>
               this.updateCurrentStep(row)
             }
@@ -291,7 +350,7 @@ state = {
   );
 
   render() {
-    const file_name = this.props.plan.plan_filename;
+    const file_name = this.state.plan.plan_filename;
 
     return (
       <div>
@@ -306,7 +365,7 @@ state = {
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
-          {this.props.plan.plan_filename && !this.props.isChanged ? (
+          {this.state.plan.plan_filename && !this.state.isChanged ? (
             <div>
               <h6 className="panel-plan-text">
                 Currently viewing File:{" "}
@@ -334,7 +393,7 @@ state = {
                   type="button"
                   id="insert-btn"
                   disabled={
-                    this.props.plan.focus.row > this.props.plan.last_step
+                    this.state.plan.focus.row > this.state.plan.last_step
                   }
                   onClick={e => {
                     this.setState({ isChanged: true });
@@ -373,7 +432,7 @@ state = {
                   type="button"
                   id="delete-btn"
                   disabled={
-                    this.props.plan.focus.row > this.props.plan.last_step
+                    this.state.plan.focus.row > this.state.plan.last_step
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
@@ -389,7 +448,7 @@ state = {
                   type="button"
                   id="clear-btn"
                   disabled={
-                    this.props.plan.focus.row > this.props.plan.last_step
+                    this.state.plan.focus.row > this.state.plan.last_step
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
