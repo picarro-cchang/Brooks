@@ -50,8 +50,6 @@ LOG_LEVELS_RANGE = range(0, 51)
 LOG_LEVELS = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
 
 MOVE_TO_NEW_FILE_EVERY_MONTH = True
-ZIP_OLD_FILE = False  # not emplemented yet, might be not necessary
-DO_DATABASE_TRANSITION = False  # not emplemented yet, might be not necessary
 
 DEFAULT_DB_PATH = "."  # TODO
 
@@ -73,8 +71,6 @@ class LOLogger(object):
                  flushing_batch_size=10,
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
                  verbose=True,
                  redundant_json=False,
                  meta_table=False,
@@ -97,8 +93,6 @@ class LOLogger(object):
         self.flushing_timeout = flushing_timeout
 
         self.move_to_new_file_every_month = move_to_new_file_every_month
-        self.zip_old_file = zip_old_file
-        self.do_database_transition = do_database_transition
 
         self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
@@ -125,8 +119,6 @@ class LOLogger(object):
                                               flushing_batch_size=self.flushing_batch_size,
                                               flushing_timeout=self.flushing_timeout,
                                               move_to_new_file_every_month=self.move_to_new_file_every_month,
-                                              zip_old_file=self.zip_old_file,
-                                              do_database_transition=self.do_database_transition,
                                               redundant_json=self.redundant_json,
                                               meta_table=self.meta_table,
                                               pkg_meta=self.pkg_meta,
@@ -246,8 +238,6 @@ class LOLoggerThread(threading.Thread):
                  flushing_batch_size=10,
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
                  redundant_json=False,
                  meta_table=False,
                  pkg_meta=None,
@@ -261,8 +251,6 @@ class LOLoggerThread(threading.Thread):
         self.queue = queue
         self.parent = parent
         self.move_to_new_file_every_month = move_to_new_file_every_month
-        self.zip_old_file = zip_old_file
-        self.do_database_transition = do_database_transition
         self.redundant_json = redundant_json
 
         self.current_year_month = get_current_year_month()
@@ -343,22 +331,6 @@ class LOLoggerThread(threading.Thread):
             self.current_year_month = get_current_year_month()
             return True
         return False
-
-    def archive_old_file(self, filepath):
-        """
-            TODO, spawn a subprocess to zip filepath and then delete original,
-            obv make sure it's safe and we are not loosing anything
-        """
-        pass
-
-    def transition_to_new_database(self, old_db_path):
-        """
-            TODO some magic bullshit so frontend would not notice transition,
-            Gerald suggested to clone 100 last logs from old to new
-            i think we can use a secondary query for it
-            or even main, just shovel those logs there to wait for new DB creation
-        """
-        pass
 
     def _sigint_handler(self):
         """
@@ -510,10 +482,6 @@ class LOLoggerThread(threading.Thread):
                     if len(self.data_to_flush) == 0:
                         # if we have no logs waiting anywhere - we can check if need move to a new file
                         if self.move_to_new_file_every_month and self.check_if_need_to_switch_file():
-                            if self.zip_old_file:
-                                self.archive_old_file(self.db_path)
-                            if self.do_database_transition:
-                                self.transition_to_new_database(self.db_path)
                             if self.redundant_json:
                                 self.json_file.close()
                             self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
@@ -552,16 +520,6 @@ def parse_arguments():
                         action="store_true")
     parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file',
                         default=True)  # this is kinda wrong
-    parser.add_argument('-z',
-                        '--zip_old_file',
-                        help='Archive old log files to preserve disk space, not implemented yet',
-                        default=False,
-                        action="store_true")
-    parser.add_argument('-t',
-                        '--transition_to_new_database',
-                        help='Do a smooth DB file transition, not implemented yet',
-                        default=False,
-                        action="store_true")
     parser.add_argument('-v', '--verbose', help='Print all recieved logs', default=False, action="store_true")
     parser.add_argument('-j', '--json', help='Write redundunt logs to json file', default=False, action="store_true")
     parser.add_argument('-meta', '--meta_table', help='Create a table with metadata', default=False, action="store_true")
@@ -591,8 +549,6 @@ def main():
         db_filename_hostname=args.db_filename_prefix_hostname,
         rpc_port=args.rpc_port,
         move_to_new_file_every_month=args.move_to_new_file_every_month,
-        zip_old_file=args.zip_old_file,
-        do_database_transition=args.transition_to_new_database,
         verbose=args.verbose,
         redundant_json=args.json,
         meta_table=args.meta_table,

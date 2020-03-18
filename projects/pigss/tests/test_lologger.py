@@ -52,8 +52,6 @@ class LOLoggerTest(TestCase):
                                  "flushing_batch_size": 10,
                                  "flushing_timeout": 1,
                                  "move_to_new_file_every_month": True,
-                                 "zip_old_file": True,
-                                 "do_database_transition": True,
                                  "verbose": False,
                                  "redundant_json": False,
                                  "meta_table": False,
@@ -428,7 +426,6 @@ class LOLoggerTest(TestCase):
         self.lologger = self.create_default_lologger(purge_old_logs=purge_older_than)
         self.should_be_filename = f"{self.hostname}__{lologger.get_current_year_month()}.db"
         self.should_be_path = os.path.join(self.tmp_path, self.should_be_filename)
-        # time.sleep(0.1)
         self.lologger.LogEvent(f"By the time this message reaches filesystem - old files should be purged")
         self.wait_until_flushed()
 
@@ -446,7 +443,6 @@ class LOLoggerTest(TestCase):
             arguments = vars(lologger.parse_arguments())
         self.assertTrue(arguments["verbose"])
         self.assertTrue(arguments["json"])
-        self.assertFalse(arguments["transition_to_new_database"])
 
     @patch('common.CmdFIFO.CmdFIFOServer')
     def test_bad_flushing_mode(self, CmdFIFO):
