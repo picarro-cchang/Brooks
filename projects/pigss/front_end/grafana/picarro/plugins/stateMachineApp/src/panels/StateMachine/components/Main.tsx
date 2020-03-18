@@ -3,7 +3,7 @@ import PicarroAPI from "./../api/PicarroAPI";
 import BankPanel from "./BankPanel";
 import BankPanelPlan from "./BankPanelPlan";
 import CommandPanel from "./CommandPanel";
-import PlanPanel from "./PlanPanel";
+import PlanPanelLayout from "./PlanPanelLayout";
 import PlanLoadPanel from "./PlanLoadPanel";
 import PlanSavePanel from "./PlanSavePanel";
 import deepmerge from "deepmerge";
@@ -97,7 +97,8 @@ export class Main extends React.Component<any, any> {
     },
     isPlan: false,
     isChanged: false,
-    bankAdd: {}
+    bankAdd: {},
+    isLoaded: false
   };
   constructor(props) {
     super(props);
@@ -209,6 +210,8 @@ export class Main extends React.Component<any, any> {
     })
   }
 
+ 
+
   render() {
     let left_panel;
     let isPlan = false;
@@ -224,7 +227,7 @@ export class Main extends React.Component<any, any> {
         break;
       case PlanPanelTypes.PLAN:
         left_panel = (
-          <PlanPanel
+          <PlanPanelLayout
             uistatus={this.state.uistatus}
             plan={this.state.plan}
             setFocus={(row, column) => this.setFocus(row, column)}

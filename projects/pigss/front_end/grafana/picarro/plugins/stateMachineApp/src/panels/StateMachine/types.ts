@@ -51,7 +51,29 @@ export interface PlanLoadPanelOptions {
   updateFileName: (x: boolean) => void;
 }
 
+export interface PlanLoadPanelEditOptions {
+  plan: Plan;
+  ws_sender: (o: object) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
+  getFileName: (s: string) => void;
+  editPlan: () => void;
+}
+
 export interface PlanPanelOptions {
+  uistatus: { [key: string]: string };
+  plan: Plan;
+  setFocus: (row: number, column: number) => void;
+  ws_sender: (o: object) => void;
+  isChanged: boolean;
+  updateFileName: (x: boolean) => void;
+  // addChanneltoPlan: (bank: number, channel: number) => void;
+  bankAddition: {[key: string]: number}
+  fileName: string;
+  loadFile: () => void;
+}
+
+export interface PlanPanelLayoutOptions {
   uistatus: { [key: string]: string };
   plan: Plan;
   setFocus: (row: number, column: number) => void;

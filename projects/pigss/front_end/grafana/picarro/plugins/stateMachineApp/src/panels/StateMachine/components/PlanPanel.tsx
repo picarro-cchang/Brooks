@@ -1,15 +1,15 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep, Plan } from "./../types";
-import { throws } from "assert";
-import { toIntegerOrUndefined } from "@grafana/data";
+import { PlanService } from "./../api/PlanService";
 
 export interface State {
   refVisible: boolean,
   plan: Plan,
   isChanged: boolean,
   isLoaded: boolean,
-  bankAdditionClicked: {}
+  bankAdditionClicked: {},
+  fileName: string
 }
 
 class PlanPanel extends PureComponent<PlanPanelOptions, State> {
@@ -34,47 +34,70 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
         plan_files: {},
         plan_filename: '',
         bank_names: {}
-      }
+      },
+      fileName: this.props.fileName
     };
     this.addToPlan = this.addToPlan.bind(this);
     this.getAvailableBanks = this.getAvailableBanks.bind(this);
     this.getLoadedPlan = this.getLoadedPlan.bind(this);
     this.updateFocus = this.updateFocus.bind(this);
-}
-
-// static getDerivedStateFromProps(nextProps, prevState) {
-//   return {
-//    bankAdditionClicked: nextProps.bankAddition,
-//   };
-//  }
-shouldComponentUpdate(nextProps, nextState) {
-  //if update works, it will update bankAdditionClicked
-  if (this.props.bankAddition !== nextProps.bankAddition) {
-      this.setState({
-          bankAdditionClicked: nextProps.bankAddition
-      }, 
-      () => {console.log(this.state.bankAdditionClicked, "Hello")});
-      if (nextProps.bankAddition.bank != undefined) {
-        let bank = nextProps.bankAddition.bank;;
-        let channel = nextProps.bankAddition.channel;
-        let row = this.state.plan.focus.row;
-        this.changeChannelstoProperFormat(bank, channel, row);
-      }
-      
   }
-  return true;
-}
 
-getLoadedPlan() {
-  if(this.state.isLoaded) {
-    //set loaded to state
-    this.setState({isLoaded: true});
-  } else {
-    this.setState({isLoaded: false});
+  shouldComponentUpdate(nextProps, nextState) {
+    //if update works, it will update bankAdditionClicked
+    if (this.props.bankAddition !== nextProps.bankAddition) {
+        this.setState({
+            bankAdditionClicked: nextProps.bankAddition
+        }, 
+        () => {console.log(this.state.bankAdditionClicked, "Hello")});
+        if (nextProps.bankAddition.bank != undefined) {
+          let bank = nextProps.bankAddition.bank;;
+          let channel = nextProps.bankAddition.channel;
+          let row = this.state.plan.focus.row;
+          this.changeChannelstoProperFormat(bank, channel, row);
+        }
+        
+    }
+    return true;
   }
-  return
-}
 
+  componentDidMount() {
+    this.getLoadedPlan();
+  }
+
+  getLoadedPlan() { //Works with TEST data for now, since no backend service
+    if(this.state.fileName) {
+      console.log(this.state.fileName);
+      //GET steps from plan
+      PlanService.getFileData(this.state.fileName).then((response: any) => {
+        response.json().then((data: any) => {
+          this.setState({plan: data}, () => console.log(this.state.plan));
+      });
+    });
+    }
+  };
+
+  //TODO
+  saveFile() {
+
+  };
+
+  //TODO
+  saveFileAs() {
+
+  };
+
+
+
+  //TODO
+  clearPlan() {
+
+  };
+
+  //TODO
+  deleteFile() {
+
+  };
 
   getAvailableBanks(){
     const availableBanks = [];
@@ -146,36 +169,35 @@ getLoadedPlan() {
     this.setState({plan});
   }
   
-  //Insert Button is pressed
-  // insertRow() {
-  //   let all_banks = this.getAvailableBanks();
-  //   let row = this.state.plan.focus.row
-  //   let col = this.state.plan.focus.column
-  //   let num_steps = this.state.plan.last_step;
-  //   let plan = {...this.state.plan}
-  //   if (num_steps < this.state.plan.max_steps) {
-  //     for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
-  //       let s = this.state.plan.steps[i]
-  //       //insert the plan 1 row down
-  //       plan.steps[i + 1] = s;
-  //     }
-  //     let bank_config = {}
-  //     for (let b in all_banks) {
-  //       bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
-  //     }
-  //     plan.steps[row] = {
-  //       banks: bank_config,
-  //       reference: 0, 
-  //       duration: 0
-  //     }
-  //     plan.last_step = num_steps + 1
-  //   }
-  //   plan.focus = {
-  //     row: row, 
-  //     column: col
-  //   }
-  //   this.setState({plan})
-  // }
+  insertRow() {
+    let all_banks = this.getAvailableBanks();
+    let row = this.state.plan.focus.row
+    let col = this.state.plan.focus.column
+    let num_steps = this.state.plan.last_step;
+    let plan = {...this.state.plan}
+    if (num_steps < this.state.plan.max_steps) {
+      for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
+        let s = this.state.plan.steps[i]
+        //insert the plan 1 row down
+        plan.steps[i + 1] = s;
+      }
+      let bank_config = {}
+      for (let b in all_banks) {
+        bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+      }
+      plan.steps[row] = {
+        banks: bank_config,
+        reference: 0, 
+        duration: 0
+      }
+      plan.last_step = num_steps + 1
+    }
+    plan.focus = {
+      row: row, 
+      column: col
+    }
+    this.setState({plan})
+  }
 
   changeChannelstoProperFormat(bank, channel, row) {
     let all_banks = this.getAvailableBanks();
@@ -310,7 +332,7 @@ getLoadedPlan() {
             }
             onChange={e => {
               this.props.updateFileName(true);
-              this.updateDuration(row, toIntegerOrUndefined(e.target.value));
+              this.updateDuration(row, Number(e.target.value));
             }}
             onFocus={e => {
               this.updateFocus(row, 2);
@@ -361,7 +383,9 @@ getLoadedPlan() {
           <span
             className="cancel panel-plan-text"
             id="cancel-x"
-            onClick={e => this.props.ws_sender({ element: "plan_cancel" })}
+            onClick={e => {
+              this.props.ws_sender({ element: "plan_cancel" });
+            }}
           ></span>
           <h6 className="panel-plan-text">
             Please click on available channels to set up a schedule, then click
@@ -399,7 +423,7 @@ getLoadedPlan() {
                   }
                   onClick={e => {
                     this.setState({ isChanged: true });
-                    this.props.ws_sender({ element: "plan_insert" });
+                    this.insertRow();
                   }}
                   className={"btn btn-block btn-group"}
                 >
@@ -410,7 +434,10 @@ getLoadedPlan() {
                 <button
                   type="button"
                   id="save-btn"
-                  onClick={e => this.props.ws_sender({ element: "plan_save" })}
+                  onClick={e => {
+                    // this.props.ws_sender({ element: "plan_save" })
+                    //this.saveFile();
+                  }}
                   className={"btn btn-block btn-light btn-group"}
                 >
                   Save
@@ -421,7 +448,11 @@ getLoadedPlan() {
                 <button
                   type="button"
                   id="load-btn"
-                  onClick={e => this.props.ws_sender({ element: "plan_load" })}
+                  onClick={e => {
+                    // this.props.ws_sender({ element: "plan_load" })
+                    //this.loadFile()
+                    this.props.loadFile()
+                  }}
                   className={"btn btn-block btn-light btn-group"}
                 >
                   Load
@@ -438,7 +469,7 @@ getLoadedPlan() {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    this.props.ws_sender({ element: "plan_delete" });
+                    //Delete File... NECESSARY? IDK
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -454,7 +485,8 @@ getLoadedPlan() {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    this.props.ws_sender({ element: "plan_clear" });
+                    //Clear Plan Steps State
+                    //this.clearPlan();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -467,11 +499,12 @@ getLoadedPlan() {
                   type="button"
                   id="ok-btn"
                   onClick={e => {
-                    this.props.ws_sender({ element: "plan_ok" });
+                    //Save State as JSON Object, send to Service
+                    //this.saveFileAs();
                   }}
                   className={"btn btn-block btn-green btn-group"}
                 >
-                  OK
+                  Save As
                 </button>
               </div>
             </div>
