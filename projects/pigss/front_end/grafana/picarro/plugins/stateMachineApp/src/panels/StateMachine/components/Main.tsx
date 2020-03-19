@@ -108,18 +108,18 @@ export class Main extends React.Component<any, any> {
 
   ws = new WebSocket(socketURL);
 
-  attachWSMethods = (ws:WebSocket) => {
+  attachWSMethods = (ws: WebSocket) => {
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
       this.handleData(evt.data);
     };
 
-    this.ws.onclose = (event) => {
+    this.ws.onclose = event => {
       if (event.code !== 1000) {
         this.setupWSComm();
       }
     };
-  }
+  };
 
   setupWSComm = () => {
     if (this.ws.CLOSED || this.ws.readyState === 0) {
@@ -131,7 +131,7 @@ export class Main extends React.Component<any, any> {
         this.getDataViaApi();
       }, REFRESH_INTERVAL * 1000);
     }
-  }
+  };
 
   componentDidMount() {
     this.getDataViaApi();
@@ -139,10 +139,10 @@ export class Main extends React.Component<any, any> {
   }
 
   componentWillUnmount() {
-    console.log('Component will unmount');
+    console.log("Component will unmount");
     if (this.ws && this.ws.readyState === 1) {
-      this.ws.send('CLOSE');
-      this.ws.close(1000, 'Client Initited Connection Termination');
+      this.ws.send("CLOSE");
+      this.ws.close(1000, "Client Initited Connection Termination");
     }
   }
 
@@ -207,10 +207,8 @@ export class Main extends React.Component<any, any> {
         bank: bankx,
         channel: channelx
       }
-    })
+    });
   }
-
- 
 
   render() {
     let left_panel;
@@ -327,7 +325,9 @@ export class Main extends React.Component<any, any> {
 
     return (
       <div style={{ textAlign: "center" }}>
-        <div className="plan-info">Running Plan: {this.state.plan.plan_filename}</div>
+        <div className="plan-info">
+          Running Plan: {this.state.plan.plan_filename}
+        </div>
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
@@ -336,28 +336,28 @@ export class Main extends React.Component<any, any> {
             <div
               className="col-sm-9"
               style={{ display: "grid", gridTemplateColumns: "1fr" }}
-            > 
-            {isPlan ?
-             ( <div
-                style={{
-                  padding: "10px",
-                  gridRowStart: "1",
-                  gridColumnStart: "1"
-                }}
-              >
-                {bankPanelsEdit}
-              </div>
-             ): ( <div
-              style={{
-                padding: "10px",
-                gridRowStart: "1",
-                gridColumnStart: "1"
-              }}
             >
-              {bankPanels}
-            </div>
-           )
-             }
+              {isPlan ? (
+                <div
+                  style={{
+                    padding: "10px",
+                    gridRowStart: "1",
+                    gridColumnStart: "1"
+                  }}
+                >
+                  {bankPanelsEdit}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: "10px",
+                    gridRowStart: "1",
+                    gridColumnStart: "1"
+                  }}
+                >
+                  {bankPanels}
+                </div>
+              )}
               {isPlan ? (
                 <div className="ref-div">
                   <button
@@ -365,7 +365,7 @@ export class Main extends React.Component<any, any> {
                     id="reference"
                     onClick={e => {
                       // this.ws_sender({ element: "reference" })
-                      this.addChanneltoPlan(0, 0)
+                      this.addChanneltoPlan(0, 0);
                     }}
                     className={"btn btn-large ref-btn"}
                     style={{ color: "black" }}

@@ -1,20 +1,19 @@
-import  TESTPlanServiceAPI from "./TESTPlanServiceAPI";
+import TESTPlanServiceAPI from "./TESTPlanServiceAPI";
 
 export const PlanService = (() => {
   return {
     getFileNames: () => {
-        return TESTPlanServiceAPI.getRequest('fileNames')
+      return TESTPlanServiceAPI.getRequest("fileNames");
     },
     getFileData: (fileName: string) => {
-        return TESTPlanServiceAPI.getRequest('planInfo')
+      return TESTPlanServiceAPI.getRequest("planInfo");
     },
-    saveFile: () => {
-        let data = {}
-        return TESTPlanServiceAPI.postData('', data)
+    saveFile: (data, fileName) => {
+      return TESTPlanServiceAPI.postData("/save/" + fileName, data, fileName);
     },
-    saveFileAs: () => {
-        let data = {}
-        return TESTPlanServiceAPI.postData('', data)
+    saveFileAs: (data, fileName) => {
+      console.log("plan service");
+      return TESTPlanServiceAPI.postData("/saveAs/" + fileName, data, fileName); // real implementation will not use filename
     }
   };
 })();

@@ -68,7 +68,7 @@ export interface PlanPanelOptions {
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
   // addChanneltoPlan: (bank: number, channel: number) => void;
-  bankAddition: {[key: string]: number}
+  bankAddition: { [key: string]: number };
   fileName: string;
   loadFile: () => void;
 }
@@ -81,7 +81,7 @@ export interface PlanPanelLayoutOptions {
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
   // addChanneltoPlan: (bank: number, channel: number) => void;
-  bankAddition: {[key: string]: number}
+  bankAddition: { [key: string]: number };
 }
 
 export enum PlanPanelTypes {

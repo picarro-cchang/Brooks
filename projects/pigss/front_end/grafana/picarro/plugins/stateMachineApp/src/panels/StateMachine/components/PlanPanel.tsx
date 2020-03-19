@@ -2,14 +2,15 @@ import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep, Plan } from "./../types";
 import { PlanService } from "./../api/PlanService";
+import fs from "fs";
 
 export interface State {
-  refVisible: boolean,
-  plan: Plan,
-  isChanged: boolean,
-  isLoaded: boolean,
-  bankAdditionClicked: {},
-  fileName: string
+  refVisible: boolean;
+  plan: Plan;
+  isChanged: boolean;
+  isLoaded: boolean;
+  bankAdditionClicked: {};
+  fileName: string;
 }
 
 class PlanPanel extends PureComponent<PlanPanelOptions, State> {
@@ -32,7 +33,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
         steps: {},
         num_plan_files: 0,
         plan_files: {},
-        plan_filename: '',
+        plan_filename: "",
         bank_names: {}
       },
       fileName: this.props.fileName
@@ -44,19 +45,17 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
   }
 
   shouldComponentUpdate(nextProps, nextState) {
-    //if update works, it will update bankAdditionClicked
+    // if update works, it will update bankAdditionClicked
     if (this.props.bankAddition !== nextProps.bankAddition) {
-        this.setState({
-            bankAdditionClicked: nextProps.bankAddition
-        }, 
-        () => {console.log(this.state.bankAdditionClicked, "Hello")});
-        if (nextProps.bankAddition.bank != undefined) {
-          let bank = nextProps.bankAddition.bank;;
-          let channel = nextProps.bankAddition.channel;
-          let row = this.state.plan.focus.row;
-          this.changeChannelstoProperFormat(bank, channel, row);
-        }
-        
+      this.setState({
+        bankAdditionClicked: nextProps.bankAddition
+      });
+      if (nextProps.bankAddition.bank != undefined) {
+        const bank = nextProps.bankAddition.bank;
+        const channel = nextProps.bankAddition.channel;
+        const row = this.state.plan.focus.row;
+        this.changeChannelstoProperFormat(bank, channel, row);
+      }
     }
     return true;
   }
@@ -65,41 +64,38 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
     this.getLoadedPlan();
   }
 
-  getLoadedPlan() { //Works with TEST data for now, since no backend service
-    if(this.state.fileName) {
-      console.log(this.state.fileName);
-      //GET steps from plan
+  getLoadedPlan() {
+    // Works with TEST data for now, since no backend service
+    if (this.state.fileName) {
+      // GET steps from plan
       PlanService.getFileData(this.state.fileName).then((response: any) => {
         response.json().then((data: any) => {
-          this.setState({plan: data}, () => console.log(this.state.plan));
+          this.setState({ plan: data });
+        });
       });
-    });
     }
-  };
+  }
 
-  //TODO
+  // TODO
   saveFile() {
+    // PlanService.saveFile(this.state.)
+    // Move to Save Panel
+  }
 
-  };
-
-  //TODO
+  // TODO
   saveFileAs() {
+    // saveAs, modal for Are you sure?
+    PlanService.saveFileAs(this.state.plan, this.state.plan.plan_filename);
+    console.log("here");
+  }
 
-  };
+  // TODO
+  clearPlan() {}
 
+  // TODO
+  deleteFile() {}
 
-
-  //TODO
-  clearPlan() {
-
-  };
-
-  //TODO
-  deleteFile() {
-
-  };
-
-  getAvailableBanks(){
+  getAvailableBanks() {
     const availableBanks = [];
     if (("bank" in this.props.uistatus) as any) {
       for (let i = 1; i <= 4; i++) {
@@ -113,113 +109,109 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
 
   addToPlan(bank_config, reference: number) {
     let row = this.state.plan.focus.row;
-    let col = this.state.plan.focus.column;
+    const col = this.state.plan.focus.column;
     let duration;
     if (row >= this.state.plan.max_steps && col == 2) {
-      //error
+      // error
     }
     if (col == 2) {
       row += 1;
     }
-    if(row <= this.state.plan.last_step) {
+    if (row <= this.state.plan.last_step) {
       duration = this.state.plan[row].duration;
     } else {
       duration = 0;
     }
 
-    let bank_step = {
+    const bank_step = {
       banks: bank_config,
-      reference: reference,
-      duration: duration
-    };  
+      reference,
+      duration
+    };
 
-    let plan = {...this.state.plan}
+    const plan = { ...this.state.plan };
     plan.steps[row] = bank_step;
 
-    if (this.state.plan.last_step < row ){
+    if (this.state.plan.last_step < row) {
       plan.last_step = row;
     }
     plan.focus = {
-      row: row,
+      row,
       column: 2
-    }
-    this.setState({plan}, () => {console.log(this.state.plan, " Hopefully this was added")});
+    };
+    this.setState({ plan });
   }
 
   updateFocus(row: number, column: number) {
-    let plan = {...this.state.plan}
+    const plan = { ...this.state.plan };
     if (row <= this.state.plan.last_step || row == this.state.plan.last_step) {
       plan.focus = {
-        row: row, 
-        column: column
+        row,
+        column
       };
     }
-    this.setState({plan});
+    this.setState({ plan });
   }
 
   updateDuration(row: number, duration: number) {
-    let plan = {...this.state.plan};
+    const plan = { ...this.state.plan };
     plan.steps[row].duration = duration;
-    this.setState({plan});
+    this.setState({ plan });
   }
 
   updateCurrentStep(row: number) {
-    let plan = {...this.state.plan};
+    const plan = { ...this.state.plan };
     plan.current_step = row;
-    this.setState({plan});
+    this.setState({ plan });
   }
-  
+
   insertRow() {
-    let all_banks = this.getAvailableBanks();
-    let row = this.state.plan.focus.row
-    let col = this.state.plan.focus.column
-    let num_steps = this.state.plan.last_step;
-    let plan = {...this.state.plan}
+    const all_banks = this.getAvailableBanks();
+    const row = this.state.plan.focus.row;
+    const col = this.state.plan.focus.column;
+    const num_steps = this.state.plan.last_step;
+    const plan = { ...this.state.plan };
     if (num_steps < this.state.plan.max_steps) {
-      for (let i = this.state.plan.last_step; i > row - 1  ; i -= 1) {
-        let s = this.state.plan.steps[i]
-        //insert the plan 1 row down
+      for (let i = this.state.plan.last_step; i > row - 1; i -= 1) {
+        const s = this.state.plan.steps[i];
+        // insert the plan 1 row down
         plan.steps[i + 1] = s;
       }
-      let bank_config = {}
-      for (let b in all_banks) {
-        bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+      const bank_config = {};
+      for (const b in all_banks) {
+        bank_config[all_banks[b]] = { clean: 0, chan_mask: 0 };
       }
       plan.steps[row] = {
         banks: bank_config,
-        reference: 0, 
+        reference: 0,
         duration: 0
-      }
-      plan.last_step = num_steps + 1
+      };
+      plan.last_step = num_steps + 1;
     }
     plan.focus = {
-      row: row, 
+      row,
       column: col
-    }
-    this.setState({plan})
+    };
+    this.setState({ plan });
   }
 
   changeChannelstoProperFormat(bank, channel, row) {
-    let all_banks = this.getAvailableBanks();
-    let bank_config = {}
-    for (let b in all_banks) {
-      bank_config[all_banks[b]] = {clean: 0, chan_mask: 0}
+    const all_banks = this.getAvailableBanks();
+    const bank_config = {};
+    for (const b in all_banks) {
+      bank_config[all_banks[b]] = { clean: 0, chan_mask: 0 };
     }
     if (bank == 0) {
       this.addToPlan(bank_config, 1);
-    }
-    else {
-      console.log(bank, channel)
-      if(channel == 0 ){
-        bank_config[bank].clean = 1
+    } else {
+      if (channel == 0) {
+        bank_config[bank].clean = 1;
         this.addToPlan(bank_config, 0);
-      }
-      else {
-        bank_config[bank].chan_mask = 1 << (channel - 1)
+      } else {
+        bank_config[bank].chan_mask = 1 << (channel - 1);
         this.addToPlan(bank_config, 0);
       }
     }
-   
   }
 
   focusComponent: any = null;
@@ -241,7 +233,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
       this.focusTimer = null;
     }, 200);
   };
-  
 
   makePlanRow = (row: number) => {
     let portString = "";
@@ -251,7 +242,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
       if (planRow.reference != 0) {
         portString = "Reference";
       } else {
-        console.log("Hello")
         for (const bank in planRow.banks) {
           if (planRow.banks.hasOwnProperty(bank)) {
             const bank_name = this.props.plan.bank_names[bank].name;
@@ -358,9 +348,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
             type="radio"
             id={"plan-row-" + row}
             checked={row == this.state.plan.current_step}
-            onChange={e =>
-              this.updateCurrentStep(row)
-            }
+            onChange={e => this.updateCurrentStep(row)}
             style={{ maxWidth: "100%" }}
           />
           <span className="checkmark"></span>
@@ -436,7 +424,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   id="save-btn"
                   onClick={e => {
                     // this.props.ws_sender({ element: "plan_save" })
-                    //this.saveFile();
+                    // this.saveFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
                 >
@@ -450,8 +438,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   id="load-btn"
                   onClick={e => {
                     // this.props.ws_sender({ element: "plan_load" })
-                    //this.loadFile()
-                    this.props.loadFile()
+                    // this.loadFile()
+                    this.props.loadFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
                 >
@@ -469,7 +457,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    //Delete File... NECESSARY? IDK
+                    // Delete File... NECESSARY? IDK
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -485,8 +473,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    //Clear Plan Steps State
-                    //this.clearPlan();
+                    // Clear Plan Steps State
+                    // this.clearPlan();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -499,8 +487,8 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   type="button"
                   id="ok-btn"
                   onClick={e => {
-                    //Save State as JSON Object, send to Service
-                    //this.saveFileAs();
+                    // Save State as JSON Object, send to Service
+                    this.saveFileAs();
                   }}
                   className={"btn btn-block btn-green btn-group"}
                 >
