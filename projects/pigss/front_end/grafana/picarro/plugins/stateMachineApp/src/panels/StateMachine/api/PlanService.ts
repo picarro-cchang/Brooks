@@ -14,6 +14,9 @@ export const PlanService = (() => {
     saveFileAs: (data, fileName) => {
       console.log("plan service");
       return TESTPlanServiceAPI.postData("/saveAs/" + fileName, data, fileName); // real implementation will not use filename
+    },
+    deleteFile: (fileName) => {
+      return TESTPlanServiceAPI.putData("/delete/" + fileName);
     }
   };
 })();

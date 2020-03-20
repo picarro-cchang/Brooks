@@ -247,16 +247,6 @@ export class Main extends React.Component<any, any> {
           />
         );
         break;
-      case PlanPanelTypes.SAVE:
-        left_panel = (
-          <PlanSavePanel
-            plan={this.state.plan}
-            updateFileName={this.updateFileName}
-            isChanged={this.state.isChanged}
-            ws_sender={this.ws_sender}
-          />
-        );
-        break;
       case PlanPanelTypes.EDIT:
         left_panel = (
           <EditPanel

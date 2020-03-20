@@ -80,6 +80,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
   saveFile() {
     // PlanService.saveFile(this.state.)
     // Move to Save Panel
+    this.props.savePlan();
   }
 
   // TODO
@@ -424,7 +425,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   id="save-btn"
                   onClick={e => {
                     // this.props.ws_sender({ element: "plan_save" })
-                    // this.saveFile();
+                    this.saveFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
                 >

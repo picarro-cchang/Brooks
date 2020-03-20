@@ -1,20 +1,41 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanSavePanelOptions } from "./../types";
+import { PlanService } from "../api/PlanService";
 
-class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
+interface State {
+  fileName: string,
+  // isOverwritten: boolean
+}
+class PlanSavePanel extends PureComponent<PlanSavePanelOptions, State> {
+  constructor(props) {
+    super(props)
+    this.state = {
+      fileName: this.props.plan.plan_filename
+    }
+  }
+
+  deleteFile(fileName: string) {
+    PlanService.deleteFile(fileName).then((response: any) => {
+      response.json().then((data: any) => {
+        console.log(data)
+      })
+    })
+  }
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>
         <button
           type="button"
           className="btn btn-light w-100 btn-small"
-          onClick={e =>
-            this.props.ws_sender({
-              element: "plan_save_filename",
-              name: this.props.plan.plan_files[index + 1]
-            })
-          }
+          // onClick={e =>
+            //set filename state to filename
+
+            // this.props.ws_sender({
+            //   element: "plan_save_filename",
+            //   name: this.props.plan.plan_files[index + 1]
+            // })
+          // }
           style={{ color: "black" }}
         >
           {this.props.plan.plan_files[index + 1]}
@@ -23,10 +44,9 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
           type="button"
           className="btn btn-danger btn-small"
           onClick={e =>
-            this.props.ws_sender({
-              element: "plan_delete_filename",
-              name: this.props.plan.plan_files[index + 1]
-            })
+            this.deleteFile(this.props.plan.plan_files[index+1])
+            //Delete File
+            //not going to actually delete file, but will have a boolean field, this will send a request to change it to false
           }
         >
           X
@@ -50,10 +70,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
             onChange={e =>
-              this.props.ws_sender({
-                element: "plan_save_filename",
-                name: e.target.value
-              })
+              this.setState({fileName: e.target.value})
             }
             maxLength={28}
             value={this.props.plan.plan_filename}
@@ -74,7 +91,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
             <button
               type="button"
               onClick={e =>
-                this.props.ws_sender({ element: "plan_save_cancel" })
+                this.props.editPlan()
               }
               className={"btn btn-group-2 btn-cancel"}
             >
@@ -84,7 +101,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions> {
               type="button"
               onClick={e => {
                 this.props.updateFileName(false);
-                this.props.ws_sender({ element: "plan_save_ok" });
+                this.props.planSaved(this.state.fileName);
               }}
               className={"btn btn-group-2 btn-green"}
             >

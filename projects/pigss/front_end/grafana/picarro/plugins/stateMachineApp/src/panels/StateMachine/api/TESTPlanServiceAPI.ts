@@ -29,7 +29,11 @@ const PlanServiceAPI = {
       }
     }
   },
-
+  putData(url: string) {
+    //delete file
+    //change a field to false, for isActive (?)
+    return Promise.resolve(new Response(JSON.stringify(url)));
+  },
   getRequest(url: string) {
     const fileNames = { "1": "plan1", "2": "plan2" };
     switch (url) {

@@ -71,6 +71,7 @@ export interface PlanPanelOptions {
   bankAddition: { [key: string]: number };
   fileName: string;
   loadFile: () => void;
+  savePlan: () => void;
 }
 
 export interface PlanPanelLayoutOptions {
@@ -97,6 +98,8 @@ export interface PlanSavePanelOptions {
   ws_sender: (o: object) => void;
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
+  planSaved: (f: string) => void;
+  editPlan: () => void;
 }
 
 export interface BankConfig {

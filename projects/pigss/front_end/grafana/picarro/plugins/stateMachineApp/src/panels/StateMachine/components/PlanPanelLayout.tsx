@@ -1,9 +1,11 @@
 import React, { PureComponent } from "react";
 import PlanPanel from "./PlanPanel";
 import PlanLoadEditPanel from "./PlanLoadEditPanel";
+import PlanSavePanel from "./PlanSavePanel"
 import { PlanPanelLayoutOptions, Plan } from "./../types";
 import deepmerge from "deepmerge";
 import "react-toastify/dist/ReactToastify.css";
+import { threadId } from "worker_threads";
 
 interface State {
   panel: string;
@@ -25,6 +27,8 @@ export class PlanPanelLayout extends PureComponent<
     this.getFileName = this.getFileName.bind(this);
     this.loadFile = this.loadFile.bind(this);
     this.editPlan = this.editPlan.bind(this);
+    this.savePlan = this.savePlan.bind(this);
+    this.planSaved = this.planSaved.bind(this);
   }
 
   getFileName(filename: string) {
@@ -44,6 +48,18 @@ export class PlanPanelLayout extends PureComponent<
     this.setState({ panel: "PLAN" });
   }
 
+  savePlan() {
+    this.setState({ panel: "SAVE"});
+  }
+
+  planSaved(fileName) {
+    this.setState({
+      isLoaded: true,
+      fileName: fileName,
+      panel: "PLAN"
+    })
+  }
+
   render() {
     let left_panel;
     switch (this.state.panel) {
@@ -51,7 +67,7 @@ export class PlanPanelLayout extends PureComponent<
         left_panel = (
           <PlanPanel
             uistatus={this.props.uistatus}
-            plan={this.props.plan} // idk if i should use props or state, probable props
+            plan={this.props.plan} // idk if i should use props or state, probably props
             setFocus={(row, column) => this.props.setFocus(row, column)}
             bankAddition={this.props.bankAddition}
             updateFileName={this.props.updateFileName}
@@ -59,6 +75,19 @@ export class PlanPanelLayout extends PureComponent<
             isChanged={this.props.isChanged}
             ws_sender={this.props.ws_sender}
             loadFile={this.loadFile}
+            savePlan={this.savePlan}
+          />
+        );
+        break;
+      case "SAVE":
+        left_panel = (
+          <PlanSavePanel
+            plan={this.props.plan}
+            updateFileName={this.props.updateFileName}
+            isChanged={this.props.isChanged}
+            ws_sender={this.props.ws_sender}
+            planSaved={this.planSaved}
+            editPlan={this.editPlan}
           />
         );
         break;
