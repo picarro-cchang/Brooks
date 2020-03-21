@@ -42,6 +42,10 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
     this.getAvailableBanks = this.getAvailableBanks.bind(this);
     this.getLoadedPlan = this.getLoadedPlan.bind(this);
     this.updateFocus = this.updateFocus.bind(this);
+    this.updateDuration = this.updateDuration.bind(this)
+    this.updateCurrentStep = this.updateCurrentStep.bind(this);
+    this.insertRow = this.insertRow.bind(this);
+    this.clearPlan = this.clearPlan.bind(this)
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -76,25 +80,54 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
     }
   }
 
-  // TODO
   saveFile() {
-    // PlanService.saveFile(this.state.)
-    // Move to Save Panel
     this.props.savePlan();
   }
 
   // TODO
   saveFileAs() {
     // saveAs, modal for Are you sure?
-    PlanService.saveFileAs(this.state.plan, this.state.plan.plan_filename);
+    PlanService.saveFileAs(this.state.plan, this.state.plan.plan_filename).then((response: any) => {
+      console.log(response)
+    });
     console.log("here");
   }
 
-  // TODO
-  clearPlan() {}
+  clearPlan() {
+    let plan = {...this.state.plan};
+    plan.steps = {};
+    plan.current_step = 1;
+    plan.focus = {
+      row: 1, 
+      column: 1
+    }
+    plan.last_step = 0;
+    this.setState({plan})
+  }
 
-  // TODO
-  deleteFile() {}
+  deleteRow() {
+    let row = this.state.plan.focus.row;
+    let col = this.state.plan.focus.column;
+    let num_steps = this.state.plan.last_step;
+    const plan = { ...this.state.plan };
+    if (num_steps > 0 && row <= num_steps) {
+      for(let r = row; r< this.state.plan.last_step; r += 1) {
+        let s = this.state.plan.steps[r + 1];
+        plan.steps[r] = s;
+      }
+      plan.last_step = num_steps - 1;
+      if (row == 1) {
+        col = 1
+      } else {
+        row = row - 1
+      }
+      plan.focus = {
+        row,
+        column: col
+      }
+      this.setState({ plan });
+    }
+  }
 
   getAvailableBanks() {
     const availableBanks = [];
@@ -416,15 +449,17 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   }}
                   className={"btn btn-block btn-group"}
                 >
-                  Insert
+                  Insert Row
                 </button>
               </div>
               <div className="col-sm-3">
                 <button
                   type="button"
                   id="save-btn"
+                  disabled={
+                    this.state.plan.focus.row > this.state.plan.last_step
+                  }
                   onClick={e => {
-                    // this.props.ws_sender({ element: "plan_save" })
                     this.saveFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
@@ -438,8 +473,6 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   type="button"
                   id="load-btn"
                   onClick={e => {
-                    // this.props.ws_sender({ element: "plan_load" })
-                    // this.loadFile()
                     this.props.loadFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
@@ -458,11 +491,11 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    // Delete File... NECESSARY? IDK
+                    this.deleteRow();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
-                  Delete
+                  Delete Row
                 </button>
               </div>
               <div className="col-sm-3">
@@ -474,8 +507,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    // Clear Plan Steps State
-                    // this.clearPlan();
+                    this.clearPlan();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -487,6 +519,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                 <button
                   type="button"
                   id="ok-btn"
+                  disabled={
+                    this.state.plan.focus.row > this.state.plan.last_step
+                  }
                   onClick={e => {
                     // Save State as JSON Object, send to Service
                     this.saveFileAs();
