@@ -12,6 +12,8 @@ export interface CommandPanelOptions {
   };
   ws_sender: (o: object) => void;
   plan: Plan;
+  updatePanel: (x: number) => void;
+
 }
 
 export interface ModalInfo {
@@ -49,6 +51,9 @@ export interface PlanLoadPanelOptions {
   ws_sender: (o: object) => void;
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
+  updatePanel: (x: number) => void;
+  loadPlan: (x: string) => void;
+  deleteFile: (x: string) => void;
 }
 
 export interface PlanLoadPanelEditOptions {
@@ -58,6 +63,7 @@ export interface PlanLoadPanelEditOptions {
   updateFileName: (x: boolean) => void;
   getFileName: (s: string) => void;
   editPlan: () => void;
+  updatePanel: (x: number) => void;
 }
 
 export interface PlanPanelOptions {
@@ -72,6 +78,7 @@ export interface PlanPanelOptions {
   fileName: string;
   loadFile: () => void;
   savePlan: () => void;
+  updatePanel: (x: number) => void;
 }
 
 export interface PlanPanelLayoutOptions {
@@ -83,14 +90,15 @@ export interface PlanPanelLayoutOptions {
   updateFileName: (x: boolean) => void;
   // addChanneltoPlan: (bank: number, channel: number) => void;
   bankAddition: { [key: string]: number };
+  updatePanel: (x: number) => void;
 }
 
 export enum PlanPanelTypes {
   NONE = 0,
   PLAN = 1,
   LOAD = 2,
-  SAVE = 3,
-  EDIT = 4
+  EDIT = 3,
+  PREVIEW = 4
 }
 
 export interface PlanSavePanelOptions {
@@ -100,6 +108,7 @@ export interface PlanSavePanelOptions {
   updateFileName: (x: boolean) => void;
   planSaved: (f: string) => void;
   editPlan: () => void;
+  updatePanel: (x: number) => void;
 }
 
 export interface BankConfig {
@@ -119,4 +128,6 @@ export interface EditPanelOptions {
   };
   ws_sender: (o: object) => void;
   plan: Plan;
+  updatePanel: (x: number) => void;
+
 }

@@ -50,6 +50,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
 
   shouldComponentUpdate(nextProps, nextState) {
     // if update works, it will update bankAdditionClicked
+    console.log("Changed")
     if (this.props.bankAddition !== nextProps.bankAddition) {
       this.setState({
         bankAdditionClicked: nextProps.bankAddition
@@ -406,7 +407,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
             className="cancel panel-plan-text"
             id="cancel-x"
             onClick={e => {
-              this.props.ws_sender({ element: "plan_cancel" });
+              this.props.updatePanel(0)
             }}
           ></span>
           <h6 className="panel-plan-text">

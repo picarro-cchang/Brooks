@@ -73,7 +73,7 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
       getChannelDisabled = chan => {
         return (
           channelStatus !== undefined &&
-          (channelStatus as any)[chan] !== "READY"
+          (channelStatus as any)[chan] == "DISABLED"
         );
       };
       test = channelStatus;
@@ -81,6 +81,7 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
 
     const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
+      let portNumber = (this.props.bank - 1) * 8 + i
       channelButtons.push(
         getChannelDisabled(i) ? (
           <button
@@ -91,12 +92,11 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             <p id={"chn-status-" + i} className={"chn-status"}>
               {" "}
-              {test && test[i]}{" "}
             </p>
           </button>
         ) : (
@@ -116,13 +116,12 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+                {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 
             <p id={"chn-status-" + i} className={"chn-status"}>
               {" "}
-              {test && test[i]}
             </p>
           </button>
         )
@@ -145,12 +144,10 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
         {"Clean"}
       </button>
     );
-    const value: string = this.props.plan.bank_names[this.props.bank].name;
     return (
       <div>
         <div className="panel-bank" style={bankStyle}>
           <div style={{ width: "100%" }}>
-            <h2 style={{ color: "blue", marginBottom: "10px" }}>{value}</h2>
             <div className="grid-bank">{channelButtons}</div>
             {cleanButton}
           </div>

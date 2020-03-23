@@ -76,6 +76,7 @@ export class PlanPanelLayout extends PureComponent<
             ws_sender={this.props.ws_sender}
             loadFile={this.loadFile}
             savePlan={this.savePlan}
+            updatePanel={this.props.updatePanel}
           />
         );
         break;
@@ -88,6 +89,8 @@ export class PlanPanelLayout extends PureComponent<
             ws_sender={this.props.ws_sender}
             planSaved={this.planSaved}
             editPlan={this.editPlan}
+            updatePanel={this.props.updatePanel}
+
           />
         );
         break;
@@ -100,6 +103,8 @@ export class PlanPanelLayout extends PureComponent<
             ws_sender={this.props.ws_sender}
             getFileName={this.getFileName}
             editPlan={this.editPlan}
+            updatePanel={this.props.updatePanel}
+
           />
         );
         break;

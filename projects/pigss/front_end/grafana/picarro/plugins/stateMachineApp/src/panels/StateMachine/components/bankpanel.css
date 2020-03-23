@@ -155,8 +155,18 @@
 }
 .btn-1-3 {
   grid-column-start: 1;
-  grid-column-end: 4;
+  grid-column-end: 7;
   width: 100%;
+}
+.btn-load {
+  grid-column-start: 4;
+  grid-column-end: 7;
+  width: 100%;
+}
+.btn-edit-plan {
+ grid-column-start: 1;
+ grid-column-end: 4;
+ width: 100%;
 }
 .reference-btn {
   display: inline-block;
@@ -229,9 +239,20 @@
   font-size: 20px;
 }
 .btn-run {
+  grid-column-start: 3;
+  grid-column-end: 5;
   width: 100%;
 }
-
+.btn-run-single {
+  grid-column-start: 1;
+  grid-column-end: 3;
+  width: 100%;
+}
+.btn-run-loop {
+  grid-column-start: 5;
+  grid-column-end: 7;
+  width: 100%;
+}
 .btn-success {
   background-color: green;
 }

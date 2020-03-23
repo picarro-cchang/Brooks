@@ -5,7 +5,6 @@ import BankPanelPlan from "./BankPanelPlan";
 import CommandPanel from "./CommandPanel";
 import PlanPanelLayout from "./PlanPanelLayout";
 import PlanLoadPanel from "./PlanLoadPanel";
-import PlanSavePanel from "./PlanSavePanel";
 import deepmerge from "deepmerge";
 import Modal from "react-responsive-modal";
 import { notifyError, notifySuccess } from "../utils/Notifications";
@@ -13,6 +12,7 @@ import { ModalInfo, PlanPanelTypes } from "./../types";
 import EditPanel from "./EditPanel";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import PlanPreviewPanel from "./PlanPreview";
 
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -104,6 +104,9 @@ export class Main extends React.Component<any, any> {
     super(props);
     this.updateFileName = this.updateFileName.bind(this);
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
+    this.updatePanelToShow = this.updatePanelToShow.bind(this);
+    this.deleteFile = this.deleteFile.bind(this)
+    this.loadPlan = this.loadPlan.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -202,6 +205,7 @@ export class Main extends React.Component<any, any> {
   }
 
   addChanneltoPlan(bankx: number, channelx: number) {
+    console.log("Adding Channel")
     this.setState({
       bankAdd: {
         bank: bankx,
@@ -210,16 +214,34 @@ export class Main extends React.Component<any, any> {
     });
   }
 
+  updatePanelToShow(panel: number) {
+    let options = {...this.state.options}
+    options.panel_to_show = panel
+    this.setState({options})
+  } 
+
+  deleteFile(fileName: string) {
+    console.log("delete file ", fileName)
+  }
+
+  loadPlan(fileName: string) {
+    let plan = {...this.state.plan}
+    plan.plan_filename = fileName;
+    this.setState({plan});
+    this.updatePanelToShow(4);
+  }
+
   render() {
     let left_panel;
     let isPlan = false;
-    switch (this.state.plan.panel_to_show) {
+    switch (this.state.options.panel_to_show) {
       case PlanPanelTypes.NONE:
         left_panel = (
           <CommandPanel
             plan={this.state.plan}
             uistatus={this.state.uistatus}
             ws_sender={this.ws_sender}
+            updatePanel={this.updatePanelToShow}
           />
         );
         break;
@@ -233,6 +255,7 @@ export class Main extends React.Component<any, any> {
             updateFileName={this.updateFileName}
             isChanged={this.state.isChanged}
             ws_sender={this.ws_sender}
+            updatePanel={this.updatePanelToShow}
           />
         );
         isPlan = true;
@@ -244,6 +267,9 @@ export class Main extends React.Component<any, any> {
             updateFileName={this.updateFileName}
             isChanged={this.state.isChanged}
             ws_sender={this.ws_sender}
+            updatePanel={this.updatePanelToShow}
+            deleteFile={this.deleteFile}
+            loadPlan={this.loadPlan}
           />
         );
         break;
@@ -253,9 +279,22 @@ export class Main extends React.Component<any, any> {
             plan={this.state.plan}
             uistatus={this.state.uistatus}
             ws_sender={this.ws_sender}
+            updatePanel={this.updatePanelToShow}
           />
         );
         break;
+      case PlanPanelTypes.PREVIEW:
+        left_panel = (
+          <PlanPreviewPanel
+            plan={this.state.plan}
+            updateFileName={this.updateFileName}
+            isChanged={this.state.isChanged}
+            ws_sender={this.ws_sender}
+            updatePanel={this.updatePanelToShow}
+            deleteFile={this.deleteFile}
+            loadPlan={this.loadPlan}
+          />
+        )
     }
 
     const modalButtons = [];

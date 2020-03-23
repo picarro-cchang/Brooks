@@ -34,7 +34,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             className="grid-command"
             style={{
               display: "grid",
-              gridTemplateColumns: "1fr 1fr 1fr",
+              gridTemplateColumns: "4rem 4rem 4rem 4rem 4rem 4rem",
               gridGap: 5,
               padding: 20
             }}
@@ -69,16 +69,30 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             <button
               id={"edit-plan"}
               onClick={e => {
-                this.props.ws_sender({ element: "plan" });
+                this.props.updatePanel(1)
               }}
               disabled={this.getDisabled("plan")}
               value="plan"
               className={
-                "btn btn-large btn-command btn-1-3 " +
+                "btn btn-large btn-command btn-edit-plan " +
                 this.getClassNameOpt("plan")
               }
             >
               Edit Plan
+            </button>
+            <button
+              id={"load-plan"}
+              onClick={e =>
+                this.props.updatePanel(2)
+              }
+              disabled={this.getDisabled("plan")}
+              value="load"
+              className={
+                "btn btn-large btn-command btn-load " +
+                this.getClassNameOpt("plan")
+              }
+            >
+              Load Plan
             </button>
             <button
               id={"run-channel"}
@@ -86,7 +100,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               disabled={this.getDisabled("run")}
               value="run"
               className={
-                "btn btn-large btn-command btn-run " +
+                "btn btn-large btn-command btn-run-single " +
                 this.getClassNameOpt("run")
               }
             >
@@ -110,7 +124,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               disabled={this.getDisabled("plan_loop")}
               value="plan_loop"
               className={
-                "btn btn-large btn-command btn-run " +
+                "btn btn-large btn-command btn-run-loop " +
                 this.getClassNameOpt("plan_loop")
               }
             >
@@ -132,7 +146,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               id={"edit-labels"}
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
-              onClick={e => this.props.ws_sender({ element: "edit" })}
+              onClick={e => this.props.updatePanel(3)}
               disabled={this.getDisabled("edit")}
             >
               Edit Labels
