@@ -1,3 +1,6 @@
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen" # allows to run unittests headless
+
 from unittest.mock import Mock, patch, MagicMock
 import utilities.firmware_updater as firmware_updater
 from qtpy import QtCore
