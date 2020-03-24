@@ -1,50 +1,51 @@
-import os
-os.environ["QT_QPA_PLATFORM"] = "offscreen" # allows to run unittests headless
-
-from unittest.mock import Mock, patch, MagicMock
 import utilities.firmware_updater as firmware_updater
+from unittest.mock import Mock, patch, MagicMock
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"  # allows to run unittests headless
 from qtpy import QtCore
 
-fake_hardware_meta = {"Serial_Devices":{
-                         "/dev/ttyACM0": {
-                            "Driver": "NumatoDriver",
-                            "Path": "/dev/ttyACM0",
-                            "Baudrate": 19200,
-                            "Numato_ID": 0,
-                            "RPC_Port": 33030
-                          },
-                          "/dev/ttyUSB0": {
-                            "Driver": "AlicatDriver",
-                            "Path": "/dev/ttyUSB0",
-                            "Baudrate": 19200,
-                            "RPC_Port": 33020
-                          },
-                          "/dev/ttyUSB1": {
-                            "Driver": "PigletDriver",
-                            "Bank_ID": 1,
-                            "Topaz_A_SN": "104",
-                            "Topaz_B_SN": "105",
-                            "Manifold_SN": "A157UT4W",
-                            "Manifold_FW": "1.1.9",
-                            "Whitfield_SN": "SN8",
-                            "Path": "/dev/ttyUSB1",
-                            "Baudrate": 230400,
-                            "RPC_Port": 33040
-                          },
-                          "/dev/ttyUSB2": {
-                            "Driver": "PigletDriver",
-                            "Bank_ID": 2,
-                            "Topaz_A_SN": "104",
-                            "Topaz_B_SN": "105",
-                            "Manifold_SN": "A157UT4W",
-                            "Manifold_FW": "1.1.999",
-                            "Whitfield_SN": "SN8987",
-                            "Path": "/dev/ttyUSB2",
-                            "Baudrate": 230400,
-                            "RPC_Port": 33041
-                          }
-                        }
-                    }
+
+fake_hardware_meta = {"Serial_Devices": {
+    "/dev/ttyACM0": {
+        "Driver": "NumatoDriver",
+        "Path": "/dev/ttyACM0",
+        "Baudrate": 19200,
+        "Numato_ID": 0,
+        "RPC_Port": 33030
+    },
+    "/dev/ttyUSB0": {
+        "Driver": "AlicatDriver",
+        "Path": "/dev/ttyUSB0",
+        "Baudrate": 19200,
+        "RPC_Port": 33020
+    },
+    "/dev/ttyUSB1": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 1,
+        "Topaz_A_SN": "104",
+        "Topaz_B_SN": "105",
+        "Manifold_SN": "A157UT4W",
+        "Manifold_FW": "1.1.9",
+        "Whitfield_SN": "SN8",
+        "Path": "/dev/ttyUSB1",
+        "Baudrate": 230400,
+        "RPC_Port": 33040
+    },
+    "/dev/ttyUSB2": {
+        "Driver": "PigletDriver",
+        "Bank_ID": 2,
+        "Topaz_A_SN": "104",
+        "Topaz_B_SN": "105",
+        "Manifold_SN": "A157UT4W",
+        "Manifold_FW": "1.1.999",
+        "Whitfield_SN": "SN8987",
+        "Path": "/dev/ttyUSB2",
+        "Baudrate": 230400,
+        "RPC_Port": 33041
+    }
+}
+}
+
 
 def set_up(qtbot):
     window = firmware_updater.FirmwareUpdateWidget()
@@ -62,6 +63,7 @@ def test_pigss_services_status_active(qtbot):
     window, qtbot = set_up(qtbot)
     qtbot.wait(10)
     assert window.dynamic_piggs_core_status_label.text() == "ACTIVE"
+
 
 @patch('utilities.firmware_updater.check_for_piggs_core_status', new=MagicMock(return_value=False))
 def test_pigss_services_status_not_active(qtbot):
@@ -94,6 +96,7 @@ def test_scan(qtbot):
         qtbot.wait(2000)
         assert (len(window.piggles_widgets) == 2)
 
+
 @patch('utilities.firmware_updater.check_for_piggs_core_status', new=MagicMock(return_value=False))
 def test_bank_id_flush(qtbot):
     """
@@ -115,7 +118,7 @@ def test_bank_id_flush(qtbot):
                 assert (len(window.piggles_widgets) == 2)
             qtbot.waitUntil(wait_until_piggles_widgets_loaded, timeout=2000)
             PigletWidget = window.piggles_widgets[0]
-            
+
             PigletWidget.bank_id_cb.setCurrentText("2")
 
             qtbot.mouseClick(PigletWidget.btn_bank_id_flush, QtCore.Qt.LeftButton)
@@ -150,6 +153,7 @@ def test_flashing_firmware(qtbot):
             PigletWidget.on_btn_fw_flash_click()
             qtbot.wait(10)
             fake_subprocess.assert_called()
+
 
 def test_check_for_pigss_status(qtbot):
     """
