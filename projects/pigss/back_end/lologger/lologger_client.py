@@ -38,7 +38,7 @@ class LOLoggerClient():
         ClientTimestamp = str(timeutils.get_local_timestamp())
         log_submitted = False
         if self.verbose:
-            print(message)
+            print(f"{ClientTimestamp}::: L-{level} :: -  {message}")
         if not self.connected:
             if self.reconnect_counter >= ATTEMPT_TO_RECONNECT_AFTER_N_LOGS:
                 self.reconnect_counter = 0
