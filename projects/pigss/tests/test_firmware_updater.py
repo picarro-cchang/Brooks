@@ -164,6 +164,7 @@ def test_check_for_pigss_status(qtbot):
     with patch('utilities.firmware_updater.process_triggers', new=[""]):
         assert firmware_updater.check_for_piggs_core_status()
 
+
 def test_qthreads():
     """
         Test qthreads properly executed
@@ -179,20 +180,19 @@ def test_qthreads():
         thread.run()
         fake_serialmapper_to_returned.get_usb_serial_devices.assert_called()
 
-
         fake_subprocess = MagicMock()
         with patch('subprocess.call', new=fake_subprocess):
-            thread  = firmware_updater.FlashTheFirmwareThread(parent,
-                                                              fake_hardware_meta["Serial_Devices"]["/dev/ttyUSB1"],
-                                                              "/fake/file/path.hex")
+            thread = firmware_updater.FlashTheFirmwareThread(parent,
+                                                             fake_hardware_meta["Serial_Devices"]["/dev/ttyUSB1"],
+                                                             "/fake/file/path.hex")
             thread.run()
             fake_subprocess.assert_called()
 
         fake_piglet_driver_to_be_returned = MagicMock()
         fake_piglet_driver = MagicMock(return_value=fake_piglet_driver_to_be_returned)
         with patch('back_end.piglet.piglet_driver.PigletBareDriver', new=fake_piglet_driver):
-            thread  = firmware_updater.FlushBankIDThread(parent,
-                                                         fake_hardware_meta["Serial_Devices"]["/dev/ttyUSB1"],
-                                                         "8")
+            thread = firmware_updater.FlushBankIDThread(parent,
+                                                        fake_hardware_meta["Serial_Devices"]["/dev/ttyUSB1"],
+                                                        "8")
             thread.run()
             fake_piglet_driver_to_be_returned.set_slot_id.assert_called_with(8)
