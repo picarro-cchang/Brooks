@@ -80,6 +80,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
 
     const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
+      let portNumber = (this.props.bank - 1) * 8 + i
       channelButtons.push(
         getChannelDisabled(i) ? (
           <button
@@ -90,12 +91,11 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             <p id={"chn-status-" + i} className={"chn-status"}>
               {" "}
-              {test && test[i]}{" "}
             </p>
           </button>
         ) : (
@@ -114,13 +114,12 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 
             <p id={"chn-status-" + i} className={"chn-status"}>
               {" "}
-              {test && test[i]}
             </p>
           </button>
         )
@@ -142,12 +141,10 @@ class BankPanel extends PureComponent<BankPanelOptions> {
         {"Clean"}
       </button>
     );
-    const value: string = this.props.plan.bank_names[this.props.bank].name;
     return (
       <div>
         <div className="panel-bank" style={bankStyle}>
           <div style={{ width: "100%" }}>
-            <h2 style={{ color: "#424242", marginBottom: "10px" }}>{value}</h2>
             <div className="grid-bank">{channelButtons}</div>
             {cleanButton}
           </div>

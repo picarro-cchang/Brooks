@@ -16,26 +16,25 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
   constructor(props) {
     super(props);
     this.state = {
-      plan: this.props.plan
+      plan: this.props.plan,
     };
-    this.getFileNames = this.getFileNames.bind(this);
   }
 
-  getFileNames() {
-    PlanService.getFileNames().then((response: any) => {
-      response.json().then((fileNames: any) => {
-        const length = Object.keys(fileNames).length;
+  // getFileNames() {
+  //   PlanService.getFileNames().then((response: any) => {
+  //     response.json().then((fileNames: any) => {
+  //       const length = Object.keys(fileNames).length;
 
-        this.setState({
-          plan: {
-            ...this.state.plan,
-            plan_files: fileNames,
-            num_plan_files: length
-          }
-        });
-      });
-    });
-  }
+  //       this.setState({
+  //         plan: {
+  //           ...this.state.plan,
+  //           plan_files: fileNames,
+  //           num_plan_files: length
+  //         }
+  //       });
+  //     });
+  //   });
+  // }
 
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
@@ -45,11 +44,11 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
           className="btn w-100 btn-small"
           onClick={e => {
             this.props.updateFileName(false);
-            this.props.getFileName(this.state.plan.plan_files[index + 1]);
+            this.props.getPlanFromFileName(this.props.fileNames[index + 1]);
           }}
           style={{ color: "black" }}
         >
-          {this.state.plan.plan_files[index + 1]}
+          {this.props.fileNames[index + 1]}
         </button>
         <button
           type="button"
@@ -69,7 +68,8 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
   );
 
   render() {
-    this.getFileNames();
+    this.props.getPlanFileNames();
+    let length = Object.keys(this.props.fileNames).length
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>
@@ -77,7 +77,7 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
           <form>
             <ReactList
               itemRenderer={this.renderItem}
-              length={this.state.plan.num_plan_files}
+              length={length}
               type={"uniform"}
             />
           </form>

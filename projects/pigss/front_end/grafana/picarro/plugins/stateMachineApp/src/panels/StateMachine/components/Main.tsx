@@ -13,6 +13,8 @@ import EditPanel from "./EditPanel";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import PlanPreviewPanel from "./PlanPreview";
+import PlanServiceAPI from "../api/PlanServiceAPI";
+import { PlanService } from "../api/PlanService";
 
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -28,7 +30,7 @@ export class Main extends React.Component<any, any> {
     },
     uistatus: {},
     plan: {
-      max_steps: 10,
+      max_steps: 32,
       panel_to_show: 0,
       current_step: 1,
       focus: { row: 0, column: 0 },
@@ -41,53 +43,53 @@ export class Main extends React.Component<any, any> {
         1: {
           name: "",
           channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
+            1: "Port 1",
+            2: "Port 2",
+            3: "Port 3",
+            4: "Port 4",
+            5: "Port 5",
+            6: "Port 6",
+            7: "Port 7",
+            8: "Port 8"
           }
         },
         2: {
           name: "",
           channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
+            1: "Port 9",
+            2: "Port 10",
+            3: "Port 11",
+            4: "Port 12",
+            5: "Port 13",
+            6: "Port 14",
+            7: "Port 15",
+            8: "Port 16"
           }
         },
         3: {
           name: "",
           channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
+            1: "Port 17",
+            2: "Port 18",
+            3: "Port 19",
+            4: "Port 20",
+            5: "Port 21",
+            6: "Port 22",
+            7: "Port 23",
+            8: "Port 24"
           }
         },
         4: {
           name: "",
           channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
+            1: "Port 25",
+            2: "Port 26",
+            3: "Port 27",
+            4: "Port 28",
+            5: "Port 29",
+            6: "Port 30",
+            7: "Port 31",
+            8: "Port 32"
           }
         }
       }
@@ -98,7 +100,8 @@ export class Main extends React.Component<any, any> {
     isPlan: false,
     isChanged: false,
     bankAdd: {},
-    isLoaded: false
+    isLoaded: false,
+    fileNames: {}
   };
   constructor(props) {
     super(props);
@@ -106,7 +109,8 @@ export class Main extends React.Component<any, any> {
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
     this.deleteFile = this.deleteFile.bind(this)
-    this.loadPlan = this.loadPlan.bind(this)
+    this.loadPlan = this.loadPlan.bind(this);
+    this.getPlanFileNames = this.getPlanFileNames.bind(this);
   }
 
   ws = new WebSocket(socketURL);
@@ -138,6 +142,7 @@ export class Main extends React.Component<any, any> {
 
   componentDidMount() {
     this.getDataViaApi();
+    this.getPlanFileNames();
     this.attachWSMethods(this.ws);
   }
 
@@ -157,13 +162,13 @@ export class Main extends React.Component<any, any> {
         this.setState(deepmerge(this.state, { uistatus: obj }));
       });
     });
-    const planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
-      response => {
-        response.json().then(obj => {
-          this.setState(deepmerge(this.state, { plan: obj }));
-        });
-      }
-    );
+    // const planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
+    //   response => {
+    //     response.json().then(obj => {
+    //       this.setState(deepmerge(this.state, { plan: obj }));
+    //     });
+    //   }
+    // );
     const modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
       response => {
         response.json().then(obj => {
@@ -171,7 +176,7 @@ export class Main extends React.Component<any, any> {
         });
       }
     );
-    Promise.all([uiStatusData, planData, modalData]).then(() => {
+    Promise.all([uiStatusData, modalData]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
     });
   };
@@ -225,10 +230,29 @@ export class Main extends React.Component<any, any> {
   }
 
   loadPlan(fileName: string) {
-    let plan = {...this.state.plan}
-    plan.plan_filename = fileName;
-    this.setState({plan});
+    PlanService.getFileData(fileName).then(response => {
+      response.json().then(plan => {
+        this.setState({plan})
+      })
+    })
     this.updatePanelToShow(4);
+  }
+
+  getPlanFileNames() {
+    PlanService.getFileNames().then((repsonse: any) => 
+    repsonse.json().then(planfiles => {
+      this.setState({ fileNames: planfiles }, () => console.log(this.state.fileNames));
+    })
+    )
+  }
+
+  planFileNameUpTop() {
+    if (this.state.uistatus["plan_loop"] == "ACTIVE" || this.state.uistatus["plan_run"] == "ACTIVE") {
+      console.log(this.state.uistatus["plan_loop"])
+      return true
+    } else {
+      return false
+    }
   }
 
   render() {
@@ -256,6 +280,8 @@ export class Main extends React.Component<any, any> {
             isChanged={this.state.isChanged}
             ws_sender={this.ws_sender}
             updatePanel={this.updatePanelToShow}
+            getPlanFileNames={this.getPlanFileNames}
+            fileNames={this.state.fileNames}
           />
         );
         isPlan = true;
@@ -270,6 +296,8 @@ export class Main extends React.Component<any, any> {
             updatePanel={this.updatePanelToShow}
             deleteFile={this.deleteFile}
             loadPlan={this.loadPlan}
+            getPlanFileNames={this.getPlanFileNames}
+            fileNames={this.state.fileNames}
           />
         );
         break;
@@ -293,6 +321,8 @@ export class Main extends React.Component<any, any> {
             updatePanel={this.updatePanelToShow}
             deleteFile={this.deleteFile}
             loadPlan={this.loadPlan}
+            getPlanFileNames={this.getPlanFileNames}
+            fileNames={this.state.fileNames}
           />
         )
     }
@@ -354,9 +384,14 @@ export class Main extends React.Component<any, any> {
 
     return (
       <div style={{ textAlign: "center" }}>
-        <div className="plan-info">
-          Running Plan: {this.state.plan.plan_filename}
-        </div>
+         {this.planFileNameUpTop() ? (
+          <div className="plan-info">
+            Running Plan: {this.state.plan.plan_filename}
+          </div>) : (
+             <div className="plan-info">
+               Not Currently Running A Plan
+             </div>
+          )}
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>

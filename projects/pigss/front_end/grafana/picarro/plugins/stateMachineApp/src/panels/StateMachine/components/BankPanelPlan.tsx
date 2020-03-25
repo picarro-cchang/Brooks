@@ -103,11 +103,6 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
           <button
             onClick={e => {
               this.props.addChanneltoPlan(this.props.bank, i);
-              //   this.props.ws_sender({
-              //     element: "channel",
-              //     bank: this.props.bank,
-              //     channel: i
-              //   });
             }}
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}

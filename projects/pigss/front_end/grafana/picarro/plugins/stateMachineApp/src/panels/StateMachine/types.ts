@@ -54,6 +54,8 @@ export interface PlanLoadPanelOptions {
   updatePanel: (x: number) => void;
   loadPlan: (x: string) => void;
   deleteFile: (x: string) => void;
+  getPlanFileNames: () => void;
+  fileNames: {[key: string]: string}
 }
 
 export interface PlanLoadPanelEditOptions {
@@ -61,9 +63,11 @@ export interface PlanLoadPanelEditOptions {
   ws_sender: (o: object) => void;
   isChanged: boolean;
   updateFileName: (x: boolean) => void;
-  getFileName: (s: string) => void;
+  getPlanFromFileName: (s: string) => void;
   editPlan: () => void;
   updatePanel: (x: number) => void;
+  getPlanFileNames: () => void;
+  fileNames: {[key: string]: string}
 }
 
 export interface PlanPanelOptions {
@@ -90,7 +94,9 @@ export interface PlanPanelLayoutOptions {
   updateFileName: (x: boolean) => void;
   // addChanneltoPlan: (bank: number, channel: number) => void;
   bankAddition: { [key: string]: number };
-  updatePanel: (x: number) => void;
+  updatePanel: (x: number) => void;            
+  getPlanFileNames: () => void;
+  fileNames: {[key: string]: string}
 }
 
 export enum PlanPanelTypes {
@@ -109,6 +115,7 @@ export interface PlanSavePanelOptions {
   planSaved: (f: string) => void;
   editPlan: () => void;
   updatePanel: (x: number) => void;
+  fileNames: {[key: string]: string}
 }
 
 export interface BankConfig {

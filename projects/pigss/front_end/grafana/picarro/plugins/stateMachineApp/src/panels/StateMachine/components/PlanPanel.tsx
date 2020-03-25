@@ -279,7 +279,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
       } else {
         for (const bank in planRow.banks) {
           if (planRow.banks.hasOwnProperty(bank)) {
-            const bank_name = this.props.plan.bank_names[bank].name;
+            const bank_name = this.state.plan.bank_names[bank].name;
             const bank_config = planRow.banks[bank];
             if (bank_config.clean != 0) {
               portString = `Clean ${bank_name}`;
@@ -288,7 +288,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
               const mask = bank_config.chan_mask;
               // Find index of first set bit using bit-twiddling hack
               const channel = (mask & -mask).toString(2).length;
-              const ch_name = this.props.plan.bank_names[bank].channels[
+              const ch_name = this.state.plan.bank_names[bank].channels[
                 channel
               ];
               portString = bank_name + ", " + ch_name;

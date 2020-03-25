@@ -8,6 +8,9 @@ export const PlanService = (() => {
     getFileData: (fileName: string) => {
       return TESTPlanServiceAPI.getRequest("planInfo");
     },
+    // getCurrentPlan: () => {
+    //   return TESTPlanServiceAPI.getRequest("currentPlan");
+    // },
     saveFile: (data, fileName) => {
       return TESTPlanServiceAPI.postData("/save/" + fileName, data, fileName);
     },

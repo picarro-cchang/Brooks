@@ -24,14 +24,14 @@ export class PlanPanelLayout extends PureComponent<
       isLoaded: false,
       fileName: ""
     };
-    this.getFileName = this.getFileName.bind(this);
+    this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
     this.loadFile = this.loadFile.bind(this);
     this.editPlan = this.editPlan.bind(this);
     this.savePlan = this.savePlan.bind(this);
     this.planSaved = this.planSaved.bind(this);
   }
 
-  getFileName(filename: string) {
+  getPlanFromFileName(filename: string) {
     // gets called when filename is clicked on in load panel
     this.setState({
       isLoaded: true,
@@ -90,7 +90,7 @@ export class PlanPanelLayout extends PureComponent<
             planSaved={this.planSaved}
             editPlan={this.editPlan}
             updatePanel={this.props.updatePanel}
-
+            fileNames={this.props.fileNames}
           />
         );
         break;
@@ -101,10 +101,11 @@ export class PlanPanelLayout extends PureComponent<
             updateFileName={this.props.updateFileName}
             isChanged={this.props.isChanged}
             ws_sender={this.props.ws_sender}
-            getFileName={this.getFileName}
+            getPlanFromFileName={this.getPlanFromFileName}
             editPlan={this.editPlan}
             updatePanel={this.props.updatePanel}
-
+            getPlanFileNames={this.props.getPlanFileNames}
+            fileNames={this.props.fileNames}
           />
         );
         break;

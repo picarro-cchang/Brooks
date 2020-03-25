@@ -8,16 +8,16 @@ import { PlanLoadPanelOptions, Plan } from "./../types";
 // if plan is being selected for editing, we pass plan file name and info to state of edit panel
 interface State {
   plan: Plan;
+  fileNames: {}
 }
 class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions, State> {
   constructor(props) {
     super(props) 
     this.state = {
       plan: this.props.plan,
+      fileNames: this.props.plan.plan_files
     }
   }
-
-  
 
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
@@ -27,17 +27,17 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions, State> {
           className="btn w-100 btn-small"
           onClick={e => {
             this.props.updateFileName(false);
-            this.props.loadPlan(this.state.plan.plan_files[index + 1])
+            this.props.loadPlan(this.props.fileNames[index + 1])
           }}
           style={{ color: "black" }}
         >
-          {this.state.plan.plan_files[index + 1]}
+          {this.props.fileNames[index + 1]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            this.props.deleteFile(this.state.plan.plan_files[index+1]);
+            this.props.deleteFile(this.props.fileNames[index + 1]);
           }}
         >
           X
@@ -47,6 +47,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions, State> {
   );
 
   render() {
+    let length = Object.keys(this.props.fileNames).length
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>
@@ -54,7 +55,7 @@ class PlanLoadPanel extends PureComponent<PlanLoadPanelOptions, State> {
           <form>
             <ReactList
               itemRenderer={this.renderItem}
-              length={this.props.plan.num_plan_files}
+              length={length}
               type={"uniform"}
             />
           </form>
