@@ -6,6 +6,7 @@ Base class for an async http server with exception handling
  as an Event of type Signal.ERROR to the async_hsm framework.
 """
 import traceback
+from json.decoder import JSONDecodeError
 
 from aiohttp import web
 from aiohttp.web import HTTPInternalServerError, middleware
@@ -35,6 +36,11 @@ class ServiceTemplate:
                 reason="Bad Request",
                 text="Please check for inorrect use of API. The API requested, could not be found."
             )
+        except JSONDecodeError:
+            return web.HTTPBadRequest(
+                reason="Bad Request",
+                text="Please check for inorrect use of API. There is issue with passed JSON data."
+            )
         except Exception as e:  # noqa
             # Handle unexpected exception by replying with a traceback and optionally publishing an event
             if self.publish_errors:
@@ -47,7 +53,8 @@ class ServiceTemplate:
                             "location": self.__class__.__name__,
                             "request": str(request.url)
                         }))
-            raise HTTPInternalServerError(text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
+            raise HTTPInternalServerError(
+                text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
         return resp
 
     # Optionally override these handler coroutines in a subclass

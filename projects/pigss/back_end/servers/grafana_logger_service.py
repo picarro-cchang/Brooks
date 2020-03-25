@@ -33,6 +33,7 @@ class GrafanaLoggerService(ServiceTemplate):
         self.app.router.add_route('GET', '/ws', self.websocket_handler)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
         self.app.router.add_route('GET', '/getlogs', self.handle_getlogs)
+        self.app.router.add_route('POST', '/writelog', self.handle_write_log)
 
     async def on_startup(self, app):
         log.debug("GrafanaLoggerService is starting up")
@@ -40,7 +41,8 @@ class GrafanaLoggerService(ServiceTemplate):
         self.app["websockets"] = []
         self.tasks = []
         self.sqlite_path = None
-        self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
+        self.socket_stats = {"ws_connections": 0,
+                             "ws_disconnections": 0, "ws_open": 0}
         self.tasks.append(asyncio.create_task(self.get_latest_db(app)))
         self.tasks.append(asyncio.create_task(self.listener(app)))
 
@@ -67,7 +69,7 @@ class GrafanaLoggerService(ServiceTemplate):
         description: Fetch server statistics from GrafanaLoggerServer
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -94,7 +96,8 @@ class GrafanaLoggerService(ServiceTemplate):
             current_date = datetime.datetime.now()
             last_date = monthrange(current_date.year, current_date.month)[1]
             tomorrow = current_date + datetime.timedelta(days=1)
-            seconds_till_midnight = (datetime.datetime.combine(tomorrow, datetime.time.min) - current_date).seconds + 1
+            seconds_till_midnight = (datetime.datetime.combine(
+                tomorrow, datetime.time.min) - current_date).seconds + 1
             await asyncio.sleep(seconds_till_midnight)
             if True or current_date.day == last_date:
                 try:
@@ -103,7 +106,8 @@ class GrafanaLoggerService(ServiceTemplate):
                     current_sqlite_path = lologger_proxy.get_sqlite_path()
                 except Exception as ex:
                     # ignore exceptions while trying to fetch new database file
-                    log.debug(f"Exception occurred while fetching latest db {ex}")
+                    log.debug(
+                        f"Exception occurred while fetching latest db {ex}")
                 if self.sqlite_path is not None and self.sqlite_path != current_sqlite_path:
                     self.sqlite_path = current_sqlite_path
                     for ws in self.app["websockets"]:
@@ -111,7 +115,8 @@ class GrafanaLoggerService(ServiceTemplate):
                         await ws.send_json({"type": "RESET"})
 
     def set_predefined_config(self):
-        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        lologger_proxy = CmdFIFOServerProxy(
+            f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
         self.sqlite_path = lologger_proxy.get_sqlite_path()
         query_dict = {}
         query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
@@ -131,11 +136,13 @@ class GrafanaLoggerService(ServiceTemplate):
              "Level"]
         """
         try:
-            query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], log)
+            query, values = EventsModel.build_sql_select_query(
+                query_params, self.app["config"]["sqlite"]["table_name"], log)
             if query is None or values is None:
                 return None
             if __debug__:
-                print(f"\nFile: {self.sqlite_path} , \nQueryParams: {query_params}, \nWS: {len(self.app['websockets'])}\n")
+                print(
+                    f"\nFile: {self.sqlite_path} , \nQueryParams: {query_params}, \nWS: {len(self.app['websockets'])}\n")
             return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], log)
         except TypeError as te:
             log.error(f"Error in GrafanaLoggerService {te}")
@@ -146,7 +153,7 @@ class GrafanaLoggerService(ServiceTemplate):
         description: Fetch Logs from GrafanaLoggerServer
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -172,7 +179,7 @@ class GrafanaLoggerService(ServiceTemplate):
         description: Websocket communication for fetching logs from GrafanaLoggerServer
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -212,12 +219,15 @@ class GrafanaLoggerService(ServiceTemplate):
                 elif msg.type == WSMsgType.PONG:
                     pass
                 elif msg.type == WSMsgType.CLOSE:
-                    log.warning(message="Client terminated websocket connection.")
+                    log.warning(
+                        message="Client terminated websocket connection.")
                     self.app["websockets"].remove(ws)
                     await ws.close(code=1000, message="Client terminated websocket connection.")
         except asyncio.CancelledError:
-            log.error("Web socket disconnection caused coroutine cancellation in handler.")
-            log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
+            log.error(
+                "Web socket disconnection caused coroutine cancellation in handler.")
+            log.debug(
+                f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
         finally:
             self.app["websockets"].remove(ws)
             self.socket_stats['ws_open'] = len(self.app["websockets"])
@@ -244,7 +254,9 @@ class GrafanaLoggerService(ServiceTemplate):
         try:
             is_time = (ws['next_run'] <= current_time)
             if 'next_run' in ws:
-                is_new_interval = current_time + datetime.timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
+                is_new_interval = current_time + \
+                    datetime.timedelta(
+                        seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
             log.error(f"Error in should_send_task {ve}")
@@ -267,6 +279,37 @@ class GrafanaLoggerService(ServiceTemplate):
                         self.send_task(ws, current_time)
                         for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
                     ],
-                                   return_exceptions=True)
+                        return_exceptions=True)
             except ConnectionError:
                 log.error(f"Error in Logger Service Listener \n{format_exc()}")
+
+    async def handle_write_log(self, request):
+        """
+        description: Write log in Event table
+        tags:
+            -   Grafana Logger
+        summary: Write log in Event table
+        responses:
+            "200":
+                description: successful operation returns True/False
+        """
+        body = await request.json()
+        message = level = None
+        try:
+            message = body.get("message")
+            level = int(body.get("level"))
+        except TypeError:
+            log.debug(format_exc())
+        except ValueError:
+            log.debug(format_exc())
+        if level is None or message is None or level not in range(10, 50, 10):
+            return web.json_response({
+                "text": "Invalid input parameters",
+                "status": 200
+            })
+
+        log.Log(message, level)
+        return web.json_response({
+            "text": "Message sent for logging.",
+            "status": 200
+        })
