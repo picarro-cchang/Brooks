@@ -302,10 +302,11 @@ export class Main extends React.Component<any, any> {
           <div className="plan-info">
             Running Plan: {this.state.plan.plan_filename}
           </div>) : (
-             <div className="plan-info">
-               Running Plan: No Plan
-             </div>
-          )}        <div className="container-fluid">
+          <div className="plan-info">
+            Running Plan: No Plan
+          </div>
+        )}        
+        <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
               {left_panel}
