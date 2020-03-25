@@ -197,6 +197,14 @@ export class Main extends React.Component<any, any> {
     this.setState({ isChanged: x });
   }
 
+  planFileNameUpTop() {
+    if (this.state.uistatus["plan_loop"] == "ACTIVE" || this.state.uistatus["plan_run"] == "ACTIVE") {
+      return true
+    } else {
+      return false
+    }
+  }
+
   render() {
     let left_panel;
     let isPlan = false;
@@ -290,7 +298,14 @@ export class Main extends React.Component<any, any> {
     }
     return (
       <div style={{ textAlign: "center" }}>
-        <div className="plan-info">Running Plan: {this.state.plan.plan_filename}</div>
+        {this.planFileNameUpTop() ? (
+          <div className="plan-info">
+            Running Plan: {this.state.plan.plan_filename}
+          </div>) : (
+          <div className="plan-info">
+            Running Plan: No Plan
+          </div>
+        )}        
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
