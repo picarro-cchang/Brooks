@@ -98,9 +98,9 @@ def test_scan(qtbot):
 
 
 @patch('utilities.firmware_updater.check_for_piggs_core_status', new=MagicMock(return_value=False))
-def test_bank_id_flush(qtbot):
+def test_bank_id_flash(qtbot):
     """
-        Test flushing down the bank id for the piglet
+        Test flashing down the bank id for the piglet
     """
     fake_serialmapper_to_returned = MagicMock()
     serialmapper = MagicMock(return_value=fake_serialmapper_to_returned)
@@ -121,7 +121,7 @@ def test_bank_id_flush(qtbot):
 
             PigletWidget.bank_id_cb.setCurrentText("2")
 
-            qtbot.mouseClick(PigletWidget.btn_bank_id_flush, QtCore.Qt.LeftButton)
+            qtbot.mouseClick(PigletWidget.btn_bank_id_flash, QtCore.Qt.LeftButton)
             qtbot.wait(1000)
             fake_piglet_driver_to_be_returned.set_slot_id.assert_called_with(2)
 
@@ -191,7 +191,7 @@ def test_qthreads():
         fake_piglet_driver_to_be_returned = MagicMock()
         fake_piglet_driver = MagicMock(return_value=fake_piglet_driver_to_be_returned)
         with patch('back_end.piglet.piglet_driver.PigletBareDriver', new=fake_piglet_driver):
-            thread = firmware_updater.FlushBankIDThread(parent,
+            thread = firmware_updater.FlashBankIDThread(parent,
                                                         fake_hardware_meta["Serial_Devices"]["/dev/ttyUSB1"],
                                                         "8")
             thread.run()
