@@ -304,7 +304,7 @@ export class Main extends React.Component<any, any> {
             Running Plan: {this.state.plan.plan_filename}
           </div>) : (
              <div className="plan-info">
-               Not Currently Running A Plan
+               Running Plan: No Plan
              </div>
           )}        <div className="container-fluid">
           <div className="row justify-content-md-center">
