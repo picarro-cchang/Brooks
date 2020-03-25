@@ -88,25 +88,25 @@ class PigletWidget(QWidget):
         self.bank_id_layout.addWidget(self.bank_id_cb)
         self.interface_to_be_locked.append(self.bank_id_cb)
 
-        self.btn_bank_id_flush = QPushButton("Flush")
-        self.btn_bank_id_flush.setEnabled(False)
-        self.btn_bank_id_flush.clicked.connect(self.on_btn_bank_id_flush_click)
-        self.bank_id_layout.addWidget(self.btn_bank_id_flush)
-        self.interface_to_be_locked.append(self.btn_bank_id_flush)
+        self.btn_bank_id_flash = QPushButton("Flash")
+        self.btn_bank_id_flash.setEnabled(False)
+        self.btn_bank_id_flash.clicked.connect(self.on_btn_bank_id_flash_click)
+        self.bank_id_layout.addWidget(self.btn_bank_id_flash)
+        self.interface_to_be_locked.append(self.btn_bank_id_flash)
 
         return self.bank_id_frame
 
     def bank_id_selection_changed(self):
         if self.bank_id_cb.currentText() != str(self.device_configs["Bank_ID"]):
-            self.btn_bank_id_flush.setEnabled(True)
+            self.btn_bank_id_flash.setEnabled(True)
         else:
-            self.btn_bank_id_flush.setEnabled(False)
+            self.btn_bank_id_flash.setEnabled(False)
 
-    def on_btn_bank_id_flush_click(self):
-        self.FlushBankIDThread = FlushBankIDThread(self, self.device_configs, str(self.bank_id_cb.currentText()))
-        self.FlushBankIDThread.daemon = True
-        self.FlushBankIDThread.log_text_box_signal.connect(lambda p: self.log_fw_update((p)))
-        self.FlushBankIDThread.start()
+    def on_btn_bank_id_flash_click(self):
+        self.FlashBankIDThread = FlashBankIDThread(self, self.device_configs, str(self.bank_id_cb.currentText()))
+        self.FlashBankIDThread.daemon = True
+        self.FlashBankIDThread.log_text_box_signal.connect(lambda p: self.log_fw_update((p)))
+        self.FlashBankIDThread.start()
 
     def make_fw_update_frame(self):
         self.fw_update_frame = QFrame()
@@ -202,7 +202,7 @@ class FirmwareUpdateWidget(QWidget):
 
     def initGUI(self):
         # Initiate all GUI
-        self.piggs_core_status_label = QLabel("Pigss-core Status: ")
+        self.piggs_core_status_label = QLabel("Software Status: ")
         self.dynamic_piggs_core_status_label = QLabel("---")
         self.piggs_core_status_layout = QHBoxLayout()
         self.piggs_core_status_frame = QFrame()
@@ -212,7 +212,7 @@ class FirmwareUpdateWidget(QWidget):
         self.piggs_core_status_frame.setLayout(self.piggs_core_status_layout)
         self.mgl.addWidget(self.piggs_core_status_frame)
 
-        self.prescan_message_label = QLabel("You --- scan for harfware now")
+        self.prescan_message_label = QLabel("You --- scan for hardware now")
         self.btn_scan_for_hardware = QPushButton("Scan")
 
         self.btn_scan_for_hardware.clicked.connect(self.on_scan_click)
@@ -244,14 +244,14 @@ class FirmwareUpdateWidget(QWidget):
             self.dynamic_piggs_core_status_label.setText("ACTIVE")
             self.dynamic_piggs_core_status_label.setStyleSheet('color: red')
             self.btn_scan_for_hardware.setEnabled(False)
-            self.prescan_message_label.setText("You can't scan for harfware now")
+            self.prescan_message_label.setText("You can't scan for hardware now")
             for piglet_widget in self.piggles_widgets:
                 piglet_widget.lock_all_interface()
         else:
             self.dynamic_piggs_core_status_label.setText("NOT ACTIVE")
             self.dynamic_piggs_core_status_label.setStyleSheet('color: green')
             self.btn_scan_for_hardware.setEnabled(True)
-            self.prescan_message_label.setText("You can scan for harfware now")
+            self.prescan_message_label.setText("You can scan for hardware now")
             for piglet_widget in self.piggles_widgets:
                 piglet_widget.unlock_all_interface()
 
@@ -350,7 +350,7 @@ class FlashTheFirmwareThread(QtCore.QThread):
         self.parent.btn_fw_flash.setEnabled(False)
 
 
-class FlushBankIDThread(QtCore.QThread):
+class FlashBankIDThread(QtCore.QThread):
     log_text_box_signal = QtCore.Signal(str)
 
     def __init__(self, parent, device_configs, new_bank_id):
@@ -360,9 +360,9 @@ class FlushBankIDThread(QtCore.QThread):
         self.new_bank_id = new_bank_id
 
     def run(self):
-        self.parent.btn_bank_id_flush.setEnabled(False)
-        self.parent.btn_bank_id_flush.setText("Flushing...")
-        self.log_text_box_signal.emit(f"Flushing new Bank_ID to be {self.new_bank_id}\n")
+        self.parent.btn_bank_id_flash.setEnabled(False)
+        self.parent.btn_bank_id_flash.setText("Flashing...")
+        self.log_text_box_signal.emit(f"Flashing new Bank_ID to be {self.new_bank_id}\n")
 
         import back_end.piglet.piglet_driver as piglet_driver
         self.piglet_driver = piglet_driver.PigletBareDriver(port=self.device_configs["Path"], baudrate=230400)
@@ -371,13 +371,13 @@ class FlushBankIDThread(QtCore.QThread):
         self.piglet_driver.close()
 
         self.parent.device_configs["Bank_ID"] = self.new_bank_id
-        self.parent.btn_bank_id_flush.setText("Flush")
+        self.parent.btn_bank_id_flash.setText("Flash")
         self.log_text_box_signal.emit("Done\n")
-        self.parent.btn_bank_id_flush.setEnabled(False)
+        self.parent.btn_bank_id_flash.setEnabled(False)
 
 
 def main():
-    app = QApplication([])
+    app = QApplication(["Firmware Updater"])
     window = FirmwareUpdateWidget()
     app.aboutToQuit.connect(window.about_to_close)
     window.show()
