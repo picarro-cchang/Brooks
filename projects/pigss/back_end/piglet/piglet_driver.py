@@ -344,16 +344,17 @@ class PigletDriver(object):
         self.rpc_port = rpc_port
         self.logger = LOLoggerClient(client_name=f'SAMletDriver_{rpc_port}')
 
-        self.piglet_bare_drivers = PigletBareDriver(port=self.port,
-                                                    baudrate=self.baudrate,
-                                                    carriage_return=self.carriage_return,
-                                                    logger=self.logger)
-
         self.rpc_server = CmdFIFO.CmdFIFOServer(("", self.rpc_port),
                                                 ServerName=__class__.__name__,
                                                 ServerDescription=f'RPC Server for {__class__.__name__}',
                                                 ServerVersion=1.0,
                                                 threaded=True)
+
+        self.piglet_bare_drivers = PigletBareDriver(port=self.port,
+                                                    baudrate=self.baudrate,
+                                                    carriage_return=self.carriage_return,
+                                                    logger=self.logger)
+
         self.register_rpc_functions()
         self.rpc_server.serve_forever()
 
