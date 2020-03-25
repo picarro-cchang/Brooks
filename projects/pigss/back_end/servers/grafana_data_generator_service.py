@@ -213,7 +213,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
                 return web.json_response({"filename": file_name})
         except KeyError as ke:
             log.critical(
-                f"HOSTNAME enveironment variable is not defined. {ke}")
+                f"HOSTNAME environment variable is not defined. {ke}")
 
     async def get_user_keys(self, request):
         """
