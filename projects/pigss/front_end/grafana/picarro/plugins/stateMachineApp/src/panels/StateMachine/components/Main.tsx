@@ -199,7 +199,6 @@ export class Main extends React.Component<any, any> {
 
   planFileNameUpTop() {
     if (this.state.uistatus["plan_loop"] == "ACTIVE" || this.state.uistatus["plan_run"] == "ACTIVE") {
-      console.log(this.state.uistatus["plan_loop"])
       return true
     } else {
       return false
