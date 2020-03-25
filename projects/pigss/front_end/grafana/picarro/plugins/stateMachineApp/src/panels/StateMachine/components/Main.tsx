@@ -209,6 +209,7 @@ export class Main extends React.Component<any, any> {
     this.setState({ isChanged: x });
   }
 
+<<<<<<< HEAD
   addChanneltoPlan(bankx: number, channelx: number) {
     console.log("Adding Channel")
     this.setState({
@@ -248,7 +249,6 @@ export class Main extends React.Component<any, any> {
 
   planFileNameUpTop() {
     if (this.state.uistatus["plan_loop"] == "ACTIVE" || this.state.uistatus["plan_run"] == "ACTIVE") {
-      console.log(this.state.uistatus["plan_loop"])
       return true
     } else {
       return false
@@ -384,14 +384,15 @@ export class Main extends React.Component<any, any> {
 
     return (
       <div style={{ textAlign: "center" }}>
-         {this.planFileNameUpTop() ? (
+        {this.planFileNameUpTop() ? (
           <div className="plan-info">
             Running Plan: {this.state.plan.plan_filename}
           </div>) : (
-             <div className="plan-info">
-               Not Currently Running A Plan
-             </div>
-          )}
+          <div className="plan-info">
+            Running Plan: No Plan
+          </div>
+        )}        
+>>>>>>> 102c4e3d18412467a1e645d4131340b1794f348c
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>

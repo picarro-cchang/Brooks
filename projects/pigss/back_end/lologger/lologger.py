@@ -50,8 +50,6 @@ LOG_LEVELS_RANGE = range(0, 51)
 LOG_LEVELS = {"CRITICAL": 50, "ERROR": 40, "WARNING": 30, "INFO": 20, "DEBUG": 10, "NOTSET": 0}
 
 MOVE_TO_NEW_FILE_EVERY_MONTH = True
-ZIP_OLD_FILE = False  # not emplemented yet, might be not necessary
-DO_DATABASE_TRANSITION = False  # not emplemented yet, might be not necessary
 
 DEFAULT_DB_PATH = "."  # TODO
 
@@ -73,8 +71,6 @@ class LOLogger(object):
                  flushing_batch_size=10,
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
                  verbose=True,
                  redundant_json=False,
                  meta_table=False,
@@ -88,13 +84,15 @@ class LOLogger(object):
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
 
-        self.flushing_mode = flushing_mode
+        if flushing_mode in FLUSHING_MODES:
+            self.flushing_mode = flushing_mode
+        else:
+            print("unsupported flushing_mode supplied, setting to be TIMED")
+            self.flushing_mode = TIMED
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
 
         self.move_to_new_file_every_month = move_to_new_file_every_month
-        self.zip_old_file = zip_old_file
-        self.do_database_transition = do_database_transition
 
         self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
@@ -121,8 +119,6 @@ class LOLogger(object):
                                               flushing_batch_size=self.flushing_batch_size,
                                               flushing_timeout=self.flushing_timeout,
                                               move_to_new_file_every_month=self.move_to_new_file_every_month,
-                                              zip_old_file=self.zip_old_file,
-                                              do_database_transition=self.do_database_transition,
                                               redundant_json=self.redundant_json,
                                               meta_table=self.meta_table,
                                               pkg_meta=self.pkg_meta,
@@ -140,12 +136,14 @@ class LOLogger(object):
             passed_level = level
         elif level in LOG_LEVELS:
             passed_level = LOG_LEVELS[level]
+        else:
+            return
         if passed_level >= self.LogLevel:
             if client_timestamp is None:
                 client_timestamp = str(timeutils.get_local_timestamp())
             EpochTime = int(1000 * timeutils.get_epoch_timestamp())
 
-            values = [client_timestamp, client_name, EpochTime, log_message, level, ip]
+            values = [client_timestamp, client_name, EpochTime, log_message, passed_level, ip]
             try:
                 self.queue.put_nowait(values)
             except queue.Full:
@@ -153,13 +151,15 @@ class LOLogger(object):
                 while not self.queue.empty():
                     temp_queue.put(self.queue.get())
                 self.queue = temp_queue
+                self.lologger_thread.queue = self.queue
+                self.queue.put_nowait(values)
             except MemoryError:
                 # TO DO
                 print("IF THIS HAS REACHED, WE MIGHT NEED NEW STRATEGY")
 
             self.logs_passed_to_queue += 1
             if self.verbose:
-                print(f"{client_timestamp}:::{client_name} :: L-{level} :: -  {log_message}")
+                print(f"{client_timestamp}:::{client_name} :: L-{passed_level} :: -  {log_message}")
 
     def register_rpc_functions(self):
         self.server.register_function(self.LogEvent)
@@ -191,7 +191,7 @@ class LOLogger(object):
             self.LogLevel = LOG_LEVELS[Level]
         else:
             message = f"""Level passed: {Level}; Should be between {LOG_LEVELS_RANGE[0]}:{LOG_LEVELS_RANGE[-1]}"""
-            self.flush_internal_log_messages(message, level=40)
+            self.LogEvent(message, client_name="LOLogger", level=40)
             raise ValueError(message)
         return True
 
@@ -238,8 +238,6 @@ class LOLoggerThread(threading.Thread):
                  flushing_batch_size=10,
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
-                 zip_old_file=ZIP_OLD_FILE,
-                 do_database_transition=DO_DATABASE_TRANSITION,
                  redundant_json=False,
                  meta_table=False,
                  pkg_meta=None,
@@ -253,17 +251,11 @@ class LOLoggerThread(threading.Thread):
         self.queue = queue
         self.parent = parent
         self.move_to_new_file_every_month = move_to_new_file_every_month
-        self.zip_old_file = zip_old_file
-        self.do_database_transition = do_database_transition
         self.redundant_json = redundant_json
 
         self.current_year_month = get_current_year_month()
 
-        if flushing_mode in FLUSHING_MODES:
-            self.flushing_mode = flushing_mode
-        else:
-            print("unsupported flushing_mode supplied, setting to be TIMED")
-            self.flushing_mode = TIMED
+        self.flushing_mode = flushing_mode
         self.flushing_batch_size = flushing_batch_size
         self.flushing_timeout = flushing_timeout
 
@@ -274,6 +266,8 @@ class LOLoggerThread(threading.Thread):
         self.pkg_meta = pkg_meta
         self.picarro_version = picarro_version
         self.purge_old_logs = purge_old_logs
+
+        self.data_to_flush = []
 
         self.setDaemon(True)
         self.start()
@@ -338,22 +332,6 @@ class LOLoggerThread(threading.Thread):
             return True
         return False
 
-    def archive_old_file(self, filepath):
-        """
-            TODO, spawn a subprocess to zip filepath and then delete original,
-            obv make sure it's safe and we are not loosing anything
-        """
-        pass
-
-    def transition_to_new_database(self, old_db_path):
-        """
-            TODO some magic bullshit so frontend would not notice transition,
-            Gerald suggested to clone 100 last logs from old to new
-            i think we can use a secondary query for it
-            or even main, just shovel those logs there to wait for new DB creation
-        """
-        pass
-
     def _sigint_handler(self):
         """
             This function is called by main thread when SIGINT recieved,
@@ -386,7 +364,7 @@ class LOLoggerThread(threading.Thread):
         """
             Delete old logs files if they are older than self.duration
         """
-        if not self.purge_old_logs.isdigit():
+        if not isinstance(self.purge_old_logs, int) and not self.purge_old_logs.isdigit():
             return False
         # get list of files
         filelist = [f for f in os.listdir(self.db_folder_path) if os.path.isfile(os.path.join(self.db_folder_path, f))]
@@ -449,6 +427,8 @@ class LOLoggerThread(threading.Thread):
                 except ValueError as e:
                     self.flush_internal_log_messages(f"""ValueError while tried to write to json file: {e}\n
                                                          Going to stop writing logs to json file""", level=40)
+        except sqlite3.OperationalError as e:
+            raise e
         except Exception as e:
                 # absolute panic mode! logs can't be flushed
                 # i don't know what possibly can lead to this place and 
@@ -465,47 +445,43 @@ class LOLoggerThread(threading.Thread):
         if self.purge_old_logs is not None:
             self.get_purging_old_logs_done()
 
-        data_to_flush = []
         time_since_last_flush = time.time()
         gonna_flush_now = False
         flushed_counter = 0
 
         self.flush_internal_log_messages("Starting lologger")
 
-        self.flush_metadata_as_event()
+        if self.meta_table:
+            self.flush_metadata_as_event()
 
         while True:
             try:
                 if not self.queue.empty():
                     obj = self.queue.get(timeout=5.0)
                     if self._check_tupple_types(obj):
-                        data_to_flush.append(obj)
+                        self.data_to_flush.append(obj)
 
                 # if batch reached size
-                if ((self.flushing_mode == BATCHING and len(data_to_flush) > self.flushing_batch_size) or
+                if ((self.flushing_mode == BATCHING and len(self.data_to_flush) > self.flushing_batch_size) or
                         # if batch been waiting for too long
                     (self.flushing_mode == BATCHING and time_since_last_flush + DEFAULT_FLUSHING_BATCHING_TIMEOUT <= time.time()) or
                         # if it is time bit.ly/30RJTbw
                     (self.flushing_mode == TIMED and abs(time.time() - time_since_last_flush) >= self.flushing_timeout )):
                     gonna_flush_now = True
 
-                if gonna_flush_now and len(data_to_flush) > 0:
+                if gonna_flush_now and len(self.data_to_flush) > 0:
 
-                    self.flush_log(data_to_flush)
+                    self.flush_log(self.data_to_flush)
 
                     gonna_flush_now = False
-                    flushed_counter += len(data_to_flush)
-                    data_to_flush = []
+                    flushed_counter += len(self.data_to_flush)
+                    self.data_to_flush = []
                     time_since_last_flush = time.time()
 
                 if self.queue.empty():
-                    if len(data_to_flush) == 0:
+                    if len(self.data_to_flush) == 0:
                         # if we have no logs waiting anywhere - we can check if need move to a new file
                         if self.move_to_new_file_every_month and self.check_if_need_to_switch_file():
-                            if self.zip_old_file:
-                                self.archive_old_file(self.db_path)
-                            if self.do_database_transition:
-                                self.transition_to_new_database(self.db_path)
                             if self.redundant_json:
                                 self.json_file.close()
                             self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
@@ -544,16 +520,6 @@ def parse_arguments():
                         action="store_true")
     parser.add_argument('-m', '--move_to_new_file_every_month', help='Every month it will create new db file',
                         default=True)  # this is kinda wrong
-    parser.add_argument('-z',
-                        '--zip_old_file',
-                        help='Archive old log files to preserve disk space, not implemented yet',
-                        default=False,
-                        action="store_true")
-    parser.add_argument('-t',
-                        '--transition_to_new_database',
-                        help='Do a smooth DB file transition, not implemented yet',
-                        default=False,
-                        action="store_true")
     parser.add_argument('-v', '--verbose', help='Print all recieved logs', default=False, action="store_true")
     parser.add_argument('-j', '--json', help='Write redundunt logs to json file', default=False, action="store_true")
     parser.add_argument('-meta', '--meta_table', help='Create a table with metadata', default=False, action="store_true")
@@ -583,8 +549,6 @@ def main():
         db_filename_hostname=args.db_filename_prefix_hostname,
         rpc_port=args.rpc_port,
         move_to_new_file_every_month=args.move_to_new_file_every_month,
-        zip_old_file=args.zip_old_file,
-        do_database_transition=args.transition_to_new_database,
         verbose=args.verbose,
         redundant_json=args.json,
         meta_table=args.meta_table,
