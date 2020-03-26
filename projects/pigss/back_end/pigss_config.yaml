@@ -32,7 +32,7 @@ Plugins:
   GrafanaLogger:
     sqlite:
       table_name: "Events"
-      columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level"]
+      columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level", "EpochTime"]
     limit: 20
     interval: 5
     level: [20, 30, 40, 50]
