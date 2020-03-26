@@ -111,6 +111,7 @@ export class Main extends React.Component<any, any> {
     this.deleteFile = this.deleteFile.bind(this)
     this.loadPlan = this.loadPlan.bind(this);
     this.getPlanFileNames = this.getPlanFileNames.bind(this);
+    this.cancelLoadPlan = this.cancelLoadPlan.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -209,7 +210,6 @@ export class Main extends React.Component<any, any> {
     this.setState({ isChanged: x });
   }
 
-<<<<<<< HEAD
   addChanneltoPlan(bankx: number, channelx: number) {
     console.log("Adding Channel")
     this.setState({
@@ -237,6 +237,75 @@ export class Main extends React.Component<any, any> {
       })
     })
     this.updatePanelToShow(4);
+  }
+
+  cancelLoadPlan(){
+    let plan = {
+      max_steps: 32,
+      panel_to_show: 0,
+      current_step: 1,
+      focus: { row: 0, column: 0 },
+      last_step: 0,
+      steps: {},
+      num_plan_files: 0,
+      plan_files: {},
+      plan_filename: "",
+      bank_names: {
+        1: {
+          name: "",
+          channels: {
+            1: "Port 1",
+            2: "Port 2",
+            3: "Port 3",
+            4: "Port 4",
+            5: "Port 5",
+            6: "Port 6",
+            7: "Port 7",
+            8: "Port 8"
+          }
+        },
+        2: {
+          name: "",
+          channels: {
+            1: "Port 9",
+            2: "Port 10",
+            3: "Port 11",
+            4: "Port 12",
+            5: "Port 13",
+            6: "Port 14",
+            7: "Port 15",
+            8: "Port 16"
+          }
+        },
+        3: {
+          name: "",
+          channels: {
+            1: "Port 17",
+            2: "Port 18",
+            3: "Port 19",
+            4: "Port 20",
+            5: "Port 21",
+            6: "Port 22",
+            7: "Port 23",
+            8: "Port 24"
+          }
+        },
+        4: {
+          name: "",
+          channels: {
+            1: "Port 25",
+            2: "Port 26",
+            3: "Port 27",
+            4: "Port 28",
+            5: "Port 29",
+            6: "Port 30",
+            7: "Port 31",
+            8: "Port 32"
+          }
+        }
+      }
+    }
+    this.setState({plan})
   }
 
   getPlanFileNames() {
@@ -298,6 +367,7 @@ export class Main extends React.Component<any, any> {
             loadPlan={this.loadPlan}
             getPlanFileNames={this.getPlanFileNames}
             fileNames={this.state.fileNames}
+            cancelLoadPlan={this.cancelLoadPlan}
           />
         );
         break;
@@ -323,6 +393,7 @@ export class Main extends React.Component<any, any> {
             loadPlan={this.loadPlan}
             getPlanFileNames={this.getPlanFileNames}
             fileNames={this.state.fileNames}
+            cancelLoadPlan={this.cancelLoadPlan}
           />
         )
     }
@@ -392,7 +463,6 @@ export class Main extends React.Component<any, any> {
             Running Plan: No Plan
           </div>
         )}        
->>>>>>> 102c4e3d18412467a1e645d4131340b1794f348c
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>

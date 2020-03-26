@@ -46,6 +46,15 @@
   margin-left: -20px;
   font-size: 100%;
 }
+
+.btn-group-preview {
+  width: 60px;
+  border-radius: 9%;
+  text-align: center;
+  margin: 10px;
+  font-size: 100%;
+}
+
 .btn-group-2 {
   width: 35%;
   border-radius: 9%;
@@ -93,6 +102,12 @@
   padding: 10px;
   border-radius: 2px;
 }
+.panel-plan-preview {
+  height: 500x;
+  background-color: #bbbbbb8c;
+  padding: 10px;
+  border-radius: 2px;
+}
 .panel-save {
   height: 400px;
   background-color: #bbbbbb8c;
@@ -107,6 +122,12 @@
   overflow-x: hidden;
   overflow-y: auto;
   max-height: 420px;
+  border-radius: 3px;
+}
+.panel-preview-inner {
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 360px;
   border-radius: 3px;
 }
 

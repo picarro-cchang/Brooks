@@ -7,7 +7,7 @@
       "row": 12,
       "column": 1
     },
-    "last_step": 11,
+    "last_step": 13,
     "steps": {
       "1": {
         "banks": {
@@ -206,11 +206,47 @@
         },
         "reference": 0,
         "duration": 20
-      }
+      },
+    "12": {
+      "banks": {
+        "1": {
+          "clean": 0,
+          "chan_mask": 2
+        },
+        "3": {
+          "clean": 0,
+          "chan_mask": 0
+        },
+        "4": {
+          "clean": 0,
+          "chan_mask": 0
+        }
+      },
+      "reference": 0,
+      "duration": 20
     },
+    "13": {
+      "banks": {
+        "1": {
+          "clean": 0,
+          "chan_mask": 2
+        },
+        "3": {
+          "clean": 0,
+          "chan_mask": 0
+        },
+        "4": {
+          "clean": 0,
+          "chan_mask": 0
+        }
+      },
+      "reference": 0,
+      "duration": 20
+    }
+  },
     "num_plan_files": 2,
     "plan_files": {},
-    "plan_filename": "plan_emma_test",
+    "plan_filename": "plan_test",
     "bank_names": {
       "1": {
         "name": "Bank 1",

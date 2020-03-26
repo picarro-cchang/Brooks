@@ -56,6 +56,7 @@ export interface PlanLoadPanelOptions {
   deleteFile: (x: string) => void;
   getPlanFileNames: () => void;
   fileNames: {[key: string]: string}
+  cancelLoadPlan: () => void;
 }
 
 export interface PlanLoadPanelEditOptions {

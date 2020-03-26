@@ -20,22 +20,6 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
     };
   }
 
-  // getFileNames() {
-  //   PlanService.getFileNames().then((response: any) => {
-  //     response.json().then((fileNames: any) => {
-  //       const length = Object.keys(fileNames).length;
-
-  //       this.setState({
-  //         plan: {
-  //           ...this.state.plan,
-  //           plan_files: fileNames,
-  //           num_plan_files: length
-  //         }
-  //       });
-  //     });
-  //   });
-  // }
-
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>

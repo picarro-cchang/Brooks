@@ -48,50 +48,26 @@ class PlanPreviewPanel extends PureComponent<PlanLoadPanelOptions, State> {
 
     return (
       <div className="gf-form-inline" key={row}>
-        {row < 10 ? (
-          <label
-            className="col-sm-1 panel-plan-text"
-            style={{ fontSize: "17px", marginTop: "5px" }}
-          >
-            {row + ". "}
-          </label>
+        <div className="panel-plan-text" style={{ fontSize: "17px", marginTop: "5px" }}>
+        {row < 10 ? (  
+          <>
+          {row + ". "}
+        </>
         ) : (
-          <label
-            className="col-sm-1 panel-plan-text"
+          <span
+          className="panel-plan-text"
             style={{
               marginLeft: "-7px",
               marginRight: "7px",
-              fontSize: "17px",
-              marginTop: "5px"
+              marginTop: "5px",
+              fontSize: "17px"
             }}
           >
             {row + ". "}
-          </label>
+          </span>
         )}
-        <div className="col-sm-6 col-bank-name">
-          <span
-            className="form-control plan-input panel-plan-text"
-            id={"plan-port-" + row}
-            style={{ maxWidth: "90%", float: "left", marginLeft: "2px" }}
-          >
-          {portString}
-          </span>
-        </div>
-        <div className="col-sm-3" style={{ paddingLeft: "0px" }}>
-          <span
-            className="form-control input-small plan-input panel-plan-text"
-            id={"plan-duration-" + row}
-            style={{ maxWidth: "100%" }}
-          >
-          {durationString}
-          </span>
-        </div>
-        <label
-          className="panel-plan-text"
-          style={{ marginLeft: "-15px", paddingRight: "5px" }}
-        >
-          s
-        </label>
+          {portString} Duration: {durationString}
+          </div>
       </div>
     );
   };
@@ -102,27 +78,41 @@ class PlanPreviewPanel extends PureComponent<PlanLoadPanelOptions, State> {
 
   render() {
     return (
-      <div className="panel-save">
-        Hello! Showing plan {this.props.plan.plan_filename}
-        <div className="panel-plan-inner">
-            <form>
+      <div className="panel-plan-preview">
+          <h4>Plan: {this.props.plan.plan_filename}</h4>
+          <h6>
+            Press Ok to continue with this plan, or Cancel to choose another.
+          </h6>
+        <div className="panel-preview-inner">
+            <div style={{marginLeft: "5px"}}>
               <ReactList
                 itemRenderer={this.renderItem}
                 length={this.props.plan.last_step}
                 type={"uniform"}
               />
-            </form>
+            </div>
           </div>
-        <button
-            onClick={e => this.props.updatePanel(0)}
-        >
-            Ok
-        </button>
-        <button
-            onClick={e => this.props.updatePanel(0)}
+          <div className="row btn-row-2">
+          <div>
+            <button
+            className={"btn btn-block btn-cancel btn-group-preview"}
+            onClick={e => {
+              this.props.cancelLoadPlan();
+              this.props.updatePanel(2);
+            }}
         >
             Cancel
         </button>
+          </div>
+          <div>
+              <button
+              className={"btn btn-block btn-green btn-group-preview"}
+              onClick={e => this.props.updatePanel(0)}
+              >
+              Ok
+              </button>
+            </div>
+        </div>
       </div>
     );
   }
