@@ -36,3 +36,4 @@ class SQLiteInstance:
     def close_connection(cls):
         if SQLiteInstance.__instance is not None:
             SQLiteInstance.__instance.close()
+            SQLiteInstance.__instance = None

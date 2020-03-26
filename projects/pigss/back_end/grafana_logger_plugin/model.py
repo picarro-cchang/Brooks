@@ -118,4 +118,4 @@ class EventsModel:
 
     @classmethod
     def close_connection(cls):
-        SQLiteInstance.close_connection();
+        SQLiteInstance.close_connection()
