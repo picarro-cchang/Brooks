@@ -50,7 +50,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions> {
               const ch_name = this.props.plan.bank_names[bank].channels[
                 channel
               ];
-              portString = bank_name + ", " + ch_name;
+              let bankNum = Number(bank);
+              let portNumber = (bankNum - 1)*8 + channel;
+              portString = portNumber + ": " + ch_name;
               break;
             }
           }
