@@ -72,6 +72,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
 
     const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
+      let portNumber = (this.props.bank - 1) * 8 + i
       channelButtons.push(
         getChannelDisabled(i) ? (
           <button
@@ -82,7 +83,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             <p id={"chn-status-" + i} className={"chn-status"}>
@@ -106,7 +107,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 
