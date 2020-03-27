@@ -15,6 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": null,
+  "iteration": 1585333645518,
   "links": [
     {
       "asDropdown": true,
@@ -73,7 +75,7 @@
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "Measuring Port:",
-      "prefixFontSize": "65%",
+      "prefixFontSize": "55%",
       "rangeMaps": [
         {
           "from": "null",
@@ -125,7 +127,7 @@
       "title": "",
       "transparent": true,
       "type": "singlestat",
-      "valueFontSize": "65%",
+      "valueFontSize": "55%",
       "valueMaps": [
         {
           "op": "=",
@@ -1482,9 +1484,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -1539,7 +1541,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -2850,9 +2852,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -2907,7 +2909,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -4218,9 +4220,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -4275,7 +4277,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -5586,9 +5588,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -5643,7 +5645,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -6954,9 +6956,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -7011,7 +7013,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -8322,9 +8324,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -8379,7 +8381,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -9690,9 +9692,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -9747,7 +9749,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -11058,9 +11060,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -11115,7 +11117,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -12426,9 +12428,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -12483,7 +12485,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -13794,9 +13796,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -13814,8 +13816,13 @@
       }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 7,
@@ -13825,17 +13832,28 @@
       },
       "id": 12,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -13908,6 +13926,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -15120,16 +15141,56 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
       "datasource": "PiGSS data source",
       "fill": 0,
+      "fillGradient": 0,
       "fontSize": "120%",
       "gridPos": {
         "h": 7,
@@ -15139,17 +15200,28 @@
       },
       "id": 13,
       "legend": {
-        "show": false
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": false,
+        "total": false,
+        "values": false
       },
+      "lines": true,
       "linewidth": 0,
       "maxPerRow": 2,
-      "options": {},
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
       "pointradius": 2,
       "points": true,
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1583446790858,
+      "repeatIteration": 1585333645518,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -15222,6 +15294,9 @@
           "color": "#ff007f"
         }
       ],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
       "targets": [
         {
           "alias": "H2O",
@@ -16434,12 +16509,47 @@
           ]
         }
       ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
       "title": "$species",
       "tooltip": {
-        "shared": true
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
       },
       "transparent": true,
-      "type": "graph"
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
     }
   ],
   "refresh": "5s",

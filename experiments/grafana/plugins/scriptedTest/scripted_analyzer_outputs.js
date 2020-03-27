@@ -171,8 +171,8 @@ function make_panel(result) {
               nullPointMode: "connected",
               postfix: "",
               postfixFontSize: "50%",
-              prefix: "Current Port:",
-              prefixFontSize: "65%",
+              prefix: "Measuring Port:",
+              prefixFontSize: "55%",
               rangeMaps: [
                 {
                   "from": "null",
@@ -187,7 +187,7 @@ function make_panel(result) {
               title: "",
               transparent: true,
               type: "singlestat",
-              valueFontSize: "65%",
+              valueFontSize: "55%",
               valueMaps: [
                 {
                   "op": "=",
@@ -217,7 +217,25 @@ function make_panel(result) {
               targets: customTargets,
               tooltip: {
                 shared: true
-              }
+              },
+              yaxes: [
+                {
+                  format: "short",
+                  label: null,
+                  logBase: 10,
+                  max: "10000",
+                  min: "0",
+                  show: true
+                },
+                {
+                  format: "short",
+                  label: null,
+                  logBase: 1,
+                  max: null,
+                  min: null,
+                  show: true
+                }
+              ],
             }
           ],
           style: "dark"
@@ -236,7 +254,7 @@ return function(callback) {
     };
  
     // Set a title
-    dashboard.title = 'Analyzer Outputs';
+    dashboard.title = 'Graphical View';
  
     // Set default time
     dashboard.time = {

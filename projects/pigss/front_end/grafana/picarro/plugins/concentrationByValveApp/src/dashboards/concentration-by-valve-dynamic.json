@@ -15,6 +15,8 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": null,
+  "iteration": 1585332390828,
   "links": [
     {
       "asDropdown": true,
@@ -29,113 +31,6 @@
   ],
   "panels": [
     {
-      "cacheTimeout": null,
-      "colorBackground": false,
-      "colorValue": false,
-      "colors": [
-        "#299c46",
-        "rgba(237, 129, 40, 0.89)",
-        "#d44a3a"
-      ],
-      "datasource": "PiGSS data source",
-      "format": "none",
-      "gauge": {
-        "maxValue": 100,
-        "minValue": 0,
-        "show": false,
-        "thresholdLabels": false,
-        "thresholdMarkers": true
-      },
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 0
-      },
-      "id": 14,
-      "interval": null,
-      "links": [],
-      "mappingType": 1,
-      "mappingTypes": [
-        {
-          "name": "value to text",
-          "value": 1
-        },
-        {
-          "name": "range to text",
-          "value": 2
-        }
-      ],
-      "maxDataPoints": 100,
-      "nullPointMode": "connected",
-      "nullText": null,
-      "options": {},
-      "postfix": "",
-      "postfixFontSize": "50%",
-      "prefix": "Measuring Port:",
-      "prefixFontSize": "65%",
-      "rangeMaps": [
-        {
-          "from": "null",
-          "text": "N/A",
-          "to": "null"
-        }
-      ],
-      "sparkline": {
-        "fillColor": "rgba(31, 118, 189, 0.18)",
-        "full": false,
-        "lineColor": "rgb(31, 120, 193)",
-        "show": false,
-        "ymax": null,
-        "ymin": null
-      },
-      "tableColumn": "valve_pos",
-      "targets": [
-        {
-          "groupBy": [
-            {
-              "params": [
-                "$__interval"
-              ],
-              "type": "time"
-            }
-          ],
-          "limit": "",
-          "measurement": "crds",
-          "orderByTime": "DESC",
-          "policy": "default",
-          "query": "SELECT * FROM autogen.crds WHERE $timeFilter ORDER BY time DESC LIMIT 1",
-          "rawQuery": true,
-          "refId": "A",
-          "resultFormat": "table",
-          "select": [
-            [
-              {
-                "params": [
-                  "*"
-                ],
-                "type": "field"
-              }
-            ]
-          ],
-          "tags": []
-        }
-      ],
-      "thresholds": "",
-      "title": "",
-      "transparent": true,
-      "type": "singlestat",
-      "valueFontSize": "65%",
-      "valueMaps": [
-        {
-          "op": "=",
-          "text": "N/A",
-          "value": "null"
-        }
-      ],
-      "valueName": "current"
-    },
-    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -149,7 +44,7 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 1
+        "y": 0
       },
       "id": 1,
       "legend": {
@@ -227,8 +122,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -261,8 +155,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -295,8 +188,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -329,8 +221,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -363,8 +254,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -397,8 +287,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -431,8 +320,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -465,8 +353,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -499,8 +386,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -533,8 +419,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -567,8 +452,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -601,8 +485,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -611,7 +494,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -627,9 +510,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -660,9 +543,9 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 1
+        "y": 0
       },
-      "id": 15,
+      "id": 2,
       "legend": {
         "avg": false,
         "current": false,
@@ -684,7 +567,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -740,8 +623,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -774,8 +656,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -808,8 +689,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -842,8 +722,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -876,8 +755,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -910,8 +788,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -944,8 +821,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -978,8 +854,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -1012,8 +887,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -1046,8 +920,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -1080,8 +953,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -1114,8 +986,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -1124,7 +995,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -1140,9 +1011,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -1173,9 +1044,9 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 1
+        "y": 0
       },
-      "id": 16,
+      "id": 3,
       "legend": {
         "avg": false,
         "current": false,
@@ -1197,7 +1068,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -1253,8 +1124,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -1287,8 +1157,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -1321,8 +1190,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -1355,8 +1223,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -1389,8 +1256,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -1423,8 +1289,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -1457,8 +1322,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -1491,8 +1355,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -1525,8 +1388,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -1559,8 +1421,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -1593,8 +1454,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -1627,8 +1487,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -1637,7 +1496,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -1653,9 +1512,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -1686,9 +1545,9 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 1
+        "y": 0
       },
-      "id": 17,
+      "id": 4,
       "legend": {
         "avg": false,
         "current": false,
@@ -1710,7 +1569,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -1766,8 +1625,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -1800,8 +1658,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -1834,8 +1691,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -1868,8 +1724,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -1902,8 +1757,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -1936,8 +1790,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -1970,8 +1823,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -2004,8 +1856,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -2038,8 +1889,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -2072,8 +1922,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -2106,8 +1955,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -2140,8 +1988,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -2150,7 +1997,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -2166,9 +2013,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -2199,9 +2046,9 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 9
+        "y": 8
       },
-      "id": 18,
+      "id": 5,
       "legend": {
         "avg": false,
         "current": false,
@@ -2223,7 +2070,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -2279,8 +2126,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -2313,8 +2159,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -2347,8 +2192,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -2381,8 +2225,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -2415,8 +2258,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -2449,8 +2291,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -2483,8 +2324,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -2517,8 +2357,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -2551,8 +2390,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -2585,8 +2423,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -2619,8 +2456,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -2653,8 +2489,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -2663,7 +2498,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -2679,9 +2514,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -2712,9 +2547,9 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 9
+        "y": 8
       },
-      "id": 19,
+      "id": 6,
       "legend": {
         "avg": false,
         "current": false,
@@ -2736,7 +2571,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -2792,8 +2627,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -2826,8 +2660,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -2860,8 +2693,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -2894,8 +2726,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -2928,8 +2759,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -2962,8 +2792,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -2996,8 +2825,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -3030,8 +2858,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -3064,8 +2891,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -3098,8 +2924,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -3132,8 +2957,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -3166,8 +2990,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -3176,7 +2999,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -3192,9 +3015,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -3225,9 +3048,9 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 9
+        "y": 8
       },
-      "id": 20,
+      "id": 7,
       "legend": {
         "avg": false,
         "current": false,
@@ -3249,7 +3072,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -3305,8 +3128,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -3339,8 +3161,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -3373,8 +3194,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -3407,8 +3227,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -3441,8 +3260,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -3475,8 +3293,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -3509,8 +3326,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -3543,8 +3359,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -3577,8 +3392,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -3611,8 +3425,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -3645,8 +3458,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -3679,8 +3491,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -3689,7 +3500,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -3705,9 +3516,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -3738,9 +3549,9 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 9
+        "y": 8
       },
-      "id": 21,
+      "id": 8,
       "legend": {
         "avg": false,
         "current": false,
@@ -3762,7 +3573,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -3818,8 +3629,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -3852,8 +3662,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -3886,8 +3695,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -3920,8 +3728,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -3954,8 +3761,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -3988,8 +3794,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -4022,8 +3827,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -4056,8 +3860,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -4090,8 +3893,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -4124,8 +3926,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -4158,8 +3959,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -4192,8 +3992,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -4202,7 +4001,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -4218,9 +4017,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -4251,9 +4050,9 @@
         "h": 8,
         "w": 6,
         "x": 0,
-        "y": 17
+        "y": 16
       },
-      "id": 22,
+      "id": 9,
       "legend": {
         "avg": false,
         "current": false,
@@ -4275,7 +4074,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -4331,8 +4130,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -4365,8 +4163,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -4399,8 +4196,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -4433,8 +4229,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -4467,8 +4262,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -4501,8 +4295,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -4535,8 +4328,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -4569,8 +4361,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -4603,8 +4394,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -4637,8 +4427,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -4671,8 +4460,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -4705,8 +4493,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -4715,7 +4502,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -4731,9 +4518,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -4764,9 +4551,9 @@
         "h": 8,
         "w": 6,
         "x": 6,
-        "y": 17
+        "y": 16
       },
-      "id": 23,
+      "id": 10,
       "legend": {
         "avg": false,
         "current": false,
@@ -4788,7 +4575,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -4844,8 +4631,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -4878,8 +4664,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -4912,8 +4697,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -4946,8 +4730,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -4980,8 +4763,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -5014,8 +4796,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -5048,8 +4829,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -5082,8 +4862,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -5116,8 +4895,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -5150,8 +4928,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -5184,8 +4961,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -5218,8 +4994,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -5228,7 +5003,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -5244,9 +5019,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -5277,9 +5052,9 @@
         "h": 8,
         "w": 6,
         "x": 12,
-        "y": 17
+        "y": 16
       },
-      "id": 24,
+      "id": 11,
       "legend": {
         "avg": false,
         "current": false,
@@ -5301,7 +5076,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -5357,8 +5132,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -5391,8 +5165,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -5425,8 +5198,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -5459,8 +5231,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -5493,8 +5264,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -5527,8 +5297,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -5561,8 +5330,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -5595,8 +5363,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -5629,8 +5396,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -5663,8 +5429,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -5697,8 +5462,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -5731,8 +5495,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -5741,7 +5504,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -5757,9 +5520,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -5790,9 +5553,9 @@
         "h": 8,
         "w": 6,
         "x": 18,
-        "y": 17
+        "y": 16
       },
-      "id": 25,
+      "id": 12,
       "legend": {
         "avg": false,
         "current": false,
@@ -5814,7 +5577,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581101508156,
+      "repeatIteration": 1585332390828,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
@@ -5870,8 +5633,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CO2",
@@ -5904,8 +5666,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "NH3",
@@ -5938,8 +5699,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CH4",
@@ -5972,8 +5732,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HF",
@@ -6006,8 +5765,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HCl",
@@ -6040,8 +5798,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "O2",
@@ -6074,8 +5831,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "HDO",
@@ -6108,8 +5864,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "H2S",
@@ -6142,8 +5897,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "SO2",
@@ -6176,8 +5930,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityPressure",
@@ -6210,8 +5963,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         },
         {
           "alias": "CavityTemp",
@@ -6244,8 +5996,7 @@
                 "type": "last"
               }
             ]
-          ],
-          "tags": []
+          ]
         }
       ],
       "thresholds": [],
@@ -6254,7 +6005,7 @@
       "timeShift": null,
       "title": "$ports",
       "tooltip": {
-        "shared": false,
+        "shared": true,
         "sort": 0,
         "value_type": "individual"
       },
@@ -6270,9 +6021,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
+          "logBase": 10,
+          "max": "10000",
+          "min": "0",
           "show": true
         },
         {
@@ -6303,9 +6054,7 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "species type service",
         "definition": "",
@@ -6354,9 +6103,7 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "port history server",
         "definition": "[$__from, $__to]",
@@ -6382,9 +6129,7 @@
         "allValue": null,
         "current": {
           "text": "All",
-          "value": [
-            "$__all"
-          ]
+          "value": "$__all"
         },
         "datasource": "PiGSS data source",
         "definition": "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
@@ -6413,6 +6158,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",
@@ -6427,6 +6174,6 @@
   },
   "timezone": "",
   "title": "Data Analysis",
-  "uid": "GTo10zcZz",
-  "version": 6
+  "uid": null,
+  "version": 0
 }
