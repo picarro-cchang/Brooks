@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
-import "./bankpanel.css";
+import "./../bankpanel.css";
 
-export interface BankPanelPlanOptions {
+export interface BankPanelOptions {
   bank: number;
   uistatus: {
     bank?: { [bankNum: string]: string };
@@ -17,10 +17,9 @@ export interface BankPanelPlanOptions {
       };
     };
   };
-  addChanneltoPlan: (bank: number, channel: number) => void;
 }
 
-class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
+class BankPanel extends PureComponent<BankPanelOptions> {
   bankStyleOpt = {
     READY: { color: "#424242", backgroundColor: "#e4e4e4" },
     ACTIVE: { color: "#fff", backgroundColor: "#56a64b" },
@@ -73,7 +72,7 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
       getChannelDisabled = chan => {
         return (
           channelStatus !== undefined &&
-          (channelStatus as any)[chan] == "DISABLED"
+          (channelStatus as any)[chan] !== "READY"
         );
       };
       test = channelStatus;
@@ -102,7 +101,11 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
         ) : (
           <button
             onClick={e => {
-              this.props.addChanneltoPlan(this.props.bank, i);
+              this.props.ws_sender({
+                element: "channel",
+                bank: this.props.bank,
+                channel: i
+              });
             }}
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}
@@ -111,7 +114,7 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 
@@ -131,8 +134,7 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
       <button
         id="clean"
         onClick={e =>
-          // this.props.ws_sender({ element: "clean", bank: this.props.bank })
-          this.props.addChanneltoPlan(this.props.bank, 0)
+          this.props.ws_sender({ element: "clean", bank: this.props.bank })
         }
         className={"btn btn-large btn-clean " + cleanClassNames}
       >
@@ -151,4 +153,4 @@ class BankPanelPlan extends PureComponent<BankPanelPlanOptions> {
     );
   }
 }
-export default BankPanelPlan;
+export default BankPanel;

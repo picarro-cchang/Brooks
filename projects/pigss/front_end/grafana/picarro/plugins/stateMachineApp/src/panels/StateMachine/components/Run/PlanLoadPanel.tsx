@@ -1,23 +1,22 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
-import { PlanLoadPanelEditOptions, Plan } from "./../types";
-import { PlanService } from "../api/PlanService";
+import { LoadPanelCommandOptions, Plan } from "../types";
 
 // changes.....
 // LOAD file names from service (?) or we can still have filenames in props, but now when filename gets clicked, it
 // gets info from service. If plan is being selected for run, we add it to props (in backend, perform same function to 'load a plan')
 // if plan is being selected for editing, we pass plan file name and info to state of edit panel
-
 interface State {
   plan: Plan;
+  fileNames: {}
 }
-
-class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
+class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
   constructor(props) {
-    super(props);
+    super(props) 
     this.state = {
       plan: this.props.plan,
-    };
+      fileNames: this.props.plan.plan_files
+    }
   }
 
   renderItem = (index: number, key: ReactText) => (
@@ -27,8 +26,7 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           onClick={e => {
-            this.props.updateFileName(false);
-            this.props.getPlanFromFileName(this.props.fileNames[index + 1]);
+            this.props.loadPlan(this.props.fileNames[index + 1])
           }}
           style={{ color: "black" }}
         >
@@ -38,11 +36,7 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            // ADD FUNCTION TO DELETE FROM SERVICE
-            // this.props.ws_sender({
-            // element: "plan_delete_filename",
-            // name: this.props.plan.plan_files[index + 1]
-            // });
+            this.props.deleteFile(this.props.fileNames[index + 1]);
           }}
         >
           X
@@ -52,7 +46,6 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
   );
 
   render() {
-    this.props.getPlanFileNames();
     let length = Object.keys(this.props.fileNames).length
     return (
       <div className="panel-save">
@@ -72,7 +65,9 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
               <button
                 id={"cancel"}
                 type="button"
-                onClick={e => this.props.editPlan()}
+                onClick={e =>
+                  this.props.updatePanel(0)
+                }
                 className={"btn btn-group-2 btn-cancel"}
               >
                 Cancel
@@ -85,4 +80,4 @@ class PlanLoadEditPanel extends PureComponent<PlanLoadPanelEditOptions, State> {
   }
 }
 
-export default PlanLoadEditPanel;
+export default PlanLoadPanel;

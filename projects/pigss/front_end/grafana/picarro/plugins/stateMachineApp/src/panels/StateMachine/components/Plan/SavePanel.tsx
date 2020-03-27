@@ -1,13 +1,13 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
-import { PlanSavePanelOptions } from "./../types";
-import { PlanService } from "../api/PlanService";
+import { PlanSavePanelOptions } from "../types";
+import { PlanService } from "../../api/PlanService";
 
 interface State {
   fileName: string,
   // isOverwritten: boolean
 }
-class PlanSavePanel extends PureComponent<PlanSavePanelOptions, State> {
+class SavePanel extends PureComponent<PlanSavePanelOptions, State> {
   constructor(props) {
     super(props)
     this.state = {
@@ -91,7 +91,7 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions, State> {
             <button
               type="button"
               onClick={e =>
-                this.props.editPlan()
+                this.props.updatePanel(0)
               }
               className={"btn btn-group-2 btn-cancel"}
             >
@@ -114,4 +114,4 @@ class PlanSavePanel extends PureComponent<PlanSavePanelOptions, State> {
   }
 }
 
-export default PlanSavePanel;
+export default SavePanel;

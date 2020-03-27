@@ -69,7 +69,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             <button
               id={"edit-plan"}
               onClick={e => {
-                this.props.updatePanel(1)
+                this.props.layoutSwitch();
               }}
               disabled={this.getDisabled("plan")}
               value="plan"

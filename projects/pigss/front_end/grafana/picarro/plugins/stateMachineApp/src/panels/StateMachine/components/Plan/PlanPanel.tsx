@@ -1,7 +1,7 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
-import { PlanPanelOptions, PlanStep, Plan } from "./../types";
-import { PlanService } from "./../api/PlanService";
+import { PlanPanelOptions, PlanStep, Plan } from "../types";
+import { PlanService } from "../../api/PlanService";
 import fs from "fs";
 
 export interface State {
@@ -82,7 +82,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
   }
 
   saveFile() {
-    this.props.savePlan();
+    this.props.updatePanel(2);
   }
 
   // TODO
@@ -291,7 +291,9 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
               const ch_name = this.state.plan.bank_names[bank].channels[
                 channel
               ];
-              portString = bank_name + ", " + ch_name;
+              let bankNum = Number(bank)
+              let portNumber = (bankNum - 1)*8 + channel
+              portString =  portNumber+ ": " + ch_name;
               break;
             }
           }
@@ -407,7 +409,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
             className="cancel panel-plan-text"
             id="cancel-x"
             onClick={e => {
-              this.props.updatePanel(0)
+              this.props.layoutSwitch();
             }}
           ></span>
           <h6 className="panel-plan-text">
@@ -474,7 +476,7 @@ class PlanPanel extends PureComponent<PlanPanelOptions, State> {
                   type="button"
                   id="load-btn"
                   onClick={e => {
-                    this.props.loadFile();
+                    this.props.updatePanel(1);
                   }}
                   className={"btn btn-block btn-light btn-group"}
                 >
