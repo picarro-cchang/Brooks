@@ -13,12 +13,11 @@ import yamale
 from aiohttp import web
 from aiohttp_swagger import setup_swagger
 
-from async_hsm import Framework
+from async_hsm import Framework, Event, Signal
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.controller_service import ControllerService
 from back_end.servers.customer_api_server import CustomerAPIService
-from back_end.servers.grafana_data_generator_service import \
-    GrafanaDataGeneratorService
+from back_end.servers.grafana_data_generator_service import GrafanaDataGeneratorService
 from back_end.servers.grafana_logger_service import GrafanaLoggerService
 from back_end.servers.port_history_service import PortHistoryService
 from back_end.servers.supervisor_service import SupervisorService
@@ -36,7 +35,8 @@ config_path = [
     os.path.join(os.getenv("HOME"), ".config", "pigss"),
     os.path.dirname(os.path.abspath(__file__))
 ]
-config_path = [p for p in config_path if p is not None and os.path.exists(p) and os.path.isdir(p)]
+config_path = [p for p in config_path if p is not None and os.path.exists(
+    p) and os.path.isdir(p)]
 
 
 class PigssRunner:
@@ -79,7 +79,8 @@ class PigssRunner:
             await setup_dummy_interfaces(nsim)
             await asyncio.sleep(2.0)
         self.app['farm'] = farm
-        self.set_host(farm.config.get_http_server_port(), farm.config.get_http_server_listen_address())
+        self.set_host(farm.config.get_http_server_port(),
+                      farm.config.get_http_server_listen_address())
 
         cors = aiohttp_cors.setup(
             self.app, defaults={"*": aiohttp_cors.ResourceOptions(
@@ -114,7 +115,8 @@ class PigssRunner:
 
         grafana_data_generator_service = GrafanaDataGeneratorService()
         grafana_data_generator_service.app['farm'] = self.app['farm']
-        self.app.add_subapp("/grafana_data_generator/", grafana_data_generator_service.app)
+        self.app.add_subapp("/grafana_data_generator/",
+                            grafana_data_generator_service.app)
 
         customer_api_service = CustomerAPIService()
         customer_api_service.app['farm'] = self.app['farm']
@@ -133,7 +135,8 @@ class PigssRunner:
         await self.runner.setup()
         site = web.TCPSite(self.runner, self.addr, self.port)
         await site.start()
-        log.info(f"======== Running on http://{site._host}:{site._port} ========")
+        log.info(
+            f"======== Running on http://{site._host}:{site._port} ========")
 
     @web.middleware
     async def error_middleware(self, request, handler):
@@ -144,7 +147,7 @@ class PigssRunner:
                 reason="Bad Request",
                 text="Please check for incorrect use of API. The API requested, could not be found."
             )
-        except Exception as e:  
+        except Exception as e:
             # noqa
             # Handle unexpected exception by replying with a traceback and optionally publishing an event
             if self.publish_errors:
@@ -157,8 +160,10 @@ class PigssRunner:
                             "location": self.__class__.__name__,
                             "request": str(request.url)
                         }))
-                log.debug(f"Error hanadling the request {str(request.url)}. \n{format_exc()}")
-            raise HTTPInternalServerError(text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
+                log.debug(
+                    f"Error hanadling the request {str(request.url)}. \n{traceback.format_exc()}")
+            raise web.HTTPInternalServerError(
+                text=f"Error handling request {request.path_qs}\n{traceback.format_exc()}")
         return resp
 
     def handle_exception(self, loop, context):
@@ -201,12 +206,14 @@ async def async_main(config_filename, validate):
         config_found = False
         schema_found = False
         for p in config_path:
-            config_full_filename = os.path.normpath(os.path.join(p, config_filename))
+            config_full_filename = os.path.normpath(
+                os.path.join(p, config_filename))
             if os.path.exists(config_full_filename):
                 config_found = True
                 break
         for p in config_path:
-            schema_full_filename = os.path.normpath(os.path.join(p, schema_filename))
+            schema_full_filename = os.path.normpath(
+                os.path.join(p, schema_filename))
             if os.path.exists(schema_full_filename):
                 schema_found = True
                 break
@@ -216,16 +223,20 @@ async def async_main(config_filename, validate):
                 if schema_found:
                     try:
                         yamale.validate(yamale.make_schema(schema_full_filename, parser='ruamel'),
-                                        yamale.make_data(config_full_filename, parser='ruamel'),
+                                        yamale.make_data(
+                                            config_full_filename, parser='ruamel'),
                                         strict=True)
                     except ValueError as ve:
-                        log.error(f"Configuration file {config_filename} fails validation: {ve}")
+                        log.error(
+                            f"Configuration file {config_filename} fails validation: {ve}")
                         ok = False
                 else:
-                    log.error(f"Cannot find schema for validating configuration")
+                    log.error(
+                        f"Cannot find schema for validating configuration")
                     ok = False
             if ok:
-                log.info(f"Starting application with configuration file {config_full_filename}.")
+                log.info(
+                    f"Starting application with configuration file {config_full_filename}.")
                 service = PigssRunner()
                 await service.server_init(config_full_filename)
                 await Framework.done()

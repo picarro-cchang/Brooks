@@ -32,7 +32,8 @@ class CustomerAPIService(ServiceTemplate):
         self.app["config"] = self.app["farm"].config.get_gdg_plugin_config()
 
         # Create influxdb connection
-        self.app["db_client"] = InfluxDBInstance(self.app["config"]["database"]).get_instance()
+        self.app["db_client"] = InfluxDBInstance(
+            self.app["config"]["database"]).get_instance()
 
     async def on_shutdown(self, app):
         log.debug("CustomerAPIServer is shutting down")
@@ -44,7 +45,7 @@ class CustomerAPIService(ServiceTemplate):
 
     async def get_keys(self):
         measurement = self.app["config"]["database"]["measurements"]
-        return await Model.get_keys(self.app["db_client"], log, measurement) 
+        return await Model.get_keys(self.app["db_client"], log, measurement)
 
     async def get_common_keys(self, keys):
         if self._keys is None:
@@ -56,7 +57,7 @@ class CustomerAPIService(ServiceTemplate):
         description: API for fetching keys available to querying measurements
 
         tags:
-            -   Controller
+            -   Customer API Endpoints
         summary: API for fetching keys available to querying measurements
         produces:
             -   application/json
@@ -64,7 +65,7 @@ class CustomerAPIService(ServiceTemplate):
             "200":
                 description: successful operation returns keys
         """
-        self._keys =  await self.get_keys()
+        self._keys = await self.get_keys()
         return web.json_response({"keys": self._keys})
 
     async def handle_get_points(self, request):
@@ -72,7 +73,7 @@ class CustomerAPIService(ServiceTemplate):
         description: Fetch points in measurement given keys and time range
 
         tags:
-            -   Controller
+            -   Customer API Endpoints
         summary: Fetch points in measurement given keys and time range
         produces:
             -   application/json
@@ -106,7 +107,8 @@ class CustomerAPIService(ServiceTemplate):
                 else:
                     # Multiplier for conversion into ns timestamps
                     i = 1000000000
-                    time_from = (int)(parse(time_from, fuzzy=True).timestamp() * i)
+                    time_from = (int)(
+                        parse(time_from, fuzzy=True).timestamp() * i)
                     time_to = (int)(parse(time_to, fuzzy=True).timestamp() * i)
             except OverflowError:
                 log.critical(f"Error in Customer API Service {format_exc()}")

@@ -9,6 +9,7 @@ from json import loads
 from urllib.parse import parse_qs
 from traceback import format_exc
 from calendar import monthrange
+from sqlite3 import OperationalError
 
 from aiohttp import web, WSMsgType, WSCloseCode
 import click
@@ -26,22 +27,34 @@ log = LOLoggerClient(client_name="GrafanaLoggerService", verbose=True)
 
 
 class GrafanaLoggerService(ServiceTemplate):
-    def __init__(self):
+    def __init__(self, farm=None, lologger_proxy=None, log=None):
         super().__init__()
+        self.app['farm'] = farm
+        self.lologger_proxy = lologger_proxy
+        self.log = log
+
+        # This would not be required once PigssRunner is modified to pass these Objects
+        if self.lologger_proxy is None:
+            self.lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
+        if self.log is None:
+            self.log = LOLoggerClient(client_name="GrafanaLoggerService", verbose=True)
 
     def setup_routes(self):
+        self.app.router.add_route('GET', '/ping', self.handle_ping)
         self.app.router.add_route('GET', '/ws', self.websocket_handler)
         self.app.router.add_route('GET', '/stats', self.handle_stats)
         self.app.router.add_route('GET', '/getlogs', self.handle_getlogs)
+        self.app.router.add_route('POST', '/writelog', self.handle_write_log)
 
     async def on_startup(self, app):
-        log.debug("GrafanaLoggerService is starting up")
+        self.log.debug("GrafanaLoggerService is starting up")
         self.app["config"] = self.app["farm"].config.get_glogger_plugin_config()
         self.app["websockets"] = []
         self.tasks = []
         self.sqlite_path = None
-        self.socket_stats = {"ws_connections": 0, "ws_disconnections": 0, "ws_open": 0}
-        self.tasks.append(asyncio.create_task(self.get_latest_db(app)))
+        self.socket_stats = {"ws_connections": 0,
+                             "ws_disconnections": 0, "ws_open": 0}
+        self.tasks.append(asyncio.create_task(self.set_latest_db(app)))
         self.tasks.append(asyncio.create_task(self.listener(app)))
 
     async def on_shutdown(self, app):
@@ -54,7 +67,7 @@ class GrafanaLoggerService(ServiceTemplate):
         for ws in app["websockets"]:
             await ws.close(code=WSCloseCode.GOING_AWAY, message='Server shutdown')
 
-        log.debug("GrafanaLoggerService is shutting down")
+        self.log.debug("GrafanaLoggerService is shutting down")
 
     async def on_cleanup(self, app):
         """
@@ -62,12 +75,17 @@ class GrafanaLoggerService(ServiceTemplate):
         """
         EventsModel.close_connection()
 
+    async def handle_ping(self, request):
+        """ Handle ping-pong messages from client
+        """
+        return web.Response(text="OK")
+
     async def handle_stats(self, request):
         """
         description: Fetch server statistics from GrafanaLoggerServer
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -80,15 +98,17 @@ class GrafanaLoggerService(ServiceTemplate):
             "time": time.time(),
             "ws_open": self.socket_stats["ws_open"],
             "ws_connections": self.socket_stats["ws_connections"],
-            "ws_disconnections": self.socket_stats["ws_disconnections"],
-            "framework": Framework.get_info(),
-            "errors": [e for e in controller.error_list]
+            "ws_disconnections": self.socket_stats["ws_disconnections"]
         }
         return web.json_response(result)
 
-    @log_async_exception(log_func=log.error, stop_loop=False, publish_terminate=False)
-    async def get_latest_db(self, app):
-        """ LoLogger creates new sqlite file beginning of a month.
+    def get_latest_db(self):
+        """ Fetches latest db file being written into by lologger.
+        """
+        return self.lologger_proxy.get_sqlite_path()
+
+    async def set_latest_db(self, app):
+        """ LoLogger creates new sqlite file beginning of a month. This method will ask lologger for latest db file once every day.
         """
         while True:
             current_date = datetime.datetime.now()
@@ -96,23 +116,23 @@ class GrafanaLoggerService(ServiceTemplate):
             tomorrow = current_date + datetime.timedelta(days=1)
             seconds_till_midnight = (datetime.datetime.combine(tomorrow, datetime.time.min) - current_date).seconds + 1
             await asyncio.sleep(seconds_till_midnight)
-            if True or current_date.day == last_date:
-                try:
-                    lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}",
-                                                        ClientName="GrafanaLoggerService")
-                    current_sqlite_path = lologger_proxy.get_sqlite_path()
-                except Exception as ex:
-                    # ignore exceptions while trying to fetch new database file
-                    log.debug(f"Exception occurred while fetching latest db {ex}")
-                if self.sqlite_path is not None and self.sqlite_path != current_sqlite_path:
-                    self.sqlite_path = current_sqlite_path
-                    for ws in self.app["websockets"]:
-                        ws["query_params"]["reset"] = True
-                        await ws.send_json({"type": "RESET"})
+
+            try:
+                current_sqlite_path = self.get_latest_db()
+            except Exception as ex:
+                # ignore exceptions while trying to fetch new database file
+                log.debug(
+                    f"Exception occurred while fetching latest db {ex}")
+            if self.sqlite_path is not None and self.sqlite_path != current_sqlite_path:
+                self.sqlite_path = current_sqlite_path
+
+                # Reset all websocket connections to use newly created database file
+                for ws in self.app["websockets"]:
+                    ws["query_params"]["reset"] = True
+                    await ws.send_json({"type": "RESET"})
 
     def set_predefined_config(self):
-        lologger_proxy = CmdFIFOServerProxy(f"http://localhost:{rpc_ports['logger']}", ClientName="GrafanaLoggerService")
-        self.sqlite_path = lologger_proxy.get_sqlite_path()
+        self.sqlite_path = self.get_latest_db()
         query_dict = {}
         query_dict["columns"] = self.app["config"]["sqlite"]["columns"]
         query_dict["limit"] = self.app["config"]["limit"]
@@ -131,22 +151,26 @@ class GrafanaLoggerService(ServiceTemplate):
              "Level"]
         """
         try:
-            query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], log)
+            query, values = EventsModel.build_sql_select_query(query_params, self.app["config"]["sqlite"]["table_name"], self.log)
             if query is None or values is None:
                 return None
             if __debug__:
-                print(f"\nFile: {self.sqlite_path} , \nQueryParams: {query_params}, \nWS: {len(self.app['websockets'])}\n")
-            return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], log)
+                print(
+                    f"\nFile: {self.sqlite_path} , \nQueryParams: {query_params}, \nWS: {len(self.app['websockets'])}\n")
+            return EventsModel.execute_query(self.sqlite_path, query, values, self.app["config"]["sqlite"]["table_name"], self.log)
         except TypeError as te:
-            log.error(f"Error in GrafanaLoggerService {te}")
-            log.debug(f"Error in GrafanaLoggerService {te} {format_exc()}")
+            self.log.error(f"Error in GrafanaLoggerService {te}")
+            self.log.debug(f"Error in GrafanaLoggerService {te} {format_exc()}")
+        except OperationalError:
+            self.log.debug(f"Unable to process query Query: {query} Values: {values}")
+        return None
 
     async def handle_getlogs(self, request):
         """
-        description: Fetch Logs from GrafanaLoggerServer
+        description: Fetch Logs from database
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -164,7 +188,7 @@ class GrafanaLoggerService(ServiceTemplate):
         predefined_params = self.set_predefined_config()
         query_params = {**predefined_params, **query_params}
         logs = await self.get_logs(query_params)
-        return web.json_response(logs) if logs is not None else web.json_response(text="Error in fetching logs.")
+        return web.json_response(logs) if logs is not None else web.json_response({"message":"Error in fetching logs."})
 
     @log_async_exception(log_func=log.error, stop_loop=False, publish_terminate=False)
     async def websocket_handler(self, request):
@@ -172,7 +196,7 @@ class GrafanaLoggerService(ServiceTemplate):
         description: Websocket communication for fetching logs from GrafanaLoggerServer
 
         tags:
-            -   Controller
+            -   Grafana Logger
         summary: Fetch server statistics
         produces:
             -   application/json
@@ -207,17 +231,13 @@ class GrafanaLoggerService(ServiceTemplate):
                             }
                 elif msg.type == WSMsgType.ERROR:
                     ws.exception()
-                elif msg.type == WSMsgType.PING:
-                    pass
-                elif msg.type == WSMsgType.PONG:
-                    pass
                 elif msg.type == WSMsgType.CLOSE:
-                    log.warning(message="Client terminated websocket connection.")
+                    self.log.warning(message="Client terminated websocket connection.")
                     self.app["websockets"].remove(ws)
                     await ws.close(code=1000, message="Client terminated websocket connection.")
         except asyncio.CancelledError:
-            log.error("Web socket disconnection caused coroutine cancellation in handler.")
-            log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
+            self.log.error("Web socket disconnection caused coroutine cancellation in handler.")
+            self.log.debug(f"Web socket disconnection caused coroutine cancellation in handler.\n{format_exc()}")
         finally:
             self.app["websockets"].remove(ws)
             self.socket_stats['ws_open'] = len(self.app["websockets"])
@@ -244,10 +264,11 @@ class GrafanaLoggerService(ServiceTemplate):
         try:
             is_time = (ws['next_run'] <= current_time)
             if 'next_run' in ws:
-                is_new_interval = current_time + datetime.timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
+                is_new_interval = current_time + \
+                    datetime.timedelta(seconds=ws['query_params']['interval']) < ws['next_run']
             return is_time or is_new_interval
         except ValueError as ve:
-            log.error(f"Error in should_send_task {ve}")
+            self.log.error(f"Error in should_send_task {ve}")
 
     @log_async_exception(log_func=log.error, publish_terminate=False)
     async def listener(self, app):
@@ -267,6 +288,37 @@ class GrafanaLoggerService(ServiceTemplate):
                         self.send_task(ws, current_time)
                         for ws in self.app["websockets"] if self.should_send_task(ws, current_time)
                     ],
-                                   return_exceptions=True)
+                        return_exceptions=True)
             except ConnectionError:
-                log.error(f"Error in Logger Service Listener \n{format_exc()}")
+                self.log.error(f"Error in Logger Service Listener \n{format_exc()}")
+
+    async def handle_write_log(self, request):
+        """
+        description: Write log in Event table
+        tags:
+            -   Grafana Logger
+        summary: Write log in Event table
+        responses:
+            "200":
+                description: successful operation returns True/False
+        """
+        body = await request.json()
+        message = level = None
+        try:
+            message = body.get("message")
+            level = int(body.get("level"))
+        except TypeError:
+            self.log.debug(format_exc())
+        except ValueError:
+            self.log.debug(format_exc())
+        if level is None or message is None or level not in range(10, 50, 10):
+            return web.json_response({
+                "text": "Invalid input parameters",
+                "status": 200
+            })
+
+        self.log.Log(message, level)
+        return web.json_response({
+            "text": "Message sent for logging.",
+            "status": 200
+        })
