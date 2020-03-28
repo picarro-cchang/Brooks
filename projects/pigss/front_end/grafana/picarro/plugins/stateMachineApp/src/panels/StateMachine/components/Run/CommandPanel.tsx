@@ -83,7 +83,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             <button
               id={"load-plan"}
               onClick={e =>
-                this.props.updatePanel(2)
+                this.props.updatePanel(1)
               }
               disabled={this.getDisabled("plan")}
               value="load"
@@ -146,7 +146,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               id={"edit-labels"}
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
-              onClick={e => this.props.updatePanel(3)}
+              onClick={e => this.props.updatePanel(2)}
               disabled={this.getDisabled("edit")}
             >
               Edit Labels

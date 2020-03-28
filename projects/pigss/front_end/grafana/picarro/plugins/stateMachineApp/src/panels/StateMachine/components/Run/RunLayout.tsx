@@ -10,9 +10,7 @@ import { PlanService } from "../../api/PlanService";
 interface State {
     plan: Plan, 
     fileNames: {},
-    options: {
-        panel_to_show: number
-    }
+    panel_to_show: number
 }
 
 export class RunLayout extends PureComponent<RunLayoutProps, State> {
@@ -21,16 +19,16 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     this.state = {
       plan: this.props.plan,
       fileNames: {},
-      options: {
-        panel_to_show: 0
-      }
+      panel_to_show: 0
     }
+    this.updatePanelToShow = this.updatePanelToShow.bind(this);
+    this.loadPlan = this.loadPlan.bind(this);
+    this.cancelLoadPlan = this.cancelLoadPlan.bind(this);
+    this.deleteFile = this.deleteFile.bind(this);
   }
 
   updatePanelToShow(panel: number) {
-    let options = {...this.state.options}
-    options.panel_to_show = panel
-    this.setState({options})
+    this.setState({panel_to_show: panel})
   } 
 
   deleteFile(fileName: string) {
@@ -118,7 +116,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
 
   render() {
     let left_panel;
-    switch (this.state.options.panel_to_show) {
+    switch (this.state.panel_to_show) {
       case PanelTypes.NONE:
         left_panel = (
           <CommandPanel
