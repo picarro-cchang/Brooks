@@ -1,4 +1,5 @@
 import React, { PureComponent } from "react";
+import { Plan, PlanStep } from "./../types";
 import "./bankpanel.css";
 
 export interface BankPanelOptions {
@@ -9,14 +10,7 @@ export interface BankPanelOptions {
     channel?: { [bankNum: string]: { [channelNum: string]: string } };
   };
   ws_sender: (o: object) => void;
-  plan: {
-    bank_names: {
-      [key: number]: {
-        name: string;
-        channels: { [key: number]: string };
-      };
-    };
-  };
+  plan: Plan
 }
 
 class BankPanel extends PureComponent<BankPanelOptions> {
@@ -48,6 +42,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
     let getChannelClassNames = (_: number) => "";
     let getChannelDisabled = (_: number) => true;
     let test = {};
+    let isInPlan = (_: number) => "";
 
     if ("bank" in (this.props.uistatus as any)) {
       const bankStatus: string = this.props.uistatus.bank && (this.props.uistatus.bank as any)[
@@ -70,14 +65,43 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       test = channelStatus;
     }
 
+    //check if channel/clean is in plan :)
+    let portsInPlan = {};
+    for (let step in this.props.plan.steps) {
+      const planRow = this.props.plan.steps[step] as PlanStep;
+      for (const bank in planRow.banks) {
+        if (planRow.banks.hasOwnProperty(bank)) {
+          const bank_config = planRow.banks[bank];
+          if (bank_config.clean != 0) {
+            portsInPlan["CL" + bank] = planRow.duration;
+            break;
+          } else if (bank_config.chan_mask != 0) {
+            const mask = bank_config.chan_mask;
+            // Find index of first set bit using bit-twiddling hack
+            const channel = (mask & -mask).toString(2).length;
+            let portNumber = (Number(bank) - 1) * 8 + channel
+            portsInPlan[String(portNumber)] = planRow.duration;
+            break;
+          }
+        }
+      }
+    }
+
+    isInPlan = (port: number) => {
+      if (portsInPlan.hasOwnProperty(port)) {
+        return " btn-bold";
+      } else return ""
+    }
+
     const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
+      let portNumber = (this.props.bank - 1) * 8 + i
       channelButtons.push(
         getChannelDisabled(i) ? (
           <button
             key={i}
             id={"channel-" + i}
-            className={"btn btn-large bank-btn " + getChannelClassNames(i)}
+            className={"btn btn-large bank-btn " + getChannelClassNames(i) + isInPlan(portNumber)}
             style={{ color: "black" }}
           >
             <p className="chn-label">
@@ -85,10 +109,17 @@ class BankPanel extends PureComponent<BankPanelOptions> {
                 {this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
-            <p id={"chn-status-" + i} className={"chn-status"}>
-              {" "}
-              {test && test[i]}{" "}
-            </p>
+            {portsInPlan.hasOwnProperty(portNumber) ? (
+                <p id={"chn-status-" + i} className={"chn-status"}>
+                  {" "}
+                  Duration: {portsInPlan[portNumber]}
+                </p>
+
+              ):(
+                <p id={"chn-status-" + i} className={"chn-status"}>
+                  {" "}
+                </p>
+              )}
           </button>
         ) : (
           <button
@@ -102,7 +133,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}
             key={i}
-            className={"btn btn-large bank-btn " + getChannelClassNames(i)}
+            className={"btn btn-large bank-btn " + getChannelClassNames(i) + isInPlan(portNumber)}
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
@@ -110,10 +141,18 @@ class BankPanel extends PureComponent<BankPanelOptions> {
               </u>
             </p>
 
-            <p id={"chn-status-" + i} className={"chn-status"}>
-              {" "}
-              {test && test[i]}
-            </p>
+              {portsInPlan.hasOwnProperty(portNumber) ? (
+                <p id={"chn-status-" + i} className={"chn-status"}>
+                  {" "}
+                  Duration: {portsInPlan[portNumber]}
+                </p>
+
+              ):(
+                <p id={"chn-status-" + i} className={"chn-status"}>
+                  {" "}
+                </p>
+              )}
+              
           </button>
         )
       );
@@ -135,6 +174,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       </button>
     );
     const value: string = this.props.plan.bank_names[this.props.bank].name;
+    console.log("Ports In Plan: ", portsInPlan)
     return (
       <div>
         <div className="panel-bank" style={bankStyle}>
