@@ -106,7 +106,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             {portsInPlan.hasOwnProperty(portNumber) ? (
@@ -137,7 +137,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 

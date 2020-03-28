@@ -60,7 +60,25 @@ function make_panel(result) {
             tooltip: {
               shared: true,
               value_type: "individual"
-            }
+            },
+            yaxes: [
+              {
+                format: "short",
+                label: null,
+                logBase: 10,
+                max: "10000",
+                min: "0",
+                show: true
+              },
+              {
+                format: "short",
+                label: null,
+                logBase: 1,
+                max: null,
+                min: null,
+                show: true
+              }
+            ],
           }
         ],
         style: "dark"
@@ -78,7 +96,7 @@ return function(callback) {
     };
  
     // Set a title
-    dashboard.title = 'Concentration by Channel';
+    dashboard.title = 'Data Analysis';
  
     // Set default time
     dashboard.time = {
