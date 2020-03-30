@@ -12,7 +12,7 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 8
+ModeCount = 9
 Mode_1 = NH3_mode
 Mode_2 = MADS_mode
 Mode_3 = AMADS_mode
@@ -20,7 +20,8 @@ Mode_4 = AMADS_DCRDS_LCT_mode
 Mode_5 = AMSADS_DCRDS_LCT_mode
 Mode_6 = NH3_manometer_mode
 Mode_7 = O2_manometer_mode
-Mode_8 = warming_mode
+Mode_8 = HCl_manometer_mode
+Mode_9 = warming_mode
 
 ############################################################################
 ###
