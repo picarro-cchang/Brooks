@@ -9,6 +9,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
   >
     <div
       className="row"
+      key="bank1"
     >
       <label
         className="edit-label"
@@ -16,22 +17,17 @@ exports[`<EditForm /> Renders correctly 1`] = `
          Bank 
         1
       </label>
-      <input
-        className="col-sm-6 edit-input"
-        maxLength={14}
-        name="bank1"
-        onChange={[Function]}
-        type="text"
-        value="Bank 1"
-      />
     </div>
     <div
       className="row"
+      key="1"
     >
       <label
         className="edit-label"
       >
-         Channel 1 
+         Port 
+        1
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -44,11 +40,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="2"
     >
       <label
         className="edit-label"
       >
-         Channel 2 
+         Port 
+        2
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -61,11 +60,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="3"
     >
       <label
         className="edit-label"
       >
-         Channel 3 
+         Port 
+        3
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -78,11 +80,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="4"
     >
       <label
         className="edit-label"
       >
-         Channel 4 
+         Port 
+        4
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -95,11 +100,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="5"
     >
       <label
         className="edit-label"
       >
-         Channel 5 
+         Port 
+        5
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -112,11 +120,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="6"
     >
       <label
         className="edit-label"
       >
-         Channel 6 
+         Port 
+        6
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -129,11 +140,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="7"
     >
       <label
         className="edit-label"
       >
-         Channel 7 
+         Port 
+        7
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -146,11 +160,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="8"
     >
       <label
         className="edit-label"
       >
-         Channel 8 
+         Port 
+        8
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -161,12 +178,9 @@ exports[`<EditForm /> Renders correctly 1`] = `
         value="Ch. 8"
       />
     </div>
-  </div>
-  <div
-    className="gf-form-group"
-  >
     <div
       className="row"
+      key="bank2"
     >
       <label
         className="edit-label"
@@ -174,22 +188,17 @@ exports[`<EditForm /> Renders correctly 1`] = `
          Bank 
         2
       </label>
-      <input
-        className="col-sm-6 edit-input"
-        maxLength={14}
-        name="bank2"
-        onChange={[Function]}
-        type="text"
-        value="Bank 2"
-      />
     </div>
     <div
       className="row"
+      key="9"
     >
       <label
         className="edit-label"
       >
-         Channel 1 
+         Port 
+        9
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -202,11 +211,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="10"
     >
       <label
         className="edit-label"
       >
-         Channel 2 
+         Port 
+        10
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -219,11 +231,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="11"
     >
       <label
         className="edit-label"
       >
-         Channel 3 
+         Port 
+        11
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -236,11 +251,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="12"
     >
       <label
         className="edit-label"
       >
-         Channel 4 
+         Port 
+        12
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -253,11 +271,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="13"
     >
       <label
         className="edit-label"
       >
-         Channel 5 
+         Port 
+        13
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -270,11 +291,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="14"
     >
       <label
         className="edit-label"
       >
-         Channel 6 
+         Port 
+        14
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -287,11 +311,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="15"
     >
       <label
         className="edit-label"
       >
-         Channel 7 
+         Port 
+        15
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"
@@ -304,11 +331,14 @@ exports[`<EditForm /> Renders correctly 1`] = `
     </div>
     <div
       className="row"
+      key="16"
     >
       <label
         className="edit-label"
       >
-         Channel 8 
+         Port 
+        16
+        : 
       </label>
       <input
         className="col-sm-6 edit-input"

@@ -15,7 +15,7 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
     super(props) 
     this.state = {
       plan: this.props.plan,
-      fileNames: this.props.plan.plan_files
+      fileNames: this.props.fileNames
     }
   }
 
@@ -26,17 +26,17 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           onClick={e => {
-            this.props.loadPlan(this.props.fileNames[index + 1])
+            this.props.loadPlan(this.state.fileNames[index + 1])
           }}
           style={{ color: "black" }}
         >
-          {this.props.fileNames[index + 1]}
+          {this.state.fileNames[index + 1]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            this.props.deleteFile(this.props.fileNames[index + 1]);
+            this.props.deleteFile(this.state.fileNames[index + 1]);
           }}
         >
           X
@@ -46,7 +46,8 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
   );
 
   render() {
-    let length = Object.keys(this.props.fileNames).length
+    let length = Object.keys(this.state.fileNames).length
+    console.log(this.props.fileNames)
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

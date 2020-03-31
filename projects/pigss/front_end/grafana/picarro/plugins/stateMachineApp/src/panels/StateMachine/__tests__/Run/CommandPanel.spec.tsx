@@ -1,14 +1,16 @@
 import React from "react";
-import CommandPanel from "../components/CommandPanel";
-import { CommandPanelOptions } from "../types";
+import CommandPanel from "./../../components/Run/CommandPanel";
+import { CommandPanelOptions } from "./../../components/types";
 import { shallow, mount } from "enzyme";
 import "jest-styled-components";
 import WS from "jest-websocket-mock";
-import mockPlan from "./../api/__mocks__/mockPlan.json";
+import mockPlan from "./../../api/__mocks__/mockPlan.json";
 
 const mockClick = jest.fn(element => {
   return element;
 });
+const mockUpdatePanel = jest.fn(e => {return e});
+const mockSwitchLayout = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
@@ -24,12 +26,13 @@ const defaultProps: CommandPanelOptions = {
     edit: "READY"
   },
   ws_sender: mockClick,
-  plan: mockPlan
+  plan: mockPlan,
+  updatePanel: mockUpdatePanel,
+  layoutSwitch: mockSwitchLayout
 };
 
 describe("<CommandPanel />", () => {
   const wrapper = shallow(<CommandPanel {...defaultProps} />);
-  const short = mount(<CommandPanel {...defaultProps} />);
   const instance = wrapper.instance() as CommandPanel;
   const server = new WS(socketURL);
   const client = new WebSocket(socketURL);
@@ -65,6 +68,7 @@ describe("<CommandPanel />", () => {
     expect(server).toHaveReceivedMessages(["standby"]);
     mockClick.mockClear();
   });
+
   it("Identify", async () => {
     await server.connected;
 
@@ -80,17 +84,9 @@ describe("<CommandPanel />", () => {
   });
 
   it("Edit Plan", async () => {
-    await server.connected;
-
     wrapper.find("button#edit-plan").simulate("click");
-    const element = mockClick.mock.calls[0][0].element;
-
-    client.send(element);
-    expect(mockClick).toHaveBeenCalled();
-    await expect(server).toReceiveMessage("plan");
-    expect(mockClick).toHaveReturnedWith({ element: "plan" });
-    expect(server).toHaveReceivedMessages(["plan"]);
-    mockClick.mockClear();
+    expect(mockSwitchLayout).toHaveBeenCalled();
+    mockSwitchLayout.mockClear();
   });
 
   it("Run Channel", async () => {
@@ -150,16 +146,8 @@ describe("<CommandPanel />", () => {
   });
 
   it("Edit Labels", async () => {
-    await server.connected;
-
     wrapper.find("button#edit-labels").simulate("click");
-    const element = mockClick.mock.calls[0][0].element;
-
-    client.send(element);
-    expect(mockClick).toHaveBeenCalled();
-    await expect(server).toReceiveMessage("edit");
-    expect(mockClick).toHaveReturnedWith({ element: "edit" });
-    expect(server).toHaveReceivedMessages(["edit"]);
-    mockClick.mockClear();
+    expect(mockUpdatePanel).toHaveBeenCalledWith(2);
+    mockUpdatePanel.mockClear();
   });
 });

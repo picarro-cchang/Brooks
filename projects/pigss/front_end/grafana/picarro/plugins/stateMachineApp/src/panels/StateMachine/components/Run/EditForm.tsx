@@ -18,26 +18,13 @@ class EditForm extends Component<any, any> {
       const value = this.banks[num];
       if (value === "READY") {
         this.bank_list.push(num);
-        edit_list.push(<div className="row">
-        <label className="edit-label"> Bank {num}</label>
-        {/* <input
-          name={"bank" + num}
-          className="col-sm-6 edit-input"
-          type="text"
-          value={this.props.plan.bank_names[num].name}
-          onChange={event =>
-            this.props.handleBankChange(
-              event.target.value,
-              num.toString()
-            )
-          }
-          maxLength={14}
-        /> */}
+        edit_list.push(<div key={"bank" + num} className="row">
+            <label className="edit-label"> Bank {num}</label>
       </div>)
         for (let i = 1; i <= 8; i++) {
           let portNumber = (Number(num) - 1) * 8 + i
           edit_list.push(
-            <div className="row">
+            <div key={portNumber} className="row">
               <label className="edit-label"> Port {portNumber}: </label>
               <input                
                 name={"bank" + num + i}

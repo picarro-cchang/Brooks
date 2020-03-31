@@ -18,7 +18,7 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         Object {
           "display": "grid",
           "gridGap": 5,
-          "gridTemplateColumns": "1fr 1fr 1fr",
+          "gridTemplateColumns": "4rem 4rem 4rem 4rem 4rem 4rem",
           "padding": 20,
         }
       }
@@ -42,7 +42,7 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         Identify Available Channels
       </button>
       <button
-        className="btn btn-large btn-command btn-1-3 btn-outline-success"
+        className="btn btn-large btn-command btn-edit-plan btn-outline-success"
         disabled={false}
         id="edit-plan"
         onClick={[Function]}
@@ -51,7 +51,16 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         Edit Plan
       </button>
       <button
-        className="btn btn-large btn-command btn-run btn-outline-success"
+        className="btn btn-large btn-command btn-load btn-outline-success"
+        disabled={false}
+        id="load-plan"
+        onClick={[Function]}
+        value="load"
+      >
+        Load Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run-single btn-outline-success"
         disabled={false}
         id="run-channel"
         onClick={[Function]}
@@ -69,7 +78,7 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         Run Plan
       </button>
       <button
-        className="btn btn-large btn-command btn-run btn-outline-success"
+        className="btn btn-large btn-command btn-run-loop btn-outline-success"
         disabled={false}
         id="loop-plan"
         onClick={[Function]}

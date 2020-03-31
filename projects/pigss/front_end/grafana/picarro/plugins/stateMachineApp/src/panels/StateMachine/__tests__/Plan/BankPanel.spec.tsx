@@ -1,17 +1,22 @@
 import React from "react";
-import BankPanel, { BankPanelOptions } from "../components/BankPanel";
+import "jest";
+import BankPanel from "../../components/Plan/BankPanel";
+import {BankPanelPlanOptions} from "./../../components/types";
 import { shallow, mount } from "enzyme";
 import "jest-styled-components";
 import WS from "jest-websocket-mock";
-import mockPlan from "./../api/__mocks__/mockPlan.json";
+import mockPlan from "./../../api/__mocks__/mockPlan.json";
 
 const mockClick = jest.fn(element => {
   return element;
 });
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
+const mockAddChannel = jest.fn(element => {
+  return element;
+});
 
-const defaultProps: BankPanelOptions = {
+const defaultProps: BankPanelPlanOptions = {
   bank: 1,
   uistatus: {
     bank: { "1": "READY" },
@@ -30,7 +35,8 @@ const defaultProps: BankPanelOptions = {
     }
   },
   ws_sender: mockClick,
-  plan: mockPlan
+  plan: mockPlan,
+  addChanneltoPlan: mockAddChannel
 };
 
 describe("<BankPanel />", () => {
@@ -46,18 +52,8 @@ describe("<BankPanel />", () => {
   it("Contains Proper Channel Names", () => {
     const value1 = part.find("u.chn-name-1").text();
     const value2 = part.find("u.chn-name-2").text();
-    expect(value1).toEqual("Ch. 1");
-    expect(value2).toEqual("Ch. 2");
-  });
-
-  it("Contains Proper Bank Name", () => {
-    const value1 = part.find("h2").text();
-    expect(value1).toEqual("Bank 1");
-  });
-
-  it("Contains correct status on channels", () => {
-    const value = part.find("p#chn-status-1").text();
-    expect(value).toEqual(" AVAILABLE ");
+    expect(value1).toEqual("1: Ch. 1 ");
+    expect(value2).toEqual("2: Ch. 2");
   });
 
   it("Check for  disabled/enabled property", () => {
@@ -71,43 +67,33 @@ describe("<BankPanel />", () => {
     await server.connected;
 
     wrapper.find("button#channel-3").simulate("click");
-    const element = mockClick.mock.calls[0][0];
+    const element = mockAddChannel.mock.calls[0][0];
 
     client.send(element);
-    expect(mockClick).toHaveBeenCalled();
-    await expect(server).toReceiveMessage({
-      element: "channel",
-      bank: 1,
-      channel: 3
-    });
-    expect(mockClick).toHaveReturnedWith({
-      bank: 1,
-      channel: 3,
-      element: "channel"
-    });
-    expect(server).toHaveReceivedMessages([
-      { element: "channel", bank: 1, channel: 3 }
-    ]);
+    expect(mockAddChannel).toHaveBeenCalled();
+    await expect(server).toReceiveMessage(1);
+    expect(mockAddChannel).toHaveReturnedWith(1);
+    expect(server).toHaveReceivedMessages([1]);
     server.close;
   });
 
   it("Clean Button", async () => {
-    mockClick.mockClear();
+    mockAddChannel.mockClear();
     await server.connected;
 
     const cleanButton = wrapper.find("button#clean");
     cleanButton.simulate("click");
-    const element = mockClick.mock.calls[0][0];
+    const element = mockAddChannel.mock.calls[0][0];
     client.send(element);
-    expect(mockClick).toHaveBeenCalled();
-    await expect(server).toReceiveMessage({ element: "clean", bank: 1 });
-    expect(server).toHaveReceivedMessages([{ element: "clean", bank: 1 }]);
-    mockClick.mockClear();
+    expect(mockAddChannel).toHaveBeenCalled();
+    await expect(server).toReceiveMessage(1);
+    expect(server).toHaveReceivedMessages([1]);
+    mockAddChannel.mockClear();
     server.close;
   });
 
   it("Test Clean Button inactive", () => {
-    const testProps: BankPanelOptions = {
+    const testProps: BankPanelPlanOptions = {
       bank: 1,
       uistatus: {
         bank: { "1": "READY" },
@@ -126,6 +112,7 @@ describe("<BankPanel />", () => {
         }
       },
       ws_sender: mockClick,
+      addChanneltoPlan: mockAddChannel,
       plan: {
         bank_names: {
           1: {
@@ -149,10 +136,11 @@ describe("<BankPanel />", () => {
   });
 
   it("Else", () => {
-    const testProps: BankPanelOptions = {
+    const testProps: BankPanelPlanOptions = {
       bank: 1,
       uistatus: {},
       ws_sender: mockClick,
+      addChanneltoPlan: mockAddChannel,
       plan: {
         bank_names: {
           1: {

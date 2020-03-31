@@ -1,7 +1,7 @@
 import React, { PureComponent } from "react";
 import BankPanel from "./BankPanel";
 import CommandPanel from "./CommandPanel";
-import LoadPanel from "./PlanLoadPanel";
+import PlanLoadPanel from "./PlanLoadPanel";
 import PlanPreview from "./PlanPreview";
 import { PanelTypes, RunLayoutProps, Plan } from "../types";
 import EditPanel from "./EditPanel";
@@ -130,13 +130,13 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         break;
       case PanelTypes.LOAD:
         left_panel = (
-          <LoadPanel
+          <PlanLoadPanel
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
             deleteFile={this.deleteFile}
             loadPlan={this.loadPlan}
-            fileNames={this.state.fileNames}
+            fileNames={this.props.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
           />
         );

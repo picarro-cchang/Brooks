@@ -13,16 +13,6 @@ exports[`<BankPanel /> Else 1`] = `
         }
       }
     >
-      <h2
-        style={
-          Object {
-            "color": "#424242",
-            "marginBottom": "10px",
-          }
-        }
-      >
-        B 1
-      </h2>
       <div
         className="grid-bank"
       >
@@ -42,6 +32,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-1"
             >
+              1: 
               Ch A
             </u>
           </p>
@@ -49,7 +40,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-1"
           >
-             
              
           </p>
         </button>
@@ -69,6 +59,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-2"
             >
+              2: 
               Channel 2
             </u>
           </p>
@@ -76,7 +67,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-2"
           >
-             
              
           </p>
         </button>
@@ -96,6 +86,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-3"
             >
+              3: 
               Ch 3
             </u>
           </p>
@@ -103,7 +94,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-3"
           >
-             
              
           </p>
         </button>
@@ -123,6 +113,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-4"
             >
+              4: 
               Ch 4
             </u>
           </p>
@@ -130,7 +121,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-4"
           >
-             
              
           </p>
         </button>
@@ -150,6 +140,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-5"
             >
+              5: 
               Ch 5
             </u>
           </p>
@@ -157,7 +148,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-5"
           >
-             
              
           </p>
         </button>
@@ -177,6 +167,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-6"
             >
+              6: 
               Ch 6
             </u>
           </p>
@@ -184,7 +175,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-6"
           >
-             
              
           </p>
         </button>
@@ -204,6 +194,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-7"
             >
+              7: 
               Ch 7
             </u>
           </p>
@@ -211,7 +202,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-7"
           >
-             
              
           </p>
         </button>
@@ -231,6 +221,7 @@ exports[`<BankPanel /> Else 1`] = `
             <u
               className="chn-name-8"
             >
+              8: 
               Ch 8
             </u>
           </p>
@@ -238,7 +229,6 @@ exports[`<BankPanel /> Else 1`] = `
             className="chn-status"
             id="chn-status-8"
           >
-             
              
           </p>
         </button>
@@ -271,16 +261,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
         }
       }
     >
-      <h2
-        style={
-          Object {
-            "color": "#424242",
-            "marginBottom": "10px",
-          }
-        }
-      >
-        Bank 1
-      </h2>
       <div
         className="grid-bank"
       >
@@ -300,6 +280,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-1"
             >
+              1: 
               Ch. 1
             </u>
           </p>
@@ -308,12 +289,10 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-1"
           >
              
-            AVAILABLE
-             
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-2"
           key="2"
           style={
@@ -328,6 +307,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-2"
             >
+              2: 
               Ch. 2
             </u>
           </p>
@@ -336,8 +316,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-2"
           >
              
-            DISABLED
-             
+            Duration: 
+            20
           </p>
         </button>
         <button
@@ -353,6 +333,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-3"
             >
+              3: 
               Ch. 3
                
             </u>
@@ -362,11 +343,10 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-3"
           >
              
-            READY
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-4"
           key="4"
           style={
@@ -381,6 +361,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-4"
             >
+              4: 
               Ch. 4
             </u>
           </p>
@@ -389,8 +370,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-4"
           >
              
-            DISABLED
-             
+            Duration: 
+            20
           </p>
         </button>
         <button
@@ -409,6 +390,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-5"
             >
+              5: 
               Ch. 5
             </u>
           </p>
@@ -417,12 +399,10 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-5"
           >
              
-            AVAILABLE
-             
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-6"
           key="6"
           style={
@@ -437,6 +417,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-6"
             >
+              6: 
               Ch. 6
             </u>
           </p>
@@ -445,8 +426,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-6"
           >
              
-            DISABLED
-             
+            Duration: 
+            20
           </p>
         </button>
         <button
@@ -465,6 +446,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-7"
             >
+              7: 
               Ch. 7
             </u>
           </p>
@@ -473,12 +455,10 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-7"
           >
              
-            AVAILABLE
-             
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-8"
           key="8"
           style={
@@ -493,6 +473,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             <u
               className="chn-name-8"
             >
+              8: 
               Ch. 8
             </u>
           </p>
@@ -501,8 +482,8 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-8"
           >
              
-            DISABLED
-             
+            Duration: 
+            20
           </p>
         </button>
       </div>
@@ -536,16 +517,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
         }
       }
     >
-      <h2
-        style={
-          Object {
-            "color": "#424242",
-            "marginBottom": "10px",
-          }
-        }
-      >
-        B 1
-      </h2>
       <div
         className="grid-bank"
       >
@@ -565,6 +536,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-1"
             >
+              1: 
               Ch A
             </u>
           </p>
@@ -572,8 +544,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-1"
           >
-             
-            AVAILABLE
              
           </p>
         </button>
@@ -593,6 +563,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-2"
             >
+              2: 
               Channel 2
             </u>
           </p>
@@ -600,8 +571,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-2"
           >
-             
-            DISABLED
              
           </p>
         </button>
@@ -618,6 +587,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-3"
             >
+              3: 
               Ch 3
                
             </u>
@@ -627,7 +597,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             id="chn-status-3"
           >
              
-            READY
           </p>
         </button>
         <button
@@ -646,6 +615,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-4"
             >
+              4: 
               Ch 4
             </u>
           </p>
@@ -653,8 +623,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-4"
           >
-             
-            DISABLED
              
           </p>
         </button>
@@ -674,6 +642,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-5"
             >
+              5: 
               Ch 5
             </u>
           </p>
@@ -681,8 +650,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-5"
           >
-             
-            AVAILABLE
              
           </p>
         </button>
@@ -702,6 +669,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-6"
             >
+              6: 
               Ch 6
             </u>
           </p>
@@ -709,8 +677,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-6"
           >
-             
-            DISABLED
              
           </p>
         </button>
@@ -730,6 +696,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-7"
             >
+              7: 
               Ch 7
             </u>
           </p>
@@ -737,8 +704,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-7"
           >
-             
-            AVAILABLE
              
           </p>
         </button>
@@ -758,6 +723,7 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             <u
               className="chn-name-8"
             >
+              8: 
               Ch 8
             </u>
           </p>
@@ -765,8 +731,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
             className="chn-status"
             id="chn-status-8"
           >
-             
-            DISABLED
              
           </p>
         </button>

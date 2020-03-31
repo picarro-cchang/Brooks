@@ -98,7 +98,7 @@ class PlanPreview extends PureComponent<LoadPanelCommandOptions, State> {
             className={"btn btn-block btn-cancel btn-group-preview"}
             onClick={e => {
               this.props.cancelLoadPlan();
-              this.props.updatePanel(2);
+              this.props.updatePanel(1);
             }}
         >
             Cancel
