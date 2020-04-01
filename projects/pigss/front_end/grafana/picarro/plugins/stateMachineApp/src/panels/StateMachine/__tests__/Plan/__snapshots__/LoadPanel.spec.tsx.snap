@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<PlanSavePanel /> Match Snapshot 1`] = `
+exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
 <div
   className="panel-save"
 >
@@ -11,7 +11,7 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
       }
     }
   >
-    Save Plan
+    Load Plan
   </h2>
   <div
     className="panel-save-inner"
@@ -21,7 +21,7 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
         axis="y"
         itemRenderer={[Function]}
         itemsRenderer={[Function]}
-        length={1}
+        length={2}
         minSize={1}
         pageSize={10}
         scrollParentGetter={[Function]}
@@ -34,31 +34,6 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
     </form>
   </div>
   <div
-    className="col-sm-12"
-    style={
-      Object {
-        "marginTop": "20px",
-      }
-    }
-  >
-    <input
-      className="form-control input-large"
-      maxLength={28}
-      onChange={[Function]}
-      placeholder="Filename (without extension)"
-      style={
-        Object {
-          "backgroundColor": "white",
-          "borderRadius": 3,
-          "color": "black",
-          "height": 35,
-        }
-      }
-      type="text"
-      value="test.pln"
-    />
-  </div>
-  <div
     className="container"
     style={
       Object {
@@ -67,33 +42,31 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
     }
   >
     <div
-      className="text-center"
+      className="row text-center"
     >
-      <button
-        className="btn btn-group-2 btn-cancel"
-        onClick={[Function]}
-        type="button"
+      <div
+        className="col-sm-12"
       >
-        Cancel
-      </button>
-      <button
-        className="btn btn-group-2 btn-green"
-        onClick={[Function]}
-        type="button"
-      >
-        OK
-      </button>
+        <button
+          className="btn btn-group-2 btn-cancel"
+          id="cancel"
+          onClick={[Function]}
+          type="button"
+        >
+          Cancel
+        </button>
+      </div>
     </div>
   </div>
 </div>
 `;
 
-exports[`<PlanSavePanel /> Renders Items 1`] = `
+exports[`<PlanLoadPanel /> Renders Items 1`] = `
 <ReactList
   axis="y"
   itemRenderer={[Function]}
   itemsRenderer={[Function]}
-  length={1}
+  length={2}
   minSize={1}
   pageSize={10}
   scrollParentGetter={[Function]}
@@ -138,7 +111,7 @@ exports[`<PlanSavePanel /> Renders Items 1`] = `
             }
           >
             <button
-              className="btn btn-light w-100 btn-small"
+              className="btn w-100 btn-small"
               onClick={[Function]}
               style={
                 Object {
@@ -147,7 +120,7 @@ exports[`<PlanSavePanel /> Renders Items 1`] = `
               }
               type="button"
             >
-              test.pln
+              Test1
             </button>
             <button
               className="btn btn-danger btn-small"

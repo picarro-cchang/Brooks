@@ -1,4 +1,4 @@
-import plan from "./__mocks__/mockExamplePlan.json";
+import plan from "./mockExamplePlan.json";
 
 const PlanServiceAPI = {
   postData(url: string, data: object, fileName: string) {
@@ -7,6 +7,8 @@ const PlanServiceAPI = {
       urlstring = "save";
     } else if (url.includes("/saveAs")) {
       urlstring = "saveAs";
+    } else if (url.includes("delete")) {
+      urlstring = "delete"
     }
     switch (urlstring) {
       case "save": {
@@ -27,12 +29,15 @@ const PlanServiceAPI = {
         // a.click();
         return Promise.resolve(new Response(JSON.stringify(data)))
       }
+      case "delete": {
+        return Promise.resolve(new Response(JSON.stringify({"event":fileName})))
+      }
     }
   },
   putData(url: string) {
     //delete file
     //change a field to false, for isActive (?)
-    return Promise.resolve(new Response(JSON.stringify(url)));
+    return Promise.resolve(new Response(JSON.stringify({"url":url})));
   },
   getRequest(url: string) {
     const fileNames = { "1": "plan1", "2": "plan2" };

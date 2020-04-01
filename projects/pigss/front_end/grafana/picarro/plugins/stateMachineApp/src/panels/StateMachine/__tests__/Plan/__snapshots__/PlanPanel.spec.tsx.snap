@@ -2,7 +2,22 @@
 
 exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
 <PlanPanel
+  bankAddition={Object {}}
+  fileName=""
   isChanged={false}
+  layoutSwitch={
+    [MockFunction] {
+      "calls": Array [
+        Array [],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
   plan={
     Object {
       "bank_names": Object {
@@ -98,1306 +113,23 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
         Array [
           true,
         ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
       ],
       "results": Array [
         Object {
           "type": "return",
           "value": undefined,
         },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
       ],
     }
   }
-  ws_sender={[MockFunction]}
->
-  <div>
-    <div
-      className="panel-plan"
-    >
-      <h2
-        className="panel-plan-text"
-      >
-        Schedule
-      </h2>
-      <span
-        className="cancel panel-plan-text"
-        id="cancel-x"
-        onClick={[Function]}
-      />
-      <h6
-        className="panel-plan-text"
-      >
-        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
-      </h6>
-      <div>
-        <h6
-          className="panel-plan-text"
-        >
-          Currently viewing File:
-           
-          <span
-            style={
-              Object {
-                "color": "white",
-              }
-            }
-          >
-            test.pln
-          </span>
-        </h6>
-      </div>
-      <div
-        className="panel-plan-inner"
-      >
-        <form>
-          <ReactList
-            axis="y"
-            itemRenderer={[Function]}
-            itemsRenderer={[Function]}
-            length={32}
-            minSize={1}
-            pageSize={10}
-            scrollParentGetter={[Function]}
-            scrollParentViewportSizeGetter={[Function]}
-            threshold={100}
-            type="uniform"
-            useStaticSize={false}
-            useTranslate3d={false}
-          >
-            <div
-              style={
-                Object {
-                  "position": "relative",
-                }
-              }
-            >
-              <div
-                style={
-                  Object {
-                    "WebkitTransform": "translate(0px, 0px)",
-                    "msTransform": "translate(0px, 0px)",
-                    "transform": "translate(0px, 0px)",
-                  }
-                }
-              >
-                <div>
-                  <div
-                    key="0"
-                  >
-                    <div
-                      className="gf-form-inline"
-                      key="1"
-                    >
-                      <label
-                        className="col-sm-1 panel-plan-text"
-                        style={
-                          Object {
-                            "fontSize": "17px",
-                            "marginTop": "5px",
-                          }
-                        }
-                      >
-                        1. 
-                      </label>
-                      <div
-                        className="col-sm-6 col-bank-name"
-                      >
-                        <input
-                          className="form-control plan-input panel-plan-text"
-                          id="plan-port-1"
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Select port"
-                          style={
-                            Object {
-                              "float": "left",
-                              "marginLeft": "2px",
-                              "maxWidth": "90%",
-                            }
-                          }
-                          type="text"
-                          value=""
-                        />
-                      </div>
-                      <div
-                        className="col-sm-3"
-                        style={
-                          Object {
-                            "paddingLeft": "0px",
-                          }
-                        }
-                      >
-                        <input
-                          className="form-control input-small plan-input panel-plan-text"
-                          id="plan-duration-1"
-                          maxLength={8}
-                          minLength={1}
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Duration"
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="text"
-                          value="20"
-                        />
-                      </div>
-                      <label
-                        className="panel-plan-text"
-                        style={
-                          Object {
-                            "marginLeft": "-15px",
-                            "paddingRight": "5px",
-                          }
-                        }
-                      >
-                        s
-                      </label>
-                      <label
-                        className="col-sm-1 radio-btn"
-                      >
-                        <input
-                          checked={true}
-                          id="plan-row-1"
-                          onChange={[Function]}
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="radio"
-                        />
-                        <span
-                          className="checkmark"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ReactList>
-        </form>
-      </div>
-      <div
-        className="container"
-      >
-        <div
-          className="row text-center btn-row-1"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-group"
-              disabled={false}
-              id="insert-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Insert
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="save-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Save
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="load-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Load
-            </button>
-          </div>
-        </div>
-        <div
-          className="row btn-row-2"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="delete-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Delete
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="clear-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Clear
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-green btn-group"
-              id="ok-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</PlanPanel>
-`;
-
-exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
-<PlanPanel
-  isChanged={false}
-  plan={
-    Object {
-      "bank_names": Object {
-        "1": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 1",
-        },
-        "2": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 2",
-        },
-        "3": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 3",
-        },
-        "4": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 4",
-        },
-      },
-      "current_step": 1,
-      "focus": Object {
-        "column": 2,
-        "row": 1,
-      },
-      "last_step": 1,
-      "max_steps": 32,
-      "num_plan_files": 1,
-      "panel_to_show": 1,
-      "plan_filename": "test.pln",
-      "plan_files": Object {
-        "1": "test.pln",
-      },
-      "steps": Object {
-        "1": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-          },
-          "duration": 1,
-          "reference": 0,
-        },
-      },
-    }
-  }
-  setFocus={[MockFunction]}
-  uistatus={Object {}}
-  updateFileName={
+  updatePanel={
     [MockFunction] {
       "calls": Array [
         Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
+          1,
         ],
       ],
       "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-      ],
-    }
-  }
-  ws_sender={[MockFunction]}
->
-  <div>
-    <div
-      className="panel-plan"
-    >
-      <h2
-        className="panel-plan-text"
-      >
-        Schedule
-      </h2>
-      <span
-        className="cancel panel-plan-text"
-        id="cancel-x"
-        onClick={[Function]}
-      />
-      <h6
-        className="panel-plan-text"
-      >
-        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
-      </h6>
-      <div>
-        <h6
-          className="panel-plan-text"
-        >
-          Currently viewing File:
-           
-          <span
-            style={
-              Object {
-                "color": "white",
-              }
-            }
-          >
-            test.pln
-          </span>
-        </h6>
-      </div>
-      <div
-        className="panel-plan-inner"
-      >
-        <form>
-          <ReactList
-            axis="y"
-            itemRenderer={[Function]}
-            itemsRenderer={[Function]}
-            length={32}
-            minSize={1}
-            pageSize={10}
-            scrollParentGetter={[Function]}
-            scrollParentViewportSizeGetter={[Function]}
-            threshold={100}
-            type="uniform"
-            useStaticSize={false}
-            useTranslate3d={false}
-          >
-            <div
-              style={
-                Object {
-                  "position": "relative",
-                }
-              }
-            >
-              <div
-                style={
-                  Object {
-                    "WebkitTransform": "translate(0px, 0px)",
-                    "msTransform": "translate(0px, 0px)",
-                    "transform": "translate(0px, 0px)",
-                  }
-                }
-              >
-                <div>
-                  <div
-                    key="0"
-                  >
-                    <div
-                      className="gf-form-inline"
-                      key="1"
-                    >
-                      <label
-                        className="col-sm-1 panel-plan-text"
-                        style={
-                          Object {
-                            "fontSize": "17px",
-                            "marginTop": "5px",
-                          }
-                        }
-                      >
-                        1. 
-                      </label>
-                      <div
-                        className="col-sm-6 col-bank-name"
-                      >
-                        <input
-                          className="form-control plan-input panel-plan-text"
-                          id="plan-port-1"
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Select port"
-                          style={
-                            Object {
-                              "float": "left",
-                              "marginLeft": "2px",
-                              "maxWidth": "90%",
-                            }
-                          }
-                          type="text"
-                          value="Clean Bank 1"
-                        />
-                      </div>
-                      <div
-                        className="col-sm-3"
-                        style={
-                          Object {
-                            "paddingLeft": "0px",
-                          }
-                        }
-                      >
-                        <input
-                          className="form-control input-small plan-input panel-plan-text"
-                          id="plan-duration-1"
-                          maxLength={8}
-                          minLength={1}
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Duration"
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="text"
-                          value="1"
-                        />
-                      </div>
-                      <label
-                        className="panel-plan-text"
-                        style={
-                          Object {
-                            "marginLeft": "-15px",
-                            "paddingRight": "5px",
-                          }
-                        }
-                      >
-                        s
-                      </label>
-                      <label
-                        className="col-sm-1 radio-btn"
-                      >
-                        <input
-                          checked={true}
-                          id="plan-row-1"
-                          onChange={[Function]}
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="radio"
-                        />
-                        <span
-                          className="checkmark"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ReactList>
-        </form>
-      </div>
-      <div
-        className="container"
-      >
-        <div
-          className="row text-center btn-row-1"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-group"
-              disabled={false}
-              id="insert-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Insert
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="save-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Save
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="load-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Load
-            </button>
-          </div>
-        </div>
-        <div
-          className="row btn-row-2"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="delete-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Delete
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="clear-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Clear
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-green btn-group"
-              id="ok-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</PlanPanel>
-`;
-
-exports[`<PlanPanel /> ReactList renders 1`] = `
-<PlanPanel
-  isChanged={false}
-  plan={
-    Object {
-      "bank_names": Object {
-        "1": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 1",
-        },
-        "2": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 2",
-        },
-        "3": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 3",
-        },
-        "4": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 4",
-        },
-      },
-      "current_step": 1,
-      "focus": Object {
-        "column": 2,
-        "row": 1,
-      },
-      "last_step": 4,
-      "max_steps": 32,
-      "num_plan_files": 1,
-      "panel_to_show": 1,
-      "plan_filename": "test.pln",
-      "plan_files": Object {
-        "1": "test.pln",
-      },
-      "steps": Object {
-        "1": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 20,
-          "reference": 1,
-        },
-        "2": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-          },
-          "duration": 20,
-          "reference": 0,
-        },
-        "3": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 8,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 60,
-          "reference": 0,
-        },
-        "4": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 128,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 60,
-          "reference": 0,
-        },
-      },
-    }
-  }
-  setFocus={[MockFunction]}
-  uistatus={Object {}}
-  updateFileName={
-    [MockFunction] {
-      "calls": Array [
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-      ],
-      "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-      ],
-    }
-  }
-  ws_sender={[MockFunction]}
->
-  <div>
-    <div
-      className="panel-plan"
-    >
-      <h2
-        className="panel-plan-text"
-      >
-        Schedule
-      </h2>
-      <span
-        className="cancel panel-plan-text"
-        id="cancel-x"
-        onClick={[Function]}
-      />
-      <h6
-        className="panel-plan-text"
-      >
-        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
-      </h6>
-      <div>
-        <h6
-          className="panel-plan-text"
-        >
-          Currently viewing File:
-           
-          <span
-            style={
-              Object {
-                "color": "white",
-              }
-            }
-          >
-            test.pln
-          </span>
-        </h6>
-      </div>
-      <div
-        className="panel-plan-inner"
-      >
-        <form>
-          <ReactList
-            axis="y"
-            itemRenderer={[Function]}
-            itemsRenderer={[Function]}
-            length={32}
-            minSize={1}
-            pageSize={10}
-            scrollParentGetter={[Function]}
-            scrollParentViewportSizeGetter={[Function]}
-            threshold={100}
-            type="uniform"
-            useStaticSize={false}
-            useTranslate3d={false}
-          >
-            <div
-              style={
-                Object {
-                  "position": "relative",
-                }
-              }
-            >
-              <div
-                style={
-                  Object {
-                    "WebkitTransform": "translate(0px, 0px)",
-                    "msTransform": "translate(0px, 0px)",
-                    "transform": "translate(0px, 0px)",
-                  }
-                }
-              >
-                <div>
-                  <div
-                    key="0"
-                  >
-                    <div
-                      className="gf-form-inline"
-                      key="1"
-                    >
-                      <label
-                        className="col-sm-1 panel-plan-text"
-                        style={
-                          Object {
-                            "fontSize": "17px",
-                            "marginTop": "5px",
-                          }
-                        }
-                      >
-                        1. 
-                      </label>
-                      <div
-                        className="col-sm-6 col-bank-name"
-                      >
-                        <input
-                          className="form-control plan-input panel-plan-text"
-                          id="plan-port-1"
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Select port"
-                          style={
-                            Object {
-                              "float": "left",
-                              "marginLeft": "2px",
-                              "maxWidth": "90%",
-                            }
-                          }
-                          type="text"
-                          value="Reference"
-                        />
-                      </div>
-                      <div
-                        className="col-sm-3"
-                        style={
-                          Object {
-                            "paddingLeft": "0px",
-                          }
-                        }
-                      >
-                        <input
-                          className="form-control input-small plan-input panel-plan-text"
-                          id="plan-duration-1"
-                          maxLength={8}
-                          minLength={1}
-                          onChange={[Function]}
-                          onFocus={[Function]}
-                          placeholder="Duration"
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="text"
-                          value="20"
-                        />
-                      </div>
-                      <label
-                        className="panel-plan-text"
-                        style={
-                          Object {
-                            "marginLeft": "-15px",
-                            "paddingRight": "5px",
-                          }
-                        }
-                      >
-                        s
-                      </label>
-                      <label
-                        className="col-sm-1 radio-btn"
-                      >
-                        <input
-                          checked={true}
-                          id="plan-row-1"
-                          onChange={[Function]}
-                          style={
-                            Object {
-                              "maxWidth": "100%",
-                            }
-                          }
-                          type="radio"
-                        />
-                        <span
-                          className="checkmark"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </ReactList>
-        </form>
-      </div>
-      <div
-        className="container"
-      >
-        <div
-          className="row text-center btn-row-1"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-group"
-              disabled={false}
-              id="insert-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Insert
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="save-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Save
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-light btn-group"
-              id="load-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Load
-            </button>
-          </div>
-        </div>
-        <div
-          className="row btn-row-2"
-        >
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="delete-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Delete
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-cancel btn-group"
-              disabled={false}
-              id="clear-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              Clear
-            </button>
-          </div>
-          <div
-            className="col-sm-3"
-          >
-            <button
-              className="btn btn-block btn-green btn-group"
-              id="ok-btn"
-              onClick={[Function]}
-              type="button"
-            >
-              OK
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</PlanPanel>
-`;
-
-exports[`<PlanPanel /> ReactList renders 2`] = `
-<PlanPanel
-  isChanged={true}
-  plan={
-    Object {
-      "bank_names": Object {
-        "1": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 1",
-        },
-        "2": Object {
-          "channels": Object {
-            "1": "Channel 1",
-            "2": "Channel 2",
-            "3": "Channel 3",
-            "4": "Channel 4",
-            "5": "Channel 5",
-            "6": "Channel 6",
-            "7": "Channel 7",
-            "8": "Channel 8",
-          },
-          "name": "Bank 2",
-        },
-        "3": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 3",
-        },
-        "4": Object {
-          "channels": Object {
-            "1": "Channel",
-            "2": "Channel",
-            "3": "Channel",
-            "4": "Channel",
-            "5": "Channel",
-            "6": "Channel",
-            "7": "Channel",
-            "8": "Channel",
-          },
-          "name": "Bank 4",
-        },
-      },
-      "current_step": 1,
-      "focus": Object {
-        "column": 2,
-        "row": 1,
-      },
-      "last_step": 4,
-      "max_steps": 32,
-      "num_plan_files": 1,
-      "panel_to_show": 1,
-      "plan_filename": "test.pln",
-      "plan_files": Object {
-        "1": "test.pln",
-      },
-      "steps": Object {
-        "1": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 20,
-          "reference": 1,
-        },
-        "2": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 10,
-            },
-          },
-          "duration": 20,
-          "reference": 0,
-        },
-        "3": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 8,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 60,
-          "reference": 0,
-        },
-        "4": Object {
-          "banks": Object {
-            "1": Object {
-              "chan_mask": 128,
-              "clean": 0,
-            },
-            "3": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-            "4": Object {
-              "chan_mask": 0,
-              "clean": 0,
-            },
-          },
-          "duration": 60,
-          "reference": 0,
-        },
-      },
-    }
-  }
-  setFocus={[MockFunction]}
-  uistatus={Object {}}
-  updateFileName={
-    [MockFunction] {
-      "calls": Array [
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-      ],
-      "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
         Object {
           "type": "return",
           "value": undefined,
@@ -1505,7 +237,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
                             }
                           }
                           type="text"
-                          value="Reference"
+                          value=""
                         />
                       </div>
                       <div
@@ -1530,7 +262,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
                             }
                           }
                           type="text"
-                          value="20"
+                          value=""
                         />
                       </div>
                       <label
@@ -1581,12 +313,12 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={false}
+              disabled={true}
               id="insert-btn"
               onClick={[Function]}
               type="button"
             >
-              Insert
+              Insert Row
             </button>
           </div>
           <div
@@ -1594,6 +326,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
+              disabled={true}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -1622,12 +355,12 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={false}
+              disabled={true}
               id="delete-btn"
               onClick={[Function]}
               type="button"
             >
-              Delete
+              Delete Row
             </button>
           </div>
           <div
@@ -1635,7 +368,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={false}
+              disabled={true}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -1648,11 +381,1286 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
+              disabled={true}
               id="ok-btn"
               onClick={[Function]}
               type="button"
             >
-              OK
+              Save As
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</PlanPanel>
+`;
+
+exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
+<PlanPanel
+  bankAddition={Object {}}
+  fileName=""
+  isChanged={false}
+  layoutSwitch={
+    [MockFunction] {
+      "calls": Array [
+        Array [],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  plan={
+    Object {
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 2",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 4",
+        },
+      },
+      "current_step": 1,
+      "focus": Object {
+        "column": 2,
+        "row": 1,
+      },
+      "last_step": 1,
+      "max_steps": 32,
+      "num_plan_files": 1,
+      "panel_to_show": 1,
+      "plan_filename": "test.pln",
+      "plan_files": Object {
+        "1": "test.pln",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+          },
+          "duration": 1,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  setFocus={[MockFunction]}
+  uistatus={Object {}}
+  updateFileName={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          true,
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  updatePanel={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          1,
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  ws_sender={[MockFunction]}
+>
+  <div>
+    <div
+      className="panel-plan"
+    >
+      <h2
+        className="panel-plan-text"
+      >
+        Schedule
+      </h2>
+      <span
+        className="cancel panel-plan-text"
+        id="cancel-x"
+        onClick={[Function]}
+      />
+      <h6
+        className="panel-plan-text"
+      >
+        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+      </h6>
+      <h6
+        style={
+          Object {
+            "color": "white",
+          }
+        }
+      >
+        Currently not viewing a saved file
+      </h6>
+      <div
+        className="panel-plan-inner"
+      >
+        <form>
+          <ReactList
+            axis="y"
+            itemRenderer={[Function]}
+            itemsRenderer={[Function]}
+            length={32}
+            minSize={1}
+            pageSize={10}
+            scrollParentGetter={[Function]}
+            scrollParentViewportSizeGetter={[Function]}
+            threshold={100}
+            type="uniform"
+            useStaticSize={false}
+            useTranslate3d={false}
+          >
+            <div
+              style={
+                Object {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "WebkitTransform": "translate(0px, 0px)",
+                    "msTransform": "translate(0px, 0px)",
+                    "transform": "translate(0px, 0px)",
+                  }
+                }
+              >
+                <div>
+                  <div
+                    key="0"
+                  >
+                    <div
+                      className="gf-form-inline"
+                      key="1"
+                    >
+                      <label
+                        className="col-sm-1 panel-plan-text"
+                        style={
+                          Object {
+                            "fontSize": "17px",
+                            "marginTop": "5px",
+                          }
+                        }
+                      >
+                        1. 
+                      </label>
+                      <div
+                        className="col-sm-6 col-bank-name"
+                      >
+                        <input
+                          className="form-control plan-input panel-plan-text"
+                          id="plan-port-1"
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Select port"
+                          style={
+                            Object {
+                              "float": "left",
+                              "marginLeft": "2px",
+                              "maxWidth": "90%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <div
+                        className="col-sm-3"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      >
+                        <input
+                          className="form-control input-small plan-input panel-plan-text"
+                          id="plan-duration-1"
+                          maxLength={8}
+                          minLength={1}
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Duration"
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <label
+                        className="panel-plan-text"
+                        style={
+                          Object {
+                            "marginLeft": "-15px",
+                            "paddingRight": "5px",
+                          }
+                        }
+                      >
+                        s
+                      </label>
+                      <label
+                        className="col-sm-1 radio-btn"
+                      >
+                        <input
+                          checked={true}
+                          id="plan-row-1"
+                          onChange={[Function]}
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="radio"
+                        />
+                        <span
+                          className="checkmark"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ReactList>
+        </form>
+      </div>
+      <div
+        className="container"
+      >
+        <div
+          className="row text-center btn-row-1"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-group"
+              disabled={true}
+              id="insert-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Insert Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              disabled={true}
+              id="save-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              id="load-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Load
+            </button>
+          </div>
+        </div>
+        <div
+          className="row btn-row-2"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="delete-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Delete Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="clear-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-green btn-group"
+              disabled={true}
+              id="ok-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save As
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</PlanPanel>
+`;
+
+exports[`<PlanPanel /> ReactList renders 1`] = `
+<PlanPanel
+  bankAddition={Object {}}
+  fileName=""
+  isChanged={false}
+  layoutSwitch={[MockFunction]}
+  plan={
+    Object {
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 2",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 4",
+        },
+      },
+      "current_step": 1,
+      "focus": Object {
+        "column": 2,
+        "row": 1,
+      },
+      "last_step": 4,
+      "max_steps": 32,
+      "num_plan_files": 1,
+      "panel_to_show": 1,
+      "plan_filename": "test.pln",
+      "plan_files": Object {
+        "1": "test.pln",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 1,
+        },
+        "2": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "3": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 60,
+          "reference": 0,
+        },
+        "4": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 60,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  setFocus={[MockFunction]}
+  uistatus={Object {}}
+  updateFileName={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          true,
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  updatePanel={[MockFunction]}
+  ws_sender={[MockFunction]}
+>
+  <div>
+    <div
+      className="panel-plan"
+    >
+      <h2
+        className="panel-plan-text"
+      >
+        Schedule
+      </h2>
+      <span
+        className="cancel panel-plan-text"
+        id="cancel-x"
+        onClick={[Function]}
+      />
+      <h6
+        className="panel-plan-text"
+      >
+        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+      </h6>
+      <h6
+        style={
+          Object {
+            "color": "white",
+          }
+        }
+      >
+        Currently not viewing a saved file
+      </h6>
+      <div
+        className="panel-plan-inner"
+      >
+        <form>
+          <ReactList
+            axis="y"
+            itemRenderer={[Function]}
+            itemsRenderer={[Function]}
+            length={32}
+            minSize={1}
+            pageSize={10}
+            scrollParentGetter={[Function]}
+            scrollParentViewportSizeGetter={[Function]}
+            threshold={100}
+            type="uniform"
+            useStaticSize={false}
+            useTranslate3d={false}
+          >
+            <div
+              style={
+                Object {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "WebkitTransform": "translate(0px, 0px)",
+                    "msTransform": "translate(0px, 0px)",
+                    "transform": "translate(0px, 0px)",
+                  }
+                }
+              >
+                <div>
+                  <div
+                    key="0"
+                  >
+                    <div
+                      className="gf-form-inline"
+                      key="1"
+                    >
+                      <label
+                        className="col-sm-1 panel-plan-text"
+                        style={
+                          Object {
+                            "fontSize": "17px",
+                            "marginTop": "5px",
+                          }
+                        }
+                      >
+                        1. 
+                      </label>
+                      <div
+                        className="col-sm-6 col-bank-name"
+                      >
+                        <input
+                          className="form-control plan-input panel-plan-text"
+                          id="plan-port-1"
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Select port"
+                          style={
+                            Object {
+                              "float": "left",
+                              "marginLeft": "2px",
+                              "maxWidth": "90%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <div
+                        className="col-sm-3"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      >
+                        <input
+                          className="form-control input-small plan-input panel-plan-text"
+                          id="plan-duration-1"
+                          maxLength={8}
+                          minLength={1}
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Duration"
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <label
+                        className="panel-plan-text"
+                        style={
+                          Object {
+                            "marginLeft": "-15px",
+                            "paddingRight": "5px",
+                          }
+                        }
+                      >
+                        s
+                      </label>
+                      <label
+                        className="col-sm-1 radio-btn"
+                      >
+                        <input
+                          checked={true}
+                          id="plan-row-1"
+                          onChange={[Function]}
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="radio"
+                        />
+                        <span
+                          className="checkmark"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ReactList>
+        </form>
+      </div>
+      <div
+        className="container"
+      >
+        <div
+          className="row text-center btn-row-1"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-group"
+              disabled={true}
+              id="insert-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Insert Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              disabled={true}
+              id="save-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              id="load-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Load
+            </button>
+          </div>
+        </div>
+        <div
+          className="row btn-row-2"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="delete-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Delete Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="clear-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-green btn-group"
+              disabled={true}
+              id="ok-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save As
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</PlanPanel>
+`;
+
+exports[`<PlanPanel /> ReactList renders 2`] = `
+<PlanPanel
+  bankAddition={Object {}}
+  fileName=""
+  isChanged={true}
+  layoutSwitch={
+    [MockFunction] {
+      "calls": Array [
+        Array [],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  plan={
+    Object {
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Channel 1",
+            "2": "Channel 2",
+            "3": "Channel 3",
+            "4": "Channel 4",
+            "5": "Channel 5",
+            "6": "Channel 6",
+            "7": "Channel 7",
+            "8": "Channel 8",
+          },
+          "name": "Bank 2",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Channel",
+            "2": "Channel",
+            "3": "Channel",
+            "4": "Channel",
+            "5": "Channel",
+            "6": "Channel",
+            "7": "Channel",
+            "8": "Channel",
+          },
+          "name": "Bank 4",
+        },
+      },
+      "current_step": 1,
+      "focus": Object {
+        "column": 2,
+        "row": 1,
+      },
+      "last_step": 4,
+      "max_steps": 32,
+      "num_plan_files": 1,
+      "panel_to_show": 1,
+      "plan_filename": "test.pln",
+      "plan_files": Object {
+        "1": "test.pln",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 1,
+        },
+        "2": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 10,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "3": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 60,
+          "reference": 0,
+        },
+        "4": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 60,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  setFocus={[MockFunction]}
+  uistatus={Object {}}
+  updateFileName={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          true,
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  updatePanel={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          1,
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
+  ws_sender={[MockFunction]}
+>
+  <div>
+    <div
+      className="panel-plan"
+    >
+      <h2
+        className="panel-plan-text"
+      >
+        Schedule
+      </h2>
+      <span
+        className="cancel panel-plan-text"
+        id="cancel-x"
+        onClick={[Function]}
+      />
+      <h6
+        className="panel-plan-text"
+      >
+        Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+      </h6>
+      <h6
+        style={
+          Object {
+            "color": "white",
+          }
+        }
+      >
+        Currently not viewing a saved file
+      </h6>
+      <div
+        className="panel-plan-inner"
+      >
+        <form>
+          <ReactList
+            axis="y"
+            itemRenderer={[Function]}
+            itemsRenderer={[Function]}
+            length={32}
+            minSize={1}
+            pageSize={10}
+            scrollParentGetter={[Function]}
+            scrollParentViewportSizeGetter={[Function]}
+            threshold={100}
+            type="uniform"
+            useStaticSize={false}
+            useTranslate3d={false}
+          >
+            <div
+              style={
+                Object {
+                  "position": "relative",
+                }
+              }
+            >
+              <div
+                style={
+                  Object {
+                    "WebkitTransform": "translate(0px, 0px)",
+                    "msTransform": "translate(0px, 0px)",
+                    "transform": "translate(0px, 0px)",
+                  }
+                }
+              >
+                <div>
+                  <div
+                    key="0"
+                  >
+                    <div
+                      className="gf-form-inline"
+                      key="1"
+                    >
+                      <label
+                        className="col-sm-1 panel-plan-text"
+                        style={
+                          Object {
+                            "fontSize": "17px",
+                            "marginTop": "5px",
+                          }
+                        }
+                      >
+                        1. 
+                      </label>
+                      <div
+                        className="col-sm-6 col-bank-name"
+                      >
+                        <input
+                          className="form-control plan-input panel-plan-text"
+                          id="plan-port-1"
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Select port"
+                          style={
+                            Object {
+                              "float": "left",
+                              "marginLeft": "2px",
+                              "maxWidth": "90%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <div
+                        className="col-sm-3"
+                        style={
+                          Object {
+                            "paddingLeft": "0px",
+                          }
+                        }
+                      >
+                        <input
+                          className="form-control input-small plan-input panel-plan-text"
+                          id="plan-duration-1"
+                          maxLength={8}
+                          minLength={1}
+                          onChange={[Function]}
+                          onFocus={[Function]}
+                          placeholder="Duration"
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="text"
+                          value=""
+                        />
+                      </div>
+                      <label
+                        className="panel-plan-text"
+                        style={
+                          Object {
+                            "marginLeft": "-15px",
+                            "paddingRight": "5px",
+                          }
+                        }
+                      >
+                        s
+                      </label>
+                      <label
+                        className="col-sm-1 radio-btn"
+                      >
+                        <input
+                          checked={true}
+                          id="plan-row-1"
+                          onChange={[Function]}
+                          style={
+                            Object {
+                              "maxWidth": "100%",
+                            }
+                          }
+                          type="radio"
+                        />
+                        <span
+                          className="checkmark"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ReactList>
+        </form>
+      </div>
+      <div
+        className="container"
+      >
+        <div
+          className="row text-center btn-row-1"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-group"
+              disabled={true}
+              id="insert-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Insert Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              disabled={true}
+              id="save-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-light btn-group"
+              id="load-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Load
+            </button>
+          </div>
+        </div>
+        <div
+          className="row btn-row-2"
+        >
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="delete-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Delete Row
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-cancel btn-group"
+              disabled={true}
+              id="clear-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Clear
+            </button>
+          </div>
+          <div
+            className="col-sm-3"
+          >
+            <button
+              className="btn btn-block btn-green btn-group"
+              disabled={true}
+              id="ok-btn"
+              onClick={[Function]}
+              type="button"
+            >
+              Save As
             </button>
           </div>
         </div>
@@ -1758,7 +1766,22 @@ exports[`<PlanPanel /> Rows greater than 10  1`] = `
 
 exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
 <PlanPanel
+  bankAddition={Object {}}
+  fileName=""
   isChanged={false}
+  layoutSwitch={
+    [MockFunction] {
+      "calls": Array [
+        Array [],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
   plan={
     Object {
       "bank_names": Object {
@@ -1854,29 +1877,23 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
         Array [
           true,
         ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
-        Array [
-          true,
-        ],
       ],
       "results": Array [
         Object {
           "type": "return",
           "value": undefined,
         },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
+      ],
+    }
+  }
+  updatePanel={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          1,
+        ],
+      ],
+      "results": Array [
         Object {
           "type": "return",
           "value": undefined,
@@ -1905,23 +1922,15 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <div>
-        <h6
-          className="panel-plan-text"
-        >
-          Currently viewing File:
-           
-          <span
-            style={
-              Object {
-                "color": "white",
-              }
-            }
-          >
-            test.pln
-          </span>
-        </h6>
-      </div>
+      <h6
+        style={
+          Object {
+            "color": "white",
+          }
+        }
+      >
+        Currently not viewing a saved file
+      </h6>
       <div
         className="panel-plan-inner"
       >
@@ -1992,7 +2001,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value="Bank 1, Channel 2"
+                          value=""
                         />
                       </div>
                       <div
@@ -2068,12 +2077,12 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={false}
+              disabled={true}
               id="insert-btn"
               onClick={[Function]}
               type="button"
             >
-              Insert
+              Insert Row
             </button>
           </div>
           <div
@@ -2081,6 +2090,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
+              disabled={true}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -2109,12 +2119,12 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={false}
+              disabled={true}
               id="delete-btn"
               onClick={[Function]}
               type="button"
             >
-              Delete
+              Delete Row
             </button>
           </div>
           <div
@@ -2122,7 +2132,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={false}
+              disabled={true}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -2135,11 +2145,12 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
+              disabled={true}
               id="ok-btn"
               onClick={[Function]}
               type="button"
             >
-              OK
+              Save As
             </button>
           </div>
         </div>
@@ -2169,23 +2180,15 @@ exports[`<PlanPanel /> Snapshot 1`] = `
     >
       Please click on available channels to set up a schedule, then click on the radio button to select starting position.
     </h6>
-    <div>
-      <h6
-        className="panel-plan-text"
-      >
-        Currently viewing File:
-         
-        <span
-          style={
-            Object {
-              "color": "white",
-            }
-          }
-        >
-          test.pln
-        </span>
-      </h6>
-    </div>
+    <h6
+      style={
+        Object {
+          "color": "white",
+        }
+      }
+    >
+      Currently not viewing a saved file
+    </h6>
     <div
       className="panel-plan-inner"
     >
@@ -2217,12 +2220,12 @@ exports[`<PlanPanel /> Snapshot 1`] = `
         >
           <button
             className="btn btn-block btn-group"
-            disabled={false}
+            disabled={true}
             id="insert-btn"
             onClick={[Function]}
             type="button"
           >
-            Insert
+            Insert Row
           </button>
         </div>
         <div
@@ -2230,6 +2233,7 @@ exports[`<PlanPanel /> Snapshot 1`] = `
         >
           <button
             className="btn btn-block btn-light btn-group"
+            disabled={true}
             id="save-btn"
             onClick={[Function]}
             type="button"
@@ -2258,12 +2262,12 @@ exports[`<PlanPanel /> Snapshot 1`] = `
         >
           <button
             className="btn btn-block btn-cancel btn-group"
-            disabled={false}
+            disabled={true}
             id="delete-btn"
             onClick={[Function]}
             type="button"
           >
-            Delete
+            Delete Row
           </button>
         </div>
         <div
@@ -2271,7 +2275,7 @@ exports[`<PlanPanel /> Snapshot 1`] = `
         >
           <button
             className="btn btn-block btn-cancel btn-group"
-            disabled={false}
+            disabled={true}
             id="clear-btn"
             onClick={[Function]}
             type="button"
@@ -2284,11 +2288,12 @@ exports[`<PlanPanel /> Snapshot 1`] = `
         >
           <button
             className="btn btn-block btn-green btn-group"
+            disabled={true}
             id="ok-btn"
             onClick={[Function]}
             type="button"
           >
-            OK
+            Save As
           </button>
         </div>
       </div>

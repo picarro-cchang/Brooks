@@ -47,7 +47,6 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
 
   render() {
     let length = Object.keys(this.state.fileNames).length
-    console.log(this.props.fileNames)
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

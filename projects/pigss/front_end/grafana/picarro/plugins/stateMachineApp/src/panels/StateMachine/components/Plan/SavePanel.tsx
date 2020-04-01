@@ -1,26 +1,29 @@
-import React, { PureComponent, ReactText } from "react";
+import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanSavePanelOptions } from "../types";
 import { PlanService } from "../../api/PlanService";
 
 interface State {
   fileName: string,
+  fileNames: {}
   // isOverwritten: boolean
 }
-class SavePanel extends PureComponent<PlanSavePanelOptions, State> {
+class SavePanel extends Component<PlanSavePanelOptions, State> {
   constructor(props) {
     super(props)
     this.state = {
-      fileName: this.props.plan.plan_filename
+      fileName: this.props.plan.plan_filename,
+      fileNames: this.props.fileNames
     }
+    this.deleteFile = this.deleteFile.bind(this)
   }
 
   deleteFile(fileName: string) {
-    PlanService.deleteFile(fileName).then((response: any) => {
-      response.json().then((data: any) => {
+    PlanService.deleteFile(fileName).then((response: any) => 
+      response.json().then(data => {
         console.log(data)
       })
-    })
+    );
   }
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
@@ -38,13 +41,15 @@ class SavePanel extends PureComponent<PlanSavePanelOptions, State> {
           // }
           style={{ color: "black" }}
         >
-          {this.props.plan.plan_files[index + 1]}
+          {this.state.fileNames[index + 1]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e =>
-            this.deleteFile(this.props.plan.plan_files[index+1])
+            {
+              this.deleteFile(this.state.fileNames[index+1]);
+            }
             //Delete File
             //not going to actually delete file, but will have a boolean field, this will send a request to change it to false
           }
@@ -55,6 +60,7 @@ class SavePanel extends PureComponent<PlanSavePanelOptions, State> {
     </div>
   );
   render() {
+    let length = Object.keys(this.props.fileNames).length
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Save Plan</h2>
@@ -62,7 +68,7 @@ class SavePanel extends PureComponent<PlanSavePanelOptions, State> {
           <form>
             <ReactList
               itemRenderer={this.renderItem}
-              length={this.props.plan.num_plan_files}
+              length={length}
               type={"uniform"}
             />
           </form>

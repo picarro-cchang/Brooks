@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactText } from "react";
+import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep, Plan } from "../types";
 import { PlanService } from "../../api/PlanService";
@@ -13,7 +13,7 @@ export interface State {
   fileName: string;
 }
 
-class PlanPanel extends PureComponent<PlanPanelOptions, State> {
+class PlanPanel extends Component<PlanPanelOptions, State> {
   constructor(props) {
     super(props);
     this.state = {

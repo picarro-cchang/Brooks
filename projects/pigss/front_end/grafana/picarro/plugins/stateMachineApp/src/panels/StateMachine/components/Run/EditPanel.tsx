@@ -1,85 +1,104 @@
 import React, { Component, PureComponent, ReactText } from "react";
 import Modal from "react-responsive-modal";
-import { EditPanelOptions } from "../types";
+import { EditPanelOptions, Plan } from "../types";
 import EditForm from "./EditForm";
 
-class EditPanel extends PureComponent<EditPanelOptions> {
+interface State {
+  initialized: boolean,
+  modal_info: {},
+  uistatus: {},
+  plan: {
+    bank_names: {
+      [key: string]: {
+        name: string,
+        channels: {
+          [key: number]: string
+        }
+      }
+    }
+  },
+  show: boolean,
+  prevState: {}
+}
+
+class EditPanel extends PureComponent<EditPanelOptions, State> {
   constructor(props) {
     super(props);
+    this.state = {
+      initialized: false,
+      modal_info: {
+        show: false,
+        html: "",
+        num_buttons: 0,
+        buttons: {}
+      },
+      uistatus: {},
+      plan: {
+        bank_names: this.props.plan.bank_names
+      },
+      show: false,
+      prevState: {
+        bank_names: {
+          1: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: ""
+            }
+          },
+          2: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: ""
+            }
+          },
+          3: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: ""
+            }
+          },
+          4: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: ""
+            }
+          }
+        }
+      }
+    };
     this.handleBankChange = this.handleBankChange.bind(this);
     this.handleChannelNameChange = this.handleChannelNameChange.bind(this);
   }
 
-  state = {
-    initialized: false,
-    modal_info: {
-      show: false,
-      html: "",
-      num_buttons: 0,
-      buttons: {}
-    },
-    uistatus: {},
-    plan: {
-      bank_names: this.props.plan.bank_names
-    },
-    show: false,
-    prevState: {
-      bank_names: {
-        1: {
-          name: "",
-          channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
-          }
-        },
-        2: {
-          name: "",
-          channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
-          }
-        },
-        3: {
-          name: "",
-          channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
-          }
-        },
-        4: {
-          name: "",
-          channels: {
-            1: "",
-            2: "",
-            3: "",
-            4: "",
-            5: "",
-            6: "",
-            7: "",
-            8: ""
-          }
-        }
-      }
-    }
-  };
+  
 
   banks: any;
   bank_list: any;

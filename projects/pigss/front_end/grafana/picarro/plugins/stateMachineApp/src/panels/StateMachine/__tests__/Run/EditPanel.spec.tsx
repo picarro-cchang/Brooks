@@ -1,15 +1,16 @@
 import React from "react";
-import { shallow, mount } from "enzyme";
+import { mount } from "enzyme";
 import Modal from "react-responsive-modal";
 import "jest-styled-components";
-import EditPanel from "../components/EditPanel";
-import EditForm from "../components/EditForm";
-import { EditPanelOptions } from "../types";
+import EditPanel from "./../../components/Run/EditPanel";
+import EditForm from "./../../components/Run/EditForm";
+import { EditPanelOptions } from "./../../components/types";
 import WS from "jest-websocket-mock";
-import mockPlan from "./../api/__mocks__/mockPlan.json";
+import mockPlan from "./../../api/__mocks__/mockPlan.json";
 const mockClick = jest.fn(element => {
   return element;
 });
+const mockUpdatePanel = jest.fn(e => {return e})
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
@@ -23,7 +24,8 @@ const defaultProps: EditPanelOptions = {
     }
   },
   plan: mockPlan,
-  ws_sender: mockClick
+  ws_sender: mockClick,
+  updatePanel: mockUpdatePanel
 };
 
 describe("<EditPanel />", () => {
@@ -249,7 +251,8 @@ describe("<EditPanel /> Using Failing Bank Names", () => {
         }
       }
     },
-    ws_sender: mockClick
+    ws_sender: mockClick,
+    updatePanel: mockUpdatePanel
   };
   const component = new EditPanel(defaultPropsFail);
 

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
+exports[`<PlanSavePanel /> Match Snapshot 1`] = `
 <div
   className="panel-save"
 >
@@ -11,7 +11,7 @@ exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
       }
     }
   >
-    Load Plan
+    Save Plan
   </h2>
   <div
     className="panel-save-inner"
@@ -34,6 +34,31 @@ exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
     </form>
   </div>
   <div
+    className="col-sm-12"
+    style={
+      Object {
+        "marginTop": "20px",
+      }
+    }
+  >
+    <input
+      className="form-control input-large"
+      maxLength={28}
+      onChange={[Function]}
+      placeholder="Filename (without extension)"
+      style={
+        Object {
+          "backgroundColor": "white",
+          "borderRadius": 3,
+          "color": "black",
+          "height": 35,
+        }
+      }
+      type="text"
+      value="test.pln"
+    />
+  </div>
+  <div
     className="container"
     style={
       Object {
@@ -42,26 +67,28 @@ exports[`<PlanLoadPanel /> Match Snapshot 1`] = `
     }
   >
     <div
-      className="row text-center"
+      className="text-center"
     >
-      <div
-        className="col-sm-12"
+      <button
+        className="btn btn-group-2 btn-cancel"
+        onClick={[Function]}
+        type="button"
       >
-        <button
-          className="btn btn-group-2 btn-cancel"
-          id="cancel"
-          onClick={[Function]}
-          type="button"
-        >
-          Cancel
-        </button>
-      </div>
+        Cancel
+      </button>
+      <button
+        className="btn btn-group-2 btn-green"
+        onClick={[Function]}
+        type="button"
+      >
+        OK
+      </button>
     </div>
   </div>
 </div>
 `;
 
-exports[`<PlanLoadPanel /> Renders Items 1`] = `
+exports[`<PlanSavePanel /> Renders Items 1`] = `
 <ReactList
   axis="y"
   itemRenderer={[Function]}
@@ -111,8 +138,7 @@ exports[`<PlanLoadPanel /> Renders Items 1`] = `
             }
           >
             <button
-              className="btn w-100 btn-small"
-              onClick={[Function]}
+              className="btn btn-light w-100 btn-small"
               style={
                 Object {
                   "color": "black",
@@ -120,7 +146,7 @@ exports[`<PlanLoadPanel /> Renders Items 1`] = `
               }
               type="button"
             >
-              test.pln
+              Test
             </button>
             <button
               className="btn btn-danger btn-small"

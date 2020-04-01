@@ -1,25 +1,25 @@
-import TESTPlanServiceAPI from "./TESTPlanServiceAPI";
-
+import PlanServiceAPI from "./__mocks__/PlanServiceAPI";
+//import PlanServiceAPI from "./PlanServiceAPI"
 export const PlanService = (() => {
   return {
     getFileNames: () => {
-      return TESTPlanServiceAPI.getRequest("fileNames");
+      return PlanServiceAPI.getRequest("fileNames");
     },
     getFileData: (fileName: string) => {
-      return TESTPlanServiceAPI.getRequest("planInfo");
+      return PlanServiceAPI.getRequest("planInfo");
     },
     // getCurrentPlan: () => {
-    //   return TESTPlanServiceAPI.getRequest("currentPlan");
+    //   return PlanServiceAPI.getRequest("currentPlan");
     // },
     saveFile: (data, fileName) => {
-      return TESTPlanServiceAPI.postData("/save/" + fileName, data, fileName);
+      return PlanServiceAPI.postData("/save/" + fileName, data, fileName);
     },
     saveFileAs: (data, fileName) => {
       console.log("plan service");
-      return TESTPlanServiceAPI.postData("/saveAs/" + fileName, data, fileName); // real implementation will not use filename
+      return PlanServiceAPI.postData("/saveAs/" + fileName, data, fileName); // real implementation will not use filename
     },
     deleteFile: (fileName) => {
-      return TESTPlanServiceAPI.putData("/delete/" + fileName);
+      return PlanServiceAPI.putData("/delete/" + fileName)//, {}, fileName);
     }
   };
 })();
