@@ -28,11 +28,11 @@ read choice
 
 case $choice in
 	0) exit;;
-	1) sudo ./pigss-hostname || sudo /usr/bin/pigss-hostname ;;
+	1) sudo ./pigss-hostname 2> /dev/null || sudo /usr/bin/pigss-hostname ;;
 	2) shutdown -r now ;;
 	3) shutdown -h now ;;
-	4) sudo ./pigss-network || sudo /usr/bin/pigss-network;;
-	5) sudo ./pigss-influx-relocating || sudo /usr/bin/pigss-influx-relocating;;
+	4) sudo ./pigss-network 2> /dev/null || sudo /usr/bin/pigss-network;;
+	5) sudo ./pigss-influx-relocating 2> /dev/null || sudo /usr/bin/pigss-influx-relocating;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac
 done
