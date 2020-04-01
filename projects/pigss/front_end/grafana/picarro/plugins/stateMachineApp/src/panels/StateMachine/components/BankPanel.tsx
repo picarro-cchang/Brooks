@@ -65,7 +65,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       test = channelStatus;
     }
 
-    //check if channel/clean is in plan :)
     let portsInPlan = {};
     for (let step in this.props.plan.steps) {
       const planRow = this.props.plan.steps[step] as PlanStep;
@@ -77,7 +76,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             break;
           } else if (bank_config.chan_mask != 0) {
             const mask = bank_config.chan_mask;
-            // Find index of first set bit using bit-twiddling hack
             const channel = (mask & -mask).toString(2).length;
             let portNumber = (Number(bank) - 1) * 8 + channel
             portsInPlan[String(portNumber)] = planRow.duration;
@@ -156,7 +154,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       </button>
     );
     const value: string = this.props.plan.bank_names[this.props.bank].name;
-    console.log("Ports In Plan: ", portsInPlan)
     return (
       <div>
         <div className="panel-bank" style={bankStyle}>
