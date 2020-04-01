@@ -32,6 +32,12 @@
   background-color: #ffffff;
   border: 2px solid hsl(0, 0%, 42%);
 }
+
+.btn-bold {
+  font-weight: 500;
+  border: 5px solid #56a64b;
+}
+
 .btn-inverse-2.disabled {
   background-color: #484848;
   opacity: 0.9;
