@@ -109,17 +109,9 @@ class BankPanel extends PureComponent<BankPanelOptions> {
               {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
-            {portsInPlan.hasOwnProperty(portNumber) ? (
-                <p id={"chn-status-" + i} className={"chn-status"}>
-                  {" "}
-                  Duration: {portsInPlan[portNumber]}
-                </p>
-
-              ):(
                 <p id={"chn-status-" + i} className={"chn-status"}>
                   {" "}
                 </p>
-              )}
           </button>
         ) : (
           <button
@@ -140,19 +132,9 @@ class BankPanel extends PureComponent<BankPanelOptions> {
               {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
-
-              {portsInPlan.hasOwnProperty(portNumber) ? (
-                <p id={"chn-status-" + i} className={"chn-status"}>
-                  {" "}
-                  Duration: {portsInPlan[portNumber]}
-                </p>
-
-              ):(
                 <p id={"chn-status-" + i} className={"chn-status"}>
                   {" "}
                 </p>
-              )}
-              
           </button>
         )
       );

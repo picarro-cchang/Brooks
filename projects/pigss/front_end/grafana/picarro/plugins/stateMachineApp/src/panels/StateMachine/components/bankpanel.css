@@ -35,7 +35,7 @@
 
 .btn-bold {
   font-weight: 500;
-  border: 3px solid hsla(0, 0%, 34%, 1);
+  border: 5px solid #56a64b;
 }
 
 .btn-inverse-2.disabled {
