@@ -5,6 +5,8 @@
 # problem with contaminated FOUP
 #  2018-07-24:  Remeasured hydrocarbon splines with AMBDS2073
 #  2019-09-04: For Dual Cavity Purposes, made so doesn't enter unless correct vlaser is used
+#  2019-12-23: changed to free center frequency for fit with HC and init centers in other fits
+#              fixes problem when index changes from N2 to Air (DF)
 
 from numpy import any, argmin, diff, amin, amax, mean, std, sqrt, round_
 import numpy as np
@@ -112,6 +114,8 @@ if INIT:
         BASEPATH, r"./NH3/AADS-xx peak 11 + HC v1_2.ini")))
     anNH3.append(Analysis(os.path.join(
         BASEPATH, r"./NH3/AADS-xx peak 12 + HC v1_2.ini")))
+    anNH3.append(Analysis(os.path.join(
+        BASEPATH, r"./NH3/AADS-xx water + co2 + HC VC v1_2.ini")))
 
     #  Import instrument specific baseline constants
 
@@ -373,8 +377,16 @@ else:
         #  Post-fit with acetylene and propyne in the spectral model
 
         init[1003, 2] = PF_c3h4_conc / 19.94
-        r = anNH3[11](d, init, deps)
+        # want to init shift if index of refraction is changing,
+        # if initial fit has C2H2 or C3H4 in it, or shift is large, you do not want to initialize the shift
+        if abs(shift_a) < 0.005:
+            init["base",3] = shift_a
+        r = anNH3[15](d, init, deps)
         ANALYSIS.append(r)
+        PF_a_shift = r["base", 3]
+        if (r[15, "peak"] < 10 and r[17, "peak"] < 10) or abs(PF_a_shift) > 0.05:
+            r = anNH3[11](d, init, deps)
+            ANALYSIS.append(r)
         PF_a_shift = r["base", 3]
         PF_res_a = r["std_dev_res"]
         PF_a_h2o_conc = 0.02 * r[15, "peak"]
@@ -507,6 +519,7 @@ else:
         #  Post-fit with acetylene and propyne in the spectral model
 
         init[1002, 2] = PF_a_c2h2_conc / 19.38
+        init["base",3] = PF_a_shift
         r = anNH3[12](d, init, deps)
         ANALYSIS.append(r)
         PF_base0 = r["base", 0]
