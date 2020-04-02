@@ -12,7 +12,7 @@ export interface State {
   bankAdditionClicked: {};
   fileName: string;
 }
-
+//TODO: Add Validation
 class PlanPanel extends Component<PlanPanelOptions, State> {
   constructor(props) {
     super(props);
@@ -48,9 +48,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.clearPlan = this.clearPlan.bind(this)
   }
 
-  shouldComponentUpdate(nextProps, nextState) {
-    // if update works, it will update bankAdditionClicked
-    console.log("Changed")
+  shouldComponentUpdate(nextProps) {
     if (this.props.bankAddition !== nextProps.bankAddition) {
       this.setState({
         bankAdditionClicked: nextProps.bankAddition
@@ -91,7 +89,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     PlanService.saveFileAs(this.state.plan, this.state.plan.plan_filename).then((response: any) => {
       console.log(response)
     });
-    console.log("here");
   }
 
   clearPlan() {
@@ -153,7 +150,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       row += 1;
     }
     if (row <= this.state.plan.last_step) {
-      duration = this.state.plan[row].duration;
+      duration = this.state.plan.steps[row].duration;
     } else {
       duration = 0;
     }
@@ -447,8 +444,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
                   onClick={e => {
-                    this.setState({ isChanged: true });
                     this.insertRow();
+                    this.setState({ isChanged: true });
                   }}
                   className={"btn btn-block btn-group"}
                 >
@@ -522,13 +519,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                 <button
                   type="button"
                   id="ok-btn"
-                  disabled={
-                    this.state.plan.focus.row > this.state.plan.last_step
-                  }
-                  onClick={e => {
-                    // Save State as JSON Object, send to Service
-                    this.saveFileAs();
-                  }}
+                  disabled={this.state.plan.focus.row > this.state.plan.last_step}
+                  onClick={e => this.saveFileAs()}
                   className={"btn btn-block btn-green btn-group"}
                 >
                   Save As

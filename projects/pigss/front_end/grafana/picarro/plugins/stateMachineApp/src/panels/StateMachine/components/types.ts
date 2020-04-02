@@ -34,7 +34,7 @@ export interface Plan {
 
 export interface PlanLayoutProps {
     uistatus: {
-      [key: string]: string;
+      [key: string]: any;
     };
     ws_sender: (o: object) => void;
     plan: Plan;
@@ -105,7 +105,7 @@ export interface LoadPanelCommandOptions {
   }
 
 export interface PlanPanelOptions {
-    uistatus: { [key: string]: string };
+    uistatus: { [key: string]: any };
     plan: Plan;
     setFocus: (row: number, column: number) => void;
     ws_sender: (o: object) => void;
