@@ -95,6 +95,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         <div className="container" style={{ marginTop: "20px" }}>
           <div className="text-center">
             <button
+              id="cancel-save"
               type="button"
               onClick={e =>
                 this.props.updatePanel(0)
@@ -105,6 +106,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
             </button>
             <button
               type="button"
+              id="save-btn"
               onClick={e => {
                 this.props.updateFileName(false);
                 this.props.planSaved(this.state.fileName);

@@ -107,7 +107,6 @@ export interface LoadPanelCommandOptions {
 export interface PlanPanelOptions {
     uistatus: { [key: string]: any };
     plan: Plan;
-    setFocus: (row: number, column: number) => void;
     ws_sender: (o: object) => void;
     isChanged: boolean;
     updateFileName: (x: boolean) => void;

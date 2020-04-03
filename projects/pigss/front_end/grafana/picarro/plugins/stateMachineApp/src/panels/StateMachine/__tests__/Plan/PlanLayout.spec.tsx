@@ -1,9 +1,9 @@
 import React from "react";
-import { shallow } from "enzyme";
+import { shallow, mount } from "enzyme";
 import "jest-styled-components";
 import "jest-fetch-mock";
 import PlanLayout from "../../components/Plan/PlanLayout";
-import { PlanLayoutProps } from "../../components/types";
+import { PlanLayoutProps, Plan } from "../../components/types";
 import mockPlan from "../../api/__mocks__/mockPlan.json";
 import mockData from "./../../api/__mocks__/mockData.json";
 import LoadPanel from "../../components/Plan/LoadPanel";
@@ -12,26 +12,22 @@ const mockWS = jest.fn();
 const mockLayoutSwitch = jest.fn();
 
 const defaultProps: PlanLayoutProps = {
-  uistatus: {
-    standby: "ACTIVE",
-    identify: "READY",
-    loop_plan: "READY",
-    run: "READY",
-    plan: "READY",
-    plan_run: "READY",
-    plan_loop: "READY",
-    reference: "READY",
-    run_plan: "READY",
-    edit: "READY"
-  },
+  uistatus: mockData,
   plan: mockPlan,
   ws_sender: mockWS,
-  fileNames: {},
+  fileNames: {
+    1: "Test"
+  },
   layoutSwitch: mockLayoutSwitch
 };
 describe("<PlanLayout />", () => {
+  const addChanneToPlanRef = jest.spyOn(PlanLayout.prototype, "addChanneltoPlan");
+  const updatePanelToShow = jest.spyOn(PlanLayout.prototype, "updatePanelToShow");
+  const updateFileName = jest.spyOn(PlanLayout.prototype, "updateFileName");
+
   const wrapper = shallow(<PlanLayout {...defaultProps} />);
-  const instance = wrapper.instance() as PlanLayout;
+  const mountwrapper = mount(<PlanLayout {...defaultProps} />)
+  const instance = mountwrapper.instance() as PlanLayout;
 
   it("Match Snapshot", () => {
     expect(wrapper).toMatchSnapshot();
@@ -46,19 +42,39 @@ describe("<PlanLayout />", () => {
     expect(wrapper.find("SavePanel").html()).toBeDefined();
   });
 
-  it("getPlanFromFileName", () => {});
+  it("getPlanFromFileName", () => {
+    const getPlan = jest.spyOn(instance, "getPlanFromFileName");
+    mountwrapper.setState({panel_to_show: 1})
+    const load = mountwrapper.find('LoadPanel').find('button#plan-filename-1')
+    load.simulate("click");
+    expect(getPlan).toHaveBeenCalled()
+  });
 
-  it("planSaved", () => {});
+  it("planSaved", () => {
+    const planSaved = jest.spyOn(instance, "planSaved");
+    mountwrapper.setState({panel_to_show: 2})
+    const load = mountwrapper.find('SavePanel').find('button#save-btn')
+    load.simulate("click");
+    expect(planSaved).toHaveBeenCalled()
+  });
 
-  it("addChannelToPlan", () => {});
+  it("addChannelToPlan", () => {
+    const reference = mountwrapper.find('button#reference');
+    reference.simulate("click");
+    expect(addChanneToPlanRef).toHaveBeenCalled();
+  });
 
-  it("updatePanelToShow", () => {});
+  it("updatePanelToShow", () => {
+    const button = mountwrapper.find('PlanPanel').find('button').at(2);
+    button.simulate('click');
+    expect(updatePanelToShow).toHaveBeenCalled();
+  });
 
-  it("deleteFile", () => {});
+  it("updateFileName", () => {
+    mountwrapper.setState({panel_to_show: 0})
+    const button = mountwrapper.find('PlanPanel').find('input#plan-port-1');
+    button.simulate('change');
+    expect(updateFileName).toHaveBeenCalled();
+  });
 
-  it("setFocus", () => {});
-
-  it("updateFileName", () => {});
-
-  it("Banks Render", () => {});
 });

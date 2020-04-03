@@ -67,7 +67,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions> {
       channelButtons.push(
         getChannelDisabled(i) ? (
           <button
-            key={i}
+            key={portNumber}
             id={"channel-" + i}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
             style={{ color: "black" }}
@@ -88,7 +88,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions> {
             }}
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}
-            key={i}
+            key={portNumber}
             className={"btn btn-large bank-btn " + getChannelClassNames(i)}
           >
             <p className="chn-label">

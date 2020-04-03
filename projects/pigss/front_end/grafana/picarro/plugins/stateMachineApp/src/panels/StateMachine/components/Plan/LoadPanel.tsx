@@ -22,6 +22,7 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>
         <button
           type="button"
+          id={"plan-filename-"+ (index + 1)}
           className="btn w-100 btn-small"
           onClick={e => {
             this.props.updateFileName(false);

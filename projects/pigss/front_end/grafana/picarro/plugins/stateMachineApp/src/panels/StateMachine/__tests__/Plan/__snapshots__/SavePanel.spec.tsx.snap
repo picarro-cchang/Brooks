@@ -71,6 +71,7 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
     >
       <button
         className="btn btn-group-2 btn-cancel"
+        id="cancel-save"
         onClick={[Function]}
         type="button"
       >
@@ -78,6 +79,7 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
       </button>
       <button
         className="btn btn-group-2 btn-green"
+        id="save-btn"
         onClick={[Function]}
         type="button"
       >

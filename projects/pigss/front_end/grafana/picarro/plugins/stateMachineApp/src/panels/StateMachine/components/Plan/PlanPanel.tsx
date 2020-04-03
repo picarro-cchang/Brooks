@@ -472,9 +472,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                 <button
                   type="button"
                   id="load-btn"
-                  onClick={e => {
-                    this.props.updatePanel(1);
-                  }}
+                  onClick={e => this.props.updatePanel(1)}
                   className={"btn btn-block btn-light btn-group"}
                 >
                   Load

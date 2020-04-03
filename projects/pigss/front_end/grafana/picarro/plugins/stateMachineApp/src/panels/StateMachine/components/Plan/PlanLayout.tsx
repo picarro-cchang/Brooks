@@ -31,10 +31,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     }
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
-    this.deleteFile = this.deleteFile.bind(this);
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
     this.planSaved = this.planSaved.bind(this);
-    this.setFocus = this.setFocus.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
   }
 
@@ -55,7 +53,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   }
 
   addChanneltoPlan(bankx: number, channelx: number) {
-    console.log("Adding Channel")
     this.setState({
       bankAdd: {
         bank: bankx,
@@ -66,14 +63,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
 
   updatePanelToShow(panel: number) {
     this.setState({panel_to_show: panel})
-  } 
-
-  deleteFile(fileName: string) {
-    console.log("delete file ", fileName)
-  }
-
-  setFocus(row: number, column: number) {
-    this.setState(deepmerge(this.state, { plan: { focus: { row, column } } }));
   }
 
   updateFileName(x: boolean) {
@@ -86,7 +75,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       for (let i = 1; i <= 4; i++) {
         if ((this.props.uistatus as any).bank.hasOwnProperty(i)) {
           bankPanelsEdit.push(
-            <div>
+            <div key={i}>
               <BankPanel
                 plan={this.state.plan}
                 bank={i}
@@ -110,7 +99,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 uistatus={this.props.uistatus}
                 plan={this.state.plan}
                 ws_sender={this.props.ws_sender}
-                setFocus={(row, column) => this.setFocus(row, column)}
                 bankAddition={this.state.bankAdd}
                 updateFileName={this.updateFileName}
                 fileName={this.state.fileName}
