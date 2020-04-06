@@ -105,7 +105,6 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
       },
     }
   }
-  setFocus={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -525,7 +524,6 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
       },
     }
   }
-  setFocus={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -1000,7 +998,6 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
       },
     }
   }
-  setFocus={[MockFunction]}
   uistatus={
     Object {
       "bank": Object {
@@ -1507,7 +1504,6 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
       },
     }
   }
-  setFocus={[MockFunction]}
   uistatus={
     Object {
       "bank": Object {
@@ -2080,7 +2076,6 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       },
     }
   }
-  setFocus={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {

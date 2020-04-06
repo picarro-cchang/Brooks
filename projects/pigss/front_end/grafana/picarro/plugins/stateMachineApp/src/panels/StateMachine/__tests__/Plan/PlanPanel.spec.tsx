@@ -11,7 +11,6 @@ import mockBankNames from "./../../api/__mocks__/mockBankNames.json";
 import validate from "./../../api/__mocks__/mockValidation";
 import mockData from "./../../api/__mocks__/mockData.json"
 
-const mockSetFocus = jest.fn();
 const mockUpdateFilename = jest.fn();
 const mockWSSender = jest.fn(element => {
   // if plan, validate, else
@@ -25,7 +24,6 @@ const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: PlanPanelOptions = {
   uistatus: mockData,
   plan: mockPlanPanelData,
-  setFocus: mockSetFocus,
   ws_sender: mockWSSender,
   isChanged: false,
   updateFileName: mockUpdateFilename,
@@ -38,7 +36,6 @@ const defaultProps: PlanPanelOptions = {
 const nextProps: PlanPanelOptions = {
   uistatus: mockData,
   plan: mockPlanPanelData,
-  setFocus: mockSetFocus,
   ws_sender: mockWSSender,
   isChanged: false,
   updateFileName: mockUpdateFilename,
@@ -244,7 +241,6 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
       },
       bank_names: mockBankNames
     },
-    setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename,
@@ -297,7 +293,6 @@ describe("<PlanPanel /> All Chan Masks == 0", () => {
       },
       bank_names: mockBankNames
     },
-    setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename,
@@ -350,7 +345,6 @@ describe("<PlanPanel /> Rows greater than 10", () => {
       },
       bank_names: mockBankNames
     },
-    setFocus: mockSetFocus,
     ws_sender: mockWSSender,
     isChanged: false,
     updateFileName: mockUpdateFilename,

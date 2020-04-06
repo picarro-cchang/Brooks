@@ -44,7 +44,7 @@ export interface PlanLayoutProps {
 
 export interface RunLayoutProps {
     uistatus: {
-      [key: string]: string;
+      [key: string]: any;
     };
     ws_sender: (o: object) => void;
     plan: Plan;
