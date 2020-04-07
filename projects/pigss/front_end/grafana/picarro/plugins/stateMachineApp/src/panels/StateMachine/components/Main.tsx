@@ -12,7 +12,6 @@ import { ModalInfo, PlanPanelTypes } from "./../types";
 import EditPanel from "./EditPanel";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { PlanInformationPanel } from "./PlanInformationPanel";
 
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -299,18 +298,6 @@ export class Main extends React.Component<any, any> {
     }
     return (
       <div style={{ textAlign: "center" }}>
-        {/* {this.planFileNameUpTop() ? (
-          <div className="plan-info">
-            Running Plan: {this.state.plan.plan_filename} Current Port: Duration: 
-          </div>) : (
-          <div className="plan-info">
-            Running Plan: No Plan
-          </div>
-        )}         */}
-        <PlanInformationPanel 
-          uistatus={this.state.uistatus}
-          plan={this.state.plan}
-        />
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
