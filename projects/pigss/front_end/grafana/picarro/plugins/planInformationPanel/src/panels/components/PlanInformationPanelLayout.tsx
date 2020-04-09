@@ -5,6 +5,7 @@ import { Plan } from '../types';
 import API from './../api/API';
 import { ToastContainer, toast } from "react-toastify";
 import { notifyError, notifySuccess } from "../utils/Notifications";
+import { threadId } from 'worker_threads';
 
 interface State {
     uistatus: { [key: string]: string},
@@ -22,7 +23,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         super(props)
         this.state = {
           ws: null,
-          timer: 0,
+          timer: null,
             initialized: false,
             uistatus: {},
             plan: {
@@ -123,6 +124,9 @@ export class PlanInformationPanelLayout extends Component<any, any> {
           } else if ("plan" in o) {
             const plan = deepmerge(this.state.plan, o.plan);
             this.setState({ plan });
+            const current_step = this.state.plan.current_step;
+            const duration = this.state.plan.steps[String(this.state.plan.current_step)].duration;
+            this.setState({timer: duration})
           } 
         }
       }
@@ -158,7 +162,6 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         var connectInterval;
 
         ws.onopen = () => {
-          console.log('connected');
           this.setState({ws: ws});
           that.timeout = 250;
           clearTimeout(connectInterval)
@@ -167,7 +170,6 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         ws.onmessage = evt => {
           const message = JSON.parse(evt.data)
           this.handleData(message)
-          console.log(message)
         }
 
         ws.onclose = (e) => {
@@ -189,6 +191,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
 
 
     render() {
+      console.log("Timer: ", this.state.timer)
         return (
             <div>
                 {this.state.initialized ? (

@@ -4,7 +4,7 @@ import { Plan } from "./../types";
 interface State {
   uistatus: { [key: string]: string };
   plan: Plan;
-  timer: number;
+  timing: number;
 }
 
 interface Props {
@@ -22,10 +22,41 @@ export class PlanInformationPanel extends Component<Props, State> {
     this.state = {
       uistatus: this.props.uistatus,
       plan: this.props.plan,
-      timer: this.props.timer
+      timing: this.props.timer
     };
+  }
+  interval;
+
+  shouldComponentUpdate(nextProps) {
+    if (this.props.plan.current_step !== nextProps.plan.current_step) {
+      this.setState({
+        timing: nextProps.timer
+      });
+      console.log("HELLO HI", this.state.timing)
+      this.interval = setInterval(() => {
+    //   this.setState(({timing}) => ({
+    //     timing: timing - 1
+    //   }))
+    // }, 1000);
+
+    if (this.state.timing > 0) {
+      this.setState(({ timing }) => ({
+        timing: timing - 1
+      }))
+    }
+    if (this.state.timing === 0) {
+        clearInterval(this.interval)
+    } 
+    }, 1000)
+
 
   }
+
+
+
+    return true;
+  }
+  
 
   getBankChannelFromStep(step: number, nextStep: number) {
     const stepInfo = this.props.plan.steps[String(step)];
@@ -93,6 +124,8 @@ export class PlanInformationPanel extends Component<Props, State> {
   }
 
   render() {
+    console.log("timer: ", this.props.timer);
+    console.log("timing: ", this.state.timing)
     if (this.props.plan.last_step !== 0) {
       const currentStep = this.props.plan.current_step;
       const currentDuration = this.props.plan.steps[
@@ -112,7 +145,7 @@ export class PlanInformationPanel extends Component<Props, State> {
           {fileNameUpTop ? (
             <div className="plan-info">
               Running Plan: {this.props.plan.plan_filename} Current Port: {steps.currentStepString}
-              Duration: {currentDuration} Next Port: {steps.nextStepString}
+              Duration: {this.state.timing} Next Port: {steps.nextStepString}
             </div>
           ) : (
             <div className="plan-info">Running Plan: No Plan Running</div>
