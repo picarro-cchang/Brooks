@@ -1,10 +1,12 @@
 import React, { Component } from "react";
+import Countdown from 'react-countdown';
 import { Plan } from "./../types";
 
 interface State {
   uistatus: { [key: string]: string };
   plan: Plan;
-  timing: number;
+  timeRemaining: number;
+  timeStart: number;
 }
 
 interface Props {
@@ -16,47 +18,58 @@ interface Props {
 }
 
 export class PlanInformationPanel extends Component<Props, State> {
+  private timer: any;
   constructor(props) {
     super(props);
 
     this.state = {
       uistatus: this.props.uistatus,
       plan: this.props.plan,
-      timing: this.props.timer
+      timeStart: this.props.timer,
+      timeRemaining: this.props.timer
     };
   }
-  interval;
 
-  shouldComponentUpdate(nextProps) {
-    if (this.props.plan.current_step !== nextProps.plan.current_step) {
-      this.setState({
-        timing: nextProps.timer
-      });
-      console.log("HELLO HI", this.state.timing)
-      this.interval = setInterval(() => {
-    //   this.setState(({timing}) => ({
-    //     timing: timing - 1
-    //   }))
-    // }, 1000);
 
-    if (this.state.timing > 0) {
-      this.setState(({ timing }) => ({
-        timing: timing - 1
+  decrementTime = () => {
+    if (this.state.timeRemaining > 0) {
+      this.setState(({ timeRemaining }) => ({
+        timeRemaining: timeRemaining - 1
       }))
+      console.log("HERE")
+    } else {
+      clearInterval(this.timer!)
     }
-    if (this.state.timing === 0) {
-        clearInterval(this.interval)
-    } 
-    }, 1000)
-
-
   }
 
+  componentWillUnmount() {
+    // clearInterval(this.timer);
+    //need to save state of it when leaving page otherwise it restarts
+  }
 
-
-    return true;
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.timeStart !== this.state.timeStart) {
+      this.setState({timeRemaining: this.state.timeStart});
+      console.log("Previous State: ", prevState.timeStart)
+      console.log("This State: ", this.state.timeStart)
+      clearInterval(this.timer);
+      this.timer = setInterval(() => {
+          this.decrementTime();
+      }, 1000)
+    }
   }
   
+  static getDerivedStateFromProps(nextProps, prevState){
+    if(nextProps.uistatus.plan_loop !== prevState.uistatus.plan_loop || nextProps.uistatus.plan_run !== prevState.uistatus.plan_run){      
+      console.log("Next Props: ", nextProps.timer)
+      
+      return {timeStart : nextProps.timer};
+    } else if (nextProps.plan.current_step !== prevState.plan.current_step) {
+      console.log("Next Props: ", nextProps.timer)
+      return {timeStart : nextProps.timer};
+    }
+    else return null;
+  }
 
   getBankChannelFromStep(step: number, nextStep: number) {
     const stepInfo = this.props.plan.steps[String(step)];
@@ -123,15 +136,18 @@ export class PlanInformationPanel extends Component<Props, State> {
     }
   }
 
+  renderer =({seconds}) => {
+    return <span>{seconds}</span>
+  }
+
   render() {
     console.log("timer: ", this.props.timer);
-    console.log("timing: ", this.state.timing)
+    console.log("timeStart: ", this.state.timeStart)
     if (this.props.plan.last_step !== 0) {
       const currentStep = this.props.plan.current_step;
       const currentDuration = this.props.plan.steps[
         String(this.props.plan.current_step)
       ].duration;
-      console.log('hello')
       let nextStep = 0;
       if (currentStep == this.props.plan.last_step) {
         nextStep = 1;
@@ -140,12 +156,13 @@ export class PlanInformationPanel extends Component<Props, State> {
       }
       const steps = this.getBankChannelFromStep(currentStep, nextStep);
       const fileNameUpTop = this.planFileNameUpTop();
+      
       return (
         <div style={{ textAlign: "center" }}>
           {fileNameUpTop ? (
             <div className="plan-info">
-              Running Plan: {this.props.plan.plan_filename} Current Port: {steps.currentStepString}
-              Duration: {this.state.timing} Next Port: {steps.nextStepString}
+              Running Plan: {this.props.plan.plan_filename}{" "} Current Port: {steps.currentStepString}{" "}
+              Duration: {this.state.timeRemaining}{" "} Next Port: {steps.nextStepString} 
             </div>
           ) : (
             <div className="plan-info">Running Plan: No Plan Running</div>
