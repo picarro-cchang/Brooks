@@ -36,36 +36,41 @@ export class PlanInformationPanel extends Component<Props, State> {
       this.setState(({ timeRemaining }) => ({
         timeRemaining: timeRemaining - 1
       }))
-      console.log("HERE")
     } else {
       clearInterval(this.timer!)
     }
   }
 
   componentWillUnmount() {
-    // clearInterval(this.timer);
+    console.log("UNMOUNT")
+    clearInterval(this.timer);
     //need to save state of it when leaving page otherwise it restarts
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.timeStart !== this.state.timeStart) {
+    if (prevState.timeStart !== this.state.timeStart) { //only changes if time is d
       this.setState({timeRemaining: this.state.timeStart});
-      console.log("Previous State: ", prevState.timeStart)
-      console.log("This State: ", this.state.timeStart)
       clearInterval(this.timer);
       this.timer = setInterval(() => {
           this.decrementTime();
       }, 1000)
+    } else if (prevState.plan.current_step !== this.state.plan.current_step) {
+      this.setState({timeRemaining: this.state.timeStart});
+      clearInterval(this.timer);
+      this.timer = setInterval(() => {
+        this.decrementTime();
+      }, 1000);
     }
   }
   
   static getDerivedStateFromProps(nextProps, prevState){
-    if(nextProps.uistatus.plan_loop !== prevState.uistatus.plan_loop || nextProps.uistatus.plan_run !== prevState.uistatus.plan_run){      
-      console.log("Next Props: ", nextProps.timer)
-      
-      return {timeStart : nextProps.timer};
-    } else if (nextProps.plan.current_step !== prevState.plan.current_step) {
-      console.log("Next Props: ", nextProps.timer)
+    if(nextProps.plan.current_step !== prevState.plan.current_step){      
+      const cu = prevState.plan.current_step
+      return { plan: {
+        ...prevState.plan,
+        current_step: nextProps.plan.current_step
+      }};
+    } else if (nextProps.uistatus.plan_loop !== prevState.uistatus.plan_loop || nextProps.uistatus.plan_run !== prevState.uistatus.plan_run) {
       return {timeStart : nextProps.timer};
     }
     else return null;
@@ -141,8 +146,6 @@ export class PlanInformationPanel extends Component<Props, State> {
   }
 
   render() {
-    console.log("timer: ", this.props.timer);
-    console.log("timeStart: ", this.state.timeStart)
     if (this.props.plan.last_step !== 0) {
       const currentStep = this.props.plan.current_step;
       const currentDuration = this.props.plan.steps[

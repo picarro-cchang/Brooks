@@ -125,7 +125,9 @@ export class PlanInformationPanelLayout extends Component<any, any> {
             const plan = deepmerge(this.state.plan, o.plan);
             this.setState({ plan });
             const current_step = this.state.plan.current_step;
+            console.log("Current Step: ", current_step);
             const duration = this.state.plan.steps[String(this.state.plan.current_step)].duration;
+            console.log("Duration: ", duration)
             this.setState({timer: duration})
           } 
         }
