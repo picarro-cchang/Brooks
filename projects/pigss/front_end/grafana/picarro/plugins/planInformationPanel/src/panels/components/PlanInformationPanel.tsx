@@ -3,15 +3,15 @@ import Countdown from 'react-countdown';
 import { Plan } from "./../types";
 
 interface State {
-  uistatus: { [key: string]: string };
+  uistatus: { [key: string]: any };
   plan: Plan;
   timeRemaining: number;
   timeStart: number;
 }
 
-interface Props {
+export interface Props {
   uistatus: {
-    [key: string]: string;
+    [key: string]: any;
   };
   plan: Plan;
   timer: number;
@@ -43,7 +43,7 @@ export class PlanInformationPanel extends Component<Props, State> {
 
   componentWillUnmount() {
     console.log("UNMOUNT")
-    clearInterval(this.timer);
+    // clearInterval(this.timer);
     //need to save state of it when leaving page otherwise it restarts
   }
 
@@ -53,7 +53,7 @@ export class PlanInformationPanel extends Component<Props, State> {
       clearInterval(this.timer);
       this.timer = setInterval(() => {
           this.decrementTime();
-      }, 1000)
+      }, 1000);
     } else if (prevState.plan.current_step !== this.state.plan.current_step) {
       this.setState({timeRemaining: this.state.timeStart});
       clearInterval(this.timer);
