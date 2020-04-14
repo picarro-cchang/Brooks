@@ -35,10 +35,10 @@ class PlanService(ServiceTemplate):
         self.log.debug("PlanService is shutting down.")
 
     async def on_cleanup(self, app):
-        # Do close up stuff
+        # Do clean up stuff
 
         # Close Connection
-        pass
+        self.model.close_connection()
 
     async def create(self, request):
         """
