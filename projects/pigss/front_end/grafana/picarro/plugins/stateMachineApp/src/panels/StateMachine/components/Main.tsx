@@ -210,6 +210,7 @@ export class Main extends React.Component<any, any> {
   getLastRunningPlan() {
     PlanService.getLastRunning().then((response: any) => 
       response.json().then(data => {
+        data["details"] = JSON.parse(data["details"]);
         console.log("Last Plan Loaded! ", data)
         this.setState({plan: data});
       }))
