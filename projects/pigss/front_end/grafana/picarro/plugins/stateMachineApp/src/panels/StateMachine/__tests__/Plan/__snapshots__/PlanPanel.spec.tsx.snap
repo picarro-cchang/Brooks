@@ -105,6 +105,181 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
       },
     }
   }
+  planSavedAs={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 4",
+              },
+            },
+            "current_step": 1,
+            "focus": Object {
+              "column": 2,
+              "row": 1,
+            },
+            "last_step": 4,
+            "max_steps": 32,
+            "num_plan_files": 1,
+            "panel_to_show": 1,
+            "plan_filename": "test.pln",
+            "plan_files": Object {
+              "1": "test.pln",
+            },
+            "steps": Object {
+              "1": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 1,
+              },
+              "2": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 32,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 0,
+              },
+              "3": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 8,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "4": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "5": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+            },
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -146,17 +321,10 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
     [MockFunction] {
       "calls": Array [
         Array [
-          2,
-        ],
-        Array [
           1,
         ],
       ],
       "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
         Object {
           "type": "return",
           "value": undefined,
@@ -185,15 +353,23 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <h6
-        style={
-          Object {
-            "color": "white",
-          }
-        }
-      >
-        Currently not viewing a saved file
-      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
       <div
         className="panel-plan-inner"
       >
@@ -289,7 +465,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="20"
                         />
                       </div>
                       <label
@@ -340,7 +516,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={true}
+              disabled={false}
               id="insert-btn"
               onClick={[Function]}
               type="button"
@@ -353,7 +529,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
-              disabled={true}
+              disabled={false}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -382,7 +558,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="delete-btn"
               onClick={[Function]}
               type="button"
@@ -395,7 +571,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -408,7 +584,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
-              disabled={true}
+              disabled={false}
               id="ok-btn"
               onClick={[Function]}
               type="button"
@@ -524,6 +700,181 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
       },
     }
   }
+  planSavedAs={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 4",
+              },
+            },
+            "current_step": 1,
+            "focus": Object {
+              "column": 2,
+              "row": 1,
+            },
+            "last_step": 4,
+            "max_steps": 32,
+            "num_plan_files": 1,
+            "panel_to_show": 1,
+            "plan_filename": "test.pln",
+            "plan_files": Object {
+              "1": "test.pln",
+            },
+            "steps": Object {
+              "1": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 1,
+              },
+              "2": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 32,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 0,
+              },
+              "3": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 8,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "4": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "5": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+            },
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -565,17 +916,10 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
     [MockFunction] {
       "calls": Array [
         Array [
-          2,
-        ],
-        Array [
           1,
         ],
       ],
       "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
         Object {
           "type": "return",
           "value": undefined,
@@ -604,15 +948,23 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <h6
-        style={
-          Object {
-            "color": "white",
-          }
-        }
-      >
-        Currently not viewing a saved file
-      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
       <div
         className="panel-plan-inner"
       >
@@ -683,7 +1035,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="Clean Bank 1"
                         />
                       </div>
                       <div
@@ -708,7 +1060,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="1"
                         />
                       </div>
                       <label
@@ -759,7 +1111,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={true}
+              disabled={false}
               id="insert-btn"
               onClick={[Function]}
               type="button"
@@ -772,7 +1124,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
-              disabled={true}
+              disabled={false}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -801,7 +1153,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="delete-btn"
               onClick={[Function]}
               type="button"
@@ -814,7 +1166,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -827,7 +1179,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
-              disabled={true}
+              disabled={false}
               id="ok-btn"
               onClick={[Function]}
               type="button"
@@ -944,16 +1296,16 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
         "2": Object {
           "banks": Object {
             "1": Object {
-              "chan_mask": 0,
-              "clean": 10,
+              "chan_mask": 32,
+              "clean": 0,
             },
             "3": Object {
               "chan_mask": 0,
-              "clean": 10,
+              "clean": 0,
             },
             "4": Object {
               "chan_mask": 0,
-              "clean": 10,
+              "clean": 0,
             },
           },
           "duration": 20,
@@ -998,6 +1350,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
       },
     }
   }
+  planSavedAs={[MockFunction]}
   uistatus={
     Object {
       "bank": Object {
@@ -1098,15 +1451,23 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <h6
-        style={
-          Object {
-            "color": "white",
-          }
-        }
-      >
-        Currently not viewing a saved file
-      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
       <div
         className="panel-plan-inner"
       >
@@ -1177,7 +1538,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="Reference"
                         />
                       </div>
                       <div
@@ -1202,7 +1563,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="20"
                         />
                       </div>
                       <label
@@ -1253,7 +1614,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={true}
+              disabled={false}
               id="insert-btn"
               onClick={[Function]}
               type="button"
@@ -1266,7 +1627,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
-              disabled={true}
+              disabled={false}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -1295,7 +1656,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="delete-btn"
               onClick={[Function]}
               type="button"
@@ -1308,7 +1669,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -1321,7 +1682,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
-              disabled={true}
+              disabled={false}
               id="ok-btn"
               onClick={[Function]}
               type="button"
@@ -1450,16 +1811,16 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
         "2": Object {
           "banks": Object {
             "1": Object {
-              "chan_mask": 0,
-              "clean": 10,
+              "chan_mask": 32,
+              "clean": 0,
             },
             "3": Object {
               "chan_mask": 0,
-              "clean": 10,
+              "clean": 0,
             },
             "4": Object {
               "chan_mask": 0,
-              "clean": 10,
+              "clean": 0,
             },
           },
           "duration": 20,
@@ -1501,7 +1862,200 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           "duration": 60,
           "reference": 0,
         },
+        "5": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 60,
+          "reference": 0,
+        },
       },
+    }
+  }
+  planSavedAs={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 4",
+              },
+            },
+            "current_step": 1,
+            "focus": Object {
+              "column": 2,
+              "row": 1,
+            },
+            "last_step": 4,
+            "max_steps": 32,
+            "num_plan_files": 1,
+            "panel_to_show": 1,
+            "plan_filename": "test.pln",
+            "plan_files": Object {
+              "1": "test.pln",
+            },
+            "steps": Object {
+              "1": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 1,
+              },
+              "2": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 32,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 0,
+              },
+              "3": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 8,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "4": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "5": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+            },
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
     }
   }
   uistatus={
@@ -1600,17 +2154,10 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
     [MockFunction] {
       "calls": Array [
         Array [
-          2,
-        ],
-        Array [
           1,
         ],
       ],
       "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
         Object {
           "type": "return",
           "value": undefined,
@@ -1639,15 +2186,23 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <h6
-        style={
-          Object {
-            "color": "white",
-          }
-        }
-      >
-        Currently not viewing a saved file
-      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
       <div
         className="panel-plan-inner"
       >
@@ -1718,7 +2273,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="Reference"
                         />
                       </div>
                       <div
@@ -1743,7 +2298,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="20"
                         />
                       </div>
                       <label
@@ -1794,7 +2349,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={true}
+              disabled={false}
               id="insert-btn"
               onClick={[Function]}
               type="button"
@@ -1807,7 +2362,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
-              disabled={true}
+              disabled={false}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -1836,7 +2391,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="delete-btn"
               onClick={[Function]}
               type="button"
@@ -1849,7 +2404,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -1862,7 +2417,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
-              disabled={true}
+              disabled={false}
               id="ok-btn"
               onClick={[Function]}
               type="button"
@@ -2076,6 +2631,181 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       },
     }
   }
+  planSavedAs={
+    [MockFunction] {
+      "calls": Array [
+        Array [
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Channel 1",
+                  "2": "Channel 2",
+                  "3": "Channel 3",
+                  "4": "Channel 4",
+                  "5": "Channel 5",
+                  "6": "Channel 6",
+                  "7": "Channel 7",
+                  "8": "Channel 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Channel",
+                  "2": "Channel",
+                  "3": "Channel",
+                  "4": "Channel",
+                  "5": "Channel",
+                  "6": "Channel",
+                  "7": "Channel",
+                  "8": "Channel",
+                },
+                "name": "Bank 4",
+              },
+            },
+            "current_step": 1,
+            "focus": Object {
+              "column": 2,
+              "row": 1,
+            },
+            "last_step": 4,
+            "max_steps": 32,
+            "num_plan_files": 1,
+            "panel_to_show": 1,
+            "plan_filename": "test.pln",
+            "plan_files": Object {
+              "1": "test.pln",
+            },
+            "steps": Object {
+              "1": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 1,
+              },
+              "2": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 32,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 20,
+                "reference": 0,
+              },
+              "3": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 8,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "4": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+              "5": Object {
+                "banks": Object {
+                  "1": Object {
+                    "chan_mask": 128,
+                    "clean": 0,
+                  },
+                  "3": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                  "4": Object {
+                    "chan_mask": 0,
+                    "clean": 0,
+                  },
+                },
+                "duration": 60,
+                "reference": 0,
+              },
+            },
+          },
+        ],
+      ],
+      "results": Array [
+        Object {
+          "type": "return",
+          "value": undefined,
+        },
+      ],
+    }
+  }
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -2117,17 +2847,10 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
     [MockFunction] {
       "calls": Array [
         Array [
-          2,
-        ],
-        Array [
           1,
         ],
       ],
       "results": Array [
-        Object {
-          "type": "return",
-          "value": undefined,
-        },
         Object {
           "type": "return",
           "value": undefined,
@@ -2156,15 +2879,23 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       >
         Please click on available channels to set up a schedule, then click on the radio button to select starting position.
       </h6>
-      <h6
-        style={
-          Object {
-            "color": "white",
-          }
-        }
-      >
-        Currently not viewing a saved file
-      </h6>
+      <div>
+        <h6
+          className="panel-plan-text"
+        >
+          Currently viewing File:
+           
+          <span
+            style={
+              Object {
+                "color": "white",
+              }
+            }
+          >
+            test.pln
+          </span>
+        </h6>
+      </div>
       <div
         className="panel-plan-inner"
       >
@@ -2235,7 +2966,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
                             }
                           }
                           type="text"
-                          value=""
+                          value="2: Channel 2"
                         />
                       </div>
                       <div
@@ -2311,7 +3042,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-group"
-              disabled={true}
+              disabled={false}
               id="insert-btn"
               onClick={[Function]}
               type="button"
@@ -2324,7 +3055,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-light btn-group"
-              disabled={true}
+              disabled={false}
               id="save-btn"
               onClick={[Function]}
               type="button"
@@ -2353,7 +3084,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="delete-btn"
               onClick={[Function]}
               type="button"
@@ -2366,7 +3097,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-cancel btn-group"
-              disabled={true}
+              disabled={false}
               id="clear-btn"
               onClick={[Function]}
               type="button"
@@ -2379,7 +3110,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
           >
             <button
               className="btn btn-block btn-green btn-group"
-              disabled={true}
+              disabled={false}
               id="ok-btn"
               onClick={[Function]}
               type="button"
@@ -2427,7 +3158,7 @@ exports[`<PlanPanel /> Snapshot 1`] = `
             }
           }
         >
-          plan_test
+          test.pln
         </span>
       </h6>
     </div>
@@ -2576,7 +3307,7 @@ exports[`<PlanPanel /> makePlanRow 1`] = `
         }
       }
       type="text"
-      value="22: Ch. 6"
+      value=""
     />
   </div>
   <div
@@ -2601,7 +3332,7 @@ exports[`<PlanPanel /> makePlanRow 1`] = `
         }
       }
       type="text"
-      value="20"
+      value=""
     />
   </div>
   <label

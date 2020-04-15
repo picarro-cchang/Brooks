@@ -12,6 +12,7 @@ const mockClick = jest.fn(element => {
 const mockLoadPlan = jest.fn()
 const mockUpdatePanel = jest.fn();
 const mockUpdateFileName = jest.fn();
+const mockDeleteFile = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: LoadPanelOptions = {
@@ -24,7 +25,8 @@ const defaultProps: LoadPanelOptions = {
   ws_sender: mockClick,
   isChanged: false,
   updateFileName: mockUpdateFileName,
-  getPlanFromFileName: mockLoadPlan
+  getPlanFromFileName: mockLoadPlan,
+  deleteFile: mockDeleteFile
 };
 
 describe("<PlanLoadPanel />", () => {

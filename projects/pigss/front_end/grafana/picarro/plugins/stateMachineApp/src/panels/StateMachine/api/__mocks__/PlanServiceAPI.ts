@@ -1,54 +1,34 @@
 import plan from "./mockExamplePlan.json";
-
+const mockURLs = {
+  GETFILENAMES: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?names=true`,
+  GETLASTRUNNING: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?last_running=true`,
+  GETFILEDATA: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?plan_name=TestFile`,
+  SAVEFILEAS: `http://${window.location.hostname}:8080/plan/api/v0.1/plan`,
+  DELETEFILE: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?name=TestFile2`
+}
 const PlanServiceAPI = {
-  postData(url: string, data: object, fileName: string) {
-    let urlstring;
-    if (url.includes("/save/")) {
-      urlstring = "save";
-    } else if (url.includes("/saveAs")) {
-      urlstring = "saveAs";
-    } else if (url.includes("delete")) {
-      urlstring = "delete"
-    }
-    switch (urlstring) {
-      case "save": {
-        // save data to a new file
-        // const a = document.createElement("a");
-        // const file = new Blob([JSON.stringify(data)]);
-        // a.href = URL.createObjectURL(file);
-        // a.download = fileName;
-        // a.click();
-        return Promise.resolve(new Response(JSON.stringify(data)))
-      }
-      case "saveAs": {
-        // overwrite current file
-        // const a = document.createElement("a");
-        // const file = new Blob([JSON.stringify(data)]);
-        // a.href = URL.createObjectURL(file);
-        // a.download = fileName;
-        // a.click();
-        return Promise.resolve(new Response(JSON.stringify(data)))
-      }
-      case "delete": {
-        return Promise.resolve(new Response(JSON.stringify({"event":fileName})))
-      }
-    }
-  },
-  putData(url: string) {
-    //delete file
-    //change a field to false, for isActive (?)
-    return Promise.resolve(new Response(JSON.stringify({"url":url})));
-  },
   getRequest(url: string) {
     const fileNames = { "1": "plan1", "2": "plan2" };
     switch (url) {
-      case "fileNames": {
+      case mockURLs.GETFILENAMES: {
         return Promise.resolve(new Response(JSON.stringify(fileNames)));
       }
-      case "planInfo": {
+      case mockURLs.GETLASTRUNNING: {
+        return Promise.resolve(new Response(JSON.stringify(plan)))
+      }
+      case mockURLs.GETFILEDATA: {
         return Promise.resolve(new Response(JSON.stringify(plan)));
       }
     }
+  },
+  postData(url: string, data: object) {
+    return Promise.resolve(new Response(JSON.stringify(data)))
+  },
+  putData(url: string, data: object) {
+    return Promise.resolve(new Response(JSON.stringify(data)))
+  },
+  deleteData(url: string) {
+    return Promise.resolve(new Response(JSON.stringify({"url":url})));
   }
 };
 

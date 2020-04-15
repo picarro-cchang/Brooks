@@ -18,6 +18,7 @@ const mockWSSender = jest.fn(element => {
 });
 const mockUpdatePanel = jest.fn();
 const mockLayoutSwitch = jest.fn();
+const mockPlanSavedAs = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
@@ -30,7 +31,8 @@ const defaultProps: PlanPanelOptions = {
   bankAddition: {bank: 1, channel: 1},
   updatePanel: mockUpdatePanel, 
   fileName: "TestPlan",
-  layoutSwitch: mockLayoutSwitch
+  layoutSwitch: mockLayoutSwitch,
+  planSavedAs: mockPlanSavedAs
 };
 
 const nextProps: PlanPanelOptions = {
@@ -42,7 +44,8 @@ const nextProps: PlanPanelOptions = {
   bankAddition: {bank: 1, channel: 6},
   updatePanel: mockUpdatePanel, 
   fileName: "TestPlan",
-  layoutSwitch: mockLayoutSwitch
+  layoutSwitch: mockLayoutSwitch,
+  planSavedAs: mockPlanSavedAs
 };
 
 const defaultState = {
@@ -195,10 +198,10 @@ describe("<PlanPanel />", () => {
     shallowwrapper.setState({plan: mockPlanPanelData})
     const validation = validate(shallowwrapper.props().plan);
     expect(validation).toBe(true);
-    const saveAs = jest.spyOn(shallowwrapper.instance() as PlanPanel, "saveFileAs")
+    // const saveAs = jest.spyOn(shallowwrapper.instance() as PlanPanel, "saveFileAs")
     const saveAsButton = shallowwrapper.find("button#ok-btn");
     saveAsButton.simulate("click");
-    expect(saveAs).toHaveBeenCalled();
+    expect(mockPlanSavedAs).toHaveBeenCalled();
   });
 
   it("ReactList renders", () => {
@@ -247,7 +250,8 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
-    layoutSwitch: mockLayoutSwitch
+    layoutSwitch: mockLayoutSwitch,
+    planSavedAs: mockPlanSavedAs
   };
   const wrapper = shallow(<PlanPanel {...defaultPropsClean} />);
   const instance = wrapper.instance() as PlanPanel;
@@ -299,7 +303,8 @@ describe("<PlanPanel /> All Chan Masks == 0", () => {
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
-    layoutSwitch: mockLayoutSwitch
+    layoutSwitch: mockLayoutSwitch,
+    planSavedAs: mockPlanSavedAs
   };
 
   const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
@@ -351,7 +356,9 @@ describe("<PlanPanel /> Rows greater than 10", () => {
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
-    layoutSwitch: mockLayoutSwitch
+    layoutSwitch: mockLayoutSwitch,
+    planSavedAs: mockPlanSavedAs
+
   };
 
   it("", () => {

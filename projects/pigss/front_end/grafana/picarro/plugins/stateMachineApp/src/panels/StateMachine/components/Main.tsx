@@ -100,6 +100,7 @@ export class Main extends React.Component<any, any> {
     super(props);
     this.getPlanFileNames = this.getPlanFileNames.bind(this);
     this.isPlanning = this.isPlanning.bind(this);
+    this.getLastRunningPlan = this.getLastRunningPlan.bind(this);
   }
 
   ws = new WebSocket(socketURL);
@@ -132,6 +133,7 @@ export class Main extends React.Component<any, any> {
   componentDidMount() {
     this.getDataViaApi();
     this.getPlanFileNames();
+    this.getLastRunningPlan();
     this.attachWSMethods(this.ws);
   }
 
@@ -203,6 +205,14 @@ export class Main extends React.Component<any, any> {
   isPlanning() {
       //Switch between the two layouts
       this.setState({isPlanning: !this.state.isPlanning})
+  }
+
+  getLastRunningPlan() {
+    PlanService.getLastRunning().then((response: any) => 
+      response.json().then(data => {
+        console.log("Last Plan Loaded! ", data)
+        this.setState({plan: data});
+      }))
   }
 
   render() {

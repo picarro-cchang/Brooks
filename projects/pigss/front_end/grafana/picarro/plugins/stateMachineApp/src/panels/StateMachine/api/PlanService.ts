@@ -1,25 +1,27 @@
 import PlanServiceAPI from "./__mocks__/PlanServiceAPI";
-//import PlanServiceAPI from "./PlanServiceAPI"
+// import PlanServiceAPI from "./PlanServiceAPI"
+
+const url = `http://${window.location.hostname}:8080/plan/api/v0.1/plan`
 export const PlanService = (() => {
   return {
     getFileNames: () => {
-      return PlanServiceAPI.getRequest("fileNames");
+      return PlanServiceAPI.getRequest(url+'?names=true');
+    },
+    getLastRunning: () => {
+      return PlanServiceAPI.getRequest(url+'?last_running=true')
     },
     getFileData: (fileName: string) => {
-      return PlanServiceAPI.getRequest("planInfo");
+      console.log("hello")
+      return PlanServiceAPI.getRequest(url+'?plan_name=TestFile')//+fileName);
     },
-    // getCurrentPlan: () => {
-    //   return PlanServiceAPI.getRequest("currentPlan");
-    // },
-    saveFile: (data, fileName) => {
-      return PlanServiceAPI.postData("/save/" + fileName, data, fileName);
+    saveFileAs: (data) => {
+      return PlanServiceAPI.putData(url, data);
     },
-    saveFileAs: (data, fileName) => {
-      console.log("plan service");
-      return PlanServiceAPI.postData("/saveAs/" + fileName, data, fileName); // real implementation will not use filename
+    saveFile: (data) => {
+      return PlanServiceAPI.postData(url, data);
     },
     deleteFile: (fileName) => {
-      return PlanServiceAPI.putData("/delete/" + fileName)//, {}, fileName);
+      return PlanServiceAPI.deleteData(url+"?name="+fileName);
     }
   };
 })();

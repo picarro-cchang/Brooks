@@ -55,7 +55,6 @@ exports[`<PlanSavePanel /> Match Snapshot 1`] = `
         }
       }
       type="text"
-      value="test.pln"
     />
   </div>
   <div

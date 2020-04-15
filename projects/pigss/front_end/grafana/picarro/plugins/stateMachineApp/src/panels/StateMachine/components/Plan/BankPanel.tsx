@@ -1,8 +1,26 @@
 import React, { PureComponent } from "react";
-import { BankPanelPlanOptions } from "../types";
+import { BankPanelPlanOptions, Plan } from "../types";
 import "./../bankpanel.css";
 
-class BankPanel extends PureComponent<BankPanelPlanOptions> {
+interface State {
+  plan: {
+    bank_names: {
+      [key: number]: {
+        name: string;
+        channels: { [key: number]: string };
+      };
+    };
+  }
+}
+
+class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
+  constructor(props){
+    super(props)
+    this.state = {
+      plan: this.props.plan
+    }
+  }
+  
   bankStyleOpt = {
     READY: { color: "#424242", backgroundColor: "#e4e4e4" },
     ACTIVE: { color: "#fff", backgroundColor: "#56a64b" },
@@ -74,7 +92,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.state.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             <p id={"chn-status-" + i} className={"chn-status"}>
@@ -93,7 +111,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
+                {portNumber + ": "}{this.state.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 

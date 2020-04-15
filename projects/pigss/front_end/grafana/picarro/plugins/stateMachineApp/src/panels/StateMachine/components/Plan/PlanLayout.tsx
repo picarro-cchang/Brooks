@@ -23,7 +23,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.state= {
         isPlanPanel: true,
         plan: this.props.plan,
-        fileNames: {},
+        fileNames: this.props.fileNames,
         panel_to_show: 0,
         fileName: "",
         bankAdd: {},
@@ -32,24 +32,84 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
+    // this.getLastLoadedPlan = this.getLastLoadedPlan.bind(this);
     this.planSaved = this.planSaved.bind(this);
+    this.planSavedAs = this.planSavedAs.bind(this);
+    // this.getAllFileNames = this.getAllFileNames.bind(this);
+    this.deleteFile = this.deleteFile.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
   }
 
+  // getAllFileNames() {
+  //   PlanService.getFileNames().then((response: any) => 
+  //     response.json().then(data => {
+  //       console.log("FileNames!! ", data);
+  //       this.setState({fileNames: data})
+  //     }))
+  // }
+
+  // getLastLoadedPlan() {
+  //   PlanService.getLastRunning().then((response: any) => {
+  //     response.json().then(data => {
+  //       console.log("Plan Last Loaded! ", data);
+  //       this.setState({plan: data})
+  //     })
+  //   })
+  // }
+
   getPlanFromFileName(filename: string) {
     // gets called when filename is clicked on in load panel
-    this.setState({
-      fileName: filename,
-      panel_to_show: 0
-    });
+    PlanService.getFileData(filename).then((response: any) => 
+      response.json().then(data => {
+        console.log("Getting Plan from Filename! ", data);
+        this.setState({
+          fileName: filename,
+          panel_to_show: 0
+        });
+      }))
   }
 
-  planSaved(fileName) {
-      //???
-    this.setState({
-      fileName: fileName,
-      panel_to_show: 0
+  planSaved(fileName, plan) {
+    /* Save File and Set fileName to state */
+    const data = {
+      name: fileName,
+      details: plan,
+      user: "admin"
+    }
+    console.log("Plan Saved! ", data)
+    PlanService.saveFile(data).then((response: any) => 
+      response.json().then(data => {
+        console.log(data);
+        this.setState({
+          fileName: fileName,
+          panel_to_show: 0
+        })
+      })
+    );
+  }
+
+  planSavedAs(plan) {
+    const data = {
+      name: plan.plan_filename,
+      details: plan,
+      user: "admin",
+      is_deleted: 0,
+      is_running: 0,
+      updated_name: plan.plan_filename
+    }
+    PlanService.saveFileAs(data).then((response: any) => 
+      response.json().then(data => {
+        console.log("Plan Saved As! ", data);
+      })
+    )
+  }
+  
+  deleteFile(fileName) {
+    PlanService.deleteFile(fileName).then((response: any) => 
+    response.json().then(data => {
+      console.log("Plan Deleted! ",data)
     })
+  );
   }
 
   addChanneltoPlan(bankx: number, channelx: number) {
@@ -67,6 +127,11 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
 
   updateFileName(x: boolean) {
     this.setState({ isChanged: x });
+  }
+
+  componentDidMount() {
+    //get the last plan that was loaded
+    // this.getLastLoadedPlan();
   }
 
   render() {
@@ -105,6 +170,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 isChanged={this.state.isChanged}
                 updatePanel={this.updatePanelToShow}
                 layoutSwitch={this.props.layoutSwitch}
+                planSavedAs={this.planSavedAs}
+                // getLastLoadedPlan={this.getLastLoadedPlan}
             />
         );
         break;
@@ -119,6 +186,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             getPlanFromFileName={this.getPlanFromFileName}
             updatePanel={this.updatePanelToShow}
             fileNames={this.props.fileNames}
+            deleteFile={this.deleteFile}
           />
         );
         break;
@@ -133,6 +201,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 planSaved={this.planSaved}
                 updatePanel={this.updatePanelToShow}
                 fileNames={this.props.fileNames}
+                deleteFile={this.deleteFile}
             />
         );
         break;

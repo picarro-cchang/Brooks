@@ -1,44 +1,60 @@
 import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
-import { PlanSavePanelOptions } from "../types";
+import { PlanSavePanelOptions, Plan } from "../types";
 import { PlanService } from "../../api/PlanService";
 
 interface State {
   fileName: string,
-  fileNames: {}
-  // isOverwritten: boolean
+  fileNames: {},
+  plan: Plan
 }
 class SavePanel extends Component<PlanSavePanelOptions, State> {
   constructor(props) {
     super(props)
     this.state = {
-      fileName: this.props.plan.plan_filename,
-      fileNames: this.props.fileNames
+      fileName: "",
+      fileNames: this.props.fileNames,
+      plan: this.props.plan
     }
-    this.deleteFile = this.deleteFile.bind(this)
+    // this.deleteFile = this.deleteFile.bind(this);
+    // this.savePlan = this.savePlan.bind(this);
+    this.updateFileName = this.updateFileName.bind(this)
   }
 
-  deleteFile(fileName: string) {
-    PlanService.deleteFile(fileName).then((response: any) => 
-      response.json().then(data => {
-        console.log(data)
-      })
-    );
+  // deleteFile(fileName: string) {
+  //   PlanService.deleteFile(fileName).then((response: any) => 
+  //     response.json().then(data => {
+  //       console.log(data)
+  //     })
+  //   );
+  // }
+
+  // savePlan() {
+  //   const data = {
+  //     name: this.state.fileName,
+  //     details: this.state.plan,
+  //     user: "admin"
+  //   }
+  //   console.log("UM HI HELlo!", data)
+  //   PlanService.saveFile(data).then((response: any) => 
+  //     response.json().then(data => {
+  //       console.log(data)
+  //     })
+  //   );
+  //   // this.props.updateFileName(false);
+  //   // this.props.planSaved(this.state.fileName);
+  // }
+
+  updateFileName(e) {
+    this.setState({fileName: e.target.value});
   }
+
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>
         <button
           type="button"
           className="btn btn-light w-100 btn-small"
-          // onClick={e =>
-            //set filename state to filename
-
-            // this.props.ws_sender({
-            //   element: "plan_save_filename",
-            //   name: this.props.plan.plan_files[index + 1]
-            // })
-          // }
           style={{ color: "black" }}
         >
           {this.state.fileNames[index + 1]}
@@ -48,10 +64,8 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           className="btn btn-danger btn-small"
           onClick={e =>
             {
-              this.deleteFile(this.state.fileNames[index+1]);
+              this.props.deleteFile(this.state.fileNames[index+1]);
             }
-            //Delete File
-            //not going to actually delete file, but will have a boolean field, this will send a request to change it to false
           }
         >
           X
@@ -75,11 +89,11 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         </div>
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
-            onChange={e =>
-              this.setState({fileName: e.target.value})
-            }
+            onChange={e => {
+              this.updateFileName(e)
+              // this.setState({fileName: e.target.value})
+            }}
             maxLength={28}
-            value={this.props.plan.plan_filename}
             type="text"
             className="form-control input-large"
             style={{
@@ -108,8 +122,8 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
               type="button"
               id="save-btn"
               onClick={e => {
-                this.props.updateFileName(false);
-                this.props.planSaved(this.state.fileName);
+                // this.savePlan();
+                this.props.planSaved(this.state.fileName, this.state.plan);
               }}
               className={"btn btn-group-2 btn-green"}
             >

@@ -11,6 +11,7 @@ export interface State {
   isLoaded: boolean;
   bankAdditionClicked: {};
   fileName: string;
+  fileNames: {};
 }
 //TODO: Add Validation
 class PlanPanel extends Component<PlanPanelOptions, State> {
@@ -21,31 +22,17 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       isLoaded: false,
       refVisible: true,
       isChanged: this.props.isChanged,
-      plan: {
-        max_steps: 32,
-        panel_to_show: 0,
-        current_step: 1,
-        focus: {
-          row: 1,
-          column: 1
-        },
-        last_step: 0,
-        steps: {},
-        num_plan_files: 0,
-        plan_files: {},
-        plan_filename: "",
-        bank_names: {}
-      },
-      fileName: this.props.fileName
+      plan: this.props.plan,
+      fileName: this.props.fileName,
+      fileNames: {}
     };
     this.addToPlan = this.addToPlan.bind(this);
     this.getAvailableBanks = this.getAvailableBanks.bind(this);
-    this.getLoadedPlan = this.getLoadedPlan.bind(this);
     this.updateFocus = this.updateFocus.bind(this);
-    this.updateDuration = this.updateDuration.bind(this)
+    this.updateDuration = this.updateDuration.bind(this);
     this.updateCurrentStep = this.updateCurrentStep.bind(this);
     this.insertRow = this.insertRow.bind(this);
-    this.clearPlan = this.clearPlan.bind(this)
+    this.clearPlan = this.clearPlan.bind(this);
   }
 
   shouldComponentUpdate(nextProps) {
@@ -64,31 +51,10 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   componentDidMount() {
-    this.getLoadedPlan();
-  }
-
-  getLoadedPlan() {
-    // Works with TEST data for now, since no backend service
-    if (this.state.fileName) {
-      // GET steps from plan
-      PlanService.getFileData(this.state.fileName).then((response: any) => {
-        response.json().then((data: any) => {
-          this.setState({ plan: data });
-        });
-      });
-    }
   }
 
   saveFile() {
     this.props.updatePanel(2);
-  }
-
-  // TODO
-  saveFileAs() {
-    // saveAs, modal for Are you sure?
-    PlanService.saveFileAs(this.state.plan, this.state.plan.plan_filename).then((response: any) => {
-      console.log(response)
-    });
   }
 
   clearPlan() {
@@ -397,7 +363,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
   render() {
     const file_name = this.state.plan.plan_filename;
-
+    console.log("Built ", this.state.plan)
     return (
       <div>
         <div className="panel-plan">
@@ -518,7 +484,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   type="button"
                   id="ok-btn"
                   disabled={this.state.plan.focus.row > this.state.plan.last_step}
-                  onClick={e => this.saveFileAs()}
+                  onClick={e => this.props.planSavedAs(this.state.plan)}
                   className={"btn btn-block btn-green btn-group"}
                 >
                   Save As

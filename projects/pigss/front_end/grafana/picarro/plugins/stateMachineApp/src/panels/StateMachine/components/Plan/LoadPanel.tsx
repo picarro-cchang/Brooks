@@ -36,11 +36,7 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            // ADD FUNCTION TO DELETE FROM SERVICE
-            // this.props.ws_sender({
-            // element: "plan_delete_filename",
-            // name: this.props.plan.plan_files[index + 1]
-            // });
+            this.props.deleteFile(this.state.fileNames[index+1]);
           }}
         >
           X
