@@ -1,0 +1,310 @@
+{
+    "max_steps": 32,
+    "panel_to_show": 0,
+    "current_step": 11,
+    "looping": false,
+    "focus": {
+      "row": 12,
+      "column": 1
+    },
+    "last_step": 13,
+    "steps": {
+      "1": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 2
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "2": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 32
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "3": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 8
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "4": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 128
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "5": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 32
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "6": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 8
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "7": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 128
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 0
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "8": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 2
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "9": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 32
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "10": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 8
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+      "11": {
+        "banks": {
+          "1": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "3": {
+            "clean": 0,
+            "chan_mask": 0
+          },
+          "4": {
+            "clean": 0,
+            "chan_mask": 128
+          }
+        },
+        "reference": 0,
+        "duration": 20
+      },
+    "12": {
+      "banks": {
+        "1": {
+          "clean": 0,
+          "chan_mask": 2
+        },
+        "3": {
+          "clean": 0,
+          "chan_mask": 0
+        },
+        "4": {
+          "clean": 0,
+          "chan_mask": 0
+        }
+      },
+      "reference": 0,
+      "duration": 20
+    },
+    "13": {
+      "banks": {
+        "1": {
+          "clean": 0,
+          "chan_mask": 2
+        },
+        "3": {
+          "clean": 0,
+          "chan_mask": 0
+        },
+        "4": {
+          "clean": 0,
+          "chan_mask": 0
+        }
+      },
+      "reference": 0,
+      "duration": 20
+    }
+  },
+    "num_plan_files": 2,
+    "plan_files": {},
+    "plan_filename": "plan_test",
+    "bank_names": {
+      "1": {
+        "name": "Bank 1",
+        "channels": {
+          "1": "Ch. 1",
+          "2": "Ch. 2",
+          "3": "Ch. 3",
+          "4": "Ch. 4",
+          "5": "Ch. 5",
+          "6": "Ch. 6",
+          "7": "Ch. 7",
+          "8": "Ch. 8"
+        }
+      },
+      "2": {
+        "name": "Bank 2",
+        "channels": {
+          "1": "Ch. 1",
+          "2": "Ch. 2",
+          "3": "Ch. 3",
+          "4": "Ch. 4",
+          "5": "Ch. 5",
+          "6": "Ch. 6",
+          "7": "Ch. 7",
+          "8": "Ch. 8"
+        }
+      },
+      "3": {
+        "name": "Bank 3",
+        "channels": {
+          "1": "Ch. 1",
+          "2": "Ch. 2",
+          "3": "Ch. 3",
+          "4": "Ch. 4",
+          "5": "Ch. 5",
+          "6": "Ch. 6",
+          "7": "Ch. 7",
+          "8": "Ch. 8"
+        }
+      },
+      "4": {
+        "name": "Bank 4",
+        "channels": {
+          "1": "Ch. 1",
+          "2": "Ch. 2",
+          "3": "Ch. 3",
+          "4": "Ch. 4",
+          "5": "Ch. 5",
+          "6": "Ch. 6",
+          "7": "Ch. 7",
+          "8": "Ch. 8"
+        }
+      }
+    },
+    "available_ports": {
+      "1": 170,
+      "2": 0,
+      "3": 170,
+      "4": 170
+    }
+}
