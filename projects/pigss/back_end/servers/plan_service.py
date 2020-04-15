@@ -28,7 +28,7 @@ class PlanService(ServiceTemplate):
         self.log.debug("PlanService is starting up")
 
         # Instantiate PlanModel
-        self.model = PlanModel(self.log, db_file)
+        self.model = PlanModel(self.log, self.db_file)
 
 
     async def on_shutdown(self, app):
@@ -265,6 +265,7 @@ if __name__ == "__main__":
         )})
 
     for route in service.app.router.routes():
+        print("route ->", route)
         cors.add(route)
 
     web.run_app(service.app, host="0.0.0.0", port=8080)

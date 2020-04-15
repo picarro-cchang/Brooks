@@ -1,7 +1,7 @@
-import PlanServiceAPI from "./__mocks__/PlanServiceAPI";
-// import PlanServiceAPI from "./PlanServiceAPI"
+// import PlanServiceAPI from "./__mocks__/PlanServiceAPI";
+import PlanServiceAPI from "./PlanServiceAPI"
 
-const url = `http://${window.location.hostname}:8080/plan/api/v0.1/plan`
+const url = `http://${window.location.hostname}:8000/manage_plan/api/v0.1/plan`
 export const PlanService = (() => {
   return {
     getFileNames: () => {
@@ -10,9 +10,10 @@ export const PlanService = (() => {
     getLastRunning: () => {
       return PlanServiceAPI.getRequest(url+'?last_running=true')
     },
-    getFileData: (fileName: string) => {
+    getFileData: (planName: string) => {
       console.log("hello")
-      return PlanServiceAPI.getRequest(url+'?plan_name=TestFile')//+fileName);
+      planName = planName || "plan_1";
+      return PlanServiceAPI.getRequest(url+`?plan_name=${planName}`);
     },
     saveFileAs: (data) => {
       return PlanServiceAPI.putData(url, data);
@@ -20,8 +21,8 @@ export const PlanService = (() => {
     saveFile: (data) => {
       return PlanServiceAPI.postData(url, data);
     },
-    deleteFile: (fileName) => {
-      return PlanServiceAPI.deleteData(url+"?name="+fileName);
+    deleteFile: (planName) => {
+      return PlanServiceAPI.deleteData(url+`?name="+${planName}`);
     }
   };
 })();
