@@ -13,6 +13,12 @@ export interface State {
   fileName: string;
   fileNames: string[];
 }
+
+interface planStorage {
+  planState: Plan;
+}
+
+
 //TODO: Add Validation
 class PlanPanel extends Component<PlanPanelOptions, State> {
   constructor(props) {
@@ -99,6 +105,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.clearPlan = this.clearPlan.bind(this);
   }
 
+
   shouldComponentUpdate(nextProps) {
     if (this.props.bankAddition !== nextProps.bankAddition) {
       this.setState({
@@ -115,7 +122,13 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   componentDidMount() {
-    console.log("Hey there from Plan Panel ", this.state.plan)
+    const plan = this.props.getStateFromSavedData();
+    this.setState({plan: plan})
+  }
+
+  componentWillUnmount() {
+    console.log("saving storage on plan panel ", this.state.plan)
+    this.props.setPlanStorage(this.state.plan)
   }
 
   saveFile() {
@@ -123,6 +136,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   clearPlan() {
+    this.setState({ isChanged: true });
     let plan = {...this.state.plan};
     plan.steps = {};
     plan.current_step = 1;
@@ -171,6 +185,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   addToPlan(bank_config, reference: number) {
+    this.setState({ isChanged: true });
     let row = this.state.plan.focus.row;
     const col = this.state.plan.focus.column;
     let duration;
@@ -217,12 +232,14 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   updateDuration(row: number, duration: number) {
+    this.setState({ isChanged: true });
     const plan = { ...this.state.plan };
     plan.steps[row].duration = duration;
     this.setState({ plan });
   }
 
   updateCurrentStep(row: number) {
+    this.setState({ isChanged: true });
     const plan = { ...this.state.plan };
     plan.current_step = row;
     this.setState({ plan });
@@ -444,10 +461,10 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
-          {this.state.plan.plan_filename && !this.state.isChanged ? (
+          {this.state.fileName && !this.state.isChanged ? (
             <div>
               <h6 className="panel-plan-text">
-                Currently viewing File:{" "}
+                Currently viewing File:{" "}{this.state.fileName}
                 <span style={{ color: "white" }}>{file_name}</span>
               </h6>
             </div>
@@ -520,6 +537,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
+                    this.setState({ isChanged: true });
                     this.deleteRow();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}

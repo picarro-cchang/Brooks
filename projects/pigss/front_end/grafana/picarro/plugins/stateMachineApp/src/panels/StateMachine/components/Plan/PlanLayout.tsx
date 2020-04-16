@@ -16,6 +16,7 @@ interface State {
     bankAdd: {},
     isChanged: boolean
 }
+export const storageKey = 'planStorage';
 
 export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   constructor(props) {
@@ -39,12 +40,49 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.deleteFile = this.deleteFile.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
   }
+  getPlanStorage = () => {
+    // get picarroStorage object from sessionStorage
+    if (window.sessionStorage) {
+      return sessionStorage.getItem(storageKey);
+    }
+    return null;
+  }
+
+  setPlanStorage = (planStorage: Plan) => {
+    // set picarroStorage object in sessionStorage
+    if (window.sessionStorage) {
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(planStorage));
+      } catch (error) {
+        this.clearPlanStorage();
+      }
+    }
+  }
+
+  clearPlanStorage = () => {
+    sessionStorage.removeItem(storageKey);
+  }
+
+  getStateFromSavedData = () => {
+    const savedData = this.getPlanStorage();
+    if (savedData !== null) {
+      return { ...(JSON.parse(savedData)) };
+    }
+    return null;
+  }
+
+  isSavedDataCurrent = (planState: Plan) => {
+    // if (planState !== null && planState.last_step !== 0) {
+    //   return planState.steps.length ? n : false;
+    // }
+    // return false;
+  }
 
   getPlanFromFileName(filename: string) {
-    // gets called when filename is clicked on in load panel
     PlanService.getFileData(filename).then((response: any) => 
       response.json().then(data => {
-        console.log("Getting Plan from Filename! ", data["details"]);
+        console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
+        this.setPlanStorage(data["details"]);
         this.setState({plan: data["details"]})
         this.setState({
           fileName: filename,
@@ -77,8 +115,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       name: plan.plan_filename,
       details: plan,
       user: "admin",
-      is_deleted: 0,
-      is_running: 0,
       updated_name: plan.plan_filename
     }
     PlanService.saveFileAs(data).then((response: any) => 
@@ -117,6 +153,18 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   componentDidMount() {
     //get the last plan that was loaded
     // this.getLastLoadedPlan();
+    const storedPlan = this.getStateFromSavedData();
+    if(this.state.plan != storedPlan){
+      this.setState({
+        plan: storedPlan,
+        fileName: storedPlan.plan_filename
+      })
+    }
+  }
+
+  componentWillUnmount() {
+    console.log("saving storage")
+    this.setPlanStorage(this.state.plan)
   }
 
   render() {
@@ -156,6 +204,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 updatePanel={this.updatePanelToShow}
                 layoutSwitch={this.props.layoutSwitch}
                 planSavedAs={this.planSavedAs}
+                setPlanStorage={this.setPlanStorage}
+                getStateFromSavedData={this.getStateFromSavedData}
                 // getLastLoadedPlan={this.getLastLoadedPlan}
             />
         );
@@ -187,6 +237,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 updatePanel={this.updatePanelToShow}
                 fileNames={this.props.fileNames}
                 deleteFile={this.deleteFile}
+                getStateFromSavedData={this.getStateFromSavedData}
             />
         );
         break;

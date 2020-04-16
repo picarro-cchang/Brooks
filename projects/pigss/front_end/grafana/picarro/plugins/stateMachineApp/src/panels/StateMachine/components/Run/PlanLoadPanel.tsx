@@ -26,7 +26,8 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           onClick={e => {
-            this.props.loadPlan(this.state.fileNames[index])
+            // this.props.loadPlan(this.state.fileNames[index]);
+            this.props.getPlanFromFileName(this.state.fileNames[index]);
           }}
           style={{ color: "black" }}
         >

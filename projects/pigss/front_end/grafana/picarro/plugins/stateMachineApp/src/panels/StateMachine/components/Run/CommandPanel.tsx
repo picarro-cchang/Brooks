@@ -27,6 +27,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
   };
 
   render() {
+    console.log("Hello from Command ", this.props.plan)
     return (
       <div className="panel-command">
         <div style={{ width: "100%", marginTop: 20 }}>

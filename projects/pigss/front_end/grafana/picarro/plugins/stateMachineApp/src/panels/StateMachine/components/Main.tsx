@@ -213,7 +213,7 @@ export class Main extends React.Component<any, any> {
           console.log("No Plan I suppsoe")
         }          
         else {
-                    this.setState({plan: data['details']});
+          this.setState({plan: data['details']});
         }
 
       }))
@@ -222,15 +222,7 @@ export class Main extends React.Component<any, any> {
   render() {
   
     return (
-        <div>
-            {this.planFileNameUpTop() ? (
-                <div className="plan-info">
-                Running Plan: {this.state.plan.plan_filename}
-                </div>) : (
-                <div className="plan-info">
-                Running Plan: No Plan
-                </div>
-            )}  
+        <div> 
             {this.state.isPlanning ? (
                 <PlanLayout
                     layoutSwitch={this.isPlanning}

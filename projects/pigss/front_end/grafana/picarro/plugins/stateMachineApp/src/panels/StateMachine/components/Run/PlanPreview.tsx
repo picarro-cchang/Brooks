@@ -1,11 +1,11 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
-import { LoadPanelCommandOptions, Plan,PlanStep } from "../types";
+import { LoadPanelCommandOptions, Plan,PlanStep, PreviewPanelOptions } from "../types";
 
 interface State {
   plan: Plan;
 }
-class PlanPreview extends PureComponent<LoadPanelCommandOptions, State> {
+class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
   constructor(props) {
     super(props) 
     this.state = {

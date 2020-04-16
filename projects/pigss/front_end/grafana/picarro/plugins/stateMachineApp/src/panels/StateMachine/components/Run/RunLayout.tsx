@@ -6,11 +6,13 @@ import PlanPreview from "./PlanPreview";
 import { PanelTypes, RunLayoutProps, Plan } from "../types";
 import EditPanel from "./EditPanel";
 import { PlanService } from "../../api/PlanService";
+import { threadId } from "worker_threads";
 
 interface State {
     plan: Plan, 
     fileNames: string[],
-    panel_to_show: number
+    panel_to_show: number,
+    loadedPlanFilename: string
 }
 
 export class RunLayout extends PureComponent<RunLayoutProps, State> {
@@ -19,30 +21,40 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     this.state = {
       plan: this.props.plan,
       fileNames: this.props.fileNames,
-      panel_to_show: 0
+      panel_to_show: 0,
+      loadedPlanFilename: ""
     }
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
-    this.loadPlan = this.loadPlan.bind(this);
+    // this.loadPlan = this.loadPlan.bind(this);
     this.cancelLoadPlan = this.cancelLoadPlan.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
+    this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
+  }
+
+  getPlanFromFileName(filename: string) {
+    PlanService.getFileData(filename).then((response: any) => 
+      response.json().then(data => {
+        console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
+        this.setState({plan: data["details"]})
+        this.setState({
+          loadedPlanFilename: filename,
+          panel_to_show: 3
+        });
+      }))
+  }
+
+  deleteFile(fileName) {
+    PlanService.deleteFile(fileName).then((response: any) => 
+    response.json().then(data => {
+      console.log("Plan Deleted! ", data)
+      //TODO: need to refresh plan file names
+    })
+  );
   }
 
   updatePanelToShow(panel: number) {
     this.setState({panel_to_show: panel})
   } 
-
-  deleteFile(fileName: string) {
-    console.log("delete file ", fileName)
-  }
-
-  loadPlan(fileName: string) {
-    PlanService.getFileData(fileName).then(response => {
-      response.json().then(plan => {
-        this.setState({plan})
-      })
-    })
-    this.updatePanelToShow(3);
-  }
 
   cancelLoadPlan(){
     let plan = {
@@ -120,7 +132,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       case PanelTypes.NONE:
         left_panel = (
           <CommandPanel
-            plan={this.props.plan}
+            plan={this.state.plan}
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
@@ -134,10 +146,12 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
-            deleteFile={this.deleteFile}
-            loadPlan={this.loadPlan}
+            // deleteFile={this.deleteFile}
+            // loadPlan={this.loadPlan}
             fileNames={this.props.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
+            deleteFile={this.deleteFile}
+            getPlanFromFileName={this.getPlanFromFileName}
           />
         );
         break;
@@ -157,8 +171,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
-            deleteFile={this.deleteFile}
-            loadPlan={this.loadPlan}
+            // deleteFile={this.deleteFile}
+            // loadPlan={this.loadPlan}
             fileNames={this.state.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
           />

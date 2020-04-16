@@ -21,32 +21,15 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
     this.updateFileName = this.updateFileName.bind(this)
   }
 
-  // deleteFile(fileName: string) {
-  //   PlanService.deleteFile(fileName).then((response: any) => 
-  //     response.json().then(data => {
-  //       console.log(data)
-  //     })
-  //   );
-  // }
-
-  // savePlan() {
-  //   const data = {
-  //     name: this.state.fileName,
-  //     details: this.state.plan,
-  //     user: "admin"
-  //   }
-  //   console.log("UM HI HELlo!", data)
-  //   PlanService.saveFile(data).then((response: any) => 
-  //     response.json().then(data => {
-  //       console.log(data)
-  //     })
-  //   );
-  //   // this.props.updateFileName(false);
-  //   // this.props.planSaved(this.state.fileName);
-  // }
+  componentDidMount() {
+    const plan = this.props.getStateFromSavedData();
+    this.setState({plan: plan})
+  }
 
   updateFileName(e) {
-    this.setState({fileName: e.target.value});
+    const plan = {...this.state.plan}
+    plan.plan_filename = e.target.value
+    this.setState({fileName: e.target.value, plan});
   }
 
   renderItem = (index: number, key: ReactText) => (
@@ -57,14 +40,14 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           className="btn btn-light w-100 btn-small"
           style={{ color: "black" }}
         >
-          {this.state.fileNames[index + 1]}
+          {this.state.fileNames[index]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e =>
             {
-              this.props.deleteFile(this.state.fileNames[index+1]);
+              this.props.deleteFile(this.state.fileNames[index]);
             }
           }
         >
@@ -75,6 +58,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
   );
   render() {
     let length = Object.keys(this.props.fileNames).length
+    
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Save Plan</h2>

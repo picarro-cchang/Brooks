@@ -176,7 +176,7 @@ class PlanModel:
             self.log.debug(format_exc())
         return None, None
 
-    def update_plan(self, name, details, modified_at=None, modified_by=None, is_running=0, updated_name=""):
+    def update_plan(self, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name=""):
         """ Given a plan name and required data, update a plan
 
         Args:            
@@ -202,10 +202,10 @@ class PlanModel:
         if self.is_plan_running(name):
             raise PlanRunningException()
         
-        if updated_name and not self.is_valid_plan_name(updated_name):
-            raise PlanExistsException()
+        # if updated_name and not self.is_valid_plan_name(updated_name):
+        #     raise PlanExistsException()
 
-        values = (details, modified_at, modified_by, is_running, name)
+        values = (details, modified_at, modified_by, is_running, is_deleted, name)
         
         if updated_name:
             update_query = ''' UPDATE plans
@@ -217,7 +217,7 @@ class PlanModel:
                     is_deleted = ?
                     where name = ?
                 '''
-            values = (updated_name, details, modified_at, modified_by, is_running, name)
+            values = (updated_name, details, modified_at, modified_by, is_running, is_deleted, name)
 
         try:
             cur = self.db_connection.cursor()

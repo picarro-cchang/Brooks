@@ -88,11 +88,24 @@ export interface LoadPanelCommandOptions {
     plan: Plan;
     ws_sender: (o: object) => void;
     updatePanel: (x: number) => void;
-    loadPlan: (x: string) => void;
-    deleteFile: (x: string) => void;
+    // loadPlan: (x: string) => void;
+    // deleteFile: (x: string) => void;
+    fileNames: any[]
+    cancelLoadPlan: () => void;
+    getPlanFromFileName: (fileName: string) => void;
+    deleteFile: (file: string) => void;
+  }
+
+  export interface PreviewPanelOptions {
+    plan: Plan;
+    ws_sender: (o: object) => void;
+    updatePanel: (x: number) => void;
+    // loadPlan: (x: string) => void;
+    // deleteFile: (x: string) => void;
     fileNames: any[]
     cancelLoadPlan: () => void;
   }
+
 
   export interface LoadPanelOptions {
     plan: Plan;
@@ -117,6 +130,8 @@ export interface PlanPanelOptions {
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
     planSavedAs: (s: object) => void;
+    setPlanStorage: (s: Plan) => void;
+    getStateFromSavedData: () => any;
     // getLastLoadedPlan: () => void;
   }
 
@@ -129,6 +144,7 @@ export interface PlanPanelOptions {
     updatePanel: (x: number) => void;
     fileNames: any[]
     deleteFile: (file: string) => void;
+    getStateFromSavedData: () => any;
   }
 
   export interface EditPanelOptions {

@@ -178,10 +178,10 @@ class PlanService(ServiceTemplate):
             return web.json_response(data = {
                 "message": f"The plan {name} is currently running. It needs to be stopped before it can be updated."
             }, status=200)
-        except PlanExistsException:
-            return web.json_response(data = {
-                "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
-            }, status=200)
+        # except PlanExistsException:
+        #     return web.json_response(data = {
+        #         "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
+        #     }, status=200)
         except PlanDoesNotExistException:
             return web.json_response(data={
                 "message": f"No record could be found for plan name {name}."
