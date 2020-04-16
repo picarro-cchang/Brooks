@@ -39,7 +39,7 @@ export interface PlanLayoutProps {
     ws_sender: (o: object) => void;
     plan: Plan;
     layoutSwitch: () => void;
-    fileNames: {[key: string]: string }
+    fileNames: any[]
 }
 
 export interface RunLayoutProps {
@@ -49,7 +49,7 @@ export interface RunLayoutProps {
     ws_sender: (o: object) => void;
     plan: Plan;
     layoutSwitch: () => void;
-    fileNames: {[key: string]: string };
+    fileNames: any[]
 }
 
 export enum PanelTypes {
@@ -90,7 +90,7 @@ export interface LoadPanelCommandOptions {
     updatePanel: (x: number) => void;
     loadPlan: (x: string) => void;
     deleteFile: (x: string) => void;
-    fileNames: {[key: string]: string}
+    fileNames: any[]
     cancelLoadPlan: () => void;
   }
 
@@ -100,7 +100,7 @@ export interface LoadPanelCommandOptions {
     isChanged: boolean;
     updateFileName: (x: boolean) => void;
     updatePanel: (x: number) => void;
-    fileNames: {[key: string]: string}
+    fileNames: any[]
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string) => void;
   }
@@ -127,7 +127,7 @@ export interface PlanPanelOptions {
     updateFileName: (x: boolean) => void;
     planSaved: (f: string, d: object) => void;
     updatePanel: (x: number) => void;
-    fileNames: {[key: string]: string};
+    fileNames: any[]
     deleteFile: (file: string) => void;
   }
 

@@ -9,7 +9,7 @@ import { PlanService } from "../../api/PlanService";
 
 interface State {
     plan: Plan, 
-    fileNames: {},
+    fileNames: string[],
     panel_to_show: number
 }
 
@@ -18,7 +18,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     super(props);
     this.state = {
       plan: this.props.plan,
-      fileNames: {},
+      fileNames: this.props.fileNames,
       panel_to_show: 0
     }
     this.updatePanelToShow = this.updatePanelToShow.bind(this);

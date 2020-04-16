@@ -5,7 +5,7 @@ import { throws } from "assert";
 
 interface State {
   plan: Plan;
-  fileNames: {}
+  fileNames: any[]
 }
 
 class LoadPanel extends PureComponent<LoadPanelOptions, State> {
@@ -26,17 +26,17 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
           className="btn w-100 btn-small"
           onClick={e => {
             this.props.updateFileName(false);
-            this.props.getPlanFromFileName(this.state.fileNames[index + 1]);
+            this.props.getPlanFromFileName(this.state.fileNames[index]);
           }}
           style={{ color: "black" }}
         >
-          {this.state.fileNames[index + 1]}
+          {this.state.fileNames[index]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            this.props.deleteFile(this.state.fileNames[index+1]);
+            this.props.deleteFile(this.state.fileNames[index]);
           }}
         >
           X
@@ -46,7 +46,8 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
   );
 
   render() {
-    let length = Object.keys(this.props.fileNames).length
+    let length = this.props.fileNames.length
+    console.log("Hello! Plan Files Here ", this.state.fileNames)
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

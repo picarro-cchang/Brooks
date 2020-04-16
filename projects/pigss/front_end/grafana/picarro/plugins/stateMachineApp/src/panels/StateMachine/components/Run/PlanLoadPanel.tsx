@@ -26,17 +26,17 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           onClick={e => {
-            this.props.loadPlan(this.state.fileNames[index + 1])
+            this.props.loadPlan(this.state.fileNames[index])
           }}
           style={{ color: "black" }}
         >
-          {this.state.fileNames[index + 1]}
+          {this.state.fileNames[index]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e => {
-            this.props.deleteFile(this.state.fileNames[index + 1]);
+            this.props.deleteFile(this.state.fileNames[index]);
           }}
         >
           X

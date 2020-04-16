@@ -11,7 +11,6 @@ export const PlanService = (() => {
       return PlanServiceAPI.getRequest(url+'?last_running=true')
     },
     getFileData: (planName: string) => {
-      console.log("hello")
       planName = planName || "plan_1";
       return PlanServiceAPI.getRequest(url+`?plan_name=${planName}`);
     },
@@ -22,7 +21,7 @@ export const PlanService = (() => {
       return PlanServiceAPI.postData(url, data);
     },
     deleteFile: (planName) => {
-      return PlanServiceAPI.deleteData(url+`?name="+${planName}`);
+      return PlanServiceAPI.deleteData(url+`?name=${planName}`);
     }
   };
 })();

@@ -10,7 +10,7 @@ import { PlanService } from "../../api/PlanService";
 interface State {
     isPlanPanel: boolean,
     plan: Plan,
-    fileNames: {},
+    fileNames: string[],
     panel_to_show: number,
     fileName: string,
     bankAdd: {},
@@ -40,28 +40,12 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.updateFileName = this.updateFileName.bind(this);
   }
 
-  // getAllFileNames() {
-  //   PlanService.getFileNames().then((response: any) => 
-  //     response.json().then(data => {
-  //       console.log("FileNames!! ", data);
-  //       this.setState({fileNames: data})
-  //     }))
-  // }
-
-  // getLastLoadedPlan() {
-  //   PlanService.getLastRunning().then((response: any) => {
-  //     response.json().then(data => {
-  //       console.log("Plan Last Loaded! ", data);
-  //       this.setState({plan: data})
-  //     })
-  //   })
-  // }
-
   getPlanFromFileName(filename: string) {
     // gets called when filename is clicked on in load panel
     PlanService.getFileData(filename).then((response: any) => 
       response.json().then(data => {
-        console.log("Getting Plan from Filename! ", data);
+        console.log("Getting Plan from Filename! ", data["details"]);
+        this.setState({plan: data["details"]})
         this.setState({
           fileName: filename,
           panel_to_show: 0
@@ -79,7 +63,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     console.log("Plan Saved! ", data)
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
-        console.log(data);
+        //TODO: Need to refresh plan
         this.setState({
           fileName: fileName,
           panel_to_show: 0
@@ -107,7 +91,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   deleteFile(fileName) {
     PlanService.deleteFile(fileName).then((response: any) => 
     response.json().then(data => {
-      console.log("Plan Deleted! ",data)
+      console.log("Plan Deleted! ", data)
+      //TODO: need to refresh plan file names
     })
   );
   }
@@ -206,7 +191,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         );
         break;
     }
-
     return (
       <div style={{ textAlign: "center" }}>   
         <div className="container-fluid">

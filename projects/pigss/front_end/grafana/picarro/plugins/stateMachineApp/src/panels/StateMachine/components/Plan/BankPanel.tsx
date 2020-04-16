@@ -43,6 +43,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
   };
 
   render() {
+    console.log("Hello Bank Panel ", this.props.plan)
     let bankStyle = {};
     let cleanClassNames = "";
     let cleanDisabled = true;

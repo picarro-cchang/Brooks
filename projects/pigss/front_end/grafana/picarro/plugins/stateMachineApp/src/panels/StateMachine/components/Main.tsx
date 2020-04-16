@@ -25,7 +25,7 @@ export class Main extends React.Component<any, any> {
       max_steps: 32,
       panel_to_show: 0,
       current_step: 1,
-      focus: { row: 0, column: 0 },
+      focus: { row: 1, column: 1 },
       last_step: 0,
       steps: {},
       num_plan_files: 0,
@@ -93,7 +93,7 @@ export class Main extends React.Component<any, any> {
     isChanged: false,
     bankAdd: {},
     isLoaded: false,
-    fileNames: {},
+    fileNames: [],
     isPlanning: false
   };
   constructor(props) {
@@ -189,7 +189,7 @@ export class Main extends React.Component<any, any> {
   getPlanFileNames() {
     PlanService.getFileNames().then((repsonse: any) => 
     repsonse.json().then(planfiles => {
-      this.setState({ fileNames: planfiles }, () => console.log(this.state.fileNames));
+      this.setState({ fileNames: planfiles['plans'] }, () => console.log(this.state.fileNames));
     })
     )
   }
@@ -203,16 +203,19 @@ export class Main extends React.Component<any, any> {
   }
 
   isPlanning() {
-      //Switch between the two layouts
       this.setState({isPlanning: !this.state.isPlanning})
   }
 
   getLastRunningPlan() {
     PlanService.getLastRunning().then((response: any) => 
       response.json().then(data => {
-        data["details"] = JSON.parse(data["details"]);
-        console.log("Last Plan Loaded! ", data)
-        this.setState({plan: data});
+        if (data["message"]) {
+          console.log("No Plan I suppsoe")
+        }          
+        else {
+                    this.setState({plan: data['details']});
+        }
+
       }))
   }
 
