@@ -13,7 +13,6 @@ import html
 import json
 import os
 import re
-import requests
 import time
 from traceback import format_exc
 from enum import Enum, IntEnum
@@ -189,7 +188,7 @@ class PigssController(Ahsm):
         self.get_plan_names()
         return filenames
 
-    def get_plan_names(self):
+    async def get_plan_names(self):
         async with aiohttp.ClientSession() as session:
             async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?names=true") as resp:
                 print(await resp.json())
@@ -504,21 +503,55 @@ class PigssController(Ahsm):
             log.critical(f"Plan save error {fe}")
             raise
 
+    async def load_plan_from_name(self):
+        planName = self.plan["plan_filename"]
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName)) as resp:
+                print(await resp.json())
+                data = resp.json()
+                plan = data["details"]
+                bank_names = plan["bank_names"]
+
+                if not isinstance(plan, dict):
+                    raise ValueError("Plan should be a dictionary")
+                steps = {}
+                last_step = len(plan["steps"])
+                for i in range(last_step):
+                    # Note: Serializing through JSON turns all dictionary keys into strings. We
+                    #  need to turn bank numbers and plan steps back into integers for compatibility
+                    #  with the rest of the code
+                    row = i + 1
+                    if str(row) not in plan["steps"]:
+                        raise ValueError(f"Plan is missing step {row}")
+                    allsteps = plan["steps"]
+                    step = allsteps[str(row)]
+                    if "banks" not in step:
+                        raise ValueError(f"Plan row {row} is missing 'banks' key")
+                    if "reference" not in step:
+                        raise ValueError(f"Plan row {row} is missing 'reference' key")
+                    if "duration" not in step:
+                        raise ValueError(f"Plan row {row} is missing 'duration' key")
+                    steps[row] = {
+                        "banks": {int(bank_str): step["banks"][bank_str]
+                                for bank_str in step["banks"]},
+                        "reference": step["reference"],
+                        "duration": step["duration"]
+                    }
+                self.set_plan(["steps"], steps)
+                self.set_plan(["last_step"], last_step)
+                self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+                self.set_plan(["bank_names"], bank_names)
+                log.debug(f"Plan file loaded {fname}")
+
     def load_plan_from_file(self):
         #TODO: Change to work from Plan Service
         # Exceptions raised here are signalled back to the front end
-        planName = self.plan["plan_filename"]
-        response = requests.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName))
-        print(response)
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
         try:
-            data = json.load(response)
-            plan = data["details"]
-            bank_names = plan["bank_names"]
-            # with open(fname, "r") as fp:
-            #     data = json.load(fp)
-            #     plan = data["plan"]
-            #     bank_names = data["bank_names"]
+            with open(fname, "r") as fp:
+                data = json.load(fp)
+                plan = data["plan"]
+                bank_names = data["bank_names"]
         except FileNotFoundError as fe:
             log.critical(f"Plan load error {fe}")
             raise
@@ -526,16 +559,15 @@ class PigssController(Ahsm):
         if not isinstance(plan, dict):
             raise ValueError("Plan should be a dictionary")
         steps = {}
-        last_step = len(plan["steps"])
+        last_step = len(plan)
         for i in range(last_step):
             # Note: Serializing through JSON turns all dictionary keys into strings. We
             #  need to turn bank numbers and plan steps back into integers for compatibility
             #  with the rest of the code
             row = i + 1
-            if str(row) not in plan["steps"]:
+            if str(row) not in plan:
                 raise ValueError(f"Plan is missing step {row}")
-            allsteps = plan["steps"]
-            step = allsteps[str(row)]
+            step = plan[str(row)]
             if "banks" not in step:
                 raise ValueError(f"Plan row {row} is missing 'banks' key")
             if "reference" not in step:
