@@ -5,6 +5,7 @@ Hierarchical state machine which controls the valves and flow in the
  which can be displayed and controlled via a web-based UI that communicates
  using API calls and a web socket.
 """
+import aiohttp
 import asyncio
 import collections
 import glob
@@ -12,6 +13,7 @@ import html
 import json
 import os
 import re
+import requests
 import time
 from traceback import format_exc
 from enum import Enum, IntEnum
@@ -178,12 +180,19 @@ class PigssController(Ahsm):
         return self.plan["bank_names"]
 
     def get_plan_filenames(self):
+        #TODO: Change to load from PlanService
         # Get list of plan filenames and update the entry in self.plan. This also
         #  informs any clients connected via a web socket of the list
         filenames = sorted(glob.glob(os.path.join(PLAN_FILE_DIR, "*.pln")))
         self.set_plan(["plan_files"], {i + 1: os.path.splitext(ntpath.basename(name))[0] for i, name in enumerate(filenames)})
         self.set_plan(["num_plan_files"], len(filenames))
+        self.get_plan_names()
         return filenames
+
+    def get_plan_names(self):
+        async with aiohttp.ClientSession() as session:
+            async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?names=true") as resp:
+                print(await resp.json())
 
     async def save_port_history(self):
         data = [{
@@ -227,7 +236,13 @@ class PigssController(Ahsm):
                                 edit_cancel=Signal.EDIT_CANCEL,
                                 edit_save=Signal.EDIT_SAVE,
                                 plan_loop=Signal.BTN_PLAN_LOOP,
-                                plan_run=Signal.BTN_PLAN_RUN)
+                                plan_run=Signal.BTN_PLAN_RUN,
+                                load=Signal.BTN_LOAD,
+                                load_cancel=Signal.BTN_LOAD_CANCEL,
+                                load_filename=Signal.LOAD_FILENAME,
+                                load_modal_ok=Signal.LOAD_MODAL_OK,
+                                load_modal_cancel=Signal.LOAD_MODAL_CANCEL
+                                )
         while True:
             try:
                 msg = json.loads(await self.receive_queue.get())
@@ -490,13 +505,20 @@ class PigssController(Ahsm):
             raise
 
     def load_plan_from_file(self):
+        #TODO: Change to work from Plan Service
         # Exceptions raised here are signalled back to the front end
+        planName = self.plan["plan_filename"]
+        response = requests.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName))
+        print(response)
         fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
         try:
-            with open(fname, "r") as fp:
-                data = json.load(fp)
-                plan = data["plan"]
-                bank_names = data["bank_names"]
+            data = json.load(response)
+            plan = data["details"]
+            bank_names = plan["bank_names"]
+            # with open(fname, "r") as fp:
+            #     data = json.load(fp)
+            #     plan = data["plan"]
+            #     bank_names = data["bank_names"]
         except FileNotFoundError as fe:
             log.critical(f"Plan load error {fe}")
             raise
@@ -504,15 +526,16 @@ class PigssController(Ahsm):
         if not isinstance(plan, dict):
             raise ValueError("Plan should be a dictionary")
         steps = {}
-        last_step = len(plan)
+        last_step = len(plan["steps"])
         for i in range(last_step):
             # Note: Serializing through JSON turns all dictionary keys into strings. We
             #  need to turn bank numbers and plan steps back into integers for compatibility
             #  with the rest of the code
             row = i + 1
-            if str(row) not in plan:
+            if str(row) not in plan["steps"]:
                 raise ValueError(f"Plan is missing step {row}")
-            step = plan[str(row)]
+            allsteps = plan["steps"]
+            step = allsteps[str(row)]
             if "banks" not in step:
                 raise ValueError(f"Plan row {row} is missing 'banks' key")
             if "reference" not in step:
@@ -637,11 +660,16 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_PLAN_RUN", self)
         Framework.subscribe("PERFORM_VALVE_TRANSITION", self)
         Framework.subscribe("VALVE_TRANSITION_DONE", self)
+        Framework.subscribe("BTN_LOAD", self)
+        Framework.subscribe("BTN_LOAD_CANCEL", self)
+        Framework.subscribe("LOAD_FILENAME", self)
+        Framework.subscribe("LOAD_MODAL_OK", self)
+        Framework.subscribe("LOAD_MODAL_CANCEL", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._configure)
 
     def disable_buttons(self):
-        button_list = ["standby", "identify", "run", "plan", "plan_run", "plan_loop", "reference", "edit"]
+        button_list = ["standby", "identify", "run", "plan", "plan_run", "load", "plan_loop", "reference", "edit"]
         self.button_states = {}
         self.clean_button_states = {}
         for button in button_list:
@@ -698,6 +726,7 @@ class PigssController(Ahsm):
             self.set_status(["identify"], UiStatus.DISABLED)
             self.set_status(["run"], UiStatus.DISABLED)
             self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["load"], UiStatus.DISABLED)
             self.set_status(["plan_run"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.DISABLED)
@@ -720,6 +749,7 @@ class PigssController(Ahsm):
             self.set_status(["identify"], UiStatus.READY)
             self.set_status(["run"], UiStatus.DISABLED)
             self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["load"], UiStatus.READY)
             self.set_status(["plan_run"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
@@ -752,6 +782,10 @@ class PigssController(Ahsm):
             if self.status["plan"] != UiStatus.DISABLED:
                 log.debug("Entering Plan State")
                 return self.tran(self._plan)
+        elif sig == Signal.BTN_LOAD:
+            if self.status["load"] != UiStatus.DISABLED:
+                log.debug("Entering Load State")
+                return self.tran(self._load)
         elif sig == Signal.BTN_PLAN_RUN:
             if self.status["plan_run"] != UiStatus.DISABLED:
                 log.debug("Entering Plan Run State")
@@ -1295,6 +1329,78 @@ class PigssController(Ahsm):
             return self.tran(self._plan)
         return self.super(self._plan_plan)
 
+    ##Load Button Pressed on Command Panel
+    @state
+    def _load(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            return self.handled(e)
+        elif sig == Signal.INIT:
+            return self.tran(self._load1)
+        elif sig == Signal.BTN_LOAD:
+            return self.handled(e)
+        return self.super(self._operational)
+
+    @state
+    def _load1(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.state_after_delete = self._load1
+            #to standby
+            return self.handled(e)
+        elif sig == Signal.BTN_LOAD_CANCEL:
+            return self.tran(self._load)
+        elif sig == Signal.LOAD_FILENAME:
+            # self.set_plan(["plan_filename"], e.value["name"])
+            return self.tran(self._load_preview)
+        elif sig == Signal.EXIT:
+            return self.handled(e)
+        return self.super(self._load)
+
+    @state
+    def _load_preview(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            return self.handled(e)
+        elif sig == Signal.LOAD_MODAL_OK:
+            self.plan_error = self.validate_plan(check_avail=True)
+            if not self.plan_error.error:
+                self.set_status(["plan_run"], UiStatus.READY)
+                self.set_status(["plan_loop"], UiStatus.READY)
+                self.set_plan(["plan_filename"], e.value["name"])
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
+                return self.tran(self._load_preview1)
+            else:
+                #plan error
+                self.set_status(["plan_run"], UiStatus.DISABLED)
+                self.set_status(["plan_loop"], UiStatus.DISABLED)
+                return self.tran(self._load1)
+        elif sig == Signal.LOAD_MODAL_CANCEL:
+            return self.tran(self._load1)
+        return self.super(self._load1)
+
+    @state
+    def _load_preview1(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            try:
+                ##LOADPLAN
+                self.load_plan_from_file()
+                self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
+            except Exception:
+                self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
+            return self.handled(e)
+        elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
+            self.run_async(self.save_port_history())
+            return self.tran(self._operational)
+        elif sig == Signal.PLAN_LOAD_FAILED:
+            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
+            return self.tran(self._load_preview)
+        return self.super(self._load_preview)
+
+
     @state
     def _sampling(self, e):
         sig = e.signal
@@ -1763,6 +1869,20 @@ class PigssController(Ahsm):
             while self.get_status()["standby"] != UiStatus.ACTIVE:
                 await asyncio.sleep(1.0)
             if plan_filename_no_ext is not None:
+                # await self.click_button("load", Signal.BTN_LOAD, "Timeout waiting to load default plan")
+                # await self.wait_for_state(self._load1, "Timeout reaching _load state before loading plan file")
+                # Framework.publish(Event(Signal.LOAD_FILENAME, None))
+                # await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
+                # Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": plan_filename_no_ext}))
+                # await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
+                # ##SET Current Step to 1
+                # ##loads plan
+                # await asyncio.sleep(1.0)
+                # await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
+                # await asyncio.sleep(1.0)
+                # await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
+                # Framework.publish(Event(Signal.MODAL_OK, None))
+
                 await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
                 await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
                 Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))

@@ -58,6 +58,10 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
   );
   render() {
     let length = Object.keys(this.props.fileNames).length
+
+    const saveButtons = {
+      
+    }
     
     return (
       <div className="panel-save">
@@ -107,7 +111,19 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
               id="save-btn"
               onClick={e => {
                 // this.savePlan();
-                this.props.planSaved(this.state.fileName, this.state.plan);
+                this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}?</div>`, 2, {
+                  1: {
+                    caption: "Save",
+                    className: "btn btn-success btn-large",
+                    response: {filename: this.state.fileName, plan: this.state.plan}
+                  },
+                  2: {
+                    caption: "Cancel",
+                    className: "btn btn-danger btn-large",
+                    response: null
+                  }
+                }, 'save')
+                
               }}
               className={"btn btn-group-2 btn-green"}
             >

@@ -105,6 +105,10 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.clearPlan = this.clearPlan.bind(this);
   }
 
+  validation() {
+
+  }
+
 
   shouldComponentUpdate(nextProps) {
     if (this.props.bankAddition !== nextProps.bankAddition) {
@@ -191,6 +195,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     let duration;
     if (row >= this.state.plan.max_steps && col == 2) {
       // error
+      console.log("Max Number of Steps Reached!")
     }
     if (col == 2) {
       row += 1;
@@ -512,7 +517,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   }}
                   className={"btn btn-block btn-light btn-group"}
                 >
-                  Save
+                  Save As
                 </button>
               </div>
 
@@ -567,10 +572,23 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   type="button"
                   id="ok-btn"
                   disabled={this.state.plan.focus.row > this.state.plan.last_step}
-                  onClick={e => this.props.planSavedAs(this.state.plan)}
+                  onClick={e => {
+                    this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`, 2, {
+                      1: {
+                        caption: "Save",
+                        className: "btn btn-success btn-large",
+                        response: {plan: this.state.plan}
+                      },
+                      2: {
+                        caption: "Cancel",
+                        className: "btn btn-danger btn-large",
+                        response: null
+                      }
+                    }, 'saveOverwrite')
+                  }}
                   className={"btn btn-block btn-green btn-group"}
                 >
-                  Save As
+                  Save
                 </button>
               </div>
             </div>

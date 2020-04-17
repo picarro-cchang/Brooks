@@ -1,6 +1,7 @@
 import React, { PureComponent, ReactText } from "react";
 import ReactList from "react-list";
 import { LoadPanelCommandOptions, Plan } from "../types";
+import { stringToJsRegex } from "@grafana/data";
 
 // changes.....
 // LOAD file names from service (?) or we can still have filenames in props, but now when filename gets clicked, it
@@ -26,6 +27,9 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           onClick={e => {
+            this.props.ws_sender({
+              element: "load_filename"
+            })
             // this.props.loadPlan(this.state.fileNames[index]);
             this.props.getPlanFromFileName(this.state.fileNames[index]);
           }}
@@ -66,9 +70,12 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
               <button
                 id={"cancel"}
                 type="button"
-                onClick={e =>
+                onClick={e =>{
                   this.props.updatePanel(0)
-                }
+                  this.props.ws_sender({
+                    element: "load_cancel"
+                  })
+                }}
                 className={"btn btn-group-2 btn-cancel"}
               >
                 Cancel

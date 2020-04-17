@@ -108,7 +108,20 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
           <div>
               <button
               className={"btn btn-block btn-green btn-group-preview"}
-              onClick={e => this.props.updatePanel(0)}
+              onClick={e => {
+                this.props.setModalInfo(true, `<div>Load File ${this.state.plan.plan_filename} for running?</div>`, 2, {
+                  1: {
+                    caption: "Ok",
+                    className: "btn btn-success btn-large",
+                    response: {plan: this.state.plan}
+                  },
+                  2: {
+                    caption: "Cancel",
+                    className: "btn btn-danger btn-large",
+                    response: null
+                  }
+                }, 'loadPlan')
+              }}
               >
               Ok
               </button>

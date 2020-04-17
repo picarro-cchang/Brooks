@@ -6,6 +6,7 @@ import SavePanel from "./SavePanel";
 import deepmerge from "deepmerge";
 import { PlanLayoutProps, Plan, PlanPanelTypes } from "../types";
 import { PlanService } from "../../api/PlanService";
+import Modal from 'react-responsive-modal';
 
 interface State {
     isPlanPanel: boolean,
@@ -15,6 +16,13 @@ interface State {
     fileName: string,
     bankAdd: {},
     isChanged: boolean
+    modal_info: {
+      show: boolean,
+      html: string,
+      num_buttons: number, 
+      buttons: {},
+      action: string
+    }
 }
 export const storageKey = 'planStorage';
 
@@ -28,7 +36,14 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         panel_to_show: 0,
         fileName: "",
         bankAdd: {},
-        isChanged: false
+        isChanged: false,
+        modal_info: {
+          show: false,
+          html: "",
+          num_buttons: 0,
+          buttons: {},
+          action: ""
+        }
     }
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
@@ -39,7 +54,20 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     // this.getAllFileNames = this.getAllFileNames.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
+    this.setModalInfo = this.setModalInfo.bind(this);
   }
+
+  setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
+    const modal = {
+      show: show, 
+      html: html,
+      num_buttons: num_buttons,
+      buttons: buttons,
+      action: action
+    }
+    this.setState({modal_info: modal})
+  }
+  
   getPlanStorage = () => {
     // get picarroStorage object from sessionStorage
     if (window.sessionStorage) {
@@ -206,6 +234,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 planSavedAs={this.planSavedAs}
                 setPlanStorage={this.setPlanStorage}
                 getStateFromSavedData={this.getStateFromSavedData}
+                setModalInfo={this.setModalInfo}
                 // getLastLoadedPlan={this.getLastLoadedPlan}
             />
         );
@@ -238,9 +267,101 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 fileNames={this.props.fileNames}
                 deleteFile={this.deleteFile}
                 getStateFromSavedData={this.getStateFromSavedData}
+                setModalInfo={this.setModalInfo}
             />
         );
         break;
+    }
+
+    const modalButtons = [];
+    for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+      const modal_info = this.state.modal_info;
+      if (modal_info.action == "save") {
+        const response = modal_info.buttons[i].response
+        console.log("filename" ,response)
+        if (response != null) {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.planSaved(response.filename, response.plan)
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        } else {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        }
+      } else if (modal_info.action == "saveOverwrite") {
+        const response = modal_info.buttons[i].response
+        console.log("filename" ,response)
+        if (response != null ) {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.planSavedAs(response.plan)
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        } else {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        }
+      } else if (modal_info.action == "validation") {
+        modalButtons.push(
+          <button
+            className={modal_info.buttons[i].className}
+            style={{ margin: "10px" }}
+            onClick={() => {
+              // this.planSaved(info[0], info[1])
+              this.setModalInfo(false, "", 0, {}, "")
+            }}
+          >
+            {modal_info.buttons[i].caption}
+          </button>
+        );
+
+      } else {
+        modalButtons.push(
+          <button
+            className={modal_info.buttons[i].className}
+            style={{ margin: "10px" }}
+            onClick={() => {
+              // this.planSaved(info[0], info[1])
+              this.setModalInfo(false, "", 0, {}, "")
+            }}
+          >
+            {modal_info.buttons[i].caption}
+          </button>
+        );
+      }
     }
     return (
       <div style={{ textAlign: "center" }}>   
@@ -281,6 +402,23 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             </div>
           </div>
         </div>
+
+        <Modal
+          styles={{ overlay: { color: "black" } }}
+          open={this.state.modal_info.show}
+          onClose={() => {
+            this.setModalInfo(false, "", 0, {}, "")
+            // this.ws_sender({ element: "modal_close" })
+          }}
+          center
+        >
+          <div style={{ margin: "20px" }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}
+            ></div>
+          </div>
+          {modalButtons}
+        </Modal>
       </div>
     );
   }

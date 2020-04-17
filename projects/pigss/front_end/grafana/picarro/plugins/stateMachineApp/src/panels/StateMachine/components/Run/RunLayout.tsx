@@ -6,13 +6,20 @@ import PlanPreview from "./PlanPreview";
 import { PanelTypes, RunLayoutProps, Plan } from "../types";
 import EditPanel from "./EditPanel";
 import { PlanService } from "../../api/PlanService";
-import { threadId } from "worker_threads";
+import Modal from 'react-responsive-modal';
 
 interface State {
     plan: Plan, 
     fileNames: string[],
     panel_to_show: number,
-    loadedPlanFilename: string
+    loadedPlanFilename: string,
+    modal_info: {
+      show: boolean,
+      html: string,
+      num_buttons: number, 
+      buttons: {},
+      action: string
+    }
 }
 
 export class RunLayout extends PureComponent<RunLayoutProps, State> {
@@ -22,13 +29,32 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       plan: this.props.plan,
       fileNames: this.props.fileNames,
       panel_to_show: 0,
-      loadedPlanFilename: ""
+      loadedPlanFilename: "",
+      modal_info: {
+        show: false,
+        html: "",
+        num_buttons: 0,
+        buttons: {},
+        action: ""
+      }
     }
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
     // this.loadPlan = this.loadPlan.bind(this);
     this.cancelLoadPlan = this.cancelLoadPlan.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
+    this.setModalInfo = this.setModalInfo.bind(this);
+  }
+
+  setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
+    const modal = {
+      show: show, 
+      html: html,
+      num_buttons: num_buttons,
+      buttons: buttons,
+      action: action
+    }
+    this.setState({modal_info: modal})
   }
 
   getPlanFromFileName(filename: string) {
@@ -175,6 +201,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             // loadPlan={this.loadPlan}
             fileNames={this.state.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
+            setModalInfo={this.setModalInfo}
           />
         )
     }
@@ -197,7 +224,48 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         }
       }
     }
-
+    const modalButtons = [];
+    for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+      const modal_info = this.state.modal_info;
+      const response = modal_info.buttons[i].response
+      console.log("filename" ,response)
+      if (response != null) {
+        modalButtons.push(
+          <button
+            className={modal_info.buttons[i].className}
+            style={{ margin: "10px" }}
+            onClick={() => {
+              this.updatePanelToShow(0)
+              //TODO: Send Plan Info to BackEnd 
+              this.props.ws_sender({
+                element: "load_modal_ok",
+                name: response.plan.plan_filename
+              })
+              this.setModalInfo(false, "", 0, {}, "")
+            }}
+          >
+            {modal_info.buttons[i].caption}
+          </button>
+        );
+      } else {
+        modalButtons.push(
+          <button
+            className={modal_info.buttons[i].className}
+            style={{ margin: "10px" }}
+            onClick={() => {
+              this.props.ws_sender({
+                element: "load_modal_cancel",
+                name: response.plan.plan_filename
+              })
+              this.setModalInfo(false, "", 0, {}, "")
+            }}
+          >
+            {modal_info.buttons[i].caption}
+          </button>
+        );
+      }
+      
+    }
     return (
       <div style={{ textAlign: "center" }}>
             
@@ -222,6 +290,22 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             </div>
           </div>
         </div>
+        <Modal
+          styles={{ overlay: { color: "black" } }}
+          open={this.state.modal_info.show}
+          onClose={() => {
+            this.setModalInfo(false, "", 0, {}, "")
+            // this.ws_sender({ element: "modal_close" })
+          }}
+          center
+        >
+          <div style={{ margin: "20px" }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}
+            ></div>
+          </div>
+          {modalButtons}
+        </Modal>
       </div>
     );
   }

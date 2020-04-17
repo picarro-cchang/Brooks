@@ -104,6 +104,7 @@ export interface LoadPanelCommandOptions {
     // deleteFile: (x: string) => void;
     fileNames: any[]
     cancelLoadPlan: () => void;
+    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
   }
 
 
@@ -132,6 +133,7 @@ export interface PlanPanelOptions {
     planSavedAs: (s: object) => void;
     setPlanStorage: (s: Plan) => void;
     getStateFromSavedData: () => any;
+    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     // getLastLoadedPlan: () => void;
   }
 
@@ -145,6 +147,7 @@ export interface PlanPanelOptions {
     fileNames: any[]
     deleteFile: (file: string) => void;
     getStateFromSavedData: () => any;
+    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
   }
 
   export interface EditPanelOptions {
