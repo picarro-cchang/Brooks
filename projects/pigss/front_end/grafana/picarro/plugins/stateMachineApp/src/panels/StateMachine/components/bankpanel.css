@@ -12,9 +12,9 @@
 .chn-label {
   position: absolute;
   top: 20px;
-  left: -0.37em;
+  left: 1px;
   bottom: 0;
-  right: 0;
+  right: 1px;
 }
 .chn-status {
   font-size: 10px;
