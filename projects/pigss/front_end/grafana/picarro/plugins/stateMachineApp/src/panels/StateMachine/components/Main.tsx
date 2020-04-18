@@ -168,13 +168,11 @@ export class Main extends React.Component<any, any> {
 
   handleData(data: any) {
     const o = JSON.parse(data);
+    console.log("WS ", o)
     if (this.state.initialized) {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
-      } else if ("plan" in o) {
-        const plan = deepmerge(this.state.plan, o.plan);
-        this.setState({ plan });
       } else if ("modal_info" in o) {
         const modal_info = deepmerge(this.state.modal_info, o.modal_info);
         this.setState({ modal_info });

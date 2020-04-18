@@ -239,7 +239,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               //TODO: Send Plan Info to BackEnd 
               this.props.ws_sender({
                 element: "load_modal_ok",
-                name: response.plan.plan_filename
+                plan: response.plan
               })
               this.setModalInfo(false, "", 0, {}, "")
             }}

@@ -13,6 +13,7 @@ import html
 import json
 import os
 import re
+import requests
 import time
 from traceback import format_exc
 from enum import Enum, IntEnum
@@ -25,6 +26,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
                                                     PlanError,
                                                     ValveTransitionPayload)
+from back_end.servers.plan_service import PlanService
 
 log = LOLoggerClient(client_name="AppController", verbose=True)
 
@@ -71,6 +73,7 @@ class PigssController(Ahsm):
         self.error_list = collections.deque(maxlen=32)
         self.status = {}
         self.all_banks = []
+        self.temp_plan = {}
         self.plan = {
             "max_steps": 32,
             "panel_to_show": int(PlanPanelType.NONE),
@@ -324,6 +327,7 @@ class PigssController(Ahsm):
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
             log.error(f"Send Queue Full. Please report.")
 
+
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
         The self.status attribute is modified in place and a shadow dictionary containing
@@ -479,6 +483,7 @@ class PigssController(Ahsm):
                     for j in setbits(bank_config["chan_mask"]):
                         if self.status["channel"][bank][j + 1] != UiStatus.READY:
                             return PlanError(True, f"Unavailable port at step {row}", row, 1)
+        print("---> Plan Validated")
         return PlanError(False)
 
     def validate_plan_filename(self, filename, check_avail=True):
@@ -503,45 +508,55 @@ class PigssController(Ahsm):
             log.critical(f"Plan save error {fe}")
             raise
 
-    async def load_plan_from_name(self):
-        planName = self.plan["plan_filename"]
-        async with aiohttp.ClientSession() as session:
-            async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName)) as resp:
-                print(await resp.json())
-                data = resp.json()
-                plan = data["details"]
-                bank_names = plan["bank_names"]
+    # def load_plan_from_name(self):
+    #     planName = self.plan["plan_filename"]
+    #     print("---------------> Hello")
+    #     print("RESPONSE -----------------> ", resp)
+        # resp = requests.get("http://0.0.0.0:8000/manage_plan/api/v0.1/plan?plan_name=hell", params={"plan_name": "hell"})
+        # print("---------------------> Response")
+        # print(resp)
+        # if resp.status_code == 200:
+        #     print("-------------------------------------------> GOT SOMETHING")
+        # else:
+        #     print("-------------------------------------------> GOT NOTHING")
+        # # async with aiohttp.ClientSession() as session:
+        # #     async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName)) as resp:
+        # #         print(await resp.json())
+        # print(resp.json())
+        # data = resp.json()
+        # plan = data["details"]
+        # bank_names = plan["bank_names"]
 
-                if not isinstance(plan, dict):
-                    raise ValueError("Plan should be a dictionary")
-                steps = {}
-                last_step = len(plan["steps"])
-                for i in range(last_step):
-                    # Note: Serializing through JSON turns all dictionary keys into strings. We
-                    #  need to turn bank numbers and plan steps back into integers for compatibility
-                    #  with the rest of the code
-                    row = i + 1
-                    if str(row) not in plan["steps"]:
-                        raise ValueError(f"Plan is missing step {row}")
-                    allsteps = plan["steps"]
-                    step = allsteps[str(row)]
-                    if "banks" not in step:
-                        raise ValueError(f"Plan row {row} is missing 'banks' key")
-                    if "reference" not in step:
-                        raise ValueError(f"Plan row {row} is missing 'reference' key")
-                    if "duration" not in step:
-                        raise ValueError(f"Plan row {row} is missing 'duration' key")
-                    steps[row] = {
-                        "banks": {int(bank_str): step["banks"][bank_str]
-                                for bank_str in step["banks"]},
-                        "reference": step["reference"],
-                        "duration": step["duration"]
-                    }
-                self.set_plan(["steps"], steps)
-                self.set_plan(["last_step"], last_step)
-                self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
-                self.set_plan(["bank_names"], bank_names)
-                log.debug(f"Plan file loaded {fname}")
+        # if not isinstance(plan, dict):
+        #     raise ValueError("Plan should be a dictionary")
+        # steps = {}
+        # last_step = len(plan["steps"])
+        # for i in range(last_step):
+        #     # Note: Serializing through JSON turns all dictionary keys into strings. We
+        #     #  need to turn bank numbers and plan steps back into integers for compatibility
+        #     #  with the rest of the code
+        #     row = i + 1
+        #     if str(row) not in plan["steps"]:
+        #         raise ValueError(f"Plan is missing step {row}")
+        #     allsteps = plan["steps"]
+        #     step = allsteps[str(row)]
+        #     if "banks" not in step:
+        #         raise ValueError(f"Plan row {row} is missing 'banks' key")
+        #     if "reference" not in step:
+        #         raise ValueError(f"Plan row {row} is missing 'reference' key")
+        #     if "duration" not in step:
+        #         raise ValueError(f"Plan row {row} is missing 'duration' key")
+        #     steps[row] = {
+        #         "banks": {int(bank_str): step["banks"][bank_str]
+        #             for bank_str in step["banks"]},
+        #         "reference": step["reference"],
+        #         "duration": step["duration"]
+        #     }
+        # self.set_plan(["steps"], steps)
+        # self.set_plan(["last_step"], last_step)
+        # self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+        # self.set_plan(["bank_names"], bank_names)
+        #     # log.debug(f"Plan file loaded {fname}")
 
     def load_plan_from_file(self):
         #TODO: Change to work from Plan Service
@@ -555,7 +570,6 @@ class PigssController(Ahsm):
         except FileNotFoundError as fe:
             log.critical(f"Plan load error {fe}")
             raise
-            return
         if not isinstance(plan, dict):
             raise ValueError("Plan should be a dictionary")
         steps = {}
@@ -975,6 +989,7 @@ class PigssController(Ahsm):
             self.set_status(["standby"], UiStatus.READY)
             self.set_status(["run"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
+            self.set_status(["load"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
@@ -1364,6 +1379,7 @@ class PigssController(Ahsm):
     ##Load Button Pressed on Command Panel
     @state
     def _load(self, e):
+        print("-----------> _load State")
         sig = e.signal
         if sig == Signal.ENTRY:
             return self.handled(e)
@@ -1377,15 +1393,14 @@ class PigssController(Ahsm):
 
     @state
     def _load1(self, e):
+        print("-----------> _load1 State")
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.state_after_delete = self._load1
             #to standby
             return self.handled(e)
         elif sig == Signal.BTN_LOAD_CANCEL:
             return self.tran(self._load)
         elif sig == Signal.LOAD_FILENAME:
-            # self.set_plan(["plan_filename"], e.value["name"])
             return self.tran(self._load_preview)
         elif sig == Signal.EXIT:
             return self.handled(e)
@@ -1393,41 +1408,47 @@ class PigssController(Ahsm):
 
     @state
     def _load_preview(self, e):
+        print("-----------> _load_preview State")
         sig = e.signal
         if sig == Signal.ENTRY:
             return self.handled(e)
         elif sig == Signal.LOAD_MODAL_OK:
-            self.plan_error = self.validate_plan(check_avail=True)
-            if not self.plan_error.error:
-                self.set_status(["plan_run"], UiStatus.READY)
-                self.set_status(["plan_loop"], UiStatus.READY)
-                self.set_plan(["plan_filename"], e.value["name"])
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
-                return self.tran(self._load_preview1)
-            else:
-                #plan error
-                self.set_status(["plan_run"], UiStatus.DISABLED)
-                self.set_status(["plan_loop"], UiStatus.DISABLED)
-                return self.tran(self._load1)
+            # self.plan_error = self.validate_plan(check_avail=True)
+            # self.plan_error = False
+            # if True or not self.plan_error.error:
+            self.set_status(["plan_run"], UiStatus.READY)
+            self.set_status(["plan_loop"], UiStatus.READY)
+            # self.set_plan(["plan_filename"], e.value["name"])
+            # self.plan = e.value["plan"]
+            self.temp_plan = e.value["plan"]
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
+            return self.tran(self._load_preview1)
+            # else:
+            #     #plan error
+            #     self.set_status(["plan_run"], UiStatus.DISABLED)
+            #     self.set_status(["plan_loop"], UiStatus.DISABLED)
+            #     return self.tran(self._load1)
         elif sig == Signal.LOAD_MODAL_CANCEL:
             return self.tran(self._load1)
-        return self.super(self._load1)
+        return self.super(self._load)
 
     @state
     def _load_preview1(self, e):
+        print("-----------> _load_preview1 State")
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                ##LOADPLAN
-                self.load_plan_from_file()
+                self.plan = self.temp_plan
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
             self.run_async(self.save_port_history())
+            print("-----------> Do we get to port histroy?")
             return self.tran(self._operational)
         elif sig == Signal.PLAN_LOAD_FAILED:
+            print("-----------> Do we get to PLAN FAILTED?")
             self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._load_preview)
         return self.super(self._load_preview)
@@ -1445,6 +1466,7 @@ class PigssController(Ahsm):
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["run_plan"], UiStatus.READY)
             self.set_status(["loop_plan"], UiStatus.READY)
+            self.set_status(["load"], UiStatus.READY)
             for bank in self.all_banks:
                 if not self.status["bank"][bank] == UiStatus.READY:
                     self.set_status(["bank", bank], UiStatus.READY)
@@ -1886,11 +1908,11 @@ class PigssController(Ahsm):
         in `plan_filename_no_ext` starting at the first row. It can be called from the
         supervisor shortly after startup to start the flow through the rack on power-up.
         """
-        if plan_filename_no_ext is not None:
-            fname = os.path.join(PLAN_FILE_DIR, f"{plan_filename_no_ext}.pln")
-            if not os.path.exists(fname):
-                plan_filename_no_ext = None
-                log.warning(f"Startup plan file {fname} not found")
+        # if plan_filename_no_ext is not None:
+        #     fname = os.path.join(PLAN_FILE_DIR, f"{plan_filename_no_ext}.pln")
+        #     if not os.path.exists(fname):
+        #         plan_filename_no_ext = None
+        #         log.warning(f"Startup plan file {fname} not found")
 
         try:
             if self.get_status()["standby"] != UiStatus.ACTIVE:
@@ -1900,34 +1922,34 @@ class PigssController(Ahsm):
             # Wait until we are out of the identify state
             while self.get_status()["standby"] != UiStatus.ACTIVE:
                 await asyncio.sleep(1.0)
-            if plan_filename_no_ext is not None:
-                # await self.click_button("load", Signal.BTN_LOAD, "Timeout waiting to load default plan")
-                # await self.wait_for_state(self._load1, "Timeout reaching _load state before loading plan file")
-                # Framework.publish(Event(Signal.LOAD_FILENAME, None))
-                # await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
-                # Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": plan_filename_no_ext}))
-                # await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
-                # ##SET Current Step to 1
-                # ##loads plan
+            # if plan_filename_no_ext is not None:
+            #     await self.click_button("load", Signal.BTN_LOAD, "Timeout waiting to load default plan")
+            #     await self.wait_for_state(self._load1, "Timeout reaching _load state before loading plan file")
+            #     Framework.publish(Event(Signal.LOAD_FILENAME, None))
+            #     await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
+            #     Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": plan_filename_no_ext}))
+            #     await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
+            #     ##SET Current Step to 1
+            #     ##loads plan
+            #     await asyncio.sleep(1.0)
+            #     await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
+            #     await asyncio.sleep(1.0)
+            #     await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
+            #     Framework.publish(Event(Signal.MODAL_OK, None))
+
+                # await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
+                # await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
+                # Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
+                # await self.wait_for_state(self._plan_load, "Timeout reaching _plan_load state")
+                # Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
+                # await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state")
+                # Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
                 # await asyncio.sleep(1.0)
+                # Framework.publish(Event(Signal.BTN_PLAN_OK, None))
                 # await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
                 # await asyncio.sleep(1.0)
                 # await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
                 # Framework.publish(Event(Signal.MODAL_OK, None))
-
-                await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
-                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
-                Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
-                await self.wait_for_state(self._plan_load, "Timeout reaching _plan_load state")
-                Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
-                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state")
-                Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
-                await asyncio.sleep(1.0)
-                Framework.publish(Event(Signal.BTN_PLAN_OK, None))
-                await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
-                await asyncio.sleep(1.0)
-                await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
-                Framework.publish(Event(Signal.MODAL_OK, None))
         except TimeoutError as e:
             log.warning(repr(e))
             return repr(e)
