@@ -508,6 +508,39 @@ class PigssController(Ahsm):
             log.critical(f"Plan save error {fe}")
             raise
 
+    def load_new_plan(self):
+        if not isinstance(self.temp_plan, dict):
+            raise ValueError("Plan should be a dictionary")
+        steps = {}
+        last_step = len(self.temp_plan["steps"])
+        for i in range(last_step):
+            # Note: Serializing through JSON turns all dictionary keys into strings. We
+            #  need to turn bank numbers and plan steps back into integers for compatibility
+            #  with the rest of the code
+            row = i + 1
+            if str(row) not in self.temp_plan["steps"]:
+                raise ValueError(f"Plan is missing step {row}")
+            allsteps = self.temp_plan["steps"]
+            step = allsteps[str(row)]
+            if "banks" not in step:
+                raise ValueError(f"Plan row {row} is missing 'banks' key")
+            if "reference" not in step:
+                raise ValueError(f"Plan row {row} is missing 'reference' key")
+            if "duration" not in step:
+                raise ValueError(f"Plan row {row} is missing 'duration' key")
+            steps[row] = {
+                "banks": {int(bank_str): step["banks"][bank_str]
+                    for bank_str in step["banks"]},
+                "reference": step["reference"],
+                "duration": step["duration"]
+            }
+        self.set_plan(["plan_filename"], self.temp_plan["plan_filename"])
+        self.set_plan(["current_step"], self.temp_plan["current_step"])
+        self.set_plan(["steps"], steps)
+        self.set_plan(["last_step"], last_step)
+        self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+        self.set_plan(["bank_names"], self.temp_plan["bank_names"])
+
     # def load_plan_from_name(self):
     #     planName = self.plan["plan_filename"]
     #     print("---------------> Hello")
@@ -1438,10 +1471,12 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                self.plan = self.temp_plan
+                self.load_new_plan()
+                # self.plan = self.temp_plan
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
-                self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
+                print(format_exc())
+                # self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
             self.run_async(self.save_port_history())
@@ -1459,6 +1494,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            print("------------> RUNNNIGS")
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1580,31 +1616,35 @@ class PigssController(Ahsm):
     def _run_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            self.set_modal_info(
-                [], {
-                    "show": True,
-                    "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
-                    "num_buttons": 3,
-                    "buttons": {
-                        1: {
-                            "caption": "OK",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_ok"
-                        },
-                        2: {
-                            "caption": "Start at Step 1",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_step_1"
-                        },
-                        3: {
-                            "caption": "Cancel",
-                            "className": "btn btn-danger btn-large",
-                            "response": "modal_close"
-                        }
-                    }
-                })
-            return self.handled(e)
+            # msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+            # self.set_modal_info(
+            #     [], {
+            #         "show": True,
+            #         "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
+            #         "num_buttons": 3,
+            #         "buttons": {
+            #             1: {
+            #                 "caption": "OK",
+            #                 "className": "btn btn-success btn-large",
+            #                 "response": "modal_ok"
+            #             },
+            #             2: {
+            #                 "caption": "Start at Step 1",
+            #                 "className": "btn btn-success btn-large",
+            #                 "response": "modal_step_1"
+            #             },
+            #             3: {
+            #                 "caption": "Cancel",
+            #                 "className": "btn btn-danger btn-large",
+            #                 "response": "modal_close"
+            #             }
+            #         }
+            #     })
+            # return self.handled(e)
+            print("PLAN RUNNING ------------------->")
+            self.save_plan_to_file("__default__")
+            self.plan_step_timer_target = asyncio.get_event_loop().time()
+            return self.tran(self._run_plan2)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
             return self.handled(e)
