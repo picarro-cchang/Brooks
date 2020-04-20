@@ -244,9 +244,9 @@ class PigletManager(Ahsm):
         #  for each analyzer
         valve_pos = valve_pos_payload.valve_pos
         if valve_pos_payload.clean_mask and valve_pos == 0:
-            valve_pos = "CL"
+            valve_pos = -1 # for clean
         if valve_pos_payload.reference_valve and valve_pos == 0:
-            valve_pos = "RF"
+            valve_pos = -2 # for reference
 
         for analyzer_rpc_name in self.picarro_analyzers:
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_stopwatch_tag("valve_stable_time", valve_pos_payload.time)
@@ -259,7 +259,7 @@ class PigletManager(Ahsm):
             await self.farm.RPC[analyzer_rpc_name].IDRIVER_add_dynamic_fields({"port": valve_pos})
 
             # The next line is for the simulator
-            await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos_payload.valve_pos)
+            await self.farm.RPC[analyzer_rpc_name].DR_setValveMask(valve_pos)
 
     async def set_mfc_setpoint(self, set_point):
         max_flow = self.farm.config.get_maximum_mfc_flow()
