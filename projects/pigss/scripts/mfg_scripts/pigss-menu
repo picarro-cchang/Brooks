@@ -20,6 +20,7 @@ cat << !
 3. Shutdown
 4. Mount Network Drives
 5. Relocate InfluxDB To Secondary SSD
+6. Update Firmware
 
 !
 
@@ -33,6 +34,7 @@ case $choice in
 	3) shutdown -h now ;;
 	4) sudo ./pigss-network 2> /dev/null || sudo /usr/bin/pigss-network;;
 	5) sudo ./pigss-influx-relocating 2> /dev/null || sudo /usr/bin/pigss-influx-relocating;;
+	6) /usr/bin/firmware-updater & 2> /dev/null || echo "Binary not found!" & sleep 1s;;
 	*) echo "\"$choice\" is not an option."; sleep 1s ;;
 esac
 done
