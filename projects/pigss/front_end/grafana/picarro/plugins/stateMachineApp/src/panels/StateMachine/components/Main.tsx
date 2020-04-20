@@ -153,14 +153,7 @@ export class Main extends React.Component<any, any> {
         this.setState(deepmerge(this.state, { uistatus: obj }));
       });
     });
-    const modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
-      response => {
-        response.json().then(obj => {
-          this.setState(deepmerge(this.state, { modal_info: obj }));
-        });
-      }
-    );
-    Promise.all([uiStatusData, modalData]).then(() => {
+    Promise.all([uiStatusData]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
     });
   };
@@ -173,10 +166,11 @@ export class Main extends React.Component<any, any> {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
-      } else if ("modal_info" in o) {
-        const modal_info = deepmerge(this.state.modal_info, o.modal_info);
-        this.setState({ modal_info });
       }
+      // } else if ("modal_info" in o) {
+      //   const modal_info = deepmerge(this.state.modal_info, o.modal_info);
+      //   this.setState({ modal_info });
+      // }
     }
   }
 
@@ -228,6 +222,7 @@ export class Main extends React.Component<any, any> {
                     plan={this.state.plan}
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
+                    getPlanFileNames={this.getPlanFileNames}
                 />
             ):(
                 <RunLayout

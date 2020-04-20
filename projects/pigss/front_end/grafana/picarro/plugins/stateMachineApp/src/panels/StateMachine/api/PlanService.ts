@@ -14,7 +14,10 @@ export const PlanService = (() => {
       planName = planName || "plan_1";
       return PlanServiceAPI.getRequest(url+`?plan_name=${planName}`);
     },
-    saveFileAs: (data) => {
+    overwriteFile: (data) => {
+      return PlanServiceAPI.putData(url, data);
+    },
+    updateLastRunning: (data) => {
       return PlanServiceAPI.putData(url, data);
     },
     saveFile: (data) => {

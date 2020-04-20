@@ -469,7 +469,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           {this.state.fileName && !this.state.isChanged ? (
             <div>
               <h6 className="panel-plan-text">
-                Currently viewing File:{" "}{this.state.fileName}
+                Currently viewing File:{" "}
                 <span style={{ color: "white" }}>{file_name}</span>
               </h6>
             </div>

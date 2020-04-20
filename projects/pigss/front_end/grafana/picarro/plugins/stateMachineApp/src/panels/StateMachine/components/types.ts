@@ -40,6 +40,7 @@ export interface PlanLayoutProps {
     plan: Plan;
     layoutSwitch: () => void;
     fileNames: any[]
+    getPlanFileNames: () => void;
 }
 
 export interface RunLayoutProps {
@@ -130,7 +131,7 @@ export interface PlanPanelOptions {
     fileName: string;
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
-    planSavedAs: (s: object) => void;
+    planOverwrite: (s: object) => void;
     setPlanStorage: (s: Plan) => void;
     getStateFromSavedData: () => any;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
@@ -167,4 +168,5 @@ export interface PlanPanelOptions {
     plan: Plan;
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
+    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
   }

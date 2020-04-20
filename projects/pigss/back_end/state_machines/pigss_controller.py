@@ -541,98 +541,6 @@ class PigssController(Ahsm):
         self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
         self.set_plan(["bank_names"], self.temp_plan["bank_names"])
 
-    # def load_plan_from_name(self):
-    #     planName = self.plan["plan_filename"]
-    #     print("---------------> Hello")
-    #     print("RESPONSE -----------------> ", resp)
-        # resp = requests.get("http://0.0.0.0:8000/manage_plan/api/v0.1/plan?plan_name=hell", params={"plan_name": "hell"})
-        # print("---------------------> Response")
-        # print(resp)
-        # if resp.status_code == 200:
-        #     print("-------------------------------------------> GOT SOMETHING")
-        # else:
-        #     print("-------------------------------------------> GOT NOTHING")
-        # # async with aiohttp.ClientSession() as session:
-        # #     async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?plan_name={}".format(planName)) as resp:
-        # #         print(await resp.json())
-        # print(resp.json())
-        # data = resp.json()
-        # plan = data["details"]
-        # bank_names = plan["bank_names"]
-
-        # if not isinstance(plan, dict):
-        #     raise ValueError("Plan should be a dictionary")
-        # steps = {}
-        # last_step = len(plan["steps"])
-        # for i in range(last_step):
-        #     # Note: Serializing through JSON turns all dictionary keys into strings. We
-        #     #  need to turn bank numbers and plan steps back into integers for compatibility
-        #     #  with the rest of the code
-        #     row = i + 1
-        #     if str(row) not in plan["steps"]:
-        #         raise ValueError(f"Plan is missing step {row}")
-        #     allsteps = plan["steps"]
-        #     step = allsteps[str(row)]
-        #     if "banks" not in step:
-        #         raise ValueError(f"Plan row {row} is missing 'banks' key")
-        #     if "reference" not in step:
-        #         raise ValueError(f"Plan row {row} is missing 'reference' key")
-        #     if "duration" not in step:
-        #         raise ValueError(f"Plan row {row} is missing 'duration' key")
-        #     steps[row] = {
-        #         "banks": {int(bank_str): step["banks"][bank_str]
-        #             for bank_str in step["banks"]},
-        #         "reference": step["reference"],
-        #         "duration": step["duration"]
-        #     }
-        # self.set_plan(["steps"], steps)
-        # self.set_plan(["last_step"], last_step)
-        # self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
-        # self.set_plan(["bank_names"], bank_names)
-        #     # log.debug(f"Plan file loaded {fname}")
-
-    def load_plan_from_file(self):
-        #TODO: Change to work from Plan Service
-        # Exceptions raised here are signalled back to the front end
-        fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
-        try:
-            with open(fname, "r") as fp:
-                data = json.load(fp)
-                plan = data["plan"]
-                bank_names = data["bank_names"]
-        except FileNotFoundError as fe:
-            log.critical(f"Plan load error {fe}")
-            raise
-        if not isinstance(plan, dict):
-            raise ValueError("Plan should be a dictionary")
-        steps = {}
-        last_step = len(plan)
-        for i in range(last_step):
-            # Note: Serializing through JSON turns all dictionary keys into strings. We
-            #  need to turn bank numbers and plan steps back into integers for compatibility
-            #  with the rest of the code
-            row = i + 1
-            if str(row) not in plan:
-                raise ValueError(f"Plan is missing step {row}")
-            step = plan[str(row)]
-            if "banks" not in step:
-                raise ValueError(f"Plan row {row} is missing 'banks' key")
-            if "reference" not in step:
-                raise ValueError(f"Plan row {row} is missing 'reference' key")
-            if "duration" not in step:
-                raise ValueError(f"Plan row {row} is missing 'duration' key")
-            steps[row] = {
-                "banks": {int(bank_str): step["banks"][bank_str]
-                          for bank_str in step["banks"]},
-                "reference": step["reference"],
-                "duration": step["duration"]
-            }
-        self.set_plan(["steps"], steps)
-        self.set_plan(["last_step"], last_step)
-        self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
-        self.set_plan(["bank_names"], bank_names)
-        log.debug(f"Plan file loaded {fname}")
-
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
         column = self.plan["focus"]["column"]
@@ -1616,35 +1524,8 @@ class PigssController(Ahsm):
     def _run_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            # msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            # self.set_modal_info(
-            #     [], {
-            #         "show": True,
-            #         "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
-            #         "num_buttons": 3,
-            #         "buttons": {
-            #             1: {
-            #                 "caption": "OK",
-            #                 "className": "btn btn-success btn-large",
-            #                 "response": "modal_ok"
-            #             },
-            #             2: {
-            #                 "caption": "Start at Step 1",
-            #                 "className": "btn btn-success btn-large",
-            #                 "response": "modal_step_1"
-            #             },
-            #             3: {
-            #                 "caption": "Cancel",
-            #                 "className": "btn btn-danger btn-large",
-            #                 "response": "modal_close"
-            #             }
-            #         }
-            #     })
-            # return self.handled(e)
             print("PLAN RUNNING ------------------->")
-            self.save_plan_to_file("__default__")
-            self.plan_step_timer_target = asyncio.get_event_loop().time()
-            return self.tran(self._run_plan2)
+            return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
             return self.handled(e)
@@ -1757,6 +1638,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
+            print("-----------------> Plan Looping Entry")
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["plan_loop"], UiStatus.READY)
@@ -1771,44 +1653,47 @@ class PigssController(Ahsm):
     def _loop_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            self.set_modal_info(
-                [], {
-                    "show": True,
-                    "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
-                    "num_buttons": 3,
-                    "buttons": {
-                        1: {
-                            "caption": "OK",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_ok"
-                        },
-                        2: {
-                            "caption": "Start at Step 1",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_step_1"
-                        },
-                        3: {
-                            "caption": "Cancel",
-                            "className": "btn btn-danger btn-large",
-                            "response": "modal_close"
-                        }
-                    }
-                })
+            # msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+            # self.set_modal_info(
+            #     [], {
+            #         "show": True,
+            #         "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
+            #         "num_buttons": 3,
+            #         "buttons": {
+            #             1: {
+            #                 "caption": "OK",
+            #                 "className": "btn btn-success btn-large",
+            #                 "response": "modal_ok"
+            #             },
+            #             2: {
+            #                 "caption": "Start at Step 1",
+            #                 "className": "btn btn-success btn-large",
+            #                 "response": "modal_step_1"
+            #             },
+            #             3: {
+            #                 "caption": "Cancel",
+            #                 "className": "btn btn-danger btn-large",
+            #                 "response": "modal_close"
+            #             }
+            #         }
+            #     })
             return self.handled(e)
         elif sig == Signal.EXIT:
-            self.set_modal_info(["show"], False)
+            # self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            print("-----------------> Signal Modal OK")
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._loop_plan2)
         elif sig == Signal.MODAL_STEP_1:
+            print("-----------------> Signal Modal Step 1")
             self.set_plan(["current_step"], 1)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._loop_plan2)
         elif sig == Signal.MODAL_CLOSE:
+            print("-----------------> Signal Modal Cancel")
             return self.tran(self._operational)
         return self.super(self._loop_plan)
 

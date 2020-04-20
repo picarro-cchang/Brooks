@@ -47,6 +47,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   }
 
   setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
+    console.log("Setting Modal for ", action)
     const modal = {
       show: show, 
       html: html,
@@ -163,6 +164,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
             layoutSwitch={this.props.layoutSwitch}
+            setModalInfo={this.setModalInfo}
           />
         );
         break;
@@ -229,7 +231,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       const modal_info = this.state.modal_info;
       const response = modal_info.buttons[i].response
       console.log("filename" ,response)
-      if (response != null) {
+      if (modal_info.action == "loadPlan") {
+        if (response != null) {
         modalButtons.push(
           <button
             className={modal_info.buttons[i].className}
@@ -264,8 +267,64 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           </button>
         );
       }
-      
-    }
+    } else {
+      if (response != null) {
+        if (response == "Ok") {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.updatePanelToShow(0)
+                //TODO: Send Plan Info to BackEnd 
+                this.props.ws_sender({
+                  element: "modal_ok",
+                  plan: response.plan
+                })
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        } else {
+          modalButtons.push(
+            <button
+              className={modal_info.buttons[i].className}
+              style={{ margin: "10px" }}
+              onClick={() => {
+                this.updatePanelToShow(0)
+                //TODO: Send Plan Info to BackEnd 
+                this.props.ws_sender({
+                  element: "modal_step_1",
+                  plan: response.plan
+                })
+                this.setModalInfo(false, "", 0, {}, "")
+              }}
+            >
+              {modal_info.buttons[i].caption}
+            </button>
+          );
+        }
+      } else {
+        modalButtons.push(
+          <button
+            className={modal_info.buttons[i].className}
+            style={{ margin: "10px" }}
+            onClick={() => {
+              this.props.ws_sender({
+                element: "load_modal_cancel",
+                name: response.plan.plan_filename
+              })
+              this.setModalInfo(false, "", 0, {}, "")
+            }}
+          >
+            {modal_info.buttons[i].caption}
+          </button>
+        );
+      }
+    }}
+
     return (
       <div style={{ textAlign: "center" }}>
             

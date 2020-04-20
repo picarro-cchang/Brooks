@@ -18,7 +18,7 @@ class PlanModel:
                 details JSON NOT NULL,
                 created_by text NOT NULL,
                 created_at text NOT NULL,
-                is_running integer NOt NULL DEFAULT 0,
+                is_running integer NOT NULL DEFAULT 0,
                 is_deleted integer NOT NULL DEFAULT 0,
                 modified_at text DEFAULT null,
                 modified_by text DEFAULT null
@@ -202,8 +202,8 @@ class PlanModel:
         if self.is_plan_running(name):
             raise PlanRunningException()
         
-        # if updated_name and not self.is_valid_plan_name(updated_name):
-        #     raise PlanExistsException()
+        if updated_name and not self.is_valid_plan_name(updated_name):
+            raise PlanExistsException()
 
         values = (details, modified_at, modified_by, is_running, is_deleted, name)
         
@@ -220,8 +220,9 @@ class PlanModel:
             values = (updated_name, details, modified_at, modified_by, is_running, is_deleted, name)
 
         try:
+            print("--------------->VALUES ", values)
             cur = self.db_connection.cursor()
-            recods = cur.execute(update_query, values)
+            records = cur.execute(update_query, values)
             self.db_connection.commit()
             return (name, details) if not updated_name else (updated_name, details)
         except sqlite3.OperationalError:

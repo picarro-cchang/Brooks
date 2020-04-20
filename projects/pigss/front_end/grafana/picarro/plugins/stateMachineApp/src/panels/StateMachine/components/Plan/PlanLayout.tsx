@@ -50,7 +50,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
     // this.getLastLoadedPlan = this.getLastLoadedPlan.bind(this);
     this.planSaved = this.planSaved.bind(this);
-    this.planSavedAs = this.planSavedAs.bind(this);
+    this.planOverwrite = this.planOverwrite.bind(this);
     // this.getAllFileNames = this.getAllFileNames.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
@@ -134,18 +134,21 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           fileName: fileName,
           panel_to_show: 0
         })
+        this.props.getPlanFileNames();
       })
     );
   }
 
-  planSavedAs(plan) {
+  planOverwrite(plan) {
     const data = {
       name: plan.plan_filename,
       details: plan,
       user: "admin",
+      is_deleted: 0,
+      is_running: 0,
       updated_name: plan.plan_filename
     }
-    PlanService.saveFileAs(data).then((response: any) => 
+    PlanService.overwriteFile(data).then((response: any) => 
       response.json().then(data => {
         console.log("Plan Saved As! ", data);
       })
@@ -179,10 +182,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   }
 
   componentDidMount() {
-    //get the last plan that was loaded
-    // this.getLastLoadedPlan();
     const storedPlan = this.getStateFromSavedData();
-    if(this.state.plan != storedPlan){
+    if(this.state.plan != storedPlan && storedPlan != null){
       this.setState({
         plan: storedPlan,
         fileName: storedPlan.plan_filename
@@ -231,7 +232,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 isChanged={this.state.isChanged}
                 updatePanel={this.updatePanelToShow}
                 layoutSwitch={this.props.layoutSwitch}
-                planSavedAs={this.planSavedAs}
+                planOverwrite={this.planOverwrite}
                 setPlanStorage={this.setPlanStorage}
                 getStateFromSavedData={this.getStateFromSavedData}
                 setModalInfo={this.setModalInfo}
@@ -314,7 +315,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
               className={modal_info.buttons[i].className}
               style={{ margin: "10px" }}
               onClick={() => {
-                this.planSavedAs(response.plan)
+                this.planOverwrite(response.plan)
                 this.setModalInfo(false, "", 0, {}, "")
               }}
             >

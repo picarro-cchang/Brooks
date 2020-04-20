@@ -110,7 +110,26 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             </button>
             <button
               id={"run-plan"}
-              onClick={e => this.props.ws_sender({ element: "plan_run" })}
+              onClick={e => {
+                this.props.ws_sender({ element: "plan_run" })
+                this.props.setModalInfo(true, `<div>Run Plan ${this.props.plan.plan_filename} starting at Step ${this.props.plan.current_step}?</div>`, 3, {
+                  1: {
+                    caption: "Ok",
+                    className: "btn btn-success btn-large",
+                    response: {plan: this.props.plan}
+                  },
+                  2: {
+                    caption: "Start at Step 1",
+                    className: "btn btn-success btn-large",
+                    response: {step: 1, plan: this.props.plan}
+                  },
+                  3: {
+                    caption: "Cancel",
+                    className: "btn btn-danger btn-large",
+                    response: null
+                  }
+                }, 'loopPlan')
+              }}
               disabled={this.getDisabled("plan_run")}
               value="plan_run"
               className={
@@ -122,7 +141,27 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             </button>
             <button
               id={"loop-plan"}
-              onClick={e => this.props.ws_sender({ element: "plan_loop" })}
+              onClick={e => {
+                console.log("Setting loop plan ", this.state)
+                this.props.setModalInfo(true, `<div>Loop Plan ${this.props.plan.plan_filename} starting at Step ${this.props.plan.current_step}?</div>`, 3, {
+                  1: {
+                    caption: "Ok",
+                    className: "btn btn-success btn-large",
+                    response: {plan: this.props.plan}
+                  },
+                  2: {
+                    caption: "Start at Step 1",
+                    className: "btn btn-success btn-large",
+                    response: {step: 1, plan: this.props.plan}
+                  },
+                  3: {
+                    caption: "Cancel",
+                    className: "btn btn-danger btn-large",
+                    response: null
+                  }
+                }, 'runPlan')
+                this.props.ws_sender({ element: "plan_loop" })
+              }}
               disabled={this.getDisabled("plan_loop")}
               value="plan_loop"
               className={

@@ -164,7 +164,7 @@ class PlanService(ServiceTemplate):
         is_deleted = plan_data.get("is_deleted", 0)
         is_running = plan_data.get("is_running", 0)
         updated_name = plan_data.get("updated_name", "")
-
+        print("------------------->IS DELETED ", is_deleted)
         try:
             name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name)
             if name is not None and details is not None:
