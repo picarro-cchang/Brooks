@@ -20,7 +20,7 @@ cat << !
 3. Shutdown
 4. Mount Network Drives
 5. Relocate InfluxDB To Secondary SSD
-6. Update Firmware
+6. Update Firmware (Cannot run remotely)
 
 !
 
