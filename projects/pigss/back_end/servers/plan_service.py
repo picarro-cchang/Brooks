@@ -156,7 +156,7 @@ class PlanService(ServiceTemplate):
         """
         plan_data = await request.json()
         name = plan_data.get("name")
-        details = plan_data.get("details")
+        details = json.dumps(plan_data.get("details"))
         # TO DO: Get username from authentication token passed by front_end to avoid user imitation
         modified_by = plan_data.get('user')
         # Current implementation has the creation of plan in local timezone
@@ -171,17 +171,17 @@ class PlanService(ServiceTemplate):
                 return web.json_response(data={
                     "message": f"Plan {name} has been updated with new details.",
                     "name": name,
-                    "details": details,
+                    "details": json.loads(details),
                     "is_running": is_running
                 })
         except PlanRunningException:
             return web.json_response(data = {
                 "message": f"The plan {name} is currently running. It needs to be stopped before it can be updated."
             }, status=200)
-        # except PlanExistsException:
-        #     return web.json_response(data = {
-        #         "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
-        #     }, status=200)
+        except PlanExistsException:
+            return web.json_response(data = {
+                "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
+            }, status=200)
         except PlanDoesNotExistException:
             return web.json_response(data={
                 "message": f"No record could be found for plan name {name}."

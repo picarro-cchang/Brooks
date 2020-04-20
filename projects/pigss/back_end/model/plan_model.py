@@ -220,7 +220,6 @@ class PlanModel:
             values = (updated_name, details, modified_at, modified_by, is_running, is_deleted, name)
 
         try:
-            print("--------------->VALUES ", values)
             cur = self.db_connection.cursor()
             records = cur.execute(update_query, values)
             self.db_connection.commit()
