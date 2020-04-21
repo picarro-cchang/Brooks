@@ -25,7 +25,7 @@ export const DataGeneratorService = (() => {
     },
     generateFile: (params: any) => {
       let url = URL.GENERATE_FILE + "?";
-      const { from, to, keys, analyzers, ports } = params;
+      const { from, to, keys, analyzers, ports, isProcessedData } = params;
       for (const key of keys) {
         url += `keys=${key.value}&`;
       }
@@ -38,6 +38,8 @@ export const DataGeneratorService = (() => {
 
       url += `from=${from}`;
       url += `&to=${to}`;
+
+      url += `&isProcessedData=${isProcessedData}`
       return API.get(url);
     }
   };

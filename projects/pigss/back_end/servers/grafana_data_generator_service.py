@@ -13,7 +13,7 @@ from aiohttp import web
 from common.influx_connection import InfluxDBInstance
 from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.servers.service_template import ServiceTemplate
-from back_end.grafana_data_generator_plugin.model import Model
+from back_end.model.data_export_model import DataExportModel
 
 log = LOLoggerClient(client_name="UserDataFileGenerator")
 
@@ -186,9 +186,10 @@ class GrafanaDataGeneratorService(ServiceTemplate):
             "analyzer": "|".join(query_dict["analyzer"]),
             "from": int(query_dict["from"][0]),
             "to": int(query_dict["to"][0]),
+            "isProcessedData": str(query_dict["isProcessedData"][0]) == "true"
         }
         measurements = self.app["config"]["database"]["measurements"]
-        result = await Model.get_points(self.app["db_client"], log, query_params, measurements)
+        result = await DataExportModel.get_points(self.app["db_client"], log, query_params, measurements)
 
         if len(result) == 0:
             data = {"message": "No observation in measurements"}
@@ -229,7 +230,7 @@ class GrafanaDataGeneratorService(ServiceTemplate):
                 description: successful operation returns available keys in a dict
         """
         measurements = self.app["config"]["database"]["measurements"]
-        field_keys = await Model.get_user_keys(self.app["db_client"], measurements, log)
+        field_keys = await DataExportModel.get_user_keys(self.app["db_client"], measurements, log)
         user_keys = self.app["config"]["server"]["user_keys"]
         return web.json_response({"keys": list(filter(lambda x: x in field_keys, user_keys))})
 
@@ -247,5 +248,5 @@ class GrafanaDataGeneratorService(ServiceTemplate):
                 description: successful operation returns available analyzers in a dict
         """
         measurements = self.app["config"]["database"]["measurements"]
-        analyzers = await Model.get_analyzers(self.app["db_client"], measurements, log)
+        analyzers = await DataExportModel.get_analyzers(self.app["db_client"], measurements, log)
         return web.json_response({"analyzers": analyzers})

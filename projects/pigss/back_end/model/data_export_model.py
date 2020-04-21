@@ -3,7 +3,7 @@ from traceback import format_exc
 from influxdb.exceptions import InfluxDBClientError
 
 
-class Model:
+class DataExportModel:
 
     __keys = None
 
@@ -40,13 +40,23 @@ class Model:
 
             keys = [f"{key}" for key in keys]
             keys = ", ".join(keys)
-
-            query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
-                     f"WHERE analyzer =~ /{analyzer}/ "
-                     f"AND valve_pos =~ /{port}/ "
-                     f"AND valve_stable_time > 15 "
-                     f"AND time > {time_from} AND time <= {time_to} "
-                     f"ORDER BY time DESC")
+            
+            # Enabling user to download processed and unprocessed data
+            if query_params["isProcessedData"]:
+                query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
+                        f"WHERE analyzer =~ /{analyzer}/ "
+                        f"AND valve_pos =~ /{port}/ "
+                        f"AND valve_stable_time > 15 "
+                        f"AND time > {time_from} AND time <= {time_to} "
+                        f"ORDER BY time DESC")
+            else:
+                query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
+                        f"WHERE analyzer =~ /{analyzer}/ "
+                        f"AND valve_pos =~ /{port}/ "
+                        f"AND time > {time_from} AND time <= {time_to} "
+                        f"ORDER BY time DESC")
+            
+            print("----> Check out query", query)
 
             data_generator = client.query(query=query, epoch="ms").get_points()
             result = []
