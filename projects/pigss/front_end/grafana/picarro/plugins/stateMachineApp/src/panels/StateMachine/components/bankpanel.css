@@ -15,6 +15,7 @@
   left: 1px;
   bottom: 0;
   right: 1px;
+  overflow-wrap: break-word;
 }
 .chn-status {
   font-size: 10px;
