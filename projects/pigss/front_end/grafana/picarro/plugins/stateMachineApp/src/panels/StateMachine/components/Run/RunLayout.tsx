@@ -46,6 +46,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     this.setModalInfo = this.setModalInfo.bind(this);
   }
 
+  plan;
+
   setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
     console.log("Setting Modal for ", action)
     const modal = {
@@ -77,6 +79,50 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       //TODO: need to refresh plan file names
     })
   );
+  }
+
+  getLastRunningPlan() {
+    PlanService.getLastRunning().then((response: any) => 
+    response.json().then(data => {
+      if (data["message"]) {
+        console.log("No Plan I suppsoe")
+        return null
+      }          
+      else {
+        const plan = {
+          name: data['name'],
+          details: data['details'],
+          user: 'admin',
+          is_running: 0,
+        }
+        return plan
+      }
+    }))
+  }
+
+  fileIsRunning(plan: Plan) {
+    const lastPlan = this.getLastRunningPlan();
+    const newPlan = {
+      name: plan.plan_filename,
+      details: plan,
+      user: 'admin',
+      is_running: 1
+    }
+    if (lastPlan != null) {
+      PlanService.overwriteFile(lastPlan).then(response => 
+        response.json().then(data => {
+          console.log(data);
+          PlanService.overwriteFile(newPlan).then(response => 
+            response.json().then(plan => {
+              console.log(plan)
+            }))
+        }))
+    } else {
+      PlanService.overwriteFile(newPlan).then(response => 
+        response.json().then(dat => {
+          console.log(dat)
+        }))
+    }
   }
 
   updatePanelToShow(panel: number) {
@@ -244,6 +290,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
                 element: "load_modal_ok",
                 plan: response.plan
               })
+              this.fileIsRunning(response.plan);
               this.setModalInfo(false, "", 0, {}, "")
             }}
           >

@@ -3,14 +3,7 @@ import { BankPanelPlanOptions, Plan } from "../types";
 import "./../bankpanel.css";
 
 interface State {
-  plan: {
-    bank_names: {
-      [key: number]: {
-        name: string;
-        channels: { [key: number]: string };
-      };
-    };
-  }
+  plan: Plan;
 }
 
 class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
@@ -43,7 +36,6 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
   };
 
   render() {
-    console.log("Hello Bank Panel ", this.props.plan)
     let bankStyle = {};
     let cleanClassNames = "";
     let cleanDisabled = true;
@@ -93,7 +85,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-              {portNumber + ": "}{this.state.plan.bank_names[this.props.bank].channels[i]}
+              {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}
               </u>
             </p>
             <p id={"chn-status-" + i} className={"chn-status"}>
@@ -112,7 +104,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>
-                {portNumber + ": "}{this.state.plan.bank_names[this.props.bank].channels[i]}{" "}
+                {portNumber + ": "}{this.props.plan.bank_names[this.props.bank].channels[i]}{" "}
               </u>
             </p>
 

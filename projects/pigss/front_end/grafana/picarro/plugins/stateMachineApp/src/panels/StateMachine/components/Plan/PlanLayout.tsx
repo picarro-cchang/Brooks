@@ -99,13 +99,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     return null;
   }
 
-  isSavedDataCurrent = (planState: Plan) => {
-    // if (planState !== null && planState.last_step !== 0) {
-    //   return planState.steps.length ? n : false;
-    // }
-    // return false;
-  }
-
   getPlanFromFileName(filename: string) {
     PlanService.getFileData(filename).then((response: any) => 
       response.json().then(data => {
@@ -130,11 +123,9 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
         //TODO: Need to refresh plan
-        this.setState({
-          fileName: fileName,
-          panel_to_show: 0
-        })
         this.props.getPlanFileNames();
+        this.getPlanFromFileName(fileName);
+        
       })
     );
   }
@@ -146,11 +137,16 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       user: "admin",
       is_deleted: 0,
       is_running: 0,
-      updated_name: plan.plan_filename
     }
     PlanService.overwriteFile(data).then((response: any) => 
       response.json().then(data => {
         console.log("Plan Saved As! ", data);
+        if (data["message"]) {
+          console.log(data["message"])
+          this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+        } else {
+          this.getPlanFromFileName(plan.plan_filename)
+        }
       })
     )
   }
@@ -159,7 +155,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     PlanService.deleteFile(fileName).then((response: any) => 
     response.json().then(data => {
       console.log("Plan Deleted! ", data)
-      //TODO: need to refresh plan file names
+      this.props.getPlanFileNames();
+      this.forceUpdate();
     })
   );
   }
@@ -184,6 +181,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   componentDidMount() {
     const storedPlan = this.getStateFromSavedData();
     if(this.state.plan != storedPlan && storedPlan != null){
+      console.log("Doesn't match")
       this.setState({
         plan: storedPlan,
         fileName: storedPlan.plan_filename
@@ -236,7 +234,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 setPlanStorage={this.setPlanStorage}
                 getStateFromSavedData={this.getStateFromSavedData}
                 setModalInfo={this.setModalInfo}
-                // getLastLoadedPlan={this.getLastLoadedPlan}
             />
         );
         break;
@@ -279,7 +276,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       const modal_info = this.state.modal_info;
       if (modal_info.action == "save") {
         const response = modal_info.buttons[i].response
-        console.log("filename" ,response)
         if (response != null) {
           modalButtons.push(
             <button
@@ -287,6 +283,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
               style={{ margin: "10px" }}
               onClick={() => {
                 this.planSaved(response.filename, response.plan)
+                this.updateFileName(false)
                 this.setModalInfo(false, "", 0, {}, "")
               }}
             >
@@ -308,7 +305,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         }
       } else if (modal_info.action == "saveOverwrite") {
         const response = modal_info.buttons[i].response
-        console.log("filename" ,response)
         if (response != null ) {
           modalButtons.push(
             <button

@@ -74,14 +74,7 @@ export interface BankPanelPlanOptions {
       channel?: { [bankNum: string]: { [channelNum: string]: string } };
     };
     ws_sender: (o: object) => void;
-    plan: {
-      bank_names: {
-        [key: number]: {
-          name: string;
-          channels: { [key: number]: string };
-        };
-      };
-    };
+    plan: Plan;
     addChanneltoPlan: (bank: number, channel: number) => void;
 }
 

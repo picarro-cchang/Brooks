@@ -161,16 +161,11 @@ export class Main extends React.Component<any, any> {
 
   handleData(data: any) {
     const o = JSON.parse(data);
-    console.log("WS ", o)
     if (this.state.initialized) {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
       }
-      // } else if ("modal_info" in o) {
-      //   const modal_info = deepmerge(this.state.modal_info, o.modal_info);
-      //   this.setState({ modal_info });
-      // }
     }
   }
 
@@ -181,17 +176,13 @@ export class Main extends React.Component<any, any> {
   getPlanFileNames() {
     PlanService.getFileNames().then((repsonse: any) => 
     repsonse.json().then(planfiles => {
-      this.setState({ fileNames: planfiles['plans'] }, () => console.log(this.state.fileNames));
+      if (planfiles['plans']) {
+        this.setState({ fileNames: planfiles['plans'] });
+      } else {
+        console.log("There are no files")
+      }
     })
     )
-  }
-
-  planFileNameUpTop() {
-    if (this.state.uistatus["plan_loop"] == "ACTIVE" || this.state.uistatus["plan_run"] == "ACTIVE") {
-      return true
-    } else {
-      return false
-    }
   }
 
   isPlanning() {
@@ -205,14 +196,14 @@ export class Main extends React.Component<any, any> {
           console.log("No Plan I suppsoe")
         }          
         else {
-          this.setState({plan: data['details']});
+          const plan = { ...(JSON.parse(data['details'])) }
+          this.setState({plan: plan});
         }
 
       }))
   }
 
   render() {
-  
     return (
         <div> 
             {this.state.isPlanning ? (
@@ -239,19 +230,4 @@ export class Main extends React.Component<any, any> {
     );
   }
 }
-
-
-  //     <Modal
-        //   styles={{ overlay: { color: "black" } }}
-        //   open={this.state.modal_info.show}
-        //   onClose={() => this.ws_sender({ element: "modal_close" })}
-        //   center
-        // >
-        //   <div style={{ margin: "20px" }}>
-        //     <div
-        //       dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}
-        //     ></div>
-        //   </div>
-        //   {modalButtons}
-        // </Modal>
         // <ToastContainer />

@@ -16,9 +16,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
       fileNames: this.props.fileNames,
       plan: this.props.plan
     }
-    // this.deleteFile = this.deleteFile.bind(this);
-    // this.savePlan = this.savePlan.bind(this);
-    this.updateFileName = this.updateFileName.bind(this)
+    this.setFileName = this.setFileName.bind(this)
   }
 
   componentDidMount() {
@@ -26,7 +24,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
     this.setState({plan: plan})
   }
 
-  updateFileName(e) {
+  setFileName(e) {
     const plan = {...this.state.plan}
     plan.plan_filename = e.target.value
     this.setState({fileName: e.target.value, plan});
@@ -40,14 +38,14 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           className="btn btn-light w-100 btn-small"
           style={{ color: "black" }}
         >
-          {this.state.fileNames[index]}
+          {this.props.fileNames[index]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={e =>
             {
-              this.props.deleteFile(this.state.fileNames[index]);
+              this.props.deleteFile(this.props.fileNames[index]);
             }
           }
         >
@@ -58,10 +56,6 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
   );
   render() {
     let length = Object.keys(this.props.fileNames).length
-
-    const saveButtons = {
-      
-    }
     
     return (
       <div className="panel-save">
@@ -78,8 +72,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
             onChange={e => {
-              this.updateFileName(e)
-              // this.setState({fileName: e.target.value})
+              this.setFileName(e)
             }}
             maxLength={28}
             type="text"
@@ -110,7 +103,6 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
               type="button"
               id="save-btn"
               onClick={e => {
-                // this.savePlan();
                 this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}?</div>`, 2, {
                   1: {
                     caption: "Save",

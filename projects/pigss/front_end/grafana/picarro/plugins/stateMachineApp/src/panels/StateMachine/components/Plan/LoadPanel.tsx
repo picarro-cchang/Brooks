@@ -17,6 +17,15 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
     };
   }
 
+  shouldComponentUpdate(nextProps) {
+    if (this.props.fileNames !== nextProps.fileNames) {
+      this.setState({
+        fileNames: nextProps.fileNames
+      });
+    }
+    return true;
+  }
+
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>
@@ -46,7 +55,7 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
   );
 
   render() {
-    let length = this.props.fileNames.length
+    let length = this.state.fileNames.length
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

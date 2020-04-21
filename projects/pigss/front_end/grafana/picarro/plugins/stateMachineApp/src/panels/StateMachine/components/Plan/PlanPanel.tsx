@@ -7,7 +7,6 @@ import fs from "fs";
 export interface State {
   refVisible: boolean;
   plan: Plan;
-  isChanged: boolean;
   isLoaded: boolean;
   bankAdditionClicked: {};
   fileName: string;
@@ -27,7 +26,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       bankAdditionClicked: {},
       isLoaded: false,
       refVisible: true,
-      isChanged: this.props.isChanged,
       plan: {
         max_steps: 32,
       panel_to_show: 0,
@@ -140,7 +138,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   clearPlan() {
-    this.setState({ isChanged: true });
+    this.props.updateFileName(true);
     let plan = {...this.state.plan};
     plan.steps = {};
     plan.current_step = 1;
@@ -189,7 +187,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   addToPlan(bank_config, reference: number) {
-    this.setState({ isChanged: true });
+    this.props.updateFileName(true);
     let row = this.state.plan.focus.row;
     const col = this.state.plan.focus.column;
     let duration;
@@ -237,14 +235,14 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   updateDuration(row: number, duration: number) {
-    this.setState({ isChanged: true });
+    this.props.updateFileName(true);
     const plan = { ...this.state.plan };
     plan.steps[row].duration = duration;
     this.setState({ plan });
   }
 
   updateCurrentStep(row: number) {
-    this.setState({ isChanged: true });
+    this.props.updateFileName(true);
     const plan = { ...this.state.plan };
     plan.current_step = row;
     this.setState({ plan });
@@ -466,7 +464,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
-          {this.state.fileName && !this.state.isChanged ? (
+          {this.state.fileName && !this.props.isChanged ? (
             <div>
               <h6 className="panel-plan-text">
                 Currently viewing File:{" "}
@@ -498,7 +496,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.insertRow();
-                    this.setState({ isChanged: true });
+                    this.props.updateFileName(true);
                   }}
                   className={"btn btn-block btn-group"}
                 >
@@ -542,7 +540,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   }
                   onClick={e => {
                     this.props.updateFileName(true);
-                    this.setState({ isChanged: true });
                     this.deleteRow();
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
