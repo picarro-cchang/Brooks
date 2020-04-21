@@ -86,7 +86,8 @@ describe("DataFileGeneratorService", () => {
       to: "",
       keys: [{ value: "CavityTemp", label: "CavityTemp" }],
       analyzers: [{ value: "AMSADS3003", label: "AMSADS3003" }],
-      ports: [{ value: "2", label: "2" }]
+      ports: [{ value: "2", label: "2" }],
+      isProcessedData: false
     };
     const mockKeys = {
       filename: "pigss-ms-02-13-2020_061135-02-13-2020_121135.csv"
