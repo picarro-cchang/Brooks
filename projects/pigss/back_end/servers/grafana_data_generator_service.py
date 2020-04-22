@@ -209,6 +209,9 @@ class GrafanaDataGeneratorService(ServiceTemplate):
 
             file_name = f"{host_name}-{from_formatted}-{to_formatted}.csv"
 
+            if not query_params["isProcessedData"]:
+                file_name = f"{host_name}-{from_formatted}-{to_formatted}_raw.csv"
+
             success = await self.write_csv_file(result, data_dir, file_name)
             if success:
                 return web.json_response({"filename": file_name})
