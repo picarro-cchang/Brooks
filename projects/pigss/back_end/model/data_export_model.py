@@ -56,7 +56,6 @@ class DataExportModel:
                         f"AND time > {time_from} AND time <= {time_to} "
                         f"ORDER BY time DESC")
             
-            print("----> Check out query", query)
 
             data_generator = client.query(query=query, epoch="ms").get_points()
             result = []
