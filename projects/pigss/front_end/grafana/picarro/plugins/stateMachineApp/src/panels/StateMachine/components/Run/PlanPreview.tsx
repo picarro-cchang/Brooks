@@ -98,6 +98,9 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
             id={'cancel-load-plan'}
             className={"btn btn-block btn-cancel btn-group-preview"}
             onClick={e => {
+              this.props.ws_sender({
+                element: "filename_cancel"
+              })
               this.props.cancelLoadPlan();
               this.props.updatePanel(1);
             }}
@@ -109,6 +112,9 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
               <button
               className={"btn btn-block btn-green btn-group-preview"}
               onClick={e => {
+                this.props.ws_sender({
+                  element: "filename_ok"
+                })
                 this.props.setModalInfo(true, `<div>Load File ${this.state.plan.plan_filename} for running?</div>`, 2, {
                   1: {
                     caption: "Ok",

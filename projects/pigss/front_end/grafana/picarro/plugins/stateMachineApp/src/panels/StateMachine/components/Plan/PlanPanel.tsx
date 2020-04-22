@@ -103,8 +103,101 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.clearPlan = this.clearPlan.bind(this);
   }
 
-  validation() {
-
+  validation(plan: Plan, checkAvailable=true) {
+    if (plan.last_step <= 0) {
+      this.props.setModalInfo(
+        true, 
+        `<h4 style='color:black'>Plan is Empty</h4>`,
+        0,
+        {},
+        "misc")
+      return false
+    }
+    if (plan.current_step > plan.last_step || plan.current_step < 1) {
+      this.props.setModalInfo(
+        true, 
+        `<h4 style='color:black'>Plan Step must be between 1 and ${plan.last_step}</h4>`,
+        0,
+        {},
+        "misc")
+      return false
+    }
+    const minDuration = 20;
+    const all_banks = this.getAvailableBanks();
+    console.log(all_banks)
+    for (let i = 0; i < plan.last_step; i++) {
+      let row = i + 1;
+      let s = plan.steps[row]
+      if (!("duration" in s) || !("reference" in s) || !("banks" in s)) {
+        this.props.setModalInfo(
+          true, 
+          `<h4 style='color:black'>Malformed Data.</h4>`,
+          0,
+          {},
+          "misc")
+        return false
+      }
+      if (s.duration <= 0 || s.duration < minDuration) {
+        this.props.setModalInfo(
+          true, 
+          `<h4 style='color:black'>Invalid Duration at step ${row}. Duration must be greater then ${minDuration}</h4>`,
+          0,
+          {},
+          "misc")
+        return false
+      }
+      for(let bank in s.banks) {
+        console.log(bank, "is included? ", all_banks.includes(bank))
+        if (!(all_banks.includes(Number(bank)))) {
+          this.props.setModalInfo(
+            true, 
+            `<h4 style='color:black'>Invalid Bank at Step ${row}</h4>`,
+            0,
+            {},
+            "misc")
+          return false
+        }
+        let bank_config = s.banks[bank];
+        if (!("chan_mask" in bank_config) || !("clean" in bank_config)) {
+          this.props.setModalInfo(
+            true, 
+            `<h4 style='color:black'>Invalid Data for Bank ${bank} in step ${row}</h4>`,
+            0,
+            {},
+            "misc")
+          return false
+        }
+        if (bank_config.chan_mask < 0 || bank_config.chan_mask > 256) {
+          this.props.setModalInfo(
+            true, 
+            `<h4 style='color:black'>Invalid Channel Selection for Bank ${bank} in Step ${row}</h4>`,
+            0,
+            {},
+            "misc")
+          return false
+        }
+        if (checkAvailable) {
+            const mask = bank_config.chan_mask;
+            if (mask != 0) {
+              const channel = (mask & -mask).toString(2).length;
+              const channelBtn = this.props.uistatus.channel[bank][channel]
+              if (channelBtn == "DISABLED") {
+                console.log(channelBtn, " Does not equal AVAILABLE")
+                this.props.setModalInfo(
+                true, 
+                `<h4 style='color:black'>Unavailable Port at Step ${row}</h4>`,
+                0,
+                {},
+                "misc")
+                return false
+              }
+              
+            }
+        }
+      }
+    }
+    console.log('all done')
+    return true
   }
 
 
@@ -135,6 +228,24 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
   saveFile() {
     this.props.updatePanel(2);
+  }
+
+  overwriteFile() {
+    const valid = this.validation(this.state.plan, true)
+    if (valid) {
+      this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`, 2, {
+      1: {
+        caption: "Save",
+        className: "btn btn-success btn-large",
+        response: {plan: this.state.plan}
+      },
+      2: {
+        caption: "Cancel",
+        className: "btn btn-danger btn-large",
+        response: null
+      }
+      }, 'saveOverwrite')
+    }
   }
 
   clearPlan() {
@@ -570,18 +681,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   id="ok-btn"
                   disabled={this.state.plan.focus.row > this.state.plan.last_step}
                   onClick={e => {
-                    this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`, 2, {
-                      1: {
-                        caption: "Save",
-                        className: "btn btn-success btn-large",
-                        response: {plan: this.state.plan}
-                      },
-                      2: {
-                        caption: "Cancel",
-                        className: "btn btn-danger btn-large",
-                        response: null
-                      }
-                    }, 'saveOverwrite')
+                    this.overwriteFile();
+                    
                   }}
                   className={"btn btn-block btn-green btn-group"}
                 >

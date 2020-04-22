@@ -176,7 +176,7 @@ class PlanModel:
             self.log.debug(format_exc())
         return None, None
 
-    def update_plan(self, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name=""):
+    def update_plan(self, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name="", is_unloading=0):
         """ Given a plan name and required data, update a plan
 
         Args:            
@@ -191,6 +191,11 @@ class PlanModel:
         Returns:
             rowid: Returns name and details of the successfully updated plan.
         """
+        if is_unloading == 0:
+            if self.is_plan_running(name):
+                raise PlanRunningException()
+
+
         update_query = ''' UPDATE plans
                             SET details = ?,
                             modified_at = ?,
@@ -199,8 +204,7 @@ class PlanModel:
                             is_deleted = ?
                             where name = ?
                              '''
-        if self.is_plan_running(name):
-            raise PlanRunningException()
+        
         
         if updated_name and not self.is_valid_plan_name(updated_name):
             raise PlanExistsException()

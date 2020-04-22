@@ -102,13 +102,17 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   getPlanFromFileName(filename: string) {
     PlanService.getFileData(filename).then((response: any) => 
       response.json().then(data => {
-        console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
-        this.setPlanStorage(data["details"]);
-        this.setState({plan: data["details"]})
-        this.setState({
-          fileName: filename,
-          panel_to_show: 0
-        });
+        if (data["message"]) {
+          this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+        } else {
+          console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
+          this.setPlanStorage(data["details"]);
+          this.setState({plan: data["details"]})
+          this.setState({
+            fileName: filename,
+            panel_to_show: 0
+          });
+      }
       }))
   }
 
@@ -123,9 +127,13 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
         //TODO: Need to refresh plan
-        this.props.getPlanFileNames();
-        this.getPlanFromFileName(fileName);
-        
+        if (data["message"]) {
+          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+          this.props.getPlanFileNames();
+        } else {
+          this.props.getPlanFileNames();
+          this.getPlanFromFileName(fileName);
+        }
       })
     );
   }
@@ -143,7 +151,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         console.log("Plan Saved As! ", data);
         if (data["message"]) {
           console.log(data["message"])
-          this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
         } else {
           this.getPlanFromFileName(plan.plan_filename)
         }
@@ -154,9 +162,14 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   deleteFile(fileName) {
     PlanService.deleteFile(fileName).then((response: any) => 
     response.json().then(data => {
-      console.log("Plan Deleted! ", data)
-      this.props.getPlanFileNames();
-      this.forceUpdate();
+      if (data["message"]) {
+        this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+        this.props.getPlanFileNames();
+      } else {
+        console.log("Plan Deleted! ", data)
+        this.props.getPlanFileNames();
+        this.forceUpdate();
+      }
     })
   );
   }

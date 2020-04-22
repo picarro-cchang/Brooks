@@ -51,6 +51,7 @@ export interface RunLayoutProps {
     plan: Plan;
     layoutSwitch: () => void;
     fileNames: any[]
+    currentStepChange: (p: Plan) => void;
 }
 
 export enum PanelTypes {

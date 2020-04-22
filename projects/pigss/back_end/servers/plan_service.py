@@ -159,33 +159,55 @@ class PlanService(ServiceTemplate):
         details = json.dumps(plan_data.get("details"))
         # TO DO: Get username from authentication token passed by front_end to avoid user imitation
         modified_by = plan_data.get('user')
-        # Current implementation has the creation of plan in local timezone
         modified_at = str(datetime.datetime.now())
         is_deleted = plan_data.get("is_deleted", 0)
-        is_running = plan_data.get("is_running", 0)
         updated_name = plan_data.get("updated_name", "")
-        print("------------------->IS DELETED ", is_deleted)
-        try:
-            name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name)
-            if name is not None and details is not None:
+
+        if plan_data.get("is_unloading") is not None:
+            is_running = plan_data.get("is_running")
+            is_unloading = plan_data.get("is_unloading")
+            try:
+                name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name, is_unloading)
+                if name is not None and details is not None:
+                    return web.json_response(data={
+                        "message": f"Plan {name} has been updated with new details.",
+                        "name": name,
+                        "details": json.loads(details),
+                        "is_running": is_running
+                    })
+            except PlanExistsException:
+                return web.json_response(data = {
+                    "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
+                }, status=200)
+            except PlanDoesNotExistException:
                 return web.json_response(data={
-                    "message": f"Plan {name} has been updated with new details.",
-                    "name": name,
-                    "details": json.loads(details),
-                    "is_running": is_running
-                })
-        except PlanRunningException:
-            return web.json_response(data = {
-                "message": f"The plan {name} is currently running. It needs to be stopped before it can be updated."
-            }, status=200)
-        except PlanExistsException:
-            return web.json_response(data = {
-                "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
-            }, status=200)
-        except PlanDoesNotExistException:
-            return web.json_response(data={
-                "message": f"No record could be found for plan name {name}."
-            }, status=200)
+                    "message": f"No record could be found for plan name {name}."
+                }, status=200)
+        else: 
+            # Current implementation has the creation of plan in local timezone
+            is_running = plan_data.get("is_running", 0)
+            is_unloading = 0
+            try:
+                name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name,  is_unloading)
+                if name is not None and details is not None:
+                    return web.json_response(data={
+                        "message": f"Plan {name} has been updated with new details.",
+                        "name": name,
+                        "details": json.loads(details),
+                        "is_running": is_running
+                    })
+            except PlanRunningException:
+                return web.json_response(data = {
+                    "message": f"The plan {name} is currently running. It needs to be stopped before it can be updated."
+                }, status=200)
+            except PlanExistsException:
+                return web.json_response(data = {
+                    "message": f"The new plan name {updated_name} already exists. Please select a different new plan name."
+                }, status=200)
+            except PlanDoesNotExistException:
+                return web.json_response(data={
+                    "message": f"No record could be found for plan name {name}."
+                }, status=200)
 
         self.log.debug(f"{plan_data} \n {format_exc()}")
         return web.json_response(data={

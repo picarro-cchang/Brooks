@@ -243,7 +243,9 @@ class PigssController(Ahsm):
                                 load_cancel=Signal.BTN_LOAD_CANCEL,
                                 load_filename=Signal.LOAD_FILENAME,
                                 load_modal_ok=Signal.LOAD_MODAL_OK,
-                                load_modal_cancel=Signal.LOAD_MODAL_CANCEL
+                                load_modal_cancel=Signal.LOAD_MODAL_CANCEL,
+                                filename_ok=Signal.FILENAME_OK,
+                                filename_cance=Signal.FILENAME_CANCEL
                                 )
         while True:
             try:
@@ -652,6 +654,8 @@ class PigssController(Ahsm):
         Framework.subscribe("LOAD_FILENAME", self)
         Framework.subscribe("LOAD_MODAL_OK", self)
         Framework.subscribe("LOAD_MODAL_CANCEL", self)
+        Framework.subscribe("FILENAME_OK", self)
+        Framework.subscribe("FILENAME_CANCEL", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._configure)
 
@@ -734,11 +738,11 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["standby"], UiStatus.READY)
             self.set_status(["identify"], UiStatus.READY)
-            self.set_status(["run"], UiStatus.DISABLED)
-            self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["run"], UiStatus.READY)
+            self.set_status(["plan"], UiStatus.READY)
             self.set_status(["load"], UiStatus.READY)
-            self.set_status(["plan_run"], UiStatus.DISABLED)
-            self.set_status(["plan_loop"], UiStatus.DISABLED)
+            self.set_status(["plan_run"], UiStatus.READY)
+            self.set_status(["plan_loop"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["edit"], UiStatus.READY)
             for bank in self.all_banks:
@@ -1337,10 +1341,9 @@ class PigssController(Ahsm):
         print("-----------> _load1 State")
         sig = e.signal
         if sig == Signal.ENTRY:
-            #to standby
             return self.handled(e)
         elif sig == Signal.BTN_LOAD_CANCEL:
-            return self.tran(self._load)
+            return self.tran(self._operational)
         elif sig == Signal.LOAD_FILENAME:
             return self.tran(self._load_preview)
         elif sig == Signal.EXIT:
@@ -1349,7 +1352,19 @@ class PigssController(Ahsm):
 
     @state
     def _load_preview(self, e):
-        print("-----------> _load_preview State")
+        print("--------------> load_preview State")
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            return self.handled(e)
+        elif sig == Signal.FILENAME_OK:
+            return self.tran(self._load_preview1)
+        elif sig == Signal.FILENAME_CANCEL:
+            return self.tran(self._load1)
+        return self.super(self._load1)
+
+    @state
+    def _load_preview1(self, e):
+        print("-----------> _load_preview1 State")
         sig = e.signal
         if sig == Signal.ENTRY:
             return self.handled(e)
@@ -1363,19 +1378,18 @@ class PigssController(Ahsm):
             # self.plan = e.value["plan"]
             self.temp_plan = e.value["plan"]
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
-            return self.tran(self._load_preview1)
+            return self.tran(self._load_preview2)
             # else:
             #     #plan error
             #     self.set_status(["plan_run"], UiStatus.DISABLED)
             #     self.set_status(["plan_loop"], UiStatus.DISABLED)
             #     return self.tran(self._load1)
         elif sig == Signal.LOAD_MODAL_CANCEL:
-            return self.tran(self._load1)
-        return self.super(self._load)
+            return self.tran(self._load_preview)
+        return self.super(self._load_preview)
 
     @state
-    def _load_preview1(self, e):
-        print("-----------> _load_preview1 State")
+    def _load_preview2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
@@ -1653,30 +1667,6 @@ class PigssController(Ahsm):
     def _loop_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            # msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            # self.set_modal_info(
-            #     [], {
-            #         "show": True,
-            #         "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
-            #         "num_buttons": 3,
-            #         "buttons": {
-            #             1: {
-            #                 "caption": "OK",
-            #                 "className": "btn btn-success btn-large",
-            #                 "response": "modal_ok"
-            #             },
-            #             2: {
-            #                 "caption": "Start at Step 1",
-            #                 "className": "btn btn-success btn-large",
-            #                 "response": "modal_step_1"
-            #             },
-            #             3: {
-            #                 "caption": "Cancel",
-            #                 "className": "btn btn-danger btn-large",
-            #                 "response": "modal_close"
-            #             }
-            #         }
-            #     })
             return self.handled(e)
         elif sig == Signal.EXIT:
             # self.set_modal_info(["show"], False)

@@ -7,6 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { PlanService } from "../api/PlanService";
 import PlanLayout from "./Plan/PlanLayout";
 import RunLayout from "./Run/RunLayout";
+import { Plan } from "./types";
 
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -101,6 +102,7 @@ export class Main extends React.Component<any, any> {
     this.getPlanFileNames = this.getPlanFileNames.bind(this);
     this.isPlanning = this.isPlanning.bind(this);
     this.getLastRunningPlan = this.getLastRunningPlan.bind(this);
+    this.currentStepChange = this.currentStepChange.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -143,6 +145,16 @@ export class Main extends React.Component<any, any> {
       this.ws.send("CLOSE");
       this.ws.close(1000, "Client Initited Connection Termination");
     }
+    //Save Plan As Is with Current Step
+    const data = {
+      name: this.state.plan.plan_filename,
+      details: this.state.plan,
+      user: 'admin'
+    }
+    PlanService.overwriteFile(data).then(resposne => 
+      resposne.json().then(plan => {
+        console.log("Current Step Updated! ", plan)
+      }));
   }
 
   getDataViaApi = () => {
@@ -165,6 +177,13 @@ export class Main extends React.Component<any, any> {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
+      } else if ("plan" in o) {
+        if ("current_step" in o.plan) {
+          //TODO: Update current step
+          // const plan = {...this.state.plan}
+          // plan.current_step = o.plan["current_step"]
+          // this.setState({plan})
+        }
       }
     }
   }
@@ -197,13 +216,19 @@ export class Main extends React.Component<any, any> {
         }          
         else {
           const plan = { ...(JSON.parse(data['details'])) }
+          console.log("Last Running Plan ", plan)
           this.setState({plan: plan});
         }
 
       }))
   }
 
+  currentStepChange(p: Plan) {
+    this.setState({plan: p});
+  }
+
   render() {
+    console.log("HEY FROM MAIN ", this.state.plan)
     return (
         <div> 
             {this.state.isPlanning ? (
@@ -222,6 +247,7 @@ export class Main extends React.Component<any, any> {
                     plan={this.state.plan}
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
+                    currentStepChange={this.currentStepChange}
                 />
             )}
 
