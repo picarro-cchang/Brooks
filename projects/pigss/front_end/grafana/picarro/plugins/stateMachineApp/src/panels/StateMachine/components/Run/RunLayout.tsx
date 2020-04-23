@@ -360,7 +360,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
 
     return (
       <div style={{ textAlign: "center" }}>
-        <h1>Plan Loaded: {this.state.plan.plan_filename}</h1>
+        {/* <h1>Plan Loaded: {this.state.plan.plan_filename}</h1> */}
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
