@@ -3,13 +3,9 @@ import ReactList from "react-list";
 import { LoadPanelCommandOptions, Plan } from "../types";
 import { stringToJsRegex } from "@grafana/data";
 
-// changes.....
-// LOAD file names from service (?) or we can still have filenames in props, but now when filename gets clicked, it
-// gets info from service. If plan is being selected for run, we add it to props (in backend, perform same function to 'load a plan')
-// if plan is being selected for editing, we pass plan file name and info to state of edit panel
 interface State {
   plan: Plan;
-  fileNames: {}
+  fileNames: any[];
 }
 class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
   constructor(props) {
@@ -19,6 +15,16 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
       fileNames: this.props.fileNames
     }
   }
+
+  shouldComponentUpdate(nextProps) {
+    if (this.props.fileNames !== nextProps.fileNames) {
+      this.setState({
+        fileNames: nextProps.fileNames
+      });
+    }
+    return true;
+  }
+
 
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>

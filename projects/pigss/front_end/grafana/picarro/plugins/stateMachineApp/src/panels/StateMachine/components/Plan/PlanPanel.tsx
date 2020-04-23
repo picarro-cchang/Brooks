@@ -217,8 +217,9 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   componentDidMount() {
+    console.log("MOUNTING")
     const plan = this.props.getStateFromSavedData();
-    this.setState({plan: plan})
+    this.setState({plan: plan}, ()=>{console.log("----------------> ", plan)})
   }
 
   componentWillUnmount() {
@@ -408,6 +409,23 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     }
   }
 
+  exitPlanPanel() {
+    this.props.setModalInfo(true, `<h4 style='color: black'/>Are you sure you want to leave? Any unsaved changes will be lost.</h4>`, 2,
+    {
+      1: {
+        caption: "Continue",
+        className: "btn btn-success btn-large",
+        response: 'exit'
+      },
+      2: {
+        caption: "Cancel",
+        className: "btn btn-danger btn-large",
+        response: null
+      }
+    }, 'exitPlan')
+    
+  }
+
   focusComponent: any = null;
   focusTimer: any = null;
 
@@ -568,7 +586,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             className="cancel panel-plan-text"
             id="cancel-x"
             onClick={e => {
-              this.props.layoutSwitch();
+              this.exitPlanPanel();
             }}
           ></span>
           <h6 className="panel-plan-text">

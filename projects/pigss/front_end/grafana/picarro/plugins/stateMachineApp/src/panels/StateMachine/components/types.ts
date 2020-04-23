@@ -41,6 +41,7 @@ export interface PlanLayoutProps {
     layoutSwitch: () => void;
     fileNames: any[]
     getPlanFileNames: () => void;
+    loadedFileName: string;
 }
 
 export interface RunLayoutProps {
@@ -52,6 +53,9 @@ export interface RunLayoutProps {
     layoutSwitch: () => void;
     fileNames: any[]
     currentStepChange: (p: Plan) => void;
+    loadedFileName: string;
+    getPlanFileNames: () => void;
+    getLastRunningPlan: () => void;
 }
 
 export enum PanelTypes {
@@ -89,6 +93,7 @@ export interface LoadPanelCommandOptions {
     cancelLoadPlan: () => void;
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string) => void;
+    loadedFileName: string;
   }
 
   export interface PreviewPanelOptions {
@@ -100,6 +105,7 @@ export interface LoadPanelCommandOptions {
     fileNames: any[]
     cancelLoadPlan: () => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
+    loadedFileName: string;
   }
 
 
@@ -112,6 +118,7 @@ export interface LoadPanelCommandOptions {
     fileNames: any[]
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string) => void;
+    loadedFileName: string;
   }
 
 export interface PlanPanelOptions {
@@ -163,4 +170,5 @@ export interface PlanPanelOptions {
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
+    loadedFileName: string;
   }

@@ -41,10 +41,10 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
           }
           }
         }
+      }
       if (planRow.duration !== 0) {
         durationString = `${planRow.duration}`;
       }
-    }
 
     return (
       <div className="gf-form-inline" key={row}>

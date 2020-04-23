@@ -22,7 +22,8 @@ interface State {
       num_buttons: number, 
       buttons: {},
       action: string
-    }
+    },
+    loadedFileName: string
 }
 export const storageKey = 'planStorage';
 
@@ -43,7 +44,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           num_buttons: 0,
           buttons: {},
           action: ""
-        }
+        },
+        loadedFileName: this.props.loadedFileName
     }
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
@@ -56,6 +58,16 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.updateFileName = this.updateFileName.bind(this);
     this.setModalInfo = this.setModalInfo.bind(this);
   }
+
+  // shouldComponentUpdate(nextProps) {
+  //   if (this.props.loadedFileName !== nextProps.loadedFileName) {
+  //     console.log("New FileName ", nextProps.loadedFileName)
+  //     this.setState({
+  //       loadedFileName: nextProps.loadedFileName
+  //     });
+  //   }
+  //   return true;
+  // }
 
   setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
     const modal = {
@@ -127,13 +139,13 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
         //TODO: Need to refresh plan
-        if (data["message"]) {
-          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+        // if (data["message"]) {
+          this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
           this.props.getPlanFileNames();
-        } else {
-          this.props.getPlanFileNames();
+        // } else {
+        //   this.props.getPlanFileNames();
           this.getPlanFromFileName(fileName);
-        }
+        // }
       })
     );
   }
@@ -168,7 +180,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       } else {
         console.log("Plan Deleted! ", data)
         this.props.getPlanFileNames();
-        this.forceUpdate();
       }
     })
   );
@@ -208,6 +219,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   }
 
   render() {
+    console.log("_____________________L Loaded File Name ", this.props.loadedFileName)
     const bankPanelsEdit = [];
     if (("bank" in this.props.uistatus) as any) {
       for (let i = 1; i <= 4; i++) {
@@ -262,6 +274,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             updatePanel={this.updatePanelToShow}
             fileNames={this.props.fileNames}
             deleteFile={this.deleteFile}
+            loadedFileName={this.props.loadedFileName}
           />
         );
         break;
@@ -284,31 +297,82 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         break;
     }
 
-    const modalButtons = [];
-    for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
-      const modal_info = this.state.modal_info;
-      if (modal_info.action == "save") {
-        const response = modal_info.buttons[i].response
-        if (response != null) {
+    const modalButtons = []
+    switch (this.state.modal_info.action) {
+      case "save":
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
+          const response = modal_info.buttons[i].response
+          if (response != null) {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.planSaved(response.filename, response.plan)
+                  this.updateFileName(false)
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+            }
+        }
+        break;
+      case "saveOverwrite":
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
+          const response = modal_info.buttons[i].response
+          if (response != null ) {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.planOverwrite(response.plan)
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          }
+        }
+        break;
+      case "validation":
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
           modalButtons.push(
             <button
               className={modal_info.buttons[i].className}
               style={{ margin: "10px" }}
               onClick={() => {
-                this.planSaved(response.filename, response.plan)
-                this.updateFileName(false)
-                this.setModalInfo(false, "", 0, {}, "")
-              }}
-            >
-              {modal_info.buttons[i].caption}
-            </button>
-          );
-        } else {
-          modalButtons.push(
-            <button
-              className={modal_info.buttons[i].className}
-              style={{ margin: "10px" }}
-              onClick={() => {
+                // this.planSaved(info[0], info[1])
                 this.setModalInfo(false, "", 0, {}, "")
               }}
             >
@@ -316,35 +380,42 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             </button>
           );
         }
-      } else if (modal_info.action == "saveOverwrite") {
-        const response = modal_info.buttons[i].response
-        if (response != null ) {
-          modalButtons.push(
-            <button
-              className={modal_info.buttons[i].className}
-              style={{ margin: "10px" }}
-              onClick={() => {
-                this.planOverwrite(response.plan)
-                this.setModalInfo(false, "", 0, {}, "")
-              }}
-            >
-              {modal_info.buttons[i].caption}
-            </button>
-          );
-        } else {
-          modalButtons.push(
-            <button
-              className={modal_info.buttons[i].className}
-              style={{ margin: "10px" }}
-              onClick={() => {
-                this.setModalInfo(false, "", 0, {}, "")
-              }}
-            >
-              {modal_info.buttons[i].caption}
-            </button>
-          );
+        break;
+      case 'exitPlan':
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
+          const response = modal_info.buttons[i].response
+          if (response != null ) {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.props.layoutSwitch();
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          }
         }
-      } else if (modal_info.action == "validation") {
+        break;
+      default:
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
         modalButtons.push(
           <button
             className={modal_info.buttons[i].className}
@@ -357,22 +428,23 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             {modal_info.buttons[i].caption}
           </button>
         );
-
-      } else {
-        modalButtons.push(
-          <button
-            className={modal_info.buttons[i].className}
-            style={{ margin: "10px" }}
-            onClick={() => {
-              // this.planSaved(info[0], info[1])
-              this.setModalInfo(false, "", 0, {}, "")
-            }}
-          >
-            {modal_info.buttons[i].caption}
-          </button>
-        );
-      }
+        }
+        break;
     }
+    // for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+    //   const modal_info = this.state.modal_info;
+    //   if (modal_info.action == "save") {
+        
+    //   } else if (modal_info.action == "saveOverwrite") {
+        
+        
+    //   } else if (modal_info.action == "validation") {
+        
+
+    //   } else {
+        
+    //   }
+    // }
     return (
       <div style={{ textAlign: "center" }}>   
         <div className="container-fluid">

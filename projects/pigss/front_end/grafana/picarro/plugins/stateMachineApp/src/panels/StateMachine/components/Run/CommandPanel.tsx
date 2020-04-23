@@ -12,22 +12,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
     let disabled = true;
     const status_dict = this.props.uistatus as any;
     if (element in status_dict) {
-      if (element == "plan_loop" || element == "plan_run") {
-        console.log(element)
-        if (this.props.plan == null) {
-          disabled = true;
-        } else if (Object.keys(this.props.plan.steps).length == 0) {
-          disabled = true;
-        }else {
-          disabled = false;
-        }
-      } else if(element == "load") {
-        if (status_dict["plan_loop"] == "ACTIVE" || status_dict["plan_run"] == "ACTIVE") {
-          disabled = true;
-        } else { disabled = false}
-      } else {
         disabled = status_dict[element] === "DISABLED";
-      }
     }
     return disabled;
   };
@@ -105,7 +90,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               value="load"
               className={
                 "btn btn-large btn-command btn-load " +
-                this.getClassNameOpt("plan")
+                this.getClassNameOpt("load")
               }
             >
               Load Plan

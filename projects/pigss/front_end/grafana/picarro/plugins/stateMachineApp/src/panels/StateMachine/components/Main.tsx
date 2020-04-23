@@ -95,7 +95,8 @@ export class Main extends React.Component<any, any> {
     bankAdd: {},
     isLoaded: false,
     fileNames: [],
-    isPlanning: false
+    isPlanning: false,
+    loadedFileName: "",
   };
   constructor(props) {
     super(props);
@@ -132,10 +133,10 @@ export class Main extends React.Component<any, any> {
     }
   };
 
-  componentDidMount() {
-    this.getDataViaApi();
-    this.getPlanFileNames();
-    this.getLastRunningPlan();
+  async componentDidMount() {
+    await this.getDataViaApi();
+    await this.getPlanFileNames();
+    await this.getLastRunningPlan();
     this.attachWSMethods(this.ws);
   }
 
@@ -212,12 +213,12 @@ export class Main extends React.Component<any, any> {
     PlanService.getLastRunning().then((response: any) => 
       response.json().then(data => {
         if (data["message"]) {
-          console.log("No Plan I suppsoe")
+          console.log("No Plan I suppose")
         }          
         else {
           const plan = { ...(JSON.parse(data['details'])) }
           console.log("Last Running Plan ", plan)
-          this.setState({plan: plan});
+          this.setState({plan: plan, loadedFileName: data['name']}, ()=>{console.log("--------> Last Running FileName ", this.state.loadedFileName)});
         }
 
       }))
@@ -228,7 +229,6 @@ export class Main extends React.Component<any, any> {
   }
 
   render() {
-    console.log("HEY FROM MAIN ", this.state.plan)
     return (
         <div> 
             {this.state.isPlanning ? (
@@ -239,6 +239,7 @@ export class Main extends React.Component<any, any> {
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
                     getPlanFileNames={this.getPlanFileNames}
+                    loadedFileName={this.state.loadedFileName}
                 />
             ):(
                 <RunLayout
@@ -248,6 +249,9 @@ export class Main extends React.Component<any, any> {
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
                     currentStepChange={this.currentStepChange}
+                    loadedFileName={this.state.loadedFileName}
+                    getLastRunningPlan={this.getLastRunningPlan}
+                    getPlanFileNames={this.getPlanFileNames}
                 />
             )}
 

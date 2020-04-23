@@ -738,11 +738,11 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["standby"], UiStatus.READY)
             self.set_status(["identify"], UiStatus.READY)
-            self.set_status(["run"], UiStatus.READY)
-            self.set_status(["plan"], UiStatus.READY)
+            self.set_status(["run"], UiStatus.DISABLED)
+            self.set_status(["plan"], UiStatus.DISABLED)
             self.set_status(["load"], UiStatus.READY)
-            self.set_status(["plan_run"], UiStatus.READY)
-            self.set_status(["plan_loop"], UiStatus.READY)
+            self.set_status(["plan_run"], UiStatus.DISABLED)
+            self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["edit"], UiStatus.READY)
             for bank in self.all_banks:
@@ -1369,13 +1369,11 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             return self.handled(e)
         elif sig == Signal.LOAD_MODAL_OK:
+            #TODO: Validate Plan from here?
             # self.plan_error = self.validate_plan(check_avail=True)
-            # self.plan_error = False
             # if True or not self.plan_error.error:
             self.set_status(["plan_run"], UiStatus.READY)
             self.set_status(["plan_loop"], UiStatus.READY)
-            # self.set_plan(["plan_filename"], e.value["name"])
-            # self.plan = e.value["plan"]
             self.temp_plan = e.value["plan"]
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
             return self.tran(self._load_preview2)
@@ -1523,6 +1521,7 @@ class PigssController(Ahsm):
     def _run_plan(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.set_status(["load"], UiStatus.DISABLED)
             self.set_status(["plan_run"], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1561,6 +1560,7 @@ class PigssController(Ahsm):
     def _run_plan2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.set_status(["load"], UiStatus.DISABLED)
             self.set_status(["plan_run"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]
@@ -1691,6 +1691,7 @@ class PigssController(Ahsm):
     def _loop_plan2(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.set_status(["load"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]

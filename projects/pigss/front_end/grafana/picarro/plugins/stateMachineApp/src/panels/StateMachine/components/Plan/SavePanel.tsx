@@ -19,6 +19,37 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
     this.setFileName = this.setFileName.bind(this)
   }
 
+  validatePlanName(fileName: string) {
+    if (fileName.length <= 0) {
+      this.props.setModalInfo(true, `<h4 style='color: black'>Invalid Plan Name length.</h4>`, 0, {}, 'validation')
+      return false
+    } else if (this.props.fileNames.includes(fileName)) {
+      this.props.setModalInfo(true, `<h4 style='color: black'>Plan Name Already Taken.</h4>`, 0, {}, 'validation')
+      return false
+    }
+    return true
+  }
+
+  savePlanFileName(fileName: string, plan: Plan) {
+    const valid = this.validatePlanName(fileName)
+    if(valid){
+      this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}?</div>`, 2, {
+        1: {
+          caption: "Save",
+          className: "btn btn-success btn-large",
+          response: {filename: fileName, plan: plan}
+        },
+        2: {
+          caption: "Cancel",
+          className: "btn btn-danger btn-large",
+          response: null
+        }
+      }, 'save')
+    } else {
+      
+    }
+  }
+
   componentDidMount() {
     const plan = this.props.getStateFromSavedData();
     this.setState({plan: plan})
@@ -27,7 +58,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
   setFileName(e) {
     const plan = {...this.state.plan}
     plan.plan_filename = e.target.value
-    this.setState({fileName: e.target.value, plan});
+    this.setState({fileName: e.target.value.replace(/\s/g, ''), plan});
   }
 
   renderItem = (index: number, key: ReactText) => (
@@ -72,6 +103,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
             onChange={e => {
+              e.target.value = e.target.value.replace(/\s/g, '')
               this.setFileName(e)
             }}
             maxLength={28}
@@ -102,21 +134,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
             <button
               type="button"
               id="save-btn"
-              onClick={e => {
-                this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}?</div>`, 2, {
-                  1: {
-                    caption: "Save",
-                    className: "btn btn-success btn-large",
-                    response: {filename: this.state.fileName, plan: this.state.plan}
-                  },
-                  2: {
-                    caption: "Cancel",
-                    className: "btn btn-danger btn-large",
-                    response: null
-                  }
-                }, 'save')
-                
-              }}
+              onClick={e => {this.savePlanFileName(this.state.fileName, this.state.plan)}}
               className={"btn btn-group-2 btn-green"}
             >
               OK

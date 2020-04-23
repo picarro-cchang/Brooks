@@ -19,7 +19,8 @@ interface State {
       num_buttons: number, 
       buttons: {},
       action: string
-    }
+    },
+    loadedFileName: string;
 }
 
 export class RunLayout extends PureComponent<RunLayoutProps, State> {
@@ -36,15 +37,30 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         num_buttons: 0,
         buttons: {},
         action: ""
-      }
+      },
+      loadedFileName: this.props.loadedFileName
     }
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
-    // this.loadPlan = this.loadPlan.bind(this);
     this.cancelLoadPlan = this.cancelLoadPlan.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
     this.setModalInfo = this.setModalInfo.bind(this);
   }
+
+  shouldComponentUpdate(nextProps) {
+    if (this.props.loadedFileName !== nextProps.loadedFileName) {
+      console.log("New FileName ", nextProps.loadedFileName)
+      this.setState({
+        loadedFileName: nextProps.loadedFileName
+      });
+      this.getLastRunningPlan();
+    } else if (this.props.fileNames !== nextProps.fileNames) {
+      console.log("New List of FileNames ", nextProps.fileNames)
+      this.setState({fileNames: nextProps.fileNames})
+    }
+    return true;
+  }
+
   setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
     console.log("Setting Modal for ", action)
     const modal = {
@@ -76,16 +92,22 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   deleteFile(fileName) {
     PlanService.deleteFile(fileName).then((response: any) => 
     response.json().then(data => {
-      console.log("Plan Deleted! ", data)
       if (data["message"]) {
         this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+        this.props.getPlanFileNames();
+        this.forceUpdate();
       } 
+      else {
+        console.log("Plan Deleted! ", data)
+        this.props.getPlanFileNames();
+      }
       //TODO: need to refresh plan file names
     })
   );
   }
 
   async fileIsRunning(plan: Plan) {
+    //Function that Changes is_running to 0 or 1 for plans that are loaded and run 
     console.log("New Plan ", plan)
     const newPlan = {
       name: plan.plan_filename,
@@ -135,73 +157,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   } 
 
   cancelLoadPlan(){
-    let plan = {
-      max_steps: 32,
-      panel_to_show: 0,
-      current_step: 1,
-      focus: { row: 0, column: 0 },
-      last_step: 0,
-      steps: {},
-      num_plan_files: 0,
-      plan_files: {},
-      plan_filename: "",
-      bank_names: {
-        1: {
-          name: "",
-          channels: {
-            1: "Port 1",
-            2: "Port 2",
-            3: "Port 3",
-            4: "Port 4",
-            5: "Port 5",
-            6: "Port 6",
-            7: "Port 7",
-            8: "Port 8"
-          }
-        },
-        2: {
-          name: "",
-          channels: {
-            1: "Port 9",
-            2: "Port 10",
-            3: "Port 11",
-            4: "Port 12",
-            5: "Port 13",
-            6: "Port 14",
-            7: "Port 15",
-            8: "Port 16"
-          }
-        },
-        3: {
-          name: "",
-          channels: {
-            1: "Port 17",
-            2: "Port 18",
-            3: "Port 19",
-            4: "Port 20",
-            5: "Port 21",
-            6: "Port 22",
-            7: "Port 23",
-            8: "Port 24"
-          }
-        },
-        4: {
-          name: "",
-          channels: {
-            1: "Port 25",
-            2: "Port 26",
-            3: "Port 27",
-            4: "Port 28",
-            5: "Port 29",
-            6: "Port 30",
-            7: "Port 31",
-            8: "Port 32"
-          }
-        }
-      }
-    }
-    //set to previous state
-    this.setState({plan})
+    //set old state?
+    //disabled run and loop
   }
 
   getLastRunningPlan() {
@@ -219,9 +176,9 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       }))
   }
 
-  async componentDidMount() {
-    await this.getLastRunningPlan();
-  }
+  // async componentDidMount() {
+  //   await this.getLastRunningPlan();
+  // }
 
   render() {
     console.log("Plan on Run Layout ", this.state.plan)
@@ -236,6 +193,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             updatePanel={this.updatePanelToShow}
             layoutSwitch={this.props.layoutSwitch}
             setModalInfo={this.setModalInfo}
+            loadedFileName={this.state.loadedFileName}
           />
         );
         break;
@@ -251,6 +209,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             cancelLoadPlan={this.cancelLoadPlan}
             deleteFile={this.deleteFile}
             getPlanFromFileName={this.getPlanFromFileName}
+            loadedFileName={this.state.loadedFileName}
           />
         );
         break;
@@ -275,6 +234,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             fileNames={this.state.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
             setModalInfo={this.setModalInfo}
+            loadedFileName={this.state.loadedFileName}
           />
         )
     }
@@ -308,7 +268,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             className={modal_info.buttons[i].className}
             style={{ margin: "10px" }}
             onClick={() => {
-              this.updatePanelToShow(0)
+              this.updatePanelToShow(0);
               // this.props.currentStepChange(response.plan);
               this.props.ws_sender({
                 element: "load_modal_ok",
@@ -347,9 +307,9 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               className={modal_info.buttons[i].className}
               style={{ margin: "10px" }}
               onClick={() => {
-                this.updatePanelToShow(0)
+                this.updatePanelToShow(0);
+                this.props.getLastRunningPlan();
                 this.fileIsRunning(response.plan);
-                //TODO: Send Plan Info to BackEnd 
                 this.props.ws_sender({
                   element: "modal_step_1",
                   plan: response.plan
@@ -368,6 +328,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               onClick={() => {
                 this.updatePanelToShow(0)
                 this.fileIsRunning(response.plan);
+                this.props.getLastRunningPlan();
+
                 //TODO: Send Plan Info to BackEnd 
                 this.props.ws_sender({
                   element: "modal_ok",
