@@ -30,52 +30,6 @@ export class PlanInformationPanel extends Component<Props, State> {
     };
   }
 
-
-  decrementTime = () => {
-    if (this.state.timeRemaining > 0) {
-      this.setState(({ timeRemaining }) => ({
-        timeRemaining: timeRemaining - 1
-      }))
-    } else {
-      clearInterval(this.timer!)
-    }
-  }
-
-  componentWillUnmount() {
-    console.log("UNMOUNT")
-    // clearInterval(this.timer);
-    //need to save state of it when leaving page otherwise it restarts
-  }
-
-  componentDidUpdate(prevProps, prevState) {
-    if (prevState.timeStart !== this.state.timeStart) { //only changes if time is d
-      this.setState({timeRemaining: this.state.timeStart});
-      clearInterval(this.timer);
-      this.timer = setInterval(() => {
-          this.decrementTime();
-      }, 1000);
-    } else if (prevState.plan.current_step !== this.state.plan.current_step) {
-      this.setState({timeRemaining: this.state.timeStart});
-      clearInterval(this.timer);
-      this.timer = setInterval(() => {
-        this.decrementTime();
-      }, 1000);
-    }
-  }
-  
-  static getDerivedStateFromProps(nextProps, prevState){
-    if(nextProps.plan.current_step !== prevState.plan.current_step){      
-      const cu = prevState.plan.current_step
-      return { plan: {
-        ...prevState.plan,
-        current_step: nextProps.plan.current_step
-      }};
-    } else if (nextProps.uistatus.plan_loop !== prevState.uistatus.plan_loop || nextProps.uistatus.plan_run !== prevState.uistatus.plan_run) {
-      return {timeStart : nextProps.timer};
-    }
-    else return null;
-  }
-
   getBankChannelFromStep(step: number, nextStep: number) {
     const stepInfo = this.props.plan.steps[String(step)];
     const nextStepInfo = this.props.plan.steps[String(nextStep)];
@@ -141,16 +95,9 @@ export class PlanInformationPanel extends Component<Props, State> {
     }
   }
 
-  renderer =({seconds}) => {
-    return <span>{seconds}</span>
-  }
-
   render() {
     if (this.props.plan.last_step !== 0) {
       const currentStep = this.props.plan.current_step;
-      const currentDuration = this.props.plan.steps[
-        String(this.props.plan.current_step)
-      ].duration;
       let nextStep = 0;
       if (currentStep == this.props.plan.last_step) {
         nextStep = 1;
@@ -165,10 +112,12 @@ export class PlanInformationPanel extends Component<Props, State> {
           {fileNameUpTop ? (
             <div className="plan-info">
               Running Plan: {this.props.plan.plan_filename}{" "} Current Port: {steps.currentStepString}{" "}
-              Duration: {this.state.timeRemaining}{" "} Next Port: {steps.nextStepString} 
+              Duration: {this.props.timer}{" "} Next Port: {steps.nextStepString} 
             </div>
           ) : (
-            <div className="plan-info">Running Plan: No Plan Running</div>
+            <div>
+              <div className="plan-info">Loaded Plan: {this.props.plan.plan_filename}</div>
+          </div>
           )}
         </div>
       );

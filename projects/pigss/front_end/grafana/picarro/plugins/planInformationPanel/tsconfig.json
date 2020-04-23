@@ -9,5 +9,6 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-  }
+  },
+  "exclude": ["src/panels/components/__tests__/**"]
 }

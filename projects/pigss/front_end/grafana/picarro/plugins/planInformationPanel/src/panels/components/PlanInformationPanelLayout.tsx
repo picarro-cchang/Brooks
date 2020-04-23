@@ -95,40 +95,21 @@ export class PlanInformationPanelLayout extends Component<any, any> {
     }
 
     timeout = 250;
-  // attachWSMethods = (ws:WebSocket) => {
-  //   this.ws.onmessage = evt => {
-  //     // on receiving a message, add it to the list of messages
-  //     this.handleData(evt.data);
-  //   };
-
-  //   this.ws.onclose = (event) => {
-  //     if (event.code !== 1000) {
-  //       this.setupWSComm();
-  //     }
-  //   };
-  // }
-
-  componentWillUnmount() {
-    // console.log('Component will unmount');
-    // if (this.ws && this.ws.readyState === 1) {
-    //   this.ws.send('CLOSE');
-    //   this.ws.close(1000, 'Client Initited Connection Termination');
-    // }
-  }
-
+    ws = new WebSocket(socketURL);
     handleData(o: any) {
         if (this.state.initialized) {
           if ("uistatus" in o) {
             const uistatus = deepmerge(this.state.uistatus, o.uistatus);
+            if (o.uistatus["timer"]) {
+              console.log("UISTATUS ", o.uistatus["timer"])
+              this.setState({timer: o.uistatus["timer"]})
+            }
+            
             this.setState({ uistatus });
           } else if ("plan" in o) {
             const plan = deepmerge(this.state.plan, o.plan);
             this.setState({ plan });
             const current_step = this.state.plan.current_step;
-            console.log("Current Step: ", current_step);
-            const duration = this.state.plan.steps[String(this.state.plan.current_step)].duration;
-            console.log("Duration: ", duration)
-            this.setState({timer: duration})
           } 
         }
       }
@@ -158,23 +139,31 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         this.connect();
       }
 
+      componentWillUnmount() {
+      console.log('Component will unmount');
+      if (this.ws && this.ws.readyState === 1) {
+        this.ws.send('CLOSE');
+        this.ws.close(1000, 'Client Initited Connection Termination');
+      }
+    }
+
       connect = () => {
-        var ws = new WebSocket(socketURL);
+        
         let that = this;
         var connectInterval;
 
-        ws.onopen = () => {
-          this.setState({ws: ws});
+        this.ws.onopen = () => {
+          this.setState({ws: this.ws});
           that.timeout = 250;
           clearTimeout(connectInterval)
         }
 
-        ws.onmessage = evt => {
+        this.ws.onmessage = evt => {
           const message = JSON.parse(evt.data)
           this.handleData(message)
         }
 
-        ws.onclose = (e) => {
+        this.ws.onclose = (e) => {
           console.log(`Socket is closed. Reconnect will be attempted in ${Math.min(
             10000 / 1000,
             (that.timeout + that.timeout) / 1000
@@ -190,10 +179,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         if (!ws || ws.readyState == WebSocket.CLOSED) this.connect(); //check if websocket instance is closed, if so call `connect` function.
     };
 
-
-
     render() {
-      console.log("Timer: ", this.state.timer)
         return (
             <div>
                 {this.state.initialized ? (
