@@ -112,10 +112,10 @@ export class PlanInformationPanel extends Component<Props, State> {
         <div id="inner">
           {fileNameUpTop ? (
             <div className="row info-row">
-              <div className={"col text-center vr"} id="plan">
+              <div className={"col text-center vr hr margin"} id="plan">
                 <span className="titles">Running Plan: </span><span className={"values"}>{this.props.plan.plan_filename}{" "}</span> 
               </div>
-              <div className={"col text-center center-info vr"}>
+              <div className={"col text-center center-info vr hr margin"}>
               <div className="col text-center" id="curr-port">
               <span className="titles">Current Port: </span><span className={"values"}>{steps.currentStepString}{" "} </span>
                 </div>
@@ -123,7 +123,7 @@ export class PlanInformationPanel extends Component<Props, State> {
                 <span className="titles">Duration: <span className={"values"}>{this.props.timer}{" "}</span> seconds</span>
                 </div>
               </div>
-              <div className="col text-center" id="next-port">
+              <div className="col text-center vr hr margin" id="next-port">
               <span className="titles">Next Port: </span><span className={"values"}> {steps.nextStepString}{" "} </span>
                </div>
             </div>

@@ -9,12 +9,21 @@
       padding-right: 10px;
   }
   
-  .vr {
-    /* border-right: 3px solid #037733; */
-    border-right: 4px solid #656565;
-  }
-  .info-row {
+  .vr, .hr {
     background-color: #212124;
+    color: #ccc;
+    padding: 12px;
+    font-size: 1.2em;
+    border-radius: 4px;
+    margin: 5px;
+  }
+
+  .margin {
+    margin: 4px;
+    border-radius: 6px;
+  }
+  
+  .info-row {
     padding: 10px;
     border-radius: 4px;
   }
@@ -33,7 +42,7 @@
   }
   
   #plan, #next-port {
-    padding-top: 17px;
+    padding-top: 30px;
     padding-right: 10px;
     padding-left: 10px;  }
 
