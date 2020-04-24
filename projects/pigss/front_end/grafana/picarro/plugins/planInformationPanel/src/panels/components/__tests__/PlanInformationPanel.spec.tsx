@@ -16,22 +16,12 @@ const defaultProps: Props = {
 };
 
 describe("<PlanInformationPanel />", () => {
-    const componentDidUpdate = jest.spyOn(PlanInformationPanel.prototype, "componentDidUpdate");
     const getBankChannelFromStep = jest.spyOn(PlanInformationPanel.prototype, "getBankChannelFromStep");
     const wrapper = mount(<PlanInformationPanel {...defaultProps}/>);
     const instance = wrapper.instance() as PlanInformationPanel;
 
     it("Snapshot", () => {
         expect(wrapper).toMatchSnapshot();
-        console.log(wrapper.props().plan.current_step)
-    });
-
-    it("componentDidUpdate", () => {
-        const plan = wrapper.props().plan
-        plan.current_step = 7;
-        wrapper.setProps({plan})
-        expect(wrapper.props().plan.current_step).toEqual(7);
-        expect(componentDidUpdate).toHaveBeenCalled();
     });
 
     it("getBankChannelFromStep", () => {
@@ -39,6 +29,28 @@ describe("<PlanInformationPanel />", () => {
         plan.current_step = 12;
         wrapper.setProps({plan});
         expect(getBankChannelFromStep).toHaveBeenCalled();
+        plan.current_step = 3;
+        wrapper.setProps({plan});
+        expect(getBankChannelFromStep).toHaveBeenCalled();
+        plan.current_step = 2;
+        wrapper.setProps({plan});
+        expect(getBankChannelFromStep).toHaveBeenCalled();
+    });
+
+    it("ACTIVE Plan", () => {
+        const uistatus = wrapper.props().uistatus;
+        uistatus.plan_loop = "ACTIVE";
+        wrapper.setProps({uistatus});
+        expect(wrapper).toMatchSnapshot();
+    });
+
+    it("Last Step = 0", () => {
+        const plan = wrapper.props().plan;
+        plan.last_step = 0;
+        wrapper.setProps({plan});
+        expect(wrapper).toMatchSnapshot();
+        const div = wrapper.find('div')
+        expect(div.text()).toEqual('No Plan Loaded')
     });
  
 });

@@ -48,8 +48,8 @@
       "3": {
         "banks": {
           "1": {
-            "clean": 0,
-            "chan_mask": 8
+            "clean": 1,
+            "chan_mask": 0
           },
           "3": {
             "clean": 0,

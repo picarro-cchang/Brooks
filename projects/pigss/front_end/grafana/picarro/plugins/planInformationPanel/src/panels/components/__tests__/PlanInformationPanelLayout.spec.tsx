@@ -10,20 +10,25 @@ import mockPlan from "./../../api/__mocks__/mockPlan.json";
 
 jest.mock("./../../api/API.ts");
 
-const apiLoc = `${window.location.hostname}:8000/controller`;
-const socketURL = `ws://localhost:1234/ws`;
+const socketURL = `ws://localhost:1234`;
 const mockWS = jest.fn(element => {
   return element;
 });
-const server = new WS(socketURL);
+const server = new WS(socketURL, { jsonProtocol: true });
 const client = new WebSocket(socketURL);
 
 describe("<PlanInformationPanelLayout />", () => {
+  const handleData = jest.spyOn(PlanInformationPanelLayout.prototype, "handleData");
   const wrapper = mount(<PlanInformationPanelLayout />);
   const instance = wrapper.instance() as PlanInformationPanelLayout;
 
   it("Snapshot", () => {
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("Websocket Send Message", async () => {
+    await server.connected;
+    server.send({"uistatus": {"timer": 0}})
+  })
  
 });

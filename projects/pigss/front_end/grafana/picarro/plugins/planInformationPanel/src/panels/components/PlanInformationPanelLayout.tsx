@@ -159,6 +159,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         }
 
         this.ws.onmessage = evt => {
+          console.log("MESSAGE ", evt.data)
           const message = JSON.parse(evt.data)
           this.handleData(message)
         }
