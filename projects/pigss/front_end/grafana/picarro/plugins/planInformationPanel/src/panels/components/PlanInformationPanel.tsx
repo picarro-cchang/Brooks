@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import Countdown from 'react-countdown';
+import Countdown from "react-countdown";
 import { Plan } from "./../types";
-import "./planInformation.css"
+import "./planInformation.css";
 
 interface State {
   uistatus: { [key: string]: any };
@@ -27,7 +27,7 @@ export class PlanInformationPanel extends Component<Props, State> {
       uistatus: this.props.uistatus,
       plan: this.props.plan,
       timeStart: this.props.timer,
-      timeRemaining: this.props.timer
+      timeRemaining: this.props.timer,
     };
   }
 
@@ -107,37 +107,50 @@ export class PlanInformationPanel extends Component<Props, State> {
       }
       const steps = this.getBankChannelFromStep(currentStep, nextStep);
       const fileNameUpTop = this.planFileNameUpTop();
-      
+
       return (
         <div id="inner">
           {fileNameUpTop ? (
             <div className="row info-row">
-              <div className={"col text-center vr hr margin"} id="plan">
-                <span className="titles">Running Plan: </span><span className={"values"}>{this.props.plan.plan_filename}{" "}</span> 
+              <div className={"col text-center vr"} id="plan">
+                <span className="titles">Running Plan: </span>
+                <span className={"values"}>
+                  {this.props.plan.plan_filename}{" "}
+                </span>
               </div>
-              <div className={"col text-center center-info vr hr margin"}>
-              <div className="col text-center" id="curr-port">
-              <span className="titles">Current Port: </span><span className={"values"}>{steps.currentStepString}{" "} </span>
+              <div className={"col text-center center-info vr"}>
+                <div className="col text-center" id="curr-port">
+                  <span className="titles">Current Port: </span>
+                  <span className={"values"}>{steps.currentStepString} </span>
                 </div>
                 <div className="col text-center" id="timer">
-                <span className="titles">Duration: <span className={"values"}>{this.props.timer}{" "}</span> seconds</span>
+                  <span className="titles">
+                    Duration:{" "}
+                    <span className={"values"}>{this.props.timer} </span>{" "}
+                    seconds
+                  </span>
                 </div>
               </div>
-              <div className="col text-center vr hr margin" id="next-port">
-              <span className="titles">Next Port: </span><span className={"values"}> {steps.nextStepString}{" "} </span>
-               </div>
+              <div className="col text-center" id="next-port">
+                <span className="titles">Next Port: </span>
+                <span className={"values"}> {steps.nextStepString} </span>
+              </div>
             </div>
           ) : (
             <div>
-              <div className="info-row" id="quick-info">Loaded Plan: {this.props.plan.plan_filename}</div>
-          </div>
+              <div className="info-row" id="quick-info">
+                Loaded Plan: {this.props.plan.plan_filename}
+              </div>
+            </div>
           )}
         </div>
       );
     } else {
       return (
-        <div className="info-row" id="quick-info">
-          No Plan Loaded
+        <div id="inner">
+          <div className="info-row" id="quick-info">
+            No Plan Loaded
+          </div>
         </div>
       );
     }
