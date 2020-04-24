@@ -7,7 +7,7 @@
 
 .center-info {
   padding: 4px 0 4px 20px;
-  margin-right: 10px;
+  /* margin-right: 10px; */
   flex: 1;
 }
 
@@ -24,8 +24,8 @@
 
 .info-row {
   background-color: #585858;
-  margin-bottom: 10px;
   border-radius: 4px;
+  margin: 5px;
 }
 
 .info-row-2 {
@@ -47,14 +47,8 @@
   color: #fd8f08;
 }
 
-#plan {
-  padding-top: 17px;
-  padding-right: 10px;
-  padding-left: 10px;
-}
-
-#next-port {
-  padding-top: 30px;
+#plan , #next-port {
+  padding-top: 20px;
   padding-right: 10px;
   padding-left: 10px;
 }
@@ -73,10 +67,7 @@
   flex: 1
 }
 
-#curr-port-time {
-  padding: inherit;
-}
-
-#curr-port-line {
-  padding: inherit;
+.width {
+  width: 95%;
+  margin: 0 auto;
 }

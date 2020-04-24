@@ -179,7 +179,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
 
   render() {
     return (
-      <div id="outer">
+      <div>
         {this.state.initialized ? (
           <PlanInformationPanel
             uistatus={this.state.uistatus}
