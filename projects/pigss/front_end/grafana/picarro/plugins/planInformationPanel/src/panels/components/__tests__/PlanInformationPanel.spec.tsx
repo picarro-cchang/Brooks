@@ -51,7 +51,7 @@ describe("<PlanInformationPanel />", () => {
     plan.last_step = 0;
     wrapper.setProps({ plan });
     expect(wrapper).toMatchSnapshot();
-    const div = wrapper.find("div");
+    const div = wrapper.find("div").at(1);
     expect(div.text()).toEqual("No Plan Loaded");
   });
 });

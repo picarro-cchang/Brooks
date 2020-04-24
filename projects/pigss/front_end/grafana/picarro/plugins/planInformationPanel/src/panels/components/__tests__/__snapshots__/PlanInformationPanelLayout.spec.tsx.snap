@@ -2,6 +2,8 @@
 
 exports[`<PlanInformationPanelLayout /> Snapshot 1`] = `
 <PlanInformationPanelLayout>
-  <div />
+  <div
+    id="outer"
+  />
 </PlanInformationPanelLayout>
 `;

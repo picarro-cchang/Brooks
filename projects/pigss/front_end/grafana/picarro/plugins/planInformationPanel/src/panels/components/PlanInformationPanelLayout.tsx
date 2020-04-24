@@ -102,7 +102,6 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         if (o.uistatus.timer) {
-          console.log("UISTATUS ", o.uistatus.timer);
           this.setState({ timer: o.uistatus.timer });
         }
 
@@ -159,7 +158,6 @@ export class PlanInformationPanelLayout extends Component<any, any> {
     };
 
     this.ws.onmessage = (evt) => {
-      console.log("MESSAGE ", evt.data);
       const message = JSON.parse(evt.data);
       this.handleData(message);
     };
