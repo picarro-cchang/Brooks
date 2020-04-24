@@ -17,17 +17,13 @@
   flex: 1;
 }
 
-.vr {
-  border-right: 4px solid #656565;
-}
-
 .br {
   width: 100%;
   padding: 10px;
 }
 
 .info-row {
-  background-color: #3e3e3ed9;
+  background-color: #585858;
   margin-bottom: 10px;
   border-radius: 4px;
 }

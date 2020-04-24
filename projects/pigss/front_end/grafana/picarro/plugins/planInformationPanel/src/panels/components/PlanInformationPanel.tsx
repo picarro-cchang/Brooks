@@ -1,5 +1,4 @@
 import React, { Component } from "react";
-import Countdown from "react-countdown";
 import { Plan } from "./../types";
 import "./planInformation.css";
 

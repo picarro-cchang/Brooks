@@ -4,9 +4,6 @@ import deepmerge from "deepmerge";
 import { Plan } from "../types";
 import API from "./../api/API";
 import "./planInformation.css";
-import { ToastContainer, toast } from "react-toastify";
-import { notifyError, notifySuccess } from "../utils/Notifications";
-import { threadId } from "worker_threads";
 
 interface State {
   uistatus: { [key: string]: string };
