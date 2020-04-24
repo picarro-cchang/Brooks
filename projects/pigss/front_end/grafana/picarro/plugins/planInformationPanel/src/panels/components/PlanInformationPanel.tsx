@@ -122,7 +122,7 @@ export class PlanInformationPanel extends Component<Props, State> {
               </div>
               <div className="row info-row-2">
               <div className={"col text-center center-info info-row"}>
-                <div id="curr-port-line" className="row text-center" style={{"padding": "inherit"}}>
+                <div id="curr-port-line" className="row text-center">
                   <div id="curr-port" className="titles text-left">Current Port: </div>
                   <div id="curr-port" className="values text-left">{steps.currentStepString} </div>
                 </div>

@@ -1,12 +1,12 @@
 #quick-info {
   color: #ccc;
   text-align: center;
-  font-size: 25px;
+  font-size: 1.75em;
+  padding: 10px;
 }
 
 .center-info {
-  padding-left: 10px;
-  padding-right: 10px;
+  padding: 4px 0 4px 20px;
   margin-right: 10px;
   flex: 1;
 }
@@ -27,7 +27,7 @@
 }
 
 .info-row {
-  background-color: #212124;
+  background-color: #3e3e3ed9;
   margin-bottom: 10px;
   border-radius: 4px;
 }
@@ -39,28 +39,33 @@
 
 .values {
   color: #3d9133;
-  font-weight: 700;
-  font-size: 25px;
+  font-weight: 500;
+  font-size: 1.75em;
 }
 
 .titles {
-  font-size: 25px;
+  font-size: 1.75em;
 }
 
 #curr-port-time .values {
   color: #fd8f08;
 }
 
-#plan,
-#next-port {
+#plan {
   padding-top: 17px;
+  padding-right: 10px;
+  padding-left: 10px;
+}
+
+#next-port {
+  padding-top: 30px;
   padding-right: 10px;
   padding-left: 10px;
 }
 
 #inner {
   margin: 0 auto;
-  width: 75%;
+  width: 60%;
 }
 
 #outer {
