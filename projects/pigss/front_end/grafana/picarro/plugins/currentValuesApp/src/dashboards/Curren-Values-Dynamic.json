@@ -73,7 +73,7 @@
       "postfix": "",
       "postfixFontSize": "50%",
       "prefix": "Measuring Port:",
-      "prefixFontSize": "65%",
+      "prefixFontSize": "50%",
       "rangeMaps": [
         {
           "from": "null",
@@ -125,12 +125,27 @@
       "title": "",
       "transparent": true,
       "type": "singlestat",
-      "valueFontSize": "65%",
+      "valueFontSize": "50%",
       "valueMaps": [
         {
           "op": "=",
           "text": "N/A",
           "value": "null"
+        },
+        {
+          "op": "=",
+          "text": "ST",
+          "value": "0"
+        },
+        {
+          "op": "=",
+          "text": "CL",
+          "value": "-1"
+        },
+        {
+          "op": "=",
+          "text": "RF",
+          "value": "-2"
         }
       ],
       "valueName": "current"
@@ -156,7 +171,7 @@
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "2: Bank 1 Ch. 2",
+          "text": "2: Bank 1 Port 2",
           "value": "2"
         }
       },
@@ -632,12 +647,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "4: Bank 1 Ch. 4",
+          "text": "4: Bank 1 Port 4",
           "value": "4"
         }
       },
@@ -1113,12 +1128,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "6: Bank 1 Ch. 6",
+          "text": "6: Bank 1 Port 6",
           "value": "6"
         }
       },
@@ -1594,12 +1609,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "8: Bank 1 Ch. 8",
+          "text": "8: Bank 1 Port 8",
           "value": "8"
         }
       },
@@ -2075,12 +2090,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "18: Bank 3 Ch. 2",
+          "text": "18: Bank 3 Port 18",
           "value": "18"
         }
       },
@@ -2556,12 +2571,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "20: Bank 3 Ch. 4",
+          "text": "20: Bank 3 Port 20",
           "value": "20"
         }
       },
@@ -3037,12 +3052,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "22: Bank 3 Ch. 6",
+          "text": "22: Bank 3 Port 22",
           "value": "22"
         }
       },
@@ -3518,12 +3533,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "24: Bank 3 Ch. 8",
+          "text": "24: Bank 3 Port 24",
           "value": "24"
         }
       },
@@ -3999,12 +4014,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "26: Bank 4 Ch. 2",
+          "text": "26: Bank 4 Port 26",
           "value": "26"
         }
       },
@@ -4480,12 +4495,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "28: Bank 4 Ch. 4",
+          "text": "28: Bank 4 Port 28",
           "value": "28"
         }
       },
@@ -4961,12 +4976,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "30: Bank 4 Ch. 6",
+          "text": "30: Bank 4 Port 30",
           "value": "30"
         }
       },
@@ -5442,12 +5457,12 @@
       "pageSize": null,
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1581447465453,
+      "repeatIteration": 1587766374395,
       "repeatPanelId": 1,
       "scopedVars": {
         "ports": {
           "selected": false,
-          "text": "32: Bank 4 Ch. 8",
+          "text": "32: Bank 4 Port 32",
           "value": "32"
         }
       },
@@ -6002,6 +6017,8 @@
   },
   "timepicker": {
     "refresh_intervals": [
+      "1s",
+      "2s",
       "5s",
       "10s",
       "30s",
@@ -6017,5 +6034,5 @@
   "timezone": "",
   "title": "Numerical View",
   "uid": "2Luty8cZk",
-  "version": 2
+  "version": 1
 }

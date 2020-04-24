@@ -15,8 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
-  "iteration": 1585333645518,
   "links": [
     {
       "asDropdown": true,
@@ -133,6 +131,21 @@
           "op": "=",
           "text": "N/A",
           "value": "null"
+        },
+        {
+          "op": "=",
+          "text": "ST",
+          "value": "0"
+        },
+        {
+          "op": "=",
+          "text": "CL",
+          "value": "-1"
+        },
+        {
+          "op": "=",
+          "text": "RF",
+          "value": "-1"
         }
       ],
       "valueName": "current"
@@ -1541,7 +1554,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -2909,7 +2922,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -4277,7 +4290,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -5645,7 +5658,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -7013,7 +7026,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -8381,7 +8394,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -9749,7 +9762,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -11117,7 +11130,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -12485,7 +12498,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -13853,7 +13866,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -15221,7 +15234,7 @@
       "renderer": "flot",
       "repeat": null,
       "repeatDirection": "h",
-      "repeatIteration": 1585333645518,
+      "repeatIteration": 1587766517487,
       "repeatPanelId": 2,
       "scopedVars": {
         "species": {
@@ -16685,6 +16698,6 @@
   },
   "timezone": "",
   "title": "Graphical View",
-  "uid": null,
-  "version": 7
+  "uid": "7iLCIqrZk",
+  "version": 2
 }
