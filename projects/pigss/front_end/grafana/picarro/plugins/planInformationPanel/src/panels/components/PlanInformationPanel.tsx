@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import Countdown from 'react-countdown';
 import { Plan } from "./../types";
+import "./planInformation.css"
 
 interface State {
   uistatus: { [key: string]: any };
@@ -108,11 +109,23 @@ export class PlanInformationPanel extends Component<Props, State> {
       const fileNameUpTop = this.planFileNameUpTop();
       
       return (
-        <div style={{ textAlign: "center" }}>
+        <div className={"quick-info"} id="inner">
           {fileNameUpTop ? (
-            <div className="plan-info">
-              Running Plan: {this.props.plan.plan_filename}{" "} Current Port: {steps.currentStepString}{" "}
-              Duration: {this.props.timer}{" "} Next Port: {steps.nextStepString} 
+            <div className="row info-row">
+              <div className={"col text-center vr"} id="plan">
+                <span className="titles">Running Plan: </span><span className={"values"}>{this.props.plan.plan_filename}{" "}</span> 
+              </div>
+              <div className={"col text-center center-info vr"}>
+              <div className="col text-center" id="curr-port">
+              <span className="titles">Current Port: </span><span className={"values"}>{steps.currentStepString}{" "} </span>
+                </div>
+                <div className="col text-center" id="timer">
+                <span className="titles">Duration: <span className={"values"}>{this.props.timer}{" "}</span> seconds</span>
+                </div>
+              </div>
+              <div className="col text-center" id="next-port">
+              <span className="titles">Next Port: </span><span className={"values"}> {steps.nextStepString}{" "} </span>
+               </div>
             </div>
           ) : (
             <div>
@@ -123,7 +136,7 @@ export class PlanInformationPanel extends Component<Props, State> {
       );
     } else {
       return (
-        <div style={{ textAlign: "center" }} className="plan-info">
+        <div style={{ textAlign: "center" }} className={"quick-info"} >
           No Plan Loaded
         </div>
       );
