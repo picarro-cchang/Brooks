@@ -31,7 +31,7 @@
     {
       "datasource": null,
       "gridPos": {
-        "h": 3,
+        "h": 5,
         "w": 24,
         "x": 0,
         "y": 0
@@ -87,7 +87,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 3
+        "y": 5
       },
       "id": 2,
       "options": {},
@@ -165,5 +165,5 @@
   "timezone": "",
   "title": "Setup",
   "uid": "TSuN1FCWz",
-  "version": 4
+  "version": 2
 }

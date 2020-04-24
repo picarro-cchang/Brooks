@@ -111,30 +111,31 @@ export class PlanInformationPanel extends Component<Props, State> {
       return (
         <div id="inner">
           {fileNameUpTop ? (
+            <div>
             <div className="row info-row">
-              <div className={"col text-center vr"} id="plan">
+              <div className={"col text-center br"} id="plan">
                 <span className="titles">Running Plan: </span>
                 <span className={"values"}>
                   {this.props.plan.plan_filename}{" "}
                 </span>
               </div>
-              <div className={"col text-center center-info vr"}>
-                <div className="col text-center" id="curr-port">
-                  <span className="titles">Current Port: </span>
-                  <span className={"values"}>{steps.currentStepString} </span>
+              </div>
+              <div className="row info-row-2">
+              <div className={"col text-center center-info info-row"}>
+                <div id="curr-port-line" className="row text-center" style={{"padding": "inherit"}}>
+                  <div id="curr-port" className="titles text-left">Current Port: </div>
+                  <div id="curr-port" className="values text-left">{steps.currentStepString} </div>
                 </div>
-                <div className="col text-center" id="timer">
-                  <span className="titles">
-                    Duration:{" "}
-                    <span className={"values"}>{this.props.timer} </span>{" "}
-                    seconds
-                  </span>
+                <div id="curr-port-time" className="row text-center">
+                  <div id="curr-port" className="titles text-left"> Remaining Time: </div>
+                  <div id="curr-port" className="values text-left">{this.props.timer} seconds</div>
                 </div>
               </div>
-              <div className="col text-center" id="next-port">
+              <div className="col text-center center-info-2 info-row" id="next-port">
                 <span className="titles">Next Port: </span>
-                <span className={"values"}> {steps.nextStepString} </span>
+                <span className="values"> {steps.nextStepString} </span>
               </div>
+            </div>
             </div>
           ) : (
             <div>

@@ -26,7 +26,6 @@ module.exports = {
     new CopyWebpackPlugin([
       { from: "../README.md", to: "." },
       { from: "panels/*.json", to: "." },
-      // { from: "dashboards", to: "./dashboards" }
     ])
   ],
   resolve: {

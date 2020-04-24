@@ -923,7 +923,6 @@ class PigssController(Ahsm):
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["timer"], 0)
-
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -1367,7 +1366,6 @@ class PigssController(Ahsm):
                     self.set_status(["clean", bank], UiStatus.READY)
                 if not self.status["reference"] == UiStatus.READY:
                     self.set_status(["reference"], UiStatus.READY)
-                # self.set_status(["timer"], 0)
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
                         self.set_status(["channel", bank, j + 1], UiStatus.READY)
@@ -1552,8 +1550,6 @@ class PigssController(Ahsm):
             self.set_status(["channel"], result)
             return self.handled(e)
         return self.super(self._run_plan2)
-
-    
 
     @state
     def _run_plan211(self, e):

@@ -7,16 +7,36 @@
 .center-info {
   padding-left: 10px;
   padding-right: 10px;
+  margin-right: 10px;
+  flex: 1;
+}
+
+.center-info-2 {
+  padding-left: 10px;
+  padding-right: 10px;
+  flex: 1;
 }
 
 .vr {
   border-right: 4px solid #656565;
 }
+
+.br {
+  width: 100%;
+  padding: 10px;
+}
+
 .info-row {
   background-color: #212124;
-  padding: 10px;
+  margin-bottom: 10px;
   border-radius: 4px;
 }
+
+.info-row-2 {
+  display: flex;
+  text-align: center;
+}
+
 .values {
   color: #3d9133;
   font-weight: 700;
@@ -27,7 +47,7 @@
   font-size: 25px;
 }
 
-#next-port .values {
+#curr-port-time .values {
   color: #fd8f08;
 }
 
@@ -40,9 +60,22 @@
 
 #inner {
   margin: 0 auto;
+  width: 75%;
 }
 
 #outer {
   width: 100%;
   display: inline-flex;
+}
+
+#curr-port {
+  flex: 1
+}
+
+#curr-port-time {
+  padding: inherit;
+}
+
+#curr-port-line {
+  padding: inherit;
 }
