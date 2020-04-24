@@ -1,8 +1,5 @@
 #quick-info{
-    background-color: #313131;
     color: #ccc;
-    padding: 12px;
-    font-size: 1.2em;
     text-align: center;
     font-size: 25px;
   }
@@ -14,11 +11,12 @@
   
   .vr {
     /* border-right: 3px solid #037733; */
-    border-right: 5px solid #656565;
+    border-right: 4px solid #656565;
   }
   .info-row {
     background-color: #212124;
     padding: 10px;
+    border-radius: 4px;
   }
   .values {
     color: #3d9133;

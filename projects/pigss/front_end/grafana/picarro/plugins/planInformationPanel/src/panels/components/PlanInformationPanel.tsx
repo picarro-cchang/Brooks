@@ -109,7 +109,7 @@ export class PlanInformationPanel extends Component<Props, State> {
       const fileNameUpTop = this.planFileNameUpTop();
       
       return (
-        <div className={"quick-info"} id="inner">
+        <div id="inner">
           {fileNameUpTop ? (
             <div className="row info-row">
               <div className={"col text-center vr"} id="plan">
@@ -129,14 +129,14 @@ export class PlanInformationPanel extends Component<Props, State> {
             </div>
           ) : (
             <div>
-              <div className="plan-info">Loaded Plan: {this.props.plan.plan_filename}</div>
+              <div className="info-row" id="quick-info">Loaded Plan: {this.props.plan.plan_filename}</div>
           </div>
           )}
         </div>
       );
     } else {
       return (
-        <div style={{ textAlign: "center" }} className={"quick-info"} >
+        <div className="info-row" id="quick-info">
           No Plan Loaded
         </div>
       );
