@@ -19,6 +19,7 @@ const client = new WebSocket(socketURL);
 
 describe("<PlanInformationPanelLayout />", () => {
   const handleData = jest.spyOn(PlanInformationPanelLayout.prototype, "handleData");
+  const componentWillUnmount = jest.spyOn(PlanInformationPanelLayout.prototype, "componentWillUnmount")
   const wrapper = mount(<PlanInformationPanelLayout />);
   const instance = wrapper.instance() as PlanInformationPanelLayout;
 
@@ -26,9 +27,36 @@ describe("<PlanInformationPanelLayout />", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("Websocket Send Message", async () => {
+  it('WebSocket Calls', async () => {
+    instance.ws = client;
+    instance.connect();
     await server.connected;
-    server.send({"uistatus": {"timer": 0}})
-  })
+    server.send({"uistatus": {"timer": 5}})
+    expect(handleData).toBeCalled();
+    expect(instance.state.timer).toBe(5)
+    server.send({"plan": {"current_step": 5}})
+    expect(instance.state.plan.current_step).toBe(5)
+    server.send({})
+    expect(instance.state.plan.current_step).toBe(5)
+    server.send({"uistatus": {"standby": "AVAILABLE"}})
+    expect(handleData).toBeCalled();
+  });
+
+  it("Initialized State", async () => {
+    instance.connect();
+    await server.connected;
+    instance.setState({initialized: false});
+    server.send({});
+    expect(handleData).toHaveBeenCalled();
+  });
+  
+
+  it("componentWillUnmount", () => {
+    wrapper.unmount()
+    expect(componentWillUnmount).toHaveBeenCalled();
+  });
+
+  
+
  
 });
