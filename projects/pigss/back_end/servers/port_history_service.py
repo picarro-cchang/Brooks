@@ -37,53 +37,53 @@ class PortHistoryService(ServiceTemplate):
             "1": {
                 "name": "Bank 1",
                 "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
+                    "1": "Port 1",
+                    "2": "Port 2",
+                    "3": "Port 3",
+                    "4": "Port 4",
+                    "5": "Port 5",
+                    "6": "Port 6",
+                    "7": "Port 7",
+                    "8": "Port 8"
                 }
             },
             "2": {
                 "name": "Bank 2",
                 "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
+                    "1": "Port 9",
+                    "2": "Port 10",
+                    "3": "Port 11",
+                    "4": "Port 12",
+                    "5": "Port 13",
+                    "6": "Port 14",
+                    "7": "Port 15",
+                    "8": "Port 16"
                 }
             },
             "3": {
                 "name": "Bank 3",
                 "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
+                    "1": "Port 17",
+                    "2": "Port 18",
+                    "3": "Port 19",
+                    "4": "Port 20",
+                    "5": "Port 21",
+                    "6": "Port 22",
+                    "7": "Port 23",
+                    "8": "Port 24"
                 }
             },
             "4": {
                 "name": "Bank 4",
                 "channels": {
-                    "1": "Ch. 1",
-                    "2": "Ch. 2",
-                    "3": "Ch. 3",
-                    "4": "Ch. 4",
-                    "5": "Ch. 5",
-                    "6": "Ch. 6",
-                    "7": "Ch. 7",
-                    "8": "Ch. 8"
+                    "1": "Port 25",
+                    "2": "Port 26",
+                    "3": "Port 27",
+                    "4": "Port 28",
+                    "5": "Port 29",
+                    "6": "Port 30",
+                    "7": "Port 31",
+                    "8": "Port 32"
                 }
             }
         }
@@ -173,7 +173,7 @@ class PortHistoryService(ServiceTemplate):
 
         banks = []
         ports = []
-        valve_pos = 1
+        valve_pos = 1 
         for bank in [1, 2, 3, 4]:
             available = self.available_ports[str(bank)]
             bank_dict = self.bank_names[str(bank)]
@@ -181,7 +181,7 @@ class PortHistoryService(ServiceTemplate):
                 banks.append(dict(text=f"{bank_dict['name']}", value=str(1 << (bank - 1))))
             for channel in [1, 2, 3, 4, 5, 6, 7, 8]:
                 chan_dict = bank_dict["channels"]
-                descr = f"{bank_dict['name']} {chan_dict[str(channel)]}"
+                descr = f"{chan_dict[str(channel)]}"
                 if available & (1 << (channel - 1)):
                     ports.append(dict(text=f"{valve_pos}: {descr}", value=str(valve_pos)))
                 valve_pos += 1
