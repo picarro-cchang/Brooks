@@ -173,7 +173,7 @@ class PortHistoryService(ServiceTemplate):
 
         banks = []
         ports = []
-        valve_pos = 1 
+        valve_pos = 1
         for bank in [1, 2, 3, 4]:
             available = self.available_ports[str(bank)]
             bank_dict = self.bank_names[str(bank)]
