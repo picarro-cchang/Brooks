@@ -74,6 +74,7 @@ class PigssController(Ahsm):
         self.status = {}
         self.all_banks = []
         self.temp_plan = {}
+        self.temp_name = ""
         self.plan = {
             "max_steps": 32,
             "panel_to_show": int(PlanPanelType.NONE),
@@ -180,7 +181,11 @@ class PigssController(Ahsm):
 
     async def fetch(self, session, url):
         async with session.get(url) as response:
-            return await response.json()
+            return await response.text()
+
+    async def post_diff(self, session, url, information):
+        async with session.put(url, information) as res:
+            return await res.text()
 
     def get_bank_names(self):
         return self.plan["bank_names"]
@@ -195,10 +200,10 @@ class PigssController(Ahsm):
         self.get_plan_names()
         return filenames
 
-    async def get_plan_names(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?names=true") as resp:
-                print(await resp.json())
+    # async def get_plan_names(self):
+    #     async with aiohttp.ClientSession() as session:
+    #         async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?names=true") as resp:
+    #             print(await resp.json())
 
     async def save_port_history(self):
         data = [{
@@ -514,17 +519,21 @@ class PigssController(Ahsm):
             log.critical(f"Plan save error {fe}")
             raise
 
-    async def load_new_plan(self):
+    async def load_new_plan(self, name):
+        plandata = {"name":"plan4","details":{"max_steps":32,"panel_to_show":0,"current_step":1,"focus":{"row":7,"column":2},"last_step":7,"steps":{"1":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"2":{"banks":{"1":{"clean":0,"chan_mask":32},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"3":{"banks":{"1":{"clean":0,"chan_mask":8},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"4":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":32},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"5":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":128},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"6":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":34},"7":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":1,"duration":34}},"num_plan_files":0,"plan_files":{},"plan_filename":"plan4","bank_names":{"1":{"name":"","channels":{"1":"Port 1","2":"Port 2","3":"Port 3","4":"Port 4","5":"Port 5","6":"Port 6","7":"Port 7","8":"Port 8"}},"2":{"name":"","channels":{"1":"Port 9","2":"Port 10","3":"Port 11","4":"Port 12","5":"Port 13","6":"Port 14","7":"Port 15","8":"Port 16"}},"3":{"name":"","channels":{"1":"Port 17","2":"Port 18","3":"Port 19","4":"Port 20","5":"Port 21","6":"Port 22","7":"Port 23","8":"Port 24"}},"4":{"name":"","channels":{"1":"Port 25","2":"Port 26","3":"Port 27","4":"Port 28","5":"Port 29","6":"Port 30","7":"Port 31","8":"Port 32"}}}},"user":"admin","is_deleted":0,"is_running":0}
+        data_json = json.dumps(plandata)
         async with aiohttp.ClientSession() as session:
-            data = await self.fetch(session,'http://192.168.122.225:8000/grafana_logger/getlogs')
-            print(data)
+            test = await session.put('http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
+            # data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
+            # test = await self.post_diff(session, f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
+            # r = await data.json()
         await asyncio.sleep(1.0)
-        print(f"After async_task in ")
 
+        
+        print(f"After async_task in {test}")
         if not isinstance(self.temp_plan, dict):
             raise ValueError("Plan should be a dictionary")
-        # plan2 = await (requests.get('http://192.168.122.225:8000/grafana_logger/getlogs'))
-        # print("++++++++++++++++++++++++++++++++++++++++HELLO PLAN ${plan2}")
+        
         steps = {}
         last_step = len(self.temp_plan["steps"])
         for i in range(last_step):
@@ -1387,6 +1396,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_run"], UiStatus.READY)
             self.set_status(["plan_loop"], UiStatus.READY)
             self.temp_plan = e.value["plan"]
+            self.temp_name = e.value["name"]
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
             return self.tran(self._load_preview2)
             # else:
@@ -1403,7 +1413,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                self.run_async(self.load_new_plan())
+                self.run_async(self.load_new_plan(self.temp_name))
                 # self.plan = self.temp_plan
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:

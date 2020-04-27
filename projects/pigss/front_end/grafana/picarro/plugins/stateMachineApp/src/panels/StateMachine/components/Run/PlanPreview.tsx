@@ -119,7 +119,7 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
                   1: {
                     caption: "Ok",
                     className: "btn btn-success btn-large",
-                    response: {plan: this.state.plan}
+                    response: {plan: this.state.plan, name: this.state.plan.plan_filename}
                   },
                   2: {
                     caption: "Cancel",

@@ -272,6 +272,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               // this.props.currentStepChange(response.plan);
               this.props.ws_sender({
                 element: "load_modal_ok",
+                name: response.name,
                 plan: response.plan
               })
               
