@@ -5,7 +5,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
   <h3
     className="text-center"
   >
-    User Data File Generator
+    Export Data
   </h3>
   <PanelOptionsGroup
     title="Generate New File"
@@ -230,6 +230,17 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
     </PanelOptionsGroup>
     <PanelOptionsGroup>
       <div
+        className="gf-form"
+      >
+        <Switch
+          checked={true}
+          label="Processed Data"
+          onChange={[Function]}
+        />
+      </div>
+    </PanelOptionsGroup>
+    <PanelOptionsGroup>
+      <div
         className="time-generate-btn"
       >
         <div
@@ -383,6 +394,7 @@ DataGeneratorLayout {
   "onDateChange": [Function],
   "onKeysChange": [Function],
   "onPortsChange": [Function],
+  "onProcessedDataSwitchChange": [Function],
   "props": Object {
     "options": Object {
       "timeRange": Object {
@@ -416,6 +428,7 @@ DataGeneratorLayout {
     "analyzers": Array [],
     "files": Array [],
     "from": "2020-02-11T14:31:13.973Z",
+    "isProcessedData": true,
     "keyOptions": Array [
       Object {
         "label": "All",
@@ -501,7 +514,7 @@ DataGeneratorLayout {
         <h3
           className="text-center"
         >
-          User Data File Generator
+          Export Data
         </h3>
         <PanelOptionsGroup
           title="Generate New File"
@@ -629,6 +642,17 @@ DataGeneratorLayout {
                   ]
                 }
                 tabSelectsValue={true}
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div
+              className="gf-form"
+            >
+              <Switch
+                checked={true}
+                label="Processed Data"
+                onChange={[Function]}
               />
             </div>
           </PanelOptionsGroup>

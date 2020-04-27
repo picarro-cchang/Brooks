@@ -12,7 +12,7 @@ DEB_BUILD_DIR=${BUILD_DIR}/.debian
 BUILD_NUMBER=0.0.1
 GIT_HASH=$(shell git rev-parse --short HEAD)
 # Assets to include in the Debian file
-ASSETS=../../scripts/mfg_scripts/* mfg-sudoer
+ASSETS=../../scripts/mfg_scripts/* mfg-sudoer ${BUILD_DIR}/firmware-updater
 
 # Meta data for DEBIAN/control
 # PACKAGE_NAME can be overriden by passing in a name
@@ -27,7 +27,7 @@ DEPENDS=cifs-utils (>= 2:6.8-1)
 
 # Make the debian package
 .PHONY: deb
-deb: clean deb-dirs prerm postinst control
+deb: clean binary deb-dirs prerm postinst control
 	dpkg-deb --build ${DEB_BUILD_DIR} ${BUILD_DIR}/${PACKAGE_NAME}-${VERSION}.deb
 
 .PHONY: deb-dirs
@@ -35,6 +35,11 @@ deb-dirs:
 	@ mkdir -p ${DEB_BUILD_DIR}
 	@ mkdir -p ${DEB_BUILD_DIR}${INSTALL_DIR}
 	@ cp -rv ${ASSETS} ${DEB_BUILD_DIR}${INSTALL_DIR}
+
+# Make the python binaries
+.PHONY: binary
+binary:
+	pyinstaller python-modules.spec --workpath /tmp
 
 # Write the control file
 .PHONY: control

@@ -162,6 +162,7 @@ class PigssController(Ahsm):
                 }
             }
         }
+        self.timer = False
         self.send_queue = None
         self.receive_queue = None
         db_config = self.farm.config.get_time_series_database()
@@ -346,6 +347,13 @@ class PigssController(Ahsm):
             row = msg["current_step"]
             if row <= self.plan["max_steps"]:
                 self.set_plan(["current_step"], row)
+
+    async def timer_update(self):
+        time_remaining = self.status["timer"]
+        while time_remaining > 0 and self.timer:
+            await asyncio.sleep(1)
+            time_remaining -= 1
+            self.set_status(["timer"], time_remaining)
 
     def add_to_plan(self, bank_config, reference):
         row = self.plan["focus"]["row"]
@@ -702,6 +710,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.DISABLED)
             self.set_status(["edit"], UiStatus.DISABLED)
+            self.set_status(["timer"], 0)
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
@@ -724,6 +733,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["edit"], UiStatus.READY)
+            self.set_status(["timer"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -800,6 +810,7 @@ class PigssController(Ahsm):
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
+            self.set_status(["timer"], 0)
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
@@ -811,6 +822,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["standby"], UiStatus.ACTIVE)
+            self.set_status(["timer"], 0)
             return self.handled(e)
         return self.super(self._standby)
 
@@ -910,6 +922,7 @@ class PigssController(Ahsm):
             self.set_status(["run"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
+            self.set_status(["timer"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -1409,6 +1422,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["plan_run"], UiStatus.READY)
+            self.set_status(["timer"], 0)
+            self.timer = False
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_RUN:
             return self.handled(e)
@@ -1468,7 +1483,9 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["plan_run"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
+            timer = self.plan["steps"][current_step]["duration"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]
+            self.set_status(["timer"], timer)
             self.plan_step_te.postAt(self, self.plan_step_timer_target)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1549,6 +1566,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
+            self.timer = True
+            self.run_async(self.timer_update())
             return self.handled(e)
         return self.super(self._run_plan21)
 
@@ -1560,6 +1579,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["plan_loop"], UiStatus.READY)
+            self.set_status(["timer"], 0)
+            self.timer = False
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_LOOP:
             return self.handled(e)
@@ -1618,7 +1639,9 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
             current_step = self.plan["current_step"]
+            timer = self.plan["steps"][current_step]["duration"]
             self.plan_step_timer_target += self.plan["steps"][current_step]["duration"]
+            self.set_status(["timer"], timer)
             self.plan_step_te.postAt(self, self.plan_step_timer_target)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1695,6 +1718,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
+            self.timer = True
+            self.run_async(self.timer_update())
             return self.handled(e)
         return self.super(self._loop_plan21)
 
