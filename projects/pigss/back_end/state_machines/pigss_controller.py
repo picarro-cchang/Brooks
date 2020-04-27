@@ -26,7 +26,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
                                                     PlanError,
                                                     ValveTransitionPayload)
-from back_end.servers.plan_service import PlanService
+
 
 log = LOLoggerClient(client_name="AppController", verbose=True)
 
@@ -177,6 +177,10 @@ class PigssController(Ahsm):
 
     def get_available_ports(self):
         return self.plan["available_ports"]
+
+    async def fetch(self, session, url):
+        async with session.get(url) as response:
+            return await response.json()
 
     def get_bank_names(self):
         return self.plan["bank_names"]
@@ -510,9 +514,17 @@ class PigssController(Ahsm):
             log.critical(f"Plan save error {fe}")
             raise
 
-    def load_new_plan(self):
+    async def load_new_plan(self):
+        async with aiohttp.ClientSession() as session:
+            data = await self.fetch(session,'http://192.168.122.225:8000/grafana_logger/getlogs')
+            print(data)
+        await asyncio.sleep(1.0)
+        print(f"After async_task in ")
+
         if not isinstance(self.temp_plan, dict):
             raise ValueError("Plan should be a dictionary")
+        # plan2 = await (requests.get('http://192.168.122.225:8000/grafana_logger/getlogs'))
+        # print("++++++++++++++++++++++++++++++++++++++++HELLO PLAN ${plan2}")
         steps = {}
         last_step = len(self.temp_plan["steps"])
         for i in range(last_step):
@@ -1391,12 +1403,12 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                self.load_new_plan()
+                self.run_async(self.load_new_plan())
                 # self.plan = self.temp_plan
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
                 print(format_exc())
-                # self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
+                self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOAD_SUCCESSFUL:
             self.run_async(self.save_port_history())
