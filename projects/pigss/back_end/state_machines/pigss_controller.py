@@ -183,8 +183,8 @@ class PigssController(Ahsm):
         async with session.get(url) as response:
             return await response.text()
 
-    async def post_diff(self, session, url, information):
-        async with session.put(url, information) as res:
+    async def put_data(self, session, url, information=None):
+        async with session.put(url, data=information) as res:
             return await res.text()
 
     def get_bank_names(self):
@@ -520,14 +520,12 @@ class PigssController(Ahsm):
             raise
 
     async def load_new_plan(self, name):
-        plandata = {"name":"plan4","details":{"max_steps":32,"panel_to_show":0,"current_step":1,"focus":{"row":7,"column":2},"last_step":7,"steps":{"1":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"2":{"banks":{"1":{"clean":0,"chan_mask":32},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"3":{"banks":{"1":{"clean":0,"chan_mask":8},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"4":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":32},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"5":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":128},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"6":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":34},"7":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":1,"duration":34}},"num_plan_files":0,"plan_files":{},"plan_filename":"plan4","bank_names":{"1":{"name":"","channels":{"1":"Port 1","2":"Port 2","3":"Port 3","4":"Port 4","5":"Port 5","6":"Port 6","7":"Port 7","8":"Port 8"}},"2":{"name":"","channels":{"1":"Port 9","2":"Port 10","3":"Port 11","4":"Port 12","5":"Port 13","6":"Port 14","7":"Port 15","8":"Port 16"}},"3":{"name":"","channels":{"1":"Port 17","2":"Port 18","3":"Port 19","4":"Port 20","5":"Port 21","6":"Port 22","7":"Port 23","8":"Port 24"}},"4":{"name":"","channels":{"1":"Port 25","2":"Port 26","3":"Port 27","4":"Port 28","5":"Port 29","6":"Port 30","7":"Port 31","8":"Port 32"}}}},"user":"admin","is_deleted":0,"is_running":0}
-        data_json = json.dumps(plandata)
-        async with aiohttp.ClientSession() as session:
-            test = await session.put('http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
-            # data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
-            # test = await self.post_diff(session, f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
-            # r = await data.json()
-        await asyncio.sleep(1.0)
+        # plandata = {"name":"plan4","details":{"max_steps":32,"panel_to_show":0,"current_step":1,"focus":{"row":8,"column":2},"last_step":8,"steps":{"1":{"banks":{"1":{"clean":0,"chan_mask":2},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":500},"2":{"banks":{"1":{"clean":0,"chan_mask":32},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"3":{"banks":{"1":{"clean":0,"chan_mask":8},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"4":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":32},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"5":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":128},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":24},"6":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":34},"7":{"banks":{"1":{"clean":0,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":1,"duration":34},"8":{"banks":{"1":{"clean":1,"chan_mask":0},"3":{"clean":0,"chan_mask":0},"4":{"clean":0,"chan_mask":0}},"reference":0,"duration":45}},"num_plan_files":0,"plan_files":{},"plan_filename":"plan4","bank_names":{"1":{"name":"","channels":{"1":"Port 1","2":"Port 2","3":"Port 3","4":"Port 4","5":"Port 5","6":"Port 6","7":"Port 7","8":"Port 8"}},"2":{"name":"","channels":{"1":"Port 9","2":"Port 10","3":"Port 11","4":"Port 12","5":"Port 13","6":"Port 14","7":"Port 15","8":"Port 16"}},"3":{"name":"","channels":{"1":"Port 17","2":"Port 18","3":"Port 19","4":"Port 20","5":"Port 21","6":"Port 22","7":"Port 23","8":"Port 24"}},"4":{"name":"","channels":{"1":"Port 25","2":"Port 26","3":"Port 27","4":"Port 28","5":"Port 29","6":"Port 30","7":"Port 31","8":"Port 32"}}}},"user":"admin","is_deleted":0,"is_running":0}
+        # data_json = json.dumps(plandata)
+        # async with aiohttp.ClientSession() as session:
+        #     # data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
+        #     test = await self.put_data(session,'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
+        # await asyncio.sleep(1.0)
 
         
         print(f"After async_task in {test}")
