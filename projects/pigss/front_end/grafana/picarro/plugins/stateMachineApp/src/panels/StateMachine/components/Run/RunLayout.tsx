@@ -101,7 +101,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         console.log("Plan Deleted! ", data)
         this.props.getPlanFileNames();
       }
-      //TODO: need to refresh plan file names
     })
   );
   }
@@ -176,10 +175,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       }))
   }
 
-  // async componentDidMount() {
-  //   await this.getLastRunningPlan();
-  // }
-
   render() {
     console.log("Plan on Run Layout ", this.state.plan)
     let left_panel;
@@ -203,8 +198,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
-            // deleteFile={this.deleteFile}
-            // loadPlan={this.loadPlan}
             fileNames={this.props.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
             deleteFile={this.deleteFile}
@@ -229,8 +222,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
-            // deleteFile={this.deleteFile}
-            // loadPlan={this.loadPlan}
             fileNames={this.state.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
             setModalInfo={this.setModalInfo}

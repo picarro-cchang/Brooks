@@ -14,7 +14,7 @@ class PlanModel:
             # Create Plans Table
             create_plan_table_query = '''CREATE TABLE IF NOT EXISTS plans (
                 id integer PRIMARY KEY AUTOINCREMENT,
-                name text NOT NULL,
+                name text NOT NULL UNIQUE,
                 details JSON NOT NULL,
                 created_by text NOT NULL,
                 created_at text NOT NULL,
