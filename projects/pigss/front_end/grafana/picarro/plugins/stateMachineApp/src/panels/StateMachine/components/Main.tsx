@@ -102,8 +102,6 @@ export class Main extends React.Component<any, any> {
     super(props);
     this.getPlanFileNames = this.getPlanFileNames.bind(this);
     this.isPlanning = this.isPlanning.bind(this);
-    this.getLastRunningPlan = this.getLastRunningPlan.bind(this);
-    this.currentStepChange = this.currentStepChange.bind(this)
   }
 
   ws = new WebSocket(socketURL);
@@ -135,8 +133,6 @@ export class Main extends React.Component<any, any> {
 
   async componentDidMount() {
     await this.getDataViaApi();
-    await this.getPlanFileNames();
-    await this.getLastRunningPlan();
     this.attachWSMethods(this.ws);
   }
 
@@ -146,16 +142,6 @@ export class Main extends React.Component<any, any> {
       this.ws.send("CLOSE");
       this.ws.close(1000, "Client Initited Connection Termination");
     }
-    //Save Plan As Is with Current Step
-    const data = {
-      name: this.state.plan.plan_filename,
-      details: this.state.plan,
-      user: 'admin'
-    }
-    PlanService.overwriteFile(data).then(resposne => 
-      resposne.json().then(plan => {
-        console.log("Current Step Updated! ", plan)
-      }));
   }
 
   getDataViaApi = () => {
@@ -166,8 +152,21 @@ export class Main extends React.Component<any, any> {
         this.setState(deepmerge(this.state, { uistatus: obj }));
       });
     });
-    Promise.all([uiStatusData]).then(() => {
-      this.setState(deepmerge(this.state, { initialized: true }));
+    const planData = PicarroAPI.getRequest(
+      `http://${apiLoc}/plan`
+    ).then(response => {
+      response.json().then(obj => {
+        this.setState(deepmerge(this.state, { plan: obj }));
+      });
+    });
+    const fileNames = PlanService.getFileNames().then(res => {
+      res.json().then(obj => {
+        console.log(obj)
+        this.setState(deepmerge(this.state.fileNames, {fileNames: obj["plans"]}))
+      })
+    })
+    Promise.all([uiStatusData, planData, fileNames]).then(() => {
+      this.setState(deepmerge(this.state, { initialized: true }), () => {console.log("PLAN UPDATED ", this.state.plan)});
     });
   };
 
@@ -179,12 +178,10 @@ export class Main extends React.Component<any, any> {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
       } else if ("plan" in o) {
-        if ("current_step" in o.plan) {
-          //TODO: Update current step
-          // const plan = {...this.state.plan}
-          // plan.current_step = o.plan["current_step"]
-          // this.setState({plan})
-        }
+        const plan = deepmerge(this.state.plan, o.plan);
+        this.setState({ plan });
+        // const fileNames = deepmerge(this.state.fileNames, o.plan.plan_files)
+        // this.setState({fileNames})
       }
     }
   }
@@ -209,25 +206,6 @@ export class Main extends React.Component<any, any> {
       this.setState({isPlanning: !this.state.isPlanning})
   }
 
-  getLastRunningPlan() {
-    PlanService.getLastRunning().then((response: any) => 
-      response.json().then(data => {
-        if (data["message"]) {
-          console.log("No Plan I suppose")
-        }          
-        else {
-          const plan = { ...(JSON.parse(data['details'])) }
-          console.log("Last Running Plan ", plan)
-          this.setState({plan: plan, loadedFileName: data['name']}, ()=>{console.log("--------> Last Running FileName ", this.state.loadedFileName)});
-        }
-
-      }))
-  }
-
-  currentStepChange(p: Plan) {
-    this.setState({plan: p});
-  }
-
   render() {
     return (
         <div> 
@@ -239,7 +217,7 @@ export class Main extends React.Component<any, any> {
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
                     getPlanFileNames={this.getPlanFileNames}
-                    loadedFileName={this.state.loadedFileName}
+                    loadedFileName={this.state.plan.plan_filename}
                 />
             ):(
                 <RunLayout
@@ -248,9 +226,7 @@ export class Main extends React.Component<any, any> {
                     plan={this.state.plan}
                     uistatus={this.state.uistatus}
                     ws_sender={this.ws_sender}
-                    currentStepChange={this.currentStepChange}
-                    loadedFileName={this.state.loadedFileName}
-                    getLastRunningPlan={this.getLastRunningPlan}
+                    loadedFileName={this.state.plan.plan_filename}
                     getPlanFileNames={this.getPlanFileNames}
                 />
             )}

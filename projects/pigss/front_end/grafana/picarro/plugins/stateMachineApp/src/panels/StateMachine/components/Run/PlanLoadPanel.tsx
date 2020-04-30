@@ -18,11 +18,19 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
 
   shouldComponentUpdate(nextProps) {
     if (this.props.fileNames !== nextProps.fileNames) {
+      console.log("UPDATE FILENAMES")
       this.setState({
         fileNames: nextProps.fileNames
       });
     }
     return true;
+  }
+
+  isDisabled(file: string) {
+    if (file == this.props.loadedFileName) {
+      return true
+    }
+    return false
   }
 
 
@@ -32,12 +40,13 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
         <button
           type="button"
           className="btn w-100 btn-small"
+          disabled={this.isDisabled(this.props.fileNames[index])}
           onClick={e => {
             this.props.ws_sender({
               element: "load_filename"
             })
             // this.props.loadPlan(this.state.fileNames[index]);
-            this.props.getPlanFromFileName(this.state.fileNames[index]);
+            this.props.getPlanFromFileName(this.props.fileNames[index]);
           }}
           style={{ color: "black" }}
         >
@@ -46,8 +55,9 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
         <button
           type="button"
           className="btn btn-danger btn-small"
+          disabled={this.isDisabled(this.props.fileNames[index])}
           onClick={e => {
-            this.props.deleteFile(this.state.fileNames[index]);
+            this.props.deleteFile(this.props.fileNames[index]);
           }}
         >
           X
@@ -57,7 +67,7 @@ class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
   );
 
   render() {
-    let length = Object.keys(this.state.fileNames).length
+    let length = Object.keys(this.props.fileNames).length
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

@@ -49,11 +49,10 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
 
   shouldComponentUpdate(nextProps) {
     if (this.props.loadedFileName !== nextProps.loadedFileName) {
-      console.log("New FileName ", nextProps.loadedFileName)
+      console.log("New FileName ", nextProps.loadedFileName, " Old File")
       this.setState({
         loadedFileName: nextProps.loadedFileName
       });
-      this.getLastRunningPlan();
     } else if (this.props.fileNames !== nextProps.fileNames) {
       console.log("New List of FileNames ", nextProps.fileNames)
       this.setState({fileNames: nextProps.fileNames})
@@ -103,52 +102,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       }
     })
   );
-  }
-
-  async fileIsRunning(plan: Plan) {
-    //Function that Changes is_running to 0 or 1 for plans that are loaded and run 
-    console.log("New Plan ", plan)
-    const newPlan = {
-      name: plan.plan_filename,
-      details: plan,
-      user: 'admin',
-      is_running: 1,
-      is_unloading: 1
-    }
-    PlanService.getLastRunning().then((response: any) => 
-      response.json().then(data => {
-        if (data["message"]) {
-          console.log("No Plan I suppsoe")
-          PlanService.overwriteFile(newPlan).then(response => 
-            response.json().then(dat => {
-              console.log(dat)
-              if (dat["message"]) {
-                // this.setModalInfo(true, `<h4 style='color: black'>${dat["message"]}</h4>`, 0, {}, 'misc')
-              } 
-            }))
-      }          
-      else {
-        console.log("Plan ", { ...(JSON.parse(data['details'])) })
-        const lastPlan = {
-          name: data['name'],
-          details:  { ...(JSON.parse(data['details'])) },
-          user: 'admin',
-          is_running: 0,
-          is_unloading: 1
-        }
-        PlanService.overwriteFile(lastPlan).then(response => 
-          response.json().then(data => {
-            console.log("Last Plan ", data);
-            PlanService.overwriteFile(newPlan).then(response => 
-              response.json().then(plan => {
-                console.log(plan)
-                if (data["message"]) {
-                  // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
-                } 
-              }))
-          }))
-      }
-    }))
   }
 
   updatePanelToShow(panel: number) {
@@ -264,7 +217,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               this.props.ws_sender({
                 element: "load_modal_ok",
                 name: response.name,
-                plan: response.plan
               })
               
               this.setModalInfo(false, "", 0, {}, "")
@@ -300,8 +252,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               style={{ margin: "10px" }}
               onClick={() => {
                 this.updatePanelToShow(0);
-                this.props.getLastRunningPlan();
-                this.fileIsRunning(response.plan);
                 this.props.ws_sender({
                   element: "modal_step_1",
                   plan: response.plan
@@ -319,10 +269,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
               style={{ margin: "10px" }}
               onClick={() => {
                 this.updatePanelToShow(0)
-                this.fileIsRunning(response.plan);
-                this.props.getLastRunningPlan();
-
-                //TODO: Send Plan Info to BackEnd 
                 this.props.ws_sender({
                   element: "modal_ok",
                   plan: response.plan

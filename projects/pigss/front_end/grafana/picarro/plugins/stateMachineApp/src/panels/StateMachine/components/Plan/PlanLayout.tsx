@@ -32,7 +32,71 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     super(props);
     this.state= {
         isPlanPanel: true,
-        plan: this.props.plan,
+        plan: {
+          max_steps: 32,
+          panel_to_show: 0,
+          current_step: 1,
+          focus: { row: 1, column: 1 },
+          last_step: 0,
+          steps: {},
+          num_plan_files: 0,
+          plan_files: {},
+          plan_filename: "",
+          bank_names: {
+            1: {
+              name: "",
+              channels: {
+                1: "Port 1",
+                2: "Port 2",
+                3: "Port 3",
+                4: "Port 4",
+                5: "Port 5",
+                6: "Port 6",
+                7: "Port 7",
+                8: "Port 8"
+              }
+            },
+            2: {
+              name: "",
+              channels: {
+                1: "Port 9",
+                2: "Port 10",
+                3: "Port 11",
+                4: "Port 12",
+                5: "Port 13",
+                6: "Port 14",
+                7: "Port 15",
+                8: "Port 16"
+              }
+            },
+            3: {
+              name: "",
+              channels: {
+                1: "Port 17",
+                2: "Port 18",
+                3: "Port 19",
+                4: "Port 20",
+                5: "Port 21",
+                6: "Port 22",
+                7: "Port 23",
+                8: "Port 24"
+              }
+            },
+            4: {
+              name: "",
+              channels: {
+                1: "Port 25",
+                2: "Port 26",
+                3: "Port 27",
+                4: "Port 28",
+                5: "Port 29",
+                6: "Port 30",
+                7: "Port 31",
+                8: "Port 32"
+              }
+            }
+          }
+        },
         fileNames: this.props.fileNames,
         panel_to_show: 0,
         fileName: "",
@@ -227,7 +291,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           bankPanelsEdit.push(
             <div key={i}>
               <BankPanel
-                plan={this.state.plan}
+                plan={this.props.plan}
                 bank={i}
                 key={i}
                 uistatus={this.props.uistatus}

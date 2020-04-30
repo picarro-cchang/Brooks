@@ -78,9 +78,7 @@ class PigssController(Ahsm):
         self.last_running_details = {}
         self.plan = {
             "max_steps": 32,
-            "panel_to_show": int(PlanPanelType.NONE),
             "current_step": 1,
-            "looping": False,
             "focus": {
                 "row": 1,
                 "column": 1
@@ -143,10 +141,12 @@ class PigssController(Ahsm):
                         "8": "Ch. 8"
                     }
                 }
-            },
+            }
+        }
+        self.available_ports = {
             "available_ports": {
                 "1": 0,
-                "2": 0,
+                "2": 0, 
                 "3": 0,
                 "4": 0
             }
@@ -178,7 +178,7 @@ class PigssController(Ahsm):
         self.receive_queue = receive_queue
 
     def get_available_ports(self):
-        return self.plan["available_ports"]
+        return self.available_ports["available_ports"]
 
     async def fetch(self, session, url):
         async with session.get(url) as response:
@@ -339,6 +339,18 @@ class PigssController(Ahsm):
         shadow = self.modify_value_in_nested_dict(self.plan, path, value)
         try:
             self.send_queue.put_nowait(json.dumps({"plan": shadow}))
+        except asyncio.queues.QueueFull:
+            log.debug(f"Farm Send Queue Full\n{format_exc()}")
+            log.error(f"Send Queue Full. Please report.")
+
+    def set_available_ports(self, path, value):
+        """Set the portion of self.plan specified by `path` to the given `value`.
+        A shadow dictionary containing the change is sent via a websocket to inform the UI
+        of the change in the plan.
+        """
+        shadow = self.modify_value_in_nested_dict(self.plan, path, value)
+        try:
+            self.send_queue.put_nowait(json.dumps({"available_ports": shadow}))
         except asyncio.queues.QueueFull:
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
             log.error(f"Send Queue Full. Please report.")
@@ -527,8 +539,8 @@ class PigssController(Ahsm):
 
     async def save_plan_to_default(self):
         data = {
-            "name": "__default__",
-            "details": self.last_running_details,
+            "name": self.plan["plan_filename"],
+            "details": self.plan,
             "user": 'admin',
             "is_running": 0,
             "is_deleted": 0
@@ -542,9 +554,13 @@ class PigssController(Ahsm):
         async with aiohttp.ClientSession() as session: 
             plans = await self.fetch(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?names=true')
         await asyncio.sleep(1.0)
-        if plans:
-            print(plans)
-            self.plan_files = json.loads(plans)
+        plans = json.loads(plans)
+        print("PLANS ++++++++++++++++++++++ ", plans)
+        if plans["plans"]:
+            num = len(plans["plans"])
+            self.set_plan(["plan_files"], {i + 1: name for i, name in enumerate(plans["plans"])})
+            self.set_plan(["num_plan_files"], num)
+            print("PLAN FILES ", self.plan["plan_files"])
 
     async def get_last_running(self):
         async with aiohttp.ClientSession() as session: 
@@ -554,17 +570,18 @@ class PigssController(Ahsm):
                 print("PLAN DEETS =----> ", running_plan["details"])
                 self.last_running = running_plan["name"]
                 self.last_running_details = json.loads(running_plan["details"])
+                self.plan = json.loads(running_plan["details"])
             ##create __default
-            data = {
-                "name": "__default__",
-                "details": self.last_running_details,
-                "user": 'admin',
-                "is_running": 0,
-                "is_deleted": 0
-            }
-            data_json = json.dumps(data)
-            default = await self.post_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
-            print(default)
+            # data = {
+            #     "name": "__default__",
+            #     "details": self.last_running_details,
+            #     "user": 'admin',
+            #     "is_running": 0,
+            #     "is_deleted": 0
+            # }
+            # data_json = json.dumps(data)
+            # default = await self.post_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
+            # print(default)
 
     async def set_is_running(self, name, plan_data, is_running):
         data = {
@@ -579,11 +596,27 @@ class PigssController(Ahsm):
             res = await self.put_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
         await asyncio.sleep(1.0)
 
+    async def set_current_step(self):
+        ##needs to save file with current step
+        data = {
+            "name": self.plan["plan_filename"],
+            "details": self.plan,
+            "user": 'admin',
+            "is_running": 1, 
+            "is_unloading": 1,
+        }
+        data_json = json.dumps(data)
+
+        async with aiohttp.ClientSession() as session:
+            res = await self.put_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
+        await asyncio.sleep(1.0)
+        print("++++++++++++++++++++SETTING CURRENT STEP ", res)
+
     async def load_new_plan(self, name):
         '''Checks last_running is not the same, if it is, fine, just less steps. Loads this new plan via API call, sets new plan is_running=1'''
         try:
-            if self.last_running != "" and self.last_running != name:
-                await self.set_is_running(self.last_running, self.last_running_details, 0)
+            if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
+                await self.set_is_running(self.plan["plan_filename"], self.plan, 0)
                 
             async with aiohttp.ClientSession() as session:
                 data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
@@ -816,6 +849,7 @@ class PigssController(Ahsm):
             payload = e.value
             self.all_banks = payload.bank_list
             self.run_async(self.save_port_history())
+            self.run_async(self.get_available_plans())
             self.run_async(self.get_last_running())
             return self.tran(self._operational)
         elif sig == Signal.TERMINATE:
@@ -1076,7 +1110,7 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             msg = int(e.value[self.bank])  # Integer representing available channels
-            self.set_plan(["available_ports", str(self.bank)], msg)
+            self.set_available_ports(["available_ports", str(self.bank)], msg)
             active = [1 if int(c) else 0 for c in reversed(format(msg, '08b'))]
             # Update the states of the channel buttons in the bank
             for i, stat in enumerate(active):
@@ -1110,7 +1144,7 @@ class PigssController(Ahsm):
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.READY:
                         self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
-            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._plan_plan)
@@ -1158,7 +1192,7 @@ class PigssController(Ahsm):
     def _plan_plan(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.PLAN))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.PLAN))
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_OK:
@@ -1250,7 +1284,7 @@ class PigssController(Ahsm):
     def _plan_load(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.LOAD))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.LOAD))
             self.state_after_delete = self._plan_load
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_LOAD_CANCEL:
@@ -1299,7 +1333,7 @@ class PigssController(Ahsm):
     def _plan_save(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.SAVE))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.SAVE))
             self.state_after_delete = self._plan_save
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_SAVE_CANCEL:
@@ -1484,15 +1518,18 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             try:
                 self.run_async(self.load_new_plan(self.plan_name))
+                self.disable_buttons()
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_LOADED:
             self.run_async(self.save_port_history())
+            self.restore_buttons()
             print("-----------> Do we get to port histroy?")
             return self.tran(self._operational)
         elif sig == Signal.PLAN_LOAD_FAILED:
+            self.restore_buttons()
             print("-----------> Do we get to PLAN FAILTED?")
             self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._load_preview)
@@ -1643,6 +1680,7 @@ class PigssController(Ahsm):
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
         elif sig == Signal.MODAL_CLOSE:
+            #SET CURRENT_STEP
             return self.tran(self._operational)
         return self.super(self._run_plan)
 
@@ -1657,6 +1695,7 @@ class PigssController(Ahsm):
             self.plan_step_te.postAt(self, self.plan_step_timer_target)
             return self.handled(e)
         elif sig == Signal.EXIT:
+            self.run_async(self.set_current_step())
             self.plan_step_te.disarm()
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -1669,6 +1708,8 @@ class PigssController(Ahsm):
                 current_step -= last_step
                 self.set_plan(["current_step"], current_step)
                 # All steps done
+                #SET CURRENT_STEP
+                self.run_async(self.set_current_step())
                 return self.tran(self._operational)
             else:
                 self.set_plan(["current_step"], current_step)
@@ -1871,7 +1912,7 @@ class PigssController(Ahsm):
         if sig == Signal.INIT:
             return self.tran(self._edit_edit)
         elif sig == Signal.EXIT:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.handled(e)
         elif sig == Signal.BTN_EDIT:
             return self.handled(e)
@@ -1881,15 +1922,15 @@ class PigssController(Ahsm):
     def _edit_edit(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.EDIT))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.EDIT))
             return self.handled(e)
         elif sig == Signal.EDIT_CANCEL:
-            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         elif sig == Signal.EDIT_SAVE:
             self.change_name_bank(e.value)
             self.run_async(self.save_port_history())
-            self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
+            # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         return self.super(self._edit)
 
@@ -1925,6 +1966,9 @@ class PigssController(Ahsm):
         #         default_plan = await self.fetch(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name=__default__')
         #     plan = json.loads(default_plan)
 
+        #get last running plan
+        # self.run_async(self.get_last_running())
+
         try:
             if self.get_status()["standby"] != UiStatus.ACTIVE:
                 await self.click_button("standby", Signal.BTN_STANDBY, "Timeout waiting for STANDBY button")
@@ -1940,7 +1984,7 @@ class PigssController(Ahsm):
                 await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
                 Framework.publish(Event(Signal.FILENAME_OK, None))
                 await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
-                Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": "__default__"}))
+                Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": self.last_running}))
                 await self.wait_for_state(self._load_preview2, "Timeout reaching _load_preview2 state")
 
                 ##SET Current Step to 1
