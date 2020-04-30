@@ -311,7 +311,7 @@ class GrafanaLoggerService(ServiceTemplate):
             self.log.debug(format_exc())
         except ValueError:
             self.log.debug(format_exc())
-        if level is None or message is None or level not in range(10, 50, 10):
+        if level is None or message is None or level not in range(10, 60, 10):
             return web.json_response({
                 "text": "Invalid input parameters",
                 "status": 200
