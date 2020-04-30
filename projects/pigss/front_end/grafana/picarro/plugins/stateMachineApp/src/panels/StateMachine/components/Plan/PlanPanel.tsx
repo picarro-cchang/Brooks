@@ -26,71 +26,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       bankAdditionClicked: {},
       isLoaded: false,
       refVisible: true,
-      plan: {
-        max_steps: 32,
-      panel_to_show: 0,
-      current_step: 1,
-      focus: { row: 1, column: 1 },
-      last_step: 0,
-      steps: {},
-      num_plan_files: 0,
-      plan_files: {},
-      plan_filename: "",
-      bank_names: {
-        1: {
-          name: "",
-          channels: {
-            1: "Port 1",
-            2: "Port 2",
-            3: "Port 3",
-            4: "Port 4",
-            5: "Port 5",
-            6: "Port 6",
-            7: "Port 7",
-            8: "Port 8"
-          }
-        },
-        2: {
-          name: "",
-          channels: {
-            1: "Port 9",
-            2: "Port 10",
-            3: "Port 11",
-            4: "Port 12",
-            5: "Port 13",
-            6: "Port 14",
-            7: "Port 15",
-            8: "Port 16"
-          }
-        },
-        3: {
-          name: "",
-          channels: {
-            1: "Port 17",
-            2: "Port 18",
-            3: "Port 19",
-            4: "Port 20",
-            5: "Port 21",
-            6: "Port 22",
-            7: "Port 23",
-            8: "Port 24"
-          }
-        },
-        4: {
-          name: "",
-          channels: {
-            1: "Port 25",
-            2: "Port 26",
-            3: "Port 27",
-            4: "Port 28",
-            5: "Port 29",
-            6: "Port 30",
-            7: "Port 31",
-            8: "Port 32"
-          }
-        }
-      }
-    },
+      plan: this.props.plan,
       fileName: this.props.fileName,
       fileNames: []
     };
@@ -218,13 +154,15 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
   componentDidMount() {
     console.log("MOUNTING")
-    const plan = this.props.getStateFromSavedData();
-    this.setState({plan: plan}, ()=>{console.log("----------------> ", plan)})
+    // const plan = this.props.getStateFromSavedData();
+    // if (plan) {
+    //   this.setState({plan: plan}, ()=>{console.log("----------------> ", plan)})
+    // }
   }
 
   componentWillUnmount() {
     console.log("saving storage on plan panel ", this.state.plan)
-    this.props.setPlanStorage(this.state.plan)
+    // this.props.setPlanStorage(this.state.plan)
   }
 
   saveFile() {
@@ -577,7 +515,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   );
 
   render() {
-    const file_name = this.state.plan.plan_filename;
+    console.log("PLAN STATE PLAN PANEL ", this.state.plan)
+    const file_name = this.state.plan.plan_filename; ///TROWS ERROR cannot read property plan_filename of null, which means this.state.plan is null 
     return (
       <div>
         <div className="panel-plan">
@@ -593,7 +532,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
-          {this.state.fileName && !this.props.isChanged ? (
+          {this.state.plan.plan_filename && !this.props.isChanged ? (
             <div>
               <h6 className="panel-plan-text">
                 Currently viewing File:{" "}

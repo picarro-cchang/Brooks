@@ -38,7 +38,7 @@ class EditForm extends Component<any, any> {
                   )
                 }
                 value={this.props.plan.bank_names[num].channels[i]}
-                maxLength={8}
+                maxLength={15}
               />
             </div>
           );

@@ -12,6 +12,7 @@ import { Plan } from "./types";
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
+export const storageKey = 'mainStorage';
 export class Main extends React.Component<any, any> {
   state = {
     initialized: false,
@@ -134,10 +135,19 @@ export class Main extends React.Component<any, any> {
   async componentDidMount() {
     await this.getDataViaApi();
     this.attachWSMethods(this.ws);
+    const storedPlanning = this.getStateFromSavedData();
+    console.log("Stored Plan is ", storedPlanning)
+    if(this.state.isPlanning != storedPlanning && storedPlanning != null){
+      console.log("Doesn't match on Main. Main is: ", this.state.isPlanning)
+      this.setState({
+        isPlanning: storedPlanning,
+      })
+    }
   }
 
   componentWillUnmount() {
-    console.log("Component will unmount");
+    console.log("Component will unmount, Saving Storage ", this.state.isPlanning);
+    this.setPlanStorage(this.state.isPlanning)
     if (this.ws && this.ws.readyState === 1) {
       this.ws.send("CLOSE");
       this.ws.close(1000, "Client Initited Connection Termination");
@@ -206,6 +216,37 @@ export class Main extends React.Component<any, any> {
       this.setState({isPlanning: !this.state.isPlanning})
   }
 
+  getPlanStorage = () => {
+    // get picarroStorage object from sessionStorage
+    if (window.sessionStorage) {
+      return sessionStorage.getItem(storageKey);
+    }
+    return null;
+  }
+
+  setPlanStorage = (mainStorage: boolean) => {
+    // set picarroStorage object in sessionStorage
+    if (window.sessionStorage) {
+      try {
+        sessionStorage.setItem(storageKey, JSON.stringify(mainStorage));
+      } catch (error) {
+        this.clearPlanStorage();
+      }
+    }
+  }
+
+  clearPlanStorage = () => {
+    sessionStorage.removeItem(storageKey);
+  }
+
+  getStateFromSavedData = () => {
+    const savedData = this.getPlanStorage();
+    if (savedData !== null) {
+      return (JSON.parse(savedData));
+    }
+    return null;
+  }
+
   render() {
     return (
         <div> 
@@ -215,7 +256,6 @@ export class Main extends React.Component<any, any> {
                     fileNames={this.state.fileNames}
                     plan={this.state.plan}
                     uistatus={this.state.uistatus}
-                    ws_sender={this.ws_sender}
                     getPlanFileNames={this.getPlanFileNames}
                     loadedFileName={this.state.plan.plan_filename}
                 />

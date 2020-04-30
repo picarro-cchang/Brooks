@@ -482,19 +482,20 @@ class PigssController(Ahsm):
             self.set_plan(["last_step"], num_steps + 1)
         self.set_plan(["focus"], {"row": row, "column": column})
 
-    def validate_plan(self, check_avail=True):
-        #TODO
+    def validate_plan(self, check_avail=True, plan=None):
         """Check that there are no errors in the plan. If an error is present,
         return the row and column of the first error and a string describing
         the problem"""
-        if self.plan["last_step"] <= 0:
+        if plan == None:
+            plan = self.plan
+        if plan["last_step"] <= 0:
             return PlanError(True, f"Plan is empty", 1, 1)
-        if not 1 <= self.plan["current_step"] <= self.plan["last_step"]:
-            return PlanError(True, f"Pending step must be between 1 and {self.plan['last_step']}", 1, 1)
+        if not 1 <= plan["current_step"] <= plan["last_step"]:
+            return PlanError(True, f"Pending step must be between 1 and {plan['last_step']}", 1, 1)
         min_plan_interval = self.farm.config.get_min_plan_interval()
-        for i in range(self.plan["last_step"]):
+        for i in range(plan["last_step"]):
             row = i + 1
-            s = self.plan["steps"][row]
+            s = plan["steps"][row]
             if "duration" not in s or "reference" not in s or "banks" not in s:
                 return PlanError(True, f"Malformed data at step {row}", row, 1)
             if not s["duration"] > 0 or s["duration"] < min_plan_interval:
@@ -627,7 +628,9 @@ class PigssController(Ahsm):
             new_plan = data_new["details"]
             if not isinstance(new_plan, dict):
                 raise ValueError("Plan should be a dictionary")
-            
+            # print(" GOINNG TO VALIDATION")
+            # valid = self.validate_plan(True, new_plan)
+            # print("IS IT VALIDE ", valid)
             steps = {}
             last_step = len(new_plan["steps"])
             for i in range(last_step):
@@ -1545,6 +1548,7 @@ class PigssController(Ahsm):
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.EXIT:
+            print("GOING TO STANDBY! ")
             self.set_status(["run"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["run_plan"], UiStatus.READY)
@@ -1783,7 +1787,6 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["plan_loop"], UiStatus.ACTIVE)
-            print("-----------------> Plan Looping Entry")
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["plan_loop"], UiStatus.READY)
@@ -1928,6 +1931,7 @@ class PigssController(Ahsm):
             # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         elif sig == Signal.EDIT_SAVE:
+            print("SAVIN ++++++++++++++++++++++++==")
             self.change_name_bank(e.value)
             self.run_async(self.save_port_history())
             # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))

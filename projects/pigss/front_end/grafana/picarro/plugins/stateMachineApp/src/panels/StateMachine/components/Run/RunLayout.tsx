@@ -130,12 +130,13 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
 
   render() {
     console.log("Plan on Run Layout ", this.state.plan)
+    console.log("Plan on Main ", this.props.plan)
     let left_panel;
     switch (this.state.panel_to_show) {
       case PanelTypes.NONE:
         left_panel = (
           <CommandPanel
-            plan={this.state.plan}
+            plan={this.props.plan}
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
@@ -148,7 +149,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       case PanelTypes.LOAD:
         left_panel = (
           <PlanLoadPanel
-            plan={this.state.plan}
+            plan={this.props.plan}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
             fileNames={this.props.fileNames}
@@ -162,7 +163,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       case PanelTypes.EDIT:
         left_panel = (
           <EditPanel
-            plan={this.state.plan}
+            plan={this.props.plan}
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
             updatePanel={this.updatePanelToShow}
@@ -190,7 +191,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           bankPanels.push(
             <div>
               <BankPanel
-                plan={this.state.plan}
+                plan={this.props.plan}
                 bank={i}
                 key={i}
                 uistatus={this.props.uistatus}
@@ -298,7 +299,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
 
     return (
       <div style={{ textAlign: "center" }}>
-        {/* <h1>Plan Loaded: {this.state.plan.plan_filename}</h1> */}
+        <h1>Plan Loaded: {this.props.plan.plan_filename}</h1>
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>

@@ -183,7 +183,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         } else {
           console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
           this.setPlanStorage(data["details"]);
-          this.setState({plan: data["details"]})
+          this.setState({plan: data["details"]}, () => console.log("Set it!!!! ", this.state.plan))
           this.setState({
             fileName: filename,
             panel_to_show: 0
@@ -204,7 +204,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       response.json().then(data => {
         //TODO: Need to refresh plan
         // if (data["message"]) {
-          this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
+          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
           this.props.getPlanFileNames();
         // } else {
         //   this.props.getPlanFileNames();
@@ -225,12 +225,14 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     PlanService.overwriteFile(data).then((response: any) => 
       response.json().then(data => {
         console.log("Plan Saved As! ", data);
-        if (data["message"]) {
-          console.log(data["message"])
+        // if (data["message"]) {
+          console.log("HELLO", data["message"])
           // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
-        } else {
           this.getPlanFromFileName(plan.plan_filename)
-        }
+          this.setState({
+            isChanged: false
+          })
+        // }
       })
     )
   }
@@ -268,13 +270,13 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
 
   componentDidMount() {
     const storedPlan = this.getStateFromSavedData();
-    if(this.state.plan != storedPlan && storedPlan != null){
-      console.log("Doesn't match")
-      this.setState({
-        plan: storedPlan,
-        fileName: storedPlan.plan_filename
-      })
-    }
+    // if(this.state.plan != storedPlan && storedPlan != null){
+    //   console.log("Doesn't match")
+    //   this.setState({
+    //     plan: storedPlan,
+    //     fileName: storedPlan.plan_filename
+    //   })
+    // }
   }
 
   componentWillUnmount() {
@@ -295,7 +297,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 bank={i}
                 key={i}
                 uistatus={this.props.uistatus}
-                ws_sender={this.props.ws_sender}
+                // ws_sender={this.props.ws_sender}
                 addChanneltoPlan={this.addChanneltoPlan}
               />
             </div>
@@ -312,7 +314,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             <PlanPanel
                 uistatus={this.props.uistatus}
                 plan={this.state.plan}
-                ws_sender={this.props.ws_sender}
+                // ws_sender={this.props.ws_sender}
                 bankAddition={this.state.bankAdd}
                 updateFileName={this.updateFileName}
                 fileName={this.state.fileName}
@@ -333,7 +335,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             plan={this.state.plan}
             updateFileName={this.updateFileName}
             isChanged={this.state.isChanged}
-            ws_sender={this.props.ws_sender}
+            // ws_sender={this.props.ws_sender}
             getPlanFromFileName={this.getPlanFromFileName}
             updatePanel={this.updatePanelToShow}
             fileNames={this.props.fileNames}
@@ -349,7 +351,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 plan={this.state.plan}
                 updateFileName={this.updateFileName}
                 isChanged={this.state.isChanged}
-                ws_sender={this.props.ws_sender}
+                // ws_sender={this.props.ws_sender}
                 planSaved={this.planSaved}
                 updatePanel={this.updatePanelToShow}
                 fileNames={this.props.fileNames}

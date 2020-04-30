@@ -186,7 +186,9 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
               id={"edit-labels"}
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
-              onClick={e => this.props.updatePanel(2)}
+              onClick={e => {
+                this.props.ws_sender({element: "edit"})
+                this.props.updatePanel(2)}}
               disabled={this.getDisabled("edit")}
             >
               Edit Labels

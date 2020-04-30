@@ -151,11 +151,11 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
     for (const key in bank_list) {
       const bankNum = bank_list[key];
       bankValue = this.state.plan.bank_names[bankNum].name;
-      if (bankValue.length < 1) {
-        return false;
-      } else if (bankValue.replace(/\s/g, "").length < 1) {
-        return false;
-      } else {
+      // if (bankValue.length < 1) {
+      //   return false;
+      // } else if (bankValue.replace(/\s/g, "").length < 1) {
+      //   return false;
+      // } else {
         for (let i = 1; i < 9; i++) {
           const chanValue = this.state.plan.bank_names[bankNum].channels[i];
           if (chanValue.length < 1) {
@@ -165,11 +165,12 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
           }
         }
       }
-    }
+    // }
     return true;
   };
 
   handleSubmit = event => {
+    console.log("HELLO")
     event.preventDefault();
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
@@ -196,6 +197,7 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
         4: { name: this.state.plan.bank_names[4].name, channels: channels4 }
       }
     });
+    this.props.updatePanel(0);
   };
 
   handleClose = () => {
@@ -212,6 +214,7 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
       }
     });
     this.props.ws_sender({ element: "edit_cancel" });
+    this.props.updatePanel(0)
   };
 
   render() {

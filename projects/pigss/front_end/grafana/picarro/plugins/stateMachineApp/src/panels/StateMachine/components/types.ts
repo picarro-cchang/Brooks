@@ -36,7 +36,7 @@ export interface PlanLayoutProps {
     uistatus: {
       [key: string]: any;
     };
-    ws_sender: (o: object) => void;
+    // ws_sender: (o: object) => void;
     plan: Plan;
     layoutSwitch: () => void;
     fileNames: any[]
@@ -76,7 +76,7 @@ export interface BankPanelPlanOptions {
       clean?: { [bankNum: string]: string };
       channel?: { [bankNum: string]: { [channelNum: string]: string } };
     };
-    ws_sender: (o: object) => void;
+    // ws_sender: (o: object) => void;
     plan: Plan;
     addChanneltoPlan: (bank: number, channel: number) => void;
 }
@@ -109,7 +109,7 @@ export interface LoadPanelCommandOptions {
 
   export interface LoadPanelOptions {
     plan: Plan;
-    ws_sender: (o: object) => void;
+    // ws_sender: (o: object) => void;
     isChanged: boolean;
     updateFileName: (x: boolean) => void;
     updatePanel: (x: number) => void;
@@ -122,7 +122,7 @@ export interface LoadPanelCommandOptions {
 export interface PlanPanelOptions {
     uistatus: { [key: string]: any };
     plan: Plan;
-    ws_sender: (o: object) => void;
+    // ws_sender: (o: object) => void;
     isChanged: boolean;
     updateFileName: (x: boolean) => void;
     // addChanneltoPlan: (bank: number, channel: number) => void;
@@ -139,7 +139,7 @@ export interface PlanPanelOptions {
 
   export interface PlanSavePanelOptions {
     plan: Plan;
-    ws_sender: (o: object) => void;
+    // ws_sender: (o: object) => void;
     isChanged: boolean;
     updateFileName: (x: boolean) => void;
     planSaved: (f: string, d: object) => void;
