@@ -710,8 +710,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.DISABLED)
             self.set_status(["edit"], UiStatus.DISABLED)
-            # self.set_status(["timer"], 0)
-            # self.timer = False
+            self.set_status(["timer"], 0)
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
@@ -734,7 +733,6 @@ class PigssController(Ahsm):
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["edit"], UiStatus.READY)
-            self.timer = False
             self.set_status(["timer"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
@@ -812,7 +810,6 @@ class PigssController(Ahsm):
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
-            self.timer = False
             self.set_status(["timer"], 0)
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
@@ -825,7 +822,6 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             self.set_status(["standby"], UiStatus.ACTIVE)
-            self.timer = False
             self.set_status(["timer"], 0)
             return self.handled(e)
         return self.super(self._standby)
@@ -926,7 +922,6 @@ class PigssController(Ahsm):
             self.set_status(["run"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
-            self.timer = False
             self.set_status(["timer"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
