@@ -715,11 +715,38 @@ class PigssController(Ahsm):
             payload = e.value
             self.all_banks = payload.bank_list
             self.run_async(self.save_port_history())
-            return self.tran(self._operational)
+            return self.tran(self._warmup_wait)
         elif sig == Signal.TERMINATE:
             self.run_async(self.db_writer.close_connection())
             return self.tran(self._exit)
         return self.super(self.top)
+
+    @state
+    def _warmup_wait(self, e):
+        sig = e.signal
+        if sig == Signal.ENTRY:
+            self.set_status(["standby"], UiStatus.DISABLED)
+            self.set_status(["identify"], UiStatus.DISABLED)
+            self.set_status(["run"], UiStatus.DISABLED)
+            self.set_status(["plan"], UiStatus.DISABLED)
+            self.set_status(["plan_run"], UiStatus.DISABLED)
+            self.set_status(["plan_loop"], UiStatus.DISABLED)
+            self.set_status(["reference"], UiStatus.DISABLED)
+            self.set_status(["edit"], UiStatus.DISABLED)
+            self.warmup_status_te = TimeEvent("WARMUP_STATUS_TIMER")
+            self.piglet_status_te.postEvery(self, self.farm.config.get_wait_warmup_timer())
+            self.picarro_analyzers = [rpc_name for rpc_name in self.farm.RPC if rpc_name.startswith("Picarro_")]
+        elif sig == Signal.WARMUP_STATUS_TIMER
+            analyzers_ready = []
+            for analyzer_rpc_name in self.picarro_analyzers:
+                result = await self.farm.RPC[analyzer_rpc_name].INSTMGR_GetStateRpc()
+                analyzers_ready.append(result["InstMgr"] == "MEASURING")
+            if all(analyzers_ready): 
+                Framework.publish(Event(Signal.WARMUP_COMPLETE, None))
+        elif sig == Signal.WARMUP_COMPLETE:
+            self.piglet_status_te.disarm()
+            return self.tran(self._operational)
+        return self.super(self._configure)
 
     @state
     def _operational(self, e):

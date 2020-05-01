@@ -25,6 +25,8 @@ Settings:
   madmapper_startup_delay: num(required=False)
   startup_plan: regex('[A-Za-z_]+', required=False)
   min_plan_interval: num(required=True)
+  wait_warmup: bool(required=True)
+  wait_warmup_timer: int(required=False)
 ---
 Simulation:
   enabled: bool(required=False)

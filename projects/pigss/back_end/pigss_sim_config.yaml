@@ -101,6 +101,8 @@ Settings:
   madmapper_startup_delay: 2
   startup_plan: __default__ # Do NOT include extension or directory
   min_plan_interval: 20
+  wait_warmup: true
+  wait_warmup_timer: 1
 
 Services:
   - Name: DBDecimator
