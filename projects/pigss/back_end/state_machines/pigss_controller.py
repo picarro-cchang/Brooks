@@ -1563,11 +1563,11 @@ class PigssController(Ahsm):
             else:
                 Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
             self.disable_buttons()
+            self.timer = True
+            self.run_async(self.timer_update())
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
-            self.timer = True
-            self.run_async(self.timer_update())
             return self.handled(e)
         return self.super(self._run_plan21)
 
@@ -1579,8 +1579,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["plan_loop"], UiStatus.READY)
-            self.set_status(["timer"], 0)
             self.timer = False
+            self.set_status(["timer"], 0)
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_LOOP:
             return self.handled(e)
@@ -1715,11 +1715,11 @@ class PigssController(Ahsm):
             else:
                 Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
             self.disable_buttons()
+            self.timer = True
+            self.run_async(self.timer_update())
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
-            self.timer = True
-            self.run_async(self.timer_update())
             return self.handled(e)
         return self.super(self._loop_plan21)
 
