@@ -121,6 +121,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.deleteFile = this.deleteFile.bind(this);
     this.updateFileName = this.updateFileName.bind(this);
     this.setModalInfo = this.setModalInfo.bind(this);
+    this.updateSavedFileState = this.updateSavedFileState.bind(this);
   }
 
   // shouldComponentUpdate(nextProps) {
@@ -192,14 +193,23 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
       }))
   }
 
+  updateSavedFileState(plan: Plan) {
+    this.setState({plan: plan})
+  }
+
   planSaved(fileName, plan) {
-    /* Save File and Set fileName to state */
+    // /* Save File and Set fileName to state */
+    // const plan = {...this.state.plan}
+    // plan.plan_filename = fileName
+    // this.setState({plan}, () => 
+    // console.log(this.state.plan.plan_filename)
+    plan.plan_filename = fileName
     const data = {
       name: fileName,
       details: plan,
       user: "admin"
     }
-    console.log("Plan Saved! ", data)
+    console.log("Plan Saved! ", data, "plan name ", plan.plan_filename)
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
         //TODO: Need to refresh plan
@@ -325,6 +335,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 setPlanStorage={this.setPlanStorage}
                 getStateFromSavedData={this.getStateFromSavedData}
                 setModalInfo={this.setModalInfo}
+                updateSavedFileState={this.updateSavedFileState}
             />
         );
         break;
@@ -375,7 +386,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  this.planSaved(response.filename, response.plan)
+                  this.planSaved(response.filename, this.state.plan)
                   this.updateFileName(false)
                   this.setModalInfo(false, "", 0, {}, "")
                 }}

@@ -167,6 +167,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
   saveFile() {
     this.props.updatePanel(2);
+    this.props.updateSavedFileState(this.state.plan);
   }
 
   overwriteFile() {

@@ -135,6 +135,7 @@ export interface PlanPanelOptions {
     getStateFromSavedData: () => any;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     // getLastLoadedPlan: () => void;
+    updateSavedFileState: (plan: Plan) => void;
   }
 
   export interface PlanSavePanelOptions {

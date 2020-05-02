@@ -51,8 +51,8 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
   }
 
   componentDidMount() {
-    const plan = this.props.getStateFromSavedData();
-    this.setState({plan: plan})
+    // const plan = this.props.getStateFromSavedData();
+    // this.setState({plan: plan})
   }
 
   setFileName(e) {
