@@ -20,8 +20,14 @@ Project Administration:
 * Before issuing a pull-request, pull and merge any recent changes in develop and make sure the code in your branch works!
 * After a pull-request is accepted and merged delete the topic branch from the repo.  The repo should only contain active branches and fixed releases.
 
-The only persons currently allowed to commit to this repo are 
-* Chetan Vala
+Following developers are allowed to commit in this repo:
+
+* Alex Bardales
+* Dileep Pandey
+* Emma Peatfield
 * Gerald Sornsen
+* John Peck
 * Patrick Pittier (administrator)
 * Petr Khromov
+* Richard Dorfner
+* Sze Tan
