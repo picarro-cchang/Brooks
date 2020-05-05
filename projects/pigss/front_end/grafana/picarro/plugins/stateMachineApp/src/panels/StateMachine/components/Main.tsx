@@ -2,10 +2,11 @@ import React, { Component } from "react";
 import PicarroAPI from "../api/PicarroAPI";
 import deepmerge from "deepmerge";
 import { notifyError } from "../utils/Notifications";
-import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { PlanService } from "../api/PlanService";
 import PlanLayout from "./Plan/PlanLayout";
+import { ToastContainer, toast } from "react-toastify";
+
 import RunLayout from "./Run/RunLayout";
 import { Plan } from "./types";
 
@@ -271,10 +272,9 @@ export class Main extends React.Component<any, any> {
                     getPlanFileNames={this.getPlanFileNames}
                 />
             )}
+            <ToastContainer />
 
-      
         </div>
     );
   }
 }
-        // <ToastContainer />

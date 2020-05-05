@@ -625,56 +625,51 @@ class PigssController(Ahsm):
 
     async def load_new_plan(self, name):
         '''Checks last_running is not the same, if it is, fine, just less steps. Loads this new plan via API call, sets new plan is_running=1'''
-        try:
-            if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
-                await self.set_is_running(self.plan["plan_filename"], self.plan, 0)
-                
-            async with aiohttp.ClientSession() as session:
-                data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
-            # await asyncio.sleep(1.0)
-            data_new = json.loads(data)
-            #########TODO:Exceptions
-            await self.set_is_running(name, data_new["details"], 1)
-            new_plan = data_new["details"]
-            if not isinstance(new_plan, dict):
-                raise ValueError("Plan should be a dictionary")
-            # print(" GOINNG TO VALIDATION")
-            # valid = self.validate_plan(True, new_plan)
-            # print("IS IT VALIDE ", valid)
-            steps = {}
-            last_step = len(new_plan["steps"])
-            for i in range(last_step):
-                # Note: Serializing through JSON turns all dictionary keys into strings. We
-                #  need to turn bank numbers and plan steps back into integers for compatibility
-                #  with the rest of the code
-                row = i + 1
-                if str(row) not in new_plan["steps"]:
-                    raise ValueError(f"Plan is missing step {row}")
-                allsteps = new_plan["steps"]
-                step = allsteps[str(row)]
-                if "banks" not in step:
-                    raise ValueError(f"Plan row {row} is missing 'banks' key")
-                if "reference" not in step:
-                    raise ValueError(f"Plan row {row} is missing 'reference' key")
-                if "duration" not in step:
-                    raise ValueError(f"Plan row {row} is missing 'duration' key")
-                steps[row] = {
-                    "banks": {int(bank_str): step["banks"][bank_str]
-                        for bank_str in step["banks"]},
-                    "reference": step["reference"],
-                    "duration": step["duration"]
-                }
-            self.set_plan(["plan_filename"], new_plan["plan_filename"])
-            self.set_plan(["current_step"], new_plan["current_step"])
-            self.set_plan(["steps"], steps)
-            self.set_plan(["last_step"], last_step)
-            self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
-            self.set_plan(["bank_names"], new_plan["bank_names"])
-            self.last_running = name
-            self.last_running_details = new_plan
-            self.postFIFO(Event(Signal.PLAN_LOADED, None))
-        except Exception:
-            self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, None))
+        if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
+            await self.set_is_running(self.plan["plan_filename"], self.plan, 0)
+        async with aiohttp.ClientSession() as session:
+            data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
+        data_new = json.loads(data)
+        #########TODO:Exceptions
+        await self.set_is_running(name, data_new["details"], 1)
+        new_plan = data_new["details"]
+        if not isinstance(new_plan, dict):
+            raise ValueError("Plan should be a dictionary")
+        # print(" GOINNG TO VALIDATION")
+        # valid = self.validate_plan(True, new_plan)
+        # print("IS IT VALIDE ", valid)
+        steps = {}
+        last_step = len(new_plan["steps"])
+        for i in range(last_step):
+            # Note: Serializing through JSON turns all dictionary keys into strings. We
+            #  need to turn bank numbers and plan steps back into integers for compatibility
+            #  with the rest of the code
+            row = i + 1
+            if str(row) not in new_plan["steps"]:
+                raise ValueError(f"Plan is missing step {row}")
+            allsteps = new_plan["steps"]
+            step = allsteps[str(row)]
+            if "banks" not in step:
+                raise ValueError(f"Plan row {row} is missing 'banks' key")
+            if "reference" not in step:
+                raise ValueError(f"Plan row {row} is missing 'reference' key")
+            if "duration" not in step:
+                raise ValueError(f"Plan row {row} is missing 'duration' key")
+            steps[row] = {
+                "banks": {int(bank_str): step["banks"][bank_str]
+                    for bank_str in step["banks"]},
+                "reference": step["reference"],
+                "duration": step["duration"]
+            }
+        self.set_plan(["plan_filename"], new_plan["plan_filename"])
+        self.set_plan(["current_step"], new_plan["current_step"])
+        self.set_plan(["steps"], steps)
+        self.set_plan(["last_step"], last_step)
+        self.set_plan(["focus"], {"row": last_step + 1, "column": 1})
+        self.set_plan(["bank_names"], new_plan["bank_names"])
+        self.last_running = name
+        self.last_running_details = new_plan
+        print("PLAN LOADED ")
 
 
 
@@ -1537,7 +1532,7 @@ class PigssController(Ahsm):
             try:
                 self.run_async(self.load_new_plan(self.plan_name))
                 self.disable_buttons()
-                self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
+                self.postFIFO(Event(Signal.PLAN_LOADED, None))
             except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
             return self.handled(e)
@@ -1964,7 +1959,6 @@ class PigssController(Ahsm):
             # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
         elif sig == Signal.EDIT_SAVE:
-            print("SAVIN ++++++++++++++++++++++++==")
             self.change_name_bank(e.value)
             self.run_async(self.save_port_history())
             # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
@@ -2022,7 +2016,7 @@ class PigssController(Ahsm):
                 Framework.publish(Event(Signal.FILENAME_OK, None))
                 await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
                 Framework.publish(Event(Signal.LOAD_MODAL_OK, {"name": self.last_running}))
-                await self.wait_for_state(self._load_preview2, "Timeout reaching _load_preview2 state")
+                # await self.wait_for_state(self._load_preview2, "Timeout reaching _load_preview2 state")
 
                 ##SET Current Step to 1
                 ##loads plan

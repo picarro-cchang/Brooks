@@ -3,6 +3,8 @@ import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep, Plan } from "../types";
 import { PlanService } from "../../api/PlanService";
 import fs from "fs";
+import Modal from 'react-responsive-modal';
+
 
 export interface State {
   refVisible: boolean;
@@ -11,14 +13,19 @@ export interface State {
   bankAdditionClicked: {};
   fileName: string;
   fileNames: string[];
+  modal_info: {
+    show: boolean,
+    html: string,
+    num_buttons: number, 
+    buttons: {},
+    action: string
+  };
 }
 
 interface planStorage {
   planState: Plan;
 }
 
-
-//TODO: Add Validation
 class PlanPanel extends Component<PlanPanelOptions, State> {
   constructor(props) {
     super(props);
@@ -28,7 +35,14 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       refVisible: true,
       plan: this.props.plan,
       fileName: this.props.fileName,
-      fileNames: []
+      fileNames: [],
+      modal_info: {
+        show: false,
+        html: "",
+        num_buttons: 0,
+        buttons: {},
+        action: ""
+      },
     };
     this.addToPlan = this.addToPlan.bind(this);
     this.getAvailableBanks = this.getAvailableBanks.bind(this);
@@ -37,6 +51,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.updateCurrentStep = this.updateCurrentStep.bind(this);
     this.insertRow = this.insertRow.bind(this);
     this.clearPlan = this.clearPlan.bind(this);
+    this.setModalInfo = this.setModalInfo.bind(this);
   }
 
   validation(plan: Plan, checkAvailable=true) {
@@ -134,6 +149,17 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     }
     console.log('all done')
     return true
+  }
+
+  setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
+    const modal = {
+      show: show, 
+      html: html,
+      num_buttons: num_buttons,
+      buttons: buttons,
+      action: action
+    }
+    this.setState({modal_info: modal})
   }
 
 
@@ -284,10 +310,11 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     }
   }
 
-  updateDuration(row: number, duration: number) {
+  updateDuration(row: number, duration) {
+    duration = duration.replace(/\D/g,'');
     this.props.updateFileName(true);
     const plan = { ...this.state.plan };
-    plan.steps[row].duration = duration;
+    plan.steps[row].duration = Number(duration);
     this.setState({ plan });
   }
 
@@ -421,6 +448,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       }
     }
 
+    
+
     return (
       <div className="gf-form-inline" key={row}>
         {row < 10 ? (
@@ -476,7 +505,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             }
             onChange={e => {
               this.props.updateFileName(true);
-              this.updateDuration(row, Number(e.target.value));
+              this.updateDuration(row, e.target.value);
             }}
             onFocus={e => {
               this.updateFocus(row, 2);
@@ -515,9 +544,45 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     <div key={key}>{this.makePlanRow(index + 1)}</div>
   );
 
+
   render() {
     console.log("PLAN STATE PLAN PANEL ", this.state.plan)
     const file_name = this.state.plan.plan_filename; ///TROWS ERROR cannot read property plan_filename of null, which means this.state.plan is null 
+    const modalButtons =[]
+    switch (this.state.modal_info.action) {
+      case 'clearPlan':
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
+          const response = modal_info.buttons[i].response
+          if (response != null ) {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.clearPlan()
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          }
+        }
+        break;
+      }
     return (
       <div>
         <div className="panel-plan">
@@ -628,8 +693,18 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
                   onClick={e => {
-                    this.props.updateFileName(true);
-                    this.clearPlan();
+                    this.setModalInfo(true, `<div>Are you sure you want to clear plan?</div>`, 2, {
+                      1: {
+                        caption: "Ok",
+                        className: "btn btn-success btn-large",
+                        response: "clear"
+                      },
+                      2: {
+                        caption: "Cancel",
+                        className: "btn btn-danger btn-large",
+                        response: null
+                      }
+                      }, 'clearPlan')
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -654,6 +729,22 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             </div>
           </div>
         </div>
+        <Modal
+          styles={{ overlay: { color: "black" } }}
+          open={this.state.modal_info.show}
+          onClose={() => {
+            this.setModalInfo(false, "", 0, {}, "")
+            // this.ws_sender({ element: "modal_close" })
+          }}
+          center
+        >
+          <div style={{ margin: "20px" }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}
+            ></div>
+          </div>
+          {modalButtons}
+        </Modal>
       </div>
     );
   }

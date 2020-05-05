@@ -490,6 +490,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           }
         }
         break;
+        
       default:
         for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
           const modal_info = this.state.modal_info;
