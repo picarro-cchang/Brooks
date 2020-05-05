@@ -26,7 +26,7 @@ export class Main extends React.Component<any, any> {
     plan: {
       max_steps: 32,
       panel_to_show: 0,
-      current_step: 1,
+      current_step: 5,
       focus: { row: 1, column: 1 },
       last_step: 0,
       steps: {},
@@ -188,6 +188,7 @@ export class Main extends React.Component<any, any> {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
       } else if ("plan" in o) {
+        console.log("PLAN UPDATED VIA WS ", o.plan.current_step)
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
         // const fileNames = deepmerge(this.state.fileNames, o.plan.plan_files)

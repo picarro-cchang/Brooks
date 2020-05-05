@@ -110,7 +110,7 @@ export interface LoadPanelCommandOptions {
   export interface LoadPanelOptions {
     plan: Plan;
     // ws_sender: (o: object) => void;
-    isChanged: boolean;
+    isEdited: boolean;
     updateFileName: (x: boolean) => void;
     updatePanel: (x: number) => void;
     fileNames: any[]
@@ -123,7 +123,7 @@ export interface PlanPanelOptions {
     uistatus: { [key: string]: any };
     plan: Plan;
     // ws_sender: (o: object) => void;
-    isChanged: boolean;
+    isEdited: boolean;
     updateFileName: (x: boolean) => void;
     // addChanneltoPlan: (bank: number, channel: number) => void;
     bankAddition: { [key: string]: number };
@@ -141,7 +141,7 @@ export interface PlanPanelOptions {
   export interface PlanSavePanelOptions {
     plan: Plan;
     // ws_sender: (o: object) => void;
-    isChanged: boolean;
+    isEdited: boolean;
     updateFileName: (x: boolean) => void;
     planSaved: (f: string, d: object) => void;
     updatePanel: (x: number) => void;

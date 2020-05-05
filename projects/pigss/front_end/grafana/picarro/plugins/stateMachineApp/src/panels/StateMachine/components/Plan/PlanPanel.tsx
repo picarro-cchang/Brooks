@@ -152,22 +152,20 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     return true;
   }
 
-  componentDidMount() {
-    console.log("MOUNTING")
-    // const plan = this.props.getStateFromSavedData();
-    // if (plan) {
-    //   this.setState({plan: plan}, ()=>{console.log("----------------> ", plan)})
-    // }
-  }
-
-  componentWillUnmount() {
-    console.log("saving storage on plan panel ", this.state.plan)
-    // this.props.setPlanStorage(this.state.plan)
-  }
-
   saveFile() {
     this.props.updatePanel(2);
     this.props.updateSavedFileState(this.state.plan);
+  }
+
+  isSaveDisabled() {
+    if(this.state.plan.focus.row > this.state.plan.last_step) {
+      return true
+    } else if (!this.props.isEdited) {
+      return true
+    } else if (this.state.plan.plan_filename == "") {
+      return true
+    }
+    return false
   }
 
   overwriteFile() {
@@ -223,6 +221,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       }
       this.setState({ plan });
     }
+    this.props.updateFileName(true)
   }
 
   getAvailableBanks() {
@@ -327,6 +326,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       column: col
     };
     this.setState({ plan });
+    this.props.updateFileName(true)
   }
 
   changeChannelstoProperFormat(bank, channel, row) {
@@ -526,14 +526,18 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             className="cancel panel-plan-text"
             id="cancel-x"
             onClick={e => {
-              this.exitPlanPanel();
+              if (this.props.isEdited) {
+                this.exitPlanPanel();
+              } else {
+                this.props.layoutSwitch();
+              }
             }}
           ></span>
           <h6 className="panel-plan-text">
             Please click on available channels to set up a schedule, then click
             on the radio button to select starting position.
           </h6>
-          {this.state.plan.plan_filename && !this.props.isChanged ? (
+          {this.state.plan.plan_filename && !this.props.isEdited ? (
             <div>
               <h6 className="panel-plan-text">
                 Currently viewing File:{" "}
@@ -637,7 +641,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                 <button
                   type="button"
                   id="ok-btn"
-                  disabled={this.state.plan.focus.row > this.state.plan.last_step}
+                  disabled={this.isSaveDisabled()}
                   onClick={e => {
                     this.overwriteFile();
                     

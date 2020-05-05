@@ -15,7 +15,7 @@ interface State {
     panel_to_show: number,
     fileName: string,
     bankAdd: {},
-    isChanged: boolean
+    isEdited: boolean
     modal_info: {
       show: boolean,
       html: string,
@@ -23,7 +23,7 @@ interface State {
       buttons: {},
       action: string
     },
-    loadedFileName: string
+    loadedFileName: string,
 }
 export const storageKey = 'planStorage';
 
@@ -101,7 +101,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         panel_to_show: 0,
         fileName: "",
         bankAdd: {},
-        isChanged: false,
+        isEdited: false,
         modal_info: {
           show: false,
           html: "",
@@ -109,7 +109,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           buttons: {},
           action: ""
         },
-        loadedFileName: this.props.loadedFileName
+        loadedFileName: this.props.loadedFileName,
     }
     this.addChanneltoPlan = this.addChanneltoPlan.bind(this);
     this.updatePanelToShow = this.updatePanelToShow.bind(this);
@@ -219,6 +219,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         // } else {
         //   this.props.getPlanFileNames();
           this.getPlanFromFileName(fileName);
+          this.setState({isEdited: false})
         // }
       })
     );
@@ -240,7 +241,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
           this.getPlanFromFileName(plan.plan_filename)
           this.setState({
-            isChanged: false
+            isEdited: false
           })
         // }
       })
@@ -275,27 +276,26 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   }
 
   updateFileName(x: boolean) {
-    this.setState({ isChanged: x });
+    this.setState({ isEdited: x });
   }
 
-  componentDidMount() {
-    const storedPlan = this.getStateFromSavedData();
-    // if(this.state.plan != storedPlan && storedPlan != null){
-    //   console.log("Doesn't match")
-    //   this.setState({
-    //     plan: storedPlan,
-    //     fileName: storedPlan.plan_filename
-    //   })
-    // }
-  }
+  // componentDidMount() {
+  //   const storedPlan = this.getStateFromSavedData();
+  //   // if(this.state.plan != storedPlan && storedPlan != null){
+  //   //   console.log("Doesn't match")
+  //   //   this.setState({
+  //   //     plan: storedPlan,
+  //   //     fileName: storedPlan.plan_filename
+  //   //   })
+  //   // }
+  // }
 
-  componentWillUnmount() {
-    console.log("saving storage")
-    this.setPlanStorage(this.state.plan)
-  }
+  // componentWillUnmount() {
+  //   console.log("saving storage")
+  //   this.setPlanStorage(this.state.plan)
+  // }
 
   render() {
-    console.log("_____________________L Loaded File Name ", this.props.loadedFileName)
     const bankPanelsEdit = [];
     if (("bank" in this.props.uistatus) as any) {
       for (let i = 1; i <= 4; i++) {
@@ -328,7 +328,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 bankAddition={this.state.bankAdd}
                 updateFileName={this.updateFileName}
                 fileName={this.state.fileName}
-                isChanged={this.state.isChanged}
+                isEdited={this.state.isEdited}
                 updatePanel={this.updatePanelToShow}
                 layoutSwitch={this.props.layoutSwitch}
                 planOverwrite={this.planOverwrite}
@@ -345,7 +345,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           <LoadPanel
             plan={this.state.plan}
             updateFileName={this.updateFileName}
-            isChanged={this.state.isChanged}
+            isEdited={this.state.isEdited}
             // ws_sender={this.props.ws_sender}
             getPlanFromFileName={this.getPlanFromFileName}
             updatePanel={this.updatePanelToShow}
@@ -361,7 +361,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             <SavePanel
                 plan={this.state.plan}
                 updateFileName={this.updateFileName}
-                isChanged={this.state.isChanged}
+                isEdited={this.state.isEdited}
                 // ws_sender={this.props.ws_sender}
                 planSaved={this.planSaved}
                 updatePanel={this.updatePanelToShow}

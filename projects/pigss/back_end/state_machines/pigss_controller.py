@@ -178,6 +178,7 @@ class PigssController(Ahsm):
         self.receive_queue = receive_queue
 
     def get_available_ports(self):
+        print("Getting available Ports ")
         return self.available_ports["available_ports"]
 
     async def fetch(self, session, url):
@@ -211,6 +212,7 @@ class PigssController(Ahsm):
     #             print(await resp.json())
 
     async def save_port_history(self):
+        print("Saving Port History ")
         data = [{
             "measurement": "port_history",
             "tags": {},
@@ -348,7 +350,7 @@ class PigssController(Ahsm):
         A shadow dictionary containing the change is sent via a websocket to inform the UI
         of the change in the plan.
         """
-        shadow = self.modify_value_in_nested_dict(self.plan, path, value)
+        shadow = self.modify_value_in_nested_dict(self.available_ports, path, value)
         try:
             self.send_queue.put_nowait(json.dumps({"available_ports": shadow}))
         except asyncio.queues.QueueFull:
@@ -621,7 +623,7 @@ class PigssController(Ahsm):
                 
             async with aiohttp.ClientSession() as session:
                 data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
-            await asyncio.sleep(1.0)
+            # await asyncio.sleep(1.0)
             data_new = json.loads(data)
             #########TODO:Exceptions
             await self.set_is_running(name, data_new["details"], 1)
@@ -1674,6 +1676,7 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
+            print("_________________________________> STEP ", self.plan["current_step"])
             self.run_async(self.save_plan_to_default())
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
@@ -1699,7 +1702,9 @@ class PigssController(Ahsm):
             self.plan_step_te.postAt(self, self.plan_step_timer_target)
             return self.handled(e)
         elif sig == Signal.EXIT:
+            print("LEAVVING")
             self.run_async(self.set_current_step())
+            self.run_async(self.save_plan_to_default())
             self.plan_step_te.disarm()
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -1803,7 +1808,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             return self.handled(e)
         elif sig == Signal.EXIT:
-            # self.set_modal_info(["show"], False)
+            self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
             print("-----------------> Signal Modal OK")
@@ -1833,6 +1838,8 @@ class PigssController(Ahsm):
             self.plan_step_te.postAt(self, self.plan_step_timer_target)
             return self.handled(e)
         elif sig == Signal.EXIT:
+            self.run_async(self.set_current_step())
+            self.run_async(self.save_plan_to_default())
             self.plan_step_te.disarm()
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -1844,6 +1851,7 @@ class PigssController(Ahsm):
             if current_step > last_step:
                 current_step -= last_step
             self.set_plan(["current_step"], current_step)
+            self.run_async(self.set_current_step())
             return self.tran(self._loop_plan2)
         return self.super(self._loop_plan)
 

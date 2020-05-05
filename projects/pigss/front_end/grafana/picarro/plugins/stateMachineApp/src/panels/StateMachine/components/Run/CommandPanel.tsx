@@ -1,7 +1,16 @@
 import React, { Component, PureComponent } from "react";
-import { CommandPanelOptions } from "./../types";
+import { CommandPanelOptions, Plan } from "./../types";
 
-class CommandPanel extends PureComponent<CommandPanelOptions, any> {
+interface State {
+  plan: Plan
+}
+class CommandPanel extends PureComponent<CommandPanelOptions, State> {
+  constructor(props) {
+    super(props)
+    this.state = {
+      plan: this.props.plan
+    }
+  }
   classNameOpt = {
     DISABLED: "",
     READY: "btn-outline-success",
@@ -27,6 +36,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
   };
 
   render() {
+    console.log("PLAN STEP ", this.props.plan.current_step)
     return (
       <div className="panel-command">
         <div style={{ width: "100%", marginTop: 20 }}>
@@ -141,8 +151,10 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
             <button
               id={"loop-plan"}
               onClick={e => {
-                console.log("Setting loop plan ", this.state)
-                this.props.setModalInfo(true, `<div>Loop Plan ${this.props.plan.plan_filename} starting at Step ${this.props.plan.current_step}?</div>`, 3, {
+                const name = this.props.plan.plan_filename
+                const plan = this.props.plan.current_step
+                this.props.ws_sender({ element: "plan_loop" })
+                this.props.setModalInfo(true, `<div>Looping Plan ${name} starting at Step ${plan}?</div>`, 3, {
                   1: {
                     caption: "Ok",
                     className: "btn btn-success btn-large",
@@ -159,7 +171,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions, any> {
                     response: null
                   }
                 }, 'runPlan')
-                this.props.ws_sender({ element: "plan_loop" })
               }}
               disabled={this.getDisabled("plan_loop")}
               value="plan_loop"

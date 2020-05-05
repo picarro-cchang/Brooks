@@ -56,6 +56,11 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     } else if (this.props.fileNames !== nextProps.fileNames) {
       console.log("New List of FileNames ", nextProps.fileNames)
       this.setState({fileNames: nextProps.fileNames})
+    } else if (this.props.plan.current_step !== nextProps.plan.current_step && nextProps.plan.current_step !== null) {
+      const plan = {...this.state.plan}
+      plan.current_step = nextProps.plan.current_step
+      console.log("New Step ", nextProps.plan.current_step)
+      this.setState({plan})
     }
     return true;
   }
@@ -129,8 +134,10 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   }
 
   render() {
-    console.log("Plan on Run Layout ", this.state.plan)
-    console.log("Plan on Main ", this.props.plan)
+    // console.log("Plan on Run Layout ", this.state.plan)
+    // console.log("Plan on Main ", this.props.plan)
+    console.log("STEP ON RUN ", this.state.plan.current_step)
+    console.log("STEP ON MAIN ", this.props.plan.current_step)
     let left_panel;
     switch (this.state.panel_to_show) {
       case PanelTypes.NONE:
@@ -202,86 +209,165 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         }
       }
     }
-    const modalButtons = [];
-    for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
-      const modal_info = this.state.modal_info;
-      const response = modal_info.buttons[i].response
-      if (modal_info.action == "loadPlan") {
-        if (response != null) {
-        modalButtons.push(
-          <button
-            className={modal_info.buttons[i].className}
-            style={{ margin: "10px" }}
-            onClick={() => {
-              this.updatePanelToShow(0);
-              // this.props.currentStepChange(response.plan);
-              this.props.ws_sender({
-                element: "load_modal_ok",
-                name: response.name,
-              })
-              
-              this.setModalInfo(false, "", 0, {}, "")
-            }}
-          >
-            {modal_info.buttons[i].caption}
-          </button>
-        );
-      } else {
-        modalButtons.push(
-          <button
-            className={modal_info.buttons[i].className}
-            style={{ margin: "10px" }}
-            onClick={() => {
-              console.log("Canceling Load")
-              this.props.ws_sender({
-                element: "load_modal_cancel",
-              })
-              this.setModalInfo(false, "", 0, {}, "")
-            }}
-          >
-            {modal_info.buttons[i].caption}
-          </button>
-        );
-      }
-    } else {
-      if (response != null) {
-        if (response.step != null) {
-          response.plan.current_step = response.step
-          modalButtons.push(
-            <button
-              className={modal_info.buttons[i].className}
-              style={{ margin: "10px" }}
-              onClick={() => {
-                this.updatePanelToShow(0);
-                this.props.ws_sender({
-                  element: "modal_step_1",
-                  plan: response.plan
-                })
-                this.setModalInfo(false, "", 0, {}, "")
-              }}
-            >
-              {modal_info.buttons[i].caption}
-            </button>
-          );
-        } else {
-          modalButtons.push(
-            <button
-              className={modal_info.buttons[i].className}
-              style={{ margin: "10px" }}
-              onClick={() => {
-                this.updatePanelToShow(0)
-                this.props.ws_sender({
-                  element: "modal_ok",
-                  plan: response.plan
-                })
-                this.setModalInfo(false, "", 0, {}, "")
-              }}
-            >
-              {modal_info.buttons[i].caption}
-            </button>
-          );
+
+    const modalButtons = []
+    switch (this.state.modal_info.action) {
+      case "loadPlan":
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
+          const response = modal_info.buttons[i].response
+          if (response != null) {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.updatePanelToShow(0);
+                  this.props.ws_sender({
+                    element: "load_modal_ok",
+                    name: response.name,
+                  })
+                  
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  console.log("Canceling Load")
+                  this.props.ws_sender({
+                    element: "load_modal_cancel",
+                  })
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          }
         }
-      } else {
+        break;
+        case "loopPlan":
+          console.log("STATE STEP ON HERE ", this.state.plan.current_step)
+          for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+            const modal_info = this.state.modal_info;
+            const response = modal_info.buttons[i].response
+            if (response != null) {
+              if (response.step != null) {
+                response.plan.current_step = response.step
+                modalButtons.push(
+                  <button
+                    className={modal_info.buttons[i].className}
+                    style={{ margin: "10px" }}
+                    onClick={() => {
+                      this.updatePanelToShow(0);
+                      this.props.ws_sender({
+                        element: "modal_step_1"
+                      })
+                      this.setModalInfo(false, "", 0, {}, "")
+                    }}
+                  >
+                    {modal_info.buttons[i].caption}
+                  </button>
+                );
+              } else {
+                modalButtons.push(
+                  <button
+                    className={modal_info.buttons[i].className}
+                    style={{ margin: "10px" }}
+                    onClick={() => {
+                      this.updatePanelToShow(0)
+                      this.props.ws_sender({
+                        element: "modal_ok"
+                      })
+                      this.setModalInfo(false, "", 0, {}, "")
+                    }}
+                  >
+                    {modal_info.buttons[i].caption}
+                  </button>
+                );
+              }
+          } else {
+            modalButtons.push(
+              <button
+                className={modal_info.buttons[i].className}
+                style={{ margin: "10px" }}
+                onClick={() => {
+                  this.props.ws_sender({element: "modal_close"})
+                  this.setModalInfo(false, "", 0, {}, "")
+                }}
+              >
+                {modal_info.buttons[i].caption}
+              </button>
+            );
+          }
+        }
+        break;
+        case "runPlan":
+          console.log("STATE STEP ON HERE ", this.state.plan.current_step)
+          for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+            const modal_info = this.state.modal_info;
+            const response = modal_info.buttons[i].response
+            if (response != null) {
+              if (response.step != null) {
+                response.plan.current_step = response.step
+                modalButtons.push(
+                  <button
+                    className={modal_info.buttons[i].className}
+                    style={{ margin: "10px" }}
+                    onClick={() => {
+                      this.updatePanelToShow(0);
+                      this.props.ws_sender({
+                        element: "modal_step_1"
+                      })
+                      this.setModalInfo(false, "", 0, {}, "")
+                    }}
+                  >
+                    {modal_info.buttons[i].caption}
+                  </button>
+                );
+              } else {
+                modalButtons.push(
+                  <button
+                    className={modal_info.buttons[i].className}
+                    style={{ margin: "10px" }}
+                    onClick={() => {
+                      this.updatePanelToShow(0)
+                      this.props.ws_sender({
+                        element: "modal_ok"
+                      })
+                      this.setModalInfo(false, "", 0, {}, "")
+                    }}
+                  >
+                    {modal_info.buttons[i].caption}
+                  </button>
+                );
+              }
+            } else {
+              modalButtons.push(
+                <button
+                  className={modal_info.buttons[i].className}
+                  style={{ margin: "10px" }}
+                  onClick={() => {
+                    this.props.ws_sender({element: "modal_close"})
+                    this.setModalInfo(false, "", 0, {}, "")
+                  }}
+                >
+                  {modal_info.buttons[i].caption}
+                </button>
+              );
+            }
+        }
+        break;
+      default:
+        for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+          const modal_info = this.state.modal_info;
         modalButtons.push(
           <button
             className={modal_info.buttons[i].className}
@@ -294,12 +380,60 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             {modal_info.buttons[i].caption}
           </button>
         );
-      }
-    }}
+          }
+    }
+    // const modalButtons = [];
+    // for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+    //   const modal_info = this.state.modal_info;
+    //   const response = modal_info.buttons[i].response
+    //   if (modal_info.action == "loadPlan") {
+    //     if (response != null) {
+    //     modalButtons.push(
+    //       <button
+    //         className={modal_info.buttons[i].className}
+    //         style={{ margin: "10px" }}
+    //         onClick={() => {
+    //           this.updatePanelToShow(0);
+    //           // this.props.currentStepChange(response.plan);
+    //           this.props.ws_sender({
+    //             element: "load_modal_ok",
+    //             name: response.name,
+    //           })
+              
+    //           this.setModalInfo(false, "", 0, {}, "")
+    //         }}
+    //       >
+    //         {modal_info.buttons[i].caption}
+    //       </button>
+    //     );
+    //   } else {
+    //     modalButtons.push(
+    //       <button
+    //         className={modal_info.buttons[i].className}
+    //         style={{ margin: "10px" }}
+    //         onClick={() => {
+    //           console.log("Canceling Load")
+    //           this.props.ws_sender({
+    //             element: "load_modal_cancel",
+    //           })
+    //           this.setModalInfo(false, "", 0, {}, "")
+    //         }}
+    //       >
+    //         {modal_info.buttons[i].caption}
+    //       </button>
+    //     );
+    //   }
+    // } else {
+      
+      // } else {
+        
+    //   }
+    // }}
 
     return (
       <div style={{ textAlign: "center" }}>
         <h1>Plan Loaded: {this.props.plan.plan_filename}</h1>
+        <h1>Plan Step: {this.state.plan.current_step}</h1>
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>
@@ -326,7 +460,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           open={this.state.modal_info.show}
           onClose={() => {
             this.setModalInfo(false, "", 0, {}, "")
-            // this.ws_sender({ element: "modal_close" })
+            this.props.ws_sender({ element: "modal_close" })
           }}
           center
         >
