@@ -42,6 +42,7 @@ class ValvePositionPayload:
     valve_pos = attr.ib(int)
     valve_mask = attr.ib(int)
     clean_mask = attr.ib(int)
+    reference_valve = attr.ib(int)
 
 
 @attr.s

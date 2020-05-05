@@ -1,5 +1,5 @@
 import React, { PureComponent } from "react";
-import { BankPanelPlanOptions, Plan } from "../types";
+import { BankPanelPlanOptions, Plan, PlanStep } from "../types";
 import "./../bankpanel.css";
 
 interface State {
@@ -42,6 +42,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
     let getChannelClassNames = (_: number) => "";
     let getChannelDisabled = (_: number) => true;
     let test = {};
+    let isInPlan = (_: number) => "";
 
     if ("bank" in (this.props.uistatus as any)) {
       const bankStatus: string =
@@ -72,6 +73,32 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
       test = channelStatus;
     }
 
+    let portsInPlan = {};
+    for (let step in this.props.plan.steps) {
+      const planRow = this.props.plan.steps[step] as PlanStep;
+      for (const bank in planRow.banks) {
+        if (planRow.banks.hasOwnProperty(bank)) {
+          const bank_config = planRow.banks[bank];
+          if (bank_config.clean != 0) {
+            portsInPlan["CL" + bank] = planRow.duration;
+            break;
+          } else if (bank_config.chan_mask != 0) {
+            const mask = bank_config.chan_mask;
+            const channel = (mask & -mask).toString(2).length;
+            let portNumber = (Number(bank) - 1) * 8 + channel
+            portsInPlan[String(portNumber)] = planRow.duration;
+            break;
+          }
+        }
+      }
+    }
+
+    isInPlan = (port: number) => {
+      if (portsInPlan.hasOwnProperty(port)) {
+        return " btn-bold";
+      } else return ""
+    }
+
     const channelButtons = [];
     for (let i = 1; i <= 8; i++) {
       let portNumber = (this.props.bank - 1) * 8 + i
@@ -80,7 +107,7 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
           <button
             key={portNumber}
             id={"channel-" + i}
-            className={"btn btn-large bank-btn " + getChannelClassNames(i)}
+            className={"btn btn-large bank-btn " + getChannelClassNames(i) + isInPlan(portNumber)}
             style={{ color: "black" }}
           >
             <p className="chn-label">
@@ -99,8 +126,8 @@ class BankPanel extends PureComponent<BankPanelPlanOptions, State> {
             }}
             id={"channel-" + i}
             disabled={getChannelDisabled(i)}
-            key={portNumber}
-            className={"btn btn-large bank-btn " + getChannelClassNames(i)}
+            key={i}
+            className={"btn btn-large bank-btn " + getChannelClassNames(i) + isInPlan(portNumber)}
           >
             <p className="chn-label">
               <u className={"chn-name-" + i}>

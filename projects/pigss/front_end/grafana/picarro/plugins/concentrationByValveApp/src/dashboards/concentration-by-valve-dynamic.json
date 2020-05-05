@@ -510,9 +510,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -1011,9 +1011,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -1512,9 +1512,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -2013,9 +2013,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -2514,9 +2514,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -3015,9 +3015,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -3516,9 +3516,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -4017,9 +4017,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -4518,9 +4518,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -5019,9 +5019,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -5520,9 +5520,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {
@@ -6021,9 +6021,9 @@
         {
           "format": "short",
           "label": null,
-          "logBase": 10,
-          "max": "10000",
-          "min": "0",
+          "logBase": 1,
+          "max": null,
+          "min": null,
           "show": true
         },
         {

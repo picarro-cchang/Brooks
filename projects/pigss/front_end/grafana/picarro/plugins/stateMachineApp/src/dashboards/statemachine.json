@@ -20,30 +20,37 @@
       "asDropdown": true,
       "icon": "external link",
       "keepTime": true,
-      "tags": ["pigss"],
+      "tags": [
+        "pigss"
+      ],
       "title": "Dashboards",
       "type": "dashboards"
     }
   ],
   "panels": [
     {
+      "datasource": null,
       "gridPos": {
-        "h": 18,
+        "h": 3,
         "w": 24,
         "x": 0,
         "y": 0
       },
-      "id": 2,
+      "id": 4,
       "options": {},
       "targets": [
         {
           "groupBy": [
             {
-              "params": ["$__interval"],
+              "params": [
+                "$__interval"
+              ],
               "type": "time"
             },
             {
-              "params": ["null"],
+              "params": [
+                "null"
+              ],
               "type": "fill"
             }
           ],
@@ -54,7 +61,62 @@
           "select": [
             [
               {
-                "params": ["value"],
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "mean"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "",
+      "transparent": true,
+      "type": "plan-information-panel"
+    },
+    {
+      "datasource": null,
+      "gridPos": {
+        "h": 18,
+        "w": 24,
+        "x": 0,
+        "y": 3
+      },
+      "id": 2,
+      "options": {},
+      "targets": [
+        {
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            },
+            {
+              "params": [
+                "null"
+              ],
+              "type": "fill"
+            }
+          ],
+          "orderByTime": "ASC",
+          "policy": "default",
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
                 "type": "field"
               },
               {
@@ -73,9 +135,9 @@
       "type": "picarro-state-machine"
     }
   ],
-  "schemaVersion": 19,
+  "schemaVersion": 20,
   "style": "dark",
-  "tags": ["pigss"],
+  "tags": [],
   "templating": {
     "list": []
   },
@@ -102,6 +164,6 @@
   },
   "timezone": "",
   "title": "Setup",
-  "uid": "xemz2IvWk",
+  "uid": "TSuN1FCWz",
   "version": 2
 }

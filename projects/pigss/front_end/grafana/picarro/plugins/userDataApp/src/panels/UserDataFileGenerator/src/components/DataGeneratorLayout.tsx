@@ -5,7 +5,8 @@ import {
   FormLabel,
   PanelOptionsGroup,
   Select,
-  Button
+  Button,
+  Switch
 } from "@grafana/ui";
 
 import { notifyError, notifySuccess } from "../utils/Notifications";
@@ -32,7 +33,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       analyzerOptions: [{ value: "All", label: "All" }],
       ports: [],
       portOptions: [{ value: "All", label: "All" }],
-      files: []
+      files: [],
+      isProcessedData: true,
     };
   }
 
@@ -52,7 +54,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   generateFile = () => {
-    const { timeRange, keys, analyzers, ports } = this.state;
+    const { timeRange, keys, analyzers, ports, isProcessedData } = this.state;
     const { from, to } = {
       from: dateMath.parse(timeRange.raw.from),
       to: dateMath.parse(timeRange.raw.to),
@@ -74,7 +76,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       from: fromTime * 1000000,
       to: toTime * 1000000,
       keys,
-      analyzers
+      analyzers,
+      isProcessedData
     };
 
     // Call generate file api
@@ -177,6 +180,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       });
     }
   };
+
+  onProcessedDataSwitchChange = (checked: boolean) => {
+    this.setState({isProcessedData: checked})
+  }
 
   componentWillMount() {
     // Get file names
@@ -304,6 +311,16 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                 )}
                 isMulti={true}
                 backspaceRemovesValue
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div className="gf-form">
+              <Switch
+                label={this.state.isProcessedData ?"Processed Data" : "Raw Data"}
+                checked={this.state.isProcessedData}
+                onChange={() => this.onProcessedDataSwitchChange(!this.state.isProcessedData)}
+                tooltip={`Toggle the switch to download ${!this.state.isProcessedData ? "processed data." : "raw data"}`}
               />
             </div>
           </PanelOptionsGroup>

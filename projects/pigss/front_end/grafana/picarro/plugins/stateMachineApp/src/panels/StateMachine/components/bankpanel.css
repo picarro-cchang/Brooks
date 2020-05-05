@@ -12,9 +12,10 @@
 .chn-label {
   position: absolute;
   top: 20px;
-  left: -0.37em;
+  left: 1px;
   bottom: 0;
-  right: 0;
+  right: 1px;
+  overflow-wrap: break-word;
 }
 .chn-status {
   font-size: 10px;
@@ -35,8 +36,9 @@
 
 .btn-bold {
   font-weight: 500;
-  border: 3px solid hsla(0, 0%, 34%, 1);
+  border-bottom: 10px solid rgb(61, 146, 50);
 }
+
 .btn-inverse-2.disabled {
   background-color: #484848;
   opacity: 0.9;

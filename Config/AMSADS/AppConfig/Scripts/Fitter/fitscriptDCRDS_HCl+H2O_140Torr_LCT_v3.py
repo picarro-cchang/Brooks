@@ -286,7 +286,8 @@ elif rd_rate != -1:
                     "uncorrectedAbsorbance"], sdev=1 / sqrt(d.groupSizes))
     P = d["cavitypressure"]
     T = d["cavitytemperature"]
-    tunerMean = mean(d.tunerValue)
+    tunerHClMean = mean(d.tunerValue)
+    tunerHClStdev = std(d.tunerValue)
     solValves = d.sensorDict["ValveMask"]
     dasTemp = d.sensorDict["DasTemp"]
     r = None
@@ -401,6 +402,7 @@ elif rd_rate != -1:
                 "pzt3_mean":pzt3_mean,"pzt3_stdev":pzt3_stdev,"hcl_threshold":hcl_current_threshold,
                 "hcl_current_threshold_factor":current_threshold_factor,"hcl_min_rd_threshold_factor":min_rd_threshold_factor,
                 "hcl_min_rd_rate":min_rd_rate,"hcl_disable_dynamic_threshold":disable_dynamic_threshold,
+                "tunerHClMean":tunerHClMean, "tunerHClStdev":tunerHClStdev,
                 }
         RESULT.update({"species":d["spectrumId"],"fittime":time.clock()-tstart,
                     "cavity2_pressure":P,"cavity2_temperature":T,"solenoid_valves":solValves,
