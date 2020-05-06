@@ -461,7 +461,8 @@ class SchemeBasedCalibrator(object):
                 pzt = array([calDataByRow[k].pztMed for k in rows])
                 # Ideally, PZT values for all rows should be close together. We check for large jumps and forgo
                 #  calibration in such cases
-                jump = abs(diff(pzt)).max()
+                perm = argsort(thetaCal)
+                jump = abs(diff(pzt[perm])).max()
                 if jump > float(self.rdFreqConv.RPC_getHotBoxCalParam("AUTOCAL", "MAX_JUMP")):
                     event_manager_proxy.Log("Calibration not done, maximum jump between calibration rows: %.1f" % (
                         jump,))
