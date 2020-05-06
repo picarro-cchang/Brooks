@@ -124,16 +124,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.updateSavedFileState = this.updateSavedFileState.bind(this);
   }
 
-  // shouldComponentUpdate(nextProps) {
-  //   if (this.props.loadedFileName !== nextProps.loadedFileName) {
-  //     console.log("New FileName ", nextProps.loadedFileName)
-  //     this.setState({
-  //       loadedFileName: nextProps.loadedFileName
-  //     });
-  //   }
-  //   return true;
-  // }
-
   setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
     const modal = {
       show: show, 
@@ -182,9 +172,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         if (data["message"]) {
           this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
         } else {
-          console.log(`Getting Plan from Filename ${filename}! `, data["details"]);
           this.setPlanStorage(data["details"]);
-          this.setState({plan: data["details"]}, () => console.log("Set it!!!! ", this.state.plan))
+          this.setState({plan: data["details"]})
           this.setState({
             fileName: filename,
             panel_to_show: 0
@@ -198,29 +187,17 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   }
 
   planSaved(fileName, plan) {
-    // /* Save File and Set fileName to state */
-    // const plan = {...this.state.plan}
-    // plan.plan_filename = fileName
-    // this.setState({plan}, () => 
-    // console.log(this.state.plan.plan_filename)
     plan.plan_filename = fileName
     const data = {
       name: fileName,
       details: plan,
       user: "admin"
     }
-    console.log("Plan Saved! ", data, "plan name ", plan.plan_filename)
     PlanService.saveFile(data).then((response: any) => 
       response.json().then(data => {
-        //TODO: Need to refresh plan
-        // if (data["message"]) {
-          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
           this.props.getPlanFileNames();
-        // } else {
-        //   this.props.getPlanFileNames();
           this.getPlanFromFileName(fileName);
           this.setState({isEdited: false})
-        // }
       })
     );
   }
@@ -235,10 +212,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     }
     PlanService.overwriteFile(data).then((response: any) => 
       response.json().then(data => {
-        console.log("Plan Saved As! ", data);
-        // if (data["message"]) {
-          console.log("HELLO", data["message"])
-          // this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
           this.getPlanFromFileName(plan.plan_filename)
           this.setState({
             isEdited: false
@@ -255,7 +228,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
         this.props.getPlanFileNames();
       } else {
-        console.log("Plan Deleted! ", data)
         this.props.getPlanFileNames();
       }
     })
@@ -278,22 +250,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
   updateFileName(x: boolean) {
     this.setState({ isEdited: x });
   }
-
-  // componentDidMount() {
-  //   const storedPlan = this.getStateFromSavedData();
-  //   // if(this.state.plan != storedPlan && storedPlan != null){
-  //   //   console.log("Doesn't match")
-  //   //   this.setState({
-  //   //     plan: storedPlan,
-  //   //     fileName: storedPlan.plan_filename
-  //   //   })
-  //   // }
-  // }
-
-  // componentWillUnmount() {
-  //   console.log("saving storage")
-  //   this.setPlanStorage(this.state.plan)
-  // }
 
   render() {
     const bankPanelsEdit = [];
@@ -383,7 +339,9 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           if (response != null) {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
+                id={"save"}
                 style={{ margin: "10px" }}
                 onClick={() => {
                   this.planSaved(response.filename, this.state.plan)
@@ -397,6 +355,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           } else {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
@@ -416,6 +375,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           if (response != null ) {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
@@ -429,6 +389,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           } else {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
@@ -446,6 +407,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           const modal_info = this.state.modal_info;
           modalButtons.push(
             <button
+            key={i}
               className={modal_info.buttons[i].className}
               style={{ margin: "10px" }}
               onClick={() => {
@@ -465,6 +427,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           if (response != null ) {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
@@ -478,6 +441,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           } else {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {

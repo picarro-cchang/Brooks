@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactText } from "react";
+import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { LoadPanelCommandOptions, Plan } from "../types";
 import { stringToJsRegex } from "@grafana/data";
@@ -7,7 +7,7 @@ interface State {
   plan: Plan;
   fileNames: any[];
 }
-class PlanLoadPanel extends PureComponent<LoadPanelCommandOptions, State> {
+class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
   constructor(props) {
     super(props) 
     this.state = {

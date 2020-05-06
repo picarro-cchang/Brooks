@@ -11,6 +11,7 @@ const mockClick = jest.fn(element => {
 });
 const mockUpdatePanel = jest.fn(e => {return e});
 const mockSwitchLayout = jest.fn();
+const mockSetModalInfo = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
@@ -28,7 +29,9 @@ const defaultProps: CommandPanelOptions = {
   ws_sender: mockClick,
   plan: mockPlan,
   updatePanel: mockUpdatePanel,
-  layoutSwitch: mockSwitchLayout
+  layoutSwitch: mockSwitchLayout,
+  setModalInfo: mockSetModalInfo,
+  loadedFileName: "Testing"
 };
 
 describe("<CommandPanel />", () => {

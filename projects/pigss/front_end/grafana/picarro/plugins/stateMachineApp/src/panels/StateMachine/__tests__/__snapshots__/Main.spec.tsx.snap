@@ -3,14 +3,11 @@
 exports[`<Main /> Snapshot 1`] = `
 <Main>
   <div>
-    <div
-      className="plan-info"
-    >
-      Running Plan: No Plan
-    </div>
     <RunLayout
-      fileNames={Object {}}
+      fileNames={Array []}
+      getPlanFileNames={[Function]}
       layoutSwitch={[Function]}
+      loadedFileName="test.pln"
       plan={
         Object {
           "bank_names": Object {
@@ -166,6 +163,14 @@ exports[`<Main /> Snapshot 1`] = `
           }
         }
       >
+        <h1>
+          Plan Loaded: 
+          test.pln
+        </h1>
+        <h1>
+          Plan Step: 
+          5
+        </h1>
         <div
           className="container-fluid"
         >
@@ -182,6 +187,7 @@ exports[`<Main /> Snapshot 1`] = `
             >
               <CommandPanel
                 layoutSwitch={[Function]}
+                loadedFileName=""
                 plan={
                   Object {
                     "bank_names": Object {
@@ -327,6 +333,7 @@ exports[`<Main /> Snapshot 1`] = `
                     },
                   }
                 }
+                setModalInfo={[Function]}
                 uistatus={Object {}}
                 updatePanel={[Function]}
                 ws_sender={[Function]}
@@ -460,12 +467,141 @@ exports[`<Main /> Snapshot 1`] = `
             </div>
           </div>
         </div>
+        <Modal
+          animationDuration={500}
+          blockScroll={true}
+          center={true}
+          classNames={Object {}}
+          classes={
+            Object {
+              "closeButton": "styles_closeButton__20ID4",
+              "closeIcon": "styles_closeIcon__1QwbI",
+              "modal": "styles_modal__gNwvD",
+              "modalCenter": "styles_modalCenter__L9F2w",
+              "overlay": "styles_overlay__CLSq-",
+              "transitionEnter": "styles_transitionEnter__3j_-a",
+              "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+              "transitionExit": "styles_transitionExit__1KmEf",
+              "transitionExitActive": "styles_transitionExitActive__1nQXw",
+            }
+          }
+          closeIconSize={28}
+          closeIconSvgPath={
+            <path
+              d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+            />
+          }
+          closeOnEsc={true}
+          closeOnOverlayClick={true}
+          focusTrapOptions={Object {}}
+          focusTrapped={true}
+          onClose={[Function]}
+          open={false}
+          role="dialog"
+          showCloseIcon={true}
+          styles={
+            Object {
+              "overlay": Object {
+                "color": "black",
+              },
+            }
+          }
+        />
       </div>
     </RunLayout>
+    <ToastContainer
+      autoClose={5000}
+      bodyClassName={null}
+      className={null}
+      closeButton={
+        <CloseButton
+          ariaLabel="close"
+        />
+      }
+      closeOnClick={true}
+      draggable={true}
+      draggablePercent={80}
+      hideProgressBar={false}
+      newestOnTop={false}
+      pauseOnFocusLoss={true}
+      pauseOnHover={true}
+      position="top-right"
+      progressClassName={null}
+      progressStyle={null}
+      role="alert"
+      rtl={false}
+      style={null}
+      toastClassName={null}
+      transition={[Function]}
+    >
+      <div
+        className="Toastify"
+      />
+    </ToastContainer>
   </div>
 </Main>
 `;
 
-exports[`<Main /> Test Toast 1`] = `null`;
+exports[`<Main /> Test Toast 1`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;
 
-exports[`<Main /> Test Toast 2`] = `null`;
+exports[`<Main /> Test Toast 2`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;

@@ -3,7 +3,7 @@ import { shallow, mount, render } from "enzyme";
 import WS from "jest-websocket-mock";
 import "jest-styled-components";
 import PlanPreview from "./../../components/Run/PlanPreview";
-import { LoadPanelCommandOptions } from "./../../components/types";
+import { LoadPanelCommandOptions, PreviewPanelOptions } from "./../../components/types";
 import mockLoadPanelData from "./../../api/__mocks__/mockLoadPanelData.json";
 
 const mockClick = jest.fn(element => {
@@ -13,19 +13,18 @@ const mockLoadPlan = jest.fn()
 const mockDeleteFile = jest.fn();
 const mockUpdatePanel = jest.fn();
 const mockCancelLoadPlan = jest.fn();
+const mockSetModalInfo = jest.fn();
+
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
-const defaultProps: LoadPanelCommandOptions = {
+const defaultProps: PreviewPanelOptions = {
   plan: mockLoadPanelData,
-  loadPlan: mockLoadPlan,
-  deleteFile: mockDeleteFile,
   updatePanel: mockUpdatePanel,
-  fileNames: {
-    1: "Test1",
-    2: "Test2"
-  },
+  fileNames: ["Test1","Test2"],
   cancelLoadPlan: mockCancelLoadPlan,
   ws_sender: mockClick,
+  loadedFileName: "Testing",
+  setModalInfo: mockSetModalInfo
 };
 
 describe("<PlanPreview />", () => {

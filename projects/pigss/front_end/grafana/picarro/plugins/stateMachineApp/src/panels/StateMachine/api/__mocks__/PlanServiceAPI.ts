@@ -2,7 +2,7 @@ import plan from "./mockExamplePlan.json";
 const mockURLs = {
   GETFILENAMES: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?names=true`,
   GETLASTRUNNING: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?last_running=true`,
-  GETFILEDATA: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?plan_name=TestFile`,
+  GETFILEDATA: `?plan_name=TestFile`,
   SAVEFILEAS: `http://${window.location.hostname}:8080/plan/api/v0.1/plan`,
   DELETEFILE: `http://${window.location.hostname}:8080/plan/api/v0.1/plan?name=TestFile2`
 }
@@ -11,7 +11,7 @@ const PlanServiceAPI = {
     const fileNames = { "1": "plan1", "2": "plan2" };
     switch (url) {
       case mockURLs.GETFILENAMES: {
-        return Promise.resolve(new Response(JSON.stringify(fileNames)));
+        return Promise.resolve((JSON.stringify(fileNames)));
       }
       case mockURLs.GETLASTRUNNING: {
         return Promise.resolve(new Response(JSON.stringify(plan)))

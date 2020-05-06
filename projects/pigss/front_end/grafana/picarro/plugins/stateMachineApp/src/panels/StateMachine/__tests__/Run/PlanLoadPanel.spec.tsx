@@ -13,19 +13,18 @@ const mockLoadPlan = jest.fn()
 const mockDeleteFile = jest.fn();
 const mockUpdatePanel = jest.fn();
 const mockCancelLoadPlan = jest.fn();
+const mockGetPlanFromFileName = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: LoadPanelCommandOptions = {
   plan: mockLoadPanelData,
-  loadPlan: mockLoadPlan,
   deleteFile: mockDeleteFile,
   updatePanel: mockUpdatePanel,
-  fileNames: {
-    1: "Test1",
-    2: "Test2"
-  },
+  fileNames: ["Test1","Test2"],
   cancelLoadPlan: mockCancelLoadPlan,
   ws_sender: mockClick,
+  getPlanFromFileName: mockGetPlanFromFileName,
+  loadedFileName: "Testing"
 };
 
 describe("<PlanLoadPanel />", () => {
@@ -68,12 +67,12 @@ describe("<PlanLoadPanel />", () => {
       .find("button")
       .at(0);
     fileButton.simulate("click");
-    const element = mockLoadPlan.mock.calls[0][0];
+    console.log(mockClick.mock.calls)
+    const element = mockClick.mock.calls[1][0];
     client.send(element);
-    expect(mockLoadPlan).toHaveBeenCalled();
-    expect(mockLoadPlan).toHaveBeenCalled();
-    await expect(server).toReceiveMessage("Test1");
-    expect(server).toHaveReceivedMessages(["Test1"]);
+    expect(mockGetPlanFromFileName).toHaveBeenCalled();
+    await expect(server).toReceiveMessage({"element":"load_filename"});
+    expect(server).toHaveReceivedMessages([{"element":"load_filename"}]);
     server.close;
   });
 

@@ -112,6 +112,7 @@ exports[`<PlanLoadPanel /> Renders Items 1`] = `
           >
             <button
               className="btn w-100 btn-small"
+              disabled={false}
               onClick={[Function]}
               style={
                 Object {
@@ -124,6 +125,7 @@ exports[`<PlanLoadPanel /> Renders Items 1`] = `
             </button>
             <button
               className="btn btn-danger btn-small"
+              disabled={false}
               onClick={[Function]}
               type="button"
             >

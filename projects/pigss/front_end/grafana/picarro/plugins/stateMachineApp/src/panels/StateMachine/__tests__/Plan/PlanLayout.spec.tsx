@@ -10,16 +10,19 @@ import LoadPanel from "../../components/Plan/LoadPanel";
 
 const mockWS = jest.fn();
 const mockLayoutSwitch = jest.fn();
-
+const mockGetPlanFileNames = jest.fn();
 const defaultProps: PlanLayoutProps = {
   uistatus: mockData,
   plan: mockPlan,
-  ws_sender: mockWS,
-  fileNames: {
-    1: "Test"
-  },
-  layoutSwitch: mockLayoutSwitch
+  fileNames: ["Test, Test5"],
+  layoutSwitch: mockLayoutSwitch,
+  getPlanFileNames: mockGetPlanFileNames,
+  loadedFileName: "Test5"
 };
+
+// jest.mock("./../api/PicarroAPI.ts");
+jest.mock("./../../api/PlanService.ts")
+
 describe("<PlanLayout />", () => {
   const addChanneToPlanRef = jest.spyOn(PlanLayout.prototype, "addChanneltoPlan");
   const updatePanelToShow = jest.spyOn(PlanLayout.prototype, "updatePanelToShow");
@@ -42,29 +45,40 @@ describe("<PlanLayout />", () => {
     expect(wrapper.find("SavePanel").html()).toBeDefined();
   });
 
-  it("getPlanFromFileName", () => {
+  it("getPlanFromFileName", async () => {
     const getPlan = jest.spyOn(instance, "getPlanFromFileName");
     mountwrapper.setState({panel_to_show: 1})
+    mountwrapper.setProps({fileNames:[ "TestFile"]})
     const load = mountwrapper.find('LoadPanel').find('button#plan-filename-1')
-    load.simulate("click");
+    await load.simulate("click")
     expect(getPlan).toHaveBeenCalled()
   });
 
-  it("planSaved", () => {
+  it("planSaved", async () => {
     const planSaved = jest.spyOn(instance, "planSaved");
+    const setModal = jest.spyOn(instance, "setModalInfo");
     mountwrapper.setState({panel_to_show: 2})
-    const load = mountwrapper.find('SavePanel').find('button#save-btn')
+    const input = mountwrapper.find('SavePanel').find('input#fileName')
+    input.simulate('change', { target: { value: 'Plan2' } });
+    const load = mountwrapper.find('SavePanel').find('button#save-btn');
     load.simulate("click");
-    expect(planSaved).toHaveBeenCalled()
+    expect(mountwrapper).toMatchSnapshot();
+    expect(setModal).toHaveBeenCalled();
+    const modalOK = mountwrapper.find('Modal').find('button#save')
+    modalOK.simulate("click");
+    await expect(planSaved).toHaveBeenCalled();
+    expect(setModal).toHaveBeenCalled();
   });
 
   it("addChannelToPlan", () => {
+    mountwrapper.setState({isPlanPanel: true})
     const reference = mountwrapper.find('button#reference');
     reference.simulate("click");
     expect(addChanneToPlanRef).toHaveBeenCalled();
   });
 
   it("updatePanelToShow", () => {
+    mountwrapper.setState({panel_to_show: 0})
     const button = mountwrapper.find('PlanPanel').find('button').at(2);
     button.simulate('click');
     expect(updatePanelToShow).toHaveBeenCalled();

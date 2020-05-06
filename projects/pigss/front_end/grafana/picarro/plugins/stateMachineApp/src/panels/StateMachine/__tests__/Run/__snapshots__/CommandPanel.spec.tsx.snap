@@ -51,8 +51,8 @@ exports[`<CommandPanel /> Renders Correctly 1`] = `
         Edit Plan
       </button>
       <button
-        className="btn btn-large btn-command btn-load btn-outline-success"
-        disabled={false}
+        className="btn btn-large btn-command btn-load "
+        disabled={true}
         id="load-plan"
         onClick={[Function]}
         value="load"

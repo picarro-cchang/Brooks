@@ -75,7 +75,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     }
     const minDuration = 20;
     const all_banks = this.getAvailableBanks();
-    console.log(all_banks)
     for (let i = 0; i < plan.last_step; i++) {
       let row = i + 1;
       let s = plan.steps[row]
@@ -98,7 +97,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         return false
       }
       for(let bank in s.banks) {
-        console.log(bank, "is included? ", all_banks.includes(bank))
         if (!(all_banks.includes(Number(bank)))) {
           this.props.setModalInfo(
             true, 
@@ -133,7 +131,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
               const channel = (mask & -mask).toString(2).length;
               const channelBtn = this.props.uistatus.channel[bank][channel]
               if (channelBtn == "DISABLED") {
-                console.log(channelBtn, " Does not equal AVAILABLE")
                 this.props.setModalInfo(
                 true, 
                 `<h4 style='color:black'>Unavailable Port at Step ${row}</h4>`,
@@ -147,7 +144,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         }
       }
     }
-    console.log('all done')
     return true
   }
 
@@ -546,7 +542,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
 
   render() {
-    console.log("PLAN STATE PLAN PANEL ", this.state.plan)
     const file_name = this.state.plan.plan_filename; ///TROWS ERROR cannot read property plan_filename of null, which means this.state.plan is null 
     const modalButtons =[]
     switch (this.state.modal_info.action) {
@@ -557,6 +552,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           if (response != null ) {
             modalButtons.push(
               <button
+              key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
@@ -570,6 +566,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           } else {
             modalButtons.push(
               <button
+                key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {

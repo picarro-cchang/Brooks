@@ -1,4 +1,4 @@
-import React, { PureComponent, ReactText } from "react";
+import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { LoadPanelOptions, Plan } from "../types";
 import { throws } from "assert";
@@ -9,7 +9,7 @@ interface State {
   loadedFileName: string;
 }
 
-class LoadPanel extends PureComponent<LoadPanelOptions, State> {
+class LoadPanel extends Component<LoadPanelOptions, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -59,6 +59,7 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
           className="btn btn-danger btn-small"
           disabled={this.isDisabled(this.state.fileNames[index])}
           onClick={e => {
+            console.log("DELETED")
             this.props.deleteFile(this.state.fileNames[index]);
           }}
         >
@@ -69,8 +70,10 @@ class LoadPanel extends PureComponent<LoadPanelOptions, State> {
   );
 
   render() {
-    console.log("FILENAME ", this.props.loadedFileName)
+    // console.log("FILENAME ", this.props.loadedFileName)
+    // console.log("FILES ", this.state.fileNames)
     let length = this.state.fileNames.length
+    // console.log("LENGTH ", length)
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

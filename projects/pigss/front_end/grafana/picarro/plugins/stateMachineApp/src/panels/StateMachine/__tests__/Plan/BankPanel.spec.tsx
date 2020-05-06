@@ -34,7 +34,6 @@ const defaultProps: BankPanelPlanOptions = {
       }
     }
   },
-  ws_sender: mockClick,
   plan: mockPlan,
   addChanneltoPlan: mockAddChannel
 };
@@ -111,9 +110,23 @@ describe("<BankPanel />", () => {
           }
         }
       },
-      ws_sender: mockClick,
       addChanneltoPlan: mockAddChannel,
       plan: {
+        max_steps: 32,
+        panel_to_show: 0,
+        current_step: 1,
+        focus: {
+          row: 1,
+          column: 1
+        },
+    last_step: 0,
+    steps: {},
+    num_plan_files: 2,
+    plan_files: {
+      1: "__default__",
+      2: "tr"
+    },
+    plan_filename: "__default__",
         bank_names: {
           1: {
             name: "B 1",
@@ -139,9 +152,23 @@ describe("<BankPanel />", () => {
     const testProps: BankPanelPlanOptions = {
       bank: 1,
       uistatus: {},
-      ws_sender: mockClick,
       addChanneltoPlan: mockAddChannel,
       plan: {
+        max_steps: 32,
+        panel_to_show: 0,
+        current_step: 1,
+        focus: {
+          row: 1,
+          column: 1
+        },
+    last_step: 0,
+    steps: {},
+    num_plan_files: 2,
+    plan_files: {
+      1: "__default__",
+      2: "tr"
+    },
+    plan_filename: "__default__",
         bank_names: {
           1: {
             name: "B 1",

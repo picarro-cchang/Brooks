@@ -15,27 +15,26 @@ const mockClick = jest.fn(element => {
 const mockUpdatePanel = jest.fn();
 const mockPlanSaved = jest.fn()
 const mockDeleteFile = jest.fn();
-const apiLoc = `${window.location.hostname}:8000/controller`;
-const socketURL = `ws://${apiLoc}/ws`;
 const mockUpdateFileName = jest.fn();
+const mockGetStateFromSavedData = jest.fn();
+const mockSetModalInfo = jest.fn(); 
+
 const defaultProps: PlanSavePanelOptions = {
   plan: mockPlanSavePanel,
-  ws_sender: mockClick,
-  isChanged: false,
+  isEdited: false,
   updateFileName: mockUpdateFileName,
   planSaved: mockPlanSaved,
   updatePanel: mockUpdatePanel,
-  fileNames: {
-    1: "Test"
-  },
-  deleteFile: mockDeleteFile
+  fileNames: ["Test"],
+  deleteFile: mockDeleteFile,
+  getStateFromSavedData: mockGetStateFromSavedData,
+  setModalInfo: mockSetModalInfo
 };
 
 describe("<PlanSavePanel />", () => {
+  const savePlanFileName = jest.spyOn(SavePanel.prototype, "savePlanFileName")
   const wrapper = shallow(<SavePanel {...defaultProps} />);
   const instance = wrapper.instance() as SavePanel;
-  const server = new WS(socketURL);
-  const client = new WebSocket(socketURL);
 
   it("Match Snapshot", () => {
     expect(wrapper).toMatchSnapshot();
@@ -83,6 +82,9 @@ describe("<PlanSavePanel />", () => {
     const ok = wrapper.find("button").at(1);
     ok.simulate("click");
     // expect(mockUpdateFileName).toHaveBeenCalled();
-    expect(mockPlanSaved).toHaveBeenCalled();
+    expect(savePlanFileName).toHaveBeenCalled();
   });
+
+  //FileName too short
+  //Filename already taken
 });

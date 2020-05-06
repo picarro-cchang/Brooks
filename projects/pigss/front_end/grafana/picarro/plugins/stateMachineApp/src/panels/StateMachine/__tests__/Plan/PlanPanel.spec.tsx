@@ -19,65 +19,59 @@ const mockWSSender = jest.fn(element => {
 const mockUpdatePanel = jest.fn();
 const mockLayoutSwitch = jest.fn();
 const mockPlanSavedAs = jest.fn();
-const apiLoc = `${window.location.hostname}:8000/controller`;
-const socketURL = `ws://${apiLoc}/ws`;
+const mockPlanOverwrite =  jest.fn();
+const mockGetStateFromSavedData = jest.fn();
+const mockSetPlanStorage = jest.fn();
+const mockSetModalInfo = jest.fn();
+const mockUpdateSavedFileState = jest.fn();
 
 const defaultProps: PlanPanelOptions = {
   uistatus: mockData,
   plan: mockPlanPanelData,
-  ws_sender: mockWSSender,
-  isChanged: false,
+  isEdited: false,
   updateFileName: mockUpdateFilename,
   bankAddition: {bank: 1, channel: 1},
   updatePanel: mockUpdatePanel, 
   fileName: "TestPlan",
   layoutSwitch: mockLayoutSwitch,
-  planSavedAs: mockPlanSavedAs
+  planOverwrite: mockPlanOverwrite,
+  setPlanStorage: mockSetPlanStorage,
+  getStateFromSavedData: mockGetStateFromSavedData,
+  setModalInfo: mockSetModalInfo,
+  updateSavedFileState: mockUpdateSavedFileState
 };
 
 const nextProps: PlanPanelOptions = {
   uistatus: mockData,
   plan: mockPlanPanelData,
-  ws_sender: mockWSSender,
-  isChanged: false,
+  isEdited: false,
   updateFileName: mockUpdateFilename,
   bankAddition: {bank: 1, channel: 6},
   updatePanel: mockUpdatePanel, 
   fileName: "TestPlan",
   layoutSwitch: mockLayoutSwitch,
-  planSavedAs: mockPlanSavedAs
+  planOverwrite: mockPlanOverwrite,
+  setPlanStorage: mockSetPlanStorage,
+  getStateFromSavedData: mockGetStateFromSavedData,
+  setModalInfo: mockSetModalInfo,
+  updateSavedFileState: mockUpdateSavedFileState
 };
 
 const defaultState = {
   bankAdditionClicked: {},
   isLoaded: false,
   refVisible: true,
-  isChanged: defaultProps.isChanged,
-  plan: {
-    max_steps: 32,
-    panel_to_show: 0,
-    current_step: 1,
-    focus: {
-      row: 1,
-      column: 1
-    },
-    last_step: 0,
-    steps: {},
-    num_plan_files: 0,
-    plan_files: {},
-    plan_filename: "",
-    bank_names: {}
-  },
+  isChanged: defaultProps.isEdited,
+  plan: mockPlanPanelData,
   fileName: defaultProps.fileName
 };
 describe("<PlanPanel />", () => {
+  const overwriteFile = jest.spyOn(PlanPanel.prototype, "overwriteFile")
   const wrapper = shallow(<PlanPanel {...defaultProps} />);
   wrapper.setState({defaultState})
   const shallowwrapper = mount(<PlanPanel {...defaultProps} />);
   const instance = wrapper.instance() as PlanPanel;
   const instance2 = shallowwrapper.instance() as PlanPanel;
-  const server = new WS(socketURL);
-  const client = new WebSocket(socketURL);
   instance.manageFocus = jest.fn();
 
 
@@ -155,11 +149,18 @@ describe("<PlanPanel />", () => {
     expect(mockLayoutSwitch).toHaveBeenCalled(); 
   });
 
-  it("Insert Button", () => {
-    const insertRow = jest.spyOn(shallowwrapper.instance() as PlanPanel, 'insertRow')
-    const insertButton = shallowwrapper.find("button#insert-btn");
-    insertButton.simulate("click");
-    expect(insertRow).toHaveBeenCalled();
+  it("SaveAs Button", () => {
+    // needs validation
+    // shallowwrapper.setState({plan: mockPlanPanelData})
+    const validation = validate(shallowwrapper.props().plan);
+    expect(validation).toBe(true);
+    // const saveAs = jest.spyOn(shallowwrapper.instance() as PlanPanel, "saveFileAs")
+    shallowwrapper.setProps({isEdited: true})
+    const saveAsButton = shallowwrapper.find("button#ok-btn");
+    saveAsButton.simulate("click");
+    expect(overwriteFile).toHaveBeenCalled();
+    expect(mockSetModalInfo).toHaveBeenCalled();
+    // expect(mockPlanSavedAs).toHaveBeenCalled();
   });
 
   it("Save Button", () => {
@@ -170,6 +171,8 @@ describe("<PlanPanel />", () => {
     saveButton.simulate("click");
     expect(spy).toHaveBeenCalled();
   });
+  
+  
 
   it("Load Button", () => {
     const loadButton = shallowwrapper.find("button#load-btn");
@@ -185,24 +188,26 @@ describe("<PlanPanel />", () => {
     expect(deleteRow).toHaveBeenCalled();
   });
 
+ it("Insert Button", () => {
+    const insertRow = jest.spyOn(shallowwrapper.instance() as PlanPanel, 'insertRow')
+    const insertButton = shallowwrapper.find("button#insert-btn");
+    insertButton.simulate("click");
+    expect(insertRow).toHaveBeenCalled();
+  });
+  
   it("Clear Button", () => {
     const clearPlan = jest.spyOn(shallowwrapper.instance() as PlanPanel, "clearPlan")
+    const setModal = jest.spyOn(shallowwrapper.instance() as PlanPanel, "setModalInfo")
     const clearButton = shallowwrapper.find("button#clear-btn");
     clearButton.simulate("click");
+    expect(setModal).toHaveBeenCalled();
+    const modal = shallowwrapper.find('Modal').find('button').at(0)
+    modal.simulate('click')
     expect(mockUpdateFilename).toHaveBeenCalled();
     expect(clearPlan).toHaveBeenCalled();
   });
 
-  it("SaveAs Button", () => {
-    // needs validation
-    shallowwrapper.setState({plan: mockPlanPanelData})
-    const validation = validate(shallowwrapper.props().plan);
-    expect(validation).toBe(true);
-    // const saveAs = jest.spyOn(shallowwrapper.instance() as PlanPanel, "saveFileAs")
-    const saveAsButton = shallowwrapper.find("button#ok-btn");
-    saveAsButton.simulate("click");
-    expect(mockPlanSavedAs).toHaveBeenCalled();
-  });
+  
 
   it("ReactList renders", () => {
     const planList = mount(<PlanPanel {...defaultProps} />);
@@ -244,14 +249,17 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
       },
       bank_names: mockBankNames
     },
-    ws_sender: mockWSSender,
-    isChanged: false,
+    isEdited: false,
     updateFileName: mockUpdateFilename,
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
-    planSavedAs: mockPlanSavedAs
+    planOverwrite: mockPlanOverwrite,
+    setPlanStorage: mockSetPlanStorage,
+    getStateFromSavedData: mockGetStateFromSavedData,
+    setModalInfo: mockSetModalInfo,
+    updateSavedFileState: mockUpdateSavedFileState
   };
   const wrapper = shallow(<PlanPanel {...defaultPropsClean} />);
   const instance = wrapper.instance() as PlanPanel;
@@ -297,14 +305,17 @@ describe("<PlanPanel /> All Chan Masks == 0", () => {
       },
       bank_names: mockBankNames
     },
-    ws_sender: mockWSSender,
-    isChanged: false,
+    isEdited: false,
     updateFileName: mockUpdateFilename,
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
-    planSavedAs: mockPlanSavedAs
+    planOverwrite: mockPlanOverwrite,
+  setPlanStorage: mockSetPlanStorage,
+  getStateFromSavedData: mockGetStateFromSavedData,
+  setModalInfo: mockSetModalInfo,
+  updateSavedFileState: mockUpdateSavedFileState
   };
 
   const wrapper = shallow(<PlanPanel {...defaultPropsRefFail} />);
@@ -350,15 +361,17 @@ describe("<PlanPanel /> Rows greater than 10", () => {
       },
       bank_names: mockBankNames
     },
-    ws_sender: mockWSSender,
-    isChanged: false,
+    isEdited: false,
     updateFileName: mockUpdateFilename,
     bankAddition: {},
     updatePanel: mockUpdatePanel, 
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
-    planSavedAs: mockPlanSavedAs
-
+    planOverwrite: mockPlanOverwrite,
+  setPlanStorage: mockSetPlanStorage,
+  getStateFromSavedData: mockGetStateFromSavedData,
+  setModalInfo: mockSetModalInfo,
+  updateSavedFileState: mockUpdateSavedFileState
   };
 
   it("", () => {

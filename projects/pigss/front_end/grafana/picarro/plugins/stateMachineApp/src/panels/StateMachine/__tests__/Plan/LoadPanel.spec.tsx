@@ -18,15 +18,12 @@ const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: LoadPanelOptions = {
   plan: mockLoadPanelData,
   updatePanel: mockUpdatePanel,
-  fileNames: {
-    1: "Test1",
-    2: "Test2"
-  },
-  ws_sender: mockClick,
-  isChanged: false,
+  fileNames: ["Test1","Test2"],
+  isEdited: false,
   updateFileName: mockUpdateFileName,
   getPlanFromFileName: mockLoadPlan,
-  deleteFile: mockDeleteFile
+  deleteFile: mockDeleteFile,
+  loadedFileName: "Test2"
 };
 
 describe("<PlanLoadPanel />", () => {
@@ -63,19 +60,13 @@ describe("<PlanLoadPanel />", () => {
   });
 
   it("Load File", async () => {
-    await server.connected;
     const fileButton = mount(<PlanLoadPanel {...defaultProps} />)
       .find("ReactList")
       .find("button")
       .at(0);
     fileButton.simulate("click");
-    const element = mockLoadPlan.mock.calls[0][0];
-    client.send(element);
     expect(mockLoadPlan).toHaveBeenCalled();
-    expect(mockLoadPlan).toHaveBeenCalled();
-    await expect(server).toReceiveMessage("Test1");
-    expect(server).toHaveReceivedMessages(["Test1"]);
-    server.close;
+    expect(mockUpdateFileName).toHaveBeenCalled();
   });
 
   it("Delete File", async () => {
@@ -83,6 +74,8 @@ describe("<PlanLoadPanel />", () => {
       .find("ReactList")
       .find("button")
       .at(1);
-    expect(deleteFile.text()).toBe('X')   
+    deleteFile.simulate("click");
+    expect(mockDeleteFile).toHaveBeenCalled();   
+    expect(deleteFile.text()).toBe('X')
   });
 });

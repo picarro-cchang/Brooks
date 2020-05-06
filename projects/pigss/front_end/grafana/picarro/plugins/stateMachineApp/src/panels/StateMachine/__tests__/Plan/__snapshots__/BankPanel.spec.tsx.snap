@@ -290,7 +290,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-2"
           key="2"
           style={
@@ -342,7 +342,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-4"
           key="4"
           style={
@@ -394,7 +394,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-6"
           key="6"
           style={
@@ -446,7 +446,7 @@ exports[`<BankPanel /> Renders correctly 1`] = `
           </p>
         </button>
         <button
-          className="btn btn-large bank-btn btn-inverse-2 disabled"
+          className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
           id="channel-8"
           key="8"
           style={

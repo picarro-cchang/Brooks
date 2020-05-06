@@ -136,8 +136,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   render() {
     // console.log("Plan on Run Layout ", this.state.plan)
     // console.log("Plan on Main ", this.props.plan)
-    console.log("STEP ON RUN ", this.state.plan.current_step)
-    console.log("STEP ON MAIN ", this.props.plan.current_step)
+    // console.log("STEP ON RUN ", this.state.plan.current_step)
+    // console.log("STEP ON MAIN ", this.props.plan.current_step)
     let left_panel;
     switch (this.state.panel_to_show) {
       case PanelTypes.NONE:
@@ -254,7 +254,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         }
         break;
         case "loopPlan":
-          console.log("STATE STEP ON HERE ", this.state.plan.current_step)
+          // console.log("STATE STEP ON HERE ", this.state.plan.current_step)
           for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
             const modal_info = this.state.modal_info;
             const response = modal_info.buttons[i].response
@@ -310,7 +310,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         }
         break;
         case "runPlan":
-          console.log("STATE STEP ON HERE ", this.state.plan.current_step)
+          // console.log("STATE STEP ON HERE ", this.state.plan.current_step)
           for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
             const modal_info = this.state.modal_info;
             const response = modal_info.buttons[i].response

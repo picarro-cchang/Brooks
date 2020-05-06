@@ -14,7 +14,7 @@ import data from "./../api/__mocks__/mockData.json";
 import mockModal from "./../api/__mocks__/mockModalInfo.json";
 
 jest.mock("./../api/PicarroAPI.ts");
-// jest.mock("./../api/PlanService.ts")
+jest.mock("./../api/PlanService.ts")
 
 const defaultState = {
   initialized: false,

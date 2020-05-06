@@ -159,7 +159,7 @@ describe("<EditPanel />", () => {
   });
 });
 
-describe("<EditPanel /> Using Failing Bank Names", () => {
+describe("<EditPanel /> Using Failing Channel Names", () => {
   const defaultPropsFail: EditPanelOptions = {
     uistatus: {
       bank: {
@@ -177,30 +177,15 @@ describe("<EditPanel /> Using Failing Bank Names", () => {
         column: 2
       },
       last_step: 1,
-      steps: {
-        "1": {
-          banks: {
-            "1": {
-              clean: 0,
-              chan_mask: 1
-            },
-            "2": {
-              clean: 0,
-              chan_mask: 0
-            }
-          },
-          reference: 0,
-          duration: 30
-        }
-      },
+      steps: {},
       num_plan_files: 0,
       plan_filename: "",
       plan_files: {},
       bank_names: {
         "1": {
-          name: "",
+          name: "Bank1",
           channels: {
-            "1": "Channel 1",
+            "1": "",
             "2": "Channel 2",
             "3": "Ch. 3",
             "4": "Ch. 4",
@@ -211,7 +196,7 @@ describe("<EditPanel /> Using Failing Bank Names", () => {
           }
         },
         "2": {
-          name: "   ",
+          name: "Bank2",
           channels: {
             "1": "Channel 1",
             "2": "Channel 2",
@@ -257,14 +242,8 @@ describe("<EditPanel /> Using Failing Bank Names", () => {
   const component = new EditPanel(defaultPropsFail);
 
   it("Validate Form", () => {
-    const boo = component.validateForm.call(defaultPropsFail, [1]);
-    const boo2 = component.validateForm.call(defaultPropsFail, [2]);
-    const boo3 = component.validateForm.call(defaultPropsFail, [3]);
-    const boo4 = component.validateForm.call(defaultPropsFail, [4]);
-    expect(boo).toEqual(false);
-    expect(boo2).toEqual(false);
-    expect(boo3).toEqual(false);
-    expect(boo4).toEqual(false);
+    const valid = component.validateForm.call(defaultPropsFail, [3]);
+    expect(valid).toEqual(false);
   });
 
   it("handleSubmit calls validation and websocket if validation", () => {

@@ -31,7 +31,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank11"
         onChange={[Function]}
         type="text"
@@ -51,7 +51,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank12"
         onChange={[Function]}
         type="text"
@@ -71,7 +71,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank13"
         onChange={[Function]}
         type="text"
@@ -91,7 +91,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank14"
         onChange={[Function]}
         type="text"
@@ -111,7 +111,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank15"
         onChange={[Function]}
         type="text"
@@ -131,7 +131,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank16"
         onChange={[Function]}
         type="text"
@@ -151,7 +151,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank17"
         onChange={[Function]}
         type="text"
@@ -171,7 +171,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank18"
         onChange={[Function]}
         type="text"
@@ -202,7 +202,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank21"
         onChange={[Function]}
         type="text"
@@ -222,7 +222,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank22"
         onChange={[Function]}
         type="text"
@@ -242,7 +242,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank23"
         onChange={[Function]}
         type="text"
@@ -262,7 +262,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank24"
         onChange={[Function]}
         type="text"
@@ -282,7 +282,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank25"
         onChange={[Function]}
         type="text"
@@ -302,7 +302,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank26"
         onChange={[Function]}
         type="text"
@@ -322,7 +322,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank27"
         onChange={[Function]}
         type="text"
@@ -342,7 +342,7 @@ exports[`<EditForm /> Renders correctly 1`] = `
       </label>
       <input
         className="col-sm-6 edit-input"
-        maxLength={8}
+        maxLength={15}
         name="bank28"
         onChange={[Function]}
         type="text"

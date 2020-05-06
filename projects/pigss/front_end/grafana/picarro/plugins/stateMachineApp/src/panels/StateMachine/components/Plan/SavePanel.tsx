@@ -102,6 +102,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         </div>
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
+          id={'fileName'}
             onChange={e => {
               e.target.value = e.target.value.replace(/\s/g, '')
               this.setFileName(e)

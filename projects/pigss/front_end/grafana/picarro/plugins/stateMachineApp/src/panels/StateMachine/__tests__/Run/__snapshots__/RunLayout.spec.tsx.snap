@@ -8,6 +8,14 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
     }
   }
 >
+  <h1>
+    Plan Loaded: 
+    __default__
+  </h1>
+  <h1>
+    Plan Step: 
+    11
+  </h1>
   <div
     className="container-fluid"
   >
@@ -24,6 +32,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
       >
         <CommandPanel
           layoutSwitch={[MockFunction]}
+          loadedFileName="Testing"
           plan={
             Object {
               "available_ports": Object {
@@ -303,6 +312,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
               },
             }
           }
+          setModalInfo={[Function]}
           uistatus={
             Object {
               "bank": Object {
@@ -349,6 +359,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
               },
               "edit": "READY",
               "identify": "READY",
+              "load": "READY",
               "loop_plan": "READY",
               "plan": "READY",
               "plan_loop": "READY",
@@ -710,6 +721,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -1052,6 +1064,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -1394,6 +1407,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -1411,6 +1425,62 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
       </div>
     </div>
   </div>
+  <Modal
+    animationDuration={500}
+    blockScroll={true}
+    center={true}
+    classNames={Object {}}
+    classes={
+      Object {
+        "closeButton": "styles_closeButton__20ID4",
+        "closeIcon": "styles_closeIcon__1QwbI",
+        "modal": "styles_modal__gNwvD",
+        "modalCenter": "styles_modalCenter__L9F2w",
+        "overlay": "styles_overlay__CLSq-",
+        "transitionEnter": "styles_transitionEnter__3j_-a",
+        "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+        "transitionExit": "styles_transitionExit__1KmEf",
+        "transitionExitActive": "styles_transitionExitActive__1nQXw",
+      }
+    }
+    closeIconSize={28}
+    closeIconSvgPath={
+      <path
+        d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+      />
+    }
+    closeOnEsc={true}
+    closeOnOverlayClick={true}
+    focusTrapOptions={Object {}}
+    focusTrapped={true}
+    onClose={[Function]}
+    open={false}
+    role="dialog"
+    showCloseIcon={true}
+    styles={
+      Object {
+        "overlay": Object {
+          "color": "black",
+        },
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "margin": "20px",
+        }
+      }
+    >
+      <div
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "",
+          }
+        }
+      />
+    </div>
+  </Modal>
 </div>
 `;
 
@@ -1422,6 +1492,14 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
     }
   }
 >
+  <h1>
+    Plan Loaded: 
+    __default__
+  </h1>
+  <h1>
+    Plan Step: 
+    11
+  </h1>
   <div
     className="container-fluid"
   >
@@ -1440,11 +1518,12 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
           cancelLoadPlan={[Function]}
           deleteFile={[Function]}
           fileNames={
-            Object {
-              "1": "Test",
-            }
+            Array [
+              "Test",
+            ]
           }
-          loadPlan={[Function]}
+          getPlanFromFileName={[Function]}
+          loadedFileName="Testing"
           plan={
             Object {
               "available_ports": Object {
@@ -2075,6 +2154,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -2417,6 +2497,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -2759,6 +2840,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -2776,6 +2858,62 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
       </div>
     </div>
   </div>
+  <Modal
+    animationDuration={500}
+    blockScroll={true}
+    center={true}
+    classNames={Object {}}
+    classes={
+      Object {
+        "closeButton": "styles_closeButton__20ID4",
+        "closeIcon": "styles_closeIcon__1QwbI",
+        "modal": "styles_modal__gNwvD",
+        "modalCenter": "styles_modalCenter__L9F2w",
+        "overlay": "styles_overlay__CLSq-",
+        "transitionEnter": "styles_transitionEnter__3j_-a",
+        "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+        "transitionExit": "styles_transitionExit__1KmEf",
+        "transitionExitActive": "styles_transitionExitActive__1nQXw",
+      }
+    }
+    closeIconSize={28}
+    closeIconSvgPath={
+      <path
+        d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+      />
+    }
+    closeOnEsc={true}
+    closeOnOverlayClick={true}
+    focusTrapOptions={Object {}}
+    focusTrapped={true}
+    onClose={[Function]}
+    open={false}
+    role="dialog"
+    showCloseIcon={true}
+    styles={
+      Object {
+        "overlay": Object {
+          "color": "black",
+        },
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "margin": "20px",
+        }
+      }
+    >
+      <div
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "",
+          }
+        }
+      />
+    </div>
+  </Modal>
 </div>
 `;
 
@@ -2787,6 +2925,14 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
     }
   }
 >
+  <h1>
+    Plan Loaded: 
+    __default__
+  </h1>
+  <h1>
+    Plan Step: 
+    11
+  </h1>
   <div
     className="container-fluid"
   >
@@ -3127,6 +3273,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
               },
               "edit": "READY",
               "identify": "READY",
+              "load": "READY",
               "loop_plan": "READY",
               "plan": "READY",
               "plan_loop": "READY",
@@ -3488,6 +3635,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -3830,6 +3978,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -4172,6 +4321,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -4189,6 +4339,62 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
       </div>
     </div>
   </div>
+  <Modal
+    animationDuration={500}
+    blockScroll={true}
+    center={true}
+    classNames={Object {}}
+    classes={
+      Object {
+        "closeButton": "styles_closeButton__20ID4",
+        "closeIcon": "styles_closeIcon__1QwbI",
+        "modal": "styles_modal__gNwvD",
+        "modalCenter": "styles_modalCenter__L9F2w",
+        "overlay": "styles_overlay__CLSq-",
+        "transitionEnter": "styles_transitionEnter__3j_-a",
+        "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+        "transitionExit": "styles_transitionExit__1KmEf",
+        "transitionExitActive": "styles_transitionExitActive__1nQXw",
+      }
+    }
+    closeIconSize={28}
+    closeIconSvgPath={
+      <path
+        d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+      />
+    }
+    closeOnEsc={true}
+    closeOnOverlayClick={true}
+    focusTrapOptions={Object {}}
+    focusTrapped={true}
+    onClose={[Function]}
+    open={false}
+    role="dialog"
+    showCloseIcon={true}
+    styles={
+      Object {
+        "overlay": Object {
+          "color": "black",
+        },
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "margin": "20px",
+        }
+      }
+    >
+      <div
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "",
+          }
+        }
+      />
+    </div>
+  </Modal>
 </div>
 `;
 
@@ -4200,6 +4406,14 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
     }
   }
 >
+  <h1>
+    Plan Loaded: 
+    __default__
+  </h1>
+  <h1>
+    Plan Step: 
+    11
+  </h1>
   <div
     className="container-fluid"
   >
@@ -4216,9 +4430,12 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
       >
         <PlanPreview
           cancelLoadPlan={[Function]}
-          deleteFile={[Function]}
-          fileNames={Object {}}
-          loadPlan={[Function]}
+          fileNames={
+            Array [
+              "Test",
+            ]
+          }
+          loadedFileName="Testing"
           plan={
             Object {
               "available_ports": Object {
@@ -4498,6 +4715,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
               },
             }
           }
+          setModalInfo={[Function]}
           updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
@@ -4849,6 +5067,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -5191,6 +5410,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -5533,6 +5753,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                   "edit": "READY",
                   "identify": "READY",
+                  "load": "READY",
                   "loop_plan": "READY",
                   "plan": "READY",
                   "plan_loop": "READY",
@@ -5550,5 +5771,61 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
       </div>
     </div>
   </div>
+  <Modal
+    animationDuration={500}
+    blockScroll={true}
+    center={true}
+    classNames={Object {}}
+    classes={
+      Object {
+        "closeButton": "styles_closeButton__20ID4",
+        "closeIcon": "styles_closeIcon__1QwbI",
+        "modal": "styles_modal__gNwvD",
+        "modalCenter": "styles_modalCenter__L9F2w",
+        "overlay": "styles_overlay__CLSq-",
+        "transitionEnter": "styles_transitionEnter__3j_-a",
+        "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+        "transitionExit": "styles_transitionExit__1KmEf",
+        "transitionExitActive": "styles_transitionExitActive__1nQXw",
+      }
+    }
+    closeIconSize={28}
+    closeIconSvgPath={
+      <path
+        d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+      />
+    }
+    closeOnEsc={true}
+    closeOnOverlayClick={true}
+    focusTrapOptions={Object {}}
+    focusTrapped={true}
+    onClose={[Function]}
+    open={false}
+    role="dialog"
+    showCloseIcon={true}
+    styles={
+      Object {
+        "overlay": Object {
+          "color": "black",
+        },
+      }
+    }
+  >
+    <div
+      style={
+        Object {
+          "margin": "20px",
+        }
+      }
+    >
+      <div
+        dangerouslySetInnerHTML={
+          Object {
+            "__html": "",
+          }
+        }
+      />
+    </div>
+  </Modal>
 </div>
 `;
