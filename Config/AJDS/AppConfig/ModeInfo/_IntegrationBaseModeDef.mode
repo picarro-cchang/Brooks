@@ -12,13 +12,13 @@
 ##       in the mode file override these defaults
 
 [AVAILABLE_MODES]
-ModeCount = 5
+ModeCount = 6
 Mode_1 = warming_mode
-Mode_2 = pressure_cal_mode
-Mode_3 = cavity_temp_cycle_mode
+Mode_2 = pressure_cal_NH3_mode
+Mode_3 = cavity_temp_cycle_NH3_mode
 Mode_4 = etalon_temp_sensitivity_mode
-Mode_5 = baseline_cal_mode
-
+Mode_5 = baseline_cal_NH3_mode
+Mode_6 = high_resolution_mode
 ############################################################################
 ###
 # Sections below are default settings for all modes

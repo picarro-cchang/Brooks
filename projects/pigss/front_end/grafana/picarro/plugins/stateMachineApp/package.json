@@ -1,0 +1,70 @@
+{
+  "name": "flow-setup-application",
+  "version": "0.0.1",
+  "description": "Picarro State Machine",
+  "author": "Picarro Inc.",
+  "license": "See license in LICENSE.md",
+  "scripts": {
+    "build": "webpack --config webpack.config.prod.js",
+    "dev": "webpack --mode development",
+    "watch": "webpack --mode development --watch",
+    "test": "jest",
+    "clean": "prettier-tslint fix '**/*.ts' '**/*.tsx'"
+  },
+  "dependencies": {
+    "@grafana/data": "^6.3.0-alpha.0",
+    "@grafana/ui": "6.4.3",
+    "deepmerge": "^4.0.0",
+    "identity-obj-proxy": "^3.0.0",
+    "prettier": "^1.19.1",
+    "react": "^16.9.0",
+    "react-dom": "^16.9.0",
+    "react-list": "^0.8.13",
+    "react-responsive-modal": "^4.0.1",
+    "react-toastify": "^5.4.0",
+    "style-loader": "^1.0.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.3",
+    "@babel/preset-env": "^7.6.0",
+    "@babel/preset-react": "^7.0.0",
+    "@testing-library/react": "^9.1.4",
+    "@types/enzyme": "^3.10.4",
+    "@types/jest": "^24.0.23",
+    "@types/node": "^13.1.4",
+    "babel-jest": "^24.9.0",
+    "babel-loader": "^8.0.5",
+    "babel-preset-env": "^1.7.0",
+    "clean-webpack-plugin": "^2.0.1",
+    "copy-webpack-plugin": "^5.0.2",
+    "css-loader": "^3.2.0",
+    "enzyme": "^3.10.0",
+    "enzyme-adapter-react-16": "^1.15.1",
+    "enzyme-to-json": "^3.4.3",
+    "fetch-mock": "^8.2.0-beta.2",
+    "jest": "^25.1.0",
+    "jest-extended": "^0.11.2",
+    "jest-fetch-mock": "^3.0.1",
+    "jest-styled-components": "^6.3.4",
+    "jest-websocket-mock": "^2.0.0",
+    "mock-socket": "^9.0.2",
+    "prettier-tslint": "^0.4.2",
+    "react-test-renderer": "^16.12.0",
+    "style-loader": "^1.0.0",
+    "styled-components": "^4.4.1",
+    "ts-jest": "^25.2.0",
+    "ts-loader": "^5.3.3",
+    "tslint": "^6.0.0",
+    "typescript": "^3.4.1",
+    "uglifyjs-webpack-plugin": "^2.1.2",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
+  },
+  "jest": {
+    "collectCoverage": true,
+    "coverageReporters": [
+      "json",
+      "html"
+    ]
+  }
+}

@@ -1,0 +1,57 @@
+Configuration: # This is for high level information
+  RpcTunnel:
+    config_file: rpc_tunnel_configs.json
+  Database:
+    server: 0.0.0.0
+    port: 8086
+    name: pigss_data
+  HttpServer:
+    listen_address: 0.0.0.0
+    port: 8000
+
+Settings:
+  maximum_mfc_flow: 50.0
+  reference_mfc_flow: 40.0
+  flow_settle_delay: 2.0
+  madmapper_startup_delay: 60
+  startup_plan: __default__ # Do NOT include extension or directory
+  min_plan_interval: 20
+
+Services:
+  - Name: DBDecimator
+    RPC_Port: 33052
+    Parameters: # These are passed to the constructor
+      db_name: pigss_data
+      rpc_server_name: DBDecimator
+      rpc_server_description: DBDecimator
+      raw_filter_conditions:
+        - ["valve_stable_time", ">", 15]
+      start: true
+
+Plugins:
+  GrafanaLogger:
+    sqlite:
+      table_name: "Events"
+      columns: ["rowid", "ClientTimestamp", "ClientName", "LogMessage", "Level", "EpochTime"]
+    limit: 20
+    interval: 5
+    level: [20, 30, 40, 50]
+    timeout: 300
+    retries: 1
+
+  GrafanaDataGenerator:
+    database:
+      host: 0.0.0.0
+      port: 8086
+      database: "pigss_data"
+      timeout: 300
+      retries: 1
+      measurements: "crds"
+    server:
+      user_keys: ["ALARM_STATUS", "CavityPressure", "CavityTemp", "WarmBoxTemp", "NH3","incomplete_nh3_spectrum" , 
+      "degraded_nh3_performance", "HF", "incomplete_hf_spectrum", "degraded_hf_performance", "HCl", 
+      "incomplete_hcl_spectrum", "degraded_hcl_performance", "H2O", "SO2", "CH4", "CO2", "BoxPressure","INST_STATUS" ]
+      data_dir: "/tmp"
+      file_type: "csv"
+
+Species: ["H2O", "CO2", "NH3", "CH4", "HF", "HCl", "O2", "HDO", "H2S", "SO2", "CavityPressure", "CavityTemp"]

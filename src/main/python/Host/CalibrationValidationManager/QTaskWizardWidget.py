@@ -199,6 +199,12 @@ class QTaskWizardWidget(QtGui.QWidget):
         return
 
     def _open_filemanager(self):
+        self._openFileManagerBtn.setEnabled(False)
+        self.button_to_enable = self._openFileManagerBtn
+        self.timer = QtCore.QTimer()
+        self.timer.setInterval(1500)
+        self.timer.start()
+        self.timer.timeout.connect(self._enableButton)
         logStr = "clicked download system validation report"
         self.db.log(logStr)
         cmd = ["python",
@@ -209,6 +215,11 @@ class QTaskWizardWidget(QtGui.QWidget):
                "ValidationReport"]
         p = subprocess32.Popen(cmd, stdin=None, stdout=None, stderr=None)
         return
+
+    #Re-enable button few seconds after being clicked
+    def _enableButton(self):
+        self.button_to_enable.setEnabled(True)
+        self.timer.deleteLater()
 
     def _show_editors_button_clicked(self):
         if self._editors_visible:

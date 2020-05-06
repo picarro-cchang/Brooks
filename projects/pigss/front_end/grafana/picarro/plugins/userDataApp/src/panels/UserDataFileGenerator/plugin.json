@@ -1,0 +1,26 @@
+{
+  "type": "panel",
+  "name": "UserDataGenerator",
+  "id": "user-data-generator",
+  "info": {
+    "description": "User Data Generator - Grafana Plugin",
+    "author": {
+      "name": "Dileep Pandey"
+    },
+    "keywords": [
+      "Simple"
+    ],
+    "logos": {
+      "small": "img/logo.svg",
+      "large": "img/logo.svg"
+    },
+    "links": [],
+    "screenshots": [],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}

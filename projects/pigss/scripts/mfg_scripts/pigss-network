@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# This script will be the menu for picarro network mounting
+
+while : # Loop forever
+do
+clear
+cat << !
+
+			     *********************
+			     *                   *
+			     *  Picarro Network  *
+			     *                   *
+			     *********************
+
+
+1. Mount All Drives
+2. Mount R:
+3. Mount S:
+4. Mount X:
+5. Mount M:
+6. Unmount All Drives
+7. Unmount R:
+8. Unmount S:
+9. Unmount X:
+10. Unmount M:
+11. Return to Menu
+
+!
+
+echo -n "Selection an option: "
+read choice
+
+case $choice in
+	1) sudo ./mount-shared-drive all || sudo /usr/bin/mount-shared-drive all;;
+	2) sudo ./mount-shared-drive r || sudo /usr/bin/mount-shared-drive r;;
+	3) sudo ./mount-shared-drive s || sudo /usr/bin/mount-shared-drive s;;
+	4) sudo ./mount-shared-drive x || sudo /usr/bin/mount-shared-drive x;;
+	5) sudo ./mount-shared-drive m || sudo /usr/bin/mount-shared-drive m;;
+	6) sudo ./unmount-shared-drive all || /usr/bin/sudo unmount-shared-drive all;;
+	7) sudo ./unmount-shared-drive r || sudo /usr/bin/unmount-shared-drive r;;
+	8) sudo ./unmount-shared-drive s || sudo /usr/bin/unmount-shared-drive s;;
+	9) sudo ./unmount-shared-drive x || sudo /usr/bin/unmount-shared-drive x;;
+	10) sudo ./unmount-shared-drive m || sudo /usr/bin/unmount-shared-drive m;;
+	11) exit ;;
+	*) echo "\"$choice\" is not an option."; sleep 1s ;;
+esac
+done

@@ -1,0 +1,31 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the loglev? command
+tcltest::test loglev_query.recognize {
+    Test recognizing the loglev? command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "loglev?"
+    set return_string [boxer::readline $channel]
+    # Return string will be made of letters if the command is recognized.
+    set test_result [string is alpha $return_string]
+    return $test_result
+} -cleanup {
+
+} -match regexp -result 1
+
+# Log level must be error for released binaries
+tcltest::test loglev_query.error {
+    Make sure the log level is error.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "loglev?"
+    set return_string [boxer::readline $channel]
+    # Return string must be error
+    set test_result [string equal $return_string error]
+    return $test_result
+} -cleanup {
+
+} -match regexp -result 1

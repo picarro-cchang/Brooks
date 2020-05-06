@@ -1,0 +1,34 @@
+### Commented entries have reasonable defaults.
+### Uncomment to edit them.
+### Debian Handbook for Meta Packages: https://debian-handbook.info/browse/stable/sect.building-first-package.html
+Source: pigss-meta
+Section: misc
+Priority: optional
+Homepage: http://www.picarro.com
+Standards-Version: 3.9.2
+
+Package: pigss-meta
+Version: 1.0.0
+Maintainer: gsornsen@picarro.com
+# Pre-Depends: <comma-separated list of packages>
+Depends: git, ruby, ruby-dev, rubygems, build-essential, curl, openssh-server, chromium-browser, gnome-terminal, gnome-tweaks, dconf-editor, nmap, htop, scrot, nodejs, avrdude
+# Packages to add: nodejs (requires sources.list addition)
+# Recommends: <comma-separated list of packages>
+# Suggests: <comma-separated list of packages>
+# Provides: <comma-separated list of packages>
+# Replaces: <comma-separated list of packages>
+Architecture: amd64
+# Multi-Arch: <one of: foreign|same|allowed>
+# Copyright: <copyright file; defaults to GPL2>
+# Changelog: <changelog file; defaults to a generic changelog>
+# Readme: <README.Debian file; defaults to a generic one>
+# Extra-Files: <comma-separated list of additional files for the doc directory>
+# Links: <pair of space-separated paths; First is path symlink points at, second is filename of link>
+# Files: <pair of space-separated paths; First is file to include, second is destination>
+#  <more pairs, if there's more than one file to include. Notice the starting space>
+Description: PiGSS Meta Package
+ This is a meta package that consists of nothing but a list of
+ dependencies. Once installed, it will automatically fetch and
+ install all PiGSS software and dependencies.
+
+ Oink Oink!

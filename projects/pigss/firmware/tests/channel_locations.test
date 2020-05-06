@@ -1,0 +1,113 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Light up channel 1
+tcltest::test chanset.light1 {
+    Make sure channel 1 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11111110"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 2
+tcltest::test chanset.light2 {
+    Make sure channel 2 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11111101"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 3
+tcltest::test chanset.light3 {
+    Make sure channel 3 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11111011"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 4
+tcltest::test chanset.light4 {
+    Make sure channel 4 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11110111"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 5
+tcltest::test chanset.light5 {
+    Make sure channel 5 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11101111"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 6
+tcltest::test chanset.light6 {
+    Make sure channel 6 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "11011111"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 7
+tcltest::test chanset.light7 {
+    Make sure channel 7 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "10111111"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0
+
+# Light up channel 8
+tcltest::test chanset.light8 {
+    Make sure channel 8 is in the correct location
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "chanset 255"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset [jpmath::bin2dec "01111111"]"
+    set return_string [boxer::readline $channel]
+} -cleanup {
+    
+} -match regexp -result 0

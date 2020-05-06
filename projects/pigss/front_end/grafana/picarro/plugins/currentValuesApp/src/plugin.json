@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Numerical View",
+  "id": "current-concentration-values",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/tables_icon_dark.svg",
+      "large": "img/tables_icon_dark.svg"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Numerical View",
+      "path": "dashboards/Curren-Values-Dynamic.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.x.x",
+    "plugins": []
+  }
+}

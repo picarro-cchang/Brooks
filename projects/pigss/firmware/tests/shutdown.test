@@ -1,0 +1,62 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the shutdown command
+
+tcltest::test shutdown.recognize {
+    Test recognizing the shutdown command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "shutdown"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    # The only way out of the shutdown state is a reset
+    boxer::sendcmd $channel "*rst"
+    # Now we need to wait for a reboot
+    after 5000
+} -match regexp -result 0
+
+tcltest::test shutdown_to_control {
+    Make sure transitions from shutdown to control are forbidden.  
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "shutdown"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset 1"
+    # This should return -3
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    # The only way out of the shutdown state is a reset
+    boxer::sendcmd $channel "*rst"
+    # Now we need to wait for a reboot
+    after 5000
+} -match regexp -result -3
+
+
+tcltest::test shutdown.forbidden_transitions {
+    Make sure transitions from shutdown to control are forbidden.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+    boxer::sendcmd $channel "shutdown"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset 1"
+    # This should return -3
+    set return_sum [boxer::readline $channel]
+    boxer::sendcmd $channel "clean"
+    # This should return -3, so the return_sum should now be -6
+    set return_sum [expr $return_sum + [boxer::readline $channel]]
+    boxer::sendcmd $channel "standby"
+    # This should return -3, so the return sum should now be -9
+    set return_sum [expr $return_sum + [boxer::readline $channel]]
+    return $return_sum
+} -cleanup {
+    # The only way out of the shutdown state is a reset
+    boxer::sendcmd $channel "*rst"
+    # Now we need to wait for a reboot
+    after 5000    
+} -match regexp -result -9
+

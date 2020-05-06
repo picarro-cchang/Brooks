@@ -3,11 +3,15 @@
 *.pyd
 *.bak
 *.so
+*.db
 *~
+*.retry
 target/
-build/
+attic/
+dist/
 .doit.db.*
 .vscode/
+.idea
 node_modules/
 src/main/python/Host/build_version.py
 src/main/python/Host/Utilities/BuildHelper/BuildInfo.py
@@ -16,4 +20,6 @@ src/main/python/AppConfig/
 src/main/python/InstrConfig/
 src/main/python/CommonConfig/
 src/main/python/Log/
-
+/experiments/grafana/bin/
+/experiments/grafana/pkg
+/experiments/grafana/src/github.com/golang

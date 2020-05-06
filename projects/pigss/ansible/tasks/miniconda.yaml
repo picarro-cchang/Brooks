@@ -1,0 +1,33 @@
+- name: Create pip.conf dir
+  file:
+    path: "{{ playbook_home }}/.pip"
+    state: directory
+    mode: '0755'
+
+- name: Configure pip
+  copy:
+    src: files/pip.conf
+    dest: "{{ playbook_home }}/.pip/pip.conf"
+
+- name: Download miniconda3
+  get_url:
+    url: https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+    dest: /tmp/
+    mode: 0755
+  when: update == "false"
+
+- name: Install miniconda3
+  shell: /tmp/Miniconda3-latest-Linux-x86_64.sh -b -p ${HOME}/miniconda3 -u && ${HOME}/miniconda3/bin/conda init bash
+  when: update == "false"
+
+- name: Update miniconda3
+  shell: conda update -n base conda
+  when: update == "true"
+
+- name: Set up conda env
+  shell: ${HOME}/miniconda3/bin/conda env update -f "{{ project_dir }}/ansible/tasks/files/pigss_conda_env.yaml"
+
+# TODO: Change path or method to obtain async_hsm when permanent solution is implemented
+- name: Install async_hsm
+  shell: cd ${HOME}/git/host/experiments/async_hsm/ && ${HOME}/miniconda3/bin/python setup.py develop
+

@@ -12,6 +12,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 
 DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
+MAX_STR_LENGTH = 30
 
 class MainWindow(UserAdminFrame):
     def __init__(self, configFile, parent=None):
@@ -144,6 +145,8 @@ class MainWindow(UserAdminFrame):
             new_username = str(self.input_new_user_name.text()).strip()
             if len(new_username) == 0:
                 errors.append("UserName is blank.")
+            elif len(new_username) > MAX_STR_LENGTH:
+                errors.append("Username is too long, can't be longer than {}".format(MAX_STR_LENGTH))
             elif new_username in self.all_users:
                 errors.append("UserName already exists.")
         if len(errors) > 0:
@@ -203,9 +206,20 @@ class MainWindow(UserAdminFrame):
             self.update_user_list()
     
     def display_user_info(self, user):
-        username = self.replace_html_special_chars(user["username"])
-        last_name = self.replace_html_special_chars(user["last_name"])
-        first_name = self.replace_html_special_chars(user["first_name"])
+        # making sure that username or fullname will not be displayed fully if it is too long, so it won't be breaking UI
+        username_str = user["username"]
+        username_croped = username_str if len(username_str) <= MAX_STR_LENGTH else "{}...".format(username_str[:MAX_STR_LENGTH])
+
+        full_name_str = "{} {}".format(user["last_name"], user["first_name"])
+        full_name_croped = full_name_str if len(full_name_str) <= MAX_STR_LENGTH else "{}...".format(full_name_str[:MAX_STR_LENGTH])
+
+        employee_id_str = user["employee_id"]
+        employee_id_croped = employee_id_str if len(employee_id_str) <= MAX_STR_LENGTH else "{}...".format(employee_id_str[:MAX_STR_LENGTH])
+
+        username = self.replace_html_special_chars(username_croped)
+        full_name = self.replace_html_special_chars(full_name_croped)
+        employee_id = self.replace_html_special_chars(employee_id_croped)
+
         user_info = """
             <html>
                 <head>
@@ -217,13 +231,13 @@ class MainWindow(UserAdminFrame):
                 <body>
                     <table>
                         <tr><td class='attr'>UserName</td><td>%s</td><td class='attr'>Active<td>%s</td></tr>
-                        <tr><td class='attr'>Name</td><td>%s %s</td><td class='attr'>Employee ID</td><td>%s</td></tr>
+                        <tr><td class='attr'>Name</td><td>%s</td><td class='attr'>Employee ID</td><td>%s</td></tr>
                         <tr><td class='attr'>Phone</td><td>%s</td><td class='attr'>Roles</td><td>%s</td></tr>
                     </table>
                 </body>
             </html>
-        """ % (username, "True" if user["active"] else "False", first_name, last_name,
-            user["employee_id"], user["phone_number"], ",".join(user["roles"]))
+        """ % (username, "True" if user["active"] else "False", full_name,
+            employee_id, user["phone_number"], ",".join(user["roles"]))
         self.label_user_info.setText(user_info)
 
     def download_history(self):

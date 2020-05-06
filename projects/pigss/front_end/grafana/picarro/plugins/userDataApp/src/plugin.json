@@ -1,0 +1,27 @@
+{
+    "type": "app",
+    "name": "Export Data",
+    "id": "picarro-user-data-app",
+    "info": {
+      "author": {
+        "name": "Picarro, Inc."
+      },
+      "logos": {
+        "small": "img/file_generator_icon_dark theme.svg",
+        "large": "img/file_generator_icon_dark theme.svg"
+      }
+    },
+    "includes": [
+      {
+        "type": "dashboard",
+        "name": "Export Data",
+        "path": "dashboards/userDataApp.json",
+        "addToNav": true,
+        "defaultNav": true
+      }
+    ],
+    "dependencies": {
+      "grafanaVersion": "6.4.x",
+      "plugins": []
+    }
+  }

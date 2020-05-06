@@ -1,0 +1,13 @@
+---
+name: State Machine
+path: ../../../grafana/plugins/state-machine-app/src/plugin.json
+---
+name: Analyzer Graphs
+path: ../../../grafana/plugins/analyzer-graphs-app/src/plugin.json
+---
+name: Concentration By Valve
+path: ../../../grafana/plugins/concentration-by-valve-app/src/plugin.json
+---
+name: Current Values
+path: ../../../grafana/plugins/current-values-app/src/plugin.json
+

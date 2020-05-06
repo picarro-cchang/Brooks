@@ -1,0 +1,287 @@
+[
+    {
+        "Manufacturer": "Teledyne",
+        "details-editor": [
+            [
+                "default_password",
+                "qwe123rty"
+            ],
+            [
+                "confidentaion",
+                "information"
+            ]
+        ],
+        "details-viewer": [
+            [
+                "Manufacturer",
+                "<copy>"
+            ],
+            [
+                "Model",
+                "T100U SO2 Analyzer"
+            ],
+            [
+                "Serial Number",
+                "339"
+            ],
+            [
+                "OS",
+                "Windows CE Ver 1.0.3.92"
+            ],
+            [
+                "Software Rev",
+                "1.0.19 bld 126"
+            ],
+            [
+                "Part Number",
+                "063850001"
+            ],
+            [
+                "SUPPORT",
+                "TELEDYNE-API.COM"
+            ],
+            [
+                "AUX Board Rev.",
+                "15EB,A1"
+            ],
+            [
+                "Factory Cfg. Saved",
+                "13-DEC-18"
+            ],
+            [
+                "Library Rev",
+                "7.0.3 bld 88"
+            ],
+            [
+                "displayName",
+                "<copy>"
+            ],
+            [
+                "status",
+                "<copy>"
+            ],
+            [
+                "ip",
+                "<copy>"
+            ],
+            [
+                "position_in_rack",
+                "<copy>"
+            ]
+        ],
+        "displayName": "asd",
+        "ip": "10.0.0.500",
+        "logo_path": "teledyne_logo",
+        "position_in_rack": 1,
+        "status": "ON",
+        "status_color": "green",
+        "warnings": [
+            [
+                "2019-04-04 12-23-00",
+                "instrument received a destroy signal"
+            ],
+            [
+                "2019-04-09 13-14-17",
+                "Instrument received a destroy signal. Don't worry, it was ignored."
+            ]
+        ]
+    },
+    {
+        "Manufacturer": "Picarro",
+        "details-editor": [
+            [
+                "default_password",
+                "qwe123rty"
+            ],
+            [
+                "confidentaion",
+                "information"
+            ]
+        ],
+        "details-viewer": [
+            [
+                "Manufacturer",
+                "<copy>"
+            ],
+            [
+                "Model",
+                ""
+            ],
+            [
+                "Serial Number",
+                ""
+            ],
+            [
+                "OS",
+                ""
+            ],
+            [
+                "Software Rev",
+                ""
+            ],
+            [
+                "Part Number",
+                ""
+            ],
+            [
+                "SUPPORT",
+                "Picarro"
+            ],
+            [
+                "displayName",
+                "<copy>"
+            ],
+            [
+                "ip",
+                "<copy>"
+            ],
+            [
+                "status",
+                "<copy>"
+            ],
+            [
+                "position_in_rack",
+                "<copy>"
+            ]
+        ],
+        "displayName": "Picarro 1",
+        "ip": "10.1.1.511",
+        "logo_path": "picarro_logo",
+        "position_in_rack": 2,
+        "status": "ON",
+        "status_color": "green",
+        "warnings": []
+    },
+    {
+        "Manufacturer": "Picarro",
+        "details-editor": [
+            [
+                "default_password",
+                "qwe123rty"
+            ],
+            [
+                "confidentaion",
+                "information"
+            ]
+        ],
+        "details-viewer": [
+            [
+                "Manufacturer",
+                "<copy>"
+            ],
+            [
+                "Model",
+                "MCDS"
+            ],
+            [
+                "OS",
+                "ubuntu"
+            ],
+            [
+                "Part Number",
+                "0000"
+            ],
+            [
+                "SUPPORT",
+                "Picarro"
+            ],
+            [
+                "Serial Number",
+                "0123"
+            ],
+            [
+                "Software Rev",
+                ""
+            ],
+            [
+                "displayName",
+                "<copy>"
+            ],
+            [
+                "ip",
+                "<copy>"
+            ],
+            [
+                "status",
+                "<copy>"
+            ],
+            [
+                "position_in_rack",
+                "<copy>"
+            ]
+        ],
+        "displayName": "10.2.2.522",
+        "ip": "10.2.2.522",
+        "logo_path": "picarro_logo",
+        "position_in_rack": 3,
+        "status": "OFF",
+        "status_color": "red",
+        "warnings": []
+    },
+    {
+        "Manufacturer": "Black Mesa",
+        "details-editor": [
+            [
+                "default_password",
+                "qwe123rty"
+            ],
+            [
+                "confidentaion",
+                "information"
+            ]
+        ],
+        "details-viewer": [
+            [
+                "Manufacturer",
+                "<copy>"
+            ],
+            [
+                "Model",
+                "Dark Matter Analyser \u03bb42G"
+            ],
+            [
+                "OS",
+                ""
+            ],
+            [
+                "Part Number",
+                "\u03bb"
+            ],
+            [
+                "SUPPORT",
+                "Valve"
+            ],
+            [
+                "Serial Number",
+                "0186"
+            ],
+            [
+                "Software Rev",
+                "3.2"
+            ],
+            [
+                "displayName",
+                "<copy>"
+            ],
+            [
+                "ip",
+                "<copy>"
+            ],
+            [
+                "status",
+                "<copy>"
+            ],
+            [
+                "position_in_rack",
+                "<copy>"
+            ]
+        ],
+        "displayName": "10.Black.Mesa",
+        "ip": "10.3.3.533",
+        "logo_path": "black_mesa_logo",
+        "position_in_rack": null,
+        "status": "annihilated",
+        "status_color": "",
+        "warnings": []
+    }
+]

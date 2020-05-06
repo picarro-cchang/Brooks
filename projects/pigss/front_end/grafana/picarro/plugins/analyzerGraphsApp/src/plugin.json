@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Graphical View",
+  "id": "picarro-analyzer-page",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/analyzer_graph_icon_dark.svg",
+      "large": "img/analyzer_graph_icon_dark.svg"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Graphical View",
+      "path": "dashboards/analyzer-output-dynamic.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.x.x",
+    "plugins": []
+  }
+}

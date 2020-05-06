@@ -1,0 +1,170 @@
+#!/bin/bash
+# INFLUXDB RELOCATION TO A SECOND SSD: THE SCRIPT
+# Run this script after installing PiGSS software and before starting it
+# Make sure you have a second SSD plugged
+# This script will:
+    # find a SATA drive by the supplied "drive_trigger"
+    # create a partition on it
+    # create an ext4 filesystem on this partition
+    # mount this partition
+    # write info about this partition to /etc/fstab, so the partition will be mounted on restart
+    # modify the influxdb config file, so it will be using that partition for storage
+# OR do all missed steps from the above if any of them were previously made
+
+if [[ $(/usr/bin/id -u) -ne 0 ]]; then
+    echo "Please run this script with sudo"
+    sleep 1
+    exit
+fi
+
+echo "Configuring secondary SSD..."
+echo
+drive_trigger="Samsung_SSD_860_PRO_1TB_"
+mount_path="/mnt/onetb"
+new_influx_path="${mount_path}/influxdb/"
+drive_to_be_used="NULL"
+
+# FIND PHYSICAL DRIVE
+for drive_path in $(ls /dev/sd*)
+do
+    if [ ${#drive_path} -eq 8 ] # sort out drives from partitions
+    then 
+        echo "Found physical drive $drive_path"
+        if  udevadm info $drive_path | grep -q $drive_trigger ;
+        then
+            drive_to_be_used=$drive_path
+        fi
+    fi
+done
+
+# if no drive triggered: exit
+if [ "$drive_to_be_used" = "NULL" ]; then 
+    echo "No drive has triggered by $drive_trigger"
+    sleep 1;
+    ## code below is a part of TODO, just need to make sure user will make a safe decision
+    # echo "Wanna use any of the found drives?"
+    # select yn in "Yes" "No"; do
+    #     case $yn in
+    #         Yes )
+    #             select part in $(ls /dev/sd?); do
+    #                 drive_to_be_used=$part
+    #                 break;
+    #             done
+    #             break;;
+    #         No )
+    #             echo "Exiting script then"; exit;;
+    #     esac
+    # done
+exit; fi
+
+# DEAL WITH PARTITION
+# check if drive has partitions
+if parted -m $drive_to_be_used print 2>/dev/null | grep -q ^1: ;
+then 
+    echo "drive $drive_to_be_used has at least one partition"
+    echo "pick partition to use:"
+    select part in $(ls $drive_to_be_used?); do
+        partition_path=$part
+        break;
+    done
+else
+    echo "drive $drive_to_be_used has no partition, make one?"
+    select yn in "Yes" "No"; do
+        case $yn in
+            Yes )
+                echo "Gonna make partition now"
+                partition_path="${drive_to_be_used}1"
+
+                # make partition
+                parted -s $drive_to_be_used unit s mklabel gpt -- mkpart $partition_path 0% 100%
+                break;;
+            No )
+                echo "Exiting script then"; sleep 1; exit;;
+        esac
+    done
+fi
+
+# DEAL WITH FILESYSTEM
+# check if partition has acceptable filesystem
+if blkid -s TYPE -o value $partition_path | grep -q ext* ;
+then
+    echo "Seems like $partition_path has acceptable filesystem"
+else
+    echo "Seems like $partition_path has no acceptable filesystem, gonna try to make one"
+    mkfs.ext4 $partition_path;
+fi
+
+# DEAL WITH MOUNTING
+# check if need to mount
+if ! df -Th | grep "^$partition_path" ;
+then
+    # mount partition 
+    echo "create mounting point: $mount_path"
+    mkdir -p $mount_path
+
+    echo "mount partition $partition_path to $mount_path"
+    mount -t auto -v $partition_path $mount_path
+else
+    # choose to remount or use already mounted path
+    mounted_path=$(df | grep $partition_path | awk '{print $(NF)}')
+    echo "Seems like choosen partition is already mounted to $mounted_path"
+    if ! [ "$mounted_path" = "$mount_path" ];
+    then
+        echo "Use existing path $mounted_path"
+        echo "    or remount to $mount_path (can possibly break something if partition already being used)?"
+        select ans in "$mounted_path" "$mount_path"; do
+            case $ans in
+                $mounted_path )
+                    mount_path=$mounted_path
+                    new_influx_path="${mount_path}/influxdb/"
+                    break;;
+                $mount_path ) 
+                    # unmount and mount to where need
+                    umount $partition_path
+
+                    echo "create mounting point: $mount_path"
+                    mkdir -p $mount_path
+
+                    mount -t auto -v $partition_path $mount_path
+                    break;
+            esac
+        done
+    fi
+fi
+
+# FSTAB
+# write to fstab so it will always be mounted on boot
+partition_uuid=$(blkid -s UUID -o value $partition_path)
+if ! grep -q $partition_uuid /etc/fstab;
+then
+    echo "Write changes to /ets/fstab"
+    echo "UUID=$partition_uuid $mount_path/ ext4 auto,rw 0 0" >> /etc/fstab
+fi
+
+# DO THE INFLUX STUFF
+# create folder for influx
+mkdir -p $new_influx_path
+chown -R influxdb:influxdb $new_influx_path
+
+# change influx config file
+echo "Modifying /etc/influxdb/influxdb.conf"
+sed -i "s|/var/lib/influxdb/meta|${new_influx_path}/meta|g" /etc/influxdb/influxdb.conf
+sed -i "s|/var/lib/influxdb/data|${new_influx_path}/data|g" /etc/influxdb/influxdb.conf
+sed -i "s|/var/lib/influxdb/wal|${new_influx_path}/wal|g" /etc/influxdb/influxdb.conf
+
+# restart influx
+echo "Restarting influxdb"
+systemctl restart influxdb.service
+
+sleep 5
+
+echo "Creating database tables if not exist"
+influx -execute 'show databases' | grep pigss_data || influx -execute 'create database pigss_data'
+influx -execute 'show databases' | grep telegraf || influx -execute 'create database telegraf'
+
+echo "Secondary SSD Configured..."
+
+# TODO fix drive_trigger string and new_influx_path before using in production
+# TODO allow user to pick a drive if non been triggered. make sure user don't pick main drive
+# TODO add command line arguments parcing
+# TODO check if partition exists with unsupported filesystem

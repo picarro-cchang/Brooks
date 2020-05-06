@@ -145,6 +145,11 @@ class ThresholdStats(object):
                 waveNumberMean = self.sumWavenumber/nRd
                 waveNumberSdev = sqrt((self.sumSqWavenumber/nRd) - (waveNumberMean-offset)**2)
                 return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,waveNumberMean,waveNumberSdev)
+            except ZeroDivisionError as ze:
+                # We are not getting any ringdowns,
+                # Let's break the loop and move onto the next
+                # threshold setting
+                break
             sys.stderr.write(".")
 
     def flushQueue(self):
@@ -195,23 +200,24 @@ class ThresholdStats(object):
                 thresh = float(self.thresh_list[l])
                 self.setTuner(thresh)
                 time.sleep(1)
-                rate,meanLoss,varLoss,meanWavenumber,sdevWavenumber = self.collectStats(1000,20)
-                shot2shot = 0
-                stdLoss = 1000.0*sqrt(varLoss)
-                if meanLoss != 0: shot2shot = 100*stdLoss/(1000.0*meanLoss)
-                sensitivity = stdLoss/sqrt(rate) if rate != 0 else 0.0
-                sdevFrequency = 30000.0*sdevWavenumber
-                msg = "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f Sdev freq (MHz): %10.4f StdDev loss: %10.4f Sensitivity: %10.5f" % \
-                      (thresh,rate,shot2shot,meanLoss,meanWavenumber,sdevFrequency,stdLoss,sensitivity)
-                print>>sys.stderr, msg
-                print msg
-                self.rd_rates[l] = rate
-                self.shot_to_shot[l] = shot2shot
-                self.mean_loss[l] = meanLoss
-                self.mean_wavenumber[l] = meanWavenumber
-                self.std_frequency[l] = sdevFrequency
-                self.std_loss[l] = stdLoss
-                self.sensitivity[l] = sensitivity
+                if self.collectStats(1000,20) is not None: # We have ringdown data
+                    rate,meanLoss,varLoss,meanWavenumber,sdevWavenumber = self.collectStats(1000,20)
+                    shot2shot = 0
+                    stdLoss = 1000.0*sqrt(varLoss)
+                    if meanLoss != 0: shot2shot = 100*stdLoss/(1000.0*meanLoss)
+                    sensitivity = stdLoss/sqrt(rate) if rate != 0 else 0.0
+                    sdevFrequency = 30000.0*sdevWavenumber
+                    msg = "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f Sdev freq (MHz): %10.4f StdDev loss: %10.4f Sensitivity: %10.5f" % \
+                        (thresh,rate,shot2shot,meanLoss,meanWavenumber,sdevFrequency,stdLoss,sensitivity)
+                    print>>sys.stderr, msg
+                    print msg
+                    self.rd_rates[l] = rate
+                    self.shot_to_shot[l] = shot2shot
+                    self.mean_loss[l] = meanLoss
+                    self.mean_wavenumber[l] = meanWavenumber
+                    self.std_frequency[l] = sdevFrequency
+                    self.std_loss[l] = stdLoss
+                    self.sensitivity[l] = sensitivity
         finally:
             self.listener.stop()
             Driver.restoreRegValues(regVault)

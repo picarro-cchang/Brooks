@@ -1,0 +1,790 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
+<Fragment>
+  <h3
+    className="text-center"
+  >
+    Export Data
+  </h3>
+  <PanelOptionsGroup
+    title="Generate New File"
+  >
+    <PanelOptionsGroup>
+      <div
+        className="gf-form"
+      >
+        <FormLabel
+          width={6}
+        >
+          Species
+        </FormLabel>
+        <Select
+          autoFocus={false}
+          backspaceRemovesValue={true}
+          className=""
+          components={
+            Object {
+              "Group": [Function],
+              "IndicatorsContainer": [Function],
+              "MenuList": [Function],
+              "Option": [Function],
+              "SingleValue": [Function],
+            }
+          }
+          isClearable={false}
+          isDisabled={false}
+          isLoading={false}
+          isMulti={true}
+          isSearchable={true}
+          maxMenuHeight={300}
+          onChange={[Function]}
+          openMenuOnFocus={false}
+          options={
+            Array [
+              Object {
+                "label": "All",
+                "value": "All",
+              },
+              Object {
+                "label": "CavityPressure",
+                "value": "CavityPressure",
+              },
+              Object {
+                "label": "WarmBoxTemp",
+                "value": "WarmBoxTemp",
+              },
+              Object {
+                "label": "HCl",
+                "value": "HCl",
+              },
+              Object {
+                "label": "H2O",
+                "value": "H2O",
+              },
+              Object {
+                "label": "SO2",
+                "value": "SO2",
+              },
+              Object {
+                "label": "CH4",
+                "value": "CH4",
+              },
+            ]
+          }
+          tabSelectsValue={true}
+        />
+      </div>
+    </PanelOptionsGroup>
+    <PanelOptionsGroup>
+      <div
+        className="gf-form"
+      >
+        <FormLabel
+          width={6}
+        >
+          Analyzer
+        </FormLabel>
+        <Select
+          autoFocus={false}
+          backspaceRemovesValue={true}
+          className=""
+          components={
+            Object {
+              "Group": [Function],
+              "IndicatorsContainer": [Function],
+              "MenuList": [Function],
+              "Option": [Function],
+              "SingleValue": [Function],
+            }
+          }
+          isClearable={false}
+          isDisabled={false}
+          isLoading={false}
+          isMulti={true}
+          isSearchable={true}
+          maxMenuHeight={300}
+          onChange={[Function]}
+          openMenuOnFocus={false}
+          options={
+            Array [
+              Object {
+                "label": "All",
+                "value": "All",
+              },
+              Object {
+                "label": "AMADS3001",
+                "value": "AMADS3001",
+              },
+              Object {
+                "label": "AMSADS3003",
+                "value": "AMSADS3003",
+              },
+              Object {
+                "label": "BFADS3003",
+                "value": "BFADS3003",
+              },
+              Object {
+                "label": "SBDS3002",
+                "value": "SBDS3002",
+              },
+              Object {
+                "label": "UADS3003",
+                "value": "UADS3003",
+              },
+            ]
+          }
+          tabSelectsValue={true}
+        />
+      </div>
+    </PanelOptionsGroup>
+    <PanelOptionsGroup>
+      <div
+        className="gf-form"
+      >
+        <FormLabel
+          width={6}
+        >
+          Port
+        </FormLabel>
+        <Select
+          autoFocus={false}
+          backspaceRemovesValue={true}
+          className=""
+          components={
+            Object {
+              "Group": [Function],
+              "IndicatorsContainer": [Function],
+              "MenuList": [Function],
+              "Option": [Function],
+              "SingleValue": [Function],
+            }
+          }
+          isClearable={false}
+          isDisabled={false}
+          isLoading={false}
+          isMulti={true}
+          isSearchable={true}
+          maxMenuHeight={300}
+          onChange={[Function]}
+          openMenuOnFocus={false}
+          options={
+            Array [
+              Object {
+                "label": "All",
+                "value": "All",
+              },
+              Object {
+                "label": "2: Bank 1 Ch. 2",
+                "value": "2",
+              },
+              Object {
+                "label": "4: Bank 1 Ch. 4",
+                "value": "4",
+              },
+              Object {
+                "label": "6: Bank 1 Ch. 6",
+                "value": "6",
+              },
+              Object {
+                "label": "8: Bank 1 Ch. 8",
+                "value": "8",
+              },
+              Object {
+                "label": "18: Bank 3 Ch. 2",
+                "value": "18",
+              },
+              Object {
+                "label": "20: Bank 3 Ch. 4",
+                "value": "20",
+              },
+              Object {
+                "label": "22: Bank 3 Ch. 6",
+                "value": "22",
+              },
+              Object {
+                "label": "24: Bank 3 Ch. 8",
+                "value": "24",
+              },
+              Object {
+                "label": "26: Bank 4 Ch. 2",
+                "value": "26",
+              },
+              Object {
+                "label": "28: Bank 4 Ch. 4",
+                "value": "28",
+              },
+              Object {
+                "label": "30: Bank 4 Ch. 6",
+                "value": "30",
+              },
+              Object {
+                "label": "32: Bank 4 Ch. 8",
+                "value": "32",
+              },
+            ]
+          }
+          tabSelectsValue={true}
+        />
+      </div>
+    </PanelOptionsGroup>
+    <PanelOptionsGroup>
+      <div
+        className="gf-form"
+      >
+        <Switch
+          checked={true}
+          label="Processed Data"
+          onChange={[Function]}
+        />
+      </div>
+    </PanelOptionsGroup>
+    <PanelOptionsGroup>
+      <div
+        className="time-generate-btn"
+      >
+        <div
+          className="gf-form time-picker-container"
+        >
+          <FormLabel
+            width={7}
+          >
+            Time Range
+          </FormLabel>
+          <TimePicker
+            onChange={[Function]}
+            onMoveBackward={[Function]}
+            onMoveForward={[Function]}
+            onZoom={[Function]}
+            selectOptions={
+              Array [
+                Object {
+                  "display": "Last 5 minutes",
+                  "from": "now-5m",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 15 minutes",
+                  "from": "now-15m",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 30 minutes",
+                  "from": "now-30m",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 1 hour",
+                  "from": "now-1h",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 3 hours",
+                  "from": "now-3h",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 6 hours",
+                  "from": "now-6h",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 12 hours",
+                  "from": "now-12h",
+                  "section": 3,
+                  "to": "now",
+                },
+                Object {
+                  "display": "Last 24 hours",
+                  "from": "now-24h",
+                  "section": 3,
+                  "to": "now",
+                },
+              ]
+            }
+            timeZone="browser"
+            value={
+              Object {
+                "from": "2020-02-11T14:31:13.973Z",
+                "raw": Object {
+                  "from": "now-6h",
+                  "to": "now",
+                },
+                "to": "2020-02-11T20:31:13.973Z",
+              }
+            }
+          />
+          <div
+            className="gf-form col-md-1"
+          >
+            <Button
+              disabled={true}
+              onClick={[MockFunction]}
+              size="md"
+              value="Generate"
+              variant="primary"
+            >
+              Generate
+            </Button>
+          </div>
+        </div>
+      </div>
+    </PanelOptionsGroup>
+  </PanelOptionsGroup>
+  <PanelOptionsGroup
+    title="Recently Generated Files"
+  >
+    <div
+      className="row"
+      style={
+        Object {
+          "height": "inherit",
+          "overflow": "scroll !important",
+        }
+      }
+    >
+      <div
+        className="gf-form col-md-12 col-sm-12"
+      >
+        <ul
+          id="file-list"
+          style={
+            Object {
+              "listStyle": "none",
+            }
+          }
+        >
+          <li
+            className="file-item"
+            key="pigss-ms-02-05-2020_121737-02-05-2020_131737.csv"
+            onClick={[Function]}
+            value="pigss-ms-02-05-2020_121737-02-05-2020_131737.csv"
+          >
+            pigss-ms-02-05-2020_121737-02-05-2020_131737.csv
+          </li>
+          <li
+            className="file-item"
+            key="pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"
+            onClick={[Function]}
+            value="pigss-ms-02-05-2020_121814-02-05-2020_131814.csv"
+          >
+            pigss-ms-02-05-2020_121814-02-05-2020_131814.csv
+          </li>
+        </ul>
+      </div>
+    </div>
+  </PanelOptionsGroup>
+</Fragment>
+`;
+
+exports[`<DataGeneratorLayout /> mount with String TimeRange 1`] = `
+DataGeneratorLayout {
+  "context": Object {},
+  "downloadData": [Function],
+  "generateFile": [Function],
+  "getFile": [Function],
+  "getFileNames": [Function],
+  "onAnalyzersChange": [Function],
+  "onDateChange": [Function],
+  "onKeysChange": [Function],
+  "onPortsChange": [Function],
+  "onProcessedDataSwitchChange": [Function],
+  "props": Object {
+    "options": Object {
+      "timeRange": Object {
+        "from": "2020-02-11T14:31:13.973Z",
+        "raw": Object {
+          "from": "now-6h",
+          "to": "now",
+        },
+        "to": "2020-02-11T20:31:13.973Z",
+      },
+    },
+    "theme": null,
+    "timeRange": Object {
+      "from": "2020-02-11T14:31:13.973Z",
+      "raw": Object {
+        "from": "now-6h",
+        "to": "now",
+      },
+      "to": "2020-02-11T20:31:13.973Z",
+    },
+  },
+  "refs": Object {},
+  "setState": [Function],
+  "state": Object {
+    "analyzerOptions": Array [
+      Object {
+        "label": "All",
+        "value": "All",
+      },
+    ],
+    "analyzers": Array [],
+    "files": Array [],
+    "from": "2020-02-11T14:31:13.973Z",
+    "isProcessedData": true,
+    "keyOptions": Array [
+      Object {
+        "label": "All",
+        "value": "All",
+      },
+    ],
+    "keys": Array [],
+    "portOptions": Array [
+      Object {
+        "label": "All",
+        "value": "All",
+      },
+    ],
+    "ports": Array [],
+    "raw": Object {
+      "from": "now-6h",
+      "to": "now",
+    },
+    "timeRange": Object {
+      "from": "2020-02-11T14:31:13.973Z",
+      "raw": Object {
+        "from": "now-6h",
+        "to": "now",
+      },
+      "to": "2020-02-11T20:31:13.973Z",
+    },
+    "to": "2020-02-11T20:31:13.973Z",
+  },
+  "updater": Updater {
+    "_callbacks": Array [],
+    "_renderer": ReactShallowRenderer {
+      "_context": Object {},
+      "_didScheduleRenderPhaseUpdate": false,
+      "_dispatcher": Object {
+        "readContext": [Function],
+        "useCallback": [Function],
+        "useContext": [Function],
+        "useDebugValue": [Function],
+        "useDeferredValue": [Function],
+        "useEffect": [Function],
+        "useImperativeHandle": [Function],
+        "useLayoutEffect": [Function],
+        "useMemo": [Function],
+        "useReducer": [Function],
+        "useRef": [Function],
+        "useResponder": [Function],
+        "useState": [Function],
+        "useTransition": [Function],
+      },
+      "_element": <DataGeneratorLayout
+        options={
+          Object {
+            "timeRange": Object {
+              "from": "2020-02-11T14:31:13.973Z",
+              "raw": Object {
+                "from": "now-6h",
+                "to": "now",
+              },
+              "to": "2020-02-11T20:31:13.973Z",
+            },
+          }
+        }
+        theme={null}
+        timeRange={
+          Object {
+            "from": "2020-02-11T14:31:13.973Z",
+            "raw": Object {
+              "from": "now-6h",
+              "to": "now",
+            },
+            "to": "2020-02-11T20:31:13.973Z",
+          }
+        }
+      />,
+      "_firstWorkInProgressHook": null,
+      "_forcedUpdate": false,
+      "_instance": [Circular],
+      "_isReRender": false,
+      "_newState": null,
+      "_numberOfReRenders": 0,
+      "_renderPhaseUpdates": null,
+      "_rendered": <React.Fragment>
+        <h3
+          className="text-center"
+        >
+          Export Data
+        </h3>
+        <PanelOptionsGroup
+          title="Generate New File"
+        >
+          <PanelOptionsGroup>
+            <div
+              className="gf-form"
+            >
+              <FormLabel
+                width={6}
+              >
+                Species
+              </FormLabel>
+              <Select
+                autoFocus={false}
+                backspaceRemovesValue={true}
+                className=""
+                components={
+                  Object {
+                    "Group": [Function],
+                    "IndicatorsContainer": [Function],
+                    "MenuList": [Function],
+                    "Option": [Function],
+                    "SingleValue": [Function],
+                  }
+                }
+                isClearable={false}
+                isDisabled={false}
+                isLoading={false}
+                isMulti={true}
+                isSearchable={true}
+                maxMenuHeight={300}
+                onChange={[Function]}
+                openMenuOnFocus={false}
+                options={
+                  Array [
+                    Object {
+                      "label": "All",
+                      "value": "All",
+                    },
+                  ]
+                }
+                tabSelectsValue={true}
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div
+              className="gf-form"
+            >
+              <FormLabel
+                width={6}
+              >
+                Analyzer
+              </FormLabel>
+              <Select
+                autoFocus={false}
+                backspaceRemovesValue={true}
+                className=""
+                components={
+                  Object {
+                    "Group": [Function],
+                    "IndicatorsContainer": [Function],
+                    "MenuList": [Function],
+                    "Option": [Function],
+                    "SingleValue": [Function],
+                  }
+                }
+                isClearable={false}
+                isDisabled={false}
+                isLoading={false}
+                isMulti={true}
+                isSearchable={true}
+                maxMenuHeight={300}
+                onChange={[Function]}
+                openMenuOnFocus={false}
+                options={
+                  Array [
+                    Object {
+                      "label": "All",
+                      "value": "All",
+                    },
+                  ]
+                }
+                tabSelectsValue={true}
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div
+              className="gf-form"
+            >
+              <FormLabel
+                width={6}
+              >
+                Port
+              </FormLabel>
+              <Select
+                autoFocus={false}
+                backspaceRemovesValue={true}
+                className=""
+                components={
+                  Object {
+                    "Group": [Function],
+                    "IndicatorsContainer": [Function],
+                    "MenuList": [Function],
+                    "Option": [Function],
+                    "SingleValue": [Function],
+                  }
+                }
+                isClearable={false}
+                isDisabled={false}
+                isLoading={false}
+                isMulti={true}
+                isSearchable={true}
+                maxMenuHeight={300}
+                onChange={[Function]}
+                openMenuOnFocus={false}
+                options={
+                  Array [
+                    Object {
+                      "label": "All",
+                      "value": "All",
+                    },
+                  ]
+                }
+                tabSelectsValue={true}
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div
+              className="gf-form"
+            >
+              <Switch
+                checked={true}
+                label="Processed Data"
+                onChange={[Function]}
+              />
+            </div>
+          </PanelOptionsGroup>
+          <PanelOptionsGroup>
+            <div
+              className="time-generate-btn"
+            >
+              <div
+                className="gf-form time-picker-container"
+              >
+                <FormLabel
+                  width={7}
+                >
+                  Time Range
+                </FormLabel>
+                <TimePicker
+                  onChange={[Function]}
+                  onMoveBackward={[Function]}
+                  onMoveForward={[Function]}
+                  onZoom={[Function]}
+                  selectOptions={
+                    Array [
+                      Object {
+                        "display": "Last 5 minutes",
+                        "from": "now-5m",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 15 minutes",
+                        "from": "now-15m",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 30 minutes",
+                        "from": "now-30m",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 1 hour",
+                        "from": "now-1h",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 3 hours",
+                        "from": "now-3h",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 6 hours",
+                        "from": "now-6h",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 12 hours",
+                        "from": "now-12h",
+                        "section": 3,
+                        "to": "now",
+                      },
+                      Object {
+                        "display": "Last 24 hours",
+                        "from": "now-24h",
+                        "section": 3,
+                        "to": "now",
+                      },
+                    ]
+                  }
+                  timeZone="browser"
+                  value={
+                    Object {
+                      "from": "2020-02-11T14:31:13.973Z",
+                      "raw": Object {
+                        "from": "now-6h",
+                        "to": "now",
+                      },
+                      "to": "2020-02-11T20:31:13.973Z",
+                    }
+                  }
+                />
+                <div
+                  className="gf-form col-md-1"
+                >
+                  <Button
+                    disabled={true}
+                    onClick={[Function]}
+                    size="md"
+                    value="Generate"
+                    variant="primary"
+                  >
+                    Generate
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </PanelOptionsGroup>
+        </PanelOptionsGroup>
+        <PanelOptionsGroup
+          title="Recently Generated Files"
+        >
+          <div
+            className="row"
+            style={
+              Object {
+                "height": "inherit",
+                "overflow": "scroll !important",
+              }
+            }
+          >
+            <div
+              className="gf-form col-md-12 col-sm-12"
+            >
+              <ul
+                id="file-list"
+                style={
+                  Object {
+                    "listStyle": "none",
+                  }
+                }
+              />
+            </div>
+          </div>
+        </PanelOptionsGroup>
+      </React.Fragment>,
+      "_rendering": false,
+      "_updater": [Circular],
+      "_workInProgressHook": null,
+    },
+  },
+}
+`;

@@ -1,0 +1,40 @@
+#!/bin/bash
+
+# This script provides a menu for scripts OPS and Service might find useful
+
+while : # Loop forever
+do
+clear
+cat << !
+
+			     *********************
+			     *                   *
+			     *   PiGSS Scripts   *
+			     *                   *
+			     *********************
+
+
+0. Exit
+1. Set Hostname
+2. Reboot
+3. Shutdown
+4. Mount Network Drives
+5. Relocate InfluxDB To Secondary SSD
+6. Update Firmware (Cannot run remotely)
+
+!
+
+echo -n "Select an option: "
+read choice
+
+case $choice in
+	0) exit;;
+	1) sudo ./pigss-hostname 2> /dev/null || sudo /usr/bin/pigss-hostname ;;
+	2) shutdown -r now ;;
+	3) shutdown -h now ;;
+	4) sudo ./pigss-network 2> /dev/null || sudo /usr/bin/pigss-network;;
+	5) sudo ./pigss-influx-relocating 2> /dev/null || sudo /usr/bin/pigss-influx-relocating;;
+	6) /usr/bin/firmware-updater & 2> /dev/null || echo "Binary not found!" && sleep 1s;;
+	*) echo "\"$choice\" is not an option."; sleep 1s ;;
+esac
+done

@@ -1,0 +1,9 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<PlanInformationPanelLayout /> Snapshot 1`] = `
+<PlanInformationPanelLayout>
+  <div
+    id="outer"
+  />
+</PlanInformationPanelLayout>
+`;

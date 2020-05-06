@@ -160,10 +160,14 @@ class QLoginDialog(QtGui.QDialog):
         self.buttonHBox = QtGui.QHBoxLayout()
         self.loginButton = QtGui.QPushButton("Login")
         self.cancelButton = QtGui.QPushButton("Cancel")
+
+        self.label_login_info = QtGui.QLabel("")
+
         self.loginButton.setDefault(True)
         self.buttonHBox.addWidget(self.cancelButton)
         self.buttonHBox.addWidget(self.loginButton)
         self.vbox.addLayout(self.buttonHBox)
+        self.vbox.addWidget(self.label_login_info)
 
         # Stretch at bottom of vbox to center content
         self.vbox.addStretch(1)
@@ -176,7 +180,9 @@ class QLoginDialog(QtGui.QDialog):
             if "error" not in ret:
                 self.accept()
             else:
-                PromptManager.error(parent, ret["error"])
+                self.label_login_info.setText(ret["error"])
+                self.passwordInput.clear()
+                # PromptManager.error(parent, ret["error"])
 
         # Connect dialog reject
         # self.rejected.connect(parent.quit)

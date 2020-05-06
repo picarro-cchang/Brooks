@@ -1,0 +1,1112 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<Main /> Snapshot 1`] = `
+<Main>
+  <div
+    style={
+      Object {
+        "textAlign": "center",
+      }
+    }
+  >
+    <div
+      className="container-fluid"
+    >
+      <div
+        className="row justify-content-md-center"
+      >
+        <div
+          className="col-sm-3"
+          style={
+            Object {
+              "height": "100%",
+            }
+          }
+        >
+          <CommandPanel
+            plan={
+              Object {
+                "available_ports": Object {
+                  "1": 170,
+                  "2": 0,
+                  "3": 170,
+                  "4": 170,
+                },
+                "bank_names": Object {
+                  "1": Object {
+                    "channels": Object {
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
+                    },
+                    "name": "Bank 1",
+                  },
+                  "2": Object {
+                    "channels": Object {
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
+                    },
+                    "name": "Bank 2",
+                  },
+                  "3": Object {
+                    "channels": Object {
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
+                    },
+                    "name": "Bank 3",
+                  },
+                  "4": Object {
+                    "channels": Object {
+                      "1": "Ch. 1",
+                      "2": "Ch. 2",
+                      "3": "Ch. 3",
+                      "4": "Ch. 4",
+                      "5": "Ch. 5",
+                      "6": "Ch. 6",
+                      "7": "Ch. 7",
+                      "8": "Ch. 8",
+                    },
+                    "name": "Bank 4",
+                  },
+                },
+                "current_step": 11,
+                "focus": Object {
+                  "column": 1,
+                  "row": 12,
+                },
+                "last_step": 11,
+                "looping": false,
+                "max_steps": 32,
+                "num_plan_files": 2,
+                "panel_to_show": 0,
+                "plan_filename": "__default__",
+                "plan_files": Object {
+                  "1": "__default__",
+                  "2": "tr",
+                },
+                "steps": Object {
+                  "1": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 2,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "10": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "11": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "2": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "3": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "4": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "5": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "6": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "7": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "8": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 2,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "9": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 32,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                },
+              }
+            }
+            uistatus={Object {}}
+            ws_sender={[Function]}
+          >
+            <div
+              className="panel-command"
+            >
+              <div
+                style={
+                  Object {
+                    "marginTop": 20,
+                    "width": "100%",
+                  }
+                }
+              >
+                <div
+                  className="grid-command"
+                  style={
+                    Object {
+                      "display": "grid",
+                      "gridGap": 5,
+                      "gridTemplateColumns": "1fr 1fr 1fr",
+                      "padding": 20,
+                    }
+                  }
+                >
+                  <button
+                    className="btn btn-large btn-command btn-1-3 "
+                    disabled={true}
+                    id="standby"
+                    onClick={[Function]}
+                    value="standby"
+                  >
+                    Standby
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-1-3 "
+                    disabled={true}
+                    id="identify"
+                    onClick={[Function]}
+                    value="identify"
+                  >
+                    Identify Available Channels
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-1-3 "
+                    disabled={true}
+                    id="edit-plan"
+                    onClick={[Function]}
+                    value="plan"
+                  >
+                    Edit Plan
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-run "
+                    disabled={true}
+                    id="run-channel"
+                    onClick={[Function]}
+                    value="run"
+                  >
+                    Run Channel
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-run "
+                    disabled={true}
+                    id="run-plan"
+                    onClick={[Function]}
+                    value="plan_run"
+                  >
+                    Run Plan
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-run "
+                    disabled={true}
+                    id="loop-plan"
+                    onClick={[Function]}
+                    value="plan_loop"
+                  >
+                    Loop Plan
+                  </button>
+                  <button
+                    className="btn btn-large btn-command btn-1-3 "
+                    disabled={true}
+                    id="reference"
+                    onClick={[Function]}
+                    value="reference"
+                  >
+                    Reference
+                  </button>
+                  <button
+                    className="btn btn-large btn-edit btn-danger"
+                    disabled={true}
+                    id="edit-labels"
+                    onClick={[Function]}
+                    value="edit"
+                  >
+                    Edit Labels
+                  </button>
+                </div>
+              </div>
+            </div>
+          </CommandPanel>
+        </div>
+        <div
+          className="col-sm-9"
+          style={
+            Object {
+              "display": "grid",
+              "gridTemplateColumns": "1fr",
+            }
+          }
+        >
+          <div
+            style={
+              Object {
+                "gridColumnStart": "1",
+                "gridRowStart": "1",
+                "padding": "10px",
+              }
+            }
+          />
+        </div>
+      </div>
+    </div>
+    <Modal
+      animationDuration={500}
+      blockScroll={true}
+      center={true}
+      classNames={Object {}}
+      classes={
+        Object {
+          "closeButton": "styles_closeButton__20ID4",
+          "closeIcon": "styles_closeIcon__1QwbI",
+          "modal": "styles_modal__gNwvD",
+          "modalCenter": "styles_modalCenter__L9F2w",
+          "overlay": "styles_overlay__CLSq-",
+          "transitionEnter": "styles_transitionEnter__3j_-a",
+          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+          "transitionExit": "styles_transitionExit__1KmEf",
+          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+        }
+      }
+      closeIconSize={28}
+      closeIconSvgPath={
+        <path
+          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+        />
+      }
+      closeOnEsc={true}
+      closeOnOverlayClick={true}
+      focusTrapOptions={Object {}}
+      focusTrapped={true}
+      onClose={[Function]}
+      open={false}
+      role="dialog"
+      showCloseIcon={true}
+      styles={
+        Object {
+          "overlay": Object {
+            "color": "black",
+          },
+        }
+      }
+    />
+    <ToastContainer
+      autoClose={5000}
+      bodyClassName={null}
+      className={null}
+      closeButton={
+        <CloseButton
+          ariaLabel="close"
+        />
+      }
+      closeOnClick={true}
+      draggable={true}
+      draggablePercent={80}
+      hideProgressBar={false}
+      newestOnTop={false}
+      pauseOnFocusLoss={true}
+      pauseOnHover={true}
+      position="top-right"
+      progressClassName={null}
+      progressStyle={null}
+      role="alert"
+      rtl={false}
+      style={null}
+      toastClassName={null}
+      transition={[Function]}
+    >
+      <div
+        className="Toastify"
+      />
+    </ToastContainer>
+  </div>
+</Main>
+`;
+
+exports[`<Main /> Test Toast 1`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;
+
+exports[`<Main /> Test Toast 2`] = `
+<ToastContainer
+  autoClose={5000}
+  bodyClassName={null}
+  className={null}
+  closeButton={
+    <CloseButton
+      ariaLabel="close"
+    />
+  }
+  closeOnClick={true}
+  draggable={true}
+  draggablePercent={80}
+  hideProgressBar={false}
+  newestOnTop={false}
+  pauseOnFocusLoss={true}
+  pauseOnHover={true}
+  position="top-right"
+  progressClassName={null}
+  progressStyle={null}
+  role="alert"
+  rtl={false}
+  style={null}
+  toastClassName={null}
+  transition={[Function]}
+>
+  <div
+    className="Toastify"
+  />
+</ToastContainer>
+`;
+
+exports[`<Main w/ PlanPanel /> Snapshot 1`] = `
+<Main>
+  <div
+    style={
+      Object {
+        "textAlign": "center",
+      }
+    }
+  >
+    <div
+      className="container-fluid"
+    >
+      <div
+        className="row justify-content-md-center"
+      >
+        <div
+          className="col-sm-3"
+          style={
+            Object {
+              "height": "100%",
+            }
+          }
+        >
+          <PlanPanel
+            isChanged={false}
+            plan={
+              Object {
+                "bank_names": Object {
+                  "1": Object {
+                    "channels": Object {
+                      "1": "Channel 1",
+                      "2": "Channel 2",
+                      "3": "Channel 3",
+                      "4": "Channel 4",
+                      "5": "Channel 5",
+                      "6": "Channel 6",
+                      "7": "Channel 7",
+                      "8": "Channel 8",
+                    },
+                    "name": "Bank 1",
+                  },
+                  "2": Object {
+                    "channels": Object {
+                      "1": "Channel 1",
+                      "2": "Channel 2",
+                      "3": "Channel 3",
+                      "4": "Channel 4",
+                      "5": "Channel 5",
+                      "6": "Channel 6",
+                      "7": "Channel 7",
+                      "8": "Channel 8",
+                    },
+                    "name": "Bank 2",
+                  },
+                  "3": Object {
+                    "channels": Object {
+                      "1": "Channel",
+                      "2": "Channel",
+                      "3": "Channel",
+                      "4": "Channel",
+                      "5": "Channel",
+                      "6": "Channel",
+                      "7": "Channel",
+                      "8": "Channel",
+                    },
+                    "name": "Bank 3",
+                  },
+                  "4": Object {
+                    "channels": Object {
+                      "1": "Channel",
+                      "2": "Channel",
+                      "3": "Channel",
+                      "4": "Channel",
+                      "5": "Channel",
+                      "6": "Channel",
+                      "7": "Channel",
+                      "8": "Channel",
+                    },
+                    "name": "Bank 4",
+                  },
+                },
+                "current_step": 1,
+                "focus": Object {
+                  "column": 2,
+                  "row": 1,
+                },
+                "last_step": 4,
+                "max_steps": 32,
+                "num_plan_files": 1,
+                "panel_to_show": 1,
+                "plan_filename": "test.pln",
+                "plan_files": Object {
+                  "1": "test.pln",
+                },
+                "steps": Object {
+                  "1": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 1,
+                  },
+                  "2": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 10,
+                      },
+                    },
+                    "duration": 20,
+                    "reference": 0,
+                  },
+                  "3": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 8,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 60,
+                    "reference": 0,
+                  },
+                  "4": Object {
+                    "banks": Object {
+                      "1": Object {
+                        "chan_mask": 128,
+                        "clean": 0,
+                      },
+                      "3": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                      "4": Object {
+                        "chan_mask": 0,
+                        "clean": 0,
+                      },
+                    },
+                    "duration": 60,
+                    "reference": 0,
+                  },
+                },
+              }
+            }
+            setFocus={[Function]}
+            uistatus={Object {}}
+            updateFileName={[Function]}
+            ws_sender={[Function]}
+          >
+            <div>
+              <div
+                className="panel-plan"
+              >
+                <h2
+                  className="panel-plan-text"
+                >
+                  Schedule
+                </h2>
+                <span
+                  className="cancel panel-plan-text"
+                  id="cancel-x"
+                  onClick={[Function]}
+                />
+                <h6
+                  className="panel-plan-text"
+                >
+                  Please click on available channels to set up a schedule, then click on the radio button to select starting position.
+                </h6>
+                <div>
+                  <h6
+                    className="panel-plan-text"
+                  >
+                    Currently viewing File:
+                     
+                    <span
+                      style={
+                        Object {
+                          "color": "white",
+                        }
+                      }
+                    >
+                      test.pln
+                    </span>
+                  </h6>
+                </div>
+                <div
+                  className="panel-plan-inner"
+                >
+                  <form>
+                    <ReactList
+                      axis="y"
+                      itemRenderer={[Function]}
+                      itemsRenderer={[Function]}
+                      length={32}
+                      minSize={1}
+                      pageSize={10}
+                      scrollParentGetter={[Function]}
+                      scrollParentViewportSizeGetter={[Function]}
+                      threshold={100}
+                      type="uniform"
+                      useStaticSize={false}
+                      useTranslate3d={false}
+                    >
+                      <div
+                        style={
+                          Object {
+                            "position": "relative",
+                          }
+                        }
+                      >
+                        <div
+                          style={
+                            Object {
+                              "WebkitTransform": "translate(0px, 0px)",
+                              "msTransform": "translate(0px, 0px)",
+                              "transform": "translate(0px, 0px)",
+                            }
+                          }
+                        >
+                          <div>
+                            <div
+                              key="0"
+                            >
+                              <div
+                                className="gf-form-inline"
+                                key="1"
+                              >
+                                <label
+                                  className="col-sm-1 panel-plan-text"
+                                  style={
+                                    Object {
+                                      "fontSize": "17px",
+                                      "marginTop": "5px",
+                                    }
+                                  }
+                                >
+                                  1. 
+                                </label>
+                                <div
+                                  className="col-sm-6 col-bank-name"
+                                >
+                                  <input
+                                    className="form-control plan-input panel-plan-text"
+                                    id="plan-port-1"
+                                    onChange={[Function]}
+                                    onFocus={[Function]}
+                                    placeholder="Select port"
+                                    style={
+                                      Object {
+                                        "float": "left",
+                                        "marginLeft": "2px",
+                                        "maxWidth": "90%",
+                                      }
+                                    }
+                                    type="text"
+                                    value="Reference"
+                                  />
+                                </div>
+                                <div
+                                  className="col-sm-3"
+                                  style={
+                                    Object {
+                                      "paddingLeft": "0px",
+                                    }
+                                  }
+                                >
+                                  <input
+                                    className="form-control input-small plan-input panel-plan-text"
+                                    id="plan-duration-1"
+                                    maxLength={8}
+                                    minLength={1}
+                                    onChange={[Function]}
+                                    onFocus={[Function]}
+                                    placeholder="Duration"
+                                    style={
+                                      Object {
+                                        "maxWidth": "100%",
+                                      }
+                                    }
+                                    type="text"
+                                    value="20"
+                                  />
+                                </div>
+                                <label
+                                  className="panel-plan-text"
+                                  style={
+                                    Object {
+                                      "marginLeft": "-15px",
+                                      "paddingRight": "5px",
+                                    }
+                                  }
+                                >
+                                  s
+                                </label>
+                                <label
+                                  className="col-sm-1 radio-btn"
+                                >
+                                  <input
+                                    checked={true}
+                                    id="plan-row-1"
+                                    onChange={[Function]}
+                                    style={
+                                      Object {
+                                        "maxWidth": "100%",
+                                      }
+                                    }
+                                    type="radio"
+                                  />
+                                  <span
+                                    className="checkmark"
+                                  />
+                                </label>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </ReactList>
+                  </form>
+                </div>
+                <div
+                  className="container"
+                >
+                  <div
+                    className="row text-center btn-row-1"
+                  >
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-group"
+                        disabled={false}
+                        id="insert-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        Insert
+                      </button>
+                    </div>
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-light btn-group"
+                        id="save-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        Save
+                      </button>
+                    </div>
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-light btn-group"
+                        id="load-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        Load
+                      </button>
+                    </div>
+                  </div>
+                  <div
+                    className="row btn-row-2"
+                  >
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-cancel btn-group"
+                        disabled={false}
+                        id="delete-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-cancel btn-group"
+                        disabled={false}
+                        id="clear-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <div
+                      className="col-sm-3"
+                    >
+                      <button
+                        className="btn btn-block btn-green btn-group"
+                        id="ok-btn"
+                        onClick={[Function]}
+                        type="button"
+                      >
+                        OK
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </PlanPanel>
+        </div>
+        <div
+          className="col-sm-9"
+          style={
+            Object {
+              "display": "grid",
+              "gridTemplateColumns": "1fr",
+            }
+          }
+        >
+          <div
+            style={
+              Object {
+                "gridColumnStart": "1",
+                "gridRowStart": "1",
+                "padding": "10px",
+              }
+            }
+          />
+          <div
+            className="ref-div"
+          >
+            <button
+              className="btn btn-large ref-btn"
+              id="reference"
+              onClick={[Function]}
+              style={
+                Object {
+                  "color": "black",
+                }
+              }
+              type="button"
+            >
+              Reference
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <Modal
+      animationDuration={500}
+      blockScroll={true}
+      center={true}
+      classNames={Object {}}
+      classes={
+        Object {
+          "closeButton": "styles_closeButton__20ID4",
+          "closeIcon": "styles_closeIcon__1QwbI",
+          "modal": "styles_modal__gNwvD",
+          "modalCenter": "styles_modalCenter__L9F2w",
+          "overlay": "styles_overlay__CLSq-",
+          "transitionEnter": "styles_transitionEnter__3j_-a",
+          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+          "transitionExit": "styles_transitionExit__1KmEf",
+          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+        }
+      }
+      closeIconSize={28}
+      closeIconSvgPath={
+        <path
+          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+        />
+      }
+      closeOnEsc={true}
+      closeOnOverlayClick={true}
+      focusTrapOptions={Object {}}
+      focusTrapped={true}
+      onClose={[Function]}
+      open={false}
+      role="dialog"
+      showCloseIcon={true}
+      styles={
+        Object {
+          "overlay": Object {
+            "color": "black",
+          },
+        }
+      }
+    />
+    <ToastContainer
+      autoClose={5000}
+      bodyClassName={null}
+      className={null}
+      closeButton={
+        <CloseButton
+          ariaLabel="close"
+        />
+      }
+      closeOnClick={true}
+      draggable={true}
+      draggablePercent={80}
+      hideProgressBar={false}
+      newestOnTop={false}
+      pauseOnFocusLoss={true}
+      pauseOnHover={true}
+      position="top-right"
+      progressClassName={null}
+      progressStyle={null}
+      role="alert"
+      rtl={false}
+      style={null}
+      toastClassName={null}
+      transition={[Function]}
+    >
+      <div
+        className="Toastify"
+      />
+    </ToastContainer>
+  </div>
+</Main>
+`;

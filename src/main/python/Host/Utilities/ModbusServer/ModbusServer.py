@@ -67,16 +67,10 @@ import socket
 def get_ip_address():
     '''
     Method use to get eth0 ip address and run modbus server using ip address for Modbus over TCPIP
+    Method been simplified.
     :return:
     '''
-    try:
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("8.8.8.8", 80))
-        ip_address = s.getsockname()[0]
-        s.close()
-        return ip_address
-    except Exception, e:
-        raise Exception("Error in reading IpAddress in ModbusServer, %s" % e.message)
+    return "0.0.0.0"
 
 if hasattr(sys, "frozen"): #we're running compiled with py2exe
     AppPath = sys.executable
@@ -524,7 +518,7 @@ class ModbusServer(object):
             
     def controller(self):
         # Some time LogExc does not find reference in thread so importing in thread
-        from Host.Common.EventManagerProxy import LogExc
+        from Host.Common.EventManagerProxy import LogExc, Log
         try:
             addr_func_map = {}
             for v in self.register_variables[COIL-1]['variables']:
@@ -534,7 +528,10 @@ class ModbusServer(object):
                 time.sleep(1)
                 while not self.command_queue.empty():
                     addr = self.command_queue.get(False)
-                    ret = addr_func_map[addr]()
+                    if addr in addr_func_map:
+                        ret = addr_func_map[addr]()
+                    else:
+                        Log("Modbus Client attempted to access non-existent register: {}".format(addr), Level=0)
         except Exception as ex:
             LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
                 

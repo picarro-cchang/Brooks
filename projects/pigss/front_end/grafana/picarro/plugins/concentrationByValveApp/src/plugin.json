@@ -1,0 +1,27 @@
+{
+  "type": "app",
+  "name": "Data Analysis",
+  "id": "picarro-concentration-page",
+  "info": {
+    "author": {
+      "name": "Picarro, Inc."
+    },
+    "logos": {
+      "small": "img/plot_graph_icon_dark.svg",
+      "large": "img/plot_graph_icon_dark.svg"
+    }
+  },
+  "includes": [
+    {
+      "type": "dashboard",
+      "name": "Data Analysis",
+      "path": "dashboards/concentration-by-valve-dynamic.json",
+      "addToNav": true,
+      "defaultNav": true
+    }
+  ],
+  "dependencies": {
+    "grafanaVersion": "6.x.x",
+    "plugins": []
+  }
+}

@@ -1,0 +1,49 @@
+- hosts: localhost
+  pre_tasks:
+    # Github Username
+    - pause:
+        prompt: "Enter your github username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubuser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Github Email
+    - pause:
+        prompt: "Enter your github email"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubemail: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Username
+    - pause:
+        prompt: "Enter the default Grafana username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanauser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Password
+    - pause:
+        prompt: "Enter the default Grafana password"
+        echo: no
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanapass: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Bootstrap
+    - include: tasks/bootstrap.yaml
+  tasks:
+    - name: Set playbook vars
+      set_fact: playbook_user="{{ lookup('env','USER') }}" playbook_home="{{  lookup('env','HOME')  }}"   
+    - include: tasks/gnome.yaml
+      when: headless == "false"
+    - include: tasks/environmental-variables.yaml 
+    - include: tasks/miniconda.yaml
+    - include: tasks/non-apt-install.yaml
+    - include: tasks/configure-git.yaml
+    - include: tasks/pigss-meta.yaml
+    - include: tasks/grafana-npm-gem.yaml
+    - include: tasks/build-menu.yaml

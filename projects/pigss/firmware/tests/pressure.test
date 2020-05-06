@@ -1,0 +1,77 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# 25PSI sensors will output 9526774 at 14.6PSI.  Set the passing range
+# to be +/- 10% of this.
+set mpr_raw_output_center 9526774
+set mpr_raw_output_high [expr 1.1 * $mpr_raw_output_center]
+set mpr_raw_output_low [expr 0.9 * $mpr_raw_output_center]
+
+set inlet_channel_list "1 2 3 4 5 6 7 8"
+foreach pressure_channel $inlet_channel_list {
+    tcltest::test prs.in_raw_$pressure_channel {
+	Test querying the raw inlet pressure values.
+    } -setup {
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	boxer::sendcmd $channel "prs.in.raw? $pressure_channel"
+	set return_string [boxer::readline $channel]
+	if {$return_string > [expr int($mpr_raw_output_low)] && \
+		$return_string < [expr int($mpr_raw_output_high)]} {
+	    return 0
+	} else {
+	    return -1
+	}
+	return $return_string
+    } -cleanup {
+
+    } -match regexp -result 0
+}
+
+set outlet_channel_list "1 2"
+foreach pressure_channel $outlet_channel_list {
+    tcltest::test prs.out_raw_$pressure_channel {
+	Test querying the raw outlet pressure values.
+    } -setup {
+	set garbage_string [boxer::readline $channel]
+    } -body {
+	boxer::sendcmd $channel "prs.out.raw? $pressure_channel"
+	set return_string [boxer::readline $channel]
+	if {$return_string > [expr int($mpr_raw_output_low)] && \
+		$return_string < [expr int($mpr_raw_output_high)]} {
+	    return 0
+	} else {
+	    return -1
+	}
+	return $return_string
+    } -cleanup {
+
+    } -match regexp -result 0
+}
+
+# Test the prs.alpha command
+tcltest::test prs.alpha.recognize {
+    Test recognizing the prs.alpha command.
+} -setup {
+    # Make sure the last command was cleaned up
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "prs.alpha 65535"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+
+} -match regexp -result 0
+
+# Test querying the alpha parameter
+tcltest::test prs.alpha.query {
+    Test querying the prs.alpha parameter
+} -setup {
+    # Make sure the last command cleaned up
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "prs.alpha?"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 65535

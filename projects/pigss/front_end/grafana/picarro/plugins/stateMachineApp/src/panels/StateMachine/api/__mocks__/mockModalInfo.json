@@ -1,0 +1,17 @@
+{
+    "show": false,
+    "html": "<h2 class='test'>Confirm Loop Plan</h2><p>Loop plan starting at step 1</p>",
+    "num_buttons": 2,
+    "buttons": {
+      "1": {
+        "caption": "OK",
+        "className": "btn btn-success btn-large",
+        "response": "modal_ok"
+      },
+      "2": {
+        "caption": "Cancel",
+        "className": "btn btn-danger btn-large",
+        "response": "modal_close"
+      }
+    }
+}

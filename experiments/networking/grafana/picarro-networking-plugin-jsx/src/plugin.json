@@ -1,0 +1,29 @@
+{
+  "type": "panel",
+  "name": "Network Settings",
+  "id": "network-settings",
+
+  "dataFormats": [],
+
+  "info": {
+    "description": "Network Settings",
+    "author": {
+      "name": "Picarro, Inc.",
+      "url": "https://picarro.com"
+    },
+    "keywords": [
+      "Network",
+      "Settings",
+      "Picarro"
+      ],
+    "links": [],
+    "screenshots": [],
+    "version": "0.3.0",
+    "updated": "2019-03-18"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.0.x",
+    "plugins": []
+  }
+}

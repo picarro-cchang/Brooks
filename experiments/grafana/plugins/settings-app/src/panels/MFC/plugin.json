@@ -1,0 +1,24 @@
+{
+  "type": "panel",
+  "name": "MFC App Panel",
+  "id": "mfc-panel",
+
+  "dataFormats": [],
+
+  "info": {
+    "description": "Grafana Panel for MFC",
+    "author": {
+      "name": "Emma Peatfield"
+    },
+    "keywords": [],
+    "links": [],
+    "screenshots": [],
+    "version": "0.0.1",
+    "updated": "2019-04-05"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "6.3.x",
+    "plugins": []
+  }
+}

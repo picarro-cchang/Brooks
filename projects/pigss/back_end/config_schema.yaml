@@ -1,0 +1,88 @@
+Configuration: include('Configuration')
+Settings: include('Settings')
+Services: include('Services')
+Plugins: include('Plugins')
+Species: include('Species')
+---
+Configuration:
+  RpcTunnel:
+    config_file: str()
+  Simulation: include('Simulation', required=False)
+  Database: include('TimeSeriesDatabase', required=False)
+  HttpServer:
+    listen_address: ip(required=False)
+    port: int(required=False)
+---
+TimeSeriesDatabase:
+  server: str()
+  port: int()
+  name: str()
+---
+Settings:
+  maximum_mfc_flow: num(required=False)
+  reference_mfc_flow: num(required=False)
+  flow_settle_delay: num(required=False)
+  madmapper_startup_delay: num(required=False)
+  startup_plan: regex('[A-Za-z_]+', required=False)
+  min_plan_interval: num(required=True)
+---
+Simulation:
+  enabled: bool(required=False)
+  ui_enabled: bool(required=False)
+  random_ids: bool(required=False)
+  analyzers: list(include('analyzers'))
+---
+analyzers:
+  ip_address: ip()
+  chassis: int()
+  analyzer: str()
+  analyzer_num: int()
+  species: list(str())
+  source: str()
+  mode: str()
+  interval: num()
+  seed: int()
+  warmup_time: num()
+---
+Services: list(include('DBDecimatorService'), required=False)
+---
+DBDecimatorService:
+  Name: enum('DBDecimator')
+  RPC_Port: int()
+  Parameters:
+    db_name: str()
+    rpc_server_name: str()
+    rpc_server_description: str(required=False)
+    raw_filter_conditions: list(include('filter_condition'), required=False)
+    start: bool()
+---
+filter_condition: list(str(), num())
+---
+Plugins:
+  GrafanaLogger: include('GrafanaLogger')
+  GrafanaDataGenerator: include('GrafanaDataGenerator')
+---
+GrafanaLogger:
+  sqlite:
+    table_name: str()
+    columns: list(str())
+  limit: int()
+  interval: num()
+  level: list(num())
+  timeout: num()
+  retries: int()
+---
+GrafanaDataGenerator:
+  database:
+    host: ip()
+    port: int()
+    database: str()
+    timeout: num()
+    retries: int()
+    measurements: str()
+  server:
+    user_keys: list(str())
+    data_dir: str()
+    file_type: str()
+---
+Species: list(str())

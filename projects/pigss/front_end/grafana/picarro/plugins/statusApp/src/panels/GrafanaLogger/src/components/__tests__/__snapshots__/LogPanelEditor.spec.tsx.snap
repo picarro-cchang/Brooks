@@ -1,0 +1,125 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<LogPanelEditor /> Match Snapshot 1`] = `
+<PanelOptionsGroup
+  title="Configuration"
+>
+  <div
+    className="row"
+  >
+    <div
+      className="gf-form col-md-3 col-sm-3"
+    >
+      <FormLabel
+        width={6}
+      >
+        Level
+      </FormLabel>
+      <Select
+        autoFocus={false}
+        backspaceRemovesValue={true}
+        className=""
+        components={
+          Object {
+            "Group": [Function],
+            "IndicatorsContainer": [Function],
+            "MenuList": [Function],
+            "Option": [Function],
+            "SingleValue": [Function],
+          }
+        }
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isMulti={true}
+        isSearchable={true}
+        maxMenuHeight={300}
+        onChange={[Function]}
+        openMenuOnFocus={false}
+        options={
+          Array [
+            Object {
+              "label": "10",
+              "value": "10",
+            },
+            Object {
+              "label": "20",
+              "value": "20",
+            },
+            Object {
+              "label": "30",
+              "value": "30",
+            },
+            Object {
+              "label": "40",
+              "value": "40",
+            },
+            Object {
+              "label": "50",
+              "value": "50",
+            },
+          ]
+        }
+        tabSelectsValue={true}
+        value={
+          Array [
+            Object {
+              "label": "10",
+              "value": "10",
+            },
+          ]
+        }
+      />
+    </div>
+    <div
+      className="gf-form col-md-3 col-sm-3"
+    >
+      <FormLabel
+        width={6}
+      >
+        Limit
+      </FormLabel>
+      <Select
+        autoFocus={false}
+        backspaceRemovesValue={true}
+        className=""
+        components={
+          Object {
+            "Group": [Function],
+            "IndicatorsContainer": [Function],
+            "MenuList": [Function],
+            "Option": [Function],
+            "SingleValue": [Function],
+          }
+        }
+        isClearable={false}
+        isDisabled={false}
+        isLoading={false}
+        isMulti={false}
+        isSearchable={true}
+        maxMenuHeight={300}
+        onChange={[Function]}
+        openMenuOnFocus={false}
+        options={
+          Array [
+            Object {
+              "label": "10",
+              "value": "10",
+            },
+            Object {
+              "label": "20",
+              "value": "20",
+            },
+            Object {
+              "label": "50",
+              "value": "50",
+            },
+          ]
+        }
+        tabSelectsValue={true}
+        width={12}
+      />
+    </div>
+  </div>
+</PanelOptionsGroup>
+`;

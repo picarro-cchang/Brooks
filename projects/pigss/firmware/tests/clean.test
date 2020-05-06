@@ -1,0 +1,28 @@
+# Hey Emacs, use -*- Tcl -*- mode
+
+# Testing the clean comand
+
+tcltest::test clean.recognize {
+    Test recognizing the clean command.
+} -setup {
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "clean"
+    set return_string [boxer::readline $channel]
+    return $return_string
+} -cleanup {
+    
+} -match regexp -result 0
+
+tcltest::test standby.shutoff {
+    All channels should go disabled with the clean command
+} -setup {
+    boxer::sendcmd $channel "clean"
+    set garbage_string [boxer::readline $channel]
+} -body {
+    boxer::sendcmd $channel "chanset?"
+    set return_string [boxer::readline $channel]
+    return $return_string 
+} -cleanup {
+    
+} -match regexp -result 0

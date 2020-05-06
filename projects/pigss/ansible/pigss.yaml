@@ -1,0 +1,72 @@
+- hosts: localhost
+  pre_tasks:
+    # Github Username
+    - pause:
+        prompt: "Enter your github username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubuser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Github Email
+    - pause:
+        prompt: "Enter your github email"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        githubemail: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Username
+    - pause:
+        prompt: "Enter the default Grafana username"
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanauser: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # Grafana Password
+    - pause:
+        prompt: "Enter the default Grafana password"
+        echo: no
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        grafanapass: "{{  prompt.user_input  }}"
+      when: update == "false"
+      # Picarro Instrument Password
+    - pause:
+        prompt: "Enter the Picarro instrument password"
+        echo: no
+      when: update == "false"
+      register: prompt
+    - set_fact:
+        picarropass: "{{  prompt.user_input  }}"
+      when: update == "false"
+    # User env var
+    - set_fact:
+        playbook_user="{{ lookup('env', 'USER') }}"
+    # Home folder env var
+    - set_fact:
+        playbook_home="{{ lookup('env', 'HOME') }}"
+    # Project root dir
+    - set_fact:
+        project_dir="{{ playbook_home }}/git/host/projects/pigss"
+    # Project scripts dir
+    - set_fact:
+        project_scripts="{{ project_dir }}/scripts"
+    # Project build scripts/makefiles
+    - set_fact:
+        project_build_scripts="{{ project_dir }}/build"
+    # Playbook and OS Version
+    - set_fact:
+        os_version="1.0.0"
+  tasks:
+    - include: tasks/os-version.yaml
+    - include: tasks/bootstrap.yaml
+    - include: tasks/gnome.yaml
+      when: headless == "false"
+    - include: tasks/environmental-variables.yaml 
+    - include: tasks/miniconda.yaml
+    - include: tasks/non-apt-install.yaml
+    - include: tasks/configure-git.yaml
+    - include: tasks/grafana-npm-gem.yaml

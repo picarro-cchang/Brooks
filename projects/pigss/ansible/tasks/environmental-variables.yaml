@@ -1,0 +1,27 @@
+- name: Add GOPATH
+  shell: echo "export GOPATH=$HOME/go" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Update PATH
+  shell: echo "export PATH=/usr/local/go/bin:$PATH" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Add PYTHONPATH
+  shell: echo "export PYTHONPATH=${HOME}/git/host:${HOME}/git/host/projects/pigss:$PYTHONPATH" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Add GRAFANA_LOGIN
+  shell: echo "export GRAFANA_LOGIN={{ grafanauser }}" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Add GRAFANA_PASS
+  shell: echo "export GRAFANA_PASS={{ grafanapass }}" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Add PIGSS_CONFIG
+  shell: echo "export PIGSS_CONFIG=${HOME}/.config/pigss" >> ${HOME}/.bashrc
+  when: update == "false"
+
+- name: Add PIGSS_CLIENT_ACCESS
+  shell: echo "export PIGSS_CLIENT_ACCESS={{ picarropass }}" >> ${HOME}/.bashrc
+  when: update == "false"
