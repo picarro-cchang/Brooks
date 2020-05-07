@@ -8,14 +8,6 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
     }
   }
 >
-  <h1>
-    Plan Loaded: 
-    __default__
-  </h1>
-  <h1>
-    Plan Step: 
-    11
-  </h1>
   <div
     className="container-fluid"
   >
@@ -1492,14 +1484,6 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
     }
   }
 >
-  <h1>
-    Plan Loaded: 
-    __default__
-  </h1>
-  <h1>
-    Plan Step: 
-    11
-  </h1>
   <div
     className="container-fluid"
   >
@@ -2925,14 +2909,6 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
     }
   }
 >
-  <h1>
-    Plan Loaded: 
-    __default__
-  </h1>
-  <h1>
-    Plan Step: 
-    11
-  </h1>
   <div
     className="container-fluid"
   >
@@ -4406,14 +4382,6 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
     }
   }
 >
-  <h1>
-    Plan Loaded: 
-    __default__
-  </h1>
-  <h1>
-    Plan Step: 
-    11
-  </h1>
   <div
     className="container-fluid"
   >

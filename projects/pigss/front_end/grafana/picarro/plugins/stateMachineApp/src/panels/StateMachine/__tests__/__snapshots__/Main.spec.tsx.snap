@@ -163,14 +163,6 @@ exports[`<Main /> Snapshot 1`] = `
           }
         }
       >
-        <h1>
-          Plan Loaded: 
-          test.pln
-        </h1>
-        <h1>
-          Plan Step: 
-          5
-        </h1>
         <div
           className="container-fluid"
         >

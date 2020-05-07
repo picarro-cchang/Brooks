@@ -316,8 +316,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-2"
           >
              
-            Duration: 
-            20
           </p>
         </button>
         <button
@@ -370,8 +368,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-4"
           >
              
-            Duration: 
-            20
           </p>
         </button>
         <button
@@ -426,8 +422,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-6"
           >
              
-            Duration: 
-            20
           </p>
         </button>
         <button
@@ -482,8 +476,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
             id="chn-status-8"
           >
              
-            Duration: 
-            20
           </p>
         </button>
       </div>

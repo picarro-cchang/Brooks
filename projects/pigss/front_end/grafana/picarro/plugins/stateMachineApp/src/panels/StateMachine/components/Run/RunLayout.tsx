@@ -382,58 +382,10 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         );
           }
     }
-    // const modalButtons = [];
-    // for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
-    //   const modal_info = this.state.modal_info;
-    //   const response = modal_info.buttons[i].response
-    //   if (modal_info.action == "loadPlan") {
-    //     if (response != null) {
-    //     modalButtons.push(
-    //       <button
-    //         className={modal_info.buttons[i].className}
-    //         style={{ margin: "10px" }}
-    //         onClick={() => {
-    //           this.updatePanelToShow(0);
-    //           // this.props.currentStepChange(response.plan);
-    //           this.props.ws_sender({
-    //             element: "load_modal_ok",
-    //             name: response.name,
-    //           })
-              
-    //           this.setModalInfo(false, "", 0, {}, "")
-    //         }}
-    //       >
-    //         {modal_info.buttons[i].caption}
-    //       </button>
-    //     );
-    //   } else {
-    //     modalButtons.push(
-    //       <button
-    //         className={modal_info.buttons[i].className}
-    //         style={{ margin: "10px" }}
-    //         onClick={() => {
-    //           console.log("Canceling Load")
-    //           this.props.ws_sender({
-    //             element: "load_modal_cancel",
-    //           })
-    //           this.setModalInfo(false, "", 0, {}, "")
-    //         }}
-    //       >
-    //         {modal_info.buttons[i].caption}
-    //       </button>
-    //     );
-    //   }
-    // } else {
-      
-      // } else {
-        
-    //   }
-    // }}
 
     return (
       <div style={{ textAlign: "center" }}>
-        <h1>Plan Loaded: {this.props.plan.plan_filename}</h1>
-        <h1>Plan Step: {this.state.plan.current_step}</h1>
+        {/* <h1>Plan Step: {this.state.plan.current_step}</h1> */}
         <div className="container-fluid">
           <div className="row justify-content-md-center">
             <div className="col-sm-3" style={{ height: "100%" }}>

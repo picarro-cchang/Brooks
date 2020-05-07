@@ -120,7 +120,6 @@ class BankPanel extends PureComponent<BankPanelOptions> {
             {portsInPlan.hasOwnProperty(portNumber) ? (
                 <p id={"chn-status-" + i} className={"chn-status"}>
                   {" "}
-                  Duration: {portsInPlan[portNumber]}
                 </p>
 
               ):(

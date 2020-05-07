@@ -9,6 +9,5 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "moduleResolution": "node",
-  },
-  "exclude": ["./src/panels/StateMachine/__tests__/**"]
+  }
 }
