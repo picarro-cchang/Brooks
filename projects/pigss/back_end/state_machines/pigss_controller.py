@@ -645,6 +645,8 @@ class PigssController(Ahsm):
         Framework.subscribe("BTN_PLAN_RUN", self)
         Framework.subscribe("PERFORM_VALVE_TRANSITION", self)
         Framework.subscribe("VALVE_TRANSITION_DONE", self)
+        Framework.subscribe("WARMUP_STATUS_TIMER", self)
+        Framework.subscribe("WARMUP_COMPLETE", self)
         self.te = TimeEvent("UI_TIMEOUT")
         return self.tran(self._configure)
 
@@ -711,42 +713,17 @@ class PigssController(Ahsm):
             self.set_status(["reference"], UiStatus.DISABLED)
             self.set_status(["edit"], UiStatus.DISABLED)
             self.set_status(["timer"], 0)
+
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
             self.run_async(self.save_port_history())
-            return self.tran(self._warmup_wait)
+            return self.tran(self._operational)
         elif sig == Signal.TERMINATE:
             self.run_async(self.db_writer.close_connection())
             return self.tran(self._exit)
         return self.super(self.top)
 
-    @state
-    def _warmup_wait(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            self.set_status(["standby"], UiStatus.DISABLED)
-            self.set_status(["identify"], UiStatus.DISABLED)
-            self.set_status(["run"], UiStatus.DISABLED)
-            self.set_status(["plan"], UiStatus.DISABLED)
-            self.set_status(["plan_run"], UiStatus.DISABLED)
-            self.set_status(["plan_loop"], UiStatus.DISABLED)
-            self.set_status(["reference"], UiStatus.DISABLED)
-            self.set_status(["edit"], UiStatus.DISABLED)
-            self.warmup_status_te = TimeEvent("WARMUP_STATUS_TIMER")
-            self.piglet_status_te.postEvery(self, self.farm.config.get_wait_warmup_timer())
-            self.picarro_analyzers = [rpc_name for rpc_name in self.farm.RPC if rpc_name.startswith("Picarro_")]
-        elif sig == Signal.WARMUP_STATUS_TIMER
-            analyzers_ready = []
-            for analyzer_rpc_name in self.picarro_analyzers:
-                result = await self.farm.RPC[analyzer_rpc_name].INSTMGR_GetStateRpc()
-                analyzers_ready.append(result["InstMgr"] == "MEASURING")
-            if all(analyzers_ready): 
-                Framework.publish(Event(Signal.WARMUP_COMPLETE, None))
-        elif sig == Signal.WARMUP_COMPLETE:
-            self.piglet_status_te.disarm()
-            return self.tran(self._operational)
-        return self.super(self._configure)
 
     @state
     def _operational(self, e):
@@ -767,6 +744,23 @@ class PigssController(Ahsm):
                 self.set_status(["bank", bank], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     self.set_status(["channel", bank, j + 1], UiStatus.DISABLED)
+
+            # some flags that helps with tracking UI for wait_warmup mode
+            self.identification_compelete = False
+            self.plan_picked = False
+
+            # if wait_warmup mode active
+            if self.farm.config.get_wait_warmup():
+                self.warmup_status_te = TimeEvent("WARMUP_STATUS_TIMER")
+                self.warmup_status_te.postEvery(self, self.farm.config.get_wait_warmup_timer())
+                self.warmup_needed_mode = True
+                self.warmup_complete = False
+                self.set_status(["reference"], UiStatus.DISABLED)
+            else:
+                self.warmup_needed_mode = False
+                self.set_status(["reference"], UiStatus.READY)
+
+            self.picarro_analyzers = [rpc_name for rpc_name in self.farm.RPC if rpc_name.startswith("Picarro_")]
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._standby)
@@ -816,6 +810,33 @@ class PigssController(Ahsm):
         elif sig == Signal.PERFORM_VALVE_TRANSITION:
             self.log_transition(e.value)
             return self.handled(e)
+        elif sig == Signal.WARMUP_STATUS_TIMER:
+            self.run_async(self.get_instruments_warmup_status())
+            return self.handled(e)
+
+        elif sig == Signal.WARMUP_COMPLETE:
+            print("warmup complete"*100)
+            self.warmup_complete = True
+            self.warmup_status_te.disarm()
+
+            self.set_status(["reference"], UiStatus.READY)
+
+            # if port identification has happen while instruments were warming up
+            if self.identification_compelete:
+                self.set_status(["run"], UiStatus.READY)
+                self.set_status(["plan"], UiStatus.READY)
+
+            # if user has picked a plan while instruments were warming up
+            if self.plan_picked:
+                self.set_status(["plan_run"], UiStatus.READY)
+                self.set_status(["plan_loop"], UiStatus.READY)
+
+            # if we are going to autostart running the plan
+            startup_plan = self.farm.config.get_startup_plan()
+            if startup_plan is not None:
+                self.run_async(self.auto_setup_flow(startup_plan))
+
+            return self.handled(e)
         return self.super(self._configure)
 
     @state
@@ -842,6 +863,9 @@ class PigssController(Ahsm):
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
             return self.tran(self._standby2)
+        # if warmup completed while in this state - ignore
+        elif sig == Signal.WARMUP_COMPLETE:
+            return self.handled(e)
         return self.super(self._standby)
 
     @state
@@ -878,6 +902,9 @@ class PigssController(Ahsm):
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
             return self.tran(self._reference2)
+        # if warmup completed while in this state - ignore
+        elif sig == Signal.WARMUP_COMPLETE:
+            return self.handled(e)
         return self.super(self._reference)
 
     @state
@@ -906,6 +933,23 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._clean1)
+        elif sig == Signal.WARMUP_COMPLETE:
+            print("warmup complete"*100)
+            self.warmup_complete = True
+            self.warmup_status_te.disarm()
+
+            self.set_status(["reference"], UiStatus.READY)
+
+            # if port identification has happen while instruments were warming up
+            if self.identification_compelete:
+                self.set_status(["run"], UiStatus.READY)
+                self.set_status(["plan"], UiStatus.READY)
+
+            # if user has picked a plan while instruments were warming up
+            if self.plan_picked:
+                self.set_status(["plan_run"], UiStatus.READY)
+                self.set_status(["plan_loop"], UiStatus.READY)
+            return self.handled(e)
         return self.super(self._operational)
 
     @state
@@ -921,6 +965,9 @@ class PigssController(Ahsm):
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
             return self.tran(self._clean2)
+        # if warmup completed while in this state - ignore
+        elif sig == Signal.WARMUP_COMPLETE:
+            return self.handled(e)
         return self.super(self._clean)
 
     @state
@@ -946,9 +993,11 @@ class PigssController(Ahsm):
         elif sig == Signal.EXIT:
             self.set_status(["identify"], UiStatus.READY)
             self.set_status(["standby"], UiStatus.READY)
-            self.set_status(["run"], UiStatus.READY)
+            if not self.warmup_needed_mode or self.warmup_complete:
+                self.set_status(["run"], UiStatus.READY)
+                self.set_status(["reference"], UiStatus.READY)
+
             self.set_status(["plan"], UiStatus.READY)
-            self.set_status(["reference"], UiStatus.READY)
             self.set_status(["timer"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
@@ -958,6 +1007,9 @@ class PigssController(Ahsm):
         elif sig == Signal.VALVE_TRANSITION_DONE:
             return self.tran(self._identify1)
         elif sig == Signal.BTN_IDENTIFY:
+            return self.handled(e)
+        # if warmup completed while in this state - ignore
+        elif sig == Signal.WARMUP_COMPLETE:
             return self.handled(e)
         return self.super(self._operational)
 
@@ -1011,11 +1063,10 @@ class PigssController(Ahsm):
                 return self.tran(self._identify1)
             else:
                 self.restore_buttons()
-                # Otherwise, enable run and plan buttons and go back to standby since identification is complete
-                self.set_status(["run"], UiStatus.READY)
-                self.set_status(["plan"], UiStatus.READY)
+                self.identification_compelete = True
                 # Write out bank name and port availability information to database
                 self.run_async(self.save_port_history())
+
                 return self.tran(self._operational)
         return self.super(self._identify)
 
@@ -1038,6 +1089,9 @@ class PigssController(Ahsm):
         elif sig == Signal.INIT:
             return self.tran(self._plan_plan)
         elif sig == Signal.BTN_PLAN:
+            return self.handled(e)
+        # if warmup completed while in this state - ignore
+        elif sig == Signal.WARMUP_COMPLETE:
             return self.handled(e)
         return self.super(self._operational)
 
@@ -1087,8 +1141,10 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_PLAN_OK:
             self.plan_error = self.validate_plan(check_avail=True)
             if not self.plan_error.error:
-                self.set_status(["plan_run"], UiStatus.READY)
-                self.set_status(["plan_loop"], UiStatus.READY)
+                if not self.warmup_needed_mode or self.warmup_complete:
+                    self.set_status(["plan_run"], UiStatus.READY)
+                    self.set_status(["plan_loop"], UiStatus.READY)
+                self.plan_picked = True
                 return self.tran(self._operational)
             else:
                 self.set_status(["plan_run"], UiStatus.DISABLED)
@@ -1809,21 +1865,24 @@ class PigssController(Ahsm):
         try:
             if self.get_status()["standby"] != UiStatus.ACTIVE:
                 await self.click_button("standby", Signal.BTN_STANDBY, "Timeout waiting for STANDBY button")
-            await self.click_button("identify", Signal.BTN_IDENTIFY, "Timeout waiting for IDENTIFY button")
-            await asyncio.sleep(1.0)
-            # Wait until we are out of the identify state
-            while self.get_status()["standby"] != UiStatus.ACTIVE:
+
+            if not self.identification_compelete:
+                await self.click_button("identify", Signal.BTN_IDENTIFY, "Timeout waiting for IDENTIFY button")
                 await asyncio.sleep(1.0)
+                # Wait until we are out of the identify state
+                while self.get_status()["standby"] != UiStatus.ACTIVE:
+                    await asyncio.sleep(1.0)
             if plan_filename_no_ext is not None:
-                await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
-                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
-                Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
-                await self.wait_for_state(self._plan_load, "Timeout reaching _plan_load state")
-                Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
-                await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state")
-                Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
-                await asyncio.sleep(1.0)
-                Framework.publish(Event(Signal.BTN_PLAN_OK, None))
+                if not self.plan_picked:
+                    await self.click_button("plan", Signal.BTN_PLAN, "Timeout waiting to load default plan")
+                    await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state before loading plan file")
+                    Framework.publish(Event(Signal.BTN_PLAN_LOAD, None))
+                    await self.wait_for_state(self._plan_load, "Timeout reaching _plan_load state")
+                    Framework.publish(Event(Signal.PLAN_LOAD_FILENAME, {"name": plan_filename_no_ext}))
+                    await self.wait_for_state(self._plan_plan, "Timeout reaching _plan_plan state")
+                    Framework.publish(Event(Signal.PLAN_PANEL_UPDATE, {"current_step": 1}))
+                    await asyncio.sleep(1.0)
+                    Framework.publish(Event(Signal.BTN_PLAN_OK, None))
                 await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
                 await asyncio.sleep(1.0)
                 await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
@@ -1835,3 +1894,11 @@ class PigssController(Ahsm):
         msg = "Successfully initialized flow state"
         log.debug(msg)
         return msg
+
+    async def get_instruments_warmup_status(self):
+        analyzers_ready = []
+        for analyzer_rpc_name in self.picarro_analyzers:
+            result = (await self.farm.RPC[analyzer_rpc_name].INSTMGR_GetStateRpc())
+            analyzers_ready.append(result["InstMgr"] == "MEASURING")
+        if all(analyzers_ready) and len(analyzers_ready)>0:
+            Framework.publish(Event(Signal.WARMUP_COMPLETE, None))
