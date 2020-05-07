@@ -713,7 +713,6 @@ class PigssController(Ahsm):
             self.set_status(["reference"], UiStatus.DISABLED)
             self.set_status(["edit"], UiStatus.DISABLED)
             self.set_status(["timer"], 0)
-
         elif sig == Signal.SYSTEM_CONFIGURE:
             payload = e.value
             self.all_banks = payload.bank_list
@@ -723,7 +722,6 @@ class PigssController(Ahsm):
             self.run_async(self.db_writer.close_connection())
             return self.tran(self._exit)
         return self.super(self.top)
-
 
     @state
     def _operational(self, e):
@@ -815,10 +813,9 @@ class PigssController(Ahsm):
             return self.handled(e)
 
         elif sig == Signal.WARMUP_COMPLETE:
-            print("warmup complete"*100)
+            log.info(f"All instruments are now measuring")
             self.warmup_complete = True
             self.warmup_status_te.disarm()
-
             self.set_status(["reference"], UiStatus.READY)
 
             # if port identification has happen while instruments were warming up
@@ -835,7 +832,6 @@ class PigssController(Ahsm):
             startup_plan = self.farm.config.get_startup_plan()
             if startup_plan is not None:
                 self.run_async(self.auto_setup_flow(startup_plan))
-
             return self.handled(e)
         return self.super(self._configure)
 
@@ -934,10 +930,8 @@ class PigssController(Ahsm):
         elif sig == Signal.INIT:
             return self.tran(self._clean1)
         elif sig == Signal.WARMUP_COMPLETE:
-            print("warmup complete"*100)
             self.warmup_complete = True
             self.warmup_status_te.disarm()
-
             self.set_status(["reference"], UiStatus.READY)
 
             # if port identification has happen while instruments were warming up
@@ -996,7 +990,6 @@ class PigssController(Ahsm):
             if not self.warmup_needed_mode or self.warmup_complete:
                 self.set_status(["run"], UiStatus.READY)
                 self.set_status(["reference"], UiStatus.READY)
-
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["timer"], 0)
             for bank in self.all_banks:
@@ -1066,7 +1059,6 @@ class PigssController(Ahsm):
                 self.identification_compelete = True
                 # Write out bank name and port availability information to database
                 self.run_async(self.save_port_history())
-
                 return self.tran(self._operational)
         return self.super(self._identify)
 

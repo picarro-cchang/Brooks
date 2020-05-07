@@ -298,7 +298,6 @@ class InstMgr:
         self.INSTMGR_warmup_additional_seconds(30)
 
 
-
 def get_analyzer_details(params):
     d = {}
     for f in attr.fields(Analyzer):
