@@ -14,7 +14,7 @@ function make_panel(result) {
         //create one target object for each field
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
-        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC"
+        temp.query = "SELECT mean(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/) AND $timeFilter ORDER BY time DESC"
         temp.groupBy = [{"params": ["null"],"type": "fill"}]
         temp.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp.resultFormat = "time_series"
