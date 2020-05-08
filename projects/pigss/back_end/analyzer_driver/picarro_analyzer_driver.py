@@ -14,6 +14,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from common import CmdFIFO, timeutils
 from common.listener import Listener
 from common.string_pickler import ArbitraryObject
+from common.analyser_model_table import analyser_model_table
 
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
@@ -72,6 +73,7 @@ class PicarroAnalyzerDriver:
                  logger=None):
         self.APP_NAME = app_name
         self.instrument_ip_address = instrument_ip_address
+        self.instrument_model = self.get_instrument_model()
         self.database_writer = database_writer
         self.rpc_server_name = rpc_server_name
         self.rpc_server_port = rpc_server_port
@@ -175,6 +177,16 @@ class PicarroAnalyzerDriver:
         self.logger.debug("Driver instance closed")
         self.IDriverThread.stop()
         self.thread_created = False
+
+    def get_instrument_model(self):
+        """
+        Method to fetch instrument model from instrument eeprom
+        """
+        driver = CmdFIFO.CmdFIFOServerProxy(f'http://{self.instrument_ip_address}:50010', ClientName='IDriver')
+        instrument_model = driver.fetchLogicEEPROM()[0]["Analyzer"]
+        if instrument_model in analyser_model_table:
+            instrument_model = analyser_model_table[instrument_model]
+        return instrument_model
 
     def get_tags(self):
         """
@@ -446,6 +458,10 @@ class IDriverThread(threading.Thread):
                     # equip measurement with fields
                     for field in obj['data']:
                         data['fields'][field] = obj['data'][field]
+
+                    # equip measurement with instrument model
+                    if self.parent_idriver.instrument_model is not None:
+                        data['fields']['instrument_model'] = self.parent_idriver.instrument_model
                     yield data
             except Queue.Empty:
                 yield None
