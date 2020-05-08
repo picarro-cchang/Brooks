@@ -18,7 +18,7 @@ const defaultProps: RunLayoutProps = {
   uistatus: mockData,
   plan: mockPlan,
   ws_sender: mockWS,
-  fileNames: ["Test"],
+  fileNames: ["Test", "HELLO", "@%#&@"],
   layoutSwitch: mockLayoutSwitch,
   loadedFileName: "Testing",
   getPlanFileNames: mockGetPlanFileNames
@@ -28,7 +28,8 @@ describe("<RunLayout />", () => {
   const updatePanelToShow = jest.spyOn(RunLayout.prototype, "updatePanelToShow");
   // const loadPlan = jest.spyOn(RunLayout.prototype, "loadPlan");
   const cancelLoadPlan = jest.spyOn(RunLayout.prototype, "cancelLoadPlan")
-
+  const setModalInfor = jest.spyOn(RunLayout.prototype, "setModalInfo")
+  const getPlanFromFilename = jest.spyOn(RunLayout.prototype, "getPlanFromFileName")
   const wrapper = shallow(<RunLayout {...defaultProps} />);
   const mountwrapper = mount(<RunLayout {...defaultProps} />)
   const instance = mountwrapper.instance() as RunLayout;
@@ -58,24 +59,64 @@ describe("<RunLayout />", () => {
   });
 
   it("deleteFile", () => {
-    wrapper.setState({ panel_to_show: 1 });
+    mountwrapper.setState({ panel_to_show: 1 });
     const button = mountwrapper.find('PlanLoadPanel').find('button').at(1);
     button.simulate('click');
     expect(deleteFile).toHaveBeenCalled();
   });
 
+  // it("planPreview", () => {
+  //   mountwrapper.setState({ panel_to_show: 1 });
+  //   const button = mountwrapper.find('PlanPreviewPanel').find('button').at(0);
+  //   button.simulate('click');
+  //   expect(deleteFile).toHaveBeenCalled();
+  // });
+
   it("loadPlan", () => {
     wrapper.setState({ panel_to_show: 1 });
     const button = mountwrapper.find('PlanLoadPanel').find('button').at(0)
     button.simulate('click');
-    // ex.toHaveBeenCalled();
+    expect(getPlanFromFilename).toHaveBeenCalled();
+    mountwrapper.setState({panel_to_show: 3})
+    expect(mountwrapper.state('panel_to_show')).toEqual(3)
+    const planButton = mountwrapper.find('PlanPreview').find('button').at(1)
+    planButton.simulate('click')
+    expect(setModalInfor).toHaveBeenCalled();
   });
 
   it("cancelLoadPlan", () => {
     mountwrapper.setState({ panel_to_show: 3 });
     const button = mountwrapper.find('PlanPreview').find('button#cancel-load-plan')
-    console.log("Button ", button.html())
     button.simulate('click');
     expect(cancelLoadPlan).toHaveBeenCalled();
   });
+
+  it("loopPlan", () => {
+    mountwrapper.setState({panel_to_show: 0})
+    const runPlan = mountwrapper.find('CommandPanel').find('button#loop-plan')
+    runPlan.simulate('click');
+    expect(setModalInfor).toHaveBeenCalled();
+    const modal = mountwrapper.find('Modal').find('button').at(0)
+    modal.simulate('click')
+    const runPlan1 = mountwrapper.find('CommandPanel').find('button#run-plan')
+    runPlan.simulate('click');
+    expect(setModalInfor).toHaveBeenCalled();
+    const modal1 = mountwrapper.find('Modal').find('button').at(1)
+    modal1.simulate('click')
+  });
+
+  it("runPlan", () => {
+    mountwrapper.setState({panel_to_show: 0})
+    const runPlan = mountwrapper.find('CommandPanel').find('button#run-plan')
+    runPlan.simulate('click');
+    expect(setModalInfor).toHaveBeenCalled();
+    const modal = mountwrapper.find('Modal').find('button').at(0)
+    modal.simulate('click')
+    const runPlan1 = mountwrapper.find('CommandPanel').find('button#run-plan')
+    runPlan.simulate('click');
+    expect(setModalInfor).toHaveBeenCalled();
+    const modal1 = mountwrapper.find('Modal').find('button').at(1)
+    modal1.simulate('click')
+  });
+
 });

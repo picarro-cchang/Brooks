@@ -1504,6 +1504,8 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
           fileNames={
             Array [
               "Test",
+              "HELLO",
+              "@%#&@",
             ]
           }
           getPlanFromFileName={[Function]}
@@ -4401,6 +4403,8 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
           fileNames={
             Array [
               "Test",
+              "HELLO",
+              "@%#&@",
             ]
           }
           loadedFileName="Testing"

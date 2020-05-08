@@ -118,21 +118,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     //disabled run and loop
   }
 
-  getLastRunningPlan() {
-    PlanService.getLastRunning().then((response: any) => 
-      response.json().then(data => {
-        if (data["message"]) {
-          console.log("No Plan I suppsoe")
-        }          
-        else {
-          const plan = { ...(JSON.parse(data['details'])) }
-          console.log("Last Running Plan Run ", plan)
-          this.setState({plan: plan});
-        }
-
-      }))
-  }
-
   render() {
     // console.log("Plan on Run Layout ", this.state.plan)
     // console.log("Plan on Main ", this.props.plan)

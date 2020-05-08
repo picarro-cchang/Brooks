@@ -4,7 +4,6 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
 <PlanPanel
   bankAddition={Object {}}
   fileName=""
-  getStateFromSavedData={[MockFunction]}
   isEdited={false}
   layoutSwitch={
     [MockFunction] {
@@ -281,7 +280,6 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
       ],
     }
   }
-  setPlanStorage={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -850,7 +848,6 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
 <PlanPanel
   bankAddition={Object {}}
   fileName=""
-  getStateFromSavedData={[MockFunction]}
   isEdited={false}
   layoutSwitch={
     [MockFunction] {
@@ -1123,7 +1120,6 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
       ],
     }
   }
-  setPlanStorage={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {
@@ -1697,7 +1693,6 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
     }
   }
   fileName="TestPlan"
-  getStateFromSavedData={[MockFunction]}
   isEdited={false}
   layoutSwitch={[MockFunction]}
   plan={
@@ -1847,7 +1842,6 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
   }
   planOverwrite={[MockFunction]}
   setModalInfo={[MockFunction]}
-  setPlanStorage={[MockFunction]}
   uistatus={
     Object {
       "bank": Object {
@@ -2265,7 +2259,6 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
     }
   }
   fileName="TestPlan"
-  getStateFromSavedData={[MockFunction]}
   isChanged={true}
   isEdited={false}
   layoutSwitch={
@@ -2601,7 +2594,6 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
       ],
     }
   }
-  setPlanStorage={[MockFunction]}
   uistatus={
     Object {
       "bank": Object {
@@ -3320,7 +3312,6 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
 <PlanPanel
   bankAddition={Object {}}
   fileName=""
-  getStateFromSavedData={[MockFunction]}
   isEdited={false}
   layoutSwitch={
     [MockFunction] {
@@ -3597,7 +3588,6 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       ],
     }
   }
-  setPlanStorage={[MockFunction]}
   uistatus={Object {}}
   updateFileName={
     [MockFunction] {

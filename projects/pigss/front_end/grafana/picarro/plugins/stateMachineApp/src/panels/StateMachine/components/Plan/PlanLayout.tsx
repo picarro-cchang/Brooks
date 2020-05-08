@@ -135,44 +135,12 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     this.setState({modal_info: modal})
   }
   
-  getPlanStorage = () => {
-    // get picarroStorage object from sessionStorage
-    if (window.sessionStorage) {
-      return sessionStorage.getItem(storageKey);
-    }
-    return null;
-  }
-
-  setPlanStorage = (planStorage: Plan) => {
-    // set picarroStorage object in sessionStorage
-    if (window.sessionStorage) {
-      try {
-        sessionStorage.setItem(storageKey, JSON.stringify(planStorage));
-      } catch (error) {
-        this.clearPlanStorage();
-      }
-    }
-  }
-
-  clearPlanStorage = () => {
-    sessionStorage.removeItem(storageKey);
-  }
-
-  getStateFromSavedData = () => {
-    const savedData = this.getPlanStorage();
-    if (savedData !== null) {
-      return { ...(JSON.parse(savedData)) };
-    }
-    return null;
-  }
-
   getPlanFromFileName(filename: string) {
     PlanService.getFileData(filename).then((response: any) => 
       response.json().then(data => {
         if (data["message"]) {
           this.setModalInfo(true, `<h4 style='color: black'>${data["message"]}</h4>`, 0, {}, 'misc')
         } else {
-          this.setPlanStorage(data["details"]);
           this.setState({plan: data["details"]})
           this.setState({
             fileName: filename,
@@ -288,8 +256,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 updatePanel={this.updatePanelToShow}
                 layoutSwitch={this.props.layoutSwitch}
                 planOverwrite={this.planOverwrite}
-                setPlanStorage={this.setPlanStorage}
-                getStateFromSavedData={this.getStateFromSavedData}
                 setModalInfo={this.setModalInfo}
                 updateSavedFileState={this.updateSavedFileState}
             />
@@ -323,7 +289,6 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 updatePanel={this.updatePanelToShow}
                 fileNames={this.props.fileNames}
                 deleteFile={this.deleteFile}
-                getStateFromSavedData={this.getStateFromSavedData}
                 setModalInfo={this.setModalInfo}
             />
         );

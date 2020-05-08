@@ -192,6 +192,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
 
   overwriteFile() {
     const valid = this.validation(this.state.plan, true)
+    console.log("VALID ", valid)
     if (valid) {
       this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`, 2, {
       1: {

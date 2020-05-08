@@ -35,8 +35,6 @@ const defaultProps: PlanPanelOptions = {
   fileName: "TestPlan",
   layoutSwitch: mockLayoutSwitch,
   planOverwrite: mockPlanOverwrite,
-  setPlanStorage: mockSetPlanStorage,
-  getStateFromSavedData: mockGetStateFromSavedData,
   setModalInfo: mockSetModalInfo,
   updateSavedFileState: mockUpdateSavedFileState
 };
@@ -51,8 +49,6 @@ const nextProps: PlanPanelOptions = {
   fileName: "TestPlan",
   layoutSwitch: mockLayoutSwitch,
   planOverwrite: mockPlanOverwrite,
-  setPlanStorage: mockSetPlanStorage,
-  getStateFromSavedData: mockGetStateFromSavedData,
   setModalInfo: mockSetModalInfo,
   updateSavedFileState: mockUpdateSavedFileState
 };
@@ -256,8 +252,6 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
     planOverwrite: mockPlanOverwrite,
-    setPlanStorage: mockSetPlanStorage,
-    getStateFromSavedData: mockGetStateFromSavedData,
     setModalInfo: mockSetModalInfo,
     updateSavedFileState: mockUpdateSavedFileState
   };
@@ -312,8 +306,6 @@ describe("<PlanPanel /> All Chan Masks == 0", () => {
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
     planOverwrite: mockPlanOverwrite,
-  setPlanStorage: mockSetPlanStorage,
-  getStateFromSavedData: mockGetStateFromSavedData,
   setModalInfo: mockSetModalInfo,
   updateSavedFileState: mockUpdateSavedFileState
   };
@@ -368,8 +360,6 @@ describe("<PlanPanel /> Rows greater than 10", () => {
     fileName: "",
     layoutSwitch: mockLayoutSwitch,
     planOverwrite: mockPlanOverwrite,
-  setPlanStorage: mockSetPlanStorage,
-  getStateFromSavedData: mockGetStateFromSavedData,
   setModalInfo: mockSetModalInfo,
   updateSavedFileState: mockUpdateSavedFileState
   };

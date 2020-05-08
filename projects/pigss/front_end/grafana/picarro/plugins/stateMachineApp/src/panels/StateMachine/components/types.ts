@@ -122,19 +122,14 @@ export interface LoadPanelCommandOptions {
 export interface PlanPanelOptions {
     uistatus: { [key: string]: any };
     plan: Plan;
-    // ws_sender: (o: object) => void;
     isEdited: boolean;
     updateFileName: (x: boolean) => void;
-    // addChanneltoPlan: (bank: number, channel: number) => void;
     bankAddition: { [key: string]: number };
     fileName: string;
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
     planOverwrite: (s: object) => void;
-    setPlanStorage: (s: Plan) => void;
-    getStateFromSavedData: () => any;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
-    // getLastLoadedPlan: () => void;
     updateSavedFileState: (plan: Plan) => void;
   }
 
@@ -147,7 +142,6 @@ export interface PlanPanelOptions {
     updatePanel: (x: number) => void;
     fileNames: any[]
     deleteFile: (file: string) => void;
-    getStateFromSavedData: () => any;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
   }
 

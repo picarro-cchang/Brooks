@@ -57,6 +57,7 @@ const server = new WS(socketURL);
 const client = new WebSocket(socketURL);
 
 describe("<Main />", () => {
+  const handleDataSpy = jest.spyOn(Main.prototype, 'handleData')
   const wrapper = mount(<Main />);
   wrapper.setState({ ...defaultState });
   const instance = wrapper.instance() as Main;
@@ -119,6 +120,21 @@ describe("<Main />", () => {
     const toastSuccess = wrapper.find("ToastContainer");
     expect(toastSuccess).toMatchSnapshot();
   });
-  server.close;
-  client.close;
+
+  it("Test WS", async ()=>{
+    const data = '{"uistatus": {"timer": 5 }}'
+    instance.ws = client;
+    instance.attachWSMethods(instance.ws);
+    await server.connected;
+    console.log(data)
+    console.log(JSON.parse(data))
+    server.send(data);
+    expect(handleDataSpy).toHaveBeenCalled();
+    server.close();
+    instance.ws.close();
+    // expect(client).toReceiveMessage();
+  })
+
+  // server.close;
+  // client.close;
 });

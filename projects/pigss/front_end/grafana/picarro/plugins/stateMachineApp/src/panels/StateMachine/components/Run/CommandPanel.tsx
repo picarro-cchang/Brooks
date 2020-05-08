@@ -36,7 +36,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
   };
 
   render() {
-    console.log("PLAN STEP ", this.props.plan.current_step)
+    // console.log("PLAN STEP ", this.props.plan.current_step)
     return (
       <div className="panel-command">
         <div style={{ width: "100%", marginTop: 20 }}>

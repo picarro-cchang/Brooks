@@ -7,6 +7,7 @@ import { PlanLayoutProps, Plan } from "../../components/types";
 import mockPlan from "../../api/__mocks__/mockPlan.json";
 import mockData from "./../../api/__mocks__/mockData.json";
 import LoadPanel from "../../components/Plan/LoadPanel";
+import PlanPanel from "../../components/Plan/PlanPanel";
 
 const mockWS = jest.fn();
 const mockLayoutSwitch = jest.fn();
@@ -27,7 +28,8 @@ describe("<PlanLayout />", () => {
   const addChanneToPlanRef = jest.spyOn(PlanLayout.prototype, "addChanneltoPlan");
   const updatePanelToShow = jest.spyOn(PlanLayout.prototype, "updatePanelToShow");
   const updateFileName = jest.spyOn(PlanLayout.prototype, "updateFileName");
-
+  const setModal = jest.spyOn(PlanLayout.prototype, "setModalInfo");
+  const deleteFile = jest.spyOn(PlanLayout.prototype, "deleteFile")
   const wrapper = shallow(<PlanLayout {...defaultProps} />);
   const mountwrapper = mount(<PlanLayout {...defaultProps} />)
   const instance = mountwrapper.instance() as PlanLayout;
@@ -56,7 +58,7 @@ describe("<PlanLayout />", () => {
 
   it("planSaved", async () => {
     const planSaved = jest.spyOn(instance, "planSaved");
-    const setModal = jest.spyOn(instance, "setModalInfo");
+    // const setModal = jest.spyOn(instance, "setModalInfo");
     mountwrapper.setState({panel_to_show: 2})
     const input = mountwrapper.find('SavePanel').find('input#fileName')
     input.simulate('change', { target: { value: 'Plan2' } });
@@ -66,9 +68,28 @@ describe("<PlanLayout />", () => {
     expect(setModal).toHaveBeenCalled();
     const modalOK = mountwrapper.find('Modal').find('button#save')
     modalOK.simulate("click");
-    await expect(planSaved).toHaveBeenCalled();
+    expect(planSaved).toHaveBeenCalled();
     expect(setModal).toHaveBeenCalled();
   });
+
+  it("planOverwrite", ()=> {
+    const planOverwrite = jest.spyOn(instance, "planOverwrite");
+    mountwrapper.setState({panel_to_show: 0})
+    mountwrapper.setState({isEdited: true})
+    const input = mountwrapper.find('PlanPanel').find('button#ok-btn')
+    console.log(input.html())
+    // input.simulate('change', { target: { value: 'Plan2' } });
+    // const load = mountwrapper.find('SavePanel').find('button#save-btn');
+    input.simulate("click");
+    expect(mountwrapper).toMatchSnapshot();
+    expect(setModal).toHaveBeenCalled();
+    const modalOK = mountwrapper.find('Modal').find('button').at(0)
+    // console.log("BOOTY", modalOK)
+    // console.log("BUTN ", mountwrapper.state('panel_to_show'))
+    modalOK.simulate("click");
+    expect(planOverwrite).toHaveBeenCalled();
+    // expect(setModal).toHaveBeenCalled();
+  })
 
   it("addChannelToPlan", () => {
     mountwrapper.setState({isPlanPanel: true})
@@ -90,5 +111,12 @@ describe("<PlanLayout />", () => {
     button.simulate('change');
     expect(updateFileName).toHaveBeenCalled();
   });
+
+  it("deleteFile", () => {
+    mountwrapper.setState({panel_to_show: 1})
+    const file = mountwrapper.find('LoadPanel').find('button').at(1)
+    file.simulate('click')
+    expect(deleteFile).toHaveBeenCalled()
+  })
 
 });

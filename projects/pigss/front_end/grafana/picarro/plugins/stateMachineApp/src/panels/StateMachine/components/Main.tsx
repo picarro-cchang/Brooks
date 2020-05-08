@@ -137,9 +137,7 @@ export class Main extends React.Component<any, any> {
     await this.getDataViaApi();
     this.attachWSMethods(this.ws);
     const storedPlanning = this.getStateFromSavedData();
-    console.log("Stored Plan is ", storedPlanning)
     if(this.state.isPlanning != storedPlanning && storedPlanning != null){
-      console.log("Doesn't match on Main. Main is: ", this.state.isPlanning)
       this.setState({
         isPlanning: storedPlanning,
       })
@@ -172,12 +170,11 @@ export class Main extends React.Component<any, any> {
     });
     const fileNames = PlanService.getFileNames().then(res => {
       res.json().then(obj => {
-        console.log(obj)
         this.setState(deepmerge(this.state.fileNames, {fileNames: obj["plans"]}))
       })
     })
     Promise.all([uiStatusData, planData, fileNames]).then(() => {
-      this.setState(deepmerge(this.state, { initialized: true }), () => {console.log("PLAN UPDATED ", this.state.plan)});
+      this.setState(deepmerge(this.state, { initialized: true }));
     });
   };
 
@@ -189,7 +186,6 @@ export class Main extends React.Component<any, any> {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         this.setState({ uistatus });
       } else if ("plan" in o) {
-        console.log("PLAN UPDATED VIA WS ", o.plan.current_step)
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
         // const fileNames = deepmerge(this.state.fileNames, o.plan.plan_files)
