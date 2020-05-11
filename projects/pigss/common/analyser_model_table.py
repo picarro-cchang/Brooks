@@ -1,14 +1,10 @@
-analyser_model_table = {
-    "AHDS":"SI2103",
-    "AJDS":"SI2103",
-    "BDDS":"SI2104",
-    "MBDS":"SI2205",
-    "MCDS":"SI2205",
-    "SADS":"SI2108",
-    "SBDS":"SI2108",
-    "AMADS":"SI2306",
-    "AMBDS":"SI2306",
-    "ASADS":"SI2309",
-    "ASBDS":"SI2309"
+analyser_model_table_regex = {
+    "A.DS":"SI2103",
+    "B.DS":"SI2104",
+    "M.DS":"SI2205",
+    "AM.DS":"SI2306",
+    "S.DS":"SI2108",
+    "AS.DS":"SI2309",
+    "AMS.DS":"SI3401",
+    "U.DS":"SI5450",
 }
-
