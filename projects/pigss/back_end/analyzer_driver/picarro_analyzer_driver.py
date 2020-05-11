@@ -182,8 +182,13 @@ class PicarroAnalyzerDriver:
         """
         Method to fetch instrument model from instrument eeprom
         """
-        driver = CmdFIFO.CmdFIFOServerProxy(f'http://{self.instrument_ip_address}:50010', ClientName='IDriver')
-        engineering_name = driver.fetchLogicEEPROM()[0]["Analyzer"]
+        try:
+            driver = CmdFIFO.CmdFIFOServerProxy(f'http://{self.instrument_ip_address}:50010', ClientName='IDriver')
+            engineering_name = driver.fetchLogicEEPROM()[0]["Analyzer"]
+        except CmdFIFO.RemoteException as e:
+            self.log.error(f'Exception while trying to fetch instrument engineering name:\n{e}')
+            return None, None
+
         model_number  = None
         for key in instrument_model_table_regex:
             # all engineering names should end on "DS" for ring-Down Spectrometer
