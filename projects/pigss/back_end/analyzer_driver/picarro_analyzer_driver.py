@@ -14,7 +14,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from common import CmdFIFO, timeutils
 from common.listener import Listener
 from common.string_pickler import ArbitraryObject
-from common.analyser_model_table import analyser_model_table_regex
+from common.instrument_model_table import instrument_model_table_regex
 
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
@@ -51,7 +51,7 @@ utc = UTC()
 
 class PicarroAnalyzerDriver:
     """
-        class represents IDriver for Picarro Analyser instrument,
+        class represents IDriver for Picarro Analyzer instrument,
         it pipelines measurement point from instrument to the database and
         is responsible for passing to the instrument commands from upper layer
     """
@@ -189,12 +189,12 @@ class PicarroAnalyzerDriver:
         driver = CmdFIFO.CmdFIFOServerProxy(f'http://{self.instrument_ip_address}:50010', ClientName='IDriver')
         engineering_name = driver.fetchLogicEEPROM()[0]["Analyzer"]
         model_number  = None
-        for key in analyser_model_table_regex:
+        for key in instrument_model_table_regex:
             # all engineering names should end on "DS" for ring-Down Spectrometer
             # the character before "DS" would stand for revision
             # all characters before that describes the gasses
             if engineering_name[:-3] == key[:-3]:
-                model_number = analyser_model_table_regex[key]
+                model_number = instrument_model_table_regex[key]
         if model_number is None:
             model_number = engineering_name
         return engineering_name, model_number

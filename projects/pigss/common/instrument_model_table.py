@@ -1,4 +1,4 @@
-analyser_model_table_regex = {
+instrument_model_table_regex = {
     "A.DS":"SI2103",
     "B.DS":"SI2104",
     "M.DS":"SI2205",
