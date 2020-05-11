@@ -9,18 +9,18 @@ interface State {
 }
 class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
   constructor(props) {
-    super(props) 
+    super(props);
     this.state = {
       plan: this.props.plan,
-      fileNames: this.props.fileNames
-    }
+      fileNames: this.props.fileNames,
+    };
   }
 
   shouldComponentUpdate(nextProps) {
     if (this.props.fileNames !== nextProps.fileNames) {
-      console.log("UPDATE FILENAMES")
+      console.log("UPDATE FILENAMES");
       this.setState({
-        fileNames: nextProps.fileNames
+        fileNames: nextProps.fileNames,
       });
     }
     return true;
@@ -28,11 +28,10 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
 
   isDisabled(file: string) {
     if (file == this.props.loadedFileName) {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
-
 
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
@@ -41,11 +40,10 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
           type="button"
           className="btn w-100 btn-small"
           disabled={this.isDisabled(this.props.fileNames[index])}
-          onClick={e => {
+          onClick={(e) => {
             this.props.ws_sender({
-              element: "load_filename"
-            })
-            // this.props.loadPlan(this.state.fileNames[index]);
+              element: "load_filename",
+            });
             this.props.getPlanFromFileName(this.props.fileNames[index]);
           }}
           style={{ color: "black" }}
@@ -56,7 +54,7 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
           type="button"
           className="btn btn-danger btn-small"
           disabled={this.isDisabled(this.props.fileNames[index])}
-          onClick={e => {
+          onClick={(e) => {
             this.props.deleteFile(this.props.fileNames[index]);
           }}
         >
@@ -67,7 +65,7 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
   );
 
   render() {
-    let length = Object.keys(this.props.fileNames).length
+    const length = Object.keys(this.props.fileNames).length;
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>
@@ -86,11 +84,11 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
               <button
                 id={"cancel"}
                 type="button"
-                onClick={e =>{
-                  this.props.updatePanel(0)
+                onClick={(e) => {
+                  this.props.updatePanel(0);
                   this.props.ws_sender({
-                    element: "load_cancel"
-                  })
+                    element: "load_cancel",
+                  });
                 }}
                 className={"btn btn-group-2 btn-cancel"}
               >

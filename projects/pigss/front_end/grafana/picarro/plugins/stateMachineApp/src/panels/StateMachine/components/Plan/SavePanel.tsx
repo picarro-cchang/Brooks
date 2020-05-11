@@ -4,57 +4,73 @@ import { PlanSavePanelOptions, Plan } from "../types";
 import { PlanService } from "../../api/PlanService";
 
 interface State {
-  fileName: string,
-  fileNames: {},
-  plan: Plan
+  fileName: string;
+  fileNames: {};
+  plan: Plan;
 }
 class SavePanel extends Component<PlanSavePanelOptions, State> {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
       fileName: "",
       fileNames: this.props.fileNames,
-      plan: this.props.plan
-    }
-    this.setFileName = this.setFileName.bind(this)
+      plan: this.props.plan,
+    };
+    this.setFileName = this.setFileName.bind(this);
   }
 
   validatePlanName(fileName: string) {
     if (fileName.length <= 0) {
-      this.props.setModalInfo(true, `<h4 style='color: black'>Invalid Plan Name length.</h4>`, 0, {}, 'validation')
-      return false
+      this.props.setModalInfo(
+        true,
+        `<h4 style='color: black'>Invalid Plan Name length.</h4>`,
+        0,
+        {},
+        "validation"
+      );
+      return false;
     } else if (this.props.fileNames.includes(fileName)) {
-      this.props.setModalInfo(true, `<h4 style='color: black'>Plan Name Already Taken.</h4>`, 0, {}, 'validation')
-      return false
+      this.props.setModalInfo(
+        true,
+        `<h4 style='color: black'>Plan Name Already Taken.</h4>`,
+        0,
+        {},
+        "validation"
+      );
+      return false;
     }
-    return true
+    return true;
   }
 
   savePlanFileName(fileName: string, plan: Plan) {
-    const valid = this.validatePlanName(fileName)
-    if(valid){
-      this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}?</div>`, 2, {
-        1: {
-          caption: "Save",
-          className: "btn btn-success btn-large",
-          response: {filename: fileName, plan: plan}
+    const valid = this.validatePlanName(fileName);
+    if (valid) {
+      this.props.setModalInfo(
+        true,
+        `<div>Save file as ${this.state.fileName}?</div>`,
+        2,
+        {
+          1: {
+            caption: "Save",
+            className: "btn btn-success btn-large",
+            response: { filename: fileName, plan },
+          },
+          2: {
+            caption: "Cancel",
+            className: "btn btn-danger btn-large",
+            response: null,
+          },
         },
-        2: {
-          caption: "Cancel",
-          className: "btn btn-danger btn-large",
-          response: null
-        }
-      }, 'save')
+        "save"
+      );
     } else {
-      
     }
   }
 
-
   setFileName(e) {
-    const plan = {...this.state.plan}
-    plan.plan_filename = e.target.value
-    this.setState({fileName: e.target.value.replace(/\s/g, ''), plan});
+    const plan = { ...this.state.plan };
+    plan.plan_filename = e.target.value;
+    this.setState({ fileName: e.target.value.replace(/\s/g, ""), plan });
   }
 
   renderItem = (index: number, key: ReactText) => (
@@ -70,20 +86,19 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         <button
           type="button"
           className="btn btn-danger btn-small"
-          onClick={e =>
-            {
-              this.props.deleteFile(this.props.fileNames[index]);
-            }
-          }
+          onClick={(e) => {
+            this.props.deleteFile(this.props.fileNames[index]);
+          }}
         >
           X
         </button>
       </div>
     </div>
   );
+
   render() {
-    let length = Object.keys(this.props.fileNames).length
-    
+    const length = Object.keys(this.props.fileNames).length;
+
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Save Plan</h2>
@@ -98,10 +113,10 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         </div>
         <div className="col-sm-12" style={{ marginTop: "20px" }}>
           <input
-          id={'fileName'}
-            onChange={e => {
-              e.target.value = e.target.value.replace(/\s/g, '')
-              this.setFileName(e)
+            id={"fileName"}
+            onChange={(e) => {
+              e.target.value = e.target.value.replace(/\s/g, "");
+              this.setFileName(e);
             }}
             maxLength={28}
             type="text"
@@ -110,7 +125,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
               backgroundColor: "white",
               borderRadius: 3,
               color: "black",
-              height: 35
+              height: 35,
             }}
             placeholder="Filename (without extension)"
           />
@@ -121,9 +136,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
             <button
               id="cancel-save"
               type="button"
-              onClick={e =>
-                this.props.updatePanel(0)
-              }
+              onClick={(e) => this.props.updatePanel(0)}
               className={"btn btn-group-2 btn-cancel"}
             >
               Cancel
@@ -131,7 +144,9 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
             <button
               type="button"
               id="save-btn"
-              onClick={e => {this.savePlanFileName(this.state.fileName, this.state.plan)}}
+              onClick={(e) => {
+                this.savePlanFileName(this.state.fileName, this.state.plan);
+              }}
               className={"btn btn-group-2 btn-green"}
             >
               OK

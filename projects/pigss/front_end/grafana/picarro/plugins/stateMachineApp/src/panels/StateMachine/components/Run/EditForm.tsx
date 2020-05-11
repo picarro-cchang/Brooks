@@ -4,8 +4,8 @@ import { EditPanelOptions } from "../types";
 class EditForm extends Component<any, any> {
   state = {
     plan: {
-      bank_names: this.props.plan.bank_names
-    }
+      bank_names: this.props.plan.bank_names,
+    },
   };
   banks: any;
   bank_list: any;
@@ -18,19 +18,21 @@ class EditForm extends Component<any, any> {
       const value = this.banks[num];
       if (value === "READY") {
         this.bank_list.push(num);
-        edit_list.push(<div key={"bank" + num} className="row">
+        edit_list.push(
+          <div key={"bank" + num} className="row">
             <label className="edit-label"> Bank {num}</label>
-      </div>)
+          </div>
+        );
         for (let i = 1; i <= 8; i++) {
-          let portNumber = (Number(num) - 1) * 8 + i
+          const portNumber = (Number(num) - 1) * 8 + i;
           edit_list.push(
             <div key={portNumber} className="row">
               <label className="edit-label"> Port {portNumber}: </label>
-              <input                
+              <input
                 name={"bank" + num + i}
                 className="col-sm-6 edit-input"
                 type="text"
-                onChange={event =>
+                onChange={(event) =>
                   this.props.handleChannelNameChange(
                     event.target.value,
                     num.toString(),
@@ -47,10 +49,9 @@ class EditForm extends Component<any, any> {
     }
     return (
       <div className="panel-plan-inner">
-        <div className="gf-form-group">
-          {edit_list}
-        </div>
-      </div>);
+        <div className="gf-form-group">{edit_list}</div>
+      </div>
+    );
   }
 }
 
