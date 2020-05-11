@@ -73,11 +73,7 @@ class PicarroAnalyzerDriver:
                  logger=None):
         self.APP_NAME = app_name
         self.instrument_ip_address = instrument_ip_address
-
-        engineering_name, model_number  = self.get_model_number()
-        self.engineering_name = engineering_name
-        self.model_number  = model_number
-
+        self.engineering_name, self.model_number  = self.get_model_number()
         self.database_writer = database_writer
         self.rpc_server_name = rpc_server_name
         self.rpc_server_port = rpc_server_port
@@ -196,6 +192,7 @@ class PicarroAnalyzerDriver:
             if engineering_name[:-3] == key[:-3]:
                 model_number = instrument_model_table_regex[key]
         if model_number is None:
+            self.logger.warning(f"Instrument engineering ({engineering_name}) name has no corresponding model name")
             model_number = engineering_name
         return engineering_name, model_number
 
