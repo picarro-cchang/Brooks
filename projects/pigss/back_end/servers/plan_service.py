@@ -109,7 +109,7 @@ class PlanService(ServiceTemplate):
 
         elif "last_running" in query_dict and query_dict["last_running"][0] == "true":
             # Retrieve last running plan
-            name, details = self.model.read_last_running_plan()
+            plan_id, name, details = self.model.read_last_running_plan()
 
             if name is None and details is None:
                 return web.json_response(data={
@@ -117,6 +117,7 @@ class PlanService(ServiceTemplate):
                 }, status=200)
 
             return web.json_response(data={
+                "plan_id": plan_id,
                 "name": name,
                 "details": details
             }, status=200)
@@ -125,13 +126,14 @@ class PlanService(ServiceTemplate):
             # Given a plan name retrive the deatil of the plan
             plan_name = query_dict.get("plan_name")[0]
             try:
-                name, details = self.model.read_plan_by_name(plan_name)
+                plan_id, name, details = self.model.read_plan_by_name(plan_name)
             except PlanDoesNotExistException:
                 return web.json_response(data={
                     "message": f"No record could be found for plan name {plan_name}."
                 }, status=200)
 
             return web.json_response(data={
+                "plan_id": plan_id,
                 "name": name,
                 "details": json.loads(details)
             }, status=200)
@@ -155,6 +157,7 @@ class PlanService(ServiceTemplate):
                 description: successful operation returns true
         """
         plan_data = await request.json()
+        plan_id = plan_data.get("plan_id")
         name = plan_data.get("name")
         details = json.dumps(plan_data.get("details"))
         # TO DO: Get username from authentication token passed by front_end to avoid user imitation
@@ -167,9 +170,11 @@ class PlanService(ServiceTemplate):
             is_running = plan_data.get("is_running")
             is_unloading = plan_data.get("is_unloading")
             try:
-                name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name, is_unloading)
+                plan_id, name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running,
+                                                                is_deleted, updated_name, is_unloading)
                 if name is not None and details is not None:
                     return web.json_response(data={
+                        "plan_id": plan_id,
                         "message": f"Plan {name} has been updated with new details.",
                         "name": name,
                         "details": json.loads(details),
@@ -188,9 +193,10 @@ class PlanService(ServiceTemplate):
             is_running = plan_data.get("is_running", 0)
             is_unloading = 0
             try:
-                name, details = self.model.update_plan(name, details, modified_at, modified_by, is_running, is_deleted, updated_name,  is_unloading)
+                name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running, is_deleted, updated_name,  is_unloading)
                 if name is not None and details is not None:
                     return web.json_response(data={
+                        "plan_id": plan_id,
                         "message": f"Plan {name} has been updated with new details.",
                         "name": name,
                         "details": json.loads(details),
@@ -227,24 +233,24 @@ class PlanService(ServiceTemplate):
             "200":
                 description: successful operation returns true
         """
-        # plan_data = await request.json()
         query_dict = parse_qs(request.query_string)
-        # name = plan_data.get("name")
-        name = query_dict.get("name")[0] if query_dict.get("name") is not None else None 
-        # TO DO: Get username from authentication token passed by front_end to avoid user imitation
-        # modified_by = plan_data.get('user')
-        modified_by = query_dict.get("user")[0] if query_dict.get("user") is not None else None
+        plan_id = name = modified_by = None
+        try:
+            name = query_dict.get("name")[0]
+            plan_id = int(query_dict.get("plan_id")[0])
+            # TO DO: Get username from authentication token passed by front_end to avoid user imitation
+            modified_by = query_dict.get("user")[0]
+        except TypeError:
+            return web.json_response(data={
+                "message": "Please make sure to provide a valid input."
+            }, status=200)
+            
         # Current implementation has the creation of plan in local timezone
         modified_at = str(datetime.datetime.now())
         is_deleted = 1
 
-        if not name:
-            return web.json_response(data={
-                "message": "Please make sure to provide a valid plan name."
-            }, status=200)
-
         try:
-            status = self.model.delete_plan(name, modified_at, modified_by, is_deleted)
+            status = self.model.delete_plan(plan_id, name, modified_at, modified_by, is_deleted)
             if status:
                 return web.json_response(data={
                     "message": f"The plan {name} has been successfully deleted."
@@ -287,7 +293,6 @@ if __name__ == "__main__":
         )})
 
     for route in service.app.router.routes():
-        print("route ->", route)
         cors.add(route)
 
     web.run_app(service.app, host="0.0.0.0", port=8080)

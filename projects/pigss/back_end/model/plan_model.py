@@ -127,7 +127,7 @@ class PlanModel:
             PlanNotFoundException: If a plan specified by name does not exist or is deleted
         """
         try:
-            read_query = '''SELECT name, details FROM plans WHERE name = ? AND is_deleted != 1'''
+            read_query = '''SELECT rowid, name, details FROM plans WHERE name = ? AND is_deleted != 1'''
             cur = self.db_connection.cursor()
             record = cur.execute(read_query, (name, )).fetchone()
             if record:
@@ -150,7 +150,7 @@ class PlanModel:
             None
         """
         try:
-            read_query = ''' SELECT name FROM plans WHERE is_deleted != 1'''
+            read_query = ''' SELECT rowid, name FROM plans WHERE is_deleted != 1'''
             cur = self.db_connection.cursor()
             records = cur.execute(read_query).fetchall()
             return records
@@ -168,7 +168,7 @@ class PlanModel:
 
         """
         try:
-            read_query = '''SELECT name, details FROM plans WHERE is_running = 1'''
+            read_query = '''SELECT rowid, name, details FROM plans WHERE is_running = 1'''
             record = self.db_connection.cursor().execute(read_query).fetchone()
             if record:
                 return record
@@ -176,7 +176,7 @@ class PlanModel:
             self.log.debug(format_exc())
         return None, None
 
-    def update_plan(self, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name="", is_unloading=0):
+    def update_plan(self, plan_id, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name="", is_unloading=0):
         """ Given a plan name and required data, update a plan
 
         Args:            
@@ -202,14 +202,14 @@ class PlanModel:
                             modified_by = ?,
                             is_running = ?,
                             is_deleted = ?
-                            where name = ?
+                            where rowid = ?
                              '''
         
         
         if updated_name and not self.is_valid_plan_name(updated_name):
             raise PlanExistsException()
 
-        values = (details, modified_at, modified_by, is_running, is_deleted, name)
+        values = (details, modified_at, modified_by, is_running, is_deleted, plan_id)
         
         if updated_name:
             update_query = ''' UPDATE plans
@@ -219,20 +219,20 @@ class PlanModel:
                     modified_by = ?,
                     is_running = ?,
                     is_deleted = ?
-                    where name = ?
+                    where rowid = ?
                 '''
-            values = (updated_name, details, modified_at, modified_by, is_running, is_deleted, name)
+            values = (updated_name, details, modified_at, modified_by, is_running, is_deleted, plan_id)
 
         try:
             cur = self.db_connection.cursor()
             records = cur.execute(update_query, values)
             self.db_connection.commit()
-            return (name, details) if not updated_name else (updated_name, details)
+            return (plan_id, name, details) if not updated_name else (plan_id, updated_name, details)
         except sqlite3.OperationalError:
             self.log.debug(format_exc())
-        return None, None
+        return None, None, None
 
-    def delete_plan(self, name, modified_at, modified_by, is_deleted=1):
+    def delete_plan(self, plan_id, name, modified_at, modified_by, is_deleted=1):
         """ Given a plan name, delete the plan from database i.e. set is_deleted=1
 
         Args:
@@ -248,12 +248,12 @@ class PlanModel:
         if self.is_valid_plan_name(name):
             raise PlanDoesNotExistException()
     
-        values = (is_deleted, modified_at, modified_by, name)
+        values = (is_deleted, modified_at, modified_by, plan_id)
         delete_query = ''' UPDATE plans
                             SET is_deleted = ?,
                             modified_at = ?,
                             modified_by = ?
-                            WHERE name = ?
+                            WHERE rowid = ?
                         '''
         try:    
             cur = self.db_connection.cursor()
