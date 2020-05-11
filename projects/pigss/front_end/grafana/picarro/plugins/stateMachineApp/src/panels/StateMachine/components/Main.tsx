@@ -13,7 +13,7 @@ import { Plan } from "./types";
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
-export const storageKey = 'mainStorage';
+export const storageKey = "mainStorage";
 export class Main extends React.Component<any, any> {
   state = {
     initialized: false,
@@ -21,7 +21,7 @@ export class Main extends React.Component<any, any> {
       show: false,
       html: "",
       num_buttons: 0,
-      buttons: {}
+      buttons: {},
     },
     uistatus: {},
     plan: {
@@ -45,8 +45,8 @@ export class Main extends React.Component<any, any> {
             5: "Port 5",
             6: "Port 6",
             7: "Port 7",
-            8: "Port 8"
-          }
+            8: "Port 8",
+          },
         },
         2: {
           name: "",
@@ -58,8 +58,8 @@ export class Main extends React.Component<any, any> {
             5: "Port 13",
             6: "Port 14",
             7: "Port 15",
-            8: "Port 16"
-          }
+            8: "Port 16",
+          },
         },
         3: {
           name: "",
@@ -71,8 +71,8 @@ export class Main extends React.Component<any, any> {
             5: "Port 21",
             6: "Port 22",
             7: "Port 23",
-            8: "Port 24"
-          }
+            8: "Port 24",
+          },
         },
         4: {
           name: "",
@@ -84,13 +84,13 @@ export class Main extends React.Component<any, any> {
             5: "Port 29",
             6: "Port 30",
             7: "Port 31",
-            8: "Port 32"
-          }
-        }
-      }
+            8: "Port 32",
+          },
+        },
+      },
     },
     options: {
-      panel_to_show: 0
+      panel_to_show: 0,
     },
     isPlan: false,
     isChanged: false,
@@ -109,12 +109,12 @@ export class Main extends React.Component<any, any> {
   ws = new WebSocket(socketURL);
 
   attachWSMethods = (ws: WebSocket) => {
-    this.ws.onmessage = evt => {
+    this.ws.onmessage = (evt) => {
       // on receiving a message, add it to the list of messages
       this.handleData(evt.data);
     };
 
-    this.ws.onclose = event => {
+    this.ws.onclose = (event) => {
       if (event.code !== 1000) {
         this.setupWSComm();
       }
@@ -137,16 +137,19 @@ export class Main extends React.Component<any, any> {
     await this.getDataViaApi();
     this.attachWSMethods(this.ws);
     const storedPlanning = this.getStateFromSavedData();
-    if(this.state.isPlanning != storedPlanning && storedPlanning != null){
+    if (this.state.isPlanning != storedPlanning && storedPlanning != null) {
       this.setState({
         isPlanning: storedPlanning,
-      })
+      });
     }
   }
 
   componentWillUnmount() {
-    console.log("Component will unmount, Saving Storage ", this.state.isPlanning);
-    this.setPlanStorage(this.state.isPlanning)
+    console.log(
+      "Component will unmount, Saving Storage ",
+      this.state.isPlanning
+    );
+    this.setPlanStorage(this.state.isPlanning);
     if (this.ws && this.ws.readyState === 1) {
       this.ws.send("CLOSE");
       this.ws.close(1000, "Client Initited Connection Termination");
@@ -156,28 +159,29 @@ export class Main extends React.Component<any, any> {
   getDataViaApi = () => {
     const uiStatusData = PicarroAPI.getRequest(
       `http://${apiLoc}/uistatus`
-    ).then(response => {
-      response.json().then(obj => {
+    ).then((response) => {
+      response.json().then((obj) => {
         this.setState(deepmerge(this.state, { uistatus: obj }));
       });
     });
-    const planData = PicarroAPI.getRequest(
-      `http://${apiLoc}/plan`
-    ).then(response => {
-      response.json().then(obj => {
-        this.setState(deepmerge(this.state, { plan: obj }));
+    const planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
+      (response) => {
+        response.json().then((obj) => {
+          this.setState(deepmerge(this.state, { plan: obj }));
+        });
+      }
+    );
+    const fileNames = PlanService.getFileNames().then((res) => {
+      res.json().then((obj) => {
+        this.setState(
+          deepmerge(this.state.fileNames, { fileNames: obj.plans })
+        );
       });
     });
-    const fileNames = PlanService.getFileNames().then(res => {
-      res.json().then(obj => {
-        this.setState(deepmerge(this.state.fileNames, {fileNames: obj["plans"]}))
-      })
-    })
     Promise.all([uiStatusData, planData, fileNames]).then(() => {
       this.setState(deepmerge(this.state, { initialized: true }));
     });
   };
-
 
   handleData(data: any) {
     const o = JSON.parse(data);
@@ -188,8 +192,6 @@ export class Main extends React.Component<any, any> {
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
-        // const fileNames = deepmerge(this.state.fileNames, o.plan.plan_files)
-        // this.setState({fileNames})
       }
     }
   }
@@ -199,19 +201,19 @@ export class Main extends React.Component<any, any> {
   };
 
   getPlanFileNames() {
-    PlanService.getFileNames().then((repsonse: any) => 
-    repsonse.json().then(planfiles => {
-      if (planfiles['plans']) {
-        this.setState({ fileNames: planfiles['plans'] });
-      } else {
-        console.log("There are no files")
-      }
-    })
-    )
+    PlanService.getFileNames().then((repsonse: any) =>
+      repsonse.json().then((planfiles) => {
+        if (planfiles.plans) {
+          this.setState({ fileNames: planfiles.plans });
+        } else {
+          console.log("There are no files");
+        }
+      })
+    );
   }
 
   isPlanning() {
-      this.setState({isPlanning: !this.state.isPlanning})
+    this.setState({ isPlanning: !this.state.isPlanning });
   }
 
   getPlanStorage = () => {
@@ -220,7 +222,7 @@ export class Main extends React.Component<any, any> {
       return sessionStorage.getItem(storageKey);
     }
     return null;
-  }
+  };
 
   setPlanStorage = (mainStorage: boolean) => {
     // set picarroStorage object in sessionStorage
@@ -231,46 +233,45 @@ export class Main extends React.Component<any, any> {
         this.clearPlanStorage();
       }
     }
-  }
+  };
 
   clearPlanStorage = () => {
     sessionStorage.removeItem(storageKey);
-  }
+  };
 
   getStateFromSavedData = () => {
     const savedData = this.getPlanStorage();
     if (savedData !== null) {
-      return (JSON.parse(savedData));
+      return JSON.parse(savedData);
     }
     return null;
-  }
+  };
 
   render() {
     return (
-        <div> 
-            {this.state.isPlanning ? (
-                <PlanLayout
-                    layoutSwitch={this.isPlanning}
-                    fileNames={this.state.fileNames}
-                    plan={this.state.plan}
-                    uistatus={this.state.uistatus}
-                    getPlanFileNames={this.getPlanFileNames}
-                    loadedFileName={this.state.plan.plan_filename}
-                />
-            ):(
-                <RunLayout
-                    layoutSwitch={this.isPlanning}
-                    fileNames={this.state.fileNames}
-                    plan={this.state.plan}
-                    uistatus={this.state.uistatus}
-                    ws_sender={this.ws_sender}
-                    loadedFileName={this.state.plan.plan_filename}
-                    getPlanFileNames={this.getPlanFileNames}
-                />
-            )}
-            <ToastContainer />
-
-        </div>
+      <div>
+        {this.state.isPlanning ? (
+          <PlanLayout
+            layoutSwitch={this.isPlanning}
+            fileNames={this.state.fileNames}
+            plan={this.state.plan}
+            uistatus={this.state.uistatus}
+            getPlanFileNames={this.getPlanFileNames}
+            loadedFileName={this.state.plan.plan_filename}
+          />
+        ) : (
+          <RunLayout
+            layoutSwitch={this.isPlanning}
+            fileNames={this.state.fileNames}
+            plan={this.state.plan}
+            uistatus={this.state.uistatus}
+            ws_sender={this.ws_sender}
+            loadedFileName={this.state.plan.plan_filename}
+            getPlanFileNames={this.getPlanFileNames}
+          />
+        )}
+        <ToastContainer />
+      </div>
     );
   }
 }

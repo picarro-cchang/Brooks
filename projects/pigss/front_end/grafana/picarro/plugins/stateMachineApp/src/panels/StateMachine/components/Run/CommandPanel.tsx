@@ -2,26 +2,26 @@ import React, { Component, PureComponent } from "react";
 import { CommandPanelOptions, Plan } from "./../types";
 
 interface State {
-  plan: Plan
+  plan: Plan;
 }
 class CommandPanel extends PureComponent<CommandPanelOptions, State> {
   constructor(props) {
-    super(props)
+    super(props);
     this.state = {
-      plan: this.props.plan
-    }
+      plan: this.props.plan,
+    };
   }
   classNameOpt = {
     DISABLED: "",
     READY: "btn-outline-success",
-    ACTIVE: "btn-green"
+    ACTIVE: "btn-green",
   };
 
   getDisabled = (element: string): boolean => {
     let disabled = true;
     const status_dict = this.props.uistatus as any;
     if (element in status_dict) {
-        disabled = status_dict[element] === "DISABLED";
+      disabled = status_dict[element] === "DISABLED";
     }
     return disabled;
   };
@@ -36,7 +36,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
   };
 
   render() {
-    // console.log("PLAN STEP ", this.props.plan.current_step)
     return (
       <div className="panel-command">
         <div style={{ width: "100%", marginTop: 20 }}>
@@ -46,12 +45,12 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
               display: "grid",
               gridTemplateColumns: "4rem 4rem 4rem 4rem 4rem 4rem",
               gridGap: 5,
-              padding: 20
+              padding: 20,
             }}
           >
             <button
               id={"standby"}
-              onClick={e => {
+              onClick={(e) => {
                 this.props.ws_sender({ element: "standby" });
               }}
               disabled={this.getDisabled("standby")}
@@ -65,7 +64,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"identify"}
-              onClick={e => this.props.ws_sender({ element: "identify" })}
+              onClick={(e) => this.props.ws_sender({ element: "identify" })}
               disabled={this.getDisabled("identify")}
               value="identify"
               className={
@@ -78,7 +77,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
 
             <button
               id={"edit-plan"}
-              onClick={e => {
+              onClick={(e) => {
                 this.props.layoutSwitch();
               }}
               disabled={this.getDisabled("plan")}
@@ -92,9 +91,9 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"load-plan"}
-              onClick={e => {
-                this.props.ws_sender({ element: "load" })
-                this.props.updatePanel(1)
+              onClick={(e) => {
+                this.props.ws_sender({ element: "load" });
+                this.props.updatePanel(1);
               }}
               disabled={this.getDisabled("load")}
               value="load"
@@ -107,7 +106,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"run-channel"}
-              onClick={e => this.props.ws_sender({ element: "run" })}
+              onClick={(e) => this.props.ws_sender({ element: "run" })}
               disabled={this.getDisabled("run")}
               value="run"
               className={
@@ -119,25 +118,31 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"run-plan"}
-              onClick={e => {
-                this.props.ws_sender({ element: "plan_run" })
-                this.props.setModalInfo(true, `<div>Run Plan ${this.props.plan.plan_filename} starting at Step ${this.props.plan.current_step}?</div>`, 3, {
-                  1: {
-                    caption: "Ok",
-                    className: "btn btn-success btn-large",
-                    response: {plan: this.props.plan}
+              onClick={(e) => {
+                this.props.ws_sender({ element: "plan_run" });
+                this.props.setModalInfo(
+                  true,
+                  `<div>Run Plan ${this.props.plan.plan_filename} starting at Step ${this.props.plan.current_step}?</div>`,
+                  3,
+                  {
+                    1: {
+                      caption: "Ok",
+                      className: "btn btn-success btn-large",
+                      response: { plan: this.props.plan },
+                    },
+                    2: {
+                      caption: "Start at Step 1",
+                      className: "btn btn-success btn-large",
+                      response: { step: 1, plan: this.props.plan },
+                    },
+                    3: {
+                      caption: "Cancel",
+                      className: "btn btn-danger btn-large",
+                      response: null,
+                    },
                   },
-                  2: {
-                    caption: "Start at Step 1",
-                    className: "btn btn-success btn-large",
-                    response: {step: 1, plan: this.props.plan}
-                  },
-                  3: {
-                    caption: "Cancel",
-                    className: "btn btn-danger btn-large",
-                    response: null
-                  }
-                }, 'loopPlan')
+                  "loopPlan"
+                );
               }}
               disabled={this.getDisabled("plan_run")}
               value="plan_run"
@@ -150,27 +155,33 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"loop-plan"}
-              onClick={e => {
-                const name = this.props.plan.plan_filename
-                const plan = this.props.plan.current_step
-                this.props.ws_sender({ element: "plan_loop" })
-                this.props.setModalInfo(true, `<div>Looping Plan ${name} starting at Step ${plan}?</div>`, 3, {
-                  1: {
-                    caption: "Ok",
-                    className: "btn btn-success btn-large",
-                    response: {plan: this.props.plan}
+              onClick={(e) => {
+                const name = this.props.plan.plan_filename;
+                const plan = this.props.plan.current_step;
+                this.props.ws_sender({ element: "plan_loop" });
+                this.props.setModalInfo(
+                  true,
+                  `<div>Looping Plan ${name} starting at Step ${plan}?</div>`,
+                  3,
+                  {
+                    1: {
+                      caption: "Ok",
+                      className: "btn btn-success btn-large",
+                      response: { plan: this.props.plan },
+                    },
+                    2: {
+                      caption: "Start at Step 1",
+                      className: "btn btn-success btn-large",
+                      response: { step: 1, plan: this.props.plan },
+                    },
+                    3: {
+                      caption: "Cancel",
+                      className: "btn btn-danger btn-large",
+                      response: null,
+                    },
                   },
-                  2: {
-                    caption: "Start at Step 1",
-                    className: "btn btn-success btn-large",
-                    response: {step: 1, plan: this.props.plan}
-                  },
-                  3: {
-                    caption: "Cancel",
-                    className: "btn btn-danger btn-large",
-                    response: null
-                  }
-                }, 'runPlan')
+                  "runPlan"
+                );
               }}
               disabled={this.getDisabled("plan_loop")}
               value="plan_loop"
@@ -183,7 +194,7 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
             </button>
             <button
               id={"reference"}
-              onClick={e => this.props.ws_sender({ element: "reference" })}
+              onClick={(e) => this.props.ws_sender({ element: "reference" })}
               disabled={this.getDisabled("reference")}
               value="reference"
               className={
@@ -197,9 +208,10 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
               id={"edit-labels"}
               value="edit"
               className={"btn btn-large btn-edit btn-danger"}
-              onClick={e => {
-                this.props.ws_sender({element: "edit"})
-                this.props.updatePanel(2)}}
+              onClick={(e) => {
+                this.props.ws_sender({ element: "edit" });
+                this.props.updatePanel(2);
+              }}
               disabled={this.getDisabled("edit")}
             >
               Edit Labels

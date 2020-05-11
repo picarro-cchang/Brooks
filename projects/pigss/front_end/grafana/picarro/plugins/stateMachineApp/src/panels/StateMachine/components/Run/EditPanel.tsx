@@ -4,21 +4,21 @@ import { EditPanelOptions, Plan } from "../types";
 import EditForm from "./EditForm";
 
 interface State {
-  initialized: boolean,
-  modal_info: {},
-  uistatus: {},
+  initialized: boolean;
+  modal_info: {};
+  uistatus: {};
   plan: {
     bank_names: {
       [key: string]: {
-        name: string,
+        name: string;
         channels: {
-          [key: number]: string
-        }
-      }
-    }
-  },
-  show: boolean,
-  prevState: {}
+          [key: number]: string;
+        };
+      };
+    };
+  };
+  show: boolean;
+  prevState: {};
 }
 
 class EditPanel extends PureComponent<EditPanelOptions, State> {
@@ -30,11 +30,11 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
         show: false,
         html: "",
         num_buttons: 0,
-        buttons: {}
+        buttons: {},
       },
       uistatus: {},
       plan: {
-        bank_names: this.props.plan.bank_names
+        bank_names: this.props.plan.bank_names,
       },
       show: false,
       prevState: {
@@ -49,8 +49,8 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
               5: "",
               6: "",
               7: "",
-              8: ""
-            }
+              8: "",
+            },
           },
           2: {
             name: "",
@@ -62,8 +62,8 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
               5: "",
               6: "",
               7: "",
-              8: ""
-            }
+              8: "",
+            },
           },
           3: {
             name: "",
@@ -75,8 +75,8 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
               5: "",
               6: "",
               7: "",
-              8: ""
-            }
+              8: "",
+            },
           },
           4: {
             name: "",
@@ -88,17 +88,15 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
               5: "",
               6: "",
               7: "",
-              8: ""
-            }
-          }
-        }
-      }
+              8: "",
+            },
+          },
+        },
+      },
     };
     this.handleBankChange = this.handleBankChange.bind(this);
     this.handleChannelNameChange = this.handleChannelNameChange.bind(this);
   }
-
-  
 
   banks: any;
   bank_list: any;
@@ -107,7 +105,7 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
     // Store bank values in previous state
     this.setState({
       ...this.state,
-      prevState: this.props.plan.bank_names
+      prevState: this.props.plan.bank_names,
     });
   };
 
@@ -120,10 +118,10 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
           ...this.state.plan.bank_names,
           [num]: {
             ...this.state.plan.bank_names[num],
-            name: value
-          }
-        }
-      }
+            name: value,
+          },
+        },
+      },
     });
   };
 
@@ -138,39 +136,32 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
             ...this.state.plan.bank_names[num],
             channels: {
               ...this.state.plan.bank_names[num].channels,
-              [num2]: value
-            }
-          }
-        }
-      }
+              [num2]: value,
+            },
+          },
+        },
+      },
     });
   }
 
-  validateForm = bank_list => {
+  validateForm = (bank_list) => {
     let bankValue;
     for (const key in bank_list) {
       const bankNum = bank_list[key];
       bankValue = this.state.plan.bank_names[bankNum].name;
-      // if (bankValue.length < 1) {
-      //   return false;
-      // } else if (bankValue.replace(/\s/g, "").length < 1) {
-      //   return false;
-      // } else {
-        for (let i = 1; i < 9; i++) {
-          const chanValue = this.state.plan.bank_names[bankNum].channels[i];
-          if (chanValue.length < 1) {
-            return false;
-          } else if (chanValue.replace(/\s/g, "").length < 1) {
-            return false;
-          }
+      for (let i = 1; i < 9; i++) {
+        const chanValue = this.state.plan.bank_names[bankNum].channels[i];
+        if (chanValue.length < 1) {
+          return false;
+        } else if (chanValue.replace(/\s/g, "").length < 1) {
+          return false;
         }
       }
-    // }
+    }
     return true;
   };
 
-  handleSubmit = event => {
-    console.log("HELLO")
+  handleSubmit = (event) => {
     event.preventDefault();
     this.bank_list = [];
     this.banks = this.props.uistatus.bank;
@@ -194,8 +185,8 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
         1: { name: this.state.plan.bank_names[1].name, channels: channels1 },
         2: { name: this.state.plan.bank_names[2].name, channels: channels2 },
         3: { name: this.state.plan.bank_names[3].name, channels: channels3 },
-        4: { name: this.state.plan.bank_names[4].name, channels: channels4 }
-      }
+        4: { name: this.state.plan.bank_names[4].name, channels: channels4 },
+      },
     });
     this.props.updatePanel(0);
   };
@@ -210,11 +201,11 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
       ...this.state,
       plan: {
         ...this.state.plan,
-        bank_names: this.state.prevState
-      }
+        bank_names: this.state.prevState,
+      },
     });
     this.props.ws_sender({ element: "edit_cancel" });
-    this.props.updatePanel(0)
+    this.props.updatePanel(0);
   };
 
   render() {

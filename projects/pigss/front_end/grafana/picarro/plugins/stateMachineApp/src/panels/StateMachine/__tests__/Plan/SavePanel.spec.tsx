@@ -27,7 +27,6 @@ const defaultProps: PlanSavePanelOptions = {
   updatePanel: mockUpdatePanel,
   fileNames: ["Test"],
   deleteFile: mockDeleteFile,
-  getStateFromSavedData: mockGetStateFromSavedData,
   setModalInfo: mockSetModalInfo
 };
 

@@ -1,10 +1,7 @@
 import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { PlanPanelOptions, PlanStep, Plan } from "../types";
-import { PlanService } from "../../api/PlanService";
-import fs from "fs";
-import Modal from 'react-responsive-modal';
-
+import Modal from "react-responsive-modal";
 
 export interface State {
   refVisible: boolean;
@@ -14,16 +11,12 @@ export interface State {
   fileName: string;
   fileNames: string[];
   modal_info: {
-    show: boolean,
-    html: string,
-    num_buttons: number, 
-    buttons: {},
-    action: string
+    show: boolean;
+    html: string;
+    num_buttons: number;
+    buttons: {};
+    action: string;
   };
-}
-
-interface planStorage {
-  planState: Plan;
 }
 
 class PlanPanel extends Component<PlanPanelOptions, State> {
@@ -41,7 +34,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         html: "",
         num_buttons: 0,
         buttons: {},
-        action: ""
+        action: "",
       },
     };
     this.addToPlan = this.addToPlan.bind(this);
@@ -54,115 +47,127 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     this.setModalInfo = this.setModalInfo.bind(this);
   }
 
-  validation(plan: Plan, checkAvailable=true) {
+  validation(plan: Plan, checkAvailable = true) {
     if (plan.last_step <= 0) {
       this.props.setModalInfo(
-        true, 
+        true,
         `<h4 style='color:black'>Plan is Empty</h4>`,
         0,
         {},
-        "misc")
-      return false
+        "misc"
+      );
+      return false;
     }
     if (plan.current_step > plan.last_step || plan.current_step < 1) {
       this.props.setModalInfo(
-        true, 
+        true,
         `<h4 style='color:black'>Plan Step must be between 1 and ${plan.last_step}</h4>`,
         0,
         {},
-        "misc")
-      return false
+        "misc"
+      );
+      return false;
     }
     const minDuration = 20;
     const all_banks = this.getAvailableBanks();
     for (let i = 0; i < plan.last_step; i++) {
-      let row = i + 1;
-      let s = plan.steps[row]
+      const row = i + 1;
+      const s = plan.steps[row];
       if (!("duration" in s) || !("reference" in s) || !("banks" in s)) {
         this.props.setModalInfo(
-          true, 
+          true,
           `<h4 style='color:black'>Malformed Data.</h4>`,
           0,
           {},
-          "misc")
-        return false
+          "misc"
+        );
+        return false;
       }
       if (s.duration <= 0 || s.duration < minDuration) {
         this.props.setModalInfo(
-          true, 
+          true,
           `<h4 style='color:black'>Invalid Duration at step ${row}. Duration must be greater then ${minDuration}</h4>`,
           0,
           {},
-          "misc")
-        return false
+          "misc"
+        );
+        return false;
       }
-      for(let bank in s.banks) {
-        if (!(all_banks.includes(Number(bank)))) {
+      for (const bank in s.banks) {
+        if (!all_banks.includes(Number(bank))) {
           this.props.setModalInfo(
-            true, 
+            true,
             `<h4 style='color:black'>Invalid Bank at Step ${row}</h4>`,
             0,
             {},
-            "misc")
-          return false
+            "misc"
+          );
+          return false;
         }
-        let bank_config = s.banks[bank];
+        const bank_config = s.banks[bank];
         if (!("chan_mask" in bank_config) || !("clean" in bank_config)) {
           this.props.setModalInfo(
-            true, 
+            true,
             `<h4 style='color:black'>Invalid Data for Bank ${bank} in step ${row}</h4>`,
             0,
             {},
-            "misc")
-          return false
+            "misc"
+          );
+          return false;
         }
         if (bank_config.chan_mask < 0 || bank_config.chan_mask > 256) {
           this.props.setModalInfo(
-            true, 
+            true,
             `<h4 style='color:black'>Invalid Channel Selection for Bank ${bank} in Step ${row}</h4>`,
             0,
             {},
-            "misc")
-          return false
+            "misc"
+          );
+          return false;
         }
         if (checkAvailable) {
-            const mask = bank_config.chan_mask;
-            if (mask != 0) {
-              const channel = (mask & -mask).toString(2).length;
-              const channelBtn = this.props.uistatus.channel[bank][channel]
-              if (channelBtn == "DISABLED") {
-                this.props.setModalInfo(
-                true, 
+          const mask = bank_config.chan_mask;
+          if (mask != 0) {
+            const channel = (mask & -mask).toString(2).length;
+            const channelBtn = this.props.uistatus.channel[bank][channel];
+            if (channelBtn == "DISABLED") {
+              this.props.setModalInfo(
+                true,
                 `<h4 style='color:black'>Unavailable Port at Step ${row}</h4>`,
                 0,
                 {},
-                "misc")
-                return false
-              }
-              
+                "misc"
+              );
+              return false;
             }
+          }
         }
       }
     }
-    return true
+    return true;
   }
 
-  setModalInfo(show: boolean, html: string, num_buttons: number, buttons: {}, action) {
+  setModalInfo(
+    show: boolean,
+    html: string,
+    num_buttons: number,
+    buttons: {},
+    action
+  ) {
     const modal = {
-      show: show, 
-      html: html,
-      num_buttons: num_buttons,
-      buttons: buttons,
-      action: action
-    }
-    this.setState({modal_info: modal})
+      show,
+      html,
+      num_buttons,
+      buttons,
+      action,
+    };
+    this.setState({ modal_info: modal });
   }
-
 
   shouldComponentUpdate(nextProps) {
     if (this.props.bankAddition !== nextProps.bankAddition) {
       this.setState({
-        bankAdditionClicked: nextProps.bankAddition
+        bankAdditionClicked: nextProps.bankAddition,
       });
       if (nextProps.bankAddition.bank != undefined) {
         const bank = nextProps.bankAddition.bank;
@@ -180,71 +185,76 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   isSaveDisabled() {
-    if(this.state.plan.focus.row > this.state.plan.last_step) {
-      return true
+    if (this.state.plan.focus.row > this.state.plan.last_step) {
+      return true;
     } else if (!this.props.isEdited) {
-      return true
+      return true;
     } else if (this.state.plan.plan_filename == "") {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
 
   overwriteFile() {
-    const valid = this.validation(this.state.plan, true)
-    console.log("VALID ", valid)
+    const valid = this.validation(this.state.plan, true);
     if (valid) {
-      this.props.setModalInfo(true, `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`, 2, {
-      1: {
-        caption: "Save",
-        className: "btn btn-success btn-large",
-        response: {plan: this.state.plan}
-      },
-      2: {
-        caption: "Cancel",
-        className: "btn btn-danger btn-large",
-        response: null
-      }
-      }, 'saveOverwrite')
+      this.props.setModalInfo(
+        true,
+        `<div>Save file as ${this.state.fileName}? This will overwrite the file.</div>`,
+        2,
+        {
+          1: {
+            caption: "Save",
+            className: "btn btn-success btn-large",
+            response: { plan: this.state.plan },
+          },
+          2: {
+            caption: "Cancel",
+            className: "btn btn-danger btn-large",
+            response: null,
+          },
+        },
+        "saveOverwrite"
+      );
     }
   }
 
   clearPlan() {
     this.props.updateFileName(true);
-    let plan = {...this.state.plan};
+    const plan = { ...this.state.plan };
     plan.steps = {};
     plan.current_step = 1;
     plan.focus = {
-      row: 1, 
-      column: 1
-    }
+      row: 1,
+      column: 1,
+    };
     plan.last_step = 0;
-    this.setState({plan})
+    this.setState({ plan });
   }
 
   deleteRow() {
     let row = this.state.plan.focus.row;
     let col = this.state.plan.focus.column;
-    let num_steps = this.state.plan.last_step;
+    const num_steps = this.state.plan.last_step;
     const plan = { ...this.state.plan };
     if (num_steps > 0 && row <= num_steps) {
-      for(let r = row; r< this.state.plan.last_step; r += 1) {
-        let s = this.state.plan.steps[r + 1];
+      for (let r = row; r < this.state.plan.last_step; r += 1) {
+        const s = this.state.plan.steps[r + 1];
         plan.steps[r] = s;
       }
       plan.last_step = num_steps - 1;
       if (row == 1) {
-        col = 1
+        col = 1;
       } else {
-        row = row - 1
+        row = row - 1;
       }
       plan.focus = {
         row,
-        column: col
-      }
+        column: col,
+      };
       this.setState({ plan });
     }
-    this.props.updateFileName(true)
+    this.props.updateFileName(true);
   }
 
   getAvailableBanks() {
@@ -266,7 +276,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     let duration;
     if (row >= this.state.plan.max_steps && col == 2) {
       // error
-      console.log("Max Number of Steps Reached!")
+      console.log("Max Number of Steps Reached!");
     }
     if (col == 2) {
       row += 1;
@@ -280,7 +290,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     const bank_step = {
       banks: bank_config,
       reference,
-      duration
+      duration,
     };
 
     const plan = { ...this.state.plan };
@@ -291,7 +301,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     }
     plan.focus = {
       row,
-      column: 2
+      column: 2,
     };
     this.setState({ plan });
   }
@@ -301,14 +311,14 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     if (row <= this.state.plan.last_step || row == this.state.plan.last_step) {
       plan.focus = {
         row,
-        column
+        column,
       };
       this.setState({ plan });
     }
   }
 
   updateDuration(row: number, duration) {
-    duration = duration.replace(/\D/g,'');
+    duration = duration.replace(/\D/g, "");
     this.props.updateFileName(true);
     const plan = { ...this.state.plan };
     plan.steps[row].duration = Number(duration);
@@ -341,16 +351,16 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
       plan.steps[row] = {
         banks: bank_config,
         reference: 0,
-        duration: 0
+        duration: 0,
       };
       plan.last_step = num_steps + 1;
     }
     plan.focus = {
       row,
-      column: col
+      column: col,
     };
     this.setState({ plan });
-    this.props.updateFileName(true)
+    this.props.updateFileName(true);
   }
 
   changeChannelstoProperFormat(bank, channel, row) {
@@ -373,20 +383,24 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   }
 
   exitPlanPanel() {
-    this.props.setModalInfo(true, `<h4 style='color: black'/>Are you sure you want to leave? Any unsaved changes will be lost.</h4>`, 2,
-    {
-      1: {
-        caption: "Continue",
-        className: "btn btn-success btn-large",
-        response: 'exit'
+    this.props.setModalInfo(
+      true,
+      `<h4 style='color: black'/>Are you sure you want to leave? Any unsaved changes will be lost.</h4>`,
+      2,
+      {
+        1: {
+          caption: "Continue",
+          className: "btn btn-success btn-large",
+          response: "exit",
+        },
+        2: {
+          caption: "Cancel",
+          className: "btn btn-danger btn-large",
+          response: null,
+        },
       },
-      2: {
-        caption: "Cancel",
-        className: "btn btn-danger btn-large",
-        response: null
-      }
-    }, 'exitPlan')
-    
+      "exitPlan"
+    );
   }
 
   focusComponent: any = null;
@@ -425,16 +439,15 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
               portString = `Clean ${bank_name}`;
               break;
             } else if (bank_config.chan_mask != 0) {
-
               const mask = bank_config.chan_mask;
               // Find index of first set bit using bit-twiddling hack
               const channel = (mask & -mask).toString(2).length;
               const ch_name = this.state.plan.bank_names[bank].channels[
                 channel
               ];
-              let bankNum = Number(bank)
-              let portNumber = (bankNum - 1)*8 + channel
-              portString =  portNumber+ ": " + ch_name;
+              const bankNum = Number(bank);
+              const portNumber = (bankNum - 1) * 8 + channel;
+              portString = portNumber + ": " + ch_name;
               break;
             }
           }
@@ -444,8 +457,6 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         durationString = `${planRow.duration}`;
       }
     }
-
-    
 
     return (
       <div className="gf-form-inline" key={row}>
@@ -463,7 +474,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
               marginLeft: "-7px",
               marginRight: "7px",
               fontSize: "17px",
-              marginTop: "5px"
+              marginTop: "5px",
             }}
           >
             {row + ". "}
@@ -471,7 +482,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         )}
         <div className="col-sm-6 col-bank-name">
           <input
-            ref={input =>
+            ref={(input) =>
               input &&
               this.state.plan.focus.row === row &&
               this.state.plan.focus.column === 1 &&
@@ -480,11 +491,11 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             type="text"
             className="form-control plan-input panel-plan-text"
             id={"plan-port-" + row}
-            onFocus={e => {
+            onFocus={(e) => {
               // this.changeChannelstoProperFormat(bank, channel, row);
               this.updateFocus(row, 1);
             }}
-            onChange={e => {
+            onChange={(e) => {
               this.props.updateFileName(true);
             }}
             style={{ maxWidth: "90%", float: "left", marginLeft: "2px" }}
@@ -494,17 +505,17 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
         </div>
         <div className="col-sm-3" style={{ paddingLeft: "0px" }}>
           <input
-            ref={input =>
+            ref={(input) =>
               input &&
               this.state.plan.focus.row === row &&
               this.state.plan.focus.column === 2 &&
               this.manageFocus(input)
             }
-            onChange={e => {
+            onChange={(e) => {
               this.props.updateFileName(true);
               this.updateDuration(row, e.target.value);
             }}
-            onFocus={e => {
+            onFocus={(e) => {
               this.updateFocus(row, 2);
             }}
             maxLength={8}
@@ -528,7 +539,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
             type="radio"
             id={"plan-row-" + row}
             checked={row == this.state.plan.current_step}
-            onChange={e => this.updateCurrentStep(row)}
+            onChange={(e) => this.updateCurrentStep(row)}
             style={{ maxWidth: "100%" }}
           />
           <span className="checkmark"></span>
@@ -541,24 +552,23 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     <div key={key}>{this.makePlanRow(index + 1)}</div>
   );
 
-
   render() {
-    const file_name = this.state.plan.plan_filename; ///TROWS ERROR cannot read property plan_filename of null, which means this.state.plan is null 
-    const modalButtons =[]
+    const file_name = this.state.plan.plan_filename;
+    const modalButtons = [];
     switch (this.state.modal_info.action) {
-      case 'clearPlan':
+      case "clearPlan":
         for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
           const modal_info = this.state.modal_info;
-          const response = modal_info.buttons[i].response
-          if (response != null ) {
+          const response = modal_info.buttons[i].response;
+          if (response != null) {
             modalButtons.push(
               <button
-              key={i}
+                key={i}
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  this.clearPlan()
-                  this.setModalInfo(false, "", 0, {}, "")
+                  this.clearPlan();
+                  this.setModalInfo(false, "", 0, {}, "");
                 }}
               >
                 {modal_info.buttons[i].caption}
@@ -571,7 +581,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  this.setModalInfo(false, "", 0, {}, "")
+                  this.setModalInfo(false, "", 0, {}, "");
                 }}
               >
                 {modal_info.buttons[i].caption}
@@ -580,7 +590,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           }
         }
         break;
-      }
+    }
     return (
       <div>
         <div className="panel-plan">
@@ -588,7 +598,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           <span
             className="cancel panel-plan-text"
             id="cancel-x"
-            onClick={e => {
+            onClick={(e) => {
               if (this.props.isEdited) {
                 this.exitPlanPanel();
               } else {
@@ -630,7 +640,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   disabled={
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
-                  onClick={e => {
+                  onClick={(e) => {
                     this.insertRow();
                     this.props.updateFileName(true);
                   }}
@@ -646,7 +656,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   disabled={
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
-                  onClick={e => {
+                  onClick={(e) => {
                     this.saveFile();
                   }}
                   className={"btn btn-block btn-light btn-group"}
@@ -659,7 +669,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                 <button
                   type="button"
                   id="load-btn"
-                  onClick={e => this.props.updatePanel(1)}
+                  onClick={(e) => this.props.updatePanel(1)}
                   className={"btn btn-block btn-light btn-group"}
                 >
                   Load
@@ -674,7 +684,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   disabled={
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
-                  onClick={e => {
+                  onClick={(e) => {
                     this.props.updateFileName(true);
                     this.deleteRow();
                   }}
@@ -690,19 +700,25 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   disabled={
                     this.state.plan.focus.row > this.state.plan.last_step
                   }
-                  onClick={e => {
-                    this.setModalInfo(true, `<div>Are you sure you want to clear plan?</div>`, 2, {
-                      1: {
-                        caption: "Ok",
-                        className: "btn btn-success btn-large",
-                        response: "clear"
+                  onClick={(e) => {
+                    this.setModalInfo(
+                      true,
+                      `<div>Are you sure you want to clear plan?</div>`,
+                      2,
+                      {
+                        1: {
+                          caption: "Ok",
+                          className: "btn btn-success btn-large",
+                          response: "clear",
+                        },
+                        2: {
+                          caption: "Cancel",
+                          className: "btn btn-danger btn-large",
+                          response: null,
+                        },
                       },
-                      2: {
-                        caption: "Cancel",
-                        className: "btn btn-danger btn-large",
-                        response: null
-                      }
-                      }, 'clearPlan')
+                      "clearPlan"
+                    );
                   }}
                   className={"btn btn-block btn-cancel btn-group"}
                 >
@@ -715,9 +731,8 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
                   type="button"
                   id="ok-btn"
                   disabled={this.isSaveDisabled()}
-                  onClick={e => {
+                  onClick={(e) => {
                     this.overwriteFile();
-                    
                   }}
                   className={"btn btn-block btn-green btn-group"}
                 >
@@ -731,8 +746,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           styles={{ overlay: { color: "black" } }}
           open={this.state.modal_info.show}
           onClose={() => {
-            this.setModalInfo(false, "", 0, {}, "")
-            // this.ws_sender({ element: "modal_close" })
+            this.setModalInfo(false, "", 0, {}, "");
           }}
           center
         >

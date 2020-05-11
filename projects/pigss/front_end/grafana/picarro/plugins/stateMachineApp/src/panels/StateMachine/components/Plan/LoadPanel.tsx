@@ -1,7 +1,6 @@
 import React, { Component, ReactText } from "react";
 import ReactList from "react-list";
 import { LoadPanelOptions, Plan } from "../types";
-import { throws } from "assert";
 
 interface State {
   plan: Plan;
@@ -15,38 +14,37 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
     this.state = {
       plan: this.props.plan,
       fileNames: this.props.fileNames,
-      loadedFileName: this.props.loadedFileName
+      loadedFileName: this.props.loadedFileName,
     };
   }
 
   shouldComponentUpdate(nextProps) {
     if (this.props.fileNames !== nextProps.fileNames) {
       this.setState({
-        fileNames: nextProps.fileNames
+        fileNames: nextProps.fileNames,
       });
     } else if (this.props.loadedFileName !== nextProps.loadedFileName) {
-      this.setState({loadedFileName: nextProps.loadedFileName})
+      this.setState({ loadedFileName: nextProps.loadedFileName });
     }
     return true;
   }
 
   isDisabled(file: string) {
     if (file == this.props.loadedFileName) {
-      return true
+      return true;
     }
-    return false
+    return false;
   }
-
 
   renderItem = (index: number, key: ReactText) => (
     <div className="container" style={{ paddingTop: "5px" }} key={key}>
       <div className="btn-group d-flex" style={{ marginLeft: "0px" }}>
         <button
           type="button"
-          id={"plan-filename-"+ (index + 1)}
+          id={"plan-filename-" + (index + 1)}
           className="btn w-100 btn-small"
           disabled={this.isDisabled(this.state.fileNames[index])}
-          onClick={e => {
+          onClick={(e) => {
             this.props.updateFileName(false);
             this.props.getPlanFromFileName(this.state.fileNames[index]);
           }}
@@ -58,8 +56,7 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
           type="button"
           className="btn btn-danger btn-small"
           disabled={this.isDisabled(this.state.fileNames[index])}
-          onClick={e => {
-            console.log("DELETED")
+          onClick={(e) => {
             this.props.deleteFile(this.state.fileNames[index]);
           }}
         >
@@ -70,10 +67,7 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
   );
 
   render() {
-    // console.log("FILENAME ", this.props.loadedFileName)
-    // console.log("FILES ", this.state.fileNames)
-    let length = this.state.fileNames.length
-    // console.log("LENGTH ", length)
+    const length = this.state.fileNames.length;
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>
@@ -92,7 +86,7 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
               <button
                 id={"cancel"}
                 type="button"
-                onClick={e => this.props.updatePanel(0)}
+                onClick={(e) => this.props.updatePanel(0)}
                 className={"btn btn-group-2 btn-cancel"}
               >
                 Cancel
