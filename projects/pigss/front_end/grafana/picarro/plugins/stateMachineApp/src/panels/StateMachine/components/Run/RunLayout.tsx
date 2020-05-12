@@ -9,8 +9,9 @@ import { PlanService } from "../../api/PlanService";
 import Modal from "react-responsive-modal";
 
 interface State {
+  plan_id: String,
   plan: Plan;
-  fileNames: string[];
+  fileNames: {[key: number]: string};
   panel_to_show: number;
   loadedPlanFilename: string;
   modal_info: {
@@ -27,6 +28,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   constructor(props) {
     super(props);
     this.state = {
+      plan_id: "",
       plan: this.props.plan,
       fileNames: this.props.fileNames,
       panel_to_show: 0,
@@ -104,6 +106,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
         } else {
           this.setState({ plan: data.details });
           this.setState({
+            plan_id: data.rowid,
             loadedPlanFilename: filename,
             panel_to_show: 3,
           });
@@ -112,8 +115,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     );
   }
 
-  deleteFile(fileName) {
-    PlanService.deleteFile(fileName).then((response: any) =>
+  deleteFile(fileId) {
+    PlanService.deleteFile(fileId).then((response: any) =>
       response.json().then((data) => {
         if (data.message) {
           this.setModalInfo(
@@ -154,6 +157,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             updatePanel={this.updatePanelToShow}
             layoutSwitch={this.props.layoutSwitch}
             setModalInfo={this.setModalInfo}
+            planID={this.state.plan_id}
             loadedFileName={this.state.loadedFileName}
           />
         );
@@ -168,6 +172,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             cancelLoadPlan={this.cancelLoadPlan}
             deleteFile={this.deleteFile}
             getPlanFromFileName={this.getPlanFromFileName}
+            planID={this.state.plan_id}
             loadedFileName={this.state.loadedFileName}
           />
         );
@@ -178,6 +183,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.props.plan}
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
+            planID={this.state.plan_id}
             updatePanel={this.updatePanelToShow}
           />
         );
@@ -191,6 +197,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             fileNames={this.state.fileNames}
             cancelLoadPlan={this.cancelLoadPlan}
             setModalInfo={this.setModalInfo}
+            planID={this.state.plan_id}
             loadedFileName={this.state.loadedFileName}
           />
         );
@@ -208,6 +215,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
                 key={i}
                 uistatus={this.props.uistatus}
                 ws_sender={this.props.ws_sender}
+                planID={this.state.plan_id}
               />
             </div>
           );

@@ -5,7 +5,7 @@ import { stringToJsRegex } from "@grafana/data";
 
 interface State {
   plan: Plan;
-  fileNames: any[];
+  fileNames: {};
 }
 class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
   constructor(props) {

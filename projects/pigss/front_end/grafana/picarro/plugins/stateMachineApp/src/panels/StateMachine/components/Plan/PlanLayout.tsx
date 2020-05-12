@@ -10,7 +10,7 @@ import Modal from "react-responsive-modal";
 interface State {
   isPlanPanel: boolean;
   plan: Plan;
-  fileNames: string[];
+  fileNames: {[key: number]: string};
   panel_to_show: number;
   fileName: string;
   bankAdd: {};
@@ -23,6 +23,7 @@ interface State {
     action: string;
   };
   loadedFileName: string;
+  plan_id: String;
 }
 
 export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
@@ -95,6 +96,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
           },
         },
       },
+      plan_id: "",
       fileNames: this.props.fileNames,
       panel_to_show: 0,
       fileName: "",
@@ -179,8 +181,9 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     );
   }
 
-  planOverwrite(plan) {
+  planOverwrite(plan, plan_id) {
     const data = {
+      rowid: plan_id,
       name: plan.plan_filename,
       details: plan,
       user: "admin",
@@ -197,8 +200,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     );
   }
 
-  deleteFile(fileName) {
-    PlanService.deleteFile(fileName).then((response: any) =>
+  deleteFile(fileID) {
+    PlanService.deleteFile(fileID).then((response: any) =>
       response.json().then((data) => {
         if (data.message) {
           this.setModalInfo(
@@ -268,6 +271,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
             updatePanel={this.updatePanelToShow}
             layoutSwitch={this.props.layoutSwitch}
             planOverwrite={this.planOverwrite}
+            planID={this.state.plan_id}
             setModalInfo={this.setModalInfo}
             updateSavedFileState={this.updateSavedFileState}
           />
@@ -356,7 +360,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 className={modal_info.buttons[i].className}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  this.planOverwrite(response.plan);
+                  this.planOverwrite(response.plan, response.id);
                   this.setModalInfo(false, "", 0, {}, "");
                 }}
               >

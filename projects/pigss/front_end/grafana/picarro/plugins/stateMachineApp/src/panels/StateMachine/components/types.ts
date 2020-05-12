@@ -39,7 +39,7 @@ export interface PlanLayoutProps {
     // ws_sender: (o: object) => void;
     plan: Plan;
     layoutSwitch: () => void;
-    fileNames: any[]
+    fileNames: {}
     getPlanFileNames: () => void;
     loadedFileName: string;
 }
@@ -51,7 +51,7 @@ export interface RunLayoutProps {
     ws_sender: (o: object) => void;
     plan: Plan;
     layoutSwitch: () => void;
-    fileNames: any[]
+    fileNames: {}
     loadedFileName: string;
     getPlanFileNames: () => void;
 }
@@ -87,11 +87,12 @@ export interface LoadPanelCommandOptions {
     updatePanel: (x: number) => void;
     // loadPlan: (x: string) => void;
     // deleteFile: (x: string) => void;
-    fileNames: any[]
+    fileNames: {}
     cancelLoadPlan: () => void;
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string) => void;
     loadedFileName: string;
+    planID: String;
   }
 
   export interface PreviewPanelOptions {
@@ -100,10 +101,11 @@ export interface LoadPanelCommandOptions {
     updatePanel: (x: number) => void;
     // loadPlan: (x: string) => void;
     // deleteFile: (x: string) => void;
-    fileNames: any[]
+    fileNames: {}
     cancelLoadPlan: () => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     loadedFileName: string;
+    planID: String;
   }
 
 
@@ -113,7 +115,7 @@ export interface LoadPanelCommandOptions {
     isEdited: boolean;
     updateFileName: (x: boolean) => void;
     updatePanel: (x: number) => void;
-    fileNames: any[]
+    fileNames: {}
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string) => void;
     loadedFileName: string;
@@ -128,9 +130,10 @@ export interface PlanPanelOptions {
     fileName: string;
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
-    planOverwrite: (s: object) => void;
+    planOverwrite: (s: object, x: String) => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     updateSavedFileState: (plan: Plan) => void;
+    planID: String;
   }
 
   export interface PlanSavePanelOptions {
@@ -140,7 +143,7 @@ export interface PlanPanelOptions {
     updateFileName: (x: boolean) => void;
     planSaved: (f: string, d: object) => void;
     updatePanel: (x: number) => void;
-    fileNames: any[]
+    fileNames: {}
     deleteFile: (file: string) => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
   }
@@ -152,6 +155,7 @@ export interface PlanPanelOptions {
     ws_sender: (o: object) => void;
     plan: Plan;
     updatePanel: (x: number) => void;
+    planID: String;
   
   }
   export interface CommandPanelOptions {
@@ -164,4 +168,5 @@ export interface PlanPanelOptions {
     layoutSwitch: () => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     loadedFileName: string;
+    planID: String;
   }

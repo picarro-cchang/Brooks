@@ -96,7 +96,7 @@ export class Main extends React.Component<any, any> {
     isChanged: false,
     bankAdd: {},
     isLoaded: false,
-    fileNames: [],
+    fileNames: {},
     isPlanning: false,
     loadedFileName: "",
   };
@@ -173,6 +173,8 @@ export class Main extends React.Component<any, any> {
     );
     const fileNames = PlanService.getFileNames().then((res) => {
       res.json().then((obj) => {
+        //TODO: filenames: {[rowid]:filename}
+        console.log("FILE NAMES ", obj)
         this.setState(
           deepmerge(this.state.fileNames, { fileNames: obj.plans })
         );

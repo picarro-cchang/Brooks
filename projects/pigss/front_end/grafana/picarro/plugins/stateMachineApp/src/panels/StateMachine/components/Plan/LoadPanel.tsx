@@ -4,7 +4,7 @@ import { LoadPanelOptions, Plan } from "../types";
 
 interface State {
   plan: Plan;
-  fileNames: any[];
+  fileNames: {[key: number]: string};
   loadedFileName: string;
 }
 

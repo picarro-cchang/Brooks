@@ -96,7 +96,7 @@ class PlanService(ServiceTemplate):
         if "names" in query_dict and query_dict["names"][0] == "true":
             # Retrieve all plan names
             plan_names = self.model.read_plan_names()
-            
+            [(1, 'st'), (2,'34')]
             # If there is no active plan currently in the database.
             if not plan_names:
                 return web.json_response(data={
@@ -104,7 +104,7 @@ class PlanService(ServiceTemplate):
                 }, status=200)
 
             return web.json_response(data= {
-                "plans": [name[0] for name in plan_names] # Each row is a list containing name
+                "plans": dict(plan_names)# Each row is a list containing name
             }, status=200)
 
         elif "last_running" in query_dict and query_dict["last_running"][0] == "true":

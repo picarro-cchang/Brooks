@@ -4,6 +4,7 @@ import { PlanPanelOptions, PlanStep, Plan } from "../types";
 import Modal from "react-responsive-modal";
 
 export interface State {
+  plan_id: String;
   refVisible: boolean;
   plan: Plan;
   isLoaded: boolean;
@@ -23,6 +24,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
   constructor(props) {
     super(props);
     this.state = {
+      plan_id: this.props.planID,
       bankAdditionClicked: {},
       isLoaded: false,
       refVisible: true,
@@ -206,7 +208,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           1: {
             caption: "Save",
             className: "btn btn-success btn-large",
-            response: { plan: this.state.plan },
+            response: { plan: this.state.plan, id: this.state.plan_id},
           },
           2: {
             caption: "Cancel",

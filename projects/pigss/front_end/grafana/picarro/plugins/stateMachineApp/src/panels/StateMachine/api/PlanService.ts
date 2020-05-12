@@ -23,8 +23,8 @@ export const PlanService = (() => {
     saveFile: (data) => {
       return PlanServiceAPI.postData(url, data);
     },
-    deleteFile: (planName) => {
-      return PlanServiceAPI.deleteData(url+`?name=${planName}`);
+    deleteFile: (planID) => {
+      return PlanServiceAPI.deleteData(url+`?name=${planID}`);
     }
   };
 })();

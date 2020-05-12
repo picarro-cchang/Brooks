@@ -11,6 +11,7 @@ export interface BankPanelOptions {
   };
   ws_sender: (o: object) => void;
   plan: Plan;
+  planID: String;
 }
 
 class BankPanel extends PureComponent<BankPanelOptions> {
