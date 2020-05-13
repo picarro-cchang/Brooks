@@ -6,9 +6,10 @@ import "react-toastify/dist/ReactToastify.css";
 import { PlanService } from "../api/PlanService";
 import PlanLayout from "./Plan/PlanLayout";
 import { ToastContainer, toast } from "react-toastify";
+import Modal from "react-responsive-modal";
 
 import RunLayout from "./Run/RunLayout";
-import { Plan } from "./types";
+import { ModalInfo } from "./types";
 
 const REFRESH_INTERVAL = 5;
 const apiLoc = `${window.location.hostname}:8000/controller`;
@@ -164,6 +165,13 @@ export class Main extends React.Component<any, any> {
         this.setState(deepmerge(this.state, { uistatus: obj }));
       });
     });
+    const modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
+      response => {
+        response.json().then(obj => {
+          this.setState(deepmerge(this.state, { modal_info: obj }));
+        });
+      }
+    );
     const planData = PicarroAPI.getRequest(`http://${apiLoc}/plan`).then(
       (response) => {
         response.json().then((obj) => {
@@ -194,6 +202,9 @@ export class Main extends React.Component<any, any> {
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
+      } else if ("modal_info" in o) {
+        const modal_info = deepmerge(this.state.modal_info, o.modal_info);
+        this.setState({ modal_info });
       }
     }
   }
@@ -249,7 +260,25 @@ export class Main extends React.Component<any, any> {
     return null;
   };
 
-  render() {
+ 
+
+  render() { 
+    const modalButtons = [];
+  for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+    const modal_info = this.state.modal_info as ModalInfo;
+    modalButtons.push(
+      <button
+        className={modal_info.buttons[i].className}
+        style={{ margin: "10px" }}
+        onClick={() =>{
+          console.log(modal_info.buttons[i])
+          this.ws_sender({ element: modal_info.buttons[i].response })}
+        }
+      >
+        {modal_info.buttons[i].caption}
+      </button>
+    );
+  }
     return (
       <div>
         {this.state.isPlanning ? (
@@ -273,6 +302,22 @@ export class Main extends React.Component<any, any> {
           />
         )}
         <ToastContainer />
+        <Modal
+          styles={{ overlay: { color: "black" } }}
+          open={this.state.modal_info.show}
+          onClose={() => {
+            // this.setModalInfo(false, "", 0, {}, "");
+            this.ws_sender({ element: "modal_close" });
+          }}
+          center
+        >
+          <div style={{ margin: "20px" }}>
+            <div
+              dangerouslySetInnerHTML={{ __html: this.state.modal_info.html }}
+            ></div>
+          </div>
+          {modalButtons}
+        </Modal>
       </div>
     );
   }

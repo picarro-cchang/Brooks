@@ -74,6 +74,7 @@ class PigssController(Ahsm):
         self.status = {}
         self.all_banks = []
         self.plan_name = ""
+        self.plan_running_id = None
         self.last_running = ""
         self.last_running_details = {}
         self.plan = {
@@ -536,6 +537,7 @@ class PigssController(Ahsm):
 
     async def save_plan_to_default(self):
         data = {
+            "plan_id": self.plan_running_id,
             "name": self.plan["plan_filename"],
             "details": self.plan,
             "user": 'admin',
@@ -554,14 +556,21 @@ class PigssController(Ahsm):
         plans = json.loads(plans)
         if plans["plans"]:
             num = len(plans["plans"])
-            self.set_plan(["plan_files"], {i + 1: name for i, name in enumerate(plans["plans"])})
+            self.set_plan(["plan_files"], plans["plans"])
             self.set_plan(["num_plan_files"], num)
+        # if plans["plans"]:
+        #     num = len(plans["plans"])
+        #     self.set_plan(["plan_files"], {i + 1: name for i, name in enumerate(plans["plans"])})
+        #     self.set_plan(["num_plan_files"], num)
 
     async def get_last_running(self):
+        #TODO: SET DEFAULT
         async with aiohttp.ClientSession() as session: 
             last_run = await self.fetch(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?last_running=true')
             running_plan = json.loads(last_run)
             if running_plan["name"]:
+                print("+++++++++++LAST RUNNING ID ", running_plan["plan_id"])
+                self.plan_running_id = running_plan["plan_id"]
                 self.last_running = running_plan["name"]
                 self.last_running_details = json.loads(running_plan["details"])
                 self.plan = json.loads(running_plan["details"])
@@ -576,8 +585,9 @@ class PigssController(Ahsm):
             # data_json = json.dumps(data)
             # default = await self.post_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
 
-    async def set_is_running(self, name, plan_data, is_running):
+    async def set_is_running(self, plan_id, name, plan_data, is_running):
         data = {
+            "plan_id": plan_id,
             "name": name,
             "details": plan_data,
             "user": 'admin',
@@ -592,6 +602,7 @@ class PigssController(Ahsm):
     async def set_current_step(self):
         ##needs to save file with current step
         data = {
+            "plan_id": self.plan_running_id,
             "name": self.plan["plan_filename"],
             "details": self.plan,
             "user": 'admin',
@@ -607,12 +618,14 @@ class PigssController(Ahsm):
     async def load_new_plan(self, name):
         '''Checks last_running is not the same, if it is, fine, just less steps. Loads this new plan via API call, sets new plan is_running=1'''
         if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
-            await self.set_is_running(self.plan["plan_filename"], self.plan, 0)
+            print("DIFF PLAN ", self.plan_running_id)
+            await self.set_is_running(self.plan_running_id, self.plan["plan_filename"], self.plan, 0)
         async with aiohttp.ClientSession() as session:
             data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
         data_new = json.loads(data)
         #########TODO:Exceptions
-        await self.set_is_running(name, data_new["details"], 1)
+        print("++++++++++++++++++++++++++++> ", data_new)
+        await self.set_is_running(data_new["plan_id"], name, data_new["details"], 1)
         new_plan = data_new["details"]
         if not isinstance(new_plan, dict):
             raise ValueError("Plan should be a dictionary")
@@ -1469,6 +1482,7 @@ class PigssController(Ahsm):
         if sig == Signal.ENTRY:
             return self.handled(e)
         elif sig == Signal.FILENAME_OK:
+            self.plan_name = e.value["name"]
             return self.tran(self._load_preview1)
         elif sig == Signal.FILENAME_CANCEL:
             return self.tran(self._load1)
@@ -1478,6 +1492,28 @@ class PigssController(Ahsm):
     def _load_preview1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            msg = f"Load plan <b>{self.plan_name}</b> for running?"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Confirm Load Plan</h2><p>{msg}</p>",
+                    "num_buttons": 2,
+                    "buttons": {
+                        1: {
+                            "caption": "OK",
+                            "className": "btn btn-success btn-large",
+                            "response": "load_modal_ok"
+                        },
+                        2: {
+                            "caption": "Cancel",
+                            "className": "btn btn-danger btn-large",
+                            "response": "modal_close"
+                        }
+                    }
+                })
+            return self.handled(e)
+        elif sig == Signal.EXIT:
+            self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.LOAD_MODAL_OK:
             #TODO: Validate Plan from here?
@@ -1486,7 +1522,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_run"], UiStatus.READY)
             self.set_status(["plan_loop"], UiStatus.READY)
             # new_plan = e.value["plan"]
-            self.plan_name = e.value["name"]
+            # self.plan_name = e.value["name"]
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))   
             return self.tran(self._load_preview2)
             # else:
@@ -1649,6 +1685,30 @@ class PigssController(Ahsm):
     def _run_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
+                    "num_buttons": 3,
+                    "buttons": {
+                        1: {
+                            "caption": "OK",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_ok"
+                        },
+                        2: {
+                            "caption": "Start at Step 1",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_step_1"
+                        },
+                        3: {
+                            "caption": "Cancel",
+                            "className": "btn btn-danger btn-large",
+                            "response": "modal_close"
+                        }
+                    }
+                })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
@@ -1695,7 +1755,6 @@ class PigssController(Ahsm):
                 current_step -= last_step
                 self.set_plan(["current_step"], current_step)
                 # All steps done
-                #SET CURRENT_STEP
                 self.run_async(self.set_current_step())
                 return self.tran(self._operational)
             else:
@@ -1788,6 +1847,30 @@ class PigssController(Ahsm):
     def _loop_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+            self.set_modal_info(
+                [], {
+                    "show": True,
+                    "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
+                    "num_buttons": 3,
+                    "buttons": {
+                        1: {
+                            "caption": "OK",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_ok"
+                        },
+                        2: {
+                            "caption": "Start at Step 1",
+                            "className": "btn btn-success btn-large",
+                            "response": "modal_step_1"
+                        },
+                        3: {
+                            "caption": "Cancel",
+                            "className": "btn btn-danger btn-large",
+                            "response": "modal_close"
+                        }
+                    }
+                })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)

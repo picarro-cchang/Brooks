@@ -107,6 +107,10 @@ class PlanService(ServiceTemplate):
                 "plans": dict(plan_names)# Each row is a list containing name
             }, status=200)
 
+            # return web.json_response(data= {
+            #     "plans": {name for name in plan_names}# Each row is a list containing name
+            # }, status=200)
+
         elif "last_running" in query_dict and query_dict["last_running"][0] == "true":
             # Retrieve last running plan
             plan_id, name, details = self.model.read_last_running_plan()
@@ -173,6 +177,7 @@ class PlanService(ServiceTemplate):
                 plan_id, name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running,
                                                                 is_deleted, updated_name, is_unloading)
                 if name is not None and details is not None:
+                    print("UPDATING PLAN+++++++++++++")
                     return web.json_response(data={
                         "plan_id": plan_id,
                         "message": f"Plan {name} has been updated with new details.",
@@ -193,7 +198,7 @@ class PlanService(ServiceTemplate):
             is_running = plan_data.get("is_running", 0)
             is_unloading = 0
             try:
-                name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running, is_deleted, updated_name,  is_unloading)
+                plan_id, name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running, is_deleted, updated_name,  is_unloading)
                 if name is not None and details is not None:
                     return web.json_response(data={
                         "plan_id": plan_id,
@@ -239,7 +244,7 @@ class PlanService(ServiceTemplate):
             name = query_dict.get("name")[0]
             plan_id = int(query_dict.get("plan_id")[0])
             # TO DO: Get username from authentication token passed by front_end to avoid user imitation
-            modified_by = query_dict.get("user")[0]
+            modified_by = query_dict.get("user")[0] if query_dict.get("user") is not None else None
         except TypeError:
             return web.json_response(data={
                 "message": "Please make sure to provide a valid input."

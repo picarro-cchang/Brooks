@@ -81,6 +81,7 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
   );
 
   render() {
+    console.log(this.props.plan)
     return (
       <div className="panel-plan-preview">
         <h4>Plan: {this.props.plan.plan_filename}</h4>
@@ -118,28 +119,9 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
               onClick={(e) => {
                 this.props.ws_sender({
                   element: "filename_ok",
+                  name: this.state.plan.plan_filename
                 });
-                this.props.setModalInfo(
-                  true,
-                  `<div>Load File ${this.state.plan.plan_filename} for running?</div>`,
-                  2,
-                  {
-                    1: {
-                      caption: "Ok",
-                      className: "btn btn-success btn-large",
-                      response: {
-                        plan: this.state.plan,
-                        name: this.state.plan.plan_filename,
-                      },
-                    },
-                    2: {
-                      caption: "Cancel",
-                      className: "btn btn-danger btn-large",
-                      response: null,
-                    },
-                  },
-                  "loadPlan"
-                );
+                this.props.updatePanel(0)
               }}
             >
               Ok

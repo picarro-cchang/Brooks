@@ -29,7 +29,7 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
         "validation"
       );
       return false;
-    } else if (this.props.fileNames.includes(fileName)) {
+    } else if (fileName in this.props.fileNames) {
       this.props.setModalInfo(
         true,
         `<h4 style='color: black'>Plan Name Already Taken.</h4>`,
@@ -81,13 +81,13 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           className="btn btn-light w-100 btn-small"
           style={{ color: "black" }}
         >
-          {this.props.fileNames[index]}
+          {this.props.fileNames[Object.keys(this.props.fileNames)[index]]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
           onClick={(e) => {
-            this.props.deleteFile(this.props.fileNames[index]);
+            this.props.deleteFile(this.props.fileNames[Object.keys(this.props.fileNames)[index]], Number(Object.keys(this.props.fileNames)[index]));
           }}
         >
           X

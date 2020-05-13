@@ -39,23 +39,23 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
         <button
           type="button"
           className="btn w-100 btn-small"
-          disabled={this.isDisabled(this.props.fileNames[index])}
+          disabled={this.isDisabled(this.props.fileNames[Object.keys(this.props.fileNames)[index]])}
           onClick={(e) => {
             this.props.ws_sender({
               element: "load_filename",
             });
-            this.props.getPlanFromFileName(this.props.fileNames[index]);
+            this.props.getPlanFromFileName(this.props.fileNames[Object.keys(this.props.fileNames)[index]]);
           }}
           style={{ color: "black" }}
         >
-          {this.state.fileNames[index]}
+          {this.props.fileNames[Object.keys(this.props.fileNames)[index]]}
         </button>
         <button
           type="button"
           className="btn btn-danger btn-small"
-          disabled={this.isDisabled(this.props.fileNames[index])}
+          disabled={this.isDisabled(this.props.fileNames[Object.keys(this.props.fileNames)[index]])}
           onClick={(e) => {
-            this.props.deleteFile(this.props.fileNames[index]);
+            this.props.deleteFile(this.props.fileNames[Object.keys(this.props.fileNames)[index]], Number(Object.keys(this.props.fileNames)[index]));
           }}
         >
           X

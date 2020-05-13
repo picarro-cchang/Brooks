@@ -153,7 +153,6 @@ class PlanModel:
             read_query = ''' SELECT rowid, name FROM plans WHERE is_deleted != 1'''
             cur = self.db_connection.cursor()
             records = cur.execute(read_query).fetchall()
-            print("RECORDS ", records)
             return records
         except sqlite3.OperationalError:
             self.log.debug(format_exc())

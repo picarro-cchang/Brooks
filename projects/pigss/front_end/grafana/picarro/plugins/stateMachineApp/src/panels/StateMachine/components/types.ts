@@ -90,7 +90,7 @@ export interface LoadPanelCommandOptions {
     fileNames: {}
     cancelLoadPlan: () => void;
     getPlanFromFileName: (fileName: string) => void;
-    deleteFile: (file: string) => void;
+    deleteFile: (file: string, id: number) => void;
     loadedFileName: string;
     planID: String;
   }
@@ -117,7 +117,7 @@ export interface LoadPanelCommandOptions {
     updatePanel: (x: number) => void;
     fileNames: {}
     getPlanFromFileName: (fileName: string) => void;
-    deleteFile: (file: string) => void;
+    deleteFile: (file: string, id: number) => void;
     loadedFileName: string;
   }
 
@@ -144,8 +144,22 @@ export interface PlanPanelOptions {
     planSaved: (f: string, d: object) => void;
     updatePanel: (x: number) => void;
     fileNames: {}
-    deleteFile: (file: string) => void;
+    deleteFile: (file: string, id: number) => void;
     setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
+  }
+
+  export interface ButtonInfo {
+    caption: string;
+    className: string;
+    response: string;
+  }
+  
+
+  export interface ModalInfo {
+    show: boolean;
+    html: string;
+    num_buttons: number;
+    buttons: { [key: string]: ButtonInfo };
   }
 
   export interface EditPanelOptions {

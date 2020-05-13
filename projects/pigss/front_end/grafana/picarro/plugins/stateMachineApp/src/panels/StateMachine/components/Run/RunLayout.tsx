@@ -93,7 +93,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       response.json().then((data) => {
         console.log(
           `Getting Plan from Filename ${filename}! `,
-          data.details
+          data
         );
         if (data.message) {
           this.setModalInfo(
@@ -104,7 +104,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             "misc"
           );
         } else {
-          this.setState({ plan: data.details });
+          this.setState({ plan: data.details }, () => {console.log("DATA ", this.state.plan)});
           this.setState({
             plan_id: data.rowid,
             loadedPlanFilename: filename,
@@ -115,8 +115,8 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
     );
   }
 
-  deleteFile(fileId) {
-    PlanService.deleteFile(fileId).then((response: any) =>
+  deleteFile(fileName, fileId) {
+    PlanService.deleteFile(fileName, fileId).then((response: any) =>
       response.json().then((data) => {
         if (data.message) {
           this.setModalInfo(
@@ -417,11 +417,11 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             </div>
           </div>
         </div>
-        <Modal
+        {/* <Modal
           styles={{ overlay: { color: "black" } }}
           open={this.state.modal_info.show}
           onClose={() => {
-            this.setModalInfo(false, "", 0, {}, "");
+            // this.setModalInfo(false, "", 0, {}, "");
             this.props.ws_sender({ element: "modal_close" });
           }}
           center
@@ -432,7 +432,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             ></div>
           </div>
           {modalButtons}
-        </Modal>
+        </Modal> */}
       </div>
     );
   }

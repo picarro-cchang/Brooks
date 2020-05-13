@@ -200,8 +200,8 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
     );
   }
 
-  deleteFile(fileID) {
-    PlanService.deleteFile(fileID).then((response: any) =>
+  deleteFile(fileName, fileID) {
+    PlanService.deleteFile(fileName, fileID).then((response: any) =>
       response.json().then((data) => {
         if (data.message) {
           this.setModalInfo(
@@ -325,7 +325,9 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 id={"save"}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  this.planSaved(response.filename, this.state.plan);
+                  // console.log("STATE ", this.state.plan)
+                  // console.log("RESPONSE ", response.plan)
+                  this.planSaved(response.filename, response.plan);
                   this.updateFileName(false);
                   this.setModalInfo(false, "", 0, {}, "");
                 }}
