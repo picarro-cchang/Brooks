@@ -57,7 +57,6 @@ describe("<PlanSavePanel />", () => {
   });
 
   it("Delete", () => {
-    // const spy = jest.spyOn(SavePanel.prototype, 'deleteFile')
     const shal = mount(<SavePanel {...defaultProps}/>)
     const deleteFileName = shal.find("ReactList").find("button").at(1);    
     deleteFileName.simulate("click");
@@ -80,12 +79,10 @@ describe("<PlanSavePanel />", () => {
   it("Ok", () => {
     const ok = wrapper.find("button").at(1);
     ok.simulate("click");
-    // expect(mockUpdateFileName).toHaveBeenCalled();
     expect(savePlanFileName).toHaveBeenCalled();
   });
 
   it("onChange file name input", () => {
-    // wrapper.props().setModalInfo = jest.fn();
     const event = { target: { name: "input", value: "" } };
     const fileInput = wrapper.find("input");
     fileInput.simulate("change", event);
@@ -97,9 +94,6 @@ describe("<PlanSavePanel />", () => {
     fileInput.simulate("change", event2);
     expect(wrapper.state("fileName")).toBe("Test");
     savebtn.simulate("click");
-    // expect(wrapper.props().setModalInfo).toHaveBeenCalled();
   });
 
-  //FileName too short
-  //Filename already taken
 });

@@ -21,7 +21,6 @@ const defaultProps: PlanLayoutProps = {
   loadedFileName: "Test5"
 };
 
-// jest.mock("./../api/PicarroAPI.ts");
 jest.mock("./../../api/PlanService.ts")
 
 describe("<PlanLayout />", () => {

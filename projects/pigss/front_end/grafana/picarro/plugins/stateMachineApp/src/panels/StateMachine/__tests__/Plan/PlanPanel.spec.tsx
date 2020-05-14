@@ -13,7 +13,6 @@ import mockData from "./../../api/__mocks__/mockData.json"
 
 const mockUpdateFilename = jest.fn();
 const mockWSSender = jest.fn(element => {
-  // if plan, validate, else
   return element;
 });
 const mockUpdatePanel = jest.fn();
@@ -148,17 +147,13 @@ describe("<PlanPanel />", () => {
   });
 
   it("SaveAs Button", () => {
-    // needs validation
-    // shallowwrapper.setState({plan: mockPlanPanelData})
     const validation = validate(shallowwrapper.props().plan);
     expect(validation).toBe(true);
-    // const saveAs = jest.spyOn(shallowwrapper.instance() as PlanPanel, "saveFileAs")
     shallowwrapper.setProps({isEdited: true})
     const saveAsButton = shallowwrapper.find("button#ok-btn");
     saveAsButton.simulate("click");
     expect(overwriteFile).toHaveBeenCalled();
     expect(mockSetModalInfo).toHaveBeenCalled();
-    // expect(mockPlanSavedAs).toHaveBeenCalled();
   });
 
   it("Save Button", () => {
