@@ -14,6 +14,7 @@ const socketURL = `ws://${apiLoc}/ws`;
 
 const defaultProps: BankPanelOptions = {
   bank: 1,
+  planID: "",
   uistatus: {
     bank: { "1": "READY" },
     clean: { "1": "READY" },
@@ -100,6 +101,7 @@ describe("<BankPanel />", () => {
   it("Test Clean Button inactive", () => {
     const testProps: BankPanelOptions = {
       bank: 1,
+      planID: "",
       uistatus: {
         bank: { "1": "READY" },
         clean: { "1": "DISABLED" },
@@ -151,6 +153,7 @@ describe("<BankPanel />", () => {
   it("Else", () => {
     const testProps: BankPanelOptions = {
       bank: 1,
+      planID: "",
       uistatus: {},
       ws_sender: mockClick,
       plan: {

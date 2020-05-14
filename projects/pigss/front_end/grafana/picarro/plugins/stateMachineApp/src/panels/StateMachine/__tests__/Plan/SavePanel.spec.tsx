@@ -25,7 +25,7 @@ const defaultProps: PlanSavePanelOptions = {
   updateFileName: mockUpdateFileName,
   planSaved: mockPlanSaved,
   updatePanel: mockUpdatePanel,
-  fileNames: ["Test"],
+  fileNames: {31:"Test"},
   deleteFile: mockDeleteFile,
   setModalInfo: mockSetModalInfo
 };
@@ -82,6 +82,22 @@ describe("<PlanSavePanel />", () => {
     ok.simulate("click");
     // expect(mockUpdateFileName).toHaveBeenCalled();
     expect(savePlanFileName).toHaveBeenCalled();
+  });
+
+  it("onChange file name input", () => {
+    // wrapper.props().setModalInfo = jest.fn();
+    const event = { target: { name: "input", value: "" } };
+    const fileInput = wrapper.find("input");
+    fileInput.simulate("change", event);
+    expect(wrapper.state("fileName")).toBe("");
+    const savebtn = wrapper.find("button").at(1);
+    savebtn.simulate("click");
+
+    const event2 = { target: { name: "input", value: "Test" } };
+    fileInput.simulate("change", event2);
+    expect(wrapper.state("fileName")).toBe("Test");
+    savebtn.simulate("click");
+    // expect(wrapper.props().setModalInfo).toHaveBeenCalled();
   });
 
   //FileName too short

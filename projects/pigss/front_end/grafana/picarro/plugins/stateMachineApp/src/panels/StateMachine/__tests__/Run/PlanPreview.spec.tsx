@@ -18,13 +18,13 @@ const mockSetModalInfo = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: PreviewPanelOptions = {
+  planID: "",
   plan: mockLoadPanelData,
   updatePanel: mockUpdatePanel,
   fileNames: ["Test1","Test2"],
   cancelLoadPlan: mockCancelLoadPlan,
   ws_sender: mockClick,
   loadedFileName: "Testing",
-  setModalInfo: mockSetModalInfo
 };
 
 describe("<PlanPreview />", () => {
@@ -44,12 +44,14 @@ describe("<PlanPreview />", () => {
       "ReactList"
     );
     expect(fileList).toMatchSnapshot();
+
     expect(
       fileList
         .find("div")
         .at(1)
         .text()
     ).toEqual("1. 1: Channel 1 Duration: 30");
+
   });
 
   it("Cancel", () => {

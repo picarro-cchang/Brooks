@@ -15,6 +15,7 @@ const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
 const defaultProps: EditPanelOptions = {
+  planID: "",
   uistatus: {
     bank: {
       "1": "READY",
@@ -161,6 +162,7 @@ describe("<EditPanel />", () => {
 
 describe("<EditPanel /> Using Failing Channel Names", () => {
   const defaultPropsFail: EditPanelOptions = {
+    planID: "",
     uistatus: {
       bank: {
         "1": "READY",

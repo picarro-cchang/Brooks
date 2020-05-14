@@ -304,7 +304,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
               },
             }
           }
-          setModalInfo={[Function]}
+          planID=""
           uistatus={
             Object {
               "bank": Object {
@@ -667,6 +667,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -1010,6 +1011,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -1353,6 +1355,7 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -1789,6 +1792,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
               },
             }
           }
+          planID=""
           updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
@@ -2094,6 +2098,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -2437,6 +2442,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -2780,6 +2786,7 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -3205,6 +3212,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
               },
             }
           }
+          planID=""
           uistatus={
             Object {
               "bank": Object {
@@ -3567,6 +3575,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -3910,6 +3919,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -4253,6 +4263,7 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -4687,7 +4698,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
               },
             }
           }
-          setModalInfo={[Function]}
+          planID=""
           updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
@@ -4993,6 +5004,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -5336,6 +5348,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {
@@ -5679,6 +5692,7 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
                   },
                 }
               }
+              planID=""
               uistatus={
                 Object {
                   "bank": Object {

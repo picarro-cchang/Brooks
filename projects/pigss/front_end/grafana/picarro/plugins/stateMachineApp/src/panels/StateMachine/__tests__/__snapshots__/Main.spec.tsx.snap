@@ -4,7 +4,7 @@ exports[`<Main /> Snapshot 1`] = `
 <Main>
   <div>
     <RunLayout
-      fileNames={Array []}
+      fileNames={Object {}}
       getPlanFileNames={[Function]}
       layoutSwitch={[Function]}
       loadedFileName="test.pln"
@@ -153,6 +153,7 @@ exports[`<Main /> Snapshot 1`] = `
           },
         }
       }
+      runPaneltoShow={0}
       uistatus={Object {}}
       ws_sender={[Function]}
     >
@@ -325,7 +326,7 @@ exports[`<Main /> Snapshot 1`] = `
                     },
                   }
                 }
-                setModalInfo={[Function]}
+                planID=""
                 uistatus={Object {}}
                 updatePanel={[Function]}
                 ws_sender={[Function]}
@@ -530,6 +531,46 @@ exports[`<Main /> Snapshot 1`] = `
         className="Toastify"
       />
     </ToastContainer>
+    <Modal
+      animationDuration={500}
+      blockScroll={true}
+      center={true}
+      classNames={Object {}}
+      classes={
+        Object {
+          "closeButton": "styles_closeButton__20ID4",
+          "closeIcon": "styles_closeIcon__1QwbI",
+          "modal": "styles_modal__gNwvD",
+          "modalCenter": "styles_modalCenter__L9F2w",
+          "overlay": "styles_overlay__CLSq-",
+          "transitionEnter": "styles_transitionEnter__3j_-a",
+          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+          "transitionExit": "styles_transitionExit__1KmEf",
+          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+        }
+      }
+      closeIconSize={28}
+      closeIconSvgPath={
+        <path
+          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+        />
+      }
+      closeOnEsc={true}
+      closeOnOverlayClick={true}
+      focusTrapOptions={Object {}}
+      focusTrapped={true}
+      onClose={[Function]}
+      open={false}
+      role="dialog"
+      showCloseIcon={true}
+      styles={
+        Object {
+          "overlay": Object {
+            "color": "black",
+          },
+        }
+      }
+    />
   </div>
 </Main>
 `;

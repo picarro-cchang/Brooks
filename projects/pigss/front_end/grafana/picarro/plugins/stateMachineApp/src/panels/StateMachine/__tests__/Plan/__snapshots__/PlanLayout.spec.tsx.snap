@@ -97,6 +97,7 @@ exports[`<PlanLayout /> Match Snapshot 1`] = `
               "steps": Object {},
             }
           }
+          planID=""
           planOverwrite={[Function]}
           setModalInfo={[Function]}
           uistatus={
@@ -5213,12 +5214,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5237,12 +5232,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5265,12 +5254,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5289,12 +5272,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5317,12 +5294,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5341,12 +5312,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5369,12 +5334,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5393,12 +5352,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>
@@ -5798,12 +5751,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready"
@@ -5822,12 +5769,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5850,12 +5791,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5874,12 +5809,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5902,12 +5831,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5926,12 +5849,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -5954,12 +5871,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -5978,12 +5889,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>
@@ -6383,12 +6288,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -6407,12 +6306,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -6435,12 +6328,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -6459,12 +6346,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -6487,12 +6368,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -6511,12 +6386,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -6539,12 +6408,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -6563,12 +6426,6 @@ exports[`<PlanLayout /> planOverwrite 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>
@@ -8103,12 +7960,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8127,12 +7978,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8155,12 +8000,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8179,12 +8018,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8207,12 +8040,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8231,12 +8058,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8259,12 +8080,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8283,12 +8098,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>
@@ -8688,12 +8497,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready"
@@ -8712,12 +8515,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8740,12 +8537,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8764,12 +8555,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8792,12 +8577,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8816,12 +8595,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -8844,12 +8617,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -8868,12 +8635,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>
@@ -9273,12 +9034,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 1
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-1"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -9297,12 +9052,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 2
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-2"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -9325,12 +9074,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 3
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-3"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -9349,12 +9092,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 4
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-4"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -9377,12 +9114,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 5
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-5"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -9401,12 +9132,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 6
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-6"
-                          >
-                             
                           </p>
                         </button>
                         <button
@@ -9429,12 +9154,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 7
                             </u>
                           </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-7"
-                          >
-                             
-                          </p>
                         </button>
                         <button
                           className="btn btn-large bank-btn btn-ready btn-bold"
@@ -9453,12 +9172,6 @@ exports[`<PlanLayout /> planSaved 1`] = `
                               Ch. 8
                                
                             </u>
-                          </p>
-                          <p
-                            className="chn-status"
-                            id="chn-status-8"
-                          >
-                             
                           </p>
                         </button>
                       </div>

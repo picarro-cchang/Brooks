@@ -105,6 +105,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
       },
     }
   }
+  planID=""
   planOverwrite={[MockFunction]}
   setModalInfo={
     [MockFunction] {
@@ -118,6 +119,7 @@ exports[`<PlanPanel /> All Chan Masks == 0 ReactList renders 1`] = `
               "caption": "Save",
               "className": "btn btn-success btn-large",
               "response": Object {
+                "id": "",
                 "plan": Object {
                   "bank_names": Object {
                     "1": Object {
@@ -945,6 +947,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
       },
     }
   }
+  planID=""
   planOverwrite={[MockFunction]}
   setModalInfo={
     [MockFunction] {
@@ -958,6 +961,7 @@ exports[`<PlanPanel /> For Clean not equal to 0 ReactList renders 1`] = `
               "caption": "Save",
               "className": "btn btn-success btn-large",
               "response": Object {
+                "id": "",
                 "plan": Object {
                   "bank_names": Object {
                     "1": Object {
@@ -1840,6 +1844,7 @@ exports[`<PlanPanel /> ReactList renders 1`] = `
       },
     }
   }
+  planID=""
   planOverwrite={[MockFunction]}
   setModalInfo={[MockFunction]}
   uistatus={
@@ -2419,6 +2424,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
       },
     }
   }
+  planID=""
   planOverwrite={[MockFunction]}
   setModalInfo={
     [MockFunction] {
@@ -2432,6 +2438,7 @@ exports[`<PlanPanel /> ReactList renders 2`] = `
               "caption": "Save",
               "className": "btn btn-success btn-large",
               "response": Object {
+                "id": "",
                 "plan": Object {
                   "bank_names": Object {
                     "1": Object {
@@ -3413,6 +3420,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
       },
     }
   }
+  planID=""
   planOverwrite={[MockFunction]}
   setModalInfo={
     [MockFunction] {
@@ -3426,6 +3434,7 @@ exports[`<PlanPanel /> Rows greater than 10 ReactList renders 1`] = `
               "caption": "Save",
               "className": "btn btn-success btn-large",
               "response": Object {
+                "id": "",
                 "plan": Object {
                   "bank_names": Object {
                     "1": Object {

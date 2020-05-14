@@ -17,6 +17,7 @@ const mockGetPlanFromFileName = jest.fn();
 const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: LoadPanelCommandOptions = {
+  planID: "",
   plan: mockLoadPanelData,
   deleteFile: mockDeleteFile,
   updatePanel: mockUpdatePanel,

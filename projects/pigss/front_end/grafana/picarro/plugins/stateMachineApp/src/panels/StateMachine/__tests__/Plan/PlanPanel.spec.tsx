@@ -26,6 +26,7 @@ const mockSetModalInfo = jest.fn();
 const mockUpdateSavedFileState = jest.fn();
 
 const defaultProps: PlanPanelOptions = {
+  planID: "",
   uistatus: mockData,
   plan: mockPlanPanelData,
   isEdited: false,
@@ -40,6 +41,7 @@ const defaultProps: PlanPanelOptions = {
 };
 
 const nextProps: PlanPanelOptions = {
+  planID: "",
   uistatus: mockData,
   plan: mockPlanPanelData,
   isEdited: false,
@@ -217,6 +219,7 @@ describe("<PlanPanel />", () => {
 describe("<PlanPanel /> For Clean not equal to 0", () => {
   const defaultPropsClean: PlanPanelOptions = {
     uistatus: {},
+    planID: "",
     plan: {
       max_steps: 32,
       panel_to_show: 1,
@@ -267,6 +270,7 @@ describe("<PlanPanel /> For Clean not equal to 0", () => {
 describe("<PlanPanel /> All Chan Masks == 0", () => {
   const defaultPropsRefFail: PlanPanelOptions = {
     uistatus: {},
+    planID: "",
     plan: {
       max_steps: 32,
       panel_to_show: 1,
@@ -321,6 +325,7 @@ describe("<PlanPanel /> All Chan Masks == 0", () => {
 describe("<PlanPanel /> Rows greater than 10", () => {
   const defaultPropsRefFail: PlanPanelOptions = {
     uistatus: {},
+    planID: "",
     plan: {
       max_steps: 32,
       panel_to_show: 1,

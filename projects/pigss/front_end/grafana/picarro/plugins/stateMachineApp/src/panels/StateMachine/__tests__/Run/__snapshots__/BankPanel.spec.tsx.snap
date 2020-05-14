@@ -36,12 +36,6 @@ exports[`<BankPanel /> Else 1`] = `
               Ch A
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-1"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn "
@@ -62,12 +56,6 @@ exports[`<BankPanel /> Else 1`] = `
               2: 
               Channel 2
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-2"
-          >
-             
           </p>
         </button>
         <button
@@ -90,12 +78,6 @@ exports[`<BankPanel /> Else 1`] = `
               Ch 3
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-3"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn "
@@ -116,12 +98,6 @@ exports[`<BankPanel /> Else 1`] = `
               4: 
               Ch 4
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-4"
-          >
-             
           </p>
         </button>
         <button
@@ -144,12 +120,6 @@ exports[`<BankPanel /> Else 1`] = `
               Ch 5
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-5"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn "
@@ -170,12 +140,6 @@ exports[`<BankPanel /> Else 1`] = `
               6: 
               Ch 6
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-6"
-          >
-             
           </p>
         </button>
         <button
@@ -198,12 +162,6 @@ exports[`<BankPanel /> Else 1`] = `
               Ch 7
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-7"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn "
@@ -224,12 +182,6 @@ exports[`<BankPanel /> Else 1`] = `
               8: 
               Ch 8
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-8"
-          >
-             
           </p>
         </button>
       </div>
@@ -284,12 +236,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 1
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-1"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
@@ -311,12 +257,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 2
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-2"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -335,12 +275,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 3
                
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-3"
-          >
-             
           </p>
         </button>
         <button
@@ -363,12 +297,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 4
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-4"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -389,12 +317,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               5: 
               Ch. 5
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-5"
-          >
-             
           </p>
         </button>
         <button
@@ -417,12 +339,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 6
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-6"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -444,12 +360,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               Ch. 7
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-7"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled btn-bold"
@@ -470,12 +380,6 @@ exports[`<BankPanel /> Renders correctly 1`] = `
               8: 
               Ch. 8
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-8"
-          >
-             
           </p>
         </button>
       </div>
@@ -532,12 +436,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Ch A
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-1"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
@@ -559,12 +457,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Channel 2
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-2"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -583,12 +475,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Ch 3
                
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-3"
-          >
-             
           </p>
         </button>
         <button
@@ -611,12 +497,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Ch 4
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-4"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -637,12 +517,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               5: 
               Ch 5
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-5"
-          >
-             
           </p>
         </button>
         <button
@@ -665,12 +539,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Ch 6
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-6"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-ready"
@@ -692,12 +560,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               Ch 7
             </u>
           </p>
-          <p
-            className="chn-status"
-            id="chn-status-7"
-          >
-             
-          </p>
         </button>
         <button
           className="btn btn-large bank-btn btn-inverse-2 disabled"
@@ -718,12 +580,6 @@ exports[`<BankPanel /> Test Clean Button inactive 1`] = `
               8: 
               Ch 8
             </u>
-          </p>
-          <p
-            className="chn-status"
-            id="chn-status-8"
-          >
-             
           </p>
         </button>
       </div>

@@ -16,6 +16,7 @@ jest.mock("./../../api/PlanService.ts")
 
 const defaultProps: RunLayoutProps = {
   uistatus: mockData,
+  runPaneltoShow: 0,
   plan: mockPlan,
   ws_sender: mockWS,
   fileNames: ["Test", "HELLO", "@%#&@"],
@@ -65,13 +66,6 @@ describe("<RunLayout />", () => {
     expect(deleteFile).toHaveBeenCalled();
   });
 
-  // it("planPreview", () => {
-  //   mountwrapper.setState({ panel_to_show: 1 });
-  //   const button = mountwrapper.find('PlanPreviewPanel').find('button').at(0);
-  //   button.simulate('click');
-  //   expect(deleteFile).toHaveBeenCalled();
-  // });
-
   it("loadPlan", () => {
     wrapper.setState({ panel_to_show: 1 });
     const button = mountwrapper.find('PlanLoadPanel').find('button').at(0)
@@ -81,7 +75,6 @@ describe("<RunLayout />", () => {
     expect(mountwrapper.state('panel_to_show')).toEqual(3)
     const planButton = mountwrapper.find('PlanPreview').find('button').at(1)
     planButton.simulate('click')
-    expect(setModalInfor).toHaveBeenCalled();
   });
 
   it("cancelLoadPlan", () => {
@@ -91,32 +84,5 @@ describe("<RunLayout />", () => {
     expect(cancelLoadPlan).toHaveBeenCalled();
   });
 
-  it("loopPlan", () => {
-    mountwrapper.setState({panel_to_show: 0})
-    const runPlan = mountwrapper.find('CommandPanel').find('button#loop-plan')
-    runPlan.simulate('click');
-    expect(setModalInfor).toHaveBeenCalled();
-    const modal = mountwrapper.find('Modal').find('button').at(0)
-    modal.simulate('click')
-    const runPlan1 = mountwrapper.find('CommandPanel').find('button#run-plan')
-    runPlan.simulate('click');
-    expect(setModalInfor).toHaveBeenCalled();
-    const modal1 = mountwrapper.find('Modal').find('button').at(1)
-    modal1.simulate('click')
-  });
-
-  it("runPlan", () => {
-    mountwrapper.setState({panel_to_show: 0})
-    const runPlan = mountwrapper.find('CommandPanel').find('button#run-plan')
-    runPlan.simulate('click');
-    expect(setModalInfor).toHaveBeenCalled();
-    const modal = mountwrapper.find('Modal').find('button').at(0)
-    modal.simulate('click')
-    const runPlan1 = mountwrapper.find('CommandPanel').find('button#run-plan')
-    runPlan.simulate('click');
-    expect(setModalInfor).toHaveBeenCalled();
-    const modal1 = mountwrapper.find('Modal').find('button').at(1)
-    modal1.simulate('click')
-  });
 
 });

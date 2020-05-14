@@ -16,6 +16,7 @@ const apiLoc = `${window.location.hostname}:8000/controller`;
 const socketURL = `ws://${apiLoc}/ws`;
 
 const defaultProps: CommandPanelOptions = {
+  planID: "",
   uistatus: {
     standby: "ACTIVE ",
     identify: "DISABLED",
@@ -30,7 +31,6 @@ const defaultProps: CommandPanelOptions = {
   plan: mockPlan,
   updatePanel: mockUpdatePanel,
   layoutSwitch: mockSwitchLayout,
-  setModalInfo: mockSetModalInfo,
   loadedFileName: "Testing"
 };
 
