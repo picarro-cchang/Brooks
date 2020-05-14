@@ -4,7 +4,7 @@ import { LoadPanelOptions, Plan } from "../types";
 
 interface State {
   plan: Plan;
-  fileNames: {[key: number]: string};
+  fileNames: { [key: number]: string };
   loadedFileName: string;
 }
 
@@ -43,10 +43,14 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
           type="button"
           id={"plan-filename-" + (index + 1)}
           className="btn w-100 btn-small"
-          disabled={this.isDisabled(this.state.fileNames[Object.keys(this.state.fileNames)[index]])}
+          disabled={this.isDisabled(
+            this.state.fileNames[Object.keys(this.state.fileNames)[index]]
+          )}
           onClick={(e) => {
             this.props.updateFileName(false);
-            this.props.getPlanFromFileName(this.state.fileNames[Object.keys(this.state.fileNames)[index]])
+            this.props.getPlanFromFileName(
+              this.state.fileNames[Object.keys(this.state.fileNames)[index]]
+            );
             // this.props.getPlanFromFileName(this.state.fileNames[index]);
           }}
           style={{ color: "black" }}
@@ -57,9 +61,14 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
         <button
           type="button"
           className="btn btn-danger btn-small"
-          disabled={this.isDisabled(this.state.fileNames[Object.keys(this.state.fileNames)[index]])}
+          disabled={this.isDisabled(
+            this.state.fileNames[Object.keys(this.state.fileNames)[index]]
+          )}
           onClick={(e) => {
-            this.props.deleteFile(this.state.fileNames[Object.keys(this.state.fileNames)[index]], Number(Object.keys(this.state.fileNames)[index]));
+            this.props.deleteFile(
+              this.state.fileNames[Object.keys(this.state.fileNames)[index]],
+              Number(Object.keys(this.state.fileNames)[index])
+            );
           }}
         >
           X
@@ -69,12 +78,7 @@ class LoadPanel extends Component<LoadPanelOptions, State> {
   );
 
   render() {
-    // const length = this.state.fileNames.length;
-    const length = Object.keys(this.state.fileNames).length
-    // for (let key in this.state.fileNames) {
-
-    // }
-
+    const length = Object.keys(this.state.fileNames).length;
     return (
       <div className="panel-save">
         <h2 style={{ color: "white" }}>Load Plan</h2>

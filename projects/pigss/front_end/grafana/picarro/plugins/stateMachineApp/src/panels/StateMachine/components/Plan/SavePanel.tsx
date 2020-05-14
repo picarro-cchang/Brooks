@@ -87,7 +87,10 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           type="button"
           className="btn btn-danger btn-small"
           onClick={(e) => {
-            this.props.deleteFile(this.props.fileNames[Object.keys(this.props.fileNames)[index]], Number(Object.keys(this.props.fileNames)[index]));
+            this.props.deleteFile(
+              this.props.fileNames[Object.keys(this.props.fileNames)[index]],
+              Number(Object.keys(this.props.fileNames)[index])
+            );
           }}
         >
           X

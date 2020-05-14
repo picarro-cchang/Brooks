@@ -100,7 +100,7 @@ export class Main extends React.Component<any, any> {
     fileNames: {},
     isPlanning: false,
     loadedFileName: "",
-    runPaneltoShow: 0
+    runPaneltoShow: 0,
   };
   constructor(props) {
     super(props);
@@ -167,8 +167,8 @@ export class Main extends React.Component<any, any> {
       });
     });
     const modalData = PicarroAPI.getRequest(`http://${apiLoc}/modal_info`).then(
-      response => {
-        response.json().then(obj => {
+      (response) => {
+        response.json().then((obj) => {
           this.setState(deepmerge(this.state, { modal_info: obj }));
         });
       }
@@ -262,24 +262,22 @@ export class Main extends React.Component<any, any> {
     return null;
   };
 
- 
-
-  render() { 
+  render() {
     const modalButtons = [];
-  for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
-    const modal_info = this.state.modal_info as ModalInfo;
+    for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
+      const modal_info = this.state.modal_info as ModalInfo;
       modalButtons.push(
-      <button
-        className={modal_info.buttons[i].className}
-        style={{ margin: "10px" }}
-        onClick={() =>{
-          this.ws_sender({ element: modal_info.buttons[i].response })}
-        }
-      >
-        {modal_info.buttons[i].caption}
-      </button>
-    );
-  }
+        <button
+          className={modal_info.buttons[i].className}
+          style={{ margin: "10px" }}
+          onClick={() => {
+            this.ws_sender({ element: modal_info.buttons[i].response });
+          }}
+        >
+          {modal_info.buttons[i].caption}
+        </button>
+      );
+    }
     return (
       <div>
         {this.state.isPlanning ? (

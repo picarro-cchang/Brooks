@@ -9,9 +9,9 @@ import { PlanService } from "../../api/PlanService";
 import Modal from "react-responsive-modal";
 
 interface State {
-  plan_id: String,
+  plan_id: String;
   plan: Plan;
-  fileNames: {[key: number]: string};
+  fileNames: { [key: number]: string };
   panel_to_show: number;
   loadedPlanFilename: string;
   modal_info: {
@@ -64,7 +64,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       plan.current_step = nextProps.plan.current_step;
       this.setState({ plan });
     } else if (this.props.runPaneltoShow !== nextProps.runPaneltoShow) {
-      this.setState({panel_to_show: nextProps.runPaneltoShow})
+      this.setState({ panel_to_show: nextProps.runPaneltoShow });
     }
     return true;
   }
@@ -89,10 +89,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   getPlanFromFileName(filename: string) {
     PlanService.getFileData(filename).then((response: any) =>
       response.json().then((data) => {
-        console.log(
-          `Getting Plan from Filename ${filename}! `,
-          data
-        );
+        console.log(`Getting Plan from Filename ${filename}! `, data);
         if (data.message) {
           this.setModalInfo(
             true,

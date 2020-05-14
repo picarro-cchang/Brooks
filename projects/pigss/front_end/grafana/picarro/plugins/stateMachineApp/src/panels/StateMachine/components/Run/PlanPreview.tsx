@@ -81,7 +81,7 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
   );
 
   render() {
-    console.log(this.props.plan)
+    console.log(this.props.plan);
     return (
       <div className="panel-plan-preview">
         <h4>Plan: {this.props.plan.plan_filename}</h4>
@@ -119,10 +119,10 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
               onClick={(e) => {
                 this.props.ws_sender({
                   element: "filename_ok",
-                  name: this.props.plan.plan_filename
+                  name: this.props.plan.plan_filename,
                 });
-                console.log(this.props.plan.plan_filename)
-                this.props.updatePanel(0)
+                console.log(this.props.plan.plan_filename);
+                this.props.updatePanel(0);
               }}
             >
               Ok

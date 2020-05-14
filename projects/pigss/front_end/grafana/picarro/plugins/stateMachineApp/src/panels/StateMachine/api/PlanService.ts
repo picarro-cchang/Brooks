@@ -1,4 +1,3 @@
-// import PlanServiceAPI from "./__mocks__/PlanServiceAPI";
 import PlanServiceAPI from "./PlanServiceAPI"
 
 const url = `http://${window.location.hostname}:8000/manage_plan/api/v0.1/plan`

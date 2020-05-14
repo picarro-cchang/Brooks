@@ -10,7 +10,7 @@ import Modal from "react-responsive-modal";
 interface State {
   isPlanPanel: boolean;
   plan: Plan;
-  fileNames: {[key: number]: string};
+  fileNames: { [key: number]: string };
   panel_to_show: number;
   fileName: string;
   bankAdd: {};
@@ -326,14 +326,13 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 id={"save"}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  const plan = {...this.state.plan}
-                  plan.plan_filename = response.filename
-                  this.setState({plan}, () => {
+                  const plan = { ...this.state.plan };
+                  plan.plan_filename = response.filename;
+                  this.setState({ plan }, () => {
                     this.planSaved(response.filename, this.state.plan);
                     this.updateFileName(false);
                     this.setModalInfo(false, "", 0, {}, "");
-                  })
-                  
+                  });
                 }}
               >
                 {modal_info.buttons[i].caption}
