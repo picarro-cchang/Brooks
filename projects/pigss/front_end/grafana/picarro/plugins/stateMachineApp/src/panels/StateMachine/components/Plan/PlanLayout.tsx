@@ -153,6 +153,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
         } else {
           this.setState({ plan: data.details });
           this.setState({
+            plan_id: data.plan_id,
             fileName: filename,
             panel_to_show: 0,
           });
@@ -183,7 +184,7 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
 
   planOverwrite(plan, plan_id) {
     const data = {
-      rowid: plan_id,
+      plan_id: Number(this.state.plan_id),
       name: plan.plan_filename,
       details: plan,
       user: "admin",
@@ -325,11 +326,14 @@ export class PlanLayout extends PureComponent<PlanLayoutProps, State> {
                 id={"save"}
                 style={{ margin: "10px" }}
                 onClick={() => {
-                  // console.log("STATE ", this.state.plan)
-                  // console.log("RESPONSE ", response.plan)
-                  this.planSaved(response.filename, response.plan);
-                  this.updateFileName(false);
-                  this.setModalInfo(false, "", 0, {}, "");
+                  const plan = {...this.state.plan}
+                  plan.plan_filename = response.filename
+                  this.setState({plan}, () => {
+                    this.planSaved(response.filename, this.state.plan);
+                    this.updateFileName(false);
+                    this.setModalInfo(false, "", 0, {}, "");
+                  })
+                  
                 }}
               >
                 {modal_info.buttons[i].caption}

@@ -100,6 +100,7 @@ export class Main extends React.Component<any, any> {
     fileNames: {},
     isPlanning: false,
     loadedFileName: "",
+    runPaneltoShow: 0
   };
   constructor(props) {
     super(props);
@@ -181,8 +182,6 @@ export class Main extends React.Component<any, any> {
     );
     const fileNames = PlanService.getFileNames().then((res) => {
       res.json().then((obj) => {
-        //TODO: filenames: {[rowid]:filename}
-        console.log("FILE NAMES ", obj)
         this.setState(
           deepmerge(this.state.fileNames, { fileNames: obj.plans })
         );
@@ -198,6 +197,9 @@ export class Main extends React.Component<any, any> {
     if (this.state.initialized) {
       if ("uistatus" in o) {
         const uistatus = deepmerge(this.state.uistatus, o.uistatus);
+        if (o.uistatus.panel || o.uistatus.panel == 0) {
+          this.setState({ runPaneltoShow: o.uistatus.panel });
+        }
         this.setState({ uistatus });
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
@@ -266,12 +268,11 @@ export class Main extends React.Component<any, any> {
     const modalButtons = [];
   for (let i = 1; i <= this.state.modal_info.num_buttons; i++) {
     const modal_info = this.state.modal_info as ModalInfo;
-    modalButtons.push(
+      modalButtons.push(
       <button
         className={modal_info.buttons[i].className}
         style={{ margin: "10px" }}
         onClick={() =>{
-          console.log(modal_info.buttons[i])
           this.ws_sender({ element: modal_info.buttons[i].response })}
         }
       >
@@ -292,6 +293,7 @@ export class Main extends React.Component<any, any> {
           />
         ) : (
           <RunLayout
+            runPaneltoShow={this.state.runPaneltoShow}
             layoutSwitch={this.isPlanning}
             fileNames={this.state.fileNames}
             plan={this.state.plan}

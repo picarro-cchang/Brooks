@@ -174,7 +174,7 @@ class PlanModel:
                 return record
         except sqlite3.OperationalError:
             self.log.debug(format_exc())
-        return None, None
+        return None, None, None
 
     def update_plan(self, plan_id, name, details, modified_at=None, modified_by=None, is_running=0, is_deleted=0, updated_name="", is_unloading=0):
         """ Given a plan name and required data, update a plan

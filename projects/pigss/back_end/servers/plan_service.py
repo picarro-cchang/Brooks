@@ -177,7 +177,6 @@ class PlanService(ServiceTemplate):
                 plan_id, name, details = self.model.update_plan(plan_id, name, details, modified_at, modified_by, is_running,
                                                                 is_deleted, updated_name, is_unloading)
                 if name is not None and details is not None:
-                    print("UPDATING PLAN+++++++++++++")
                     return web.json_response(data={
                         "plan_id": plan_id,
                         "message": f"Plan {name} has been updated with new details.",

@@ -119,8 +119,9 @@ class PlanPreview extends PureComponent<PreviewPanelOptions, State> {
               onClick={(e) => {
                 this.props.ws_sender({
                   element: "filename_ok",
-                  name: this.state.plan.plan_filename
+                  name: this.props.plan.plan_filename
                 });
+                console.log(this.props.plan.plan_filename)
                 this.props.updatePanel(0)
               }}
             >

@@ -208,7 +208,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
           1: {
             caption: "Save",
             className: "btn btn-success btn-large",
-            response: { plan: this.state.plan, id: this.state.plan_id},
+            response: { plan: this.state.plan, id: this.props.planID},
           },
           2: {
             caption: "Cancel",
@@ -277,8 +277,7 @@ class PlanPanel extends Component<PlanPanelOptions, State> {
     const col = this.state.plan.focus.column;
     let duration;
     if (row >= this.state.plan.max_steps && col == 2) {
-      // error
-      console.log("Max Number of Steps Reached!");
+      this.props.setModalInfo(true, "<h2>Max number of steps reached!</h2>", 0, {}, "")
     }
     if (col == 2) {
       row += 1;

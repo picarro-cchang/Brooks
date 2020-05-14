@@ -54,6 +54,7 @@ export interface RunLayoutProps {
     fileNames: {}
     loadedFileName: string;
     getPlanFileNames: () => void;
+    runPaneltoShow: number
 }
 
 export enum PanelTypes {
@@ -103,7 +104,6 @@ export interface LoadPanelCommandOptions {
     // deleteFile: (x: string) => void;
     fileNames: {}
     cancelLoadPlan: () => void;
-    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     loadedFileName: string;
     planID: String;
   }
@@ -180,7 +180,6 @@ export interface PlanPanelOptions {
     plan: Plan;
     updatePanel: (x: number) => void;
     layoutSwitch: () => void;
-    setModalInfo: (s: boolean, h: string, n: number, b: object, a: string) => void;
     loadedFileName: string;
     planID: String;
   }
