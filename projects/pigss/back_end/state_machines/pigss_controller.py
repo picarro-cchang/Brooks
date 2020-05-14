@@ -30,7 +30,8 @@ from back_end.state_machines.pigss_payloads import (PigletRequestPayload,
 
 log = LOLoggerClient(client_name="AppController", verbose=True)
 
-PLAN_FILE_DIR = os.path.join(os.getenv("HOME"), ".config", "pigss", "plan_files")
+PLAN_FILE_DIR = os.path.join(
+    os.getenv("HOME"), ".config", "pigss", "plan_files")
 if not os.path.isdir(PLAN_FILE_DIR):
     os.makedirs(PLAN_FILE_DIR, 0o755)
 
@@ -146,7 +147,7 @@ class PigssController(Ahsm):
         self.available_ports = {
             "available_ports": {
                 "1": 0,
-                "2": 0, 
+                "2": 0,
                 "3": 0,
                 "4": 0
             }
@@ -173,7 +174,8 @@ class PigssController(Ahsm):
         self.send_queue = None
         self.receive_queue = None
         db_config = self.farm.config.get_time_series_database()
-        self.db_writer = AioInfluxDBWriter(address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
+        self.db_writer = AioInfluxDBWriter(
+            address=db_config["server"], db_port=db_config["port"], db_name=db_config["name"])
 
     def set_queues(self, send_queue, receive_queue):
         self.send_queue = send_queue
@@ -196,10 +198,6 @@ class PigssController(Ahsm):
 
     def get_bank_names(self):
         return self.plan["bank_names"]
-
-    # async def get_plan_names(self):
-    #     async with aiohttp.ClientSession() as session:
-    #         async with session.get("http://localhost:8000/manage_plan/api/v0.1/plan?names=true") as resp:
 
     async def save_port_history(self):
         data = [{
@@ -257,7 +255,8 @@ class PigssController(Ahsm):
                 msg = json.loads(await self.receive_queue.get())
                 Framework.publish(Event(event_by_element[msg["element"]], msg))
             except KeyError:
-                log.warning(f"Cannot find event associated with socket message {msg['element']} - ignoring")
+                log.warning(
+                    f"Cannot find event associated with socket message {msg['element']} - ignoring")
 
     def get_modal_info(self):
         return self.modal_info
@@ -339,13 +338,13 @@ class PigssController(Ahsm):
         A shadow dictionary containing the change is sent via a websocket to inform the UI
         of the change in the plan.
         """
-        shadow = self.modify_value_in_nested_dict(self.available_ports, path, value)
+        shadow = self.modify_value_in_nested_dict(
+            self.available_ports, path, value)
         try:
             self.send_queue.put_nowait(json.dumps({"available_ports": shadow}))
         except asyncio.queues.QueueFull:
             log.debug(f"Farm Send Queue Full\n{format_exc()}")
             log.error(f"Send Queue Full. Please report.")
-
 
     def set_status(self, path, value):
         """Set the status of the element specified by `path` to the given `value`.
@@ -411,7 +410,8 @@ class PigssController(Ahsm):
             duration = self.plan["steps"][row]["duration"]
         else:
             duration = 0
-        self.set_plan(["steps", row], {"banks": bank_config, "reference": reference, "duration": duration})
+        self.set_plan(["steps", row], {
+                      "banks": bank_config, "reference": reference, "duration": duration})
         if self.plan["last_step"] < row:
             self.set_plan(["last_step"], row)
         self.set_plan(["focus"], {"row": row, "column": 2})
@@ -473,7 +473,7 @@ class PigssController(Ahsm):
                     "clean": 0,
                     "chan_mask": 0
                 }
-                          for b in self.all_banks},
+                    for b in self.all_banks},
                 "reference": 0,
                 "duration": 0
             })
@@ -486,6 +486,7 @@ class PigssController(Ahsm):
         the problem"""
         if plan == None:
             plan = self.plan
+
         if plan["last_step"] <= 0:
             return PlanError(True, f"Plan is empty", 1, 1)
         if not 1 <= plan["current_step"] <= plan["last_step"]:
@@ -493,7 +494,7 @@ class PigssController(Ahsm):
         min_plan_interval = self.farm.config.get_min_plan_interval()
         for i in range(plan["last_step"]):
             row = i + 1
-            s = plan["steps"][str(row)]
+            s = plan["steps"][row]
             if "duration" not in s or "reference" not in s or "banks" not in s:
                 return PlanError(True, f"Malformed data at step {row}", row, 1)
             if not s["duration"] > 0 or s["duration"] < min_plan_interval:
@@ -529,7 +530,8 @@ class PigssController(Ahsm):
             plan[str(row)] = s
         try:
             with open(fname, "w") as fp:
-                json.dump({"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
+                json.dump(
+                    {"plan": plan, "bank_names": self.plan["bank_names"]}, fp, indent=4)
                 log.debug(f"Plan file saved {fname}")
         except FileNotFoundError as fe:
             log.critical(f"Plan save error {fe}")
@@ -550,7 +552,7 @@ class PigssController(Ahsm):
         await asyncio.sleep(1.0)
 
     async def get_available_plans(self):
-        async with aiohttp.ClientSession() as session: 
+        async with aiohttp.ClientSession() as session:
             plans = await self.fetch(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?names=true')
         await asyncio.sleep(1.0)
         plans = json.loads(plans)
@@ -560,7 +562,7 @@ class PigssController(Ahsm):
             self.set_plan(["num_plan_files"], num)
 
     async def get_last_running(self):
-        async with aiohttp.ClientSession() as session: 
+        async with aiohttp.ClientSession() as session:
             last_run = await self.fetch(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?last_running=true')
             running_plan = json.loads(last_run)
             if "name" in running_plan:
@@ -581,38 +583,35 @@ class PigssController(Ahsm):
         data_json = json.dumps(data)
         async with aiohttp.ClientSession() as session:
             res = await self.put_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
-        await asyncio.sleep(1.0)
 
     async def set_current_step(self):
-        ##needs to save file with current step
+        # needs to save file with current step
         data = {
             "plan_id": self.plan_running_id,
             "name": self.plan["plan_filename"],
             "details": self.plan,
             "user": 'admin',
-            "is_running": 1, 
+            "is_running": 1,
             "is_unloading": 1,
         }
         data_json = json.dumps(data)
 
         async with aiohttp.ClientSession() as session:
             res = await self.put_data(session, 'http://192.168.122.225:8000/manage_plan/api/v0.1/plan', data_json)
-        await asyncio.sleep(1.0)
 
     async def load_new_plan(self, name):
         '''Checks last_running is not the same, if it is, fine, just less steps. Loads this new plan via API call, sets new plan is_running=1'''
         if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
             await self.set_is_running(self.plan_running_id, self.plan["plan_filename"], self.plan, 0)
         async with aiohttp.ClientSession() as session:
-            data = await self.fetch(session,f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
+            data = await self.fetch(session, f'http://192.168.122.225:8000/manage_plan/api/v0.1/plan?plan_name={name}')
         data_new = json.loads(data)
         await self.set_is_running(data_new["plan_id"], name, data_new["details"], 1)
         new_plan = data_new["details"]
         if not isinstance(new_plan, dict):
             raise ValueError("Plan should be a dictionary")
-        # valid = self.validate_plan(True, new_plan)
         steps = {}
-        last_step = len(new_plan["steps"])
+        last_step = new_plan["last_step"]
         for i in range(last_step):
             # Note: Serializing through JSON turns all dictionary keys into strings. We
             #  need to turn bank numbers and plan steps back into integers for compatibility
@@ -630,7 +629,7 @@ class PigssController(Ahsm):
                 raise ValueError(f"Plan row {row} is missing 'duration' key")
             steps[row] = {
                 "banks": {int(bank_str): step["banks"][bank_str]
-                    for bank_str in step["banks"]},
+                          for bank_str in step["banks"]},
                 "reference": step["reference"],
                 "duration": step["duration"]
             }
@@ -644,7 +643,6 @@ class PigssController(Ahsm):
         self.plan_running_id = data_new["plan_id"]
         self.last_running_details = new_plan
 
-
     def get_current_step_from_focus(self):
         step = self.plan["focus"]["row"]
         column = self.plan["focus"]["column"]
@@ -655,7 +653,8 @@ class PigssController(Ahsm):
         return step
 
     def handle_error_signal(self, epoch_time, payload):
-        self.error_list.append({"time": epoch_time, "payload": payload, "framework": Framework.get_info()})
+        self.error_list.append(
+            {"time": epoch_time, "payload": payload, "framework": Framework.get_info()})
 
     def change_name_bank(self, msg):
         if "bank_names" in msg:
@@ -711,6 +710,7 @@ class PigssController(Ahsm):
         Signal.register("PLAN_LOAD_SUCCESSFUL")
         Signal.register("PLAN_LOADED")
         Signal.register("PLAN_LOAD_FAILED")
+        Signal.register("PLAN_ERROR")
         Signal.register("PLAN_SAVE_SUCCESSFUL")
         Signal.register("PLAN_SAVE_FAILED")
         Signal.register("PROCEED")
@@ -763,7 +763,8 @@ class PigssController(Ahsm):
         return self.tran(self._configure)
 
     def disable_buttons(self):
-        button_list = ["standby", "identify", "run", "plan", "plan_run", "load", "plan_loop", "reference", "edit"]
+        button_list = ["standby", "identify", "run", "plan",
+                       "plan_run", "load", "plan_loop", "reference", "edit"]
         self.button_states = {}
         self.clean_button_states = {}
         for button in button_list:
@@ -778,7 +779,8 @@ class PigssController(Ahsm):
         self.channel_button_states = {}
         for bank in self.all_banks:
             for j in range(self.num_chans_per_bank):
-                self.channel_button_states[j+1] = self.status["channel"][bank][j + 1]
+                self.channel_button_states[j +
+                                           1] = self.status["channel"][bank][j + 1]
                 self.set_status(["channel", bank, j + 1], UiStatus.DISABLED)
 
     def restore_buttons(self):
@@ -791,7 +793,8 @@ class PigssController(Ahsm):
     def restore_channel_buttons(self):
         for bank in self.all_banks:
             for channel in self.channel_button_states:
-                self.set_status(["channel", bank, channel], self.channel_button_states[channel])
+                self.set_status(["channel", bank, channel],
+                                self.channel_button_states[channel])
 
     def log_transition(self, payload):
         """Log valve transition to clean, reference, exhaust, and control states.
@@ -857,7 +860,8 @@ class PigssController(Ahsm):
                 self.set_status(["clean", bank], UiStatus.READY)
                 self.set_status(["bank", bank], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
-                    self.set_status(["channel", bank, j + 1], UiStatus.DISABLED)
+                    self.set_status(["channel", bank, j + 1],
+                                    UiStatus.DISABLED)
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._standby)
@@ -929,7 +933,8 @@ class PigssController(Ahsm):
     def _standby1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["standby"], UiStatus.ACTIVE)
             self.set_status(["timer"], 0)
@@ -966,7 +971,8 @@ class PigssController(Ahsm):
     def _reference1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             self.disable_buttons()
             self.set_status(["reference"], UiStatus.ACTIVE)
             return self.handled(e)
@@ -1007,8 +1013,10 @@ class PigssController(Ahsm):
     def _clean1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            banks_to_clean = {bank: (bank == self.bank) for bank in self.all_banks}
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", banks_to_clean)))
+            banks_to_clean = {bank: (bank == self.bank)
+                              for bank in self.all_banks}
+            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION,
+                                    ValveTransitionPayload("clean", banks_to_clean)))
             self.disable_buttons()
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             self.clean_active[self.bank] = 1
@@ -1032,7 +1040,8 @@ class PigssController(Ahsm):
     def _identify(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             self.set_status(["identify"], UiStatus.ACTIVE)
             self.banks_to_process = self.all_banks.copy()
@@ -1061,7 +1070,8 @@ class PigssController(Ahsm):
     def _identify1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("IDENTIFY", [self.bank])))
+            Framework.publish(Event(Signal.PIGLET_REQUEST,
+                                    PigletRequestPayload("IDENTIFY", [self.bank])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
             return self.tran(self._identify2)
@@ -1091,15 +1101,18 @@ class PigssController(Ahsm):
     def _identify4(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PIGLET_REQUEST, PigletRequestPayload("ACTIVECH?", [self.bank])))
+            Framework.publish(Event(Signal.PIGLET_REQUEST,
+                                    PigletRequestPayload("ACTIVECH?", [self.bank])))
             return self.handled(e)
         elif sig == Signal.PIGLET_RESPONSE:
-            msg = int(e.value[self.bank])  # Integer representing available channels
+            # Integer representing available channels
+            msg = int(e.value[self.bank])
             self.set_available_ports(["available_ports", str(self.bank)], msg)
             active = [1 if int(c) else 0 for c in reversed(format(msg, '08b'))]
             # Update the states of the channel buttons in the bank
             for i, stat in enumerate(active):
-                self.set_status(["channel", self.bank, i + 1], UiStatus.AVAILABLE if stat else UiStatus.DISABLED)
+                self.set_status(["channel", self.bank, i + 1],
+                                UiStatus.AVAILABLE if stat else UiStatus.DISABLED)
             self.set_status(["bank", self.bank], UiStatus.READY)
             # Go to the next bank, and continue identification if the bank is present
             if self.banks_to_process:
@@ -1122,13 +1135,15 @@ class PigssController(Ahsm):
             for bank in self.all_banks:
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
-                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.READY)
             return self.handled(e)
         elif sig == Signal.EXIT:
             for bank in self.all_banks:
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.READY:
-                        self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.AVAILABLE)
             # self.set_plan(["panel_to_show"], int(PlanPanelType.NONE))
             return self.handled(e)
         elif sig == Signal.INIT:
@@ -1165,9 +1180,10 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
-            fname = os.path.join(PLAN_FILE_DIR, self.filename_to_delete + ".pln")
+            fname = os.path.join(
+                PLAN_FILE_DIR, self.filename_to_delete + ".pln")
             os.remove(fname)
-            self.run_async(self.get_plan_filenames())
+            self.run_async(self.get_available_plans())
             return self.tran(self.state_after_delete)
         elif sig == Signal.MODAL_CLOSE:
             return self.tran(self.state_after_delete)
@@ -1177,7 +1193,8 @@ class PigssController(Ahsm):
     def _plan_plan(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_OK:
             self.plan_error = self.validate_plan(check_avail=True)
@@ -1291,7 +1308,8 @@ class PigssController(Ahsm):
             self.run_async(self.save_port_history())
             return self.tran(self._plan)
         elif sig == Signal.PLAN_LOAD_FAILED:
-            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
+            self.plan_error = PlanError(
+                True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_load11)
         return self.super(self._plan_load)
 
@@ -1322,13 +1340,16 @@ class PigssController(Ahsm):
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FILENAME:
             # Remove non alphanumeric characters
-            self.set_plan(["plan_filename"], re.sub(r'[^\w-]', "", e.value["name"]))
+            self.set_plan(["plan_filename"], re.sub(
+                r'[^\w-]', "", e.value["name"]))
             return self.handled(e)
         elif sig == Signal.BTN_PLAN_SAVE_OK:
-            self.valid_plan = self.validate_plan_filename(self.plan["plan_filename"])
+            self.valid_plan = self.validate_plan_filename(
+                self.plan["plan_filename"])
 
             if self.valid_plan:
-                fname = os.path.join(PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
+                fname = os.path.join(
+                    PLAN_FILE_DIR, self.plan["plan_filename"] + ".pln")
                 if os.path.isfile(fname):
                     return self.tran(self._plan_save1)
                 else:
@@ -1386,10 +1407,11 @@ class PigssController(Ahsm):
                 self.postFIFO(Event(Signal.PLAN_SAVE_FAILED, format_exc()))
             return self.handled(e)
         elif sig == Signal.PLAN_SAVE_SUCCESSFUL:
-            self.run_async(self.get_plan_filenames())
+            self.run_async(self.get_available_plans())
             return self.tran(self._plan)
         elif sig == Signal.PLAN_SAVE_FAILED:
-            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
+            self.plan_error = PlanError(
+                True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._plan_save21)
         return self.super(self._plan_save)
 
@@ -1422,7 +1444,8 @@ class PigssController(Ahsm):
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
-            self.set_plan(["focus"], {"row": self.plan_error.row, "column": self.plan_error.column})
+            self.set_plan(
+                ["focus"], {"row": self.plan_error.row, "column": self.plan_error.column})
             return self.handled(e)
         elif sig == Signal.MODAL_CLOSE:
             return self.tran(self._plan)
@@ -1498,41 +1521,16 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.LOAD_MODAL_OK:
-            self.plan_error = self.validate_plan(check_avail=True)
-            if not self.plan_error.error:
-                self.set_status(["plan_run"], UiStatus.READY)
-                self.set_status(["plan_loop"], UiStatus.READY)
-                # new_plan = e.value["plan"]
-                # self.plan_name = e.value["name"]
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
-                return self.tran(self._load_preview2)
-            else:
-                #plan error
-                self.set_status(["plan_run"], UiStatus.DISABLED)
-                self.set_status(["plan_loop"], UiStatus.DISABLED)
-                return self.tran(self._load_preview_error)
+            self.set_status(["plan_run"], UiStatus.READY)
+            self.set_status(["plan_loop"], UiStatus.READY)
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            return self.tran(self._load_preview2)
         elif sig == Signal.LOAD_MODAL_CANCEL:
             return self.tran(self._load_preview)
         elif sig == Signal.MODAL_CLOSE:
             return self.tran(self._operational)
         return self.super(self._load_preview)
-
-    @state
-    def _load_preview_error(self, e):
-        sig = e.signal
-        if sig == Signal.ENTRY:
-            self.set_modal_info([], {
-                "show": True,
-                "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message}</p>",
-                "num_buttons": 0
-            })
-            return self.handled(e)
-        elif sig == Signal.EXIT:
-            self.set_modal_info(["show"], False)
-            return self.handled(e)
-        elif sig == Signal.MODAL_CLOSE:
-            return self.tran(self._load_preview)
-        return self.super(self._load_preview1)
 
     @state
     def _load_preview2(self, e):
@@ -1551,16 +1549,17 @@ class PigssController(Ahsm):
             return self.tran(self._operational)
         elif sig == Signal.PLAN_LOAD_FAILED:
             self.restore_buttons()
-            self.plan_error = PlanError(True, f'<div>Unhandled Exception. Please contact support.</div>')
+            self.plan_error = PlanError(
+                True, f'<div>Unhandled Exception. Please contact support.</div>')
             return self.tran(self._load_preview)
         return self.super(self._load_preview)
-
 
     @state
     def _sampling(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
+            Framework.publish(
+                Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("exhaust")))
             self.disable_buttons()
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1576,7 +1575,8 @@ class PigssController(Ahsm):
                     self.set_status(["clean", bank], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] in [UiStatus.READY, UiStatus.ACTIVE]:
-                        self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.AVAILABLE)
             return self.handled(e)
         elif sig == Signal.BTN_RUN:
             return self.tran(self._run1)
@@ -1617,13 +1617,15 @@ class PigssController(Ahsm):
                     self.set_status(["reference"], UiStatus.READY)
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.AVAILABLE:
-                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.READY)
             return self.handled(e)
         elif sig == Signal.EXIT:
             for bank in self.all_banks:
                 for j in range(self.num_chans_per_bank):
                     if self.status["channel"][bank][j + 1] == UiStatus.READY:
-                        self.set_status(["channel", bank, j + 1], UiStatus.AVAILABLE)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.AVAILABLE)
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._run11)
@@ -1643,13 +1645,15 @@ class PigssController(Ahsm):
                 for bank in self.all_banks:
                     # Turn off ACTIVE states in UI for active channels
                     for j in setbits(self.chan_active[bank]):
-                        self.set_status(["channel", bank, j + 1], UiStatus.READY)
+                        self.set_status(
+                            ["channel", bank, j + 1], UiStatus.READY)
                     # Replace with the selected channel
                     if bank == e.value["bank"]:
                         self.chan_active[bank] = mask
                     else:
                         self.chan_active[bank] = 0
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload(
+                    "control", self.chan_active)))
                 self.disable_channel_buttons()
                 self.disable_buttons()
             return self.handled(e)
@@ -1685,46 +1689,57 @@ class PigssController(Ahsm):
     def _run_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            self.set_modal_info(
-                [], {
+            self.plan_error = self.validate_plan(check_avail=True)
+            if self.plan_error.error:
+                self.set_modal_info([], {
                     "show": True,
-                    "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
-                    "num_buttons": 3,
-                    "buttons": {
-                        1: {
-                            "caption": "OK",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_ok"
-                        },
-                        2: {
-                            "caption": "Start at Step 1",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_step_1"
-                        },
-                        3: {
-                            "caption": "Cancel",
-                            "className": "btn btn-danger btn-large",
-                            "response": "modal_close"
-                        }
-                    }
+                    "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message} Please pick another plan.</p>",
+                    "num_buttons": 0
                 })
+            else:
+                msg = f"Run plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+                self.set_modal_info(
+                    [], {
+                        "show": True,
+                        "html": f"<h2 class='test'>Confirm Run Plan</h2><p>{msg}</p>",
+                        "num_buttons": 3,
+                        "buttons": {
+                            1: {
+                                "caption": "OK",
+                                "className": "btn btn-success btn-large",
+                                "response": "modal_ok"
+                            },
+                            2: {
+                                "caption": "Start at Step 1",
+                                "className": "btn btn-success btn-large",
+                                "response": "modal_step_1"
+                            },
+                            3: {
+                                "caption": "Cancel",
+                                "className": "btn btn-danger btn-large",
+                                "response": "modal_close"
+                            }
+                        }
+                    })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
-            self.run_async(self.save_plan_to_default())
-            self.plan_step_timer_target = asyncio.get_event_loop().time()
-            return self.tran(self._run_plan2)
+            if self.plan_error.error:
+                return self.tran(self._operational)
+            else:
+                self.run_async(self.save_plan_to_default())
+                self.plan_step_timer_target = asyncio.get_event_loop().time()
+                return self.tran(self._run_plan2)
         elif sig == Signal.MODAL_STEP_1:
-            #set step to #1
+            # set step to #1
             self.set_plan(["current_step"], 1)
             self.run_async(self.save_plan_to_default())
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
         elif sig == Signal.MODAL_CLOSE:
-            #SET CURRENT_STEP
+            # SET CURRENT_STEP
             return self.tran(self._operational)
         return self.super(self._run_plan)
 
@@ -1810,13 +1825,17 @@ class PigssController(Ahsm):
     def _run_plan211(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            some_clean_active = any([self.clean_active[bank] for bank in self.clean_active])
+            some_clean_active = any([self.clean_active[bank]
+                                     for bank in self.clean_active])
             if self.reference_active:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
+                Framework.publish(
+                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             elif some_clean_active:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload(
+                    "clean", self.clean_active)))
             else:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload(
+                    "control", self.chan_active)))
             self.disable_buttons()
             self.timer = True
             self.run_async(self.timer_update())
@@ -1847,38 +1866,49 @@ class PigssController(Ahsm):
     def _loop_plan1(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
-            self.set_modal_info(
-                [], {
+            self.plan_error = self.validate_plan(check_avail=True)
+            if self.plan_error.error:
+                self.set_modal_info([], {
                     "show": True,
-                    "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
-                    "num_buttons": 3,
-                    "buttons": {
-                        1: {
-                            "caption": "OK",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_ok"
-                        },
-                        2: {
-                            "caption": "Start at Step 1",
-                            "className": "btn btn-success btn-large",
-                            "response": "modal_step_1"
-                        },
-                        3: {
-                            "caption": "Cancel",
-                            "className": "btn btn-danger btn-large",
-                            "response": "modal_close"
-                        }
-                    }
+                    "html": f"<h3 class='test'>Plan error</h3><p>{self.plan_error.message} Please pick another plan.</p>",
+                    "num_buttons": 0
                 })
+            else:
+                msg = f"Loop plan <b>{self.plan['plan_filename']}</b> starting at step {self.plan['current_step']}"
+                self.set_modal_info(
+                    [], {
+                        "show": True,
+                        "html": f"<h2 class='test'>Confirm Loop Plan</h2><p>{msg}</p>",
+                        "num_buttons": 3,
+                        "buttons": {
+                            1: {
+                                "caption": "OK",
+                                "className": "btn btn-success btn-large",
+                                "response": "modal_ok"
+                            },
+                            2: {
+                                "caption": "Start at Step 1",
+                                "className": "btn btn-success btn-large",
+                                "response": "modal_step_1"
+                            },
+                            3: {
+                                "caption": "Cancel",
+                                "className": "btn btn-danger btn-large",
+                                "response": "modal_close"
+                            }
+                        }
+                    })
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
-            self.run_async(self.save_plan_to_default())
-            self.plan_step_timer_target = asyncio.get_event_loop().time()
-            return self.tran(self._loop_plan2)
+            if self.plan_error.error:
+                return self.tran(self._operational)
+            else:
+                self.run_async(self.save_plan_to_default())
+                self.plan_step_timer_target = asyncio.get_event_loop().time()
+                return self.tran(self._loop_plan2)
         elif sig == Signal.MODAL_STEP_1:
             self.set_plan(["current_step"], 1)
             self.run_async(self.save_plan_to_default())
@@ -1966,13 +1996,17 @@ class PigssController(Ahsm):
     def _loop_plan211(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            some_clean_active = any([self.clean_active[bank] for bank in self.clean_active])
+            some_clean_active = any([self.clean_active[bank]
+                                     for bank in self.clean_active])
             if self.reference_active:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
+                Framework.publish(
+                    Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             elif some_clean_active:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("clean", self.clean_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload(
+                    "clean", self.clean_active)))
             else:
-                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("control", self.chan_active)))
+                Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload(
+                    "control", self.chan_active)))
             self.disable_buttons()
             self.timer = True
             self.run_async(self.timer_update())
@@ -2045,14 +2079,14 @@ class PigssController(Ahsm):
                 await self.wait_for_state(self._load1, "Timeout reaching _load state before loading plan file")
                 Framework.publish(Event(Signal.LOAD_FILENAME, None))
                 await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
-                Framework.publish(Event(Signal.FILENAME_OK,  {"name": self.last_running}))
+                Framework.publish(Event(Signal.FILENAME_OK,  {
+                                  "name": self.last_running}))
                 await self.wait_for_state(self._load_preview1, "Timeout reaching _load_preview1 state")
                 Framework.publish(Event(Signal.LOAD_MODAL_OK, None))
                 # await self.wait_for_state(self._load_preview2, "Timeout reaching _load_preview2 state")
-                ##loads plan
+                # loads plan
                 await asyncio.sleep(1.0)
                 await self.click_button("plan_loop", Signal.BTN_PLAN_LOOP, "Timeout waiting to start default plan")
-                await asyncio.sleep(1.0)
                 await self.wait_for_state(self._loop_plan1, "Timeout reaching _loop_plan1 state")
                 Framework.publish(Event(Signal.MODAL_OK, None))
         except TimeoutError as e:
