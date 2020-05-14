@@ -1,4 +1,4 @@
-import React, { PureComponent } from "react";
+import React, { Component } from "react";
 import BankPanel from "./BankPanel";
 import CommandPanel from "./CommandPanel";
 import PlanLoadPanel from "./PlanLoadPanel";
@@ -24,7 +24,7 @@ interface State {
   loadedFileName: string;
 }
 
-export class RunLayout extends PureComponent<RunLayoutProps, State> {
+export class RunLayout extends Component<RunLayoutProps, State> {
   constructor(props) {
     super(props);
     this.state = {
@@ -42,8 +42,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
       },
       loadedFileName: this.props.loadedFileName,
     };
-    this.updatePanelToShow = this.updatePanelToShow.bind(this);
-    this.cancelLoadPlan = this.cancelLoadPlan.bind(this);
     this.deleteFile = this.deleteFile.bind(this);
     this.getPlanFromFileName = this.getPlanFromFileName.bind(this);
     this.setModalInfo = this.setModalInfo.bind(this);
@@ -89,7 +87,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
   getPlanFromFileName(filename: string) {
     PlanService.getFileData(filename).then((response: any) =>
       response.json().then((data) => {
-        console.log(`Getting Plan from Filename ${filename}! `, data);
         if (data.message) {
           this.setModalInfo(
             true,
@@ -123,21 +120,12 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           );
           this.props.getPlanFileNames();
         } else {
-          console.log("Plan Deleted! ", data);
           this.props.getPlanFileNames();
         }
       })
     );
   }
 
-  updatePanelToShow(panel: number) {
-    // this.setState({ panel_to_show: panel });
-  }
-
-  cancelLoadPlan() {
-    // set old state?
-    // disabled run and loop
-  }
 
   render() {
     let left_panel;
@@ -148,7 +136,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             plan={this.props.plan}
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
-            updatePanel={this.updatePanelToShow}
             layoutSwitch={this.props.layoutSwitch}
             planID={this.state.plan_id}
             loadedFileName={this.state.loadedFileName}
@@ -160,9 +147,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           <PlanLoadPanel
             plan={this.props.plan}
             ws_sender={this.props.ws_sender}
-            updatePanel={this.updatePanelToShow}
             fileNames={this.props.fileNames}
-            cancelLoadPlan={this.cancelLoadPlan}
             deleteFile={this.deleteFile}
             getPlanFromFileName={this.getPlanFromFileName}
             planID={this.state.plan_id}
@@ -177,7 +162,6 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
             uistatus={this.props.uistatus}
             ws_sender={this.props.ws_sender}
             planID={this.state.plan_id}
-            updatePanel={this.updatePanelToShow}
           />
         );
         break;
@@ -186,9 +170,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           <PlanPreview
             plan={this.state.plan}
             ws_sender={this.props.ws_sender}
-            updatePanel={this.updatePanelToShow}
             fileNames={this.state.fileNames}
-            cancelLoadPlan={this.cancelLoadPlan}
             planID={this.state.plan_id}
             loadedFileName={this.state.loadedFileName}
           />
@@ -222,6 +204,7 @@ export class RunLayout extends PureComponent<RunLayoutProps, State> {
           const modal_info = this.state.modal_info;
           modalButtons.push(
             <button
+              key={i}
               className={modal_info.buttons[i].className}
               style={{ margin: "10px" }}
               onClick={() => {

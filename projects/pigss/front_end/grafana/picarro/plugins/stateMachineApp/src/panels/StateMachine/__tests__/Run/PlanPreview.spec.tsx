@@ -20,9 +20,7 @@ const socketURL = `ws://${apiLoc}/ws`;
 const defaultProps: PreviewPanelOptions = {
   planID: "",
   plan: mockLoadPanelData,
-  updatePanel: mockUpdatePanel,
   fileNames: ["Test1","Test2"],
-  cancelLoadPlan: mockCancelLoadPlan,
   ws_sender: mockClick,
   loadedFileName: "Testing",
 };

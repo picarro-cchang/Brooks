@@ -93,7 +93,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
               id={"load-plan"}
               onClick={(e) => {
                 this.props.ws_sender({ element: "load" });
-                this.props.updatePanel(1);
               }}
               disabled={this.getDisabled("load")}
               value="load"
@@ -164,7 +163,6 @@ class CommandPanel extends PureComponent<CommandPanelOptions, State> {
               className={"btn btn-large btn-edit btn-danger"}
               onClick={(e) => {
                 this.props.ws_sender({ element: "edit" });
-                this.props.updatePanel(2);
               }}
               disabled={this.getDisabled("edit")}
             >

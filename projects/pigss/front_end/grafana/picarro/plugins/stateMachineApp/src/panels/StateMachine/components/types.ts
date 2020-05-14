@@ -77,7 +77,6 @@ export interface BankPanelPlanOptions {
       clean?: { [bankNum: string]: string };
       channel?: { [bankNum: string]: { [channelNum: string]: string } };
     };
-    // ws_sender: (o: object) => void;
     plan: Plan;
     addChanneltoPlan: (bank: number, channel: number) => void;
 }
@@ -85,11 +84,7 @@ export interface BankPanelPlanOptions {
 export interface LoadPanelCommandOptions {
     plan: Plan;
     ws_sender: (o: object) => void;
-    updatePanel: (x: number) => void;
-    // loadPlan: (x: string) => void;
-    // deleteFile: (x: string) => void;
     fileNames: {}
-    cancelLoadPlan: () => void;
     getPlanFromFileName: (fileName: string) => void;
     deleteFile: (file: string, id: number) => void;
     loadedFileName: string;
@@ -99,11 +94,7 @@ export interface LoadPanelCommandOptions {
   export interface PreviewPanelOptions {
     plan: Plan;
     ws_sender: (o: object) => void;
-    updatePanel: (x: number) => void;
-    // loadPlan: (x: string) => void;
-    // deleteFile: (x: string) => void;
     fileNames: {}
-    cancelLoadPlan: () => void;
     loadedFileName: string;
     planID: String;
   }
@@ -111,7 +102,6 @@ export interface LoadPanelCommandOptions {
 
   export interface LoadPanelOptions {
     plan: Plan;
-    // ws_sender: (o: object) => void;
     isEdited: boolean;
     updateFileName: (x: boolean) => void;
     updatePanel: (x: number) => void;
@@ -138,7 +128,6 @@ export interface PlanPanelOptions {
 
   export interface PlanSavePanelOptions {
     plan: Plan;
-    // ws_sender: (o: object) => void;
     isEdited: boolean;
     updateFileName: (x: boolean) => void;
     planSaved: (f: string, d: object) => void;
@@ -168,17 +157,15 @@ export interface PlanPanelOptions {
     };
     ws_sender: (o: object) => void;
     plan: Plan;
-    updatePanel: (x: number) => void;
     planID: String;
-  
   }
+
   export interface CommandPanelOptions {
     uistatus: {
       [key: string]: string;
     };
     ws_sender: (o: object) => void;
     plan: Plan;
-    updatePanel: (x: number) => void;
     layoutSwitch: () => void;
     loadedFileName: string;
     planID: String;

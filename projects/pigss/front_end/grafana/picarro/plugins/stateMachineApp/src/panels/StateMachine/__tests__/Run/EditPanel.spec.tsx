@@ -26,7 +26,6 @@ const defaultProps: EditPanelOptions = {
   },
   plan: mockPlan,
   ws_sender: mockClick,
-  updatePanel: mockUpdatePanel
 };
 
 describe("<EditPanel />", () => {
@@ -239,7 +238,6 @@ describe("<EditPanel /> Using Failing Channel Names", () => {
       }
     },
     ws_sender: mockClick,
-    updatePanel: mockUpdatePanel
   };
   const component = new EditPanel(defaultPropsFail);
 

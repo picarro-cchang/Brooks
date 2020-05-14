@@ -362,7 +362,6 @@ exports[`<RunLayout /> Match Snapshot 1`] = `
               "standby": "ACTIVE",
             }
           }
-          updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
       </div>
@@ -1502,7 +1501,6 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
         }
       >
         <PlanLoadPanel
-          cancelLoadPlan={[Function]}
           deleteFile={[Function]}
           fileNames={
             Array [
@@ -1793,7 +1791,6 @@ exports[`<RunLayout /> Renders Correct Component 1`] = `
             }
           }
           planID=""
-          updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
       </div>
@@ -3270,7 +3267,6 @@ exports[`<RunLayout /> Renders Correct Component 2`] = `
               "standby": "ACTIVE",
             }
           }
-          updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
       </div>
@@ -4410,7 +4406,6 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
         }
       >
         <PlanPreview
-          cancelLoadPlan={[Function]}
           fileNames={
             Array [
               "Test",
@@ -4699,7 +4694,6 @@ exports[`<RunLayout /> Renders Correct Component 3`] = `
             }
           }
           planID=""
-          updatePanel={[Function]}
           ws_sender={[MockFunction]}
         />
       </div>

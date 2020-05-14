@@ -126,15 +126,9 @@ describe("<Main />", () => {
     instance.ws = client;
     instance.attachWSMethods(instance.ws);
     await server.connected;
-    console.log(data)
-    console.log(JSON.parse(data))
     server.send(data);
     expect(handleDataSpy).toHaveBeenCalled();
     server.close();
     instance.ws.close();
-    // expect(client).toReceiveMessage();
   })
-
-  // server.close;
-  // client.close;
 });

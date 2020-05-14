@@ -29,7 +29,6 @@ const defaultProps: CommandPanelOptions = {
   },
   ws_sender: mockClick,
   plan: mockPlan,
-  updatePanel: mockUpdatePanel,
   layoutSwitch: mockSwitchLayout,
   loadedFileName: "Testing"
 };
@@ -148,9 +147,4 @@ describe("<CommandPanel />", () => {
     mockClick.mockClear();
   });
 
-  it("Edit Labels", async () => {
-    wrapper.find("button#edit-labels").simulate("click");
-    expect(mockUpdatePanel).toHaveBeenCalledWith(2);
-    mockUpdatePanel.mockClear();
-  });
 });

@@ -26,9 +26,6 @@ const defaultProps: RunLayoutProps = {
 };
 describe("<RunLayout />", () => {
   const deleteFile = jest.spyOn(RunLayout.prototype, "deleteFile");
-  const updatePanelToShow = jest.spyOn(RunLayout.prototype, "updatePanelToShow");
-  // const loadPlan = jest.spyOn(RunLayout.prototype, "loadPlan");
-  const cancelLoadPlan = jest.spyOn(RunLayout.prototype, "cancelLoadPlan")
   const setModalInfor = jest.spyOn(RunLayout.prototype, "setModalInfo")
   const getPlanFromFilename = jest.spyOn(RunLayout.prototype, "getPlanFromFileName")
   const wrapper = shallow(<RunLayout {...defaultProps} />);
@@ -51,14 +48,6 @@ describe("<RunLayout />", () => {
     expect(wrapper.find("PlanPreview").html()).toBeDefined();
   });
 
-  it("updatePanelToShow", () => {
-    mountwrapper.setState({panel_to_show: 0})
-    const button = mountwrapper.find('CommandPanel').find('button#load-plan')
-    // console.log("button", button.html())
-    button.simulate('click');
-    expect(updatePanelToShow).toHaveBeenCalled();
-  });
-
   it("deleteFile", () => {
     mountwrapper.setState({ panel_to_show: 1 });
     const button = mountwrapper.find('PlanLoadPanel').find('button').at(1);
@@ -76,13 +65,5 @@ describe("<RunLayout />", () => {
     const planButton = mountwrapper.find('PlanPreview').find('button').at(1)
     planButton.simulate('click')
   });
-
-  it("cancelLoadPlan", () => {
-    mountwrapper.setState({ panel_to_show: 3 });
-    const button = mountwrapper.find('PlanPreview').find('button#cancel-load-plan')
-    button.simulate('click');
-    expect(cancelLoadPlan).toHaveBeenCalled();
-  });
-
 
 });

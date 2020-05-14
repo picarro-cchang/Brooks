@@ -292,7 +292,6 @@ exports[`<EditPanel /> Match Snapshot 1`] = `
       },
     }
   }
-  updatePanel={[MockFunction]}
   ws_sender={[MockFunction]}
 >
   <div
@@ -1261,21 +1260,6 @@ exports[`<EditPanel /> Test Modal is open 1`] = `
         "3": "READY",
         "4": "READY",
       },
-    }
-  }
-  updatePanel={
-    [MockFunction] {
-      "calls": Array [
-        Array [
-          0,
-        ],
-      ],
-      "results": Array [
-        Object {
-          "type": "return",
-          "value": 0,
-        },
-      ],
     }
   }
   ws_sender={[MockFunction]}

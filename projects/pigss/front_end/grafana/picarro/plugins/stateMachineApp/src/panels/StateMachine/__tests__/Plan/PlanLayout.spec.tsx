@@ -77,18 +77,12 @@ describe("<PlanLayout />", () => {
     mountwrapper.setState({panel_to_show: 0})
     mountwrapper.setState({isEdited: true})
     const input = mountwrapper.find('PlanPanel').find('button#ok-btn')
-    console.log(input.html())
-    // input.simulate('change', { target: { value: 'Plan2' } });
-    // const load = mountwrapper.find('SavePanel').find('button#save-btn');
     input.simulate("click");
     expect(mountwrapper).toMatchSnapshot();
     expect(setModal).toHaveBeenCalled();
     const modalOK = mountwrapper.find('Modal').find('button').at(0)
-    // console.log("BOOTY", modalOK)
-    // console.log("BUTN ", mountwrapper.state('panel_to_show'))
     modalOK.simulate("click");
     expect(planOverwrite).toHaveBeenCalled();
-    // expect(setModal).toHaveBeenCalled();
   })
 
   it("addChannelToPlan", () => {

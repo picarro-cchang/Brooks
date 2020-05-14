@@ -188,7 +188,6 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
         4: { name: this.state.plan.bank_names[4].name, channels: channels4 },
       },
     });
-    this.props.updatePanel(0);
   };
 
   handleClose = () => {
@@ -205,7 +204,6 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
       },
     });
     this.props.ws_sender({ element: "edit_cancel" });
-    this.props.updatePanel(0);
   };
 
   render() {

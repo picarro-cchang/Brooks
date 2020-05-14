@@ -94,7 +94,6 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
                 id={"cancel"}
                 type="button"
                 onClick={(e) => {
-                  this.props.updatePanel(0);
                   this.props.ws_sender({
                     element: "load_cancel",
                   });

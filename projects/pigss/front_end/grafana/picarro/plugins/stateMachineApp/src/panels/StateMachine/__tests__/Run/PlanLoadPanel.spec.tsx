@@ -20,9 +20,7 @@ const defaultProps: LoadPanelCommandOptions = {
   planID: "",
   plan: mockLoadPanelData,
   deleteFile: mockDeleteFile,
-  updatePanel: mockUpdatePanel,
   fileNames: ["Test1","Test2"],
-  cancelLoadPlan: mockCancelLoadPlan,
   ws_sender: mockClick,
   getPlanFromFileName: mockGetPlanFromFileName,
   loadedFileName: "Testing"
@@ -55,12 +53,6 @@ describe("<PlanLoadPanel />", () => {
     ).toEqual("Test1");
   });
 
-  it("Cancel", () => {
-    const cancel = wrapper.find("button#cancel");
-    cancel.simulate("click");
-    expect(mockUpdatePanel).toBeCalled();
-  });
-
   it("Load File", async () => {
     await server.connected;
     const fileButton = mount(<PlanLoadPanel {...defaultProps} />)
@@ -68,8 +60,7 @@ describe("<PlanLoadPanel />", () => {
       .find("button")
       .at(0);
     fileButton.simulate("click");
-    console.log(mockClick.mock.calls)
-    const element = mockClick.mock.calls[1][0];
+    const element = mockClick.mock.calls[0][0];
     client.send(element);
     expect(mockGetPlanFromFileName).toHaveBeenCalled();
     await expect(server).toReceiveMessage({"element":"load_filename"});

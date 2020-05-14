@@ -328,7 +328,6 @@ exports[`<Main /> Snapshot 1`] = `
                 }
                 planID=""
                 uistatus={Object {}}
-                updatePanel={[Function]}
                 ws_sender={[Function]}
               >
                 <div
