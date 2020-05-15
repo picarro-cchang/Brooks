@@ -46,9 +46,10 @@ function make_panel(result) {
                 type: "hidden"
               },
               {
-                alias: "",
+                alias: "Average Value",
                 decimals: 2,
-                pattern: "/.*/",
+                mappingType: 1,
+                pattern: "Value",
                 type: "number",
                 unit: "short"
               }
