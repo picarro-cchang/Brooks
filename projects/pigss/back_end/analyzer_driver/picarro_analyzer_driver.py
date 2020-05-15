@@ -73,7 +73,6 @@ class PicarroAnalyzerDriver:
                  logger=None):
         self.APP_NAME = app_name
         self.instrument_ip_address = instrument_ip_address
-        self.engineering_name, self.model_number  = self.get_model_number()
         self.database_writer = database_writer
         self.rpc_server_name = rpc_server_name
         self.rpc_server_port = rpc_server_port
@@ -98,6 +97,8 @@ class PicarroAnalyzerDriver:
         if logger is None:
             self.logger = LOLoggerClient(client_name=self.rpc_server_name, verbose=True)
 
+        self.engineering_name, self.model_number  = self.get_model_number()
+        
         if database_tags is not None:
             for database_tag in database_tags:
                 self.add_tags(database_tags)
