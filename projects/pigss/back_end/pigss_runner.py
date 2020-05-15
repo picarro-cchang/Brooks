@@ -130,7 +130,10 @@ class PigssRunner:
 
         log = LOLoggerClient(client_name="PlanService", verbose=True)
         # Get DB file path from config, and pass in instance as db_file
-        db_file = os.path.join(os.getenv("HOME"), ".config", "pigss", "data", "sam_data.db")
+        db_path = os.path.join(os.getenv("HOME"), ".config", "pigss", "data")
+        db_file = os.path.join(db_path, "sam_data.db")
+        if not os.path.exists(db_path):
+            os.makedirs(db_path)
         manage_plan_service = PlanService(log, db_file)
         manage_plan_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/manage_plan/", manage_plan_service.app)
