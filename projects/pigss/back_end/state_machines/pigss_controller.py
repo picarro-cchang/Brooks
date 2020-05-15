@@ -556,7 +556,7 @@ class PigssController(Ahsm):
             plans = await self.fetch(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?names=true')
         await asyncio.sleep(1.0)
         plans = json.loads(plans)
-        if plans["plans"]:
+        if "plans" in plans:
             num = len(plans["plans"])
             self.set_plan(["plan_files"], plans["plans"])
             self.set_plan(["num_plan_files"], num)
