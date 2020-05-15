@@ -182,9 +182,11 @@ export class Main extends React.Component<any, any> {
     );
     const fileNames = PlanService.getFileNames().then((res) => {
       res.json().then((obj) => {
-        this.setState(
+        if (obj.plans) {
+           this.setState(
           deepmerge(this.state.fileNames, { fileNames: obj.plans })
         );
+        }
       });
     });
     Promise.all([uiStatusData, planData, fileNames]).then(() => {
