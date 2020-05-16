@@ -164,7 +164,7 @@ class PigssController(Ahsm):
         }
         self.timer = False
         self.run_type = None
-        self.cur_port = None
+        self.cur_port = ""
         self.send_queue = None
         self.receive_queue = None
         db_config = self.farm.config.get_time_series_database()
@@ -736,7 +736,7 @@ class PigssController(Ahsm):
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["edit"], UiStatus.READY)
             self.set_status(["timer"], 0)
-            self.set_status(["run_type"], False)
+            self.set_status(["run_type"], 0)
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -815,6 +815,7 @@ class PigssController(Ahsm):
             self.set_status(["standby"], UiStatus.ACTIVE)
             self.set_status(["timer"], 0)
             self.set_status(["run_type"], 0)
+            self.set_status(["cur_port"], "Standby")
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
@@ -851,7 +852,8 @@ class PigssController(Ahsm):
             Framework.publish(Event(Signal.PERFORM_VALVE_TRANSITION, ValveTransitionPayload("reference")))
             self.disable_buttons()
             self.set_status(["reference"], UiStatus.ACTIVE)
-            self.set_status(["run_type"], 0)
+            self.set_status(["run_type"], 1)
+            self.set_status(["cur_port"], "Reference")
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
@@ -873,6 +875,7 @@ class PigssController(Ahsm):
     def _clean(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.set_status(["cur_port"], f"Clean {self.bank}")
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -895,7 +898,7 @@ class PigssController(Ahsm):
             self.disable_buttons()
             self.set_status(["clean", self.bank], UiStatus.CLEAN)
             self.clean_active[self.bank] = 1
-            self.set_status(["run_type"], 0)
+            self.set_status(["run_type"], 2)
             return self.handled(e)
         elif sig == Signal.VALVE_TRANSITION_DONE:
             self.restore_buttons()
@@ -922,6 +925,7 @@ class PigssController(Ahsm):
             self.banks_to_process = self.all_banks.copy()
             self.bank = self.banks_to_process.pop(0)
             self.set_status(["run_type"], 0)
+            self.set_status(["cur_port"], "Identify")
             return self.handled(e)
         elif sig == Signal.EXIT:
             self.set_status(["identify"], UiStatus.READY)
@@ -1352,7 +1356,7 @@ class PigssController(Ahsm):
     def _run(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
-            self.set_status(["run_type"], 1)
+            self.set_status(["run_type"], 3)
             self.set_status(["run"], UiStatus.ACTIVE)
             return self.handled(e)
         elif sig == Signal.EXIT:
@@ -1419,6 +1423,9 @@ class PigssController(Ahsm):
             for bank in self.all_banks:
                 mask = self.chan_active[bank]
                 for j in setbits(mask):
+                    label = self.plan["bank_names"][str(bank)]["channels"][str(j+1)]
+                    port = (bank-1)*8 + (j + 1)
+                    self.set_status(["cur_port"], f"{port}: {label}")
                     self.set_status(["channel", bank, j + 1], UiStatus.ACTIVE)
             return self.handled(e)
         return self.super(self._run1)
@@ -1474,12 +1481,12 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
-            self.set_status(["run_type"], 2)
+            self.set_status(["run_type"], 4)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._run_plan2)
         elif sig == Signal.MODAL_STEP_1:
-            self.set_status(["run_type"], 2)
+            self.set_status(["run_type"], 4)
             #set step to #1
             self.set_plan(["current_step"], 1)
             self.save_plan_to_file("__default__")
@@ -1634,12 +1641,12 @@ class PigssController(Ahsm):
             self.set_modal_info(["show"], False)
             return self.handled(e)
         elif sig == Signal.MODAL_OK:
-            self.set_status(["run_type"], 2)
+            self.set_status(["run_type"], 4)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()
             return self.tran(self._loop_plan2)
         elif sig == Signal.MODAL_STEP_1:
-            self.set_status(["run_type"], 2)
+            self.set_status(["run_type"], 4)
             self.set_plan(["current_step"], 1)
             self.save_plan_to_file("__default__")
             self.plan_step_timer_target = asyncio.get_event_loop().time()

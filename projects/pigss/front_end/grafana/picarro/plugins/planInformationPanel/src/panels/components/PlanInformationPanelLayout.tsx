@@ -12,6 +12,7 @@ interface State {
   timer: number;
   ws: WebSocket;
   runType: Number;
+  currentPort: String;
 }
 
 const REFRESH_INTERVAL = 5;
@@ -24,6 +25,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       ws: null,
       timer: null,
       initialized: false,
+      currentPort: "",
       uistatus: {},
       runType: null,
       plan: {
@@ -102,8 +104,17 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         if (o.uistatus.timer) {
           this.setState({ timer: o.uistatus.timer });
         }
-        if (o.uistatus.run_type == 1 || o.uistatus.run_type == 2 || o.uistatus.run_type == 0) {
-          this.setState({runType: o.uistatus.run_type})
+        if (
+          o.uistatus.run_type == 1 ||
+          o.uistatus.run_type == 2 ||
+          o.uistatus.run_type == 0 ||
+          o.uistatus.run_type == 3 ||
+          o.uistatus.run_type == 4
+        ) {
+          this.setState({ runType: o.uistatus.run_type });
+        }
+        if (o.uistatus.cur_port !== undefined) {
+          this.setState({ currentPort: o.uistatus.cur_port });
         }
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
@@ -188,6 +199,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
             plan={this.state.plan}
             timer={this.state.timer}
             runType={this.state.runType}
+            currentPort={this.state.currentPort}
           />
         ) : null}
       </div>
