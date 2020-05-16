@@ -11,6 +11,7 @@ interface State {
   initialized: boolean;
   timer: number;
   ws: WebSocket;
+  runType: Number;
 }
 
 const REFRESH_INTERVAL = 5;
@@ -24,6 +25,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       timer: null,
       initialized: false,
       uistatus: {},
+      runType: null,
       plan: {
         max_steps: 32,
         panel_to_show: 0,
@@ -97,12 +99,12 @@ export class PlanInformationPanelLayout extends Component<any, any> {
   handleData(o: any) {
     if (this.state.initialized) {
       if ("uistatus" in o) {
-        const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         if (o.uistatus.timer) {
           this.setState({ timer: o.uistatus.timer });
         }
-
-        this.setState({ uistatus });
+        if (o.uistatus.run_type == 1 || o.uistatus.run_type == 2 || o.uistatus.run_type == 0) {
+          this.setState({runType: o.uistatus.run_type})
+        }
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
@@ -185,6 +187,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
             uistatus={this.state.uistatus}
             plan={this.state.plan}
             timer={this.state.timer}
+            runType={this.state.runType}
           />
         ) : null}
       </div>

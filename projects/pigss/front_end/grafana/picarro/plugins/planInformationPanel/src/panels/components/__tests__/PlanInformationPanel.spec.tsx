@@ -12,6 +12,7 @@ const defaultProps: Props = {
   uistatus: mockData,
   plan: mockPlan,
   timer: 30,
+  runType: 2
 };
 
 describe("<PlanInformationPanel />", () => {
