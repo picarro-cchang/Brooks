@@ -56,7 +56,7 @@ if INIT:
     loadSpectralLibrary(fname)
     loadPhysicalConstants(fname)
     loadSplineLibrary(fname)
-    fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/FitterConfig_Manometer.ini")
+    fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/FitterConfig_HCl_140Torr_45C.ini")
     instrParams = getInstrParams(fname)
     fname = os.path.join(BASEPATH,r"../../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal_lct.ini")
     cavityParams = getInstrParams(fname)
@@ -76,20 +76,22 @@ if INIT:
     
 #   Spectroscopic parameters
     fH2O = 5732.47312               # library center for Galatry peak 60
-    h2o_lin = instrParams['H2O_linear']
+    h2o_lin = instrParams['H2O_linear_manometer']
       
 #   Baseline parameters
 
-    baseline_level = instrParams['Baseline_level']
-    baseline_slope = instrParams['Baseline_slope']
-    A0 = instrParams['Sine0_ampl']
-    Nu0 = instrParams['Sine0_freq']
-    Per0 = instrParams['Sine0_period']
-    Phi0 = instrParams['Sine0_phase']
-    A1 = instrParams['Sine1_ampl']
-    Nu1 = instrParams['Sine1_freq']
-    Per1 = instrParams['Sine1_period']
-    Phi1 = instrParams['Sine1_phase']
+
+    baseline_level = instrParams['HCl_Baseline_level']
+    baseline_slope = instrParams['HCl_Baseline_slope']
+    A0 = instrParams['HCl_Sine0_ampl']
+    Nu0 = instrParams['HCl_Sine0_freq']
+    Per0 = instrParams['HCl_Sine0_period']
+    Phi0 = instrParams['HCl_Sine0_phase']
+    A1 = instrParams['HCl_Sine1_ampl']
+    Nu1 = instrParams['HCl_Sine1_freq']
+    Per1 = instrParams['HCl_Sine1_period']
+    Phi1 = instrParams['HCl_Sine1_phase']
+
     
 #   Initialize values
 
