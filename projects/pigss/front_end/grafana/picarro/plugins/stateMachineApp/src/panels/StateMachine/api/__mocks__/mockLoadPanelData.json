@@ -6,13 +6,41 @@
         "row": 1,
         "column": 2
     },
-    "last_step": 1,
+    "last_step": 3,
     "steps": {
         "1": {
             "banks": {
                 "1": {
                 "clean": 0,
                 "chan_mask": 1
+                },
+                "2": {
+                "clean": 0,
+                "chan_mask": 0
+                }
+            },
+            "reference": 0,
+            "duration": 30
+        },
+        "2": {
+            "banks": {
+                "1": {
+                "clean": 0,
+                "chan_mask": 0
+                },
+                "2": {
+                "clean": 0,
+                "chan_mask": 0
+                }
+            },
+            "reference": 1,
+            "duration": 30
+        },
+        "3": {
+            "banks": {
+                "1": {
+                "clean": 1,
+                "chan_mask": 0
                 },
                 "2": {
                 "clean": 0,

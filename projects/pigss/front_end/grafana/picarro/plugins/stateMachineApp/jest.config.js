@@ -16,5 +16,5 @@ module.exports = {
   setupFiles: ["./setupJest.js"],
   moduleNameMapper: {
     "\\.(css|sass)$": "identity-obj-proxy",
-  },
+  }
 };

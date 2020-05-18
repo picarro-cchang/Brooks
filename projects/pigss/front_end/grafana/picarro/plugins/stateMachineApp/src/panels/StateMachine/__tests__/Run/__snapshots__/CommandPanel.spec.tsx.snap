@@ -1,0 +1,110 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<CommandPanel /> Renders Correctly 1`] = `
+<div
+  className="panel-command"
+>
+  <div
+    style={
+      Object {
+        "marginTop": 20,
+        "width": "100%",
+      }
+    }
+  >
+    <div
+      className="grid-command"
+      style={
+        Object {
+          "display": "grid",
+          "gridGap": 5,
+          "gridTemplateColumns": "4rem 4rem 4rem 4rem 4rem 4rem",
+          "padding": 20,
+        }
+      }
+    >
+      <button
+        className="btn btn-large btn-command btn-1-3 undefined"
+        disabled={false}
+        id="standby"
+        onClick={[Function]}
+        value="standby"
+      >
+        Standby
+      </button>
+      <button
+        className="btn btn-large btn-command btn-1-3 "
+        disabled={true}
+        id="identify"
+        onClick={[Function]}
+        value="identify"
+      >
+        Identify Available Channels
+      </button>
+      <button
+        className="btn btn-large btn-command btn-edit-plan btn-outline-success"
+        disabled={false}
+        id="edit-plan"
+        onClick={[Function]}
+        value="plan"
+      >
+        Edit Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-load "
+        disabled={true}
+        id="load-plan"
+        onClick={[Function]}
+        value="load"
+      >
+        Load Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run-single btn-outline-success"
+        disabled={false}
+        id="run-channel"
+        onClick={[Function]}
+        value="run"
+      >
+        Single Port
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run btn-outline-success"
+        disabled={false}
+        id="run-plan"
+        onClick={[Function]}
+        value="plan_run"
+      >
+        Run Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-run-loop btn-outline-success"
+        disabled={false}
+        id="loop-plan"
+        onClick={[Function]}
+        value="plan_loop"
+      >
+        Loop Plan
+      </button>
+      <button
+        className="btn btn-large btn-command btn-1-3 btn-outline-success"
+        disabled={false}
+        id="reference"
+        onClick={[Function]}
+        value="reference"
+      >
+        Reference
+      </button>
+      <button
+        className="btn btn-large btn-edit btn-danger"
+        disabled={false}
+        id="edit-labels"
+        onClick={[Function]}
+        value="edit"
+      >
+        Edit Labels
+      </button>
+    </div>
+  </div>
+</div>
+`;

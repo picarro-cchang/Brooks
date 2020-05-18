@@ -24,6 +24,7 @@ from back_end.servers.supervisor_service import SupervisorService
 from back_end.servers.system_status_service import SystemStatusService
 from back_end.servers.time_aggregation_sevice import TimeAggregationService
 from back_end.servers.species_type_service import SpeciesTypeService
+from back_end.servers.plan_service import PlanService
 from back_end.state_machines.pigss_farm import PigssFarm
 from common.async_helper import log_async_exception
 
@@ -125,6 +126,18 @@ class PigssRunner:
         species_type_service = SpeciesTypeService()
         species_type_service.app['farm'] = self.app['farm']
         self.app.add_subapp("/species/", species_type_service.app)
+
+
+        log = LOLoggerClient(client_name="PlanService", verbose=True)
+        # Get DB file path from config, and pass in instance as db_file
+        # Modify the following code to get the database filepath from config file
+        db_path = os.path.join(os.getenv("HOME"), ".config", "pigss", "data")
+        db_file = os.path.join(db_path, "sam_data.db")
+        if not os.path.exists(db_path):
+            os.makedirs(db_path)
+        manage_plan_service = PlanService(log, db_file)
+        manage_plan_service.app['farm'] = self.app['farm']
+        self.app.add_subapp("/manage_plan/", manage_plan_service.app)
 
         setup_swagger(self.app)
 
