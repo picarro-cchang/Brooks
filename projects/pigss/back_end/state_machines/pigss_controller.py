@@ -51,6 +51,12 @@ class PlanPanelType(IntEnum):
     EDIT = 2
     PREVIEW = 3
 
+class PlanServiceURL(str, Enum):
+    GET_PLAN_NAMES = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?names=true'
+    GET_LAST_RUNNING = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?last_running=true'
+    GET_PLAN_FROM_NAME = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?plan_name='
+    PUT = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan'
+
 
 def setbits(mask):
     """Return the bits set in the integer `mask` """
@@ -548,12 +554,12 @@ class PigssController(Ahsm):
         }
         data_json = json.dumps(data)
         async with aiohttp.ClientSession() as session:
-            res = await self.put_data(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan', data_json)
+            res = await self.put_data(session, PlanServiceURL.PUT, data_json)
         await asyncio.sleep(1.0)
 
     async def get_available_plans(self):
         async with aiohttp.ClientSession() as session:
-            plans = await self.fetch(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?names=true')
+            plans = await self.fetch(session, PlanServiceURL.GET_PLAN_NAMES)
         await asyncio.sleep(1.0)
         plans = json.loads(plans)
         if "plans" in plans:
@@ -563,7 +569,7 @@ class PigssController(Ahsm):
 
     async def get_last_running(self):
         async with aiohttp.ClientSession() as session:
-            last_run = await self.fetch(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?last_running=true')
+            last_run = await self.fetch(session, PlanServiceURL.GET_LAST_RUNNING)
             running_plan = json.loads(last_run)
             if "name" in running_plan:
                 self.plan_running_id = running_plan["plan_id"]
@@ -582,7 +588,7 @@ class PigssController(Ahsm):
         }
         data_json = json.dumps(data)
         async with aiohttp.ClientSession() as session:
-            res = await self.put_data(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan', data_json)
+            res = await self.put_data(session, PlanServiceURL.PUT, data_json)
 
     async def set_current_step(self):
         # needs to save file with current step
@@ -597,14 +603,14 @@ class PigssController(Ahsm):
         data_json = json.dumps(data)
 
         async with aiohttp.ClientSession() as session:
-            res = await self.put_data(session, 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan', data_json)
+            res = await self.put_data(session, PlanServiceURL.PUT, data_json)
 
     async def load_new_plan(self, name):
         '''Checks last_running is not the same, if it is, fine, just less steps. Loads this new plan via API call, sets new plan is_running=1'''
         if self.plan["plan_filename"] != "" and self.plan["plan_filename"] != name:
             await self.set_is_running(self.plan_running_id, self.plan["plan_filename"], self.plan, 0)
         async with aiohttp.ClientSession() as session:
-            data = await self.fetch(session, f'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?plan_name={name}')
+            data = await self.fetch(session, PlanServiceURL.GET_PLAN_FROM_NAME + name)
         data_new = json.loads(data)
         await self.set_is_running(data_new["plan_id"], name, data_new["details"], 1)
         new_plan = data_new["details"]
