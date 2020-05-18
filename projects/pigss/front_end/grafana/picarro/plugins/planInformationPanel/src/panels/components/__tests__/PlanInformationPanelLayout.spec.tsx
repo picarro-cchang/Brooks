@@ -28,13 +28,13 @@ describe("<PlanInformationPanelLayout />", () => {
   );
   const wrapper = mount(<PlanInformationPanelLayout />);
   const instance = wrapper.instance() as PlanInformationPanelLayout;
+  instance.ws = client;
 
   it("Snapshot", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
   it("WebSocket Calls", async () => {
-    instance.ws = client;
     instance.connect();
     await server.connected;
     server.send({ uistatus: { timer: 5 } });
@@ -46,6 +46,11 @@ describe("<PlanInformationPanelLayout />", () => {
     expect(instance.state.plan.current_step).toBe(5);
     server.send({ uistatus: { standby: "AVAILABLE" } });
     expect(handleData).toBeCalled();
+    server.send({ uistatus: { run_type: 1 } });
+    expect(handleData).toBeCalled();
+    server.send({ uistatus: { cur_port: 'Standby' } });
+    expect(instance.state.currentPort).toBe("Standby");
+    server.close;
   });
 
   it("Initialized State", async () => {
@@ -54,6 +59,7 @@ describe("<PlanInformationPanelLayout />", () => {
     instance.setState({ initialized: false });
     server.send({});
     expect(handleData).toHaveBeenCalled();
+    server.close;
   });
 
   it("componentWillUnmount", () => {

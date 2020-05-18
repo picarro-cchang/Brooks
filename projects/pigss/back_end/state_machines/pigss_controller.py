@@ -931,6 +931,7 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.EXIT:
             self.set_status(["standby"], UiStatus.READY)
+            self.set_status(["cur_port"], "")
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._standby1)
@@ -971,6 +972,7 @@ class PigssController(Ahsm):
             self.set_status(["reference"], UiStatus.READY)
             for bank in self.all_banks:
                 self.set_status(["bank", bank], UiStatus.READY)
+            self.set_status(["cur_port"], "")
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._reference1)
@@ -1018,6 +1020,7 @@ class PigssController(Ahsm):
                 self.set_status(["clean", bank], UiStatus.READY)
                 self.set_status(["bank", bank], UiStatus.READY)
                 self.clean_active[bank] = 0
+                self.set_status(["cur_port"], "")
             return self.handled(e)
         elif sig == Signal.INIT:
             return self.tran(self._clean1)
@@ -1072,6 +1075,7 @@ class PigssController(Ahsm):
             self.set_status(["load"], UiStatus.READY)
             self.set_status(["reference"], UiStatus.READY)
             self.set_status(["timer"], 0)
+            self.set_status(["cur_port"], "")
             for bank in self.all_banks:
                 # Use 1-origin for numbering banks and channels
                 self.set_status(["clean", bank], UiStatus.READY)
@@ -1835,6 +1839,9 @@ class PigssController(Ahsm):
                     current = chan_status[j + 1]
                     if current != UiStatus.DISABLED:
                         if j in sel:
+                            label = self.plan["bank_names"][str(bank)]["channels"][str(j+1)]
+                            port = (bank-1)*8 + (j + 1)
+                            self.set_status(["cur_port"], f"{port}: {label}")
                             if current != UiStatus.ACTIVE:
                                 chan_status[j + 1] = UiStatus.ACTIVE
                         else:
@@ -2009,6 +2016,9 @@ class PigssController(Ahsm):
                     current = chan_status[j + 1]
                     if current != UiStatus.DISABLED:
                         if j in sel:
+                            label = self.plan["bank_names"][str(bank)]["channels"][str(j+1)]
+                            port = (bank-1)*8 + (j + 1)
+                            self.set_status(["cur_port"], f"{port}: {label}")
                             if current != UiStatus.ACTIVE:
                                 chan_status[j + 1] = UiStatus.ACTIVE
                         else:
@@ -2059,6 +2069,8 @@ class PigssController(Ahsm):
     def _edit_edit(self, e):
         sig = e.signal
         if sig == Signal.ENTRY:
+            self.set_status(["run_type"], 0)
+            self.set_status(["cur_port"], "Standby")
             self.set_status(["panel"], int(PlanPanelType.EDIT))
             return self.handled(e)
         elif sig == Signal.EDIT_CANCEL:

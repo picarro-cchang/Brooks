@@ -104,13 +104,7 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         if (o.uistatus.timer) {
           this.setState({ timer: o.uistatus.timer });
         }
-        if (
-          o.uistatus.run_type == 1 ||
-          o.uistatus.run_type == 2 ||
-          o.uistatus.run_type == 0 ||
-          o.uistatus.run_type == 3 ||
-          o.uistatus.run_type == 4
-        ) {
+        if (o.uistatus.run_type != null){
           this.setState({ runType: o.uistatus.run_type });
         }
         if (o.uistatus.cur_port !== undefined) {
@@ -184,14 +178,14 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         )} second.`,
         e.reason
       );
-      that.timeout = that.timeout + that.timeout; // increment retry interval
-      connectInterval = setTimeout(this.check, Math.min(10000, that.timeout)); // call check function after timeout
+      that.timeout = that.timeout + that.timeout; 
+      connectInterval = setTimeout(this.check, Math.min(10000, that.timeout)); 
     };
   };
 
   check = () => {
     const { ws } = this.state;
-    if (!ws || ws.readyState == WebSocket.CLOSED) this.connect(); // check if websocket instance is closed, if so call `connect` function.
+    if (!ws || ws.readyState == WebSocket.CLOSED) this.connect(); 
   };
 
   render() {

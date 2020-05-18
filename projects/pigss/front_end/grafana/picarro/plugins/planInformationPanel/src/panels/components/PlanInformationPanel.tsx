@@ -132,12 +132,12 @@ export class PlanInformationPanel extends Component<Props, State> {
             {this.props.runType === 0 ||
             this.props.runType === 1 ||
             this.props.runType === 2 ? (
-              <div className={"col text-center br"} id="plan">
+              <div className={"text-center"} id="plan">
                 <span className="titles">Plan Loaded: </span>
                 <span className={"values"}>{planName} </span>
               </div>
             ) : (
-              <div className={"col text-center br"} id="plan">
+              <div className={this.props.runType === 4 ? "text-center running-plan" : "text-center"} id={this.props.runType === 3 ? "plan" : "" }>
                 <span className="titles">Plan Running: </span>
 
                 {this.props.runType === 3 ? (
@@ -152,10 +152,10 @@ export class PlanInformationPanel extends Component<Props, State> {
             className={
               this.props.runType === 4
                 ? "text-center center-info info-row col-sm-4"
-                : "ext-center center-info info-row col-sm-6"
+                : "text-center center-info info-row col-sm-6"
             }
           >
-            <div id="curr-port-line" className="row text-center">
+            <div id="curr-port-line" className={this.props.runType === 4 ? "row text-center": "row text-center not-running-port"}>
               <div id="curr-port" className="titles text-left">
                 Measuring Port:{" "}
               </div>
@@ -178,11 +178,12 @@ export class PlanInformationPanel extends Component<Props, State> {
           {this.props.runType === 4 ? (
             <Col
               sm={4}
-              className={"text-center center-info-2 info-row"}
-              id="next-port"
+              className={"text-center center-info-2 info-row "}
             >
-              <span className="titles">Next Port: </span>
-              <span className="values"> {nextport} </span>
+              <div className={"text-center running-plan"}>
+                <span className="titles">Next Port: </span>
+                <span className="values"> {nextport} </span>
+              </div>
             </Col>
           ) : null}
         </Row>
