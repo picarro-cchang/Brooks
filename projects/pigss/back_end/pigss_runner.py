@@ -130,6 +130,7 @@ class PigssRunner:
 
         log = LOLoggerClient(client_name="PlanService", verbose=True)
         # Get DB file path from config, and pass in instance as db_file
+        # Modify the following code to get the database filepath from config file
         db_path = os.path.join(os.getenv("HOME"), ".config", "pigss", "data")
         db_file = os.path.join(db_path, "sam_data.db")
         if not os.path.exists(db_path):
