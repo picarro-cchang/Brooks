@@ -96,7 +96,6 @@ class PlanService(ServiceTemplate):
         if "names" in query_dict and query_dict["names"][0] == "true":
             # Retrieve all plan names
             plan_names = self.model.read_plan_names()
-            [(1, 'st'), (2,'34')]
             # If there is no active plan currently in the database.
             if not plan_names:
                 return web.json_response(data={

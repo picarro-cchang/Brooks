@@ -244,7 +244,7 @@ class PigssController(Ahsm):
                                 plan_run=Signal.BTN_PLAN_RUN,
                                 load=Signal.BTN_LOAD,
                                 load_cancel=Signal.BTN_LOAD_CANCEL,
-                                load_filename=Signal.LOAD_FILENAME,
+                                load_plan=Signal.LOAD_PLAN,
                                 load_modal_ok=Signal.LOAD_MODAL_OK,
                                 load_modal_cancel=Signal.LOAD_MODAL_CANCEL,
                                 filename_ok=Signal.FILENAME_OK,
@@ -754,7 +754,7 @@ class PigssController(Ahsm):
         Framework.subscribe("VALVE_TRANSITION_DONE", self)
         Framework.subscribe("BTN_LOAD", self)
         Framework.subscribe("BTN_LOAD_CANCEL", self)
-        Framework.subscribe("LOAD_FILENAME", self)
+        Framework.subscribe("LOAD_PLAN", self)
         Framework.subscribe("LOAD_MODAL_OK", self)
         Framework.subscribe("LOAD_MODAL_CANCEL", self)
         Framework.subscribe("FILENAME_OK", self)
@@ -1474,7 +1474,7 @@ class PigssController(Ahsm):
         elif sig == Signal.BTN_LOAD_CANCEL:
             self.set_status(["panel"], int(PlanPanelType.NONE))
             return self.tran(self._operational)
-        elif sig == Signal.LOAD_FILENAME:
+        elif sig == Signal.LOAD_PLAN:
             return self.tran(self._load_preview)
         elif sig == Signal.EXIT:
             return self.handled(e)
@@ -2077,7 +2077,7 @@ class PigssController(Ahsm):
             if self.last_running is not None:
                 await self.click_button("load", Signal.BTN_LOAD, "Timeout waiting to load default plan")
                 await self.wait_for_state(self._load1, "Timeout reaching _load state before loading plan file")
-                Framework.publish(Event(Signal.LOAD_FILENAME, None))
+                Framework.publish(Event(Signal.LOAD_PLAN, None))
                 await self.wait_for_state(self._load_preview, "Timeout reaching _load_preview state")
                 Framework.publish(Event(Signal.FILENAME_OK,  {
                                   "name": self.last_running}))

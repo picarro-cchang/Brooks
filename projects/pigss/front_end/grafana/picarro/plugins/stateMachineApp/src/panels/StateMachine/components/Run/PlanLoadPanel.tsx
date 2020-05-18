@@ -44,7 +44,7 @@ class PlanLoadPanel extends Component<LoadPanelCommandOptions, State> {
           )}
           onClick={(e) => {
             this.props.ws_sender({
-              element: "load_filename",
+              element: "load_plan",
             });
             this.props.getPlanFromFileName(
               this.props.fileNames[Object.keys(this.props.fileNames)[index]]
