@@ -1758,7 +1758,7 @@ class PigssController(Ahsm):
                 self.set_status(["run_type"], 4)
                 self.run_async(self.save_plan_to_default())
                 self.plan_step_timer_target = asyncio.get_event_loop().time()
-                return self.tran(self._run_plan2)            
+                return self.tran(self._run_plan2)     
         elif sig == Signal.MODAL_STEP_1:
             self.set_status(["run_type"], 4)
             # set step to #1
