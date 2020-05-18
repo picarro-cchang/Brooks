@@ -51,8 +51,8 @@ class PlanPanelType(IntEnum):
     EDIT = 2
     PREVIEW = 3
 
-class PlanServiceURL(str, Enum):
-    GET_PLAN_NAMES = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?names=true'
+class PlanServiceURL():
+    GET_PLAN_NAMES = "http://0.0.0.0:8000/manage_plan/api/v0.1/plan?names=true"
     GET_LAST_RUNNING = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?last_running=true'
     GET_PLAN_FROM_NAME = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan?plan_name='
     PUT = 'http://0.0.0.0:8000/manage_plan/api/v0.1/plan'
