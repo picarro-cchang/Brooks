@@ -1299,7 +1299,6 @@ class PigssController(Ahsm):
         sig = e.signal
         if sig == Signal.ENTRY:
             try:
-                # self.load_plan_from_file()
                 self.postFIFO(Event(Signal.PLAN_LOAD_SUCCESSFUL, None))
             except Exception:
                 self.postFIFO(Event(Signal.PLAN_LOAD_FAILED, format_exc()))
