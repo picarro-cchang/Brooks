@@ -190,7 +190,7 @@ class ControllerService(ServiceTemplate):
                 description: successful operation. Returns plan info
         """
         controller = request.app['farm'].controller
-        controller.get_plan_filenames()
+        await controller.get_available_plans()
         return web.json_response(controller.get_plan())
 
     async def handle_stats(self, request):

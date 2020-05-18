@@ -1,0 +1,354 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<EditForm /> Renders correctly 1`] = `
+<div
+  className="panel-plan-inner"
+>
+  <div
+    className="gf-form-group"
+  >
+    <div
+      className="row"
+      key="bank1"
+    >
+      <label
+        className="edit-label"
+      >
+         Bank 
+        1
+      </label>
+    </div>
+    <div
+      className="row"
+      key="1"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        1
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank11"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 1"
+      />
+    </div>
+    <div
+      className="row"
+      key="2"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        2
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank12"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 2"
+      />
+    </div>
+    <div
+      className="row"
+      key="3"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        3
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank13"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 3"
+      />
+    </div>
+    <div
+      className="row"
+      key="4"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        4
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank14"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 4"
+      />
+    </div>
+    <div
+      className="row"
+      key="5"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        5
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank15"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 5"
+      />
+    </div>
+    <div
+      className="row"
+      key="6"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        6
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank16"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 6"
+      />
+    </div>
+    <div
+      className="row"
+      key="7"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        7
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank17"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 7"
+      />
+    </div>
+    <div
+      className="row"
+      key="8"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        8
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank18"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 8"
+      />
+    </div>
+    <div
+      className="row"
+      key="bank2"
+    >
+      <label
+        className="edit-label"
+      >
+         Bank 
+        2
+      </label>
+    </div>
+    <div
+      className="row"
+      key="9"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        9
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank21"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 1"
+      />
+    </div>
+    <div
+      className="row"
+      key="10"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        10
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank22"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 2"
+      />
+    </div>
+    <div
+      className="row"
+      key="11"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        11
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank23"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 3"
+      />
+    </div>
+    <div
+      className="row"
+      key="12"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        12
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank24"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 4"
+      />
+    </div>
+    <div
+      className="row"
+      key="13"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        13
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank25"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 5"
+      />
+    </div>
+    <div
+      className="row"
+      key="14"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        14
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank26"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 6"
+      />
+    </div>
+    <div
+      className="row"
+      key="15"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        15
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank27"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 7"
+      />
+    </div>
+    <div
+      className="row"
+      key="16"
+    >
+      <label
+        className="edit-label"
+      >
+         Port 
+        16
+        : 
+      </label>
+      <input
+        className="col-sm-6 edit-input"
+        maxLength={15}
+        name="bank28"
+        onChange={[Function]}
+        type="text"
+        value="Ch. 8"
+      />
+    </div>
+  </div>
+</div>
+`;

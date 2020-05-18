@@ -1,0 +1,2109 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<EditPanel /> Match Snapshot 1`] = `
+<EditPanel
+  plan={
+    Object {
+      "available_ports": Object {
+        "1": 170,
+        "2": 0,
+        "3": 170,
+        "4": 170,
+      },
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 2",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 4",
+        },
+      },
+      "current_step": 11,
+      "focus": Object {
+        "column": 1,
+        "row": 12,
+      },
+      "last_step": 11,
+      "looping": false,
+      "max_steps": 32,
+      "num_plan_files": 2,
+      "panel_to_show": 0,
+      "plan_filename": "__default__",
+      "plan_files": Object {
+        "1": "__default__",
+        "2": "tr",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 2,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "10": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "11": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "2": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "3": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "4": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "5": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "6": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "7": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "8": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 2,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "9": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  planID=""
+  uistatus={
+    Object {
+      "bank": Object {
+        "1": "READY",
+        "2": "DISABLED",
+        "3": "READY",
+        "4": "READY",
+      },
+    }
+  }
+  ws_sender={[MockFunction]}
+>
+  <div
+    className="panel-edit"
+  >
+    <h2
+      style={
+        Object {
+          "color": "#2f2f2f",
+        }
+      }
+    >
+      Edit Bank and Channel Names
+    </h2>
+    <form
+      onSubmit={[Function]}
+    >
+      <EditForm
+        handleBankChange={[Function]}
+        handleChannelNameChange={[Function]}
+        plan={
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 4",
+              },
+            },
+          }
+        }
+        uistatus={
+          Object {
+            "bank": Object {
+              "1": "READY",
+              "2": "DISABLED",
+              "3": "READY",
+              "4": "READY",
+            },
+          }
+        }
+        ws_sender={[MockFunction]}
+      >
+        <div
+          className="panel-plan-inner"
+        >
+          <div
+            className="gf-form-group"
+          >
+            <div
+              className="row"
+              key="bank1"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                1
+              </label>
+            </div>
+            <div
+              className="row"
+              key="1"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                1
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank11"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="2"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                2
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank12"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="3"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                3
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank13"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="4"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                4
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank14"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="5"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                5
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank15"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="6"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                6
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank16"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="7"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                7
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank17"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="8"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                8
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank18"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+            <div
+              className="row"
+              key="bank3"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                3
+              </label>
+            </div>
+            <div
+              className="row"
+              key="17"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                17
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank31"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="18"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                18
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank32"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="19"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                19
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank33"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="20"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                20
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank34"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="21"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                21
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank35"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="22"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                22
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank36"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="23"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                23
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank37"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="24"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                24
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank38"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+            <div
+              className="row"
+              key="bank4"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                4
+              </label>
+            </div>
+            <div
+              className="row"
+              key="25"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                25
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank41"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="26"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                26
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank42"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="27"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                27
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank43"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="28"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                28
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank44"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="29"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                29
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank45"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="30"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                30
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank46"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="31"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                31
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank47"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="32"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                32
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank48"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+          </div>
+        </div>
+      </EditForm>
+      <div
+        className="row text-center button-edit"
+      >
+        <div
+          className="col-sm-4"
+        >
+          <button
+            className="btn  btn-green btn-edit-panel btn-group-2"
+            id="submit-edit"
+            type="submit"
+          >
+            Ok
+          </button>
+        </div>
+        <div
+          className="col-sm-4"
+        >
+          <button
+            className="btn btn-cancel btn-edit-panel btn-group-2"
+            id="cancel-btn"
+            onClick={[Function]}
+            type="button"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+    <Modal
+      animationDuration={500}
+      blockScroll={true}
+      center={true}
+      classNames={Object {}}
+      classes={
+        Object {
+          "closeButton": "styles_closeButton__20ID4",
+          "closeIcon": "styles_closeIcon__1QwbI",
+          "modal": "styles_modal__gNwvD",
+          "modalCenter": "styles_modalCenter__L9F2w",
+          "overlay": "styles_overlay__CLSq-",
+          "transitionEnter": "styles_transitionEnter__3j_-a",
+          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+          "transitionExit": "styles_transitionExit__1KmEf",
+          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+        }
+      }
+      closeIconSize={28}
+      closeIconSvgPath={
+        <path
+          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+        />
+      }
+      closeOnEsc={true}
+      closeOnOverlayClick={true}
+      focusTrapOptions={Object {}}
+      focusTrapped={true}
+      onClose={[Function]}
+      open={false}
+      role="dialog"
+      showCloseIcon={true}
+      styles={Object {}}
+    />
+  </div>
+</EditPanel>
+`;
+
+exports[`<EditPanel /> Test Modal is open 1`] = `
+<EditPanel
+  plan={
+    Object {
+      "available_ports": Object {
+        "1": 170,
+        "2": 0,
+        "3": 170,
+        "4": 170,
+      },
+      "bank_names": Object {
+        "1": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 1",
+        },
+        "2": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 2",
+        },
+        "3": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 3",
+        },
+        "4": Object {
+          "channels": Object {
+            "1": "Ch. 1",
+            "2": "Ch. 2",
+            "3": "Ch. 3",
+            "4": "Ch. 4",
+            "5": "Ch. 5",
+            "6": "Ch. 6",
+            "7": "Ch. 7",
+            "8": "Ch. 8",
+          },
+          "name": "Bank 4",
+        },
+      },
+      "current_step": 11,
+      "focus": Object {
+        "column": 1,
+        "row": 12,
+      },
+      "last_step": 11,
+      "looping": false,
+      "max_steps": 32,
+      "num_plan_files": 2,
+      "panel_to_show": 0,
+      "plan_filename": "__default__",
+      "plan_files": Object {
+        "1": "__default__",
+        "2": "tr",
+      },
+      "steps": Object {
+        "1": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 2,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "10": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "11": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "2": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "3": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "4": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "5": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "6": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 8,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "7": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 128,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "8": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 2,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+        "9": Object {
+          "banks": Object {
+            "1": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "3": Object {
+              "chan_mask": 0,
+              "clean": 0,
+            },
+            "4": Object {
+              "chan_mask": 32,
+              "clean": 0,
+            },
+          },
+          "duration": 20,
+          "reference": 0,
+        },
+      },
+    }
+  }
+  planID=""
+  uistatus={
+    Object {
+      "bank": Object {
+        "1": "READY",
+        "2": "DISABLED",
+        "3": "READY",
+        "4": "READY",
+      },
+    }
+  }
+  ws_sender={[MockFunction]}
+>
+  <div
+    className="panel-edit"
+  >
+    <h2
+      style={
+        Object {
+          "color": "#2f2f2f",
+        }
+      }
+    >
+      Edit Bank and Channel Names
+    </h2>
+    <form
+      onSubmit={[Function]}
+    >
+      <EditForm
+        handleBankChange={[Function]}
+        handleChannelNameChange={[Function]}
+        plan={
+          Object {
+            "bank_names": Object {
+              "1": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 1",
+              },
+              "2": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 2",
+              },
+              "3": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 3",
+              },
+              "4": Object {
+                "channels": Object {
+                  "1": "Ch. 1",
+                  "2": "Ch. 2",
+                  "3": "Ch. 3",
+                  "4": "Ch. 4",
+                  "5": "Ch. 5",
+                  "6": "Ch. 6",
+                  "7": "Ch. 7",
+                  "8": "Ch. 8",
+                },
+                "name": "Bank 4",
+              },
+            },
+          }
+        }
+        uistatus={
+          Object {
+            "bank": Object {
+              "1": "READY",
+              "2": "DISABLED",
+              "3": "READY",
+              "4": "READY",
+            },
+          }
+        }
+        ws_sender={[MockFunction]}
+      >
+        <div
+          className="panel-plan-inner"
+        >
+          <div
+            className="gf-form-group"
+          >
+            <div
+              className="row"
+              key="bank1"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                1
+              </label>
+            </div>
+            <div
+              className="row"
+              key="1"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                1
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank11"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="2"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                2
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank12"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="3"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                3
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank13"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="4"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                4
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank14"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="5"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                5
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank15"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="6"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                6
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank16"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="7"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                7
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank17"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="8"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                8
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank18"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+            <div
+              className="row"
+              key="bank3"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                3
+              </label>
+            </div>
+            <div
+              className="row"
+              key="17"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                17
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank31"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="18"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                18
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank32"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="19"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                19
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank33"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="20"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                20
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank34"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="21"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                21
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank35"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="22"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                22
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank36"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="23"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                23
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank37"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="24"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                24
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank38"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+            <div
+              className="row"
+              key="bank4"
+            >
+              <label
+                className="edit-label"
+              >
+                 Bank 
+                4
+              </label>
+            </div>
+            <div
+              className="row"
+              key="25"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                25
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank41"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 1"
+              />
+            </div>
+            <div
+              className="row"
+              key="26"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                26
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank42"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 2"
+              />
+            </div>
+            <div
+              className="row"
+              key="27"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                27
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank43"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 3"
+              />
+            </div>
+            <div
+              className="row"
+              key="28"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                28
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank44"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 4"
+              />
+            </div>
+            <div
+              className="row"
+              key="29"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                29
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank45"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 5"
+              />
+            </div>
+            <div
+              className="row"
+              key="30"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                30
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank46"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 6"
+              />
+            </div>
+            <div
+              className="row"
+              key="31"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                31
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank47"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 7"
+              />
+            </div>
+            <div
+              className="row"
+              key="32"
+            >
+              <label
+                className="edit-label"
+              >
+                 Port 
+                32
+                : 
+              </label>
+              <input
+                className="col-sm-6 edit-input"
+                maxLength={15}
+                name="bank48"
+                onChange={[Function]}
+                type="text"
+                value="Ch. 8"
+              />
+            </div>
+          </div>
+        </div>
+      </EditForm>
+      <div
+        className="row text-center button-edit"
+      >
+        <div
+          className="col-sm-4"
+        >
+          <button
+            className="btn  btn-green btn-edit-panel btn-group-2"
+            id="submit-edit"
+            type="submit"
+          >
+            Ok
+          </button>
+        </div>
+        <div
+          className="col-sm-4"
+        >
+          <button
+            className="btn btn-cancel btn-edit-panel btn-group-2"
+            id="cancel-btn"
+            onClick={[Function]}
+            type="button"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+    <Modal
+      animationDuration={500}
+      blockScroll={true}
+      center={true}
+      classNames={Object {}}
+      classes={
+        Object {
+          "closeButton": "styles_closeButton__20ID4",
+          "closeIcon": "styles_closeIcon__1QwbI",
+          "modal": "styles_modal__gNwvD",
+          "modalCenter": "styles_modalCenter__L9F2w",
+          "overlay": "styles_overlay__CLSq-",
+          "transitionEnter": "styles_transitionEnter__3j_-a",
+          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+          "transitionExit": "styles_transitionExit__1KmEf",
+          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+        }
+      }
+      closeIconSize={28}
+      closeIconSvgPath={
+        <path
+          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+        />
+      }
+      closeOnEsc={true}
+      closeOnOverlayClick={true}
+      focusTrapOptions={Object {}}
+      focusTrapped={true}
+      onClose={[Function]}
+      open={true}
+      role="dialog"
+      showCloseIcon={true}
+      styles={Object {}}
+    >
+      <Portal
+        containerInfo={
+          <div>
+            <div
+              class="styles_overlay__CLSq- styles_transitionEnter__3j_-a styles_transitionEnterActive___eQs7"
+            >
+              <div
+                aria-modal="true"
+                class="styles_modal__gNwvD styles_modalCenter__L9F2w"
+                role="dialog"
+              >
+                <div>
+                  <h2
+                    style="color: black;"
+                  >
+                    Uh Oh!
+                  </h2>
+                  <p
+                    style="color: black;"
+                  >
+                    Each Label must be at least one character in length.
+                  </p>
+                  <button
+                    class="styles_closeButton__20ID4"
+                  >
+                    <svg
+                      class="styles_closeIcon__1QwbI"
+                      height="28"
+                      viewBox="0 0 36 36"
+                      width="28"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <CSSTransition
+          appear={true}
+          classNames={
+            Object {
+              "appear": "styles_transitionEnter__3j_-a",
+              "appearActive": "styles_transitionEnterActive___eQs7",
+              "enter": "styles_transitionEnter__3j_-a",
+              "enterActive": "styles_transitionEnterActive___eQs7",
+              "exit": "styles_transitionExit__1KmEf",
+              "exitActive": "styles_transitionExitActive__1nQXw",
+            }
+          }
+          in={true}
+          onEntered={[Function]}
+          onExited={[Function]}
+          timeout={500}
+        >
+          <Transition
+            appear={true}
+            enter={true}
+            exit={true}
+            in={true}
+            mountOnEnter={false}
+            onEnter={[Function]}
+            onEntered={[Function]}
+            onEntering={[Function]}
+            onExit={[Function]}
+            onExited={[Function]}
+            onExiting={[Function]}
+            timeout={500}
+            unmountOnExit={false}
+          >
+            <div
+              className="styles_overlay__CLSq-"
+              onClick={[Function]}
+            >
+              <div
+                aria-modal="true"
+                className="styles_modal__gNwvD styles_modalCenter__L9F2w"
+                onClick={[Function]}
+                onMouseDown={[Function]}
+                onMouseUp={[Function]}
+                role="dialog"
+              >
+                <FocusTrap
+                  _createFocusTrap={[Function]}
+                  active={true}
+                  focusTrapOptions={
+                    Object {
+                      "clickOutsideDeactivates": true,
+                    }
+                  }
+                  paused={false}
+                  tag="div"
+                >
+                  <div>
+                    <h2
+                      style={
+                        Object {
+                          "color": "black",
+                        }
+                      }
+                    >
+                      Uh Oh!
+                    </h2>
+                    <p
+                      style={
+                        Object {
+                          "color": "black",
+                        }
+                      }
+                    >
+                      Each Label must be at least one character in length.
+                    </p>
+                    <CloseIcon
+                      classNames={Object {}}
+                      classes={
+                        Object {
+                          "closeButton": "styles_closeButton__20ID4",
+                          "closeIcon": "styles_closeIcon__1QwbI",
+                          "modal": "styles_modal__gNwvD",
+                          "modalCenter": "styles_modalCenter__L9F2w",
+                          "overlay": "styles_overlay__CLSq-",
+                          "transitionEnter": "styles_transitionEnter__3j_-a",
+                          "transitionEnterActive": "styles_transitionEnterActive___eQs7",
+                          "transitionExit": "styles_transitionExit__1KmEf",
+                          "transitionExitActive": "styles_transitionExitActive__1nQXw",
+                        }
+                      }
+                      closeIconSize={28}
+                      closeIconSvgPath={
+                        <path
+                          d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+                        />
+                      }
+                      id={null}
+                      onClickCloseIcon={[Function]}
+                      styles={Object {}}
+                    >
+                      <button
+                        className="styles_closeButton__20ID4"
+                        id={null}
+                        onClick={[Function]}
+                      >
+                        <svg
+                          className="styles_closeIcon__1QwbI"
+                          height={28}
+                          viewBox="0 0 36 36"
+                          width={28}
+                          xmlns="http://www.w3.org/2000/svg"
+                        >
+                          <path
+                            d="M28.5 9.62L26.38 7.5 18 15.88 9.62 7.5 7.5 9.62 15.88 18 7.5 26.38l2.12 2.12L18 20.12l8.38 8.38 2.12-2.12L20.12 18z"
+                          />
+                        </svg>
+                      </button>
+                    </CloseIcon>
+                  </div>
+                </FocusTrap>
+              </div>
+            </div>
+          </Transition>
+        </CSSTransition>
+      </Portal>
+    </Modal>
+  </div>
+</EditPanel>
+`;

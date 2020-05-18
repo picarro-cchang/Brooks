@@ -119,7 +119,6 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
-        const current_step = this.state.plan.current_step;
       }
     }
   }
@@ -129,6 +128,11 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       (response) => {
         response.json().then((obj) => {
           this.setState(deepmerge(this.state, { uistatus: obj }));
+          this.setState({
+            timer: obj.timer,
+            runType: obj.run_type,
+            currentPort: obj.cur_port
+          })
         });
       }
     );
