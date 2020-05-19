@@ -74,7 +74,7 @@ class BankPanel extends PureComponent<BankPanelOptions> {
       test = channelStatus;
     }
 
-    const portsInPlan = {};
+    let portsInPlan = [];
     for (const step in this.props.plan.steps) {
       const planRow = this.props.plan.steps[step] as PlanStep;
       for (const bank in planRow.banks) {
