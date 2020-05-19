@@ -204,8 +204,14 @@ export class Main extends React.Component<any, any> {
         }
         this.setState({ uistatus });
       } else if ("plan" in o) {
-        const plan = deepmerge(this.state.plan, o.plan);
-        this.setState({ plan });
+        if ("steps" in o.plan) {
+          const plan = {...this.state.plan}
+          plan.steps = o.plan.steps;
+          this.setState({plan})
+        } else {
+          const plan = deepmerge(this.state.plan, o.plan);
+          this.setState({ plan });
+        }
       } else if ("modal_info" in o) {
         const modal_info = deepmerge(this.state.modal_info, o.modal_info);
         this.setState({ modal_info });
