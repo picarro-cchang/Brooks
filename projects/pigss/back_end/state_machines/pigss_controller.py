@@ -711,7 +711,7 @@ class PigssController(Ahsm):
         22
         """
         label = self.plan["bank_names"][str(bank)]["channels"][str(channel+1)]
-        port = (bank-1)*8 + (channel + 1)
+        port = (bank - 1) * 8 + (channel + 1)
 
         return port, label
     
