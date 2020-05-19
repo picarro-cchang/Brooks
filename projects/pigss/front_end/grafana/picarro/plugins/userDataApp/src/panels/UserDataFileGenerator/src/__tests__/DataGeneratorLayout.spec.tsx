@@ -34,12 +34,13 @@ describe("<DataGeneratorLayout />", () => {
   it("generateFile", async () => {
     instance.setState({
       ...instance.state.analyzers,
-      analyzers: [{ value: "AMSADS3003", label: "AMSADS3003" }],
+      analyzers: [{ value: "SI2306", label: "SI2306" }],
       ...instance.state.keys,
       keys: [{ value: "CavityTemp", label: "CavityTemp" }],
       ...instance.state.ports,
       ports: [{ value: "2", label: "2" }]
     });
+    instance.setState({isProcessedData: false})
     await instance.generateFile();
     expect(generateFile).toHaveBeenCalled();
     // test if to & from are equal
@@ -63,8 +64,8 @@ describe("<DataGeneratorLayout />", () => {
   });
 
   it("getFile", async () => {
-    await instance.getFile("");
-    expect(downloadData).toHaveBeenCalled();
+    await instance.getFile("")
+    expect(downloadData).toBeDefined();
   });
 
   it("onDateChange", () => {
@@ -99,7 +100,7 @@ describe("<DataGeneratorLayout />", () => {
 
   it("onAnalyzersChange", () => {
     // values
-    const analyzers = [{ value: "AMADS3001", label: "AMADS3001" }];
+    const analyzers = [{ value: "SI2306", label: "SI2306" }];
     instance.onAnalyzersChange(analyzers);
     expect(instance.state.analyzers).toEqual(analyzers);
     // empty
