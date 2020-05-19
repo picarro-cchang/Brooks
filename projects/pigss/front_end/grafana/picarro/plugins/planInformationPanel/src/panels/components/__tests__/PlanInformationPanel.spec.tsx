@@ -12,6 +12,8 @@ const defaultProps: Props = {
   uistatus: mockData,
   plan: mockPlan,
   timer: 30,
+  runType: 4,
+  currentPort: "Standby"
 };
 
 describe("<PlanInformationPanel />", () => {
@@ -52,6 +54,86 @@ describe("<PlanInformationPanel />", () => {
     wrapper.setProps({ plan });
     expect(wrapper).toMatchSnapshot();
     const div = wrapper.find("div").at(1);
-    expect(div.text()).toEqual("No Plan Loaded");
+    expect(div.text()).toEqual("Plan Running: __default__ Measuring Port: 6: Ch. 6  Remaining Time: 30 secondsNext Port:  Clean Bank 1 ");
   });
+
+  it("No Plan Loaded", () => {
+    wrapper.setProps({
+      runType: 0,
+      plan: {
+        max_steps: 32,
+        panel_to_show: 0,
+        current_step: 1,
+        focus: { row: 0, column: 0 },
+        last_step: 0,
+        steps: {},
+        num_plan_files: 0,
+        plan_files: {},
+        plan_filename: "",
+        bank_names: {
+          1: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: "",
+            },
+          },
+          2: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: "",
+            },
+          },
+          3: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: "",
+            },
+          },
+          4: {
+            name: "",
+            channels: {
+              1: "",
+              2: "",
+              3: "",
+              4: "",
+              5: "",
+              6: "",
+              7: "",
+              8: "",
+            },
+          },
+        },
+      }
+    });
+    expect(wrapper).toMatchSnapshot();
+    const div = wrapper.find("div").at(1);
+    expect(div.text()).toEqual("Plan Loaded: No Plan Loaded Measuring Port: Standby ");
+  });
+
+  it("Single Port", () => {
+    wrapper.setProps({runType: 3, currentPort: "2: Port 2"})
+    const div = wrapper.find("div").at(1);
+    expect(div.text()).toEqual("Plan Running: Single PortMeasuring Port: 2: Port 2 ");
+  })
 });

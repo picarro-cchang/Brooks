@@ -11,6 +11,8 @@ interface State {
   initialized: boolean;
   timer: number;
   ws: WebSocket;
+  runType: Number;
+  currentPort: String;
 }
 
 const REFRESH_INTERVAL = 5;
@@ -23,7 +25,9 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       ws: null,
       timer: null,
       initialized: false,
+      currentPort: "",
       uistatus: {},
+      runType: null,
       plan: {
         max_steps: 32,
         panel_to_show: 0,
@@ -97,16 +101,18 @@ export class PlanInformationPanelLayout extends Component<any, any> {
   handleData(o: any) {
     if (this.state.initialized) {
       if ("uistatus" in o) {
-        const uistatus = deepmerge(this.state.uistatus, o.uistatus);
         if (o.uistatus.timer) {
           this.setState({ timer: o.uistatus.timer });
         }
-
-        this.setState({ uistatus });
+        if (o.uistatus.run_type != null){
+          this.setState({ runType: o.uistatus.run_type });
+        }
+        if (o.uistatus.cur_port !== undefined) {
+          this.setState({ currentPort: o.uistatus.cur_port });
+        }
       } else if ("plan" in o) {
         const plan = deepmerge(this.state.plan, o.plan);
         this.setState({ plan });
-        const current_step = this.state.plan.current_step;
       }
     }
   }
@@ -116,6 +122,11 @@ export class PlanInformationPanelLayout extends Component<any, any> {
       (response) => {
         response.json().then((obj) => {
           this.setState(deepmerge(this.state, { uistatus: obj }));
+          this.setState({
+            timer: obj.timer,
+            runType: obj.run_type,
+            currentPort: obj.cur_port
+          })
         });
       }
     );
@@ -167,14 +178,14 @@ export class PlanInformationPanelLayout extends Component<any, any> {
         )} second.`,
         e.reason
       );
-      that.timeout = that.timeout + that.timeout; // increment retry interval
-      connectInterval = setTimeout(this.check, Math.min(10000, that.timeout)); // call check function after timeout
+      that.timeout = that.timeout + that.timeout; 
+      connectInterval = setTimeout(this.check, Math.min(10000, that.timeout)); 
     };
   };
 
   check = () => {
     const { ws } = this.state;
-    if (!ws || ws.readyState == WebSocket.CLOSED) this.connect(); // check if websocket instance is closed, if so call `connect` function.
+    if (!ws || ws.readyState == WebSocket.CLOSED) this.connect(); 
   };
 
   render() {
@@ -185,6 +196,8 @@ export class PlanInformationPanelLayout extends Component<any, any> {
             uistatus={this.state.uistatus}
             plan={this.state.plan}
             timer={this.state.timer}
+            runType={this.state.runType}
+            currentPort={this.state.currentPort}
           />
         ) : null}
       </div>

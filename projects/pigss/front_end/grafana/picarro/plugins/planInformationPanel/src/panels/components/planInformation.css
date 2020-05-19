@@ -26,6 +26,7 @@
   background-color: #585858;
   border-radius: 4px;
   margin: 5px;
+  padding: 4px 0 4px 20px;
 }
 
 .info-row-2 {
@@ -48,9 +49,7 @@
 }
 
 #plan , #next-port {
-  padding-top: 20px;
-  padding-right: 10px;
-  padding-left: 10px;
+  padding: 10px;
 }
 
 #inner {
@@ -70,4 +69,12 @@
 .width {
   width: 95%;
   margin: 0 auto;
+}
+
+.running-plan {
+  padding-top: 17px;
+}
+
+.not-running-port {
+  padding: 10px;
 }
