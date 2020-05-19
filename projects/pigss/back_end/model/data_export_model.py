@@ -99,7 +99,7 @@ class DataExportModel:
             list[str] -- list of available analyzers
         """
         try:
-            analyzers_result_set = client.query(f'select distinct(model_number) from {measurement}')
+            analyzers_result_set = client.query(f'SELECT DISTINCT(model_number) FROM {measurement}')
             analyzers = []
             for datum in analyzers_result_set:
                 analyzers = datum
