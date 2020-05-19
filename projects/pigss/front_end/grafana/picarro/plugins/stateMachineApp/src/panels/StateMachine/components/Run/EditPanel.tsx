@@ -210,7 +210,7 @@ class EditPanel extends PureComponent<EditPanelOptions, State> {
     const { show } = this.state;
     return (
       <div className="panel-edit">
-        <h2 style={{ color: "#2f2f2f" }}>Edit Bank and Channel Names</h2>
+        <h2 style={{ color: "#2f2f2f" }}>Edit Port Labels</h2>
         <form onSubmit={this.handleSubmit}>
           <EditForm
             handleBankChange={this.handleBankChange}
