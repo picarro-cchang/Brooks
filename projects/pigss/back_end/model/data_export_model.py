@@ -43,15 +43,15 @@ class DataExportModel:
             
             # Enabling user to download processed and unprocessed data
             if query_params["isProcessedData"]:
-                query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
-                        f"WHERE analyzer =~ /{analyzer}/ "
+                query = (f"SELECT time as Time, model_number as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
+                        f"WHERE model_number =~ /{analyzer}/ "
                         f"AND valve_pos =~ /{port}/ "
                         f"AND valve_stable_time > 15 "
                         f"AND time > {time_from} AND time <= {time_to} "
                         f"ORDER BY time DESC")
             else:
-                query = (f"SELECT time as Time, analyzer as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
-                        f"WHERE analyzer =~ /{analyzer}/ "
+                query = (f"SELECT time as Time, model_number as Analyzer, valve_pos as Port, {keys} FROM {measurements} "
+                        f"WHERE model_number =~ /{analyzer}/ "
                         f"AND valve_pos =~ /{port}/ "
                         f"AND time > {time_from} AND time <= {time_to} "
                         f"ORDER BY time DESC")
@@ -99,11 +99,11 @@ class DataExportModel:
             list[str] -- list of available analyzers
         """
         try:
-            analyzers_result_set = client.query(f'SHOW TAG VALUES FROM {measurement} WITH KEY = "analyzer"')
+            analyzers_result_set = client.query(f'select distinct(model_number) from {measurement}')
             analyzers = []
             for datum in analyzers_result_set:
                 analyzers = datum
-            return [analyzer["value"] for analyzer in analyzers]
+            return [analyzer["distinct"] for analyzer in analyzers]
         except ConnectionError:
             log.error(f"Error while retrieving available analyzers.")
             log.debug(f"Error while retrieving available analyzers {format_exc()}")
