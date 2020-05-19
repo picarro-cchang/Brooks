@@ -36,7 +36,7 @@ function make_panel(result) {
         let temp = {}
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
-        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND model_number =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp.groupBy = [{"params": ["null"],"type": "fill"}]
         temp.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp.resultFormat = "time_series"
@@ -49,7 +49,7 @@ function make_panel(result) {
         let temp2 = {}
         temp2.alias = "Unstable"
         temp2.measurement = measurement;
-        temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND model_number =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp2.groupBy = [{"params": ["null"],"type": "fill"}]
         temp2.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp2.resultFormat = "time_series"
@@ -63,7 +63,7 @@ function make_panel(result) {
         let temp3 = {}
         temp3.alias = "Unselected"
         temp3.measurement = measurement;
-        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos = '0' AND model_number =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp3.groupBy = [{"params": ["null"],"type": "fill"}]
         temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp3.resultFormat = "time_series"
@@ -75,7 +75,7 @@ function make_panel(result) {
         let temp4 = {}
         temp4.alias = speciesArray[i];
         temp4.measurement = measurement;
-        temp4.query = "SELECT last(" + speciesArray[i] + ") AS \"Current $species\", min(" + speciesArray[i] + ") AS \"Min. $species\", max(" +speciesArray[i] + ") AS \"Max. $species\" FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$port_value_current$/ AND analyzer =~ /^$instrument$/) AND $timeFilter fill(null)",
+        temp4.query = "SELECT last(" + speciesArray[i] + ") AS \"Current $species\", min(" + speciesArray[i] + ") AS \"Min. $species\", max(" +speciesArray[i] + ") AS \"Max. $species\" FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$port_value_current$/ AND model_number =~ /^$instrument$/) AND $timeFilter fill(null)",
         temp4.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp4.resultFormat = "table"
         temp4.rawQuery = true;
@@ -86,7 +86,7 @@ function make_panel(result) {
         let temp5 = {}
         temp5.alias = "";
         temp5.measurement = measurement;
-        temp5.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM autogen.crds WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time(5s), \"valve_pos\" fill(none) ORDER BY time DESC LIMIT 1",
+        temp5.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM autogen.crds WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND model_number =~ /^$instrument$/) AND $timeFilter GROUP BY time(5s), \"valve_pos\" fill(none) ORDER BY time DESC LIMIT 1",
         temp5.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp5.resultFormat = "table"
         temp5.rawQuery = true;
@@ -96,7 +96,7 @@ function make_panel(result) {
 
         customTable2Targets.push(temp5)
 
-        //SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time(5s), "valve_pos" fill(none) ORDER BY time DESC LIMIT 1
+        //SELECT last(H2O) AS H2O FROM autogen.crds WHERE ('H2O' =~ /^$species$/ AND model_number =~ /^$instrument$/) AND $timeFilter GROUP BY time(5s), "valve_pos" fill(none) ORDER BY time DESC LIMIT 1
 
         customTable1Targets.push(temp4)
         customGraphTargets.push(temp)
@@ -176,51 +176,57 @@ function make_panel(result) {
             }
           },
           {
-            datasource: "PiGSS data source",
+            datasource: null,
             gridPos: {
-              "x": 0,
-              "y": 0,
-              "h": 1,
-              "w": 24,
+              h: 3,
+              w: 24,
+              x: 0,
+              y: 8
             },
-            mappingTypes: [
-              {
-                "name": "value to text",
-                "value": 1
-              },
-              {
-                "name": "range to text",
-                "value": 2
-              }
-            ],
-            nullPointMode: "connected",
-            postfix: "",
-            postfixFontSize: "50%",
-            prefix: "Current Port:",
-            prefixFontSize: "65%",
-            rangeMaps: [
-              {
-                "from": "null",
-                "text": "N/A",
-                "to": "null"
-              }
-            ],
-            tableColumn: "valve_pos",
+            id: 17,
+            options: {},
             targets: [
-              tempPort
+              {
+                groupBy: [
+                  {
+                    params: [
+                      "$__interval"
+                    ],
+                    type: "time"
+                  },
+                  {
+                    params: [
+                      "null"
+                    ],
+                    type: "fill"
+                  }
+                ],
+                orderByTime: "ASC",
+                policy: "default",
+                refId: "A",
+                resultFormat: "time_series",
+                select: [
+                  [
+                    {
+                      params: [
+                        "value"
+                      ],
+                      type: "field"
+                    },
+                    {
+                      params: [],
+                      type: "mean"
+                    }
+                  ]
+                ],
+                tags: []
+              }
             ],
+            timeFrom: null,
+            timeShift: null,
             title: "",
             transparent: true,
-            type: "singlestat",
-            valueFontSize: "65%",
-            valueMaps: [
-              {
-                "op": "=",
-                "text": "N/A",
-                "value": "null"
-              }
-            ],
-            valueName: "current"
+            type: "plan-information-panel"
           },
           {
             title: "",
@@ -229,7 +235,7 @@ function make_panel(result) {
             repeat: "species",
             repeatDirection: "h",
             transparent: true,
-            fontSize: "110%",
+            fontSize: "120%",
             gridPos: {
               h: 3,
               w: 8,
@@ -303,7 +309,7 @@ return function(callback) {
     };
  
     // Set a title
-    dashboard.title = 'Analyzer Outputs';
+    dashboard.title = 'Home';
  
     // Set default time
     dashboard.time = {
@@ -387,12 +393,12 @@ return function(callback) {
     temp3.allValue = null,
     temp3.current = {"text": "All", "value": "$__all"},
     temp3.datasource = "PiGSS data source",
-    temp3.definition =  "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.definition =  "select distinct(model_number) from autogen.crds",
     temp3.includeAll = true, 
     temp3.label = "Instrument",
     temp3.multi = true,
     temp3.name = "instrument",
-    temp3.query = "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.query = "select distinct(model_number) from autogen.crds",
     temp3.refresh = 1,
     temp3.regex = "",
     temp3.sort = 0,
