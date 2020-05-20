@@ -1,3 +1,10 @@
+- name: Install node-gyp
+  npm:
+    name: node-gyp
+    global: yes
+    state: latest
+  become: yes
+
 - name: Install yarn
   npm:
     name: yarn
