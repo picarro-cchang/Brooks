@@ -1,6 +1,8 @@
 name: base
 channels:
   - pdrops
+  - Qwant
+  - anaconda
   - conda-forge
   - anaconda
   - Qwant
@@ -42,6 +44,7 @@ dependencies:
   - idna=2.8=py37_0
   - intel-openmp=2019.4=243
   - jpeg=9b=h024ee3a_2
+  - ld_impl_linux-64=2.33.1=h53a641e_7
   - libarchive=3.3.3=h5d8350f_5
   - libedit=3.1.20181209=hc058e9b_0
   - libffi=3.2.1=hd88cf55_4
@@ -70,7 +73,7 @@ dependencies:
   - numexpr=2.6.9=py37h9e4a6bb_0
   - numpy=1.16.4=py37h7e9f1db_0
   - numpy-base=1.16.4=py37hde5b4d6_0
-  - openssl=1.1.1=h7b6447c_0
+  - openssl=1.1.1g=h516909a_0
   - pango=1.42.4=h049681c_0
   - paramiko=2.4.2=py37_0
   - pcre=8.43=he6710b0_0
