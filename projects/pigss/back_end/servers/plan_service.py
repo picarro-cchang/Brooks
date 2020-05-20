@@ -91,7 +91,7 @@ class PlanService(ServiceTemplate):
             "200":
                 description: successful operation returns true
         """
-        query_dict = parse_qs(str.lower(request.query_string))
+        query_dict = parse_qs(request.query_string)
 
         if "names" in query_dict and query_dict["names"][0] == "true":
             # Retrieve all plan names
