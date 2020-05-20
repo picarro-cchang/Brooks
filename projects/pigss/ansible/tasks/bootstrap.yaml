@@ -166,10 +166,6 @@
   apt: name=libssl1.0-dev
   become: yes
 
-- name: Install node-gyp
-  apt: name=node-gyp
-  become: yes
-
 - name: Install equivs
   apt: name=equivs
   become: yes
