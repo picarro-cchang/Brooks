@@ -67,10 +67,10 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
     }
   }
 
-  setFileName(e) {
+  setFileName(planName) {
     const plan = { ...this.state.plan };
-    plan.plan_filename = e.target.value;
-    this.setState({ fileName: e.target.value.replace(/\s/g, ""), plan });
+    plan.plan_filename = planName;
+    this.setState({fileName: planName, plan})
   }
 
   renderItem = (index: number, key: ReactText) => (
@@ -118,8 +118,8 @@ class SavePanel extends Component<PlanSavePanelOptions, State> {
           <input
             id={"fileName"}
             onChange={(e) => {
-              e.target.value = e.target.value.replace(/\s/g, "");
-              this.setFileName(e);
+              e.target.value = e.target.value.replace(/[^\w-]/g, "");
+              this.setFileName(e.target.value);
             }}
             maxLength={28}
             type="text"
