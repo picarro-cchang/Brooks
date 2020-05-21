@@ -249,7 +249,7 @@ class PigssSupervisor(Ahsm):
         elif sig == Signal.SYSTEM_CONFIGURE:
             log.info(f"System config: {e.value}")
             startup_plan = self.farm.config.get_startup_plan()
-            if startup_plan is not None:
+            if startup_plan is not None and not self.farm.config.get_wait_warmup():
                 self.run_async(self.farm.controller.auto_setup_flow(startup_plan))
             return self.handled(e)
         elif sig == Signal.MONITOR_PROCESSES:

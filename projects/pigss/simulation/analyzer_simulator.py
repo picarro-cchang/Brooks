@@ -287,6 +287,15 @@ class InstMgr:
         self.rpc_server.register_function(self.INSTMGR_GetStateRpc)
         # self.rpc_server.register_function(self.INSTMGR_GetStatusRpc)
         self.rpc_server.register_function(self.INSTMGR_ShutdownRpc)
+        self.rpc_server.register_function(self.INSTMGR_warmup_additional_seconds)
+        self.rpc_server.register_function(self.INSTMGR_warmup_for_30)
+
+
+    def INSTMGR_warmup_additional_seconds(self, seconds):
+        self.analyzer.warmup_time = self.sim.sim_time - self.sim.sim_start_time + seconds
+
+    def INSTMGR_warmup_for_30(self):
+        self.INSTMGR_warmup_additional_seconds(30)
 
 
 def get_analyzer_details(params):

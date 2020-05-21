@@ -117,6 +117,14 @@ class PigssConfig:
     def get_min_plan_interval(self):
         return self.config["Settings"]["min_plan_interval"]
 
+    @default(None)
+    def get_wait_warmup(self):
+        return self.config["Settings"]["wait_warmup"]
+
+    @default(1)
+    def get_wait_warmup_timer(self):
+        return self.config["Settings"]["wait_warmup_timer"]
+
     @default([])
     def get_glogger_plugin_config(self):
         return self.config["Plugins"]["GrafanaLogger"]
