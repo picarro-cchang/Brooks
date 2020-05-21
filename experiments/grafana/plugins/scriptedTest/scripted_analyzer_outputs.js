@@ -56,7 +56,7 @@ function make_panel(result) {
         let tempColor = {}
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
-        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND model_number =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp.groupBy = [{"params": ["null"],"type": "fill"}]
         temp.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp.resultFormat = "time_series"
@@ -72,7 +72,7 @@ function make_panel(result) {
         let temp2 = {}
         temp2.alias = "Unstable"
         temp2.measurement = measurement;
-        temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp2.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND model_number =~ /^$instrument$/ AND valve_stable_time < $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp2.groupBy = [{"params": ["null"],"type": "fill"}]
         temp2.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp2.resultFormat = "time_series"
@@ -86,7 +86,7 @@ function make_panel(result) {
         let temp3 = {}
         temp3.alias = "Unselected"
         temp3.measurement = measurement;
-        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos = '0' AND analyzer =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp3.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos = '0' AND model_number =~ /^$instrument$/) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp3.groupBy = [{"params": ["null"],"type": "fill"}]
         temp3.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp3.resultFormat = "time_series"
@@ -222,9 +222,9 @@ function make_panel(result) {
                 {
                   format: "short",
                   label: null,
-                  logBase: 10,
-                  max: "10000",
-                  min: "0",
+                  logBase: 1,
+                  max: null,
+                  min: null,
                   show: true
                 },
                 {
@@ -336,17 +336,17 @@ return function(callback) {
 
     customVariables.push(temp2)
 
-    //get analyzers
+    //get analyzer model numbers
     let temp3 = {}
     temp3.allValue = null,
     temp3.current = {"text": "All", "value": "$__all"},
     temp3.datasource = "PiGSS data source",
-    temp3.definition =  "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.definition =  "select distinct(model_number) from autogen.crds",
     temp3.includeAll = true, 
     temp3.label = "Instrument",
     temp3.multi = true,
     temp3.name = "instrument",
-    temp3.query = "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.query = "select distinct(model_number) from autogen.crds",
     temp3.refresh = 1,
     temp3.regex = "",
     temp3.sort = 0,

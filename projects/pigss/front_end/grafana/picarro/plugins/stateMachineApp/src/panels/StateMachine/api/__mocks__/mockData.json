@@ -4,6 +4,7 @@
     "loop_plan": "READY",
     "run": "READY",
     "plan": "READY",
+    "load": "READY",
     "plan_run": "READY",
     "plan_loop": "READY",
     "reference": "READY",

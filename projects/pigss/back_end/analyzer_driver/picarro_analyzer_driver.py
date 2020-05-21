@@ -14,6 +14,7 @@ from back_end.lologger.lologger_client import LOLoggerClient
 from common import CmdFIFO, timeutils
 from common.listener import Listener
 from common.string_pickler import ArbitraryObject
+from common.instrument_model_table import instrument_model_table_regex
 
 ZERO = timedelta(0)
 HOUR = timedelta(hours=1)
@@ -50,7 +51,7 @@ utc = UTC()
 
 class PicarroAnalyzerDriver:
     """
-        class represents IDriver for Picarro Analyser instrument,
+        class represents IDriver for Picarro Analyzer instrument,
         it pipelines measurement point from instrument to the database and
         is responsible for passing to the instrument commands from upper layer
     """
@@ -96,6 +97,8 @@ class PicarroAnalyzerDriver:
         if logger is None:
             self.logger = LOLoggerClient(client_name=self.rpc_server_name, verbose=True)
 
+        self.engineering_name, self.model_number  = self.get_model_number()
+        
         if database_tags is not None:
             for database_tag in database_tags:
                 self.add_tags(database_tags)
@@ -175,6 +178,29 @@ class PicarroAnalyzerDriver:
         self.logger.debug("Driver instance closed")
         self.IDriverThread.stop()
         self.thread_created = False
+
+    def get_model_number (self):
+        """
+        Method to fetch instrument model from instrument eeprom
+        """
+        try:
+            driver = CmdFIFO.CmdFIFOServerProxy(f'http://{self.instrument_ip_address}:50010', ClientName='IDriver')
+            engineering_name = driver.fetchLogicEEPROM()[0]["Analyzer"]
+        except CmdFIFO.RemoteException as e:
+            self.log.error(f'Exception while trying to fetch instrument engineering name:\n{e}')
+            return None, None
+
+        model_number  = None
+        for key in instrument_model_table_regex:
+            # all engineering names should end on "DS" for ring-Down Spectrometer
+            # the character before "DS" would stand for revision
+            # all characters before that describes the gasses
+            if engineering_name[:-3] == key[:-3]:
+                model_number = instrument_model_table_regex[key]
+        if model_number is None:
+            self.logger.warning(f"Instrument engineering ({engineering_name}) name has no corresponding model name")
+            model_number = engineering_name
+        return engineering_name, model_number
 
     def get_tags(self):
         """
@@ -446,6 +472,11 @@ class IDriverThread(threading.Thread):
                     # equip measurement with fields
                     for field in obj['data']:
                         data['fields'][field] = obj['data'][field]
+
+                    # equip measurement with instrument model
+                    if self.parent_idriver.engineering_name is not None:
+                        data['fields']['model_number'] = str(self.parent_idriver.model_number )
+                        data['fields']['engineering_name'] = self.parent_idriver.engineering_name
                     yield data
             except Queue.Empty:
                 yield None

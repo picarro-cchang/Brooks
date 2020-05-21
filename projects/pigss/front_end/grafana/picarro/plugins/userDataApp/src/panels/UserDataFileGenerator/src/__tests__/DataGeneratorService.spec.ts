@@ -39,11 +39,11 @@ describe("DataFileGeneratorService", () => {
   it("getAnalyzers", () => {
     const mockAnalyzers = {
       analyzers: [
-        "AMADS3001",
-        "AMSADS3003",
-        "BFADS3003",
-        "SBDS3002",
-        "UADS3003"
+        "SI2306",
+        "SI2108",
+        "SI3401",
+        "BFADS",
+        "SI5450"
       ]
     };
     const analyzers = DataGeneratorService.getAnalyzers();
@@ -72,9 +72,9 @@ describe("DataFileGeneratorService", () => {
   it("getFile", async () => {
     const mockKeys = [
       ["time", "analyzer", "valve_pos", "WarmBoxTemp", "CavityTemp"],
-      ["1580936855480", "AMSADS3003", "18", "45", "80"],
-      ["1580936854180", "AMSADS3003", "18", "45", "80"],
-      ["1580936852880", "AMSADS3003", "18", "45", "80"]
+      ["1580936855480", "SI2306", "18", "45", "80"],
+      ["1580936854180", "SI2306", "18", "45", "80"],
+      ["1580936852880", "SI2306", "18", "45", "80"]
     ];
     const response = await DataGeneratorService.getFile("");
     expect(response).toEqual(mockKeys);
@@ -85,7 +85,7 @@ describe("DataFileGeneratorService", () => {
       from: "",
       to: "",
       keys: [{ value: "CavityTemp", label: "CavityTemp" }],
-      analyzers: [{ value: "AMSADS3003", label: "AMSADS3003" }],
+      analyzers: [{ value: "SI2306", label: "SI2306" }],
       ports: [{ value: "2", label: "2" }],
       isProcessedData: false
     };

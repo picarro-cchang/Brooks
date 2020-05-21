@@ -14,7 +14,7 @@ function make_panel(result) {
         //create one target object for each field
         temp.alias = speciesArray[i]
         temp.measurement = measurement;
-        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND analyzer =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
+        temp.query = "SELECT last(" + speciesArray[i] + ") AS " + speciesArray[i] + " FROM " + measurement + " WHERE ('" + speciesArray[i] + "' =~ /^$species$/ AND valve_pos =~ /^$ports$/ AND model_number =~ /^$instrument$/ AND valve_stable_time > $stabilization_time) AND $timeFilter GROUP BY time($__interval) fill(none)"
         temp.groupBy = [{"params": ["null"],"type": "fill"}]
         temp.select = [[{"params" : [speciesArray[i]], "type" : "field"}, {"params": [],"type": "last"}]]
         temp.resultFormat = "time_series"
@@ -65,9 +65,9 @@ function make_panel(result) {
               {
                 format: "short",
                 label: null,
-                logBase: 10,
-                max: "10000",
-                min: "0",
+                logBase: 1,
+                max: null,
+                min: null,
                 show: true
               },
               {
@@ -182,12 +182,12 @@ return function(callback) {
     temp3.allValue = null,
     temp3.current = {"text": "All", "value": "$__all"},
     temp3.datasource = "PiGSS data source",
-    temp3.definition =  "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.definition =  "select distinct(model_number) from autogen.crds",
     temp3.includeAll = true, 
     temp3.label = "Instrument",
     temp3.multi = true,
     temp3.name = "instrument",
-    temp3.query = "SHOW TAG VALUES from crds WITH KEY = \"analyzer\"",
+    temp3.query = "select distinct(model_number) from autogen.crds",
     temp3.refresh = 1,
     temp3.regex = "",
     temp3.sort = 0,

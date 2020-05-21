@@ -113,24 +113,24 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
                 "value": "All",
               },
               Object {
-                "label": "AMADS3001",
-                "value": "AMADS3001",
+                "label": "SI2306",
+                "value": "SI2306",
               },
               Object {
-                "label": "AMSADS3003",
-                "value": "AMSADS3003",
+                "label": "SI2108",
+                "value": "SI2108",
               },
               Object {
-                "label": "BFADS3003",
-                "value": "BFADS3003",
+                "label": "SI3401",
+                "value": "SI3401",
               },
               Object {
-                "label": "SBDS3002",
-                "value": "SBDS3002",
+                "label": "BFADS",
+                "value": "BFADS",
               },
               Object {
-                "label": "UADS3003",
-                "value": "UADS3003",
+                "label": "SI5450",
+                "value": "SI5450",
               },
             ]
           }
@@ -236,6 +236,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
           checked={true}
           label="Processed Data"
           onChange={[Function]}
+          tooltip="Toggle the switch to download raw data"
         />
       </div>
     </PanelOptionsGroup>
@@ -653,6 +654,7 @@ DataGeneratorLayout {
                 checked={true}
                 label="Processed Data"
                 onChange={[Function]}
+                tooltip="Toggle the switch to download raw data"
               />
             </div>
           </PanelOptionsGroup>

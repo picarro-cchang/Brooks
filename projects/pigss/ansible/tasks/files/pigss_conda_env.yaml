@@ -127,7 +127,7 @@ dependencies:
     - flask-restplus==0.12.1
     - flask-socketio==4.2.0
     - grafana-api==0.9.0
-    - grootilities>=0.1.9
+    - grootilities>=0.1.11
     - influxdb==5.2.2
     - itsdangerous==1.1.0
     - jinja2==2.10.1

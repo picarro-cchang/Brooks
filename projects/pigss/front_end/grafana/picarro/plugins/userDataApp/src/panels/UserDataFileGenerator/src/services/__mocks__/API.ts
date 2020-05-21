@@ -22,11 +22,11 @@ export const API = {
       case URL.GET_ANALYZERS: {
         const analyzers = {
           analyzers: [
-            "AMADS3001",
-            "AMSADS3003",
-            "BFADS3003",
-            "SBDS3002",
-            "UADS3003"
+            "SI2306",
+            "SI2108",
+            "SI3401",
+            "BFADS",
+            "SI5450"
           ]
         };
         return analyzers;
@@ -34,14 +34,14 @@ export const API = {
       case URL.GET_FILE + "?name=": {
         const data = [
           ["time", "analyzer", "valve_pos", "WarmBoxTemp", "CavityTemp"],
-          ["1580936855480", "AMSADS3003", "18", "45", "80"],
-          ["1580936854180", "AMSADS3003", "18", "45", "80"],
-          ["1580936852880", "AMSADS3003", "18", "45", "80"]
+          ["1580936855480", "SI2306", "18", "45", "80"],
+          ["1580936854180", "SI2306", "18", "45", "80"],
+          ["1580936852880", "SI2306", "18", "45", "80"]
         ];
         return data;
       }
       case URL.GENERATE_FILE +
-        "?keys=CavityTemp&analyzer=AMSADS3003&port=2&from=&to=": {
+        "?keys=CavityTemp&analyzer=SI2306&port=2&from=&to=&isProcessedData=false": {
         const data = {
           filename: "pigss-ms-02-13-2020_061135-02-13-2020_121135.csv"
         };
