@@ -1,10 +1,11 @@
-import { PanelPlugin } from "@grafana/ui";
-import { DataGeneratorPanel } from "./src/components/DataGeneratorPanel";
-import { DataGeneratorPanelProps } from "./src/types";
-import { DataGeneratorService } from "./src/services/DataGeneratorService";
+// @ts-ignore
+// import { PanelPlugin } from '@grafana/data';
+// @ts-ignore
+import { PanelPlugin } from '@grafana/ui';
+import { DataGeneratorPanel } from './src/components/DataGeneratorPanel';
+import { DataGeneratorPanelProps } from './src/types';
+import { DataGeneratorService } from './src/services/DataGeneratorService';
 
-export const plugin = new PanelPlugin<DataGeneratorPanelProps>(
-  DataGeneratorPanel
-);
+export let plugin = new PanelPlugin<DataGeneratorPanelProps>(DataGeneratorPanel);
 
 plugin.setDefaults(DataGeneratorService.getDefaults());

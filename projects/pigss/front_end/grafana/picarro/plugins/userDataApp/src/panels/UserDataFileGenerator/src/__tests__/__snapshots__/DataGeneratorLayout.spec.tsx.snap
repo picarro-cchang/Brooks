@@ -232,11 +232,16 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
       <div
         className="gf-form"
       >
+        <FormLabel
+          tooltip="Toggle the switch to download raw data"
+          width={10}
+        >
+          Processed Data
+        </FormLabel>
         <Switch
           checked={true}
-          label="Processed Data"
+          label=""
           onChange={[Function]}
-          tooltip="Toggle the switch to download raw data"
         />
       </div>
     </PanelOptionsGroup>
@@ -650,11 +655,16 @@ DataGeneratorLayout {
             <div
               className="gf-form"
             >
+              <FormLabel
+                tooltip="Toggle the switch to download raw data"
+                width={10}
+              >
+                Processed Data
+              </FormLabel>
               <Switch
                 checked={true}
-                label="Processed Data"
+                label=""
                 onChange={[Function]}
-                tooltip="Toggle the switch to download raw data"
               />
             </div>
           </PanelOptionsGroup>

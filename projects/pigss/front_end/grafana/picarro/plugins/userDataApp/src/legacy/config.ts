@@ -1,12 +1,11 @@
-import { PluginMeta } from "@grafana/ui";
+import { PluginMeta } from '@grafana/data';
 
 export class UserDataAppConfigCtrl {
   appEditCtrl: any;
-  appModel: PluginMeta;
+  appModel?: PluginMeta;
 
   /** @ngInject */
   constructor($scope: any, $injector: any) {
-    this.appModel.enabled = true;
     this.appEditCtrl.setPostUpdateHook(this.postUpdate.bind(this));
 
     // Make sure it has a JSON Data spot
@@ -19,11 +18,17 @@ export class UserDataAppConfigCtrl {
     if (!appModel.jsonData) {
       appModel.jsonData = {};
     }
+
+    console.log('ExampleConfigCtrl', this);
   }
 
   postUpdate() {
-    if (!this.appModel.enabled) {
+    if (!this.appModel || !this.appModel.enabled) {
+      console.log('Not enabled...');
       return;
     }
+
+    // TODO, can do stuff after update
+    console.log('Post Update:', this);
   }
 }

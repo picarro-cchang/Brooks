@@ -1,12 +1,10 @@
 {
-    "compilerOptions": {
-      "baseUrl": ".",
-      "paths": { "*": ["types/*"] },
-      "module": "esnext",
-      "lib": ["dom", "es2015", "es2016"],
-      "target": "es5",
-      "jsx": "react",
-      "esModuleInterop": true,
-      "moduleResolution": "node"
-    }
-  }
+  "extends": "./node_modules/@grafana/toolkit/src/config/tsconfig.plugin.json",
+  "include": ["./src/**/*.ts", "./src/**/*.tsx"],
+  "exclude": ["node_modules", "./src/panels/UserDataFileGenerator/src/__tests__/**"],
+  "compilerOptions": {
+    "rootDir": "./src",
+    "typeRoots": ["./node_modules/@types"],
+    "noImplicitAny": false
+  },
+}
