@@ -6,6 +6,6 @@ export interface DataGeneratorPanelProps {
 }
 
 export interface DataGeneratorLayoutProps {
-  theme: GrafanaTheme;
+  theme?: GrafanaTheme | null;
   options: DataGeneratorPanelProps;
 }

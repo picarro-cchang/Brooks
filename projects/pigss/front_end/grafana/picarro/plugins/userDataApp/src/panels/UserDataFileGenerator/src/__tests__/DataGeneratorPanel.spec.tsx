@@ -2,7 +2,8 @@ import React from 'react';
 import { DataGeneratorPanel } from './../components/DataGeneratorPanel';
 import { shallow } from 'enzyme';
 import { DataGeneratorPanelProps } from '../types';
-import { PanelProps, LoadingState, TimeFragment, dateTime } from '@grafana/data';
+import { PanelProps } from '@grafana/ui';
+import { LoadingState, TimeFragment, dateTime } from '@grafana/data';
 import { DEFAULT_TIME_RANGE } from './../constants/index';
 
 jest.mock('./../services/DataGeneratorService.ts');

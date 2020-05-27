@@ -13,7 +13,7 @@
   "devDependencies": {
     "@grafana/toolkit": "next",
     "@grafana/data": "^6.3.0-alpha.0",
-    "@grafana/ui": "^6.4.3"
+    "@grafana/ui": "6.4.3"
   },
   "dependencies": {
     "@types/styled-components": "^4.1.18",

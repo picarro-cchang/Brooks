@@ -19,27 +19,18 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Species
         </FormLabel>
-        <Select
-          autoFocus={false}
+        <StateManager
           backspaceRemovesValue={true}
-          className=""
           components={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
               "Option": [Function],
-              "SingleValue": [Function],
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
+          defaultInputValue=""
+          defaultMenuIsOpen={false}
+          defaultValue={null}
           isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
           onChange={[Function]}
-          openMenuOnFocus={false}
           options={
             Array [
               Object {
@@ -72,7 +63,12 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
+          styles={
+            Object {
+              "control": [Function],
+              "option": [Function],
+            }
+          }
         />
       </div>
     </PanelOptionsGroup>
@@ -85,27 +81,18 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Analyzer
         </FormLabel>
-        <Select
-          autoFocus={false}
+        <StateManager
           backspaceRemovesValue={true}
-          className=""
           components={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
               "Option": [Function],
-              "SingleValue": [Function],
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
+          defaultInputValue=""
+          defaultMenuIsOpen={false}
+          defaultValue={null}
           isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
           onChange={[Function]}
-          openMenuOnFocus={false}
           options={
             Array [
               Object {
@@ -134,7 +121,6 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
         />
       </div>
     </PanelOptionsGroup>
@@ -147,27 +133,18 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Port
         </FormLabel>
-        <Select
-          autoFocus={false}
+        <StateManager
           backspaceRemovesValue={true}
-          className=""
           components={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
               "Option": [Function],
-              "SingleValue": [Function],
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
+          defaultInputValue=""
+          defaultMenuIsOpen={false}
+          defaultValue={null}
           isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
           onChange={[Function]}
-          openMenuOnFocus={false}
           options={
             Array [
               Object {
@@ -224,7 +201,6 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
         />
       </div>
     </PanelOptionsGroup>
@@ -534,27 +510,18 @@ DataGeneratorLayout {
               >
                 Species
               </FormLabel>
-              <Select
-                autoFocus={false}
+              <StateManager
                 backspaceRemovesValue={true}
-                className=""
                 components={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
                     "Option": [Function],
-                    "SingleValue": [Function],
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
+                defaultInputValue=""
+                defaultMenuIsOpen={false}
+                defaultValue={null}
                 isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
                 onChange={[Function]}
-                openMenuOnFocus={false}
                 options={
                   Array [
                     Object {
@@ -563,7 +530,12 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
+                styles={
+                  Object {
+                    "control": [Function],
+                    "option": [Function],
+                  }
+                }
               />
             </div>
           </PanelOptionsGroup>
@@ -576,27 +548,18 @@ DataGeneratorLayout {
               >
                 Analyzer
               </FormLabel>
-              <Select
-                autoFocus={false}
+              <StateManager
                 backspaceRemovesValue={true}
-                className=""
                 components={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
                     "Option": [Function],
-                    "SingleValue": [Function],
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
+                defaultInputValue=""
+                defaultMenuIsOpen={false}
+                defaultValue={null}
                 isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
                 onChange={[Function]}
-                openMenuOnFocus={false}
                 options={
                   Array [
                     Object {
@@ -605,7 +568,6 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
               />
             </div>
           </PanelOptionsGroup>
@@ -618,27 +580,18 @@ DataGeneratorLayout {
               >
                 Port
               </FormLabel>
-              <Select
-                autoFocus={false}
+              <StateManager
                 backspaceRemovesValue={true}
-                className=""
                 components={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
                     "Option": [Function],
-                    "SingleValue": [Function],
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
+                defaultInputValue=""
+                defaultMenuIsOpen={false}
+                defaultValue={null}
                 isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
                 onChange={[Function]}
-                openMenuOnFocus={false}
                 options={
                   Array [
                     Object {
@@ -647,7 +600,6 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
               />
             </div>
           </PanelOptionsGroup>
