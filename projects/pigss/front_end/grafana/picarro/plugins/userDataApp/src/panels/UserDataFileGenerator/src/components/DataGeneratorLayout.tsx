@@ -30,15 +30,21 @@ const OptionCheckbox = createClass({
 });
 
 const customStyles = {
+  menu: (provided, state) => ({
+    ...provided,
+    width: '200%',
+    padding: 5,
+    backgroundColor: '#262628',
+  }),
   option: (provided, state) => ({
     ...provided,
-    backgroundColor: state.isSelected ? 'green' : '#262628',
+    backgroundColor: '#262628',
   }),
   control: provided => ({
     ...provided,
     backgroundColor: '#09090b',
     border: '1px solid #262628',
-    width: '100%',
+    width: '200%',
   }),
 };
 

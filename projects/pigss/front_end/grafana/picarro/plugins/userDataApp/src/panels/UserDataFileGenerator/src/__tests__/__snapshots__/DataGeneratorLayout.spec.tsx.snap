@@ -66,6 +66,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
           styles={
             Object {
               "control": [Function],
+              "menu": [Function],
               "option": [Function],
             }
           }
@@ -533,6 +534,7 @@ DataGeneratorLayout {
                 styles={
                   Object {
                     "control": [Function],
+                    "menu": [Function],
                     "option": [Function],
                   }
                 }
