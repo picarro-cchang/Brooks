@@ -56,6 +56,9 @@ class DasConfigure(SharedTypes.Singleton):
             self.instrConfig = instrConfig
             self.driverConfig = driverConfig
             self.installed = {}
+            #List of Cavity Thermistors that are available and need to be used.
+            self.cavityThermistorList = []
+            self.cavity2ThermistorList = []
             for key in instrConfig["CONFIGURATION"]:
                 self.installed[key] = int(instrConfig["CONFIGURATION"][key])
             self.enableInterpolation = self.installed.get(
@@ -68,6 +71,56 @@ class DasConfigure(SharedTypes.Singleton):
             #  a 16-bit hot box heatsink thermistor
             self.cavityThermistorConfig = self.installed.get(
                 "CAVITY_THERMISTOR_CONFIG", 0)
+            self.cavityThermistor1Disabled = self.installed.get("CAVITY_THERMISTOR1_DISABLED",0)
+            self.cavityThermistor2Disabled = self.installed.get("CAVITY_THERMISTOR2_DISABLED",0)
+            self.cavityThermistor3Disabled = self.installed.get("CAVITY_THERMISTOR3_DISABLED",0)
+            self.cavityThermistor4Disabled = self.installed.get("CAVITY_THERMISTOR4_DISABLED",0)
+            self.cavity2Thermistor1Disabled = self.installed.get("CAVITY2_THERMISTOR1_DISABLED",0)
+            self.cavity2Thermistor2Disabled = self.installed.get("CAVITY2_THERMISTOR2_DISABLED",0)
+            self.cavity2Thermistor3Disabled = self.installed.get("CAVITY2_THERMISTOR3_DISABLED",0)
+            self.cavity2Thermistor4Disabled = self.installed.get("CAVITY2_THERMISTOR4_DISABLED",0)
+            # build list of thermistors available to use.
+            if self.cavityThermistor1Disabled is 0:
+                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE1_REGISTER"]
+                Log("Cavity Thermistor1 Enabled",1)
+            else:
+                Log("Cavity Thermistor1 Disabled",1)
+            if self.cavityThermistor2Disabled is 0:
+                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE2_REGISTER"]
+                Log("Cavity Thermistor2 Enabled",1)
+            else:
+                Log("Cavity Thermistor2 Disabled",1)
+            if self.cavityThermistor3Disabled is 0:
+                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE3_REGISTER"]
+                Log("Cavity Thermistor3 Enabled",1)
+            else:
+                Log("Cavity Thermistor3 Disabled",1)
+            if self.cavityThermistor4Disabled is 0:
+                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE4_REGISTER"]
+                Log("Cavity Thermistor4 Enabled",1)
+            else:
+                Log("Cavity Thermistor4 Disabled",1)
+            # Now build cavity 2's thermistor available list
+            if self.cavity2Thermistor1Disabled is 0:
+                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE1_REGISTER"]
+                Log("Cavity2 Thermistor1 Enabled",1)
+            else:
+                Log("Cavity2 Thermistor1 Disabled",1)
+            if self.cavity2Thermistor2Disabled is 0:
+                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE2_REGISTER"]
+                Log("Cavity2 Thermistor2 Enabled",1)
+            else:
+                Log("Cavity2 Thermistor2 Disabled",1)
+            if self.cavity2Thermistor3Disabled is 0:
+                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE3_REGISTER"]
+                Log("Cavity2 Thermistor3 Enabled",1)
+            else:
+                Log("Cavity2 Thermistor3 Disabled",1)
+            if self.cavity2Thermistor4Disabled is 0:
+                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE4_REGISTER"]
+                Log("Cavity2 Thermistor4 Enabled",1)
+            else:
+                Log("Cavity2 Thermistor4 Disabled",1)
             self.is_dual_cavity = self.installed.get("DUAL_CAVITY", 0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
@@ -478,29 +531,33 @@ class DasConfigure(SharedTypes.Singleton):
                     # This represents the new mode in which there are four cavity thermistors
                     # with 24-bit ADCs and a hot box heatsink thermistor with a
                     # 16-bit ADC
-                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                  ["I2C_CAVITY_THERMISTOR_1_ADC",
-                                   "CAVITY_RESISTANCE1_REGISTER",
-                                   "CAVITY_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
+                    if self.cavityThermistor1Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_1_ADC",
+                                       "CAVITY_RESISTANCE1_REGISTER",
+                                       "CAVITY_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
 
-                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                  ["I2C_CAVITY_THERMISTOR_2_ADC",
-                                   "CAVITY_RESISTANCE2_REGISTER",
-                                   "CAVITY_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
+                    if self.cavityThermistor2Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_2_ADC",
+                                       "CAVITY_RESISTANCE2_REGISTER",
+                                       "CAVITY_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
 
-                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                  ["I2C_CAVITY_THERMISTOR_3_ADC",
-                                   "CAVITY_RESISTANCE3_REGISTER",
-                                   "CAVITY_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
+                    if self.cavityThermistor3Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_3_ADC",
+                                       "CAVITY_RESISTANCE3_REGISTER",
+                                       "CAVITY_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
 
-                    self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                        Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                  ["I2C_CAVITY_THERMISTOR_4_ADC",
-                                   "CAVITY_RESISTANCE4_REGISTER",
-                                   "CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
+                    if self.cavityThermistor4Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                      ["I2C_CAVITY_THERMISTOR_4_ADC",
+                                       "CAVITY_RESISTANCE4_REGISTER",
+                                       "CAVITY_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
 
                     self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
                         Operation("ACTION_READ_THERMISTOR_RESISTANCE_16BIT",
@@ -509,29 +566,33 @@ class DasConfigure(SharedTypes.Singleton):
                                    "HOT_BOX_HEATSINK_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
                     # Handle additional thermistors on a second cavity
                     if self.is_dual_cavity != 0:
-                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                    ["I2C_CAVITY2_THERMISTOR_1_ADC",
-                                    "CAVITY2_RESISTANCE1_REGISTER",
-                                    "CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
+                        if self.cavity2Thermistor1Disabled is 0:
+                            self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                        ["I2C_CAVITY2_THERMISTOR_1_ADC",
+                                        "CAVITY2_RESISTANCE1_REGISTER",
+                                        "CAVITY2_THERMISTOR1_SERIES_RESISTANCE_REGISTER"]))
 
-                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                    ["I2C_CAVITY2_THERMISTOR_2_ADC",
-                                    "CAVITY2_RESISTANCE2_REGISTER",
-                                    "CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
+                        if self.cavity2Thermistor2Disabled is 0:
+                            self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                        ["I2C_CAVITY2_THERMISTOR_2_ADC",
+                                        "CAVITY2_RESISTANCE2_REGISTER",
+                                        "CAVITY2_THERMISTOR2_SERIES_RESISTANCE_REGISTER"]))
 
-                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                    ["I2C_CAVITY2_THERMISTOR_3_ADC",
-                                    "CAVITY2_RESISTANCE3_REGISTER",
-                                    "CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
+                        if self.cavity2Thermistor3Disabled is 0:
+                            self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                        ["I2C_CAVITY2_THERMISTOR_3_ADC",
+                                        "CAVITY2_RESISTANCE3_REGISTER",
+                                        "CAVITY2_THERMISTOR3_SERIES_RESISTANCE_REGISTER"]))
 
-                        self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_READ_THERMISTOR_RESISTANCE",
-                                    ["I2C_CAVITY2_THERMISTOR_4_ADC",
-                                    "CAVITY2_RESISTANCE4_REGISTER",
-                                    "CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
+                        if self.cavity2Thermistor4Disabled is 0:
+                            self.opGroups["SLOW"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_READ_THERMISTOR_RESISTANCE",
+                                        ["I2C_CAVITY2_THERMISTOR_4_ADC",
+                                        "CAVITY2_RESISTANCE4_REGISTER",
+                                        "CAVITY2_THERMISTOR4_SERIES_RESISTANCE_REGISTER"]))
 
             if self.cavityThermistorConfig == 0:
                 # This represents the legacy mode in which the hot box heatsink thermistor is connected
@@ -557,114 +618,135 @@ class DasConfigure(SharedTypes.Singleton):
                 # This represents the new mode in which there are four cavity thermistors
                 # with 24-bit ADCs and a hot box heatsink thermistor with a
                 # 16-bit ADC
-                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                              ["CAVITY_RESISTANCE1_REGISTER",
-                               "CONVERSION_CAVITY_THERM1_CONSTA_REGISTER",
-                               "CONVERSION_CAVITY_THERM1_CONSTB_REGISTER",
-                               "CONVERSION_CAVITY_THERM1_CONSTC_REGISTER",
-                               "CAVITY_TEMPERATURE1_REGISTER"]))
-                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                              ["CAVITY_RESISTANCE2_REGISTER",
-                               "CONVERSION_CAVITY_THERM2_CONSTA_REGISTER",
-                               "CONVERSION_CAVITY_THERM2_CONSTB_REGISTER",
-                               "CONVERSION_CAVITY_THERM2_CONSTC_REGISTER",
-                               "CAVITY_TEMPERATURE2_REGISTER"]))
-                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                              ["CAVITY_RESISTANCE3_REGISTER",
-                               "CONVERSION_CAVITY_THERM3_CONSTA_REGISTER",
-                               "CONVERSION_CAVITY_THERM3_CONSTB_REGISTER",
-                               "CONVERSION_CAVITY_THERM3_CONSTC_REGISTER",
-                               "CAVITY_TEMPERATURE3_REGISTER"]))
-                self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                    Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                              ["CAVITY_RESISTANCE4_REGISTER",
-                               "CONVERSION_CAVITY_THERM4_CONSTA_REGISTER",
-                               "CONVERSION_CAVITY_THERM4_CONSTB_REGISTER",
-                               "CONVERSION_CAVITY_THERM4_CONSTC_REGISTER",
-                               "CAVITY_TEMPERATURE4_REGISTER"]))
+                if self.cavityThermistor1Disabled is 0:
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                  ["CAVITY_RESISTANCE1_REGISTER",
+                                   "CONVERSION_CAVITY_THERM1_CONSTA_REGISTER",
+                                   "CONVERSION_CAVITY_THERM1_CONSTB_REGISTER",
+                                   "CONVERSION_CAVITY_THERM1_CONSTC_REGISTER",
+                                   "CAVITY_TEMPERATURE1_REGISTER"]))
+
+                if self.cavityThermistor2Disabled is 0:
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                  ["CAVITY_RESISTANCE2_REGISTER",
+                                   "CONVERSION_CAVITY_THERM2_CONSTA_REGISTER",
+                                   "CONVERSION_CAVITY_THERM2_CONSTB_REGISTER",
+                                   "CONVERSION_CAVITY_THERM2_CONSTC_REGISTER",
+                                   "CAVITY_TEMPERATURE2_REGISTER"]))
+
+                if self.cavityThermistor3Disabled is 0:
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                  ["CAVITY_RESISTANCE3_REGISTER",
+                                   "CONVERSION_CAVITY_THERM3_CONSTA_REGISTER",
+                                   "CONVERSION_CAVITY_THERM3_CONSTB_REGISTER",
+                                   "CONVERSION_CAVITY_THERM3_CONSTC_REGISTER",
+                                   "CAVITY_TEMPERATURE3_REGISTER"]))
+
+                if self.cavityThermistor4Disabled is 0:
+                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                  ["CAVITY_RESISTANCE4_REGISTER",
+                                   "CONVERSION_CAVITY_THERM4_CONSTA_REGISTER",
+                                   "CONVERSION_CAVITY_THERM4_CONSTB_REGISTER",
+                                   "CONVERSION_CAVITY_THERM4_CONSTC_REGISTER",
+                                   "CAVITY_TEMPERATURE4_REGISTER"]))
+
                 # We average the individual temperatures to give the reported
                 # cavity temperature
                 self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                     Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
-                              ["CAVITY_TEMPERATURE1_REGISTER",
-                               "CAVITY_TEMPERATURE2_REGISTER",
-                               "CAVITY_TEMPERATURE3_REGISTER",
-                               "CAVITY_TEMPERATURE4_REGISTER",
-                               "CAVITY_TEMPERATURE_REGISTER"]))
+                              self.cavityThermistorList))
+
                 # Stream the individual cavity temperature readings
-                self.opGroups["SLOW"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_CavityTemp1", "CAVITY_TEMPERATURE1_REGISTER"]))
-                self.opGroups["SLOW"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_CavityTemp2", "CAVITY_TEMPERATURE2_REGISTER"]))
-                self.opGroups["SLOW"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_CavityTemp3", "CAVITY_TEMPERATURE3_REGISTER"]))
-                self.opGroups["SLOW"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_CavityTemp4", "CAVITY_TEMPERATURE4_REGISTER"]))
+                if self.cavityThermistor1Disabled is 0:
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                  ["STREAM_CavityTemp1", "CAVITY_TEMPERATURE1_REGISTER"]))
+
+                if self.cavityThermistor2Disabled is 0:
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                  ["STREAM_CavityTemp2", "CAVITY_TEMPERATURE2_REGISTER"]))
+
+                if self.cavityThermistor3Disabled is 0:
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                  ["STREAM_CavityTemp3", "CAVITY_TEMPERATURE3_REGISTER"]))
+
+                if self.cavityThermistor4Disabled is 0:
+                    self.opGroups["SLOW"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                  ["STREAM_CavityTemp4", "CAVITY_TEMPERATURE4_REGISTER"]))
 
                 if self.is_dual_cavity != 0:
                     # This represents the new mode in which there are four addtional thermistors
                     # for a second cavity
-                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                                ["CAVITY2_RESISTANCE1_REGISTER",
-                                "CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER",
-                                "CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER",
-                                "CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER",
-                                "CAVITY2_TEMPERATURE1_REGISTER"]))
-                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                                ["CAVITY2_RESISTANCE2_REGISTER",
-                                "CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER",
-                                "CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER",
-                                "CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER",
-                                "CAVITY2_TEMPERATURE2_REGISTER"]))
-                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                                ["CAVITY2_RESISTANCE3_REGISTER",
-                                "CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER",
-                                "CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER",
-                                "CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER",
-                                "CAVITY2_TEMPERATURE3_REGISTER"]))
-                    self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
-                        Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
-                                ["CAVITY2_RESISTANCE4_REGISTER",
-                                "CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER",
-                                "CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER",
-                                "CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER",
-                                "CAVITY2_TEMPERATURE4_REGISTER"]))
+
+                    if self.cavity2Thermistor1Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                    ["CAVITY2_RESISTANCE1_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM1_CONSTA_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM1_CONSTB_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM1_CONSTC_REGISTER",
+                                    "CAVITY2_TEMPERATURE1_REGISTER"]))
+
+                    if self.cavity2Thermistor2Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                    ["CAVITY2_RESISTANCE2_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM2_CONSTA_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM2_CONSTB_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM2_CONSTC_REGISTER",
+                                    "CAVITY2_TEMPERATURE2_REGISTER"]))
+
+                    if self.cavity2Thermistor3Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                    ["CAVITY2_RESISTANCE3_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM3_CONSTA_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM3_CONSTB_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM3_CONSTC_REGISTER",
+                                    "CAVITY2_TEMPERATURE3_REGISTER"]))
+
+                    if self.cavity2Thermistor4Disabled is 0:
+                        self.opGroups["SLOW"]["SENSOR_CONVERT"].addOperation(
+                            Operation("ACTION_RESISTANCE_TO_TEMPERATURE",
+                                    ["CAVITY2_RESISTANCE4_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM4_CONSTA_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM4_CONSTB_REGISTER",
+                                    "CONVERSION_CAVITY2_THERM4_CONSTC_REGISTER",
+                                    "CAVITY2_TEMPERATURE4_REGISTER"]))
+
                     # We average the individual temperatures to give the reported
                     # cavity2 temperature
                     self.opGroups["SLOW"]["SENSOR_PROCESSING"].addOperation(
                         Operation("ACTION_AVERAGE_FLOAT_REGISTERS",
-                                ["CAVITY2_TEMPERATURE1_REGISTER",
-                                 "CAVITY2_TEMPERATURE2_REGISTER",
-                                 "CAVITY2_TEMPERATURE3_REGISTER",
-                                 "CAVITY2_TEMPERATURE4_REGISTER",
-                                 "CAVITY2_TEMPERATURE_REGISTER"]))
+                                self.cavity2ThermistorList))
 
                     # Stream the individual cavity temperature readings
                     self.opGroups["SLOW"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                 ["STREAM_Cavity2Temp", "CAVITY2_TEMPERATURE_REGISTER"]))
-                    self.opGroups["SLOW"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE1_REGISTER"]))
-                    self.opGroups["SLOW"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                ["STREAM_Cavity2Temp2", "CAVITY2_TEMPERATURE2_REGISTER"]))
-                    self.opGroups["SLOW"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                ["STREAM_Cavity2Temp3", "CAVITY2_TEMPERATURE3_REGISTER"]))
-                    self.opGroups["SLOW"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                ["STREAM_Cavity2Temp4", "CAVITY2_TEMPERATURE4_REGISTER"]))
+                    if self.cavity2Thermistor1Disabled is 0:
+                        self.opGroups["SLOW"]["STREAMER"].addOperation(
+                            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                    ["STREAM_Cavity2Temp1", "CAVITY2_TEMPERATURE1_REGISTER"]))
+                    if self.cavity2Thermistor2Disabled is 0:
+                        self.opGroups["SLOW"]["STREAMER"].addOperation(
+                            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                    ["STREAM_Cavity2Temp2", "CAVITY2_TEMPERATURE2_REGISTER"]))
+                    if self.cavity2Thermistor3Disabled is 0:
+                        self.opGroups["SLOW"]["STREAMER"].addOperation(
+                            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                    ["STREAM_Cavity2Temp3", "CAVITY2_TEMPERATURE3_REGISTER"]))
+                    if self.cavity2Thermistor4Disabled is 0:
+                        self.opGroups["SLOW"]["STREAMER"].addOperation(
+                            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                    ["STREAM_Cavity2Temp4", "CAVITY2_TEMPERATURE4_REGISTER"]))
                     # Cavity 2 Pressure and Ambient 2 stream
                     self.opGroups["FAST"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
