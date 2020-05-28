@@ -6,12 +6,12 @@ const customStyles = {
     ...provided,
     minWidth: '10%',
   }),
-  menu: (provided) => ({
+  menu: provided => ({
     ...provided,
     padding: 5,
     backgroundColor: '#262628',
   }),
-  option: (provided) => ({
+  option: provided => ({
     ...provided,
     color: '#d8d9da',
     backgroundColor: '#262628',
@@ -59,6 +59,11 @@ const ClearIndicator = props => {
 export interface Props {
   passedOptions: [];
   passedOnChange: (keys: any) => void;
+  allOption: {
+    label: string;
+    value: string;
+  };
+  value: [];
 }
 
 export default class CustomSelect extends Component<Props> {
@@ -66,7 +71,7 @@ export default class CustomSelect extends Component<Props> {
     super(props);
   }
   render() {
-    const { passedOptions, passedOnChange } = this.props;
+    const { passedOptions, passedOnChange, value } = this.props;
     return (
       <Select
         placeholder="Select..."
@@ -74,8 +79,11 @@ export default class CustomSelect extends Component<Props> {
         styles={customStyles}
         options={passedOptions}
         onChange={passedOnChange}
-        value={passedOptions.find((option: any) => option.value === 'key')}
+        value={value}
+        // value={passedOptions.find((option: any) => option.value === 'key')}
         isMulti={true}
+        closeMenuOnSelect={false}
+        hideSelectedOptions={false}
         backspaceRemovesValue={true}
       />
     );

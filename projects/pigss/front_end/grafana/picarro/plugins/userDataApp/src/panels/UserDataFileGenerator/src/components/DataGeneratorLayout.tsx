@@ -15,6 +15,11 @@ const labelWidth_6 = 6;
 const labelWidth_7 = 7;
 const labelWidth_10 = 10;
 
+const allOption = {
+  label: 'All',
+  value: 'All',
+};
+
 export default class DataGeneratorLayout extends PureComponent<Props, any> {
   constructor(props: Props) {
     super(props);
@@ -260,20 +265,35 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Species</FormLabel>
-              <CustomSelect passedOptions={keyOptions} passedOnChange={this.onKeysChange} />
+              <CustomSelect
+                passedOptions={keyOptions}
+                allOption={allOption}
+                passedOnChange={this.onKeysChange}
+                value={this.state.keys}
+              />
             </div>
           </PanelOptionsGroup>
 
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Analyzer</FormLabel>
-              <CustomSelect passedOptions={analyzerOptions} passedOnChange={this.onAnalyzersChange} />
+              <CustomSelect
+                passedOptions={analyzerOptions}
+                allOption={allOption}
+                passedOnChange={this.onAnalyzersChange}
+                value={this.state.analyzers}
+              />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Port</FormLabel>
-              <CustomSelect passedOptions={portOptions} passedOnChange={this.onPortsChange} />
+              <CustomSelect
+                passedOptions={portOptions}
+                allOption={allOption}
+                passedOnChange={this.onPortsChange}
+                value={this.state.ports}
+              />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
