@@ -119,7 +119,7 @@ class DasConfigure(SharedTypes.Singleton):
             else:
                 Log("Cavity2 Thermistor3 Disabled",1)
             if self.cavity2Thermistor4Disabled is 0:
-                self.cavity2ThermistorList.append"CAVITY2_TEMPERATURE4_REGISTER")
+                self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE4_REGISTER")
                 Log("Cavity2 Thermistor4 Enabled",1)
             else:
                 Log("Cavity2 Thermistor4 Disabled",1)
