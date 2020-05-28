@@ -81,46 +81,49 @@ class DasConfigure(SharedTypes.Singleton):
             self.cavity2Thermistor4Disabled = self.installed.get("CAVITY2_THERMISTOR4_DISABLED",0)
             # build list of thermistors available to use.
             if self.cavityThermistor1Disabled is 0:
-                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE1_REGISTER"]
+                self.cavityThermistorList.append("CAVITY_TEMPERATURE1_REGISTER")
                 Log("Cavity Thermistor1 Enabled",1)
             else:
                 Log("Cavity Thermistor1 Disabled",1)
             if self.cavityThermistor2Disabled is 0:
-                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE2_REGISTER"]
+                self.cavityThermistorList.append("CAVITY_TEMPERATURE2_REGISTER")
                 Log("Cavity Thermistor2 Enabled",1)
             else:
                 Log("Cavity Thermistor2 Disabled",1)
             if self.cavityThermistor3Disabled is 0:
-                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE3_REGISTER"]
+                self.cavityThermistorList.append("CAVITY_TEMPERATURE3_REGISTER")
                 Log("Cavity Thermistor3 Enabled",1)
             else:
                 Log("Cavity Thermistor3 Disabled",1)
             if self.cavityThermistor4Disabled is 0:
-                self.cavityThermistorList = self.cavityThermistorList + ["CAVITY_TEMPERATURE4_REGISTER"]
+                self.cavityThermistorList.append("CAVITY_TEMPERATURE4_REGISTER")
                 Log("Cavity Thermistor4 Enabled",1)
             else:
                 Log("Cavity Thermistor4 Disabled",1)
+            #This last item is the register that the average will be written to and then returned to us
+            self.cavityThermistorList.append("CAVITY_TEMPERATURE_REGISTER")
             # Now build cavity 2's thermistor available list
             if self.cavity2Thermistor1Disabled is 0:
-                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE1_REGISTER"]
+                self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE1_REGISTER")
                 Log("Cavity2 Thermistor1 Enabled",1)
             else:
                 Log("Cavity2 Thermistor1 Disabled",1)
             if self.cavity2Thermistor2Disabled is 0:
-                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE2_REGISTER"]
+                self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE2_REGISTER")
                 Log("Cavity2 Thermistor2 Enabled",1)
             else:
                 Log("Cavity2 Thermistor2 Disabled",1)
             if self.cavity2Thermistor3Disabled is 0:
-                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE3_REGISTER"]
+                self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE3_REGISTER")
                 Log("Cavity2 Thermistor3 Enabled",1)
             else:
                 Log("Cavity2 Thermistor3 Disabled",1)
             if self.cavity2Thermistor4Disabled is 0:
-                self.cavity2ThermistorList = self.cavity2ThermistorList + ["CAVITY2_TEMPERATURE4_REGISTER"]
+                self.cavity2ThermistorList.append"CAVITY2_TEMPERATURE4_REGISTER")
                 Log("Cavity2 Thermistor4 Enabled",1)
             else:
                 Log("Cavity2 Thermistor4 Disabled",1)
+            self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE_REGISTER")
             self.is_dual_cavity = self.installed.get("DUAL_CAVITY", 0)
             self.initialized = True
             self.parameter_forms = interface.parameter_forms
