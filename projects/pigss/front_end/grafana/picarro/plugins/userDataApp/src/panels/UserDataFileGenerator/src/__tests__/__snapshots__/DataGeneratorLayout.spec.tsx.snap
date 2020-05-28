@@ -19,19 +19,9 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Species
         </FormLabel>
-        <StateManager
-          backspaceRemovesValue={true}
-          components={
-            Object {
-              "Option": [Function],
-            }
-          }
-          defaultInputValue=""
-          defaultMenuIsOpen={false}
-          defaultValue={null}
-          isMulti={true}
-          onChange={[Function]}
-          options={
+        <CustomSelect
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -63,13 +53,6 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          styles={
-            Object {
-              "control": [Function],
-              "menu": [Function],
-              "option": [Function],
-            }
-          }
         />
       </div>
     </PanelOptionsGroup>
@@ -82,19 +65,9 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Analyzer
         </FormLabel>
-        <StateManager
-          backspaceRemovesValue={true}
-          components={
-            Object {
-              "Option": [Function],
-            }
-          }
-          defaultInputValue=""
-          defaultMenuIsOpen={false}
-          defaultValue={null}
-          isMulti={true}
-          onChange={[Function]}
-          options={
+        <CustomSelect
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -134,19 +107,9 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Port
         </FormLabel>
-        <StateManager
-          backspaceRemovesValue={true}
-          components={
-            Object {
-              "Option": [Function],
-            }
-          }
-          defaultInputValue=""
-          defaultMenuIsOpen={false}
-          defaultValue={null}
-          isMulti={true}
-          onChange={[Function]}
-          options={
+        <CustomSelect
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -511,32 +474,15 @@ DataGeneratorLayout {
               >
                 Species
               </FormLabel>
-              <StateManager
-                backspaceRemovesValue={true}
-                components={
-                  Object {
-                    "Option": [Function],
-                  }
-                }
-                defaultInputValue=""
-                defaultMenuIsOpen={false}
-                defaultValue={null}
-                isMulti={true}
-                onChange={[Function]}
-                options={
+              <CustomSelect
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",
                       "value": "All",
                     },
                   ]
-                }
-                styles={
-                  Object {
-                    "control": [Function],
-                    "menu": [Function],
-                    "option": [Function],
-                  }
                 }
               />
             </div>
@@ -550,19 +496,9 @@ DataGeneratorLayout {
               >
                 Analyzer
               </FormLabel>
-              <StateManager
-                backspaceRemovesValue={true}
-                components={
-                  Object {
-                    "Option": [Function],
-                  }
-                }
-                defaultInputValue=""
-                defaultMenuIsOpen={false}
-                defaultValue={null}
-                isMulti={true}
-                onChange={[Function]}
-                options={
+              <CustomSelect
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",
@@ -582,19 +518,9 @@ DataGeneratorLayout {
               >
                 Port
               </FormLabel>
-              <StateManager
-                backspaceRemovesValue={true}
-                components={
-                  Object {
-                    "Option": [Function],
-                  }
-                }
-                defaultInputValue=""
-                defaultMenuIsOpen={false}
-                defaultValue={null}
-                isMulti={true}
-                onChange={[Function]}
-                options={
+              <CustomSelect
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",

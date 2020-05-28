@@ -1,52 +1,19 @@
 import React, { PureComponent, Fragment } from 'react';
 import { TimeRange, dateTime, dateMath } from '@grafana/data';
 import { TimePicker, FormLabel, PanelOptionsGroup, Button, Switch } from '@grafana/ui';
-import Select, { components } from 'react-select';
 
 import { notifyError, notifySuccess } from '../utils/Notifications';
 import { DataGeneratorLayoutProps } from '../types';
 import { DataGeneratorService } from '../services/DataGeneratorService';
 import { DEFAULT_TIME_OPTIONS } from './../constants';
 import './Layout.css';
-import createClass from 'create-react-class';
+import CustomSelect from './CustomSelect';
 
 interface Props extends DataGeneratorLayoutProps {}
 
 const labelWidth_6 = 6;
 const labelWidth_7 = 7;
 const labelWidth_10 = 10;
-
-const OptionCheckbox = createClass({
-  render() {
-    return (
-      <div>
-        <components.Option {...this.props}>
-          <input type="checkbox" checked={this.props.isSelected} onChange={e => null} />{' '}
-          <label>{this.props.value} </label>
-        </components.Option>
-      </div>
-    );
-  },
-});
-
-const customStyles = {
-  menu: (provided, state) => ({
-    ...provided,
-    width: '200%',
-    padding: 5,
-    backgroundColor: '#262628',
-  }),
-  option: (provided, state) => ({
-    ...provided,
-    backgroundColor: '#262628',
-  }),
-  control: provided => ({
-    ...provided,
-    backgroundColor: '#09090b',
-    border: '1px solid #262628',
-    width: '200%',
-  }),
-};
 
 export default class DataGeneratorLayout extends PureComponent<Props, any> {
   constructor(props: Props) {
@@ -293,42 +260,20 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Species</FormLabel>
-              <Select
-                components={{ Option: OptionCheckbox }}
-                styles={customStyles}
-                options={keyOptions}
-                onChange={this.onKeysChange}
-                value={keyOptions.find((option: any) => option.value === 'key')}
-                isMulti={true}
-                backspaceRemovesValue
-              />
+              <CustomSelect passedOptions={keyOptions} passedOnChange={this.onKeysChange} />
             </div>
           </PanelOptionsGroup>
 
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Analyzer</FormLabel>
-              <Select
-                components={{ Option: OptionCheckbox }}
-                options={analyzerOptions}
-                onChange={this.onAnalyzersChange}
-                value={analyzerOptions.find((option: any) => option.value === 'key')}
-                isMulti={true}
-                backspaceRemovesValue
-              />
+              <CustomSelect passedOptions={analyzerOptions} passedOnChange={this.onAnalyzersChange} />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Port</FormLabel>
-              <Select
-                components={{ Option: OptionCheckbox }}
-                options={portOptions}
-                onChange={this.onPortsChange}
-                value={portOptions.find((option: any) => option.value === 'key')}
-                isMulti={true}
-                backspaceRemovesValue
-              />
+              <CustomSelect passedOptions={portOptions} passedOnChange={this.onPortsChange} />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
