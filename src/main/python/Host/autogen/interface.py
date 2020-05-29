@@ -10,7 +10,7 @@
 # SEE ALSO:
 #   Specify any related information.
 #
-#  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
 #
 
 from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
@@ -132,7 +132,13 @@ class RingdownParamsType(Structure):
     ("tunerAtRingdown",c_uint),
     ("addressAtRingdown",c_uint),
     ("extLaserLevelCounter",c_uint),
-    ("extLaserSequenceId",c_uint)
+    ("extLaserSequenceId",c_uint),
+    ("angleSetpoint",c_float),
+    ("frontAndBackMirrorCurrentDac",c_uint),
+    ("gainAndSoaCurrentDac",c_uint),
+    ("coarseAndFinePhaseCurrentDac",c_uint),
+    ("param14",c_uint),
+    ("param15",c_uint)
     ]
 
 class RingdownBufferType(Structure):
@@ -145,6 +151,7 @@ class RingdownEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),
     ("wlmAngle",c_float),
+    ("angleSetpoint",c_float),
     ("uncorrectedAbsorbance",c_float),
     ("correctedAbsorbance",c_float),
     ("status",c_ushort),
@@ -165,13 +172,21 @@ class RingdownEntryType(Structure):
     ("fitRmsResidual",c_ushort),
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
-    ("cavityPressure",c_float)
+    ("cavityPressure",c_float),
+    ("frontMirrorDac",c_ushort),
+    ("backMirrorDac",c_ushort),
+    ("gainCurrentDac",c_ushort),
+    ("soaCurrentDac",c_ushort),
+    ("coarsePhaseDac",c_ushort),
+    ("finePhaseDac",c_ushort),
+    ("padToCacheLine",c_ushort*24)
     ]
 
 class ProcessedRingdownEntryType(Structure):
     _fields_ = [
     ("timestamp",c_longlong),
     ("wlmAngle",c_float),
+    ("angleSetpoint",c_float),
     ("waveNumber",c_double),
     ("waveNumberSetpoint",c_double),
     ("uncorrectedAbsorbance",c_float),
@@ -195,6 +210,12 @@ class ProcessedRingdownEntryType(Structure):
     ("laserTemperature",c_float),
     ("etalonTemperature",c_float),
     ("cavityPressure",c_float),
+    ("frontMirrorDac",c_ushort),
+    ("backMirrorDac",c_ushort),
+    ("gainCurrentDac",c_ushort),
+    ("soaCurrentDac",c_ushort),
+    ("coarsePhaseDac",c_ushort),
+    ("finePhaseDac",c_ushort),
     ("extra1",c_uint),
     ("extra2",c_uint),
     ("extra3",c_uint),
@@ -268,7 +289,11 @@ class SchemeRowType(Structure):
     ("virtualLaser",c_ushort),
     ("threshold",c_ushort),
     ("pztSetpoint",c_ushort),
-    ("laserTemp",c_ushort)
+    ("laserTemp",c_ushort),
+    ("frontMirrorDac",c_ushort),
+    ("backMirrorDac",c_ushort),
+    ("coarsePhaseDac",c_ushort),
+    ("padding",c_ushort*5)
     ]
 
 class SchemeTableHeaderType(Structure):
@@ -286,7 +311,8 @@ class SchemeTableType(Structure):
 
 class VirtualLaserParamsType(Structure):
     _fields_ = [
-    ("actualLaser",c_uint),
+    ("actualLaser",c_ushort),
+    ("laserType",c_ushort),
     ("tempSensitivity",c_float),
     ("ratio1Center",c_float),
     ("ratio2Center",c_float),
@@ -325,15 +351,21 @@ class WLMCalibrationType(Structure):
     ("wlmCalRows",WLMCalRowType*336)
     ]
 
+class LatticeFpgaProgramType(Structure):
+    _fields_ = [
+    ("num_words",c_uint),
+    ("data",c_uint*20000)
+    ]
+
 # Constant definitions
 # Scheduler period (ms)
 SCHEDULER_PERIOD = 100
 # Maximum number of lasers
 MAX_LASERS = 4
 # Number of points in controller waveforms
-CONTROLLER_WAVEFORM_POINTS = 1000
+CONTROLLER_WAVEFORM_POINTS = 2500
 # Number of points for waveforms on controller rindown pane
-CONTROLLER_RINGDOWN_POINTS = 10000
+CONTROLLER_RINGDOWN_POINTS = 25000
 # Number of points for Allan statistics plots in controller
 CONTROLLER_STATS_POINTS = 32
 # Base address for DSP data memory
@@ -360,6 +392,14 @@ VIRTUAL_LASER_PARAMS_OFFSET = (SCHEME_OFFSET+NUM_SCHEME_TABLES*SCHEME_TABLE_SIZE
 NUM_VIRTUAL_LASERS = 8
 # Size of a virtual laser parameter table in 32 bit ints
 VIRTUAL_LASER_PARAMS_SIZE = (sizeof(VirtualLaserParamsType)/4)
+# Offset for Lattice FPGA programs in DSP shared memory
+LATTICE_FPGA_PROGRAMS_OFFSET = (VIRTUAL_LASER_PARAMS_OFFSET+NUM_VIRTUAL_LASERS*VIRTUAL_LASER_PARAMS_SIZE)
+# Number of programs
+NUM_LATTICE_FPGA_PROGRAMS = 1
+# Size of a program in 32 bit ints
+LATTICE_FPGA_PROGRAM_PARAMS_SIZE = (sizeof(LatticeFpgaProgramType)/4)
+# Offset following DSP data area
+DSP_DATA_END_OFFSET = (LATTICE_FPGA_PROGRAMS_OFFSET+NUM_LATTICE_FPGA_PROGRAMS*LATTICE_FPGA_PROGRAM_PARAMS_SIZE)
 # Base address for DSP shared memory
 SHAREDMEM_ADDRESS = 0x10000
 # Base address for ringdown memory
@@ -484,6 +524,46 @@ PEAK_DETECT_MAX_HISTORY_LENGTH = 1024
 LASER_CURRENT_GEN_ACC_WIDTH = 24
 # Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks
 EEPROM_BLOCK_SIZE = 128
+# SGDBR source front mirror DAC select
+SGDBR_FRONT_MIRROR_DAC = 0x0000000
+# SGDBR source back mirror DAC select
+SGDBR_BACK_MIRROR_DAC = 0x1000000
+# SGDBR source gain DAC select
+SGDBR_GAIN_DAC = 0x2000000
+# SGDBR source SOA DAC select
+SGDBR_SOA_DAC = 0x3000000
+# SGDBR source coarse phase DAC select
+SGDBR_COARSE_PHASE_DAC = 0x4000000
+# SGDBR source fine phase DAC select
+SGDBR_FINE_PHASE_DAC = 0x5000000
+# SGDBR source coarse phase DAC select
+SGDBR_CHIRP_DAC = 0x6000000
+# SGDBR source fine phase DAC select
+SGDBR_SPARE_DAC = 0x7000000
+# SGDBR ADC configuration select
+SGDBR_ADC_CONFIG = 0x8000000
+# SGDBR ringdown configuration select
+SGDBR_RD_CONFIG = 0x9000000
+# SGDBR ADC configuration speed selection SPD
+SGDBR_ADC_CONFIG_SPD = 0x1
+# SGDBR ADC configuration rejection FOB
+SGDBR_ADC_CONFIG_FOB = 0x2
+# SGDBR ADC configuration rejection FOA
+SGDBR_ADC_CONFIG_FOA = 0x4
+# SGDBR ADC configuration temperature selection IM
+SGDBR_ADC_CONFIG_IM = 0x8
+# SGDBR ringdown configuration, SOA select
+SGDBR_RD_CONFIG_SOA = 0x1
+# SGDBR ringdown configuration, gain select
+SGDBR_RD_CONFIG_GAIN = 0x2
+# SGDBR ringdown configuration, front mirror select
+SGDBR_RD_CONFIG_FRONT_MIRROR = 0x4
+# SGDBR ringdown configuration, back mirror select
+SGDBR_RD_CONFIG_BACK_MIRROR = 0x8
+# SGDBR ringdown configuration, phase select
+SGDBR_RD_CONFIG_PHASE = 0x10
+# SGDBR ringdown configuration, chirp select
+SGDBR_RD_CONFIG_CHIRP = 0x20
 
 # Enumerated definitions for RegTypes
 RegTypes = c_uint
@@ -811,6 +891,18 @@ PEAK_DETECT_CNTRL_StateTypeDict[8] = 'PEAK_DETECT_CNTRL_InjectionPendingState' #
 PEAK_DETECT_CNTRL_StateTypeDict[9] = 'PEAK_DETECT_CNTRL_TransitioningState' # Transitioning
 PEAK_DETECT_CNTRL_StateTypeDict[10] = 'PEAK_DETECT_CNTRL_HoldingState' # Holding
 
+# Enumerated definitions for SGDBR_CNTRL_StateType
+SGDBR_CNTRL_StateType = c_uint
+SGDBR_CNTRL_DisabledState = 0 # Controller Disabled
+SGDBR_CNTRL_ManualState = 1 # Manual Control
+SGDBR_CNTRL_AutomaticState = 2 # Automatic Control
+
+# Dictionary for enumerated constants in SGDBR_CNTRL_StateType
+SGDBR_CNTRL_StateTypeDict = {}
+SGDBR_CNTRL_StateTypeDict[0] = 'SGDBR_CNTRL_DisabledState' # Controller Disabled
+SGDBR_CNTRL_StateTypeDict[1] = 'SGDBR_CNTRL_ManualState' # Manual Control
+SGDBR_CNTRL_StateTypeDict[2] = 'SGDBR_CNTRL_AutomaticState' # Automatic Control
+
 # Enumerated definitions for VIRTUAL_LASER_Type
 VIRTUAL_LASER_Type = c_uint
 VIRTUAL_LASER_1 = 0 # Virtual laser 1
@@ -1037,6 +1129,16 @@ LOG_LEVEL_TypeDict[1] = 'LOG_LEVEL_INFO' #
 LOG_LEVEL_TypeDict[2] = 'LOG_LEVEL_STANDARD' # 
 LOG_LEVEL_TypeDict[3] = 'LOG_LEVEL_CRITICAL' # 
 
+# Enumerated definitions for PZT_UPDATE_ModeType
+PZT_UPDATE_ModeType = c_uint
+PZT_UPDATE_IgnoreVLOffset_Mode = 0 # Do not update
+PZT_UPDATE_UseVLOffset_Mode = 1 # Update from VL Offset
+
+# Dictionary for enumerated constants in PZT_UPDATE_ModeType
+PZT_UPDATE_ModeTypeDict = {}
+PZT_UPDATE_ModeTypeDict[0] = 'PZT_UPDATE_IgnoreVLOffset_Mode' # Do not update
+PZT_UPDATE_ModeTypeDict[1] = 'PZT_UPDATE_UseVLOffset_Mode' # Update from VL Offset
+
 # Definitions for COMM_STATUS_BITMASK
 COMM_STATUS_CompleteMask = 0x1
 COMM_STATUS_BadCrcMask = 0x2
@@ -1078,7 +1180,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 582
+INTERFACE_NUMBER_OF_REGISTERS = 583
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1662,6 +1764,7 @@ ACCELEROMETER_Z_REGISTER = 578
 CAVITY2_TEMPERATURE_REGISTER = 579
 RDD2_BALANCE_REGISTER = 580
 RDD2_GAIN_REGISTER = 581
+SGDBR_A_CNTRL_STATE_REGISTER = 582
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -3497,6 +3600,9 @@ registerInitialValue["RDD2_BALANCE_REGISTER"] = 0
 registerByName["RDD2_GAIN_REGISTER"] = RDD2_GAIN_REGISTER
 registerInfo.append(RegInfo("RDD2_GAIN_REGISTER",c_uint,1,1.0,"rw"))
 registerInitialValue["RDD2_GAIN_REGISTER"] = 128
+registerByName["SGDBR_A_CNTRL_STATE_REGISTER"] = SGDBR_A_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SGDBR_A_CNTRL_STATE_REGISTER",SGDBR_CNTRL_StateType,0,1.0,"rw"))
+registerInitialValue["SGDBR_A_CNTRL_STATE_REGISTER"] = SGDBR_CNTRL_DisabledState
 
 # FPGA block definitions
 
@@ -3608,6 +3714,8 @@ LASERLOCKER_OPTIONS_SIM_ACTUAL_B = 0 # Wavelength Monitor Data Source bit positi
 LASERLOCKER_OPTIONS_SIM_ACTUAL_W = 1 # Wavelength Monitor Data Source bit width
 LASERLOCKER_OPTIONS_DIRECT_TUNE_B = 1 # Route tuner input to fine current output bit position
 LASERLOCKER_OPTIONS_DIRECT_TUNE_W = 1 # Route tuner input to fine current output bit width
+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B = 2 # Select source of ratio outputs bit position
+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W = 2 # Select source of ratio outputs bit width
 
 LASERLOCKER_ETA1 = 2 # Etalon 1 reading
 LASERLOCKER_REF1 = 3 # Reference 1 reading
@@ -3709,20 +3817,26 @@ RDMAN_PARAM6 = 9 # Parameter 6 register
 RDMAN_PARAM7 = 10 # Parameter 7 register
 RDMAN_PARAM8 = 11 # Parameter 8 register
 RDMAN_PARAM9 = 12 # Parameter 9 register
-RDMAN_DATA_ADDRCNTR = 13 # Counter for ring-down data
-RDMAN_METADATA_ADDRCNTR = 14 # Counter for ring-down metadata
-RDMAN_PARAM_ADDRCNTR = 15 # Counter for parameter data
-RDMAN_DIVISOR = 16 # Ring-down data counter rate divisor
-RDMAN_NUM_SAMP = 17 # Number of samples to collect for ring-down waveform
-RDMAN_THRESHOLD = 18 # Ring-down threshold
-RDMAN_LOCK_DURATION = 19 # Duration (us) for laser frequency to be locked before ring-down is allowed
-RDMAN_PRECONTROL_DURATION = 20 # Duration (us) for laser current to be at nominal value before frequency locking is enabled
-RDMAN_OFF_DURATION = 21 # Duration (us) for ringdown (no injection)
-RDMAN_EXTRA_DURATION = 22 # Duration (us) of extra laser current after ringdown
-RDMAN_TIMEOUT_DURATION = 23 # Duration (us) within which ring-down must occur to be valid
-RDMAN_TUNER_AT_RINGDOWN = 24 # Value of tuner at ring-down
-RDMAN_METADATA_ADDR_AT_RINGDOWN = 25 # Metadata address at ring-down
-RDMAN_RINGDOWN_DATA = 26 # Ringdown data
+RDMAN_PARAM10 = 13 # Parameter 10 register
+RDMAN_PARAM11 = 14 # Parameter 11 register
+RDMAN_PARAM12 = 15 # Parameter 12 register
+RDMAN_PARAM13 = 16 # Parameter 13 register
+RDMAN_PARAM14 = 17 # Parameter 14 register
+RDMAN_PARAM15 = 18 # Parameter 15 register
+RDMAN_DATA_ADDRCNTR = 19 # Counter for ring-down data
+RDMAN_METADATA_ADDRCNTR = 20 # Counter for ring-down metadata
+RDMAN_PARAM_ADDRCNTR = 21 # Counter for parameter data
+RDMAN_DIVISOR = 22 # Ring-down data counter rate divisor
+RDMAN_NUM_SAMP = 23 # Number of samples to collect for ring-down waveform
+RDMAN_THRESHOLD = 24 # Ring-down threshold
+RDMAN_LOCK_DURATION = 25 # Duration (us) for laser frequency to be locked before ring-down is allowed
+RDMAN_PRECONTROL_DURATION = 26 # Duration (us) for laser current to be at nominal value before frequency locking is enabled
+RDMAN_OFF_DURATION = 27 # Duration (us) for ringdown (no injection)
+RDMAN_EXTRA_DURATION = 28 # Duration (us) of extra laser current after ringdown
+RDMAN_TIMEOUT_DURATION = 29 # Duration (us) within which ring-down must occur to be valid
+RDMAN_TUNER_AT_RINGDOWN = 30 # Value of tuner at ring-down
+RDMAN_METADATA_ADDR_AT_RINGDOWN = 31 # Metadata address at ring-down
+RDMAN_RINGDOWN_DATA = 32 # Ringdown data
 
 # Block TWGEN Tuner waveform generator
 TWGEN_ACC = 0 # Accumulator
@@ -3802,6 +3916,8 @@ INJECT_CONTROL2_DISABLE_SOA_WITH_LASER3_B = 7 # Disable SOA for laser 3 bit posi
 INJECT_CONTROL2_DISABLE_SOA_WITH_LASER3_W = 1 # Disable SOA for laser 3 bit width
 INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_B = 8 # Disable SOA for laser 4 bit position
 INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_W = 1 # Disable SOA for laser 4 bit width
+INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B = 9 # Select optical switch type bit position
+INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W = 2 # Select optical switch type bit width
 
 INJECT_LASER1_COARSE_CURRENT = 2 # Sets coarse current for laser 1
 INJECT_LASER2_COARSE_CURRENT = 3 # Sets coarse current for laser 2
@@ -3886,6 +4002,64 @@ LASERCURRENTGENERATOR_LOWER_WINDOW = 9 #
 LASERCURRENTGENERATOR_UPPER_WINDOW = 10 # 
 LASERCURRENTGENERATOR_SEQUENCE_ID = 11 # 
 
+# Block SGDBRCURRENTSOURCE SGDBR current source
+SGDBRCURRENTSOURCE_CSR = 0 # Control/Status Register
+SGDBRCURRENTSOURCE_CSR_RESET_B = 0 # Reset bit position
+SGDBRCURRENTSOURCE_CSR_RESET_W = 1 # Reset bit width
+SGDBRCURRENTSOURCE_CSR_SELECT_B = 1 # Chip select bit position
+SGDBRCURRENTSOURCE_CSR_SELECT_W = 1 # Chip select bit width
+SGDBRCURRENTSOURCE_CSR_DESELECT_B = 2 # Chip deselect bit position
+SGDBRCURRENTSOURCE_CSR_DESELECT_W = 1 # Chip deselect bit width
+SGDBRCURRENTSOURCE_CSR_CPOL_B = 3 # SPI Clock polarity bit position
+SGDBRCURRENTSOURCE_CSR_CPOL_W = 1 # SPI Clock polarity bit width
+SGDBRCURRENTSOURCE_CSR_CPHA_B = 4 # SPI Clock phase bit position
+SGDBRCURRENTSOURCE_CSR_CPHA_W = 1 # SPI Clock phase bit width
+SGDBRCURRENTSOURCE_CSR_DONE_B = 5 # SPI transaction complete bit position
+SGDBRCURRENTSOURCE_CSR_DONE_W = 1 # SPI transaction complete bit width
+SGDBRCURRENTSOURCE_CSR_MISO_B = 6 # MISO level bit position
+SGDBRCURRENTSOURCE_CSR_MISO_W = 1 # MISO level bit width
+SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B = 7 # Allow synchronous updates bit position
+SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_W = 1 # Allow synchronous updates bit width
+SGDBRCURRENTSOURCE_CSR_SUPPRESS_UPDATE_B = 8 # Suppress updates from DSP flag bit position
+SGDBRCURRENTSOURCE_CSR_SUPPRESS_UPDATE_W = 1 # Suppress updates from DSP flag bit width
+
+SGDBRCURRENTSOURCE_MISO_DELAY = 1 # Compensation for MISO propagation delay
+SGDBRCURRENTSOURCE_MOSI_DATA = 2 # Data to send to slave
+SGDBRCURRENTSOURCE_MISO_DATA = 3 # Data received from slave
+SGDBRCURRENTSOURCE_SYNC_REGISTER = 4 # Select current source for synchronous updates
+SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_B = 0 # Current source for sync updates bit position
+SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_W = 4 # Current source for sync updates bit width
+SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_B = 4 # Method used for selecting current source bit position
+SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_W = 1 # Method used for selecting current source bit width
+
+SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT = 5 # Maximum value of current for sync updates
+
+# Block SGDBRMANAGER SGDBR laser manager
+SGDBRMANAGER_CSR = 0 # Control/status register
+SGDBRMANAGER_CSR_START_SCAN_B = 0 # Start SGDBR scan bit position
+SGDBRMANAGER_CSR_START_SCAN_W = 1 # Start SGDBR scan bit width
+SGDBRMANAGER_CSR_DONE_B = 1 # Scan done bit position
+SGDBRMANAGER_CSR_DONE_W = 1 # Scan done bit width
+SGDBRMANAGER_CSR_SCAN_ACTIVE_B = 2 # Scan in progress bit position
+SGDBRMANAGER_CSR_SCAN_ACTIVE_W = 1 # Scan in progress bit width
+
+SGDBRMANAGER_CONFIG = 1 # Configuration of SGDBR
+SGDBRMANAGER_CONFIG_MODE_B = 0 # Analyzer memory mode bit position
+SGDBRMANAGER_CONFIG_MODE_W = 1 # Analyzer memory mode bit width
+SGDBRMANAGER_CONFIG_SELECT_B = 1 # Select SGDBR laser to control bit position
+SGDBRMANAGER_CONFIG_SELECT_W = 1 # Select SGDBR laser to control bit width
+
+SGDBRMANAGER_SCAN_SAMPLES = 2 # Number of samples in a scan
+SGDBRMANAGER_SAMPLE_TIME = 3 # Intersample duration
+SGDBRMANAGER_DELAY_SAMPLES = 4 # Delay at start of scan
+SGDBRMANAGER_SCAN_ADDRESS = 5 # Scan memory address
+SGDBRMANAGER_SGDBR_PRESENT = 6 # Indicates which SGDBR lasers have been installed
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B = 0 # SGDBR laser A present bit position
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W = 1 # SGDBR laser A present bit width
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B = 1 # SGDBR laser B present bit position
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W = 1 # SGDBR laser B present bit width
+
+
 # FPGA registers by name
 fpgaRegByName = {}
 fpgaRegByName["KERNEL_MAGIC_CODE"] = KERNEL_MAGIC_CODE
@@ -3954,6 +4128,12 @@ fpgaRegByName["RDMAN_PARAM6"] = RDMAN_PARAM6
 fpgaRegByName["RDMAN_PARAM7"] = RDMAN_PARAM7
 fpgaRegByName["RDMAN_PARAM8"] = RDMAN_PARAM8
 fpgaRegByName["RDMAN_PARAM9"] = RDMAN_PARAM9
+fpgaRegByName["RDMAN_PARAM10"] = RDMAN_PARAM10
+fpgaRegByName["RDMAN_PARAM11"] = RDMAN_PARAM11
+fpgaRegByName["RDMAN_PARAM12"] = RDMAN_PARAM12
+fpgaRegByName["RDMAN_PARAM13"] = RDMAN_PARAM13
+fpgaRegByName["RDMAN_PARAM14"] = RDMAN_PARAM14
+fpgaRegByName["RDMAN_PARAM15"] = RDMAN_PARAM15
 fpgaRegByName["RDMAN_DATA_ADDRCNTR"] = RDMAN_DATA_ADDRCNTR
 fpgaRegByName["RDMAN_METADATA_ADDRCNTR"] = RDMAN_METADATA_ADDRCNTR
 fpgaRegByName["RDMAN_PARAM_ADDRCNTR"] = RDMAN_PARAM_ADDRCNTR
@@ -4030,6 +4210,19 @@ fpgaRegByName["LASERCURRENTGENERATOR_PERIOD_COUNTER_LIMIT"] = LASERCURRENTGENERA
 fpgaRegByName["LASERCURRENTGENERATOR_LOWER_WINDOW"] = LASERCURRENTGENERATOR_LOWER_WINDOW
 fpgaRegByName["LASERCURRENTGENERATOR_UPPER_WINDOW"] = LASERCURRENTGENERATOR_UPPER_WINDOW
 fpgaRegByName["LASERCURRENTGENERATOR_SEQUENCE_ID"] = LASERCURRENTGENERATOR_SEQUENCE_ID
+fpgaRegByName["SGDBRCURRENTSOURCE_CSR"] = SGDBRCURRENTSOURCE_CSR
+fpgaRegByName["SGDBRCURRENTSOURCE_MISO_DELAY"] = SGDBRCURRENTSOURCE_MISO_DELAY
+fpgaRegByName["SGDBRCURRENTSOURCE_MOSI_DATA"] = SGDBRCURRENTSOURCE_MOSI_DATA
+fpgaRegByName["SGDBRCURRENTSOURCE_MISO_DATA"] = SGDBRCURRENTSOURCE_MISO_DATA
+fpgaRegByName["SGDBRCURRENTSOURCE_SYNC_REGISTER"] = SGDBRCURRENTSOURCE_SYNC_REGISTER
+fpgaRegByName["SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT"] = SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT
+fpgaRegByName["SGDBRMANAGER_CSR"] = SGDBRMANAGER_CSR
+fpgaRegByName["SGDBRMANAGER_CONFIG"] = SGDBRMANAGER_CONFIG
+fpgaRegByName["SGDBRMANAGER_SCAN_SAMPLES"] = SGDBRMANAGER_SCAN_SAMPLES
+fpgaRegByName["SGDBRMANAGER_SAMPLE_TIME"] = SGDBRMANAGER_SAMPLE_TIME
+fpgaRegByName["SGDBRMANAGER_DELAY_SAMPLES"] = SGDBRMANAGER_DELAY_SAMPLES
+fpgaRegByName["SGDBRMANAGER_SCAN_ADDRESS"] = SGDBRMANAGER_SCAN_ADDRESS
+fpgaRegByName["SGDBRMANAGER_SGDBR_PRESENT"] = SGDBRMANAGER_SGDBR_PRESENT
 
 # FPGA map indices
 FPGA_KERNEL = 0 # Kernel registers
@@ -4046,13 +4239,16 @@ FPGA_PWM_FILTER_HEATER = 33 # Filter Heater pulse width modulator registers
 FPGA_RDSIM = 35 # Ringdown simulator registers
 FPGA_LASERLOCKER = 43 # Laser frequency locker registers
 FPGA_RDMAN = 71 # Ringdown manager registers
-FPGA_TWGEN = 98 # Tuner waveform generator
-FPGA_INJECT = 107 # Optical Injection Subsystem
-FPGA_WLMSIM = 133 # WLM Simulator
-FPGA_DYNAMICPWM_INLET = 142 # Inlet proportional valve dynamic PWM
-FPGA_DYNAMICPWM_OUTLET = 147 # Outlet proportional valve dynamic PWM
-FPGA_SCALER = 152 # Scaler for PZT waveform
-FPGA_LASERCURRENTGENERATOR = 153 # Laser current generator
+FPGA_TWGEN = 104 # Tuner waveform generator
+FPGA_INJECT = 113 # Optical Injection Subsystem
+FPGA_WLMSIM = 139 # WLM Simulator
+FPGA_DYNAMICPWM_INLET = 148 # Inlet proportional valve dynamic PWM
+FPGA_DYNAMICPWM_OUTLET = 153 # Outlet proportional valve dynamic PWM
+FPGA_SCALER = 158 # Scaler for PZT waveform
+FPGA_LASERCURRENTGENERATOR = 159 # Laser current generator
+FPGA_SGDBRCURRENTSOURCE_A = 171 # SGDBR current source A
+FPGA_SGDBRCURRENTSOURCE_B = 177 # SGDBR current source B
+FPGA_SGDBRMANAGER = 183 # SGDBR manager
 
 # FPGA map dictionary
 fpgaMapByName = {}
@@ -4077,12 +4273,15 @@ fpgaMapByName["FPGA_DYNAMICPWM_INLET"] = FPGA_DYNAMICPWM_INLET
 fpgaMapByName["FPGA_DYNAMICPWM_OUTLET"] = FPGA_DYNAMICPWM_OUTLET
 fpgaMapByName["FPGA_SCALER"] = FPGA_SCALER
 fpgaMapByName["FPGA_LASERCURRENTGENERATOR"] = FPGA_LASERCURRENTGENERATOR
+fpgaMapByName["FPGA_SGDBRCURRENTSOURCE_A"] = FPGA_SGDBRCURRENTSOURCE_A
+fpgaMapByName["FPGA_SGDBRCURRENTSOURCE_B"] = FPGA_SGDBRCURRENTSOURCE_B
+fpgaMapByName["FPGA_SGDBRMANAGER"] = FPGA_SGDBRMANAGER
 
 persistent_fpga_registers = []
 persistent_fpga_registers.append((u'FPGA_KERNEL', [u'KERNEL_CONFIG', u'KERNEL_INTRONIX_CLKSEL', u'KERNEL_INTRONIX_1', u'KERNEL_INTRONIX_2', u'KERNEL_INTRONIX_3', u'KERNEL_SEL_DETECTOR_MODE']))
 persistent_fpga_registers.append((u'FPGA_RDSIM', [u'RDSIM_OPTIONS', u'RDSIM_PZT_WINDOW_HALF_WIDTH', u'RDSIM_FILLING_RATE', u'RDSIM_DECAY_IN_SHIFT', u'RDSIM_DECAY_IN_OFFSET']))
 persistent_fpga_registers.append((u'FPGA_LASERLOCKER', [u'LASERLOCKER_OPTIONS', u'LASERLOCKER_ETA1_OFFSET', u'LASERLOCKER_REF1_OFFSET', u'LASERLOCKER_ETA2_OFFSET', u'LASERLOCKER_REF2_OFFSET', u'LASERLOCKER_TUNING_OFFSET', u'LASERLOCKER_WM_LOCK_WINDOW', u'LASERLOCKER_WM_INT_GAIN', u'LASERLOCKER_WM_PROP_GAIN', u'LASERLOCKER_WM_DERIV_GAIN']))
-persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_OFF_DURATION', u'RDMAN_EXTRA_DURATION']))
+persistent_fpga_registers.append((u'FPGA_RDMAN', [u'RDMAN_OPTIONS', u'RDMAN_PARAM10', u'RDMAN_PARAM11', u'RDMAN_PARAM12', u'RDMAN_PARAM13', u'RDMAN_PARAM14', u'RDMAN_PARAM15', u'RDMAN_DIVISOR', u'RDMAN_NUM_SAMP', u'RDMAN_THRESHOLD', u'RDMAN_LOCK_DURATION', u'RDMAN_PRECONTROL_DURATION', u'RDMAN_OFF_DURATION', u'RDMAN_EXTRA_DURATION']))
 persistent_fpga_registers.append((u'FPGA_TWGEN', [u'TWGEN_SLOPE_DOWN', u'TWGEN_SLOPE_UP']))
 persistent_fpga_registers.append((u'FPGA_INJECT', [u'INJECT_CONTROL', u'INJECT_CONTROL2', u'INJECT_LASER1_FINE_CURRENT_RANGE', u'INJECT_LASER2_FINE_CURRENT_RANGE', u'INJECT_LASER3_FINE_CURRENT_RANGE', u'INJECT_LASER4_FINE_CURRENT_RANGE']))
 persistent_fpga_registers.append((u'FPGA_WLMSIM', [u'WLMSIM_OPTIONS', u'WLMSIM_RFAC', u'WLMSIM_WFAC', u'WLMSIM_ETA1_OFFSET', u'WLMSIM_REF1_OFFSET', u'WLMSIM_ETA2_OFFSET', u'WLMSIM_REF2_OFFSET']))
@@ -4090,6 +4289,9 @@ persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_INLET', [u'DYNAMICPWM_DELTA'
 persistent_fpga_registers.append((u'FPGA_DYNAMICPWM_OUTLET', [u'DYNAMICPWM_DELTA', u'DYNAMICPWM_SLOPE']))
 persistent_fpga_registers.append((u'FPGA_SCALER', [u'SCALER_SCALE1']))
 persistent_fpga_registers.append((u'FPGA_LASERCURRENTGENERATOR', [u'LASERCURRENTGENERATOR_CONTROL_STATUS', u'LASERCURRENTGENERATOR_SLOW_SLOPE', u'LASERCURRENTGENERATOR_FAST_SLOPE', u'LASERCURRENTGENERATOR_FIRST_OFFSET', u'LASERCURRENTGENERATOR_SECOND_OFFSET', u'LASERCURRENTGENERATOR_FIRST_BREAKPOINT', u'LASERCURRENTGENERATOR_SECOND_BREAKPOINT', u'LASERCURRENTGENERATOR_TRANSITION_COUNTER_LIMIT', u'LASERCURRENTGENERATOR_PERIOD_COUNTER_LIMIT', u'LASERCURRENTGENERATOR_LOWER_WINDOW', u'LASERCURRENTGENERATOR_UPPER_WINDOW']))
+persistent_fpga_registers.append((u'FPGA_SGDBRCURRENTSOURCE_A', [u'SGDBRCURRENTSOURCE_MISO_DELAY', u'SGDBRCURRENTSOURCE_SYNC_REGISTER', u'SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT']))
+persistent_fpga_registers.append((u'FPGA_SGDBRCURRENTSOURCE_B', [u'SGDBRCURRENTSOURCE_MISO_DELAY', u'SGDBRCURRENTSOURCE_SYNC_REGISTER', u'SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT']))
+persistent_fpga_registers.append((u'FPGA_SGDBRMANAGER', [u'SGDBRMANAGER_SCAN_SAMPLES', u'SGDBRMANAGER_SAMPLE_TIME', u'SGDBRMANAGER_DELAY_SAMPLES']))
 
 # Environment addresses
 BYTE4_ENV = 0
@@ -4211,6 +4413,10 @@ ACTION_UPDATE_FROM_SIMULATORS = 91
 ACTION_STEP_SIMULATORS = 92
 ACTION_TEMP_CNTRL_FILTER_HEATER_INIT = 93
 ACTION_TEMP_CNTRL_FILTER_HEATER_STEP = 94
+ACTION_SGDBR_PROGRAM_FPGA = 95
+ACTION_READ_THERMISTOR_RESISTANCE_SGDBR = 96
+ACTION_SGDBR_CNTRL_INIT = 97
+ACTION_SGDBR_CNTRL_STEP = 98
 
 # Aliases
 PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER # Old name for number of samples spent in triggered state
@@ -4672,7 +4878,7 @@ __p = []
 
 __p.append(('dsp','choices',VIRTUAL_LASER_REGISTER,'Virtual laser','',[(VIRTUAL_LASER_1,"Virtual laser 1"),(VIRTUAL_LASER_2,"Virtual laser 2"),(VIRTUAL_LASER_3,"Virtual laser 3"),(VIRTUAL_LASER_4,"Virtual laser 4"),(VIRTUAL_LASER_5,"Virtual laser 5"),(VIRTUAL_LASER_6,"Virtual laser 6"),(VIRTUAL_LASER_7,"Virtual laser 7"),(VIRTUAL_LASER_8,"Virtual laser 8"),],1,1))
 __p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL,[(1, u'Manual/Automatic mode', [(0, u'Manual'), (1, u'Automatic')]), (6, u'Laser selected', [(0, u'Laser 1'), (2, u'Laser 2'), (4, u'Laser 3'), (6, u'Laser 4')]), (120, u'Laser current enable', []), (8, u'Laser 1 current source', []), (16, u'Laser 2 current source', []), (32, u'Laser 3 current source', []), (64, u'Laser 4 current source', []), (1920, u'Deasserts short across laser in manual mode', []), (128, u'Laser 1 current (in manual mode)', []), (256, u'Laser 2 current (in manual mode)', []), (512, u'Laser 3 current (in manual mode)', []), (1024, u'Laser 4 current (in manual mode)', []), (2048, u'Enable SOA current (in manual mode)', [(0, u'Off'), (2048, u'On')]), (4096, u'Enables laser shutdown (in automatic mode)', [(0, u'Disabled'), (4096, u'Enabled')]), (8192, u'Enables SOA shutdown (in automatic mode)', [(0, u'Disabled'), (8192, u'Enabled')]), (16384, u'Select optical switch type', [(0, u'2-way'), (16384, u'4-way')]), (32768, u'SOA or fiber amplifier present', [(0, u'No'), (32768, u'Yes')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')]), (2, u'Turn off deselected lasers', [(0, u'No'), (2, u'Yes')]), (4, u'How is extra laser current controlled?', [(0, u'Input port'), (4, u'Bit in register')]), (8, u'Bit for controlling extra laser current', [(0, u'Normal current'), (8, u'Extra current')]), (16, u'Use extended laser current control', [(0, u'Disable'), (16, u'Enable')]), (480, u'Disable SOA for some lasers', []), (32, u'Disable SOA for laser 1', [(0, u'No'), (32, u'Yes')]), (64, u'Disable SOA for laser 2', [(0, u'No'), (64, u'Yes')]), (128, u'Disable SOA for laser 3', [(0, u'No'), (128, u'Yes')]), (256, u'Disable SOA for laser 4', [(0, u'No'), (256, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_INJECT+INJECT_CONTROL2,[(1, u'Fiber amplifier present', [(0, u'No'), (1, u'Yes')]), (2, u'Turn off deselected lasers', [(0, u'No'), (2, u'Yes')]), (4, u'How is extra laser current controlled?', [(0, u'Input port'), (4, u'Bit in register')]), (8, u'Bit for controlling extra laser current', [(0, u'Normal current'), (8, u'Extra current')]), (16, u'Use extended laser current control', [(0, u'Disable'), (16, u'Enable')]), (480, u'Disable SOA for some lasers', []), (32, u'Disable SOA for laser 1', [(0, u'No'), (32, u'Yes')]), (64, u'Disable SOA for laser 2', [(0, u'No'), (64, u'Yes')]), (128, u'Disable SOA for laser 3', [(0, u'No'), (128, u'Yes')]), (256, u'Disable SOA for laser 4', [(0, u'No'), (256, u'Yes')]), (1536, u'Select optical switch type', [(0, u'2-way Crystalatch'), (512, u'2-way MEMS'), (1024, u'4-way Crystalatch')])],None,None,1,1))
 parameter_forms.append(('Optical Injection Parameters',__p))
 
 # Form: Spectrum Controller Parameters
@@ -4760,7 +4966,7 @@ parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
 __p = []
 
 __p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Generate PRBS', [(0, u'Idle'), (4, u'Send PRBS')]), (8, u'Enable fine current acc', [(0, u'Reset'), (8, u'Accumulate')]), (16, u'Sample dark currents', [(0, u'Idle'), (16, u'Sample')]), (32, u'Load WLM ADC values', [(0, u'Idle'), (32, u'Load')]), (64, u'Tuner offset source', [(0, u'Register'), (64, u'Input port')]), (128, u'Laser frequency in window', [(0, u'Out of range'), (128, u'In Window')]), (256, u'Fine current calculation', [(0, u'In progress'), (256, u'Complete')])],None,None,1,1))
-__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')]), (2, u'Route tuner input to fine current output', [(0, u'No'), (2, u'Yes')])],None,None,1,1))
+__p.append(('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')]), (2, u'Route tuner input to fine current output', [(0, u'No'), (2, u'Yes')]), (12, u'Select source of ratio outputs', [(0, u'WLM ratios'), (4, u'WLM etalon1 photodiodes'), (8, u'WLM etalon2 photodiodes')])],None,None,1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1,'Etalon 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_REF1,'Reference 1 reading','digU','%d',1,1))
 __p.append(('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA2,'Etalon 2 reading','digU','%d',1,1))

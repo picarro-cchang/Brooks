@@ -131,20 +131,27 @@
             <field ident="lockerError" type="double"/>
         </struct>
         <struct type="RingdownParamsType">
-            <field ident="injectionSettings"      type="uint32"/>
-            <field ident="laserTemperature"       type="float"/>
-            <field ident="coarseLaserCurrent"     type="uint32"/>
-            <field ident="etalonTemperature"      type="float"/>
-            <field ident="cavityPressure"         type="float"/>
-            <field ident="ambientPressure"        type="float"/>
-            <field ident="schemeTableAndRow"      type="uint32"/>
-            <field ident="countAndSubschemeId"    type="uint32"/>
-            <field ident="ringdownThreshold"      type="uint32"/>
-            <field ident="status"                 type="uint32"/>
-            <field ident="tunerAtRingdown"        type="uint32"/>
-            <field ident="addressAtRingdown"      type="uint32"/>
-            <field ident="extLaserLevelCounter"   type="uint32"/>
-            <field ident="extLaserSequenceId"     type="uint32"/>
+            <field ident="injectionSettings" type="uint32"/>
+            <field ident="laserTemperature" type="float"/>
+            <field ident="coarseLaserCurrent" type="uint32"/>
+            <field ident="etalonTemperature" type="float"/>
+            <field ident="cavityPressure" type="float"/>
+            <field ident="ambientPressure" type="float"/>
+            <field ident="schemeTableAndRow" type="uint32"/>
+            <field ident="countAndSubschemeId" type="uint32"/>
+            <field ident="ringdownThreshold" type="uint32"/>
+            <field ident="status" type="uint32"/>
+
+            <field ident="tunerAtRingdown" type="uint32"/>
+            <field ident="addressAtRingdown" type="uint32"/>
+            <field ident="extLaserLevelCounter" type="uint32"/>
+            <field ident="extLaserSequenceId" type="uint32"/>
+            <field ident="angleSetpoint" type="float"/>
+            <field ident="frontAndBackMirrorCurrentDac" type="uint32"/>
+            <field ident="gainAndSoaCurrentDac" type="uint32"/>
+            <field ident="coarseAndFinePhaseCurrentDac" type="uint32"/>
+            <field ident="param14" type="uint32"/>
+            <field ident="param15" type="uint32"/>
         </struct>
         <struct type="RingdownBufferType">
             <field ident="ringdownWaveform" type="uint32" size="4096"/>
@@ -153,6 +160,7 @@
         <struct type="RingdownEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="wlmAngle" type="float"/>
+            <field ident="angleSetpoint" type="float"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
             <field ident="correctedAbsorbance" type="float"/>
             <field ident="status" type="uint16"/>
@@ -176,11 +184,18 @@
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
             <!--  ><field ident="lockerError" type="int16"/></!-->
-            <!--  ><field ident="padToCacheLine" type="uint16"/></!-->
+            <field ident="frontMirrorDac" type="uint16"/>
+            <field ident="backMirrorDac" type="uint16"/>
+            <field ident="gainCurrentDac" type="uint16"/>
+            <field ident="soaCurrentDac" type="uint16"/>
+            <field ident="coarsePhaseDac" type="uint16"/>
+            <field ident="finePhaseDac" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="24"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
             <field ident="wlmAngle" type="float"/>
+            <field ident="angleSetpoint" type="float"/>
             <field ident="waveNumber" type="double"/>
             <field ident="waveNumberSetpoint" type="double"/>
             <field ident="uncorrectedAbsorbance" type="float"/>
@@ -205,6 +220,12 @@
             <field ident="laserTemperature" type="float"/>
             <field ident="etalonTemperature" type="float"/>
             <field ident="cavityPressure" type="float"/>
+            <field ident="frontMirrorDac" type="uint16"/>
+            <field ident="backMirrorDac" type="uint16"/>
+            <field ident="gainCurrentDac" type="uint16"/>
+            <field ident="soaCurrentDac" type="uint16"/>
+            <field ident="coarsePhaseDac" type="uint16"/>
+            <field ident="finePhaseDac" type="uint16"/>
             <!--  ><field ident="lockerError" type="int16"/></!-->
             <field ident="extra1" type="uint32"/>
             <field ident="extra2" type="uint32"/>
@@ -258,6 +279,10 @@
             <field ident="threshold" type="uint16"/>
             <field ident="pztSetpoint" type="uint16"/>
             <field ident="laserTemp" type="uint16"/>
+            <field ident="frontMirrorDac" type="uint16"/>
+            <field ident="backMirrorDac" type="uint16"/>
+            <field ident="coarsePhaseDac" type="uint16"/>
+            <field ident="padding" type="uint16" size="5"/>
         </struct>
         <struct type="SchemeTableHeaderType">
             <field ident="numRepeats" type="uint32"/>
@@ -269,7 +294,8 @@
             <field ident="rows"  type="SchemeRowType" size="8192"/>
         </struct>
         <struct type="VirtualLaserParamsType">
-            <field ident="actualLaser" type="uint32"/>
+            <field ident="actualLaser" type="uint16"/>
+            <field ident="laserType" type="uint16"/>
             <field ident="tempSensitivity" type="float"/>
             <field ident="ratio1Center" type="float"/>
             <field ident="ratio2Center" type="float"/>
@@ -301,13 +327,17 @@
             <field ident="header" type="WLMHeaderType" />
             <field ident="wlmCalRows" type="WLMCalRowType" size="336" />
         </struct>
+        <struct type="LatticeFpgaProgramType">
+            <field ident="num_words" type="uint32" />
+            <field ident="data" type="uint32" size="20000" />
+        </struct>
     </struct_list>
     <constant_list>
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
         <constant ident="SCHEDULER_PERIOD" description="Scheduler period (ms)">100</constant>
         <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
-        <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">1000</constant>
-        <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">10000</constant>
+        <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">2500</constant>
+        <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">25000</constant>
         <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
         <constant ident="DSP_DATA_ADDRESS" description="Base address for DSP data memory">0x80800000</constant>
         <constant ident="RDRESULTS_OFFSET" description="Offset for ringdown results in DSP data memory">0x0</constant>
@@ -321,6 +351,10 @@
         <constant ident="VIRTUAL_LASER_PARAMS_OFFSET" description="Offset for virtual laser parameters in DSP shared memory">(SCHEME_OFFSET+NUM_SCHEME_TABLES*SCHEME_TABLE_SIZE)</constant>
         <constant ident="NUM_VIRTUAL_LASERS" description="Maximum number of virtual lasers">8</constant>
         <constant ident="VIRTUAL_LASER_PARAMS_SIZE" description="Size of a virtual laser parameter table in 32 bit ints">(sizeof(VirtualLaserParamsType)/4)</constant>
+        <constant ident="LATTICE_FPGA_PROGRAMS_OFFSET" description="Offset for Lattice FPGA programs in DSP shared memory">(VIRTUAL_LASER_PARAMS_OFFSET+NUM_VIRTUAL_LASERS*VIRTUAL_LASER_PARAMS_SIZE)</constant>
+        <constant ident="NUM_LATTICE_FPGA_PROGRAMS" description="Number of programs">1</constant>
+        <constant ident="LATTICE_FPGA_PROGRAM_PARAMS_SIZE" description="Size of a program in 32 bit ints">(sizeof(LatticeFpgaProgramType)/4)</constant>
+        <constant ident="DSP_DATA_END_OFFSET" description="Offset following DSP data area">(LATTICE_FPGA_PROGRAMS_OFFSET+NUM_LATTICE_FPGA_PROGRAMS*LATTICE_FPGA_PROGRAM_PARAMS_SIZE)</constant>
         <constant ident="SHAREDMEM_ADDRESS" description="Base address for DSP shared memory">0x10000</constant>
         <constant ident="RDMEM_ADDRESS" description="Base address for ringdown memory">0xA0000000</constant>
         <constant ident="REG_OFFSET" description="Offset for software registers in DSP shared memory">0x0</constant>
@@ -383,6 +417,26 @@
         <constant ident="PEAK_DETECT_MAX_HISTORY_LENGTH" description="Maximum number of samples in peak detection history buffer">1024</constant>
         <constant ident="LASER_CURRENT_GEN_ACC_WIDTH" description="Laser current generator accumulator width">24</constant>
         <constant ident="EEPROM_BLOCK_SIZE" description="Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks">128</constant>
+        <constant ident="SGDBR_FRONT_MIRROR_DAC" description="SGDBR source front mirror DAC select">0x0000000</constant>
+        <constant ident="SGDBR_BACK_MIRROR_DAC" description="SGDBR source back mirror DAC select">0x1000000</constant>
+        <constant ident="SGDBR_GAIN_DAC" description="SGDBR source gain DAC select">0x2000000</constant>
+        <constant ident="SGDBR_SOA_DAC" description="SGDBR source SOA DAC select">0x3000000</constant>
+        <constant ident="SGDBR_COARSE_PHASE_DAC" description="SGDBR source coarse phase DAC select">0x4000000</constant>
+        <constant ident="SGDBR_FINE_PHASE_DAC" description="SGDBR source fine phase DAC select">0x5000000</constant>
+        <constant ident="SGDBR_CHIRP_DAC" description="SGDBR source coarse phase DAC select">0x6000000</constant>
+        <constant ident="SGDBR_SPARE_DAC" description="SGDBR source fine phase DAC select">0x7000000</constant>
+        <constant ident="SGDBR_ADC_CONFIG" description="SGDBR ADC configuration select">0x8000000</constant>
+        <constant ident="SGDBR_RD_CONFIG" description="SGDBR ringdown configuration select">0x9000000</constant>
+        <constant ident="SGDBR_ADC_CONFIG_SPD" description="SGDBR ADC configuration speed selection SPD">0x1</constant>
+        <constant ident="SGDBR_ADC_CONFIG_FOB" description="SGDBR ADC configuration rejection FOB">0x2</constant>
+        <constant ident="SGDBR_ADC_CONFIG_FOA" description="SGDBR ADC configuration rejection FOA">0x4</constant>
+        <constant ident="SGDBR_ADC_CONFIG_IM" description="SGDBR ADC configuration temperature selection IM">0x8</constant>
+        <constant ident="SGDBR_RD_CONFIG_SOA" description="SGDBR ringdown configuration, SOA select">0x1</constant>
+        <constant ident="SGDBR_RD_CONFIG_GAIN" description="SGDBR ringdown configuration, gain select">0x2</constant>
+        <constant ident="SGDBR_RD_CONFIG_FRONT_MIRROR" description="SGDBR ringdown configuration, front mirror select">0x4</constant>
+        <constant ident="SGDBR_RD_CONFIG_BACK_MIRROR" description="SGDBR ringdown configuration, back mirror select">0x8</constant>
+        <constant ident="SGDBR_RD_CONFIG_PHASE" description="SGDBR ringdown configuration, phase select">0x10</constant>
+        <constant ident="SGDBR_RD_CONFIG_CHIRP" description="SGDBR ringdown configuration, chirp select">0x20</constant>
     </constant_list>
     <union_list>
         <union type="DataType">
@@ -399,7 +453,7 @@
             <enum_value ident="int_type" />
         </enum>
         <enum type="STREAM_MemberType">
-        <description>Sensor stream members</description>
+            <description>Sensor stream members</description>
             <enum_value ident="STREAM_Laser1Temp" />
             <enum_value ident="STREAM_Laser2Temp" />
             <enum_value ident="STREAM_Laser3Temp" />
@@ -557,6 +611,12 @@
             <enum_value ident="PEAK_DETECT_CNTRL_TransitioningState" value="9" caption="Transitioning" />
             <enum_value ident="PEAK_DETECT_CNTRL_HoldingState" value="10" caption="Holding" />
         </enum>
+        <enum type="SGDBR_CNTRL_StateType">
+            <description>State of SGDBR current controller</description>
+            <enum_value ident="SGDBR_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
+            <enum_value ident="SGDBR_CNTRL_ManualState" value="1" caption="Manual Control" />
+            <enum_value ident="SGDBR_CNTRL_AutomaticState" value="2" caption="Automatic Control" />
+        </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description>
             <enum_value ident="VIRTUAL_LASER_1" value="0" caption="Virtual laser 1" />
@@ -665,10 +725,15 @@
         </enum>
         <enum type="LOG_LEVEL_Type">
             <description>Enumeration specifying event log level</description>
-            <enum_value ident="LOG_LEVEL_DEBUG"     value="0" />
-            <enum_value ident="LOG_LEVEL_INFO"      value="1" />
-            <enum_value ident="LOG_LEVEL_STANDARD"  value="2" />
-            <enum_value ident="LOG_LEVEL_CRITICAL"  value="3" />
+            <enum_value ident="LOG_LEVEL_DEBUG" value="0" />
+            <enum_value ident="LOG_LEVEL_INFO" value="1" />
+            <enum_value ident="LOG_LEVEL_STANDARD" value="2" />
+            <enum_value ident="LOG_LEVEL_CRITICAL" value="3" />
+        </enum>
+        <enum type="PZT_UPDATE_ModeType">
+            <description>Enumeration for PZT Update Mode</description>
+            <enum_value ident="PZT_UPDATE_IgnoreVLOffset_Mode" value="0" caption="Do not update" />
+            <enum_value ident="PZT_UPDATE_UseVLOffset_Mode" value="1"  caption="Update from VL Offset" />
         </enum>
     </enum_list>
     <bits_list>
@@ -3876,18 +3941,26 @@
         <register ident="CAVITY2_TEMPERATURE_REGISTER" type="float" minver="1.0" access="r">
             <description>Cavity2 temperature</description>
         </register>
+
         <register ident="RDD2_BALANCE_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Ringdown detector 2 balance register</description>
             <initial>0</initial>
             <display format="%d">Ringdown 2 detector balance</display>
             <save/>
         </register>
+
         <register ident="RDD2_GAIN_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Ringdown detector 2 gain register</description>
             <initial>128</initial>
             <display format="%d">Ringdown 2 detector gain</display>
             <save/>
         </register>
+        <register ident="SGDBR_A_CNTRL_STATE_REGISTER" type="SGDBR_CNTRL_StateType" minver="1.0" access="rw">
+            <description>State register for SGDBR_A laser control</description>
+            <initial>SGDBR_CNTRL_DisabledState</initial>
+            <display>SGDBR laser control state</display>
+        </register>
+
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -4254,6 +4327,11 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
+                <bitfield ident="RATIO_OUT_SEL" description="Select source of ratio outputs" lsb="2" width="2">
+                    <fielddef value="0">WLM ratios</fielddef>
+                    <fielddef value="1">WLM etalon1 photodiodes</fielddef>
+                    <fielddef value="2">WLM etalon2 photodiodes</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="ETA1" description="Etalon 1 reading" access="rw">
                 <display format="%d" units="digU">Etalon 1 reading</display>
@@ -4465,35 +4543,59 @@
                     <fielddef value="1">Rising</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint16" ident="PARAM0" description="Parameter 0 register" access="rw">
+            <reg type="uint32" ident="PARAM0" description="Parameter 0 register" access="rw">
                 <display format="%d">Parameter 0</display>
             </reg>
-            <reg type="uint16" ident="PARAM1" description="Parameter 1 register" access="rw">
+            <reg type="uint32" ident="PARAM1" description="Parameter 1 register" access="rw">
                 <display format="%d">Parameter 1</display>
             </reg>
-            <reg type="uint16" ident="PARAM2" description="Parameter 2 register" access="rw">
+            <reg type="uint32" ident="PARAM2" description="Parameter 2 register" access="rw">
                 <display format="%d">Parameter 2</display>
             </reg>
-            <reg type="uint16" ident="PARAM3" description="Parameter 3 register" access="rw">
+            <reg type="uint32" ident="PARAM3" description="Parameter 3 register" access="rw">
                 <display format="%d">Parameter 3</display>
             </reg>
-            <reg type="uint16" ident="PARAM4" description="Parameter 4 register" access="rw">
+            <reg type="uint32" ident="PARAM4" description="Parameter 4 register" access="rw">
                 <display format="%d">Parameter 4</display>
             </reg>
-            <reg type="uint16" ident="PARAM5" description="Parameter 5 register" access="rw">
+            <reg type="uint32" ident="PARAM5" description="Parameter 5 register" access="rw">
                 <display format="%d">Parameter 5</display>
             </reg>
-            <reg type="uint16" ident="PARAM6" description="Parameter 6 register" access="rw">
+            <reg type="uint32" ident="PARAM6" description="Parameter 6 register" access="rw">
                 <display format="%d">Parameter 6</display>
             </reg>
-            <reg type="uint16" ident="PARAM7" description="Parameter 7 register" access="rw">
+            <reg type="uint32" ident="PARAM7" description="Parameter 7 register" access="rw">
                 <display format="%d">Parameter 7</display>
             </reg>
-            <reg type="uint16" ident="PARAM8" description="Parameter 8 register" access="rw">
+            <reg type="uint32" ident="PARAM8" description="Parameter 8 register" access="rw">
                 <display format="%d">Parameter 8</display>
             </reg>
-            <reg type="uint16" ident="PARAM9" description="Parameter 9 register" access="rw">
+            <reg type="uint32" ident="PARAM9" description="Parameter 9 register" access="rw">
                 <display format="%d">Parameter 9</display>
+            </reg>
+            <reg type="uint32" ident="PARAM10" description="Parameter 10 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 10</display>
+            </reg>
+            <reg type="uint32" ident="PARAM11" description="Parameter 11 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 11</display>
+            </reg>
+            <reg type="uint32" ident="PARAM12" description="Parameter 12 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 12</display>
+            </reg>
+            <reg type="uint32" ident="PARAM13" description="Parameter 13 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 13</display>
+            </reg>
+            <reg type="uint32" ident="PARAM14" description="Parameter 14 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 14</display>
+            </reg>
+            <reg type="uint32" ident="PARAM15" description="Parameter 15 register" access="rw">
+                <save/>
+                <display format="%d">Parameter 15</display>
             </reg>
             <reg type="uint16" ident="DATA_ADDRCNTR" description="Counter for ring-down data" access="r">
                 <display format="%d">Ringdown data address</display>
@@ -4696,6 +4798,11 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
+                <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="9" width="2">
+                    <fielddef value="0">2-way Crystalatch</fielddef>
+                    <fielddef value="1">2-way MEMS</fielddef>
+                    <fielddef value="2">4-way Crystalatch</fielddef>
+                </bitfield>
             </reg>
             <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>
             <reg type="uint16" ident="LASER2_COARSE_CURRENT" description="Sets coarse current for laser 2"/>
@@ -4883,6 +4990,128 @@
                 <display format="%d">Sequence Identifier</display>
             </reg>
         </fpga_block>
+        <fpga_block ident="SGDBRCURRENTSOURCE" description="SGDBR current source">
+            <reg type="mask" ident="CSR" description="Control/Status Register" access="rw">
+                <bitfield ident="RESET" description="Reset" lsb="0" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Assert</fielddef>
+                </bitfield>
+                <bitfield ident="SELECT" description="Chip select" lsb="1" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Assert</fielddef>
+                </bitfield>
+                <bitfield ident="DESELECT" description="Chip deselect" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Assert</fielddef>
+                </bitfield>
+                <bitfield ident="CPOL" description="SPI Clock polarity" lsb="3" width="1">
+                    <fielddef value="0">CPOL = 0</fielddef>
+                    <fielddef value="1">CPOL = 1</fielddef>
+                </bitfield>
+                <bitfield ident="CPHA" description="SPI Clock phase" lsb="4" width="1">
+                    <fielddef value="0">CPHA = 0</fielddef>
+                    <fielddef value="1">CPHA = 1</fielddef>
+                </bitfield>
+                <bitfield ident="DONE" description="SPI transaction complete" lsb="5" width="1">
+                    <fielddef value="0">Incomplete</fielddef>
+                    <fielddef value="1">Complete</fielddef>
+                </bitfield>
+                <bitfield ident="MISO" description="MISO level" lsb="6" width="1">
+                    <fielddef value="0">0</fielddef>
+                    <fielddef value="1">1</fielddef>
+                </bitfield>
+                <bitfield ident="SYNC_UPDATE" description="Allow synchronous updates" lsb="7" width="1">
+                    <fielddef value="0">Disabled</fielddef>
+                    <fielddef value="1">Enabled</fielddef>
+                </bitfield>
+                <bitfield ident="SUPPRESS_UPDATE" description="Suppress updates from DSP flag" lsb="8" width="1">
+                    <fielddef value="0">Allow updates</fielddef>
+                    <fielddef value="1">Suppress updates</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="uint16" ident="MISO_DELAY" description="Compensation for MISO propagation delay" access="rw">
+                <save/>
+                <display format="%d" units="*10ns">MISO propagation delay compensation (0-15)</display>
+            </reg>
+            <reg type="uint32" ident="MOSI_DATA" description="Data to send to slave" access="rw">
+                <display format="$%08x">Data to send to slave</display>
+            </reg>
+            <reg type="uint32" ident="MISO_DATA" description="Data received from slave" access="rw">
+                <display format="$%08x">Data received from slave</display>
+            </reg>
+            <reg type="mask" ident="SYNC_REGISTER" description="Select current source for synchronous updates" access="rw">
+                <save/>
+                <bitfield ident="REG_SELECT" description="Current source for sync updates" lsb="0" width="4">
+                    <fielddef value="0">Front Mirror</fielddef>
+                    <fielddef value="1">Back Mirror</fielddef>
+                    <fielddef value="2">Gain</fielddef>
+                    <fielddef value="3">SOA</fielddef>
+                    <fielddef value="4">Coarse Phase</fielddef>
+                    <fielddef value="5">Fine Phase</fielddef>
+                    <fielddef value="6">Chirp current</fielddef>
+                    <fielddef value="7">Spare DAC</fielddef>
+                </bitfield>
+                <bitfield ident="SOURCE" description="Method used for selecting current source" lsb="4" width="1">
+                    <fielddef value="0">Hardware input</fielddef>
+                    <fielddef value="1">Register</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="uint16" ident="MAX_SYNC_CURRENT" description="Maximum value of current for sync updates" access="rw">
+                <save/>
+                <display format="%d" units="digU">Maximum value of current for sync updates</display>
+            </reg>
+        </fpga_block>
+        <fpga_block ident="SGDBRMANAGER" description="SGDBR laser manager">
+            <reg type="mask" ident="CSR" description="Control/status register" access="rw">
+                <bitfield ident="START_SCAN" description="Start SGDBR scan" lsb="0" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">Start</fielddef>
+                </bitfield>
+                <bitfield ident="DONE" description="Scan done" lsb="1" width="1">
+                    <fielddef value="0">Not done</fielddef>
+                    <fielddef value="1">Done</fielddef>
+                </bitfield>
+                <bitfield ident="SCAN_ACTIVE" description="Scan in progress" lsb="2" width="1">
+                    <fielddef value="0">Idle</fielddef>
+                    <fielddef value="1">In progress</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="mask" ident="CONFIG" description="Configuration of SGDBR" access="rw">
+                <bitfield ident="MODE" description="Analyzer memory mode" lsb="0" width="1">
+                    <fielddef value="0">Ringdown</fielddef>
+                    <fielddef value="1">SGDBR recorder</fielddef>
+                </bitfield>
+                <bitfield ident="SELECT" description="Select SGDBR laser to control" lsb="1" width="1">
+                    <fielddef value="0">SGDBR laser A</fielddef>
+                    <fielddef value="1">SGDBR laser B</fielddef>
+                </bitfield>
+            </reg>
+            <reg type="uint16" ident="SCAN_SAMPLES" description="Number of samples in a scan" access="rw">
+                <save/>
+                <display format="%d">Number of samples in a scan (1-4096)</display>
+            </reg>
+            <reg type="uint16" ident="SAMPLE_TIME" description="Intersample duration" access="rw">
+                <save/>
+                <display format="%d" units="x 10us">Intersample duration (1-127)</display>
+            </reg>
+            <reg type="uint16" ident="DELAY_SAMPLES" description="Delay at start of scan" access="rw">
+                <save/>
+                <display format="%d" units="samples">Delay at start of scan (0-65535)</display>
+            </reg>
+            <reg type="uint16" ident="SCAN_ADDRESS" description="Scan memory address" access="r">
+                <display format="%d">Scan memory address</display>
+            </reg>
+            <reg type="mask" ident="SGDBR_PRESENT" description="Indicates which SGDBR lasers have been installed" access="rw">
+                <bitfield ident="SGDBR_A_PRESENT" description="SGDBR laser A present" lsb="0" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="SGDBR_B_PRESENT" description="SGDBR laser B present" lsb="1" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+            </reg>
+        </fpga_block>
     </fpga_block_list>
     <fpga_map_list>
         <fpga_map ident="FPGA_KERNEL" block="KERNEL">
@@ -4948,7 +5177,15 @@
         <fpga_map ident="FPGA_LASERCURRENTGENERATOR" block="LASERCURRENTGENERATOR">
             <description>Laser current generator</description>
         </fpga_map>
-
+        <fpga_map ident="FPGA_SGDBRCURRENTSOURCE_A" block="SGDBRCURRENTSOURCE">
+            <description>SGDBR current source A</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_SGDBRCURRENTSOURCE_B" block="SGDBRCURRENTSOURCE">
+            <description>SGDBR current source B</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_SGDBRMANAGER" block="SGDBRMANAGER">
+            <description>SGDBR manager</description>
+        </fpga_map>
     </fpga_map_list>
     <environment_list>
         <env type="Byte4EnvType"  ident="BYTE4_ENV" />
@@ -5076,6 +5313,10 @@
         <action ident="ACTION_STEP_SIMULATORS">r_step_simulators</action>
         <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_INIT">r_tempCntrlFilterHeaterInit</action>
         <action ident="ACTION_TEMP_CNTRL_FILTER_HEATER_STEP">r_tempCntrlFilterHeaterStep</action>
+        <action ident="ACTION_SGDBR_PROGRAM_FPGA">r_action_sgdbr_program_fpga</action>
+        <action ident="ACTION_READ_THERMISTOR_RESISTANCE_SGDBR">r_read_thermistor_resistance_sgdbr</action>
+        <action ident="ACTION_SGDBR_CNTRL_INIT">r_sgdbr_cntrl_init</action>
+        <action ident="ACTION_SGDBR_CNTRL_STEP">r_sgdbr_cntrl_step</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

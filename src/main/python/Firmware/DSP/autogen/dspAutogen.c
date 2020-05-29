@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[582];
+RegTypes regTypes[583];
 
 /* I2C devices */
 I2C_device i2c_devices[41] = {
@@ -1131,6 +1131,8 @@ void initRegisters()
     writeRegister(RDD2_BALANCE_REGISTER,d);
     d.asUint = 128;
     writeRegister(RDD2_GAIN_REGISTER,d);
+    d.asUint = SGDBR_CNTRL_DisabledState;
+    writeRegister(SGDBR_A_CNTRL_STATE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1713,6 +1715,7 @@ void initRegisters()
     regTypes[CAVITY2_TEMPERATURE_REGISTER] = float_type;
     regTypes[RDD2_BALANCE_REGISTER] = uint_type;
     regTypes[RDD2_GAIN_REGISTER] = uint_type;
+    regTypes[SGDBR_A_CNTRL_STATE_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1906,6 +1909,14 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_tempCntrlFilterHeaterInit(numInt,params,env);
         case ACTION_TEMP_CNTRL_FILTER_HEATER_STEP:
             return r_tempCntrlFilterHeaterStep(numInt,params,env);
+        case ACTION_SGDBR_PROGRAM_FPGA:
+            return r_action_sgdbr_program_fpga(numInt,params,env);
+        case ACTION_READ_THERMISTOR_RESISTANCE_SGDBR:
+            return r_read_thermistor_resistance_sgdbr(numInt,params,env);
+        case ACTION_SGDBR_CNTRL_INIT:
+            return r_sgdbr_cntrl_init(numInt,params,env);
+        case ACTION_SGDBR_CNTRL_STEP:
+            return r_sgdbr_cntrl_step(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }
