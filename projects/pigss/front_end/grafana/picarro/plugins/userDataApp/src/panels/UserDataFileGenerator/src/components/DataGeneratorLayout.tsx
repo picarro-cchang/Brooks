@@ -13,7 +13,6 @@ interface Props extends DataGeneratorLayoutProps {}
 
 const labelWidth_6 = 6;
 const labelWidth_7 = 7;
-const labelWidth_10 = 10;
 
 const allOption = {
   label: 'All',
@@ -298,19 +297,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
-              <FormLabel
-                width={labelWidth_10}
-                tooltip={`Toggle the switch to download ${
-                  !this.state.isProcessedData ? 'processed data.' : 'raw data'
-                }`}
-              >
-                {this.state.isProcessedData ? 'Processed Data' : 'Raw Data'}
-              </FormLabel>
-              <Switch
-                label=""
+            <Switch
+                label={this.state.isProcessedData ?"Processed Data" : "Raw Data"}
                 checked={this.state.isProcessedData}
                 onChange={() => this.onProcessedDataSwitchChange(!this.state.isProcessedData)}
-                // tooltip={`Toggle the switch to download ${!this.state.isProcessedData ? "processed data." : "raw data"}`}
+                tooltip={`Toggle the switch to download ${!this.state.isProcessedData ? "processed data." : "raw data"}`}
               />
             </div>
           </PanelOptionsGroup>

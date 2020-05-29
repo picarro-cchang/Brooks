@@ -29,11 +29,6 @@ const defaultProps: PanelProps<DataGeneratorPanelProps> = {
       raw: { from: 'now-6h' as TimeFragment, to: 'now' as TimeFragment },
     },
   },
-  // fieldConfig: {
-  //   defaults: {},
-  //   overrides: [],
-  // },
-  // onFieldConfigChange: () => {},
   onOptionsChange: () => {},
   renderCounter: 0,
   transparent: true,

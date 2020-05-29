@@ -32,79 +32,26 @@
 }
 
 .checkbox-label .checkbox-span {
-  /* position: absolute; */
-  top: 0;
-  left: 0;
-  height: 25px;
-  width: 25px;
-  background-color: transparent;
-  border-radius: 3px;
-  border: 2px solid #d8d9da;
-  padding-left: 5px;
+  background-image: url('./../img/uncheck.png');
+  background-repeat: no-repeat;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  padding-left: 13px;
 }
 
 .checkbox-label .checkbox-span::after {
-  /* background-image: url('./../img/checkbox.png'); */
   content: '';
-  /* display: none; */
-  top: 12px;
-  left: 12px;
-  height: 0px;
-  width: 0px;
-  /* background-color: #343436; */
-  border-radius: 3px;
+  border-radius: 5px;
   border: solid transparent;
   border-width: 0px 3px 3px 0px;
-  opacity: 1;
-  padding-left: 5px;
-  -webkit-transform: rotate(0deg) scale(0);
-  -ms-transform: rotate(0deg) scale(0);
-  transform: rotate(0deg) scale(0); 
-}
-
-.checkbox-label:hover input ~ .checkbox-span {
-  background-color: thistle;
 }
 
 .checkbox-label input:checked ~ .checkbox-span {
-  /* background-color: #343436; */
   background-image: url('./../img/checkbox.png');
+  background-repeat: no-repeat;
   border-radius: 5px;
-  /* -webkit-transform: rotate(0deg) scale(1);
-  -ms-transform: rotate(0deg) scale(1);
-  transform: rotate(0deg) scale(1); */
-  opacity:1;
-  border: 2px solid rgb(99, 98, 98);
-}
-
-
-
-.checkbox-label input:checked ~ .checkbox-span {
-  background-image: url('./../img/checkbox.png');
-  /* background-color: #343436;
-  background: './../img/checkbox.png';
-  border-radius: 3px;
-  -webkit-transform: rotate(0deg) scale(1);
-  -ms-transform: rotate(0deg) scale(1);
-  transform: rotate(0deg) scale(1);
-  opacity: 1;
-  border: 2px solid rgb(99, 98, 98); */
-}
-
-.checkbox-label input:checked ~ .checkbox-span::after {
-  background-image: url('./../img/checkbox.png');
-  /* -webkit-transform: rotate(45deg) scale(1);
-  -ms-transform: rotate(45deg) scale(1);
-  transform: rotate(45deg) scale(1);
-  opacity: 1;
-  left: 8px;
-  top: 3px;
-  width: 6px;
-  height: 12px;
   border: solid transparent;
-  border-width: 0 2px 2px 0;
-  background-color: blue;
-  border-radius: 0; */
+  border-width: 0px 3px 3px 0px;
 }
 
 .checkbox-name {

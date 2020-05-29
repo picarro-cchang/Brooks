@@ -11,10 +11,10 @@ const customStyles = {
     padding: 5,
     backgroundColor: '#262628',
   }),
-  option: provided => ({
+  option: (provided, state) => ({
     ...provided,
     color: '#d8d9da',
-    backgroundColor: '#262628',
+    backgroundColor: state.isFocused ? '#44484a' : '#262628',
   }),
   control: provided => ({
     ...provided,
@@ -41,13 +41,14 @@ const Option = props => {
     <div style={{ display: 'flex' }}>
       <components.Option {...props}>
         <label className="checkbox-label">
-          <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null} />
+          <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null}>
           <span className="checkbox-span"></span>
           <span className="checkbox-name">
             {' '}
             {'   '}
             {props.value}
           </span>
+          </input>
         </label>
       </components.Option>
     </div>

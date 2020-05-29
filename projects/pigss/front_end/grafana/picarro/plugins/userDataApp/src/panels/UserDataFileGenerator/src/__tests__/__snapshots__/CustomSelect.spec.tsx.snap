@@ -1,0 +1,41 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<DataGeneratorPanel/> Create Snapshot 1`] = `
+<StateManager
+  allOption={
+    Object {
+      "label": "All",
+      "value": "All",
+    }
+  }
+  backspaceRemovesValue={true}
+  closeMenuOnSelect={false}
+  components={
+    Object {
+      "ClearIndicator": [Function],
+      "MultiValue": [Function],
+      "Option": [Function],
+    }
+  }
+  defaultInputValue=""
+  defaultMenuIsOpen={false}
+  defaultValue={null}
+  hideSelectedOptions={false}
+  isMulti={true}
+  onChange={[Function]}
+  options={Array []}
+  passedOnChange={[Function]}
+  passedOptions={Array []}
+  placeholder="Select..."
+  styles={
+    Object {
+      "container": [Function],
+      "control": [Function],
+      "menu": [Function],
+      "multiValue": [Function],
+      "multiValueLabel": [Function],
+      "option": [Function],
+    }
+  }
+/>
+`;
