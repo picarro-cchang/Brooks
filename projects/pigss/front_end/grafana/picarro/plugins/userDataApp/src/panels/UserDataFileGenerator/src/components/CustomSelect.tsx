@@ -40,9 +40,11 @@ const Option = props => {
   return (
     <div style={{ display: 'flex' }}>
       <components.Option {...props}>
-        <label>
-          <input type="checkbox" checked={props.isSelected} onChange={e => null} />
-          <span className="checkbox-label">
+        <label className="checkbox-label">
+          <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null} />
+          <span className="checkbox-span"></span>
+          <span className="checkbox-name">
+            {' '}
             {'   '}
             {props.value}
           </span>
@@ -54,6 +56,15 @@ const Option = props => {
 
 const ClearIndicator = props => {
   return null;
+};
+
+const MultiValue = props => {
+  const labelToBeDisplayed = `${props.data.label}`;
+  return (
+    <components.MultiValue {...props}>
+      <span>{labelToBeDisplayed}</span>
+    </components.MultiValue>
+  );
 };
 
 export interface Props {
@@ -71,16 +82,17 @@ export default class CustomSelect extends Component<Props> {
     super(props);
   }
   render() {
-    const { passedOptions, passedOnChange, value } = this.props;
+    const { passedOptions, passedOnChange } = this.props;
     return (
       <Select
+        {...this.props}
         placeholder="Select..."
-        components={{ Option, ClearIndicator }}
+        components={{ Option, ClearIndicator, MultiValue }}
         styles={customStyles}
         options={passedOptions}
         onChange={passedOnChange}
-        value={value}
-        // value={passedOptions.find((option: any) => option.value === 'key')}
+        // value={value}
+        value={passedOptions.find((option: any) => option.value === 'key')}
         isMulti={true}
         closeMenuOnSelect={false}
         hideSelectedOptions={false}
