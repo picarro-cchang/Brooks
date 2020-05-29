@@ -44,7 +44,6 @@ const Option = props => {
           <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null} />
           <span className="checkbox-span"></span>
           <span className="checkbox-name">
-            {' '}
             {'   '}
             {props.value}
           </span>

@@ -33,7 +33,7 @@ describe('<DataGeneratorPanel/>', () => {
         .find('.list__option')
         .at(0)
         .text()
-    ).toBe('    H2O');
+    ).toBe('   H2O');
     mt.find('.list__option')
       .at(0)
       .simulate('click');
