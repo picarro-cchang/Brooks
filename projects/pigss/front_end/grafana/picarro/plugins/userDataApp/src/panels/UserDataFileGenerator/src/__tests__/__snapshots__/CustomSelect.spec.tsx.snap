@@ -9,6 +9,7 @@ exports[`<DataGeneratorPanel/> Create Snapshot 1`] = `
     }
   }
   backspaceRemovesValue={true}
+  classNamePrefix="list"
   closeMenuOnSelect={false}
   components={
     Object {
@@ -23,9 +24,31 @@ exports[`<DataGeneratorPanel/> Create Snapshot 1`] = `
   hideSelectedOptions={false}
   isMulti={true}
   onChange={[Function]}
-  options={Array []}
+  options={
+    Array [
+      Object {
+        "label": "H2O",
+        "value": "H2O",
+      },
+      Object {
+        "label": "CO2",
+        "value": "CO2",
+      },
+    ]
+  }
   passedOnChange={[Function]}
-  passedOptions={Array []}
+  passedOptions={
+    Array [
+      Object {
+        "label": "H2O",
+        "value": "H2O",
+      },
+      Object {
+        "label": "CO2",
+        "value": "CO2",
+      },
+    ]
+  }
   placeholder="Select..."
   styles={
     Object {

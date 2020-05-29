@@ -297,11 +297,13 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
-            <Switch
-                label={this.state.isProcessedData ?"Processed Data" : "Raw Data"}
+              <Switch
+                label={this.state.isProcessedData ? 'Processed Data' : 'Raw Data'}
                 checked={this.state.isProcessedData}
                 onChange={() => this.onProcessedDataSwitchChange(!this.state.isProcessedData)}
-                tooltip={`Toggle the switch to download ${!this.state.isProcessedData ? "processed data." : "raw data"}`}
+                tooltip={`Toggle the switch to download ${
+                  !this.state.isProcessedData ? 'processed data.' : 'raw data'
+                }`}
               />
             </div>
           </PanelOptionsGroup>

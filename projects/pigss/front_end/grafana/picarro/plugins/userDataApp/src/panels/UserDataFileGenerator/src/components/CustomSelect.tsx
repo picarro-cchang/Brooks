@@ -41,14 +41,13 @@ const Option = props => {
     <div style={{ display: 'flex' }}>
       <components.Option {...props}>
         <label className="checkbox-label">
-          <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null}>
+          <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null} />
           <span className="checkbox-span"></span>
           <span className="checkbox-name">
             {' '}
             {'   '}
             {props.value}
           </span>
-          </input>
         </label>
       </components.Option>
     </div>
@@ -69,13 +68,13 @@ const MultiValue = props => {
 };
 
 export interface Props {
-  passedOptions: [];
+  passedOptions: any[];
   passedOnChange: (keys: any) => void;
   allOption: {
     label: string;
     value: string;
   };
-  value: [];
+  value: any[];
 }
 
 export default class CustomSelect extends Component<Props> {
@@ -87,6 +86,7 @@ export default class CustomSelect extends Component<Props> {
     return (
       <Select
         {...this.props}
+        classNamePrefix="list"
         placeholder="Select..."
         components={{ Option, ClearIndicator, MultiValue }}
         styles={customStyles}
