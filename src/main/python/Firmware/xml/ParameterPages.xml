@@ -78,16 +78,29 @@
             <register>LASER1_TEC_PRBS_AMPLITUDE_REGISTER</register>
             <register>LASER1_TEC_PRBS_MEAN_REGISTER</register>
             <register>LASER1_MANUAL_TEC_REGISTER</register>
-            <register>LASER1_CURRENT_CNTRL_STATE_REGISTER</register>
-            <register>LASER1_MANUAL_COARSE_CURRENT_REGISTER</register>
-            <register>LASER1_MANUAL_FINE_CURRENT_REGISTER</register>
-            <fpga_register offset="FPGA_INJECT">LASER1_FINE_CURRENT_RANGE</fpga_register>
-            <register>LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
-            <register>LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
-            <register>LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
-            <register>LASER1_EXTRA_COARSE_SCALE_REGISTER</register>
-            <register>LASER1_EXTRA_FINE_SCALE_REGISTER</register>
-            <register>LASER1_EXTRA_OFFSET_REGISTER</register>
+            <register cond="dfb1">LASER1_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register cond="dfb1">LASER1_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register cond="dfb1">LASER1_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register cond="dfb1" offset="FPGA_INJECT">LASER1_FINE_CURRENT_RANGE</fpga_register>
+            <register cond="dfb1">LASER1_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register cond="dfb1">LASER1_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register cond="dfb1">LASER1_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register cond="dfb1">LASER1_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register cond="dfb1">LASER1_EXTRA_FINE_SCALE_REGISTER</register>
+            <register cond="dfb1">LASER1_EXTRA_OFFSET_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_STATE_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_BACK_MIRROR_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_GAIN_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_SOA_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_COARSE_PHASE_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_FINE_PHASE_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_CHIRP_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_SPARE_DAC_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_RD_CONFIG_REGISTER</register>
+            <fpga_register cond="sgdbr1" offset="FPGA_SGDBRCURRENTSOURCE_A">SYNC_REGISTER</fpga_register>
+            <fpga_register cond="sgdbr1" offset="FPGA_SGDBRCURRENTSOURCE_A">MISO_DELAY</fpga_register>
+            <fpga_register cond="sgdbr1" offset="FPGA_SGDBRCURRENTSOURCE_A">MAX_SYNC_CURRENT</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 2 Parameters</title>
@@ -148,16 +161,29 @@
             <register>LASER3_TEC_PRBS_AMPLITUDE_REGISTER</register>
             <register>LASER3_TEC_PRBS_MEAN_REGISTER</register>
             <register>LASER3_MANUAL_TEC_REGISTER</register>
-            <fpga_register offset="FPGA_INJECT">LASER3_FINE_CURRENT_RANGE</fpga_register>
-            <register>LASER3_CURRENT_CNTRL_STATE_REGISTER</register>
-            <register>LASER3_MANUAL_COARSE_CURRENT_REGISTER</register>
-            <register>LASER3_MANUAL_FINE_CURRENT_REGISTER</register>
-            <register>LASER3_CURRENT_SWEEP_MIN_REGISTER</register>
-            <register>LASER3_CURRENT_SWEEP_MAX_REGISTER</register>
-            <register>LASER3_CURRENT_SWEEP_INCR_REGISTER</register>
-            <register>LASER3_EXTRA_COARSE_SCALE_REGISTER</register>
-            <register>LASER3_EXTRA_FINE_SCALE_REGISTER</register>
-            <register>LASER3_EXTRA_OFFSET_REGISTER</register>
+            <register cond="dfb3">LASER3_CURRENT_CNTRL_STATE_REGISTER</register>
+            <register cond="dfb3">LASER3_MANUAL_COARSE_CURRENT_REGISTER</register>
+            <register cond="dfb3">LASER3_MANUAL_FINE_CURRENT_REGISTER</register>
+            <fpga_register cond="dfb3" offset="FPGA_INJECT">LASER3_FINE_CURRENT_RANGE</fpga_register>
+            <register cond="dfb3">LASER3_CURRENT_SWEEP_MIN_REGISTER</register>
+            <register cond="dfb3">LASER3_CURRENT_SWEEP_MAX_REGISTER</register>
+            <register cond="dfb3">LASER3_CURRENT_SWEEP_INCR_REGISTER</register>
+            <register cond="dfb3">LASER3_EXTRA_COARSE_SCALE_REGISTER</register>
+            <register cond="dfb3">LASER3_EXTRA_FINE_SCALE_REGISTER</register>
+            <register cond="dfb3">LASER3_EXTRA_OFFSET_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_STATE_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_BACK_MIRROR_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_GAIN_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_SOA_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_COARSE_PHASE_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_FINE_PHASE_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_CHIRP_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_SPARE_DAC_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_RD_CONFIG_REGISTER</register>
+            <fpga_register cond="sgdbr3" offset="FPGA_SGDBRCURRENTSOURCE_B">SYNC_REGISTER</fpga_register>
+            <fpga_register cond="sgdbr3" offset="FPGA_SGDBRCURRENTSOURCE_B">MISO_DELAY</fpga_register>
+            <fpga_register cond="sgdbr3" offset="FPGA_SGDBRCURRENTSOURCE_B">MAX_SYNC_CURRENT</fpga_register>
         </gui_page>
         <gui_page>
             <title>Laser 4 Parameters</title>
@@ -319,6 +345,22 @@
             <register>FILTER_HEATER_MANUAL_REGISTER</register>
         </gui_page>
         <gui_page>
+            <title>SGDBR Current Source Parameters</title>
+            <fpga_register offset="FPGA_SGDBRMANAGER">SGDBR_PRESENT</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">CSR</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">CONFIG</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">SCAN_SAMPLES</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">SAMPLE_TIME</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">DELAY_SAMPLES</fpga_register>
+            <fpga_register offset="FPGA_SGDBRMANAGER">SCAN_ADDRESS</fpga_register>
+            <!-->
+            <fpga_register offset="FPGA_SGDBRCURRENTSOURCE">CSR</fpga_register>
+            <fpga_register offset="FPGA_SGDBRCURRENTSOURCE">SCK_DIVISOR</fpga_register>
+            <fpga_register offset="FPGA_SGDBRCURRENTSOURCE">NUM_OF_CLOCK_PULSES</fpga_register>
+            <fpga_register offset="FPGA_SGDBRCURRENTSOURCE">MISO_DELAY</fpga_register>
+            <fpga_register offset="FPGA_SGDBRCURRENTSOURCE">MOSI_DATA</fpga_register></!-->
+        </gui_page>
+        <gui_page>
             <title>Fan Controller Parameters</title>
             <register>FAN_CNTRL_TEMPERATURE_REGISTER</register>
             <register>FAN_CNTRL_STATE_REGISTER</register>
@@ -443,6 +485,7 @@
             <fpga_register offset="FPGA_TWGEN">SLOPE_DOWN</fpga_register>
             <fpga_register offset="FPGA_TWGEN">PZT_OFFSET</fpga_register>
             <fpga_register offset="FPGA_SCALER">SCALE1</fpga_register>
+            <register>PZT_UPDATE_MODE_REGISTER</register>
             <register>TUNER_SWEEP_RAMP_HIGH_REGISTER</register>
             <register>TUNER_SWEEP_RAMP_LOW_REGISTER</register>
             <register>TUNER_WINDOW_RAMP_HIGH_REGISTER</register>

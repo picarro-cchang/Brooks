@@ -3960,6 +3960,126 @@
             <initial>SGDBR_CNTRL_DisabledState</initial>
             <display>SGDBR laser control state</display>
         </register>
+        <register ident="SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A front mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Front Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_BACK_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A back mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Back Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A gain current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Gain Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A SOA current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">SOA Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_COARSE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A coarse phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Coarse Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_FINE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A fine phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Fine Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_CHIRP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A chirp current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Chirp Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_SPARE_DAC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A spare DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Spare DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_RD_CONFIG_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_A ringdown configuration register</description>
+            <initial>0</initial>
+            <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_STATE_REGISTER" type="SGDBR_CNTRL_StateType" minver="1.0" access="rw">
+            <description>State register for SGDBR_B laser control</description>
+            <initial>SGDBR_CNTRL_DisabledState</initial>
+            <display>SGDBR laser control state</display>
+        </register>
+        <register ident="SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B front mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Front Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_BACK_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B back mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Back Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B gain current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Gain Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B SOA current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">SOA Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_COARSE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B coarse phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Coarse Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_FINE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B fine phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Fine Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_CHIRP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B chirp current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Chirp Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_SPARE_DAC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B spare DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Spare DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_RD_CONFIG_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_B ringdown configuration register</description>
+            <initial>0</initial>
+            <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
+            <save/>
+        </register>
+        <register ident="PZT_UPDATE_MODE_REGISTER" type="PZT_UPDATE_ModeType" minver="1.0" access="rw">
+            <description>PZT update mode register</description>
+            <initial>PZT_UPDATE_UseVLOffset_Mode</initial>
+            <display>Update PZT from VL laser offset</display>
+            <save/>
+        </register>
+
 
     </register_list>
     <i2c_list>

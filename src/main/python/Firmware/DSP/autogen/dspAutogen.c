@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[583];
+RegTypes regTypes[603];
 
 /* I2C devices */
 I2C_device i2c_devices[41] = {
@@ -1133,6 +1133,46 @@ void initRegisters()
     writeRegister(RDD2_GAIN_REGISTER,d);
     d.asUint = SGDBR_CNTRL_DisabledState;
     writeRegister(SGDBR_A_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_BACK_MIRROR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_GAIN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_SOA_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_COARSE_PHASE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_FINE_PHASE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_CHIRP_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_SPARE_DAC_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SGDBR_A_CNTRL_RD_CONFIG_REGISTER,d);
+    d.asUint = SGDBR_CNTRL_DisabledState;
+    writeRegister(SGDBR_B_CNTRL_STATE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_GAIN_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_SOA_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_COARSE_PHASE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_FINE_PHASE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_CHIRP_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_SPARE_DAC_REGISTER,d);
+    d.asUint = 0;
+    writeRegister(SGDBR_B_CNTRL_RD_CONFIG_REGISTER,d);
+    d.asUint = PZT_UPDATE_UseVLOffset_Mode;
+    writeRegister(PZT_UPDATE_MODE_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1716,6 +1756,26 @@ void initRegisters()
     regTypes[RDD2_BALANCE_REGISTER] = uint_type;
     regTypes[RDD2_GAIN_REGISTER] = uint_type;
     regTypes[SGDBR_A_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_BACK_MIRROR_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_GAIN_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_SOA_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_COARSE_PHASE_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_FINE_PHASE_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_CHIRP_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_SPARE_DAC_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_RD_CONFIG_REGISTER] = uint_type;
+    regTypes[SGDBR_B_CNTRL_STATE_REGISTER] = uint_type;
+    regTypes[SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_BACK_MIRROR_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_GAIN_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_SOA_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_COARSE_PHASE_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_FINE_PHASE_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_CHIRP_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_SPARE_DAC_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_RD_CONFIG_REGISTER] = uint_type;
+    regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
