@@ -29,6 +29,5 @@ export class UserDataAppConfigCtrl {
     }
 
     // TODO, can do stuff after update
-    console.log('Post Update:', this);
   }
 }
