@@ -91,7 +91,6 @@ export default class CustomSelect extends Component<Props> {
         styles={customStyles}
         options={passedOptions}
         onChange={passedOnChange}
-        // value={value}
         value={passedOptions.find((option: any) => option.value === 'key')}
         isMulti={true}
         closeMenuOnSelect={false}
