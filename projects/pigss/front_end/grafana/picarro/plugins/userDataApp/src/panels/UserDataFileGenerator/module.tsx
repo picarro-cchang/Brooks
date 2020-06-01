@@ -1,5 +1,4 @@
 // @ts-ignore
-// import { PanelPlugin } from '@grafana/data';
 // @ts-ignore
 import { PanelPlugin } from '@grafana/ui';
 import { DataGeneratorPanel } from './src/components/DataGeneratorPanel';
