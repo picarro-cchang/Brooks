@@ -1,26 +1,23 @@
-import React, { PureComponent, Fragment } from "react";
-import { TimeRange, dateTime, dateMath } from "@grafana/data";
-import {
-  TimePicker,
-  FormLabel,
-  PanelOptionsGroup,
-  Select,
-  Button,
-  Switch
-} from "@grafana/ui";
+import React, { PureComponent, Fragment } from 'react';
+import { TimeRange, dateTime, dateMath } from '@grafana/data';
+import { TimePicker, FormLabel, PanelOptionsGroup, Button, Switch } from '@grafana/ui';
 
-import { notifyError, notifySuccess } from "../utils/Notifications";
-import { DataGeneratorLayoutProps } from "../types";
-import { DEFAULT_TIME_OPTIONS } from "../constants";
-import { DataGeneratorService } from "../services/DataGeneratorService";
-
-import "./Layout.css";
+import { notifyError, notifySuccess } from '../utils/Notifications';
+import { DataGeneratorLayoutProps } from '../types';
+import { DataGeneratorService } from '../services/DataGeneratorService';
+import { DEFAULT_TIME_OPTIONS } from './../constants';
+import './Layout.css';
+import CustomSelect from './CustomSelect';
 
 interface Props extends DataGeneratorLayoutProps {}
 
 const labelWidth_6 = 6;
 const labelWidth_7 = 7;
-const selectWidth = 12;
+
+const allOption = {
+  label: 'All',
+  value: 'All',
+};
 
 export default class DataGeneratorLayout extends PureComponent<Props, any> {
   constructor(props: Props) {
@@ -28,11 +25,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     this.state = {
       timeRange: this.props.options.timeRange,
       keys: [],
-      keyOptions: [{ value: "All", label: "All" }],
+      keyOptions: [{ value: 'All', label: 'All' }],
       analyzers: [],
-      analyzerOptions: [{ value: "All", label: "All" }],
+      analyzerOptions: [{ value: 'All', label: 'All' }],
       ports: [],
-      portOptions: [{ value: "All", label: "All" }],
+      portOptions: [{ value: 'All', label: 'All' }],
       files: [],
       isProcessedData: true,
     };
@@ -40,17 +37,19 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
 
   // Code to download the file
   downloadData = (blob: any, fileName: string) => {
-    const a = document.createElement("a");
-
-    document.getElementById("file-list").appendChild(a);
-    // @ts-ignore
-    a.style = "display: none";
-    const url = window.URL.createObjectURL(blob);
-    a.href = url;
-    a.download = fileName;
-    a.click();
-    notifySuccess(`File successfully downloaded in Downloads folder.`);
-    window.URL.revokeObjectURL(url);
+    const a = document.createElement('a');
+    const fileList = document.getElementById('file-list');
+    if (fileList != null) {
+      fileList.appendChild(a);
+      // @ts-ignore
+      a.style = 'display: none';
+      const url = window.URL.createObjectURL(blob);
+      a.href = url;
+      a.download = fileName;
+      a.click();
+      notifySuccess(`File successfully downloaded in Downloads folder.`);
+      window.URL.revokeObjectURL(url);
+    }
   };
 
   generateFile = () => {
@@ -58,7 +57,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     const { from, to } = {
       from: dateMath.parse(timeRange.raw.from),
       to: dateMath.parse(timeRange.raw.to),
-      raw: timeRange.raw
+      raw: timeRange.raw,
     } as TimeRange;
 
     // @ts-ignore
@@ -67,7 +66,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     const toTime = to._d.getTime();
 
     if (fromTime === toTime || keys.length === 0) {
-      notifyError("Invalid Query parameters");
+      notifyError('Invalid Query parameters');
       return;
     }
 
@@ -77,7 +76,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       to: toTime * 1000000,
       keys,
       analyzers,
-      isProcessedData
+      isProcessedData,
     };
 
     // Call generate file api
@@ -88,7 +87,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           this.getFileNames();
           this.getFile(data.filename);
         } else {
-          if (data !== undefined && data.hasOwnProperty("message")) {
+          if (data !== undefined && data.hasOwnProperty('message')) {
             notifyError(data.message);
           }
         }
@@ -125,10 +124,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
       return;
     }
     for (const key of keys) {
-      if (key.value === "All") {
+      if (key.value === 'All') {
         this.setState(() => {
           return {
-            keys: this.state.keyOptions.filter(x => x.value !== "All")
+            keys: this.state.keyOptions.filter(x => x.value !== 'All'),
           };
         });
         break;
@@ -146,10 +145,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     for (const analyzer of analyzers) {
-      if (analyzer.value === "All") {
+      if (analyzer.value === 'All') {
         this.setState(() => {
           return {
-            analyzers: this.state.analyzerOptions.filter(x => x.value !== "All")
+            analyzers: this.state.analyzerOptions.filter(x => x.value !== 'All'),
           };
         });
         break;
@@ -167,10 +166,10 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
     }
 
     for (const port of ports) {
-      if (port.value === "All") {
+      if (port.value === 'All') {
         this.setState(() => {
           return {
-            ports: this.state.portOptions.filter(x => x.value !== "All")
+            ports: this.state.portOptions.filter(x => x.value !== 'All'),
           };
         });
         break;
@@ -182,8 +181,8 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
   };
 
   onProcessedDataSwitchChange = (checked: boolean) => {
-    this.setState({isProcessedData: checked})
-  }
+    this.setState({ isProcessedData: checked });
+  };
 
   componentWillMount() {
     // Get file names
@@ -195,11 +194,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         const keyOptions = data.keys.map((x: string) => {
           return {
             value: x,
-            label: x
+            label: x,
           };
         });
         this.setState({
-          keyOptions: [...this.state.keyOptions, ...keyOptions]
+          keyOptions: [...this.state.keyOptions, ...keyOptions],
         });
       });
     });
@@ -210,11 +209,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         const analyzerOptions = data.analyzers.map((x: string) => {
           return {
             value: x,
-            label: x
+            label: x,
           };
         });
         this.setState({
-          analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions]
+          analyzerOptions: [...this.state.analyzerOptions, ...analyzerOptions],
         });
       });
     });
@@ -225,45 +224,34 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         const portOptions = data.map((x: any) => {
           return {
             value: x.value,
-            label: x.text
+            label: x.text,
           };
         });
         this.setState({
-          portOptions: [...this.state.portOptions, ...portOptions]
+          portOptions: [...this.state.portOptions, ...portOptions],
         });
       });
     });
   }
 
   render() {
-    const {
-      files,
-      timeRange,
-      keyOptions,
-      analyzerOptions,
-      portOptions
-    } = this.state;
+    const { files, timeRange, keyOptions, analyzerOptions, portOptions } = this.state;
 
     const styleObj = {
-      overflow: "scroll !important",
-      height: "inherit"
+      overflow: 'scroll !important',
+      height: 'inherit',
     };
 
-    if (typeof timeRange.from === "string") {
+    if (typeof timeRange.from === 'string') {
       timeRange.from = dateTime(timeRange.from);
     }
-    if (typeof timeRange.to === "string") {
+    if (typeof timeRange.to === 'string') {
       timeRange.to = dateTime(timeRange.to);
     }
 
     const fileItems = files.map((fn: string, i: number) => {
       return (
-        <li
-          key={fn}
-          className="file-item"
-          value={fn}
-          onClick={() => this.getFile(fn)}
-        >
+        <li key={fn} className="file-item" value={fn} onClick={() => this.getFile(fn)}>
           {fn}
         </li>
       );
@@ -276,12 +264,11 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Species</FormLabel>
-              <Select
-                options={keyOptions}
-                onChange={this.onKeysChange}
-                value={keyOptions.find((option: any) => option.value === "key")}
-                isMulti={true}
-                backspaceRemovesValue
+              <CustomSelect
+                passedOptions={keyOptions}
+                allOption={allOption}
+                passedOnChange={this.onKeysChange}
+                value={this.state.keys}
               />
             </div>
           </PanelOptionsGroup>
@@ -289,38 +276,34 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Analyzer</FormLabel>
-              <Select
-                options={analyzerOptions}
-                onChange={this.onAnalyzersChange}
-                value={analyzerOptions.find(
-                  (option: any) => option.value === "key"
-                )}
-                isMulti={true}
-                backspaceRemovesValue
+              <CustomSelect
+                passedOptions={analyzerOptions}
+                allOption={allOption}
+                passedOnChange={this.onAnalyzersChange}
+                value={this.state.analyzers}
               />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
               <FormLabel width={labelWidth_6}>Port</FormLabel>
-              <Select
-                options={portOptions}
-                onChange={this.onPortsChange}
-                value={portOptions.find(
-                  (option: any) => option.value === "key"
-                )}
-                isMulti={true}
-                backspaceRemovesValue
+              <CustomSelect
+                passedOptions={portOptions}
+                allOption={allOption}
+                passedOnChange={this.onPortsChange}
+                value={this.state.ports}
               />
             </div>
           </PanelOptionsGroup>
           <PanelOptionsGroup>
             <div className="gf-form">
               <Switch
-                label={this.state.isProcessedData ?"Processed Data" : "Raw Data"}
+                label={this.state.isProcessedData ? 'Processed Data' : 'Raw Data'}
                 checked={this.state.isProcessedData}
                 onChange={() => this.onProcessedDataSwitchChange(!this.state.isProcessedData)}
-                tooltip={`Toggle the switch to download ${!this.state.isProcessedData ? "processed data." : "raw data"}`}
+                tooltip={`Toggle the switch to download ${
+                  !this.state.isProcessedData ? 'processed data.' : 'raw data'
+                }`}
               />
             </div>
           </PanelOptionsGroup>
@@ -333,9 +316,9 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                   selectOptions={DEFAULT_TIME_OPTIONS}
                   onChange={this.onDateChange}
                   value={this.state.timeRange}
-                  onMoveBackward={() => console.log("Move Backward")}
-                  onMoveForward={() => console.log("Move forward")}
-                  onZoom={() => console.log("Zoom")}
+                  onMoveBackward={() => console.log('Move Backward')}
+                  onMoveForward={() => console.log('Move forward')}
+                  onZoom={() => console.log('Zoom')}
                 />
 
                 <div className="gf-form col-md-1">
@@ -344,13 +327,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
                     variant="primary"
                     value="Generate"
                     onClick={this.generateFile}
-                    disabled={
-                      !(
-                        this.state.keys.length &&
-                        this.state.analyzers.length &&
-                        this.state.ports.length
-                      )
-                    }
+                    disabled={!(this.state.keys.length && this.state.analyzers.length && this.state.ports.length)}
                   >
                     Generate
                   </Button>
@@ -362,7 +339,7 @@ export default class DataGeneratorLayout extends PureComponent<Props, any> {
         <PanelOptionsGroup title="Recently Generated Files">
           <div className="row" style={styleObj}>
             <div className="gf-form col-md-12 col-sm-12">
-              <ul id="file-list" style={{ listStyle: "none" }}>
+              <ul id="file-list" style={{ listStyle: 'none' }}>
                 {fileItems}
               </ul>
             </div>

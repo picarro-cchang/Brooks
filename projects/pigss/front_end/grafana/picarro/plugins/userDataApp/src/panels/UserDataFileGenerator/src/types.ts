@@ -1,11 +1,11 @@
-import { GrafanaTheme } from "@grafana/ui";
-import { TimeRange } from "@grafana/data";
+import { GrafanaTheme } from '@grafana/ui';
+import { TimeRange } from '@grafana/data';
 
 export interface DataGeneratorPanelProps {
   timeRange: TimeRange;
 }
 
 export interface DataGeneratorLayoutProps {
-  theme: GrafanaTheme;
+  theme?: GrafanaTheme | null;
   options: DataGeneratorPanelProps;
 }

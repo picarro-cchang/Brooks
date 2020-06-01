@@ -1,6 +1,6 @@
-import { URL, DEFAULT_DATA_GENERATOR_PROPS } from "../../constants";
-import { API } from "./API";
-import { DataGeneratorPanelProps } from "../../types";
+import { URL, DEFAULT_DATA_GENERATOR_PROPS } from '../../constants';
+import { API } from './API';
+import { DataGeneratorPanelProps } from '../../types';
 
 export const DataGeneratorService = (() => {
   return {
@@ -24,13 +24,13 @@ export const DataGeneratorService = (() => {
       return Promise.resolve(new Response(JSON.stringify(ports)));
     },
     getFile: (fileName: string) => {
-      const url = URL.GET_FILE + "?name=" + fileName;
+      const url = URL.GET_FILE + '?name=' + fileName;
       const response = API.get(url);
       return Promise.resolve(new Response(JSON.stringify(response)));
     },
     generateFile: (params: any) => {
-      let url = URL.GENERATE_FILE + "?";
-      const { from, to, keys, analyzers, ports } = params;
+      let url = URL.GENERATE_FILE + '?';
+      const { keys, analyzers, ports } = params;
 
       for (const key of keys) {
         url += `keys=${key.value}&`;
@@ -46,6 +46,6 @@ export const DataGeneratorService = (() => {
       url += `&to=`;
       const response = API.get(url);
       return Promise.resolve(new Response(JSON.stringify(response)));
-    }
+    },
   };
 })();

@@ -19,28 +19,15 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Species
         </FormLabel>
-        <Select
-          autoFocus={false}
-          backspaceRemovesValue={true}
-          className=""
-          components={
+        <CustomSelect
+          allOption={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
-              "Option": [Function],
-              "SingleValue": [Function],
+              "label": "All",
+              "value": "All",
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
-          isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
-          onChange={[Function]}
-          openMenuOnFocus={false}
-          options={
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -72,7 +59,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
+          value={Array []}
         />
       </div>
     </PanelOptionsGroup>
@@ -85,28 +72,15 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Analyzer
         </FormLabel>
-        <Select
-          autoFocus={false}
-          backspaceRemovesValue={true}
-          className=""
-          components={
+        <CustomSelect
+          allOption={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
-              "Option": [Function],
-              "SingleValue": [Function],
+              "label": "All",
+              "value": "All",
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
-          isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
-          onChange={[Function]}
-          openMenuOnFocus={false}
-          options={
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -134,7 +108,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
+          value={Array []}
         />
       </div>
     </PanelOptionsGroup>
@@ -147,28 +121,15 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
         >
           Port
         </FormLabel>
-        <Select
-          autoFocus={false}
-          backspaceRemovesValue={true}
-          className=""
-          components={
+        <CustomSelect
+          allOption={
             Object {
-              "Group": [Function],
-              "IndicatorsContainer": [Function],
-              "MenuList": [Function],
-              "Option": [Function],
-              "SingleValue": [Function],
+              "label": "All",
+              "value": "All",
             }
           }
-          isClearable={false}
-          isDisabled={false}
-          isLoading={false}
-          isMulti={true}
-          isSearchable={true}
-          maxMenuHeight={300}
-          onChange={[Function]}
-          openMenuOnFocus={false}
-          options={
+          passedOnChange={[Function]}
+          passedOptions={
             Array [
               Object {
                 "label": "All",
@@ -224,7 +185,7 @@ exports[`<DataGeneratorLayout /> Renders correctly 1`] = `
               },
             ]
           }
-          tabSelectsValue={true}
+          value={Array []}
         />
       </div>
     </PanelOptionsGroup>
@@ -529,28 +490,15 @@ DataGeneratorLayout {
               >
                 Species
               </FormLabel>
-              <Select
-                autoFocus={false}
-                backspaceRemovesValue={true}
-                className=""
-                components={
+              <CustomSelect
+                allOption={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
-                    "Option": [Function],
-                    "SingleValue": [Function],
+                    "label": "All",
+                    "value": "All",
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
-                isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
-                onChange={[Function]}
-                openMenuOnFocus={false}
-                options={
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",
@@ -558,7 +506,7 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
+                value={Array []}
               />
             </div>
           </PanelOptionsGroup>
@@ -571,28 +519,15 @@ DataGeneratorLayout {
               >
                 Analyzer
               </FormLabel>
-              <Select
-                autoFocus={false}
-                backspaceRemovesValue={true}
-                className=""
-                components={
+              <CustomSelect
+                allOption={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
-                    "Option": [Function],
-                    "SingleValue": [Function],
+                    "label": "All",
+                    "value": "All",
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
-                isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
-                onChange={[Function]}
-                openMenuOnFocus={false}
-                options={
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",
@@ -600,7 +535,7 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
+                value={Array []}
               />
             </div>
           </PanelOptionsGroup>
@@ -613,28 +548,15 @@ DataGeneratorLayout {
               >
                 Port
               </FormLabel>
-              <Select
-                autoFocus={false}
-                backspaceRemovesValue={true}
-                className=""
-                components={
+              <CustomSelect
+                allOption={
                   Object {
-                    "Group": [Function],
-                    "IndicatorsContainer": [Function],
-                    "MenuList": [Function],
-                    "Option": [Function],
-                    "SingleValue": [Function],
+                    "label": "All",
+                    "value": "All",
                   }
                 }
-                isClearable={false}
-                isDisabled={false}
-                isLoading={false}
-                isMulti={true}
-                isSearchable={true}
-                maxMenuHeight={300}
-                onChange={[Function]}
-                openMenuOnFocus={false}
-                options={
+                passedOnChange={[Function]}
+                passedOptions={
                   Array [
                     Object {
                       "label": "All",
@@ -642,7 +564,7 @@ DataGeneratorLayout {
                     },
                   ]
                 }
-                tabSelectsValue={true}
+                value={Array []}
               />
             </div>
           </PanelOptionsGroup>

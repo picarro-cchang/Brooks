@@ -24,3 +24,38 @@
 .time-generate-btn {
   /* To be used in future to fix the timerange custom panel alignment */
 }
+
+.checkbox-label input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.checkbox-label .checkbox-span {
+  background-image: url('./../img/uncheck.png');
+  background-repeat: no-repeat;
+  border-radius: 5px;
+  border: 2px solid transparent;
+  padding-left: 13px;
+}
+
+.checkbox-label .checkbox-span::after {
+  content: '';
+  border-radius: 5px;
+  border: solid transparent;
+  border-width: 0px 3px 3px 0px;
+}
+
+.checkbox-label input:checked ~ .checkbox-span {
+  background-image: url('./../img/checkbox.png');
+  background-repeat: no-repeat;
+  border-radius: 5px;
+  border: solid transparent;
+  border-width: 0px 3px 3px 0px;
+}
+
+.checkbox-name {
+  padding-left: 5px;
+  font-size: 14px;
+  font-weight: 400;
+}
