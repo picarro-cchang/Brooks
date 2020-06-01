@@ -1288,11 +1288,11 @@ class Driver(SharedTypes.Singleton):
                     self.analyzerType = None
 
                 if self.analyzerType != None:
-                    if self.installerId != self.analyzerType:
+                    if "SOURCE" in self.installerId:
+                        Log("Running from source code!", Level=3)
+                    elif self.installerId != self.analyzerType:
                         Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (self.analyzerType,self.installerId),Level=3)
                         self.validInstallerId = False
-                    elif "SOURCE" in installerID:
-                        Log("Running from source code!", Level=3)
                     else:
                         Log("EEPROM ID matches Software Installer ID (%s)" % (self.analyzerType,),Level=1)
 
