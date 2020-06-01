@@ -86,7 +86,7 @@ class PigletBareDriver(object):
                 response = self.serial.read().strip()
                 if '-2' not in response:
                     break
-        self.logger.debug(f'Command sent: {command}\nResponse received: {response}')
+        self.logger.Log(f'Command sent: {command}\nResponse received: {response}', level=5)
         return response.replace('\n', '')
 
     def close(self):

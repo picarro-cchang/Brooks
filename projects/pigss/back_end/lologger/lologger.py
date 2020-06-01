@@ -96,6 +96,7 @@ class LOLogger(object):
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
                  verbose=True,
+                 log_level=1,
                  redundant_json=False,
                  meta_table=False,
                  pkg_meta=None,
@@ -121,7 +122,7 @@ class LOLogger(object):
 
         self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
-        self.LogLevel = 1
+        self.LogLevel = log_level
         self.logs_passed_to_queue = 0
         self.redundant_json = redundant_json
         self.file_tracking = file_tracking
@@ -575,7 +576,7 @@ def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
-    parser.add_argument('-l', '--log_level', help='LogLevel', default=20)
+    parser.add_argument('-l', '--log_level', help='LogLevel: all the logs below that level will be ignorred', default=1)
     parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=os.getcwd())
     parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
     parser.add_argument('-prh',
@@ -616,6 +617,7 @@ def main():
         rpc_port=args.rpc_port,
         move_to_new_file_every_month=args.move_to_new_file_every_month,
         verbose=args.verbose,
+        log_level=args.log_level,
         redundant_json=args.json,
         meta_table=args.meta_table,
         pkg_meta=args.pkg_meta,
