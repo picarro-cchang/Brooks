@@ -1,5 +1,6 @@
 #!/bin/bash
-#
+
+
 # To run the uncompiled python code (for example for
 # debugging), the ini files need to be in a specific
 # directories.
@@ -23,66 +24,72 @@
 #
 # We are assuming this script is run from 
 # /home/picarro/git/host/Config/<analyzer type>/bin
-#
-cd ..
-cwd=$(pwd)
 
-# Set source tree links
-#
-if [ -d "../../src/main/python/AppConfig" ] 
-then
+
+cd ..
+
+CWD=$(pwd)
+GIT_DIR="${HOME}/git/host"
+SOURCE_DIR="${GIT_DIR}/src/main/python/"
+COMMON_CONFIG_DIR="${GIT_DIR}/Config/CommonConfig"
+HOST_DIR="${HOME}/I2000"
+TIMESTAMP=`date +"%Y-%m-%d_%H%M%S"`
+
+# Clean up any existing symlinks in the source code
+if [ -d "../../src/main/python/AppConfig" ]; then
     rm ../../src/main/python/AppConfig
 fi
 
-if [ -d "../../src/main/python/CommonConfig" ] 
-then
+if [ -d "../../src/main/python/CommonConfig" ]; then
     rm ../../src/main/python/CommonConfig
 fi
 
-if [ -d "../../src/main/python/InstrConfig" ] 
-then
+if [ -d "../../src/main/python/InstrConfig" ]; then
     rm ../../src/main/python/InstrConfig
 fi
 
-if [ -d "./CommonConfig" ] 
-then
+if [ -d "./CommonConfig" ]; then
     rm ./CommonConfig
 fi
 
+# Create symbolic links in the source code
 ln -s ../CommonConfig
-ln -s $cwd/AppConfig ../../src/main/python
-ln -s $cwd/CommonConfig/ ../../src/main/python
-ln -s $cwd/InstrConfig/ ../../src/main/python
+ln -s ${CWD}/AppConfig ../../src/main/python
+ln -s ${CWD}/CommonConfig/ ../../src/main/python
+ln -s ${CWD}/InstrConfig/ ../../src/main/python
 
+# Make a temporary backup of InstrConfig to recover later
+if [ -d "${HOST_DIR}/InstrConfig" ]; then
 
-# Set installed package links
-#
-if [ -d "/home/picarro/I2000/AppConfig" ] 
-then
-    rm /home/picarro/I2000/AppConfig
+    cp -rv ${HOST_DIR}/InstrConfig /tmp/InstrConfig
 fi
 
-if [ -d "/home/picarro/I2000/CommonConfig" ] 
-then
-    rm /home/picarro/I2000/CommonConfig
+# Archive a timestamped backup of I2000 if it exists
+if [ -d ${HOST_DIR} ]; then
+    mv -v ${HOST_DIR} ${HOST_DIR}_backup_${TIMESTAMP}
 fi
 
-if [ -d "/home/picarro/I2000/InstrConfig" ] 
-then
-    rm /home/picarro/I2000/InstrConfig
+mkdir -p ${HOST_DIR}
+
+# If we already had a running instrument, let's recover that
+# instead of running from git default paramaters
+if [ -d "/tmp/InstrConfig" ]; then
+    mv -v /tmp/InstrConfig ${HOST_DIR}/InstrConfig
+else
+    ln -sv ${CWD}/InstrConfig ${HOST_DIR}
 fi
 
-if [ -d "/home/picarro/I2000/Firmware" ] 
-then
-    rm /home/picarro/I2000/Firmware
-fi
+# Create symbolic links for everything else
+ln -sv ${CWD}/AppConfig ${HOST_DIR}
+ln -sv ${COMMON_CONFIG_DIR} ${HOST_DIR}
+ln -sv ${SOURCE_DIR}/Firmware ${HOST_DIR}
+ln -sv ${SOURCE_DIR}/Host ${HOST_DIR}
 
-mkdir -p /home/picarro/I2000
+# Create an installerSignature so we don't get an EEPROM
+# error log message on Driver startup
+echo "SOURCE" > ${HOST_DIR}/installerSignature.txt
 
-ln -s $cwd/AppConfig /home/picarro/I2000
-ln -s $cwd/CommonConfig /home/picarro/I2000
-ln -s $cwd/InstrConfig /home/picarro/I2000
-ln -s /home/picarro/git/host/src/main/python/Firmware /home/picarro/I2000
-
-cd /home/picarro/git/host/src/main/python/Host/Fitter
+# Compile the fitter
+cd ${SOURCE_DIR}/Host/Fitter
 bash makeFitutils
+
