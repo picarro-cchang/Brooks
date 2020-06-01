@@ -882,7 +882,7 @@ class PigssController(Ahsm):
             self.set_status(["plan_run"], UiStatus.DISABLED)
             self.set_status(["plan_loop"], UiStatus.DISABLED)
             self.set_status(["reference"], UiStatus.READY)
-            self.set_status(["edit"], UiStatus.READY)
+            self.set_status(["edit"], UiStatus.DISABLED)
             self.set_status(["timer"], 0)
             self.set_status(["run_type"], 0)
             for bank in self.all_banks:
@@ -1161,6 +1161,7 @@ class PigssController(Ahsm):
                 self.set_status(["reference"], UiStatus.READY)
             self.set_status(["plan"], UiStatus.READY)
             self.set_status(["load"], UiStatus.READY)
+            self.set_status(["edit"], UiStatus.READY)
             self.set_status(["timer"], 0)
             self.set_status(["cur_port"], "")
             for bank in self.all_banks:
