@@ -25,7 +25,10 @@ from Host.autogen.interface import RDMAN_PARAM1, RDMAN_PARAM2
 from Host.autogen.interface import RDMAN_PARAM3, RDMAN_PARAM4
 from Host.autogen.interface import RDMAN_PARAM5, RDMAN_PARAM6
 from Host.autogen.interface import RDMAN_PARAM7, RDMAN_PARAM8
-from Host.autogen.interface import RDMAN_PARAM9, RDMAN_DATA_ADDRCNTR
+from Host.autogen.interface import RDMAN_PARAM9, RDMAN_PARAM10
+from Host.autogen.interface import RDMAN_PARAM11, RDMAN_PARAM12
+from Host.autogen.interface import RDMAN_PARAM13, RDMAN_PARAM14
+from Host.autogen.interface import RDMAN_PARAM15, RDMAN_DATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_METADATA_ADDRCNTR
 from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
 from Host.autogen.interface import RDMAN_NUM_SAMP, RDMAN_THRESHOLD

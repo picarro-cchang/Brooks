@@ -18,63 +18,83 @@
 #   11-Jan-2015  sze  Added precise timing for ringdown and additional laser current
 #   01-Oct-2015  sze  Added recording of extended laser current level counter input
 #   11-Oct-2015  sze  Added extended laser current sequence id input
-#
-#  Copyright (c) 2009 Picarro, Inc. All rights reserved
-#
+
 from myhdl import *
 from Host.autogen import interface
-from Host.autogen.interface import DATA_BANK_ADDR_WIDTH, META_BANK_ADDR_WIDTH, PARAM_BANK_ADDR_WIDTH
-from Host.autogen.interface import RDMEM_DATA_WIDTH, RDMEM_META_WIDTH, RDMEM_PARAM_WIDTH, RDMEM_RESERVED_BANK_ADDR_WIDTH
-from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH
-from Host.autogen.interface import FPGA_REG_WIDTH, FPGA_REG_MASK, FPGA_RDMAN
-
-from Host.autogen.interface import RDMAN_CONTROL, RDMAN_STATUS
-from Host.autogen.interface import RDMAN_OPTIONS, RDMAN_PARAM0
-from Host.autogen.interface import RDMAN_PARAM1, RDMAN_PARAM2
-from Host.autogen.interface import RDMAN_PARAM3, RDMAN_PARAM4
-from Host.autogen.interface import RDMAN_PARAM5, RDMAN_PARAM6
-from Host.autogen.interface import RDMAN_PARAM7, RDMAN_PARAM8
-from Host.autogen.interface import RDMAN_PARAM9, RDMAN_DATA_ADDRCNTR
-from Host.autogen.interface import RDMAN_METADATA_ADDRCNTR
-from Host.autogen.interface import RDMAN_PARAM_ADDRCNTR, RDMAN_DIVISOR
-from Host.autogen.interface import RDMAN_NUM_SAMP, RDMAN_THRESHOLD
-from Host.autogen.interface import RDMAN_LOCK_DURATION
-from Host.autogen.interface import RDMAN_PRECONTROL_DURATION
-from Host.autogen.interface import RDMAN_OFF_DURATION
-from Host.autogen.interface import RDMAN_EXTRA_DURATION
-from Host.autogen.interface import RDMAN_TIMEOUT_DURATION
-from Host.autogen.interface import RDMAN_TUNER_AT_RINGDOWN
-from Host.autogen.interface import RDMAN_METADATA_ADDR_AT_RINGDOWN
-from Host.autogen.interface import RDMAN_RINGDOWN_DATA
-
-from Host.autogen.interface import RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W
-from Host.autogen.interface import RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W
-from Host.autogen.interface import RDMAN_CONTROL_START_RD_B, RDMAN_CONTROL_START_RD_W
-from Host.autogen.interface import RDMAN_CONTROL_ABORT_RD_B, RDMAN_CONTROL_ABORT_RD_W
-from Host.autogen.interface import RDMAN_CONTROL_RESET_RDMAN_B, RDMAN_CONTROL_RESET_RDMAN_W
-from Host.autogen.interface import RDMAN_CONTROL_BANK0_CLEAR_B, RDMAN_CONTROL_BANK0_CLEAR_W
-from Host.autogen.interface import RDMAN_CONTROL_BANK1_CLEAR_B, RDMAN_CONTROL_BANK1_CLEAR_W
-from Host.autogen.interface import RDMAN_CONTROL_RD_IRQ_ACK_B, RDMAN_CONTROL_RD_IRQ_ACK_W
-from Host.autogen.interface import RDMAN_CONTROL_ACQ_DONE_ACK_B, RDMAN_CONTROL_ACQ_DONE_ACK_W
-from Host.autogen.interface import RDMAN_CONTROL_RAMP_DITHER_B, RDMAN_CONTROL_RAMP_DITHER_W
-from Host.autogen.interface import RDMAN_STATUS_SHUTDOWN_B, RDMAN_STATUS_SHUTDOWN_W
-from Host.autogen.interface import RDMAN_STATUS_RD_IRQ_B, RDMAN_STATUS_RD_IRQ_W
-from Host.autogen.interface import RDMAN_STATUS_ACQ_DONE_B, RDMAN_STATUS_ACQ_DONE_W
-from Host.autogen.interface import RDMAN_STATUS_BANK_B, RDMAN_STATUS_BANK_W
-from Host.autogen.interface import RDMAN_STATUS_BANK0_IN_USE_B, RDMAN_STATUS_BANK0_IN_USE_W
-from Host.autogen.interface import RDMAN_STATUS_BANK1_IN_USE_B, RDMAN_STATUS_BANK1_IN_USE_W
-from Host.autogen.interface import RDMAN_STATUS_LAPPED_B, RDMAN_STATUS_LAPPED_W
-from Host.autogen.interface import RDMAN_STATUS_LASER_FREQ_LOCKED_B, RDMAN_STATUS_LASER_FREQ_LOCKED_W
-from Host.autogen.interface import RDMAN_STATUS_TIMEOUT_B, RDMAN_STATUS_TIMEOUT_W
-from Host.autogen.interface import RDMAN_STATUS_ABORTED_B, RDMAN_STATUS_ABORTED_W
-from Host.autogen.interface import RDMAN_STATUS_BUSY_B, RDMAN_STATUS_BUSY_W
-from Host.autogen.interface import RDMAN_OPTIONS_LOCK_ENABLE_B, RDMAN_OPTIONS_LOCK_ENABLE_W
-from Host.autogen.interface import RDMAN_OPTIONS_UP_SLOPE_ENABLE_B, RDMAN_OPTIONS_UP_SLOPE_ENABLE_W
-from Host.autogen.interface import RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B, RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W
-from Host.autogen.interface import RDMAN_OPTIONS_DITHER_ENABLE_B, RDMAN_OPTIONS_DITHER_ENABLE_W
-from Host.autogen.interface import RDMAN_OPTIONS_SIM_ACTUAL_B, RDMAN_OPTIONS_SIM_ACTUAL_W
-from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_MODE_B, RDMAN_OPTIONS_SCOPE_MODE_W
-from Host.autogen.interface import RDMAN_OPTIONS_SCOPE_SLOPE_B, RDMAN_OPTIONS_SCOPE_SLOPE_W
+from Host.autogen.interface import (DATA_BANK_ADDR_WIDTH, EMIF_ADDR_WIDTH,
+                                    EMIF_DATA_WIDTH, FPGA_RDMAN, FPGA_REG_MASK,
+                                    FPGA_REG_WIDTH, META_BANK_ADDR_WIDTH,
+                                    PARAM_BANK_ADDR_WIDTH, RDMAN_CONTROL,
+                                    RDMAN_CONTROL_ABORT_RD_B,
+                                    RDMAN_CONTROL_ABORT_RD_W,
+                                    RDMAN_CONTROL_ACQ_DONE_ACK_B,
+                                    RDMAN_CONTROL_ACQ_DONE_ACK_W,
+                                    RDMAN_CONTROL_BANK0_CLEAR_B,
+                                    RDMAN_CONTROL_BANK0_CLEAR_W,
+                                    RDMAN_CONTROL_BANK1_CLEAR_B,
+                                    RDMAN_CONTROL_BANK1_CLEAR_W,
+                                    RDMAN_CONTROL_CONT_B, RDMAN_CONTROL_CONT_W,
+                                    RDMAN_CONTROL_RAMP_DITHER_B,
+                                    RDMAN_CONTROL_RAMP_DITHER_W,
+                                    RDMAN_CONTROL_RD_IRQ_ACK_B,
+                                    RDMAN_CONTROL_RD_IRQ_ACK_W,
+                                    RDMAN_CONTROL_RESET_RDMAN_B,
+                                    RDMAN_CONTROL_RESET_RDMAN_W,
+                                    RDMAN_CONTROL_RUN_B, RDMAN_CONTROL_RUN_W,
+                                    RDMAN_CONTROL_START_RD_B,
+                                    RDMAN_CONTROL_START_RD_W,
+                                    RDMAN_DATA_ADDRCNTR, RDMAN_DIVISOR,
+                                    RDMAN_EXTRA_DURATION, RDMAN_LOCK_DURATION,
+                                    RDMAN_METADATA_ADDR_AT_RINGDOWN,
+                                    RDMAN_METADATA_ADDRCNTR, RDMAN_NUM_SAMP,
+                                    RDMAN_OFF_DURATION, RDMAN_OPTIONS,
+                                    RDMAN_OPTIONS_DITHER_ENABLE_B,
+                                    RDMAN_OPTIONS_DITHER_ENABLE_W,
+                                    RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_B,
+                                    RDMAN_OPTIONS_DOWN_SLOPE_ENABLE_W,
+                                    RDMAN_OPTIONS_LOCK_ENABLE_B,
+                                    RDMAN_OPTIONS_LOCK_ENABLE_W,
+                                    RDMAN_OPTIONS_SCOPE_MODE_B,
+                                    RDMAN_OPTIONS_SCOPE_MODE_W,
+                                    RDMAN_OPTIONS_SCOPE_SLOPE_B,
+                                    RDMAN_OPTIONS_SCOPE_SLOPE_W,
+                                    RDMAN_OPTIONS_SIM_ACTUAL_B,
+                                    RDMAN_OPTIONS_SIM_ACTUAL_W,
+                                    RDMAN_OPTIONS_UP_SLOPE_ENABLE_B,
+                                    RDMAN_OPTIONS_UP_SLOPE_ENABLE_W,
+                                    RDMAN_PARAM0, RDMAN_PARAM1, RDMAN_PARAM2,
+                                    RDMAN_PARAM3, RDMAN_PARAM4, RDMAN_PARAM5,
+                                    RDMAN_PARAM6, RDMAN_PARAM7, RDMAN_PARAM8,
+                                    RDMAN_PARAM9, RDMAN_PARAM10, RDMAN_PARAM11,
+                                    RDMAN_PARAM12, RDMAN_PARAM13,
+                                    RDMAN_PARAM14, RDMAN_PARAM15,
+                                    RDMAN_PARAM_ADDRCNTR,
+                                    RDMAN_PRECONTROL_DURATION,
+                                    RDMAN_RINGDOWN_DATA, RDMAN_STATUS,
+                                    RDMAN_STATUS_ABORTED_B,
+                                    RDMAN_STATUS_ABORTED_W,
+                                    RDMAN_STATUS_ACQ_DONE_B,
+                                    RDMAN_STATUS_ACQ_DONE_W,
+                                    RDMAN_STATUS_BANK0_IN_USE_B,
+                                    RDMAN_STATUS_BANK0_IN_USE_W,
+                                    RDMAN_STATUS_BANK1_IN_USE_B,
+                                    RDMAN_STATUS_BANK1_IN_USE_W,
+                                    RDMAN_STATUS_BANK_B, RDMAN_STATUS_BANK_W,
+                                    RDMAN_STATUS_BUSY_B, RDMAN_STATUS_BUSY_W,
+                                    RDMAN_STATUS_LAPPED_B,
+                                    RDMAN_STATUS_LAPPED_W,
+                                    RDMAN_STATUS_LASER_FREQ_LOCKED_B,
+                                    RDMAN_STATUS_LASER_FREQ_LOCKED_W,
+                                    RDMAN_STATUS_RD_IRQ_B,
+                                    RDMAN_STATUS_RD_IRQ_W,
+                                    RDMAN_STATUS_SHUTDOWN_B,
+                                    RDMAN_STATUS_SHUTDOWN_W,
+                                    RDMAN_STATUS_TIMEOUT_B,
+                                    RDMAN_STATUS_TIMEOUT_W, RDMAN_THRESHOLD,
+                                    RDMAN_TIMEOUT_DURATION,
+                                    RDMAN_TUNER_AT_RINGDOWN, RDMEM_DATA_WIDTH,
+                                    RDMEM_META_WIDTH, RDMEM_PARAM_WIDTH,
+                                    RDMEM_RESERVED_BANK_ADDR_WIDTH)
 
 SeqState = enum("IDLE", "START_INJECT", "WAIT_FOR_PRECONTROL",
                 "WAIT_FOR_LOCK", "WAIT_FOR_GATING_CONDITIONS",
@@ -162,6 +182,12 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     RDMAN_PARAM7        -- Subscheme ID (passthrough)
     RDMAN_PARAM8        -- Ringdown threshold
     RDMAN_PARAM9        -- Spare
+    RDMAN_PARAM10       -- Spare
+    RDMAN_PARAM11       -- Spare
+    RDMAN_PARAM12       -- Spare
+    RDMAN_PARAM13       -- Spare
+    RDMAN_PARAM14       -- Spare
+    RDMAN_PARAM15       -- Spare
     RDMAN_DATA_ADDRCNTR     -- Address counter for ringdown data memory
     RDMAN_METADATA_ADDRCNTR -- Address counter for ringdown metadata memory
     RDMAN_PARAM_ADDRCNTR    -- Address counter for ringdown parameter memory
@@ -224,6 +250,12 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     rdman_param7_addr = map_base + RDMAN_PARAM7
     rdman_param8_addr = map_base + RDMAN_PARAM8
     rdman_param9_addr = map_base + RDMAN_PARAM9
+    rdman_param10_addr = map_base + RDMAN_PARAM10
+    rdman_param11_addr = map_base + RDMAN_PARAM11
+    rdman_param12_addr = map_base + RDMAN_PARAM12
+    rdman_param13_addr = map_base + RDMAN_PARAM13
+    rdman_param14_addr = map_base + RDMAN_PARAM14
+    rdman_param15_addr = map_base + RDMAN_PARAM15
     rdman_data_addrcntr_addr = map_base + RDMAN_DATA_ADDRCNTR
     rdman_metadata_addrcntr_addr = map_base + RDMAN_METADATA_ADDRCNTR
     rdman_param_addrcntr_addr = map_base + RDMAN_PARAM_ADDRCNTR
@@ -251,6 +283,12 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     param7 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     param8 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     param9 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param10 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param11 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param12 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param13 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param14 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
+    param15 = Signal(intbv(0)[RDMEM_PARAM_WIDTH:])
     data_addrcntr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     metadata_addrcntr = Signal(intbv(0)[META_BANK_ADDR_WIDTH:])
     param_addrcntr = Signal(intbv(0)[PARAM_BANK_ADDR_WIDTH:])
@@ -346,6 +384,12 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                 param7.next = 0
                 param8.next = 0
                 param9.next = 0
+                param10.next = 0
+                param11.next = 0
+                param12.next = 0
+                param13.next = 0
+                param14.next = 0
+                param15.next = 0
                 data_addrcntr.next = 0
                 metadata_addrcntr.next = 0
                 param_addrcntr.next = 0
@@ -442,6 +486,30 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                         if dsp_wr:
                             param9.next = dsp_data_out
                         dsp_data_in.next = param9
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param10_addr:  # rw
+                        if dsp_wr:
+                            param10.next = dsp_data_out
+                        dsp_data_in.next = param10
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param11_addr:  # rw
+                        if dsp_wr:
+                            param11.next = dsp_data_out
+                        dsp_data_in.next = param11
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param12_addr:  # rw
+                        if dsp_wr:
+                            param12.next = dsp_data_out
+                        dsp_data_in.next = param12
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param13_addr:  # rw
+                        if dsp_wr:
+                            param13.next = dsp_data_out
+                        dsp_data_in.next = param13
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param14_addr:  # rw
+                        if dsp_wr:
+                            param14.next = dsp_data_out
+                        dsp_data_in.next = param14
+                    elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_param15_addr:  # rw
+                        if dsp_wr:
+                            param15.next = dsp_data_out
+                        dsp_data_in.next = param15
                     elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_data_addrcntr_addr:  # r
                         dsp_data_in.next = data_addrcntr
                     elif dsp_addr[EMIF_ADDR_WIDTH - 1:] == rdman_metadata_addrcntr_addr:  # r
@@ -662,37 +730,67 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                             param_addrcntr.next = 0
                             paramState.next = ParamState.STORING
                     elif paramState == ParamState.STORING:
-                        # Store parameters on the next thirteen clock cycles
+                        # Store parameters on the next nineteen clock cycles
                         param_we_out.next = HIGH
                         param_addrcntr.next = param_addrcntr + 1
-                        if param_addrcntr[4:] == 0:
+                        if param_addrcntr[5:] == 0:
                             wr_param_out.next = param0
-                        elif param_addrcntr[4:] == 1:
+                        elif param_addrcntr[5:] == 1:
                             wr_param_out.next = param1
-                        elif param_addrcntr[4:] == 2:
+                        elif param_addrcntr[5:] == 2:
                             wr_param_out.next = param2
-                        elif param_addrcntr[4:] == 3:
+                        elif param_addrcntr[5:] == 3:
                             wr_param_out.next = param3
-                        elif param_addrcntr[4:] == 4:
+                        elif param_addrcntr[5:] == 4:
                             wr_param_out.next = param4
-                        elif param_addrcntr[4:] == 5:
+                        elif param_addrcntr[5:] == 5:
                             wr_param_out.next = param5
-                        elif param_addrcntr[4:] == 6:
+                        elif param_addrcntr[5:] == 6:
                             wr_param_out.next = param6
-                        elif param_addrcntr[4:] == 7:
+                        elif param_addrcntr[5:] == 7:
                             wr_param_out.next = param7
-                        elif param_addrcntr[4:] == 8:
+                        elif param_addrcntr[5:] == 8:
                             wr_param_out.next = param8
-                        elif param_addrcntr[4:] == 9:
+                        elif param_addrcntr[5:] == 9:
                             wr_param_out.next = param9
-                        elif param_addrcntr[4:] == 10:
+                        # elif param_addrcntr[5:] == 10:
+                        #     wr_param_out.next = param10
+                        # elif param_addrcntr[5:] == 11:
+                        #     wr_param_out.next = param11
+                        # elif param_addrcntr[5:] == 12:
+                        #     wr_param_out.next = param12
+                        # elif param_addrcntr[5:] == 13:
+                        #     wr_param_out.next = param13
+                        # elif param_addrcntr[5:] == 14:
+                        #     wr_param_out.next = param14
+                        # elif param_addrcntr[5:] == 15:
+                        #     wr_param_out.next = param15
+                        # elif param_addrcntr[5:] == 16:
+                        #     wr_param_out.next = tuner_at_ringdown
+                        # elif param_addrcntr[5:] == 17:
+                        #     wr_param_out.next = metadata_addr_at_ringdown
+                        # elif param_addrcntr[5:] == 18:
+                        #     wr_param_out.next = ext_laser_level_counter
+                        elif param_addrcntr[5:] == 10:
                             wr_param_out.next = tuner_at_ringdown
-                        elif param_addrcntr[4:] == 11:
+                        elif param_addrcntr[5:] == 11:
                             wr_param_out.next = metadata_addr_at_ringdown
-                        elif param_addrcntr[4:] == 12:
+                        elif param_addrcntr[5:] == 12:
                             wr_param_out.next = ext_laser_level_counter
-                        else:
+                        elif param_addrcntr[5:] == 13:
                             wr_param_out.next = ext_laser_sequence_id
+                        elif param_addrcntr[5:] == 14:
+                            wr_param_out.next = param10
+                        elif param_addrcntr[5:] == 15:
+                            wr_param_out.next = param11
+                        elif param_addrcntr[5:] == 16:
+                            wr_param_out.next = param12
+                        elif param_addrcntr[5:] == 17:
+                            wr_param_out.next = param13
+                        elif param_addrcntr[5:] == 18:
+                            wr_param_out.next = param14
+                        else:
+                            wr_param_out.next = param15
                             paramState.next = ParamState.DONE
                     elif paramState == ParamState.DONE:
                         param_acq.next = LOW
@@ -845,6 +943,7 @@ def RdMan(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                 status.next[RDMAN_STATUS_ABORTED_B] = abort
                 status.next[RDMAN_STATUS_TIMEOUT_B] = timeout
     return instances()
+
 
 if __name__ == "__main__":
     clk = Signal(LOW)

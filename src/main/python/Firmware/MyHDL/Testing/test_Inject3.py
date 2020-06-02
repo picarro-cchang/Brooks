@@ -39,9 +39,9 @@ from Host.autogen.interface import INJECT_CONTROL_MANUAL_LASER_ENABLE_B, INJECT_
 from Host.autogen.interface import INJECT_CONTROL_MANUAL_SOA_ENABLE_B, INJECT_CONTROL_MANUAL_SOA_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B, INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B, INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W
-from Host.autogen.interface import INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W
 from Host.autogen.interface import INJECT_CONTROL_SOA_PRESENT_B, INJECT_CONTROL_SOA_PRESENT_W
 from Host.autogen.interface import INJECT_CONTROL2_FIBER_AMP_PRESENT_B, INJECT_CONTROL2_FIBER_AMP_PRESENT_W
+from Host.autogen.interface import INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B, INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W
 
 from MyHDL.Common.Inject import Inject
 
@@ -210,13 +210,14 @@ def bench():
     @instance
     def  stimulus():
         yield assertReset()
-        yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,(1 << INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B))
+        yield writeFPGA(FPGA_INJECT+INJECT_CONTROL2,(1 << INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B))
         # Test optical switch operation
         yield delay(MS/5)
         for trials in range(10):
             laser_sel = randrange(4)
-            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B) | (1 << INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B)
+            control = (laser_sel << INJECT_CONTROL_LASER_SELECT_B)
             yield writeFPGA(FPGA_INJECT+INJECT_CONTROL,control)
+            yield writeFPGA(FPGA_INJECT+INJECT_CONTROL2,(1 << INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B))
             yield delay(MS/5)
         raise StopSimulation
     return instances()

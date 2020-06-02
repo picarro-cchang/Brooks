@@ -528,6 +528,7 @@ void rdFitting(void)
             rdParams = &nextRdParams;
             ringdownEntry = get_ringdown_entry_addr();
             ringdownEntry->wlmAngle = 0.0;
+            ringdownEntry->angleSetpoint = rdParams->angleSetpoint;
             ringdownEntry->uncorrectedAbsorbance = 0.0;
             ringdownEntry->correctedAbsorbance = 0.0;
             ringdownEntry->status = rdParams->status;
@@ -535,7 +536,7 @@ void rdFitting(void)
             ringdownEntry->tunerValue = 0;
             ringdownEntry->pztValue = 0;
             //ringdownEntry->lockerOffset = 0;
-            ringdownEntry->laserUsed = rdParams->injectionSettings;
+            ringdownEntry->laserUsed = (rdParams->injectionSettings) & (INJECTION_SETTINGS_virtualLaserMask | INJECTION_SETTINGS_actualLaserMask);
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
             if (*(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode)
@@ -559,6 +560,12 @@ void rdFitting(void)
             ringdownEntry->fitAmplitude = 0;
             ringdownEntry->fitBackground = 0;
             ringdownEntry->fitRmsResidual = 0;
+            ringdownEntry->frontMirrorDac = (rdParams->frontAndBackMirrorCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->backMirrorDac = rdParams->frontAndBackMirrorCurrentDac & 0xFFFF;
+            ringdownEntry->gainCurrentDac = (rdParams->gainAndSoaCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->soaCurrentDac = rdParams->gainAndSoaCurrentDac & 0xFFFF;
+            ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
             ringdown_put();
             if (SPECT_CNTRL_RunningState == *(int *)registerAddr(SPECT_CNTRL_STATE_REGISTER))
                 SEM_postBinary(&SEM_startRdCycle);
@@ -636,7 +643,9 @@ void rdFitting(void)
             thetaC = (vLaserParams->pressureC0 + dp * (vLaserParams->pressureC1 + dp * (vLaserParams->pressureC2 + dp * vLaserParams->pressureC3))) +
                      (vLaserParams->tempSensitivity * (rdParams->etalonTemperature - vLaserParams->calTemp)) + atan2sp(arctanvar1, arctanvar2);
 
+            thetaC = thetaC + 2.0 * PI * floor(0.5 + (rdParams->angleSetpoint - thetaC) / (2.0 * PI));
             ringdownEntry->wlmAngle = thetaC;
+            ringdownEntry->angleSetpoint = rdParams->angleSetpoint;
             ringdownEntry->uncorrectedAbsorbance = uncorrectedLoss;
             ringdownEntry->correctedAbsorbance = correctedLoss;
             // TODO: Modify the status as necessary if there are any fitter issues
@@ -671,6 +680,12 @@ void rdFitting(void)
             ringdownEntry->fitAmplitude = 4.0 * amplitude;
             ringdownEntry->fitBackground = 4.0 * background;
             ringdownEntry->fitRmsResidual = 400.0 * rmsResidual;
+            ringdownEntry->frontMirrorDac = (rdParams->frontAndBackMirrorCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->backMirrorDac = rdParams->frontAndBackMirrorCurrentDac & 0xFFFF;
+            ringdownEntry->gainCurrentDac = (rdParams->gainAndSoaCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->soaCurrentDac = rdParams->gainAndSoaCurrentDac & 0xFFFF;
+            ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
+            ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
 
             // Next lines are used to recenter the PZT offsets
             cltmode = *(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_CavityLengthTuningMode;

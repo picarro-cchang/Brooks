@@ -43,12 +43,24 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int *schemeThresholdBase_;  // scheme ringdown threshold base
     unsigned int *defaultThreshold_;  // Default ringdown threshol
     unsigned int *analyzerTuningMode_;  // Analyzer tuning mode
+    float *frontMirrorDac_[2];  // SGDBR laser front mirror current DAC
+    float *backMirrorDac_[2];   // SGDBR laser back mirror current DAC
+    float *gainDac_[2];         // SGDBR laser gain current DAC
+    float *soaDac_[2];          // SGDBR laser SOA current DAC
+    float *coarsePhaseDac_[2];  // SGDBR coarse phase current DAC
+    float *finePhaseDac_[2];    // SGDBR fine phase current DAC
+    // SGDBR current source register indices
+    unsigned int sgdbr_csr_[2];    // SGDBR current source CSR
+    unsigned int sgdbr_mosi_data_[2];    // SGDBR current source MOSI data
+    unsigned int sgdbr_miso_data_[2];    // SGDBR current source MISO data
+
     // Local variables for controller
     unsigned int schemeCounter_;   // Increments after last ringdown of a scheme
     int incrFlag_;                 // Flag indicating MSB of scheme ID is set
     unsigned int incrCounter_;     // Increments after last ringdown of a scheme row with MSB of subscheme ID set
     unsigned int incrCounterNext_; // Records schemeCounter_ on last increment of incrCounter_
     int useMemo_;
+    unsigned int *pztUpdateMode_; // PZT update mode
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;

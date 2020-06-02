@@ -18,6 +18,7 @@
 
 void writeFPGA(unsigned int regNum, unsigned int value);
 unsigned int readFPGA(unsigned int regNum);
+unsigned int readFPGA_long(unsigned int regNum);
 void changeInMaskFPGA(unsigned int regNum, unsigned int mask,
                       unsigned int value);
 void changeBitsFPGA(unsigned int regNum, unsigned int lsb,

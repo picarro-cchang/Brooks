@@ -84,24 +84,28 @@ entity top_block is
            lsr1_ss          : out std_logic;
            lsr1_rd          : out std_logic;
            lsr1_mosi        : out std_logic;
+           lsr1_miso        : in std_logic;
            lsr1_disable     : out std_logic;
 
            lsr2_sck         : out std_logic;
            lsr2_ss          : out std_logic;
            lsr2_rd          : out std_logic;
            lsr2_mosi        : out std_logic;
+           lsr2_miso        : in std_logic;
            lsr2_disable     : out std_logic;
 
            lsr3_sck         : out std_logic;
            lsr3_ss          : out std_logic;
            lsr3_rd          : out std_logic;
            lsr3_mosi        : out std_logic;
+           lsr3_miso        : in std_logic;
            lsr3_disable     : out std_logic;
 
            lsr4_sck         : out std_logic;
            lsr4_ss          : out std_logic;
            lsr4_rd          : out std_logic;
            lsr4_mosi        : out std_logic;
+           lsr4_miso        : in std_logic;
            lsr4_disable     : out std_logic;
 
            wmm_refl1        : in std_logic;
@@ -226,21 +230,25 @@ begin
         lsr1_ss  => lsr1_ss,
         lsr1_rd  => lsr1_rd,
         lsr1_mosi => lsr1_mosi,
+        lsr1_miso => lsr1_miso,
         lsr1_disable => lsr1_disable,
         lsr2_sck => lsr2_sck,
         lsr2_ss  => lsr2_ss,
         lsr2_rd  => lsr2_rd,
         lsr2_mosi => lsr2_mosi,
+        lsr2_miso => lsr2_miso,
         lsr2_disable => lsr2_disable,
         lsr3_sck => lsr3_sck,
         lsr3_ss  => lsr3_ss,
         lsr3_rd  => lsr3_rd,
         lsr3_mosi => lsr3_mosi,
+        lsr3_miso => lsr3_miso,
         lsr3_disable => lsr3_disable,
         lsr4_sck => lsr4_sck,
         lsr4_ss  => lsr4_ss,
         lsr4_rd  => lsr4_rd,
         lsr4_mosi => lsr4_mosi,
+        lsr4_miso => lsr4_miso,
         lsr4_disable => lsr4_disable,
         sw1 => sw1,
         sw2 => sw2,

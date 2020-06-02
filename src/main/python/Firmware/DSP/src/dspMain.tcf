@@ -140,6 +140,9 @@ bios.TSK.create("TSK_scopeHandler");
 bios.TSK.instance("TSK_scopeHandler").order = 8;
 bios.TSK.instance("TSK_scopeHandler").fxn = prog.extern("scopeHandler");
 bios.TSK.instance("TSK_scopeHandler").comment = "Controls access to the rdBuffers when they are used for oscilloscope mode";
+bios.PRD.instance("PRD_sentryHandler").order = 1;
+bios.PRD.instance("PRD_timeStamp").order = 2;
+bios.PRD.instance("PRD_scheduler").destroy();
 // !GRAPHICAL_CONFIG_TOOL_SCRIPT_INSERT_POINT!
 
 prog.gen();
