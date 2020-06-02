@@ -10,6 +10,7 @@ Copyright (c) 2014 Picarro, Inc. All rights reserved
 """
 import multiprocessing
 import threading
+import traceback
 import numpy
 import os
 import Queue
@@ -69,29 +70,38 @@ def work(parentPid, queue):
             for spectrum in spectraInScheme:
                 # Iterate over rdData, sensorData, tagalongData and controlData tables
                 for tableName in spectrum:
-                    spectTableData = spectrum[tableName]
-                    if len(spectTableData) > 0:
-                        keys, values = zip(*sorted(spectTableData.items()))
-                        if tableName not in tableDict:
-                            # We are encountering this table for the first time, so we
-                            #  need to build up colDict whose keys are the column names and
-                            #  whose values are the subclasses of Col used by pytables to
-                            #  define the HDF5 column. These are retrieved from colByName.
-                            colDict = {}
-                            # Use numpy to get the dtype names for the various data
-                            values = [numpy.asarray(v) for v in values]
-                            for key, value in zip(keys, values):
-                                colDict[key] = colByName[value.dtype.name]()
-                            tableDict[tableName] = hdf5Handle.createTable(hdf5Handle.root, tableName, colDict, filters=hdf5Filters)
-                        table = tableDict[tableName]
-                        # Go through the arrays in values and fill up each row of the table
-                        #  one element at a time
-                        row = table.row
-                        for j in range(len(values[0])):
-                            for i, key in enumerate(keys):
-                                row[key] = values[i][j]
-                            row.append()
-                        table.flush()
+                    if tableName in ["rdData", "sensorData", "tagalongData", "controlData"]:
+                        spectTableData = spectrum[tableName]
+                        if len(spectTableData) > 0:
+                            keys, values = zip(*sorted(spectTableData.items()))
+                            if tableName not in tableDict:
+                                # We are encountering this table for the first time, so we
+                                #  need to build up colDict whose keys are the column names and
+                                #  whose values are the subclasses of Col used by pytables to
+                                #  define the HDF5 column. These are retrieved from colByName.
+                                colDict = {}
+                                # Use numpy to get the dtype names for the various data
+                                values = [numpy.asarray(v) for v in values]
+                                for key, value in zip(keys, values):
+                                    colDict[key] = colByName[value.dtype.name]()
+                                tableDict[tableName] = hdf5Handle.createTable(hdf5Handle.root,
+                                                                              tableName,
+                                                                              colDict,
+                                                                              filters=hdf5Filters)
+                            table = tableDict[tableName]
+                            # Go through the arrays in values and fill up each row of the table
+                            #  one element at a time
+                            row = table.row
+                            for j in range(len(values[0])):
+                                for i, key in enumerate(keys):
+                                    try:
+                                        row[key] = values[i][j]
+                                    except KeyError:
+                                        pass
+                                row.append()
+                            table.flush()
+        except:
+            print traceback.format_exc()
         finally:
             hdf5Handle.close()
 
