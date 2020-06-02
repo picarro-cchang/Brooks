@@ -37,13 +37,12 @@ else:
 
 
 class Controller(ControllerFrameGui):
-
     def __init__(self, *a, **k):
         try:
             self.versions = Driver.allVersions()
         except:
-            wx.MessageDialog(None, "Driver not accessible, cannot continue.",
-                             "Controller Startup Error", wx.OK | wx.ICON_ERROR).ShowModal()
+            wx.MessageDialog(None, "Driver not accessible, cannot continue.", "Controller Startup Error",
+                             wx.OK | wx.ICON_ERROR).ShowModal()
             sys.exit()
         ControllerFrameGui.__init__(self, *a, **k)
         self.updateTimer = wx.Timer(self)
@@ -81,58 +80,47 @@ class Controller(ControllerFrameGui):
         self.updateInterface()
 
     def setupWaveforms(self):
-        waveforms["Accelerometer"] = dict(
-            accelx=self.accelerometerPanel.accelxWfm,
-            accely=self.accelerometerPanel.accelyWfm,
-            accelz=self.accelerometerPanel.accelzWfm
-        )
-        waveforms["Laser1"] = dict(
-            temperature=self.laser1Panel.temperatureWfm,
-            tec=self.laser1Panel.tecWfm,
-            current=self.laser1Panel.currentWfm)
-        waveforms["Laser2"] = dict(
-            temperature=self.laser2Panel.temperatureWfm,
-            tec=self.laser2Panel.tecWfm,
-            current=self.laser2Panel.currentWfm)
-        waveforms["Laser3"] = dict(
-            temperature=self.laser3Panel.temperatureWfm,
-            tec=self.laser3Panel.tecWfm,
-            current=self.laser3Panel.currentWfm)
-        waveforms["Laser4"] = dict(
-            temperature=self.laser4Panel.temperatureWfm,
-            tec=self.laser4Panel.tecWfm,
-            current=self.laser4Panel.currentWfm)
-        waveforms["WarmBox"] = dict(
-            etalonTemperature=self.warmBoxPanel.etalonTemperatureWfm,
-            warmBoxTemperature=self.warmBoxPanel.warmBoxTemperatureWfm,
-            heatsinkTemperature=self.warmBoxPanel.heatsinkTemperatureWfm,
-            tec=self.warmBoxPanel.tecWfm)
-        waveforms["HotBox"] = dict(
-            cavityTemperature=self.hotBoxPanel.cavityTemperatureWfm,
-            cavity2Temperature=self.hotBoxPanel.cavity2TemperatureWfm,
-            cavityTemperature1=self.hotBoxPanel.cavityTemperature1Wfm,
-            cavityTemperature2=self.hotBoxPanel.cavityTemperature2Wfm,
-            cavityTemperature3=self.hotBoxPanel.cavityTemperature3Wfm,
-            cavityTemperature4=self.hotBoxPanel.cavityTemperature4Wfm,
-            cavity2Temperature1=self.hotBoxPanel.cavity2Temperature1Wfm,
-            cavity2Temperature2=self.hotBoxPanel.cavity2Temperature2Wfm,
-            cavity2Temperature3=self.hotBoxPanel.cavity2Temperature3Wfm,
-            cavity2Temperature4=self.hotBoxPanel.cavity2Temperature4Wfm,
-            heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
-            dasTemperature=self.hotBoxPanel.dasTemperatureWfm,
-            tec=self.hotBoxPanel.tecWfm,
-            heater=self.hotBoxPanel.heaterWfm)
-        waveforms["FilterHeater"] = dict(
-            temperature=self.filterHeaterPanel.temperatureWfm,
-            heater=self.filterHeaterPanel.heaterWfm)
-        waveforms["Pressure"] = dict(
-            ambientPressure=self.pressurePanel.ambientPressureWfm,
-            cavityPressure=self.pressurePanel.cavityPressureWfm,
-            ambient2Pressure=self.pressurePanel.ambient2PressureWfm,
-            cavity2Pressure=self.pressurePanel.cavity2PressureWfm,
-            flow1=self.pressurePanel.flow1Wfm,
-            inletValve=self.pressurePanel.inletValveWfm,
-            outletValve=self.pressurePanel.outletValveWfm)
+        waveforms["Accelerometer"] = dict(accelx=self.accelerometerPanel.accelxWfm,
+                                          accely=self.accelerometerPanel.accelyWfm,
+                                          accelz=self.accelerometerPanel.accelzWfm)
+        waveforms["Laser1"] = dict(temperature=self.laser1Panel.temperatureWfm,
+                                   tec=self.laser1Panel.tecWfm,
+                                   current=self.laser1Panel.currentWfm)
+        waveforms["Laser2"] = dict(temperature=self.laser2Panel.temperatureWfm,
+                                   tec=self.laser2Panel.tecWfm,
+                                   current=self.laser2Panel.currentWfm)
+        waveforms["Laser3"] = dict(temperature=self.laser3Panel.temperatureWfm,
+                                   tec=self.laser3Panel.tecWfm,
+                                   current=self.laser3Panel.currentWfm)
+        waveforms["Laser4"] = dict(temperature=self.laser4Panel.temperatureWfm,
+                                   tec=self.laser4Panel.tecWfm,
+                                   current=self.laser4Panel.currentWfm)
+        waveforms["WarmBox"] = dict(etalonTemperature=self.warmBoxPanel.etalonTemperatureWfm,
+                                    warmBoxTemperature=self.warmBoxPanel.warmBoxTemperatureWfm,
+                                    heatsinkTemperature=self.warmBoxPanel.heatsinkTemperatureWfm,
+                                    tec=self.warmBoxPanel.tecWfm)
+        waveforms["HotBox"] = dict(cavityTemperature=self.hotBoxPanel.cavityTemperatureWfm,
+                                   cavity2Temperature=self.hotBoxPanel.cavity2TemperatureWfm,
+                                   cavityTemperature1=self.hotBoxPanel.cavityTemperature1Wfm,
+                                   cavityTemperature2=self.hotBoxPanel.cavityTemperature2Wfm,
+                                   cavityTemperature3=self.hotBoxPanel.cavityTemperature3Wfm,
+                                   cavityTemperature4=self.hotBoxPanel.cavityTemperature4Wfm,
+                                   cavity2Temperature1=self.hotBoxPanel.cavity2Temperature1Wfm,
+                                   cavity2Temperature2=self.hotBoxPanel.cavity2Temperature2Wfm,
+                                   cavity2Temperature3=self.hotBoxPanel.cavity2Temperature3Wfm,
+                                   cavity2Temperature4=self.hotBoxPanel.cavity2Temperature4Wfm,
+                                   heatsinkTemperature=self.hotBoxPanel.heatsinkTemperatureWfm,
+                                   dasTemperature=self.hotBoxPanel.dasTemperatureWfm,
+                                   tec=self.hotBoxPanel.tecWfm,
+                                   heater=self.hotBoxPanel.heaterWfm)
+        waveforms["FilterHeater"] = dict(temperature=self.filterHeaterPanel.temperatureWfm, heater=self.filterHeaterPanel.heaterWfm)
+        waveforms["Pressure"] = dict(ambientPressure=self.pressurePanel.ambientPressureWfm,
+                                     cavityPressure=self.pressurePanel.cavityPressureWfm,
+                                     ambient2Pressure=self.pressurePanel.ambient2PressureWfm,
+                                     cavity2Pressure=self.pressurePanel.cavity2PressureWfm,
+                                     flow1=self.pressurePanel.flow1Wfm,
+                                     inletValve=self.pressurePanel.inletValveWfm,
+                                     outletValve=self.pressurePanel.outletValveWfm)
         waveforms["Wlm"] = dict(
             etalon1=self.wlmPanel.etalon1Wfm,
             reference1=self.wlmPanel.reference1Wfm,
@@ -153,15 +141,14 @@ class Controller(ControllerFrameGui):
             ratio1=self.statsPanel.ratio1Stats,
             ratio2=self.statsPanel.ratio2Stats,
         )
-        waveforms["Ringdown"] = dict(
-            corrected=self.ringdownPanel.ringdownWfms[0],
-            uncorrected=self.ringdownPanel.ringdownWfms[1],
-            ratio1=self.ringdownPanel.ringdownWfms[0],
-            ratio2=self.ringdownPanel.ringdownWfms[1],
-            tuner=self.ringdownPanel.ringdownWfms[0],
-            pzt=self.ringdownPanel.ringdownWfms[0],
-            wavenumber=self.ringdownPanel.ringdownWfms[0],
-            fineCurrent=self.ringdownPanel.ringdownWfms[0])
+        waveforms["Ringdown"] = dict(corrected=self.ringdownPanel.ringdownWfms[0],
+                                     uncorrected=self.ringdownPanel.ringdownWfms[1],
+                                     ratio1=self.ringdownPanel.ringdownWfms[0],
+                                     ratio2=self.ringdownPanel.ringdownWfms[1],
+                                     tuner=self.ringdownPanel.ringdownWfms[0],
+                                     pzt=self.ringdownPanel.ringdownWfms[0],
+                                     wavenumber=self.ringdownPanel.ringdownWfms[0],
+                                     fineCurrent=self.ringdownPanel.ringdownWfms[0])
 
     def setupParameterDialogs(self):
         idmin = None
@@ -174,8 +161,7 @@ class Controller(ControllerFrameGui):
             self.parameters.AppendItem(item)
             parameterForms[id] = f
             idmax = id
-        self.Bind(wx.EVT_MENU_RANGE, self.onParameterDialog,
-                  id=idmin, id2=idmax)
+        self.Bind(wx.EVT_MENU_RANGE, self.onParameterDialog, id=idmin, id2=idmax)
 
     def onParameterDialog(self, e):
         """Either open a new parameter dialog form or shift focus
@@ -229,10 +215,8 @@ class Controller(ControllerFrameGui):
         if self.fullInterface:
             return
         else:
-            dlg = wx.TextEntryDialog(
-                self, 'Password: ', 'Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-            self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (
-                dlg.GetValue() == self.password)
+            dlg = wx.TextEntryDialog(self, 'Password: ', 'Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+            self.fullInterface = (dlg.ShowModal() == wx.ID_OK) and (dlg.GetValue() == self.password)
             dlg.Destroy()
         if self.fullInterface:
             self.updateInterface()
@@ -307,8 +291,7 @@ class Controller(ControllerFrameGui):
             daemon = self.rpcHandler.server.daemon
             daemon.handleRequests(0.0)
         except:
-            Log("Controller shut down in response to termination of RPC server.",
-                Level=2)
+            Log("Controller shut down in response to termination of RPC server.", Level=2)
             self.onClose(evt)
 
     def onLoadIni(self, event):
@@ -319,14 +302,15 @@ class Controller(ControllerFrameGui):
     def onWriteIni(self, event):
         Driver.writeIniFile()
 
+
 # Report GUI exceptions in EventManager
 
 
 def excepthook(type, value, trace):
     exc = traceback.format_exception(type, value, trace)
-    Log("Unhandled Exception: %s: %s" % (str(type), str(value)),
-        Verbose="".join(exc), Level=3)
+    Log("Unhandled Exception: %s: %s" % (str(type), str(value)), Verbose="".join(exc), Level=3)
     sys.__excepthook__(type, value, trace)
+
 
 if __name__ == "__main__":
     # sys.excepthook = excepthook
@@ -340,5 +324,4 @@ if __name__ == "__main__":
         app.MainLoop()
         Log("Exiting program")
     finally:
-        Driver.unregisterStreamStatusObserver(
-            SharedTypes.RPC_PORT_CONTROLLER)
+        Driver.unregisterStreamStatusObserver(SharedTypes.RPC_PORT_CONTROLLER)

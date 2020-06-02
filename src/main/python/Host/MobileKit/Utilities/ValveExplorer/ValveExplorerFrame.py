@@ -24,14 +24,12 @@ from Host.Common import timestamp
 
 class ValveExplorerFrame(wx.Frame):
 
-    VALVE_STATES = [['Ignore', 'Pull to Loop (-)', 'Off (+)'],
-                    ['Ignore', 'From Inlet (-)', 'From Loop (+)'],
+    VALVE_STATES = [['Ignore', 'Pull to Loop (-)', 'Off (+)'], ['Ignore', 'From Inlet (-)', 'From Loop (+)'],
                     ['Ignore', 'Off (-)', 'Inject (+)']]
 
     VALVE_COLORS = ['blue', 'red', 'green']
 
     FONTS = None
-
 
     def __init__(self, *args, **kwds):
         kwds['style'] = wx.DEFAULT_FRAME_STYLE
@@ -40,10 +38,8 @@ class ValveExplorerFrame(wx.Frame):
         assert len(self.VALVE_STATES) == ValveExplorer.ValveExplorer.N_VALVES
 
         self.FONTS = {
-            'std' : wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL,
-                            faceName='Arial'),
-            'bold' : wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.BOLD,
-                             faceName='Arial')
+            'std': wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.NORMAL, faceName='Arial'),
+            'bold': wx.Font(9, wx.DEFAULT, wx.NORMAL, wx.BOLD, faceName='Arial')
         }
 
         self.rows = []
@@ -54,7 +50,7 @@ class ValveExplorerFrame(wx.Frame):
         # Top control row
         topRow = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btnRun = wx.Button(self, -1, 'Run', size=(150,46))
+        self.btnRun = wx.Button(self, -1, 'Run', size=(150, 46))
         self.btnRun.SetFont(self.FONTS['bold'])
         topRow.Add(self.btnRun, 0, wx.ALIGN_LEFT)
         base.Add(topRow, 0, wx.ALL, 11)
@@ -64,22 +60,19 @@ class ValveExplorerFrame(wx.Frame):
 
         valveRow = wx.BoxSizer(wx.HORIZONTAL)
 
-        self.btnAddValve = wx.Button(self, -1, '+', size=(32,32))
+        self.btnAddValve = wx.Button(self, -1, '+', size=(32, 32))
         self.btnAddValve.SetFont(self.FONTS['std'])
         valveRow.Add(self.btnAddValve, 0, wx.ALIGN_LEFT)
 
-        self.btnSaveSequence = wx.Button(self, -1, 'Save Sequence...',
-                                         size=(104,32))
+        self.btnSaveSequence = wx.Button(self, -1, 'Save Sequence...', size=(104, 32))
         self.btnSaveSequence.SetFont(self.FONTS['std'])
         valveRow.Add(self.btnSaveSequence, 0)
 
-        self.btnLoadSequence = wx.Button(self, -1, 'Load Sequence...',
-                                         size=(104,32))
+        self.btnLoadSequence = wx.Button(self, -1, 'Load Sequence...', size=(104, 32))
         self.btnLoadSequence.SetFont(self.FONTS['std'])
         valveRow.Add(self.btnLoadSequence, 0)
 
-        self.btnExportData = wx.Button(self, -1, 'Export Data...',
-                                       size=(104,32))
+        self.btnExportData = wx.Button(self, -1, 'Export Data...', size=(104, 32))
         self.btnExportData.SetFont(self.FONTS['std'])
         valveRow.Add(self.btnExportData, 0)
 
@@ -95,8 +88,7 @@ class ValveExplorerFrame(wx.Frame):
 
         # Valve mask and processed loss
         self.pnlMaskLoss = GraphPanel.GraphPanel(self, -1)
-        self.pnlMaskLoss.SetGraphProperties(
-            ylabel='Processed Loss (ppm/cm)', timeAxes=(True,False))
+        self.pnlMaskLoss.SetGraphProperties(ylabel='Processed Loss (ppm/cm)', timeAxes=(True, False))
         base.Add(self.pnlMaskLoss, 2, wx.EXPAND)
 
         self.SetTitle('MobileKit Valve Timing Explorer')
@@ -109,20 +101,16 @@ class ValveExplorerFrame(wx.Frame):
         self.plotTimer.Start(milliseconds=1000)
 
         self.lossSeries = GraphPanel.Series(10000)
-        self.pnlMaskLoss.AddSeriesAsLine(self.lossSeries, colour='black',
-                                         width=1)
+        self.pnlMaskLoss.AddSeriesAsLine(self.lossSeries, colour='black', width=1)
         # Plot the status of each valve independently
         self.valveSeries = []
         for i in range(ValveExplorer.ValveExplorer.N_VALVES):
             self.valveSeries.append(GraphPanel.Series(10000))
-            self.pnlMaskLoss.AddSeriesAsLine(self.valveSeries[-1],
-                                             colour=self.VALVE_COLORS[i],
-                                             width=2)
+            self.pnlMaskLoss.AddSeriesAsLine(self.valveSeries[-1], colour=self.VALVE_COLORS[i], width=2)
 
         self._bindEvents()
 
-        self.v = ValveExplorer.ValveExplorer(self._logMessage,
-                                             self._updateSeries)
+        self.v = ValveExplorer.ValveExplorer(self._logMessage, self._updateSeries)
 
     def _updateSeries(self, sensor, t, v):
         if sensor == STREAM_ProcessedLoss1:
@@ -149,16 +137,13 @@ class ValveExplorerFrame(wx.Frame):
         self.Bind(wx.EVT_TIMER, self._onUpdatePlotTimer, self.plotTimer)
 
     def _exportData(self, evt=None):
-        dlg = wx.FileDialog(self, message='Export data as...',
-                            wildcard='*.csv', style=wx.SAVE)
+        dlg = wx.FileDialog(self, message='Export data as...', wildcard='*.csv', style=wx.SAVE)
 
         if dlg.ShowModal() != wx.ID_OK:
             self._logMessage("Data export cancelled.\n")
             return
 
-        noteDlg = wx.TextEntryDialog(self, message='Data Note',
-                                     caption='Description:',
-                                     style=wx.OK | wx.CANCEL)
+        noteDlg = wx.TextEntryDialog(self, message='Data Note', caption='Description:', style=wx.OK | wx.CANCEL)
 
         fullFilename = os.path.join(dlg.GetDirectory(), dlg.GetFilename())
         self._logMessage("Saving '%s'...\n" % fullFilename)
@@ -172,7 +157,7 @@ class ValveExplorerFrame(wx.Frame):
         counts = [c.x.count for c in self.valveSeries]
         counts.append(self.lossSeries.x.count)
 
-        header = ['processed_loss_1_time','processed_loss_1']
+        header = ['processed_loss_1_time', 'processed_loss_1']
         for i in range(ValveExplorer.ValveExplorer.N_VALVES):
             header.append("valve_%d_time" % (i + 1))
             header.append("valve_%d" % (i + 1))
@@ -193,21 +178,18 @@ class ValveExplorerFrame(wx.Frame):
             fp.writerow(row)
 
     def _saveSequence(self, evt=None):
-        dlg = wx.FileDialog(self, message='Save Valve Sequence as...',
-                            wildcard='*.txt', style=wx.SAVE)
+        dlg = wx.FileDialog(self, message='Save Valve Sequence as...', wildcard='*.txt', style=wx.SAVE)
 
         if dlg.ShowModal() != wx.ID_OK:
             self._logMessage("Save cancelled.\n")
             return
-
 
         fullFilename = os.path.join(dlg.GetDirectory(), dlg.GetFilename())
         self._logMessage("Saving '%s'...\n" % fullFilename)
         self.v.saveSequence(fullFilename)
 
     def _loadSequence(self, evt=None):
-        dlg = wx.FileDialog(self, message='Load Valve Sequence',
-                            wildcard='*.txt', style=wx.OPEN)
+        dlg = wx.FileDialog(self, message='Load Valve Sequence', wildcard='*.txt', style=wx.OPEN)
 
         if dlg.ShowModal() == wx.ID_OK:
             fullFilename = os.path.join(dlg.GetDirectory(), dlg.GetFilename())
@@ -287,20 +269,19 @@ class ValveExplorerFrame(wx.Frame):
         newRow.Add(self.rows[-1][-1], 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
 
         for i in range(ValveExplorer.ValveExplorer.N_VALVES):
-            self.rows[-1].append(wx.ComboBox(self, -1,
-                                             value=self.VALVE_STATES[i][0],
-                                             choices=self.VALVE_STATES[i],
-                                             style=wx.CB_READONLY|
-                                             wx.CB_DROPDOWN,
-                                             size=(110,23)))
-            newRow.Add(self.rows[-1][-1], 0,
-                       wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
+            self.rows[-1].append(
+                wx.ComboBox(self,
+                            -1,
+                            value=self.VALVE_STATES[i][0],
+                            choices=self.VALVE_STATES[i],
+                            style=wx.CB_READONLY | wx.CB_DROPDOWN,
+                            size=(110, 23)))
+            newRow.Add(self.rows[-1][-1], 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
 
-        self.rows[-1].append(wx.TextCtrl(self, -1, value='0.0',
-                                         size=(50,23)))
+        self.rows[-1].append(wx.TextCtrl(self, -1, value='0.0', size=(50, 23)))
         newRow.Add(self.rows[-1][-1], 1, wx.ALIGN_CENTER_VERTICAL)
 
-        self.rows[-1].append(wx.StaticText(self, -1, 's', size=(5,23)))
+        self.rows[-1].append(wx.StaticText(self, -1, 's', size=(5, 23)))
         newRow.Add(self.rows[-1][-1], 0, wx.ALIGN_CENTER_VERTICAL | wx.RIGHT, 7)
 
         self.valveArea.Add(newRow, 0)

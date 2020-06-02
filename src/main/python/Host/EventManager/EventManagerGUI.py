@@ -28,39 +28,44 @@ else:
 import Host.EventManager.EventManager as EventManager
 import threading
 if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
+    threading._time = time.clock  #prevents threading.Timer from getting screwed by local time changes
 
 from os.path import dirname as os_dirname
 from os.path import abspath
 
 MIN_REFRESH_PERIOD_s = 0.2
 
+
 def GetSelfPath():
     "adapted from a c.l.py thread here: http://tinyurl.com/nrg6o"
-    if hasattr(sys, "frozen"): #we're running compiled with py2exe
+    if hasattr(sys, "frozen"):  #we're running compiled with py2exe
         return sys.executable
     else:
         return abspath(sys.argv[0])
+
 
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """ListCtrl that auto-sizes the right-most column to fit the width.
 
     DataSource must be the list of Event objects that are to be displayed.
     """
-    def __init__(self, parent, ID, DataSource, EventSourceList = [], pos=wx.DefaultPosition,
-                 size=wx.DefaultSize):
-        wx.ListCtrl.__init__(self, parent, ID, pos, size,
-                             style = wx.LC_REPORT
-                                   | wx.LC_VIRTUAL
-                                   #| wx.BORDER_SUNKEN
-                                   | wx.BORDER_NONE
-                                   # wx.LC_EDIT_LABELS
-                                   #| wx.LC_SORT_ASCENDING
-                                   #| wx.LC_NO_HEADER
-                                   #| wx.LC_VRULES
-                                   | wx.LC_HRULES
-                                   | wx.LC_SINGLE_SEL
-                             )
+    def __init__(self, parent, ID, DataSource, EventSourceList=[], pos=wx.DefaultPosition, size=wx.DefaultSize):
+        wx.ListCtrl.__init__(
+            self,
+            parent,
+            ID,
+            pos,
+            size,
+            style=wx.LC_REPORT
+            | wx.LC_VIRTUAL
+            #| wx.BORDER_SUNKEN
+            | wx.BORDER_NONE
+            # wx.LC_EDIT_LABELS
+            #| wx.LC_SORT_ASCENDING
+            #| wx.LC_NO_HEADER
+            #| wx.LC_VRULES
+            | wx.LC_HRULES
+            | wx.LC_SINGLE_SEL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self._DataSource = DataSource
         self._EventSourceList = EventSourceList
@@ -69,39 +74,39 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
         self.ColourCodeSources = True
 
         colourList = [
-                        "#FFFFFF",
-                        "#FFFFD4",
-                        "#AAD4FF",
-                        "#D4D4FF",
-                        "#CCFFCC",
-                        "#FFD4AA",
-                        "#D2D2D2",
-                        "#FFD4D4",
-                        "#F77979",
-                        "#F89008",
-                        "#00AAFF",
-                        "#FFFF55",
-                        "#D4FFFF",
-                        ]
+            "#FFFFFF",
+            "#FFFFD4",
+            "#AAD4FF",
+            "#D4D4FF",
+            "#CCFFCC",
+            "#FFD4AA",
+            "#D2D2D2",
+            "#FFD4D4",
+            "#F77979",
+            "#F89008",
+            "#00AAFF",
+            "#FFFF55",
+            "#D4FFFF",
+        ]
         self.ColourAttr = []
         for i in range(len(colourList)):
             attr = wx.ListItemAttr()
             attr.SetBackgroundColour(colourList[i])
             self.ColourAttr.append(attr)
 
-        self.InsertColumn(0, "Index", wx.LIST_FORMAT_RIGHT, width = 70)
-        self.InsertColumn(1, "Time", width = 140)
-        self.InsertColumn(2, "Source", width = 100)
-        self.InsertColumn(3, "Code", width = 50)
-        self.InsertColumn(4, "Desc", width = 300)
+        self.InsertColumn(0, "Index", wx.LIST_FORMAT_RIGHT, width=70)
+        self.InsertColumn(1, "Time", width=140)
+        self.InsertColumn(2, "Source", width=100)
+        self.InsertColumn(3, "Code", width=50)
+        self.InsertColumn(4, "Desc", width=300)
 
         self.ilEventIcons = wx.ImageList(16, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
 
         thisDir = os_dirname(GetSelfPath())
-        self.IconIndex_Warning  = myIL.Add(wx.Bitmap(thisDir + '/Warning_16x16_32.ico', wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Info     = myIL.Add(wx.Bitmap(thisDir + '/Info_16x16_32.ico', wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Warning = myIL.Add(wx.Bitmap(thisDir + '/Warning_16x16_32.ico', wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Info = myIL.Add(wx.Bitmap(thisDir + '/Info_16x16_32.ico', wx.BITMAP_TYPE_ICO))
         self.IconIndex_Critical = myIL.Add(wx.Bitmap(thisDir + '/Critical_16x16_32.ico', wx.BITMAP_TYPE_ICO))
 
         self.EvenRowAttr = wx.ListItemAttr()
@@ -114,14 +119,14 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             if self.EnsureLatestEventOnscreen and eventCount > 0:
                 self.EnsureVisible(eventCount - 1)
         except Exception, E:
-            print "Exception trapped in _RefreshList: %r %s" % (E,E)
+            print "Exception trapped in _RefreshList: %r %s" % (E, E)
             pass
 
     def OnGetItemText(self, item, col):
         try:
-            if col == 0: #idx
-                return "%s" % (self._DataSource[item].Index,)
-            elif col == 1: #time
+            if col == 0:  #idx
+                return "%s" % (self._DataSource[item].Index, )
+            elif col == 1:  #time
                 retStr = ""
                 if self.ShowEventDate:
                     retStr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self._DataSource[item].EventTime))
@@ -130,14 +135,14 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
                 ms = int(self._DataSource[item].EventTime * 1000) % 1000
                 retStr += ".%03d" % ms
                 return retStr
-            elif col == 2: #source
+            elif col == 2:  #source
                 return "%s" % self._DataSource[item].Source
-            elif col == 3: #code
+            elif col == 3:  #code
                 return "%s" % self._DataSource[item].Event.Code
-            elif col == 4: #desc
+            elif col == 4:  #desc
                 msg = self._DataSource[item].Event.Description
                 if self._DataSource[item].Data:
-                    msg += " : %s" % (self._DataSource[item].Data,)
+                    msg += " : %s" % (self._DataSource[item].Data, )
                 return msg
         except IndexError:
             #Likely due to the EventList getting shrunk behind the scenes so our item index is now too big.
@@ -148,24 +153,22 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     def OnGetItemImage(self, item):
         try:
             evtLevel = self._DataSource[item].Event.Level
-            if evtLevel == 0: #debug
+            if evtLevel == 0:  #debug
                 return self.IconIndex_Info
             elif evtLevel == 1 or evtLevel == 1.5:
                 return -1
             elif evtLevel == 2:
                 return self.IconIndex_Warning
-            elif evtLevel == 3: #Major
+            elif evtLevel == 3:  #Major
                 return self.IconIndex_Critical
             else:
                 # If level is not 0, 1, 1.5, 2, 3 there is a bug so flag the message
                 # with a critical icon.
                 # Level 1.5 is a special case from InstrMgr to show the hardware
                 # status on the QuickGUI status panel.
-                # 
-                print("Event message number %s: Incorrect event level %s from %s"
-                        %(self._DataSource[item].Index,
-                            evtLevel,
-                            self._DataSource[item].Source))
+                #
+                print("Event message number %s: Incorrect event level %s from %s" %
+                      (self._DataSource[item].Index, evtLevel, self._DataSource[item].Source))
                 return self.IconIndex_Critical
         except IndexError:
             #Likely due to the EventList getting shrunk behind the scenes so our item index is now too big.
@@ -193,16 +196,17 @@ class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
             #In any case, the viewing of the data should NEVER affect the actual logging.
             pass
 
+
 class MyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.debug_mode = False
 
-    def Initialize(self, DataSource = None, SourceEventCounter = None, EventSourceList = None, CommandQueue = None):
-        self._EventList = DataSource #will hold a reference to the main event list (or BE it in debug mode)
-        self._SourceEventCounter = SourceEventCounter #contains a dictionary of source names and event counts
-        self._EventSourceList = EventSourceList #the list of unique event sources
+    def Initialize(self, DataSource=None, SourceEventCounter=None, EventSourceList=None, CommandQueue=None):
+        self._EventList = DataSource  #will hold a reference to the main event list (or BE it in debug mode)
+        self._SourceEventCounter = SourceEventCounter  #contains a dictionary of source names and event counts
+        self._EventSourceList = EventSourceList  #the list of unique event sources
         self.commandQueue = CommandQueue
 
         self.CurrentEventListItem = None
@@ -253,35 +257,35 @@ class MyFrame(wx.Frame):
         self.CurrentEventListEventLog = self.lstEventLog._DataSource[idx]
         evtLog = self.CurrentEventListEventLog
 
-        if 0: assert isinstance(evtLog, EventManager.EventLogger.EventLog) #for Wing
-        self.tlblEventTime.SetLabel(   time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(evtLog.EventTime)))
-        self.tlblEventCode.SetLabel(   str(evtLog.Event.Code))
-        self.tlblEventID.SetLabel(     str(evtLog.Index))
+        if 0: assert isinstance(evtLog, EventManager.EventLogger.EventLog)  #for Wing
+        self.tlblEventTime.SetLabel(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(evtLog.EventTime)))
+        self.tlblEventCode.SetLabel(str(evtLog.Event.Code))
+        self.tlblEventID.SetLabel(str(evtLog.Index))
         #print evtLog.Index
-        self.tlblEventLevel.SetLabel(  str(evtLog.Event.Level))
-        self.chkEventPublic.SetValue(  evtLog.Event.Public)
-        self.tlblEventSource.SetLabel( evtLog.Source)
+        self.tlblEventLevel.SetLabel(str(evtLog.Event.Level))
+        self.chkEventPublic.SetValue(evtLog.Event.Public)
+        self.tlblEventSource.SetLabel(evtLog.Source)
         msg = evtLog.Event.Description
         if evtLog.Data:
-            msg += " : %s" % (evtLog.Data,)
-        self.tlblEventText.SetLabel(   msg)
+            msg += " : %s" % (evtLog.Data, )
+        self.tlblEventText.SetLabel(msg)
         self.txtEventVerbose.SetValue(evtLog.Event.VerboseDescription or "<no verbose description available>")
         Event.Skip()
 
     def On_chkTrackLatestEvent_Check(self, event):
         cb = event.GetEventObject()
-        assert isinstance(cb,wx.CheckBox)
+        assert isinstance(cb, wx.CheckBox)
         self.lstEventLog.EnsureLatestEventOnscreen = cb.GetValue()
 
     def On_chkShowEventDate_Check(self, event):
         cb = event.GetEventObject()
-        assert isinstance(cb,wx.CheckBox)
+        assert isinstance(cb, wx.CheckBox)
         self.lstEventLog.ShowEventDate = cb.GetValue()
         self.lstEventLog.RefreshItems(1, len(self.lstEventLog._DataSource))
 
     def On_chkColourCodeSources_Check(self, event):
         cb = event.GetEventObject()
-        assert isinstance(cb,wx.CheckBox)
+        assert isinstance(cb, wx.CheckBox)
         self.lstEventLog.ColourCodeSources = cb.GetValue()
         self.lstEventLog.RefreshItems(1, len(self.lstEventLog._DataSource))
 
@@ -291,7 +295,7 @@ class MyFrame(wx.Frame):
         self.chkTrackLatestEvent.SetValue(self.lstEventLog.EnsureLatestEventOnscreen)
         event.Skip()
 
-    def OnCommandTimer(self,event):
+    def OnCommandTimer(self, event):
         """The command timer runs commands enqueued by the EventLog thread within the GUI thread and
         refreshes the event view control"""
 
@@ -300,7 +304,7 @@ class MyFrame(wx.Frame):
         if self.commandQueue != None:
             while True:
                 try:
-                    command = self.commandQueue.get(block = False)
+                    command = self.commandQueue.get(block=False)
                     command()
                 except Queue.Empty:
                     break
@@ -311,18 +315,24 @@ class MyFrame(wx.Frame):
         import random
         itemCount = self.lstEventLog.GetItemCount()
         #idx = self.lstEventLog.InsertImageStringItem(sys.maxint, str(itemCount), random.choice([0,1,2]))
-        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
 
-#    thisEvent = self._CreateEventLog("Log %s of %s generated with Debug_LogMany." % (i+1, Count))
-#    self._AddEventLog(thisEvent)
-#    time.sleep(Delay_s)
+        #    thisEvent = self._CreateEventLog("Log %s of %s generated with Debug_LogMany." % (i+1, Count))
+        #    self._AddEventLog(thisEvent)
+        #    time.sleep(Delay_s)
 
-        eventSource = random.choice(['Test_1','Test_2','Test_3'])
-        eventCode = str(random.choice([0,100, 200]))
+        eventSource = random.choice(['Test_1', 'Test_2', 'Test_3'])
+        eventCode = str(random.choice([0, 100, 200]))
         eventDesc = random.choice(["This is a test!", "Unga bunga!", "I hope this worked!"])
-        eventLevel = random.choice([0,1,2,3])
+        eventLevel = random.choice([0, 1, 2, 3])
 
-        thisEvent = EventManager.EventLogger.EventLog(eventSource, eventDesc, Data = "this is instance data", Level = eventLevel, Code = eventCode, Public = random.choice([True, False]), VerboseDescription = "this is for the verbose text")
+        thisEvent = EventManager.EventLogger.EventLog(eventSource,
+                                                      eventDesc,
+                                                      Data="this is instance data",
+                                                      Level=eventLevel,
+                                                      Code=eventCode,
+                                                      Public=random.choice([True, False]),
+                                                      VerboseDescription="this is for the verbose text")
         for i in range(100):
             self._EventList.append(thisEvent)
         #print "Count = ", len(self._EventList)
@@ -350,46 +360,46 @@ class MyFrame(wx.Frame):
         self.frame_1_menubar.Append(self.mnuHelp, "Help")
 
     def PrepareStatusBar(self):
-        self.StatusBar = self.CreateStatusBar(2, 0) #field count, style(?)
+        self.StatusBar = self.CreateStatusBar(2, 0)  #field count, style(?)
         self.StatusBar.SetStatusWidths([-1, -2])
-        self.StatusBar.SetStatusText("This is field 0",0)
-        self.StatusBar.SetStatusText("This is field 1 (twice as big as field 0)",1)
+        self.StatusBar.SetStatusText("This is field 0", 0)
+        self.StatusBar.SetStatusText("This is field 1 (twice as big as field 0)", 1)
 
     def MakeWidgets(self):
         "Make all the widgets in the frame (but don't position them)."
         #Buttons...
         btnHeight = 30
-        self.btnPFiltSelectAll     = wx.Button(self, -1, "All",  size = [-1, btnHeight])
-        self.btnPFiltSelectNone    = wx.Button(self, -1, "None", size = [-1, btnHeight])
-        self.btnSFiltSelectAll     = wx.Button(self, -1, "All",  size = [-1, btnHeight])
-        self.btnSFiltSelectNone    = wx.Button(self, -1, "None", size = [-1, btnHeight])
+        self.btnPFiltSelectAll = wx.Button(self, -1, "All", size=[-1, btnHeight])
+        self.btnPFiltSelectNone = wx.Button(self, -1, "None", size=[-1, btnHeight])
+        self.btnSFiltSelectAll = wx.Button(self, -1, "All", size=[-1, btnHeight])
+        self.btnSFiltSelectNone = wx.Button(self, -1, "None", size=[-1, btnHeight])
 
         #Image lists
         #self.ilEventIcons = wx.ImageList(16, 16)
 
         #List Controls...
-        self.lstEventLog  = EventViewListCtrl(self, -1,
-                              DataSource = self._EventList,
-                              EventSourceList = self._EventSourceList,
-                              size = [800,400]
-                              )
+        self.lstEventLog = EventViewListCtrl(self,
+                                             -1,
+                                             DataSource=self._EventList,
+                                             EventSourceList=self._EventSourceList,
+                                             size=[800, 400])
 
         ##Event Info...
         #Fixed Labels (StaticText)
-        self.lblEventID            = wx.StaticText(self, -1, "ID:")
-        self.lblEventTime          = wx.StaticText(self, -1, "Time:")
-        self.lblEventLevel         = wx.StaticText(self, -1, "Level:")
-        self.lblEventCode          = wx.StaticText(self, -1, "Code:")
-        self.lblEventSource        = wx.StaticText(self, -1, "Source:")
+        self.lblEventID = wx.StaticText(self, -1, "ID:")
+        self.lblEventTime = wx.StaticText(self, -1, "Time:")
+        self.lblEventLevel = wx.StaticText(self, -1, "Level:")
+        self.lblEventCode = wx.StaticText(self, -1, "Code:")
+        self.lblEventSource = wx.StaticText(self, -1, "Source:")
         #self.lblEventText          = wx.StaticText(self, -1, "Event:")
-        self.lblEventPublic        = wx.StaticText(self, -1, "Public:")
+        self.lblEventPublic = wx.StaticText(self, -1, "Public:")
         #Changing text labels
-        self.tlblEventID           = wx.StaticText(self, -1, "---")
-        self.tlblEventTime         = wx.StaticText(self, -1, "---")
-        self.tlblEventLevel        = wx.StaticText(self, -1, "---")
-        self.tlblEventCode         = wx.StaticText(self, -1, "---")
-        self.tlblEventSource       = wx.StaticText(self, -1, "---")
-        self.tlblEventText         = wx.StaticText(self, -1, "<no item selected>", size = [-1, -1])
+        self.tlblEventID = wx.StaticText(self, -1, "---")
+        self.tlblEventTime = wx.StaticText(self, -1, "---")
+        self.tlblEventLevel = wx.StaticText(self, -1, "---")
+        self.tlblEventCode = wx.StaticText(self, -1, "---")
+        self.tlblEventSource = wx.StaticText(self, -1, "---")
+        self.tlblEventText = wx.StaticText(self, -1, "<no item selected>", size=[-1, -1])
         self.tlblEventText.SetForegroundColour('YELLOW')
         self.tlblEventText.SetHelpText("This is a combination of the event description and the event data")
         #Checkboxes...
@@ -402,27 +412,29 @@ class MyFrame(wx.Frame):
         self.chkColourCodeSources.SetValue(self.lstEventLog.ColourCodeSources)
 
         #Text box...
-        self.txtEventVerbose = wx.TextCtrl(self, -1, "<no item selected>",
-                                          pos = wx.DefaultPosition,
-                                          size = [80,40],
-                                          style = wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP  )
+        self.txtEventVerbose = wx.TextCtrl(self,
+                                           -1,
+                                           "<no item selected>",
+                                           pos=wx.DefaultPosition,
+                                           size=[80, 40],
+                                           style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_WORDWRAP)
         #self.txtEventVerbose.SetBackgroundColour('#191970')
         #self.txtEventVerbose.SetForegroundColour('WHITE')
 
         #CheckListBoxes...
-        self.chlstPFilt = wx.CheckListBox(self, -1, (0, 0), wx.DefaultSize, ['P1','P2'])
-        self.chlstSFilt = wx.CheckListBox(self, -1, (0, 0), wx.DefaultSize, ['S1','S2'])
+        self.chlstPFilt = wx.CheckListBox(self, -1, (0, 0), wx.DefaultSize, ['P1', 'P2'])
+        self.chlstSFilt = wx.CheckListBox(self, -1, (0, 0), wx.DefaultSize, ['S1', 'S2'])
 
         #idx = 0
         #for i in xrange(1000):
-            #idx =frame_1.lstEventLog.InsertImageStringItem(sys.maxint, str(i+1), random.choice([0,1,2]))
-            #timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
-            #frame_1.lstEventLog.SetStringItem(idx, 1, timeStr)
-            #frame_1.lstEventLog.SetStringItem(idx, 3, str(random.choice([0,100, 200])))
-            #frame_1.lstEventLog.SetStringItem(idx, 2, random.choice(['Test_1','Test_2','Test_3']))
-            #frame_1.lstEventLog.SetStringItem(idx, 4, random.choice(["This is a test!", "Unga bunga!", "I hope this worked!"]))
-            #time.sleep(0.5)
-            ##self.lstEventLog.ClearAll()
+        #idx =frame_1.lstEventLog.InsertImageStringItem(sys.maxint, str(i+1), random.choice([0,1,2]))
+        #timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime())
+        #frame_1.lstEventLog.SetStringItem(idx, 1, timeStr)
+        #frame_1.lstEventLog.SetStringItem(idx, 3, str(random.choice([0,100, 200])))
+        #frame_1.lstEventLog.SetStringItem(idx, 2, random.choice(['Test_1','Test_2','Test_3']))
+        #frame_1.lstEventLog.SetStringItem(idx, 4, random.choice(["This is a test!", "Unga bunga!", "I hope this worked!"]))
+        #time.sleep(0.5)
+        ##self.lstEventLog.ClearAll()
 
     def DoLayout(self):
         """Creates all sizers, adds to them, and lays them out.
@@ -433,10 +445,10 @@ class MyFrame(wx.Frame):
         ##Priority filter frame
         #button sizer
         bsPFBut = wx.BoxSizer(wx.HORIZONTAL)
-        bsPFBut.Add(self.btnPFiltSelectAll , 1, wx.GROW, 0)
+        bsPFBut.Add(self.btnPFiltSelectAll, 1, wx.GROW, 0)
         bsPFBut.Add(self.btnPFiltSelectNone, 1, wx.GROW, 0)
         #staticbox sizer with list combo and buttons
-        sbPF  = wx.StaticBox(self, -1, "Priority Filter:" )
+        sbPF = wx.StaticBox(self, -1, "Priority Filter:")
         bsPF = wx.StaticBoxSizer(sbPF, wx.VERTICAL)
         bsPF.Add(self.chlstPFilt, 1, wx.GROW, 0)
         bsPF.Add(bsPFBut, 0, wx.GROW, 0)
@@ -444,17 +456,17 @@ class MyFrame(wx.Frame):
         ##Source filter frame
         #button sizer
         bsSFBut = wx.BoxSizer(wx.HORIZONTAL)
-        bsSFBut.Add(self.btnSFiltSelectAll , 1, wx.GROW, 0)
+        bsSFBut.Add(self.btnSFiltSelectAll, 1, wx.GROW, 0)
         bsSFBut.Add(self.btnSFiltSelectNone, 1, wx.GROW, 0)
         #staticbox sizer with list combo and buttons
-        sbSF  = wx.StaticBox(self, -1, "Source Filter:" )
+        sbSF = wx.StaticBox(self, -1, "Source Filter:")
         bsSF = wx.StaticBoxSizer(sbSF, wx.VERTICAL)
         bsSF.Add(self.chlstSFilt, 1, wx.GROW, 0)
         bsSF.Add(bsSFBut, 0, wx.GROW, 0)
 
         ##Options frame
         #staticbox sizer with list combo and buttons
-        sbOptions  = wx.StaticBox(self, -1, "Options:" )
+        sbOptions = wx.StaticBox(self, -1, "Options:")
         bsOptions = wx.StaticBoxSizer(sbOptions, wx.VERTICAL)
         bsOptions.Add(self.chkTrackLatestEvent, 0, wx.GROW, 0)
         bsOptions.Add(self.chkShowEventDate, 0, wx.GROW, 0)
@@ -475,30 +487,30 @@ class MyFrame(wx.Frame):
         #static labels...
         bsEDLabels = wx.BoxSizer(wx.VERTICAL)
         labelBorder = 1
-        bsEDLabels.Add(self.lblEventID    , 0, wx.ALIGN_LEFT, labelBorder)
-        bsEDLabels.Add(self.lblEventTime  , 0, wx.ALIGN_LEFT, labelBorder)
-        bsEDLabels.Add(self.lblEventLevel , 0, wx.ALIGN_LEFT, labelBorder)
-        bsEDLabels.Add(self.lblEventCode  , 0, wx.ALIGN_LEFT, labelBorder)
+        bsEDLabels.Add(self.lblEventID, 0, wx.ALIGN_LEFT, labelBorder)
+        bsEDLabels.Add(self.lblEventTime, 0, wx.ALIGN_LEFT, labelBorder)
+        bsEDLabels.Add(self.lblEventLevel, 0, wx.ALIGN_LEFT, labelBorder)
+        bsEDLabels.Add(self.lblEventCode, 0, wx.ALIGN_LEFT, labelBorder)
         bsEDLabels.Add(self.lblEventSource, 0, wx.ALIGN_LEFT, labelBorder)
         bsEDLabels.Add(self.lblEventPublic, 0, wx.ALIGN_LEFT, labelBorder)
         #short information text...
         bsEDInfo = wx.BoxSizer(wx.VERTICAL)
-        bsEDInfo.Add(self.tlblEventID    , 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
-        bsEDInfo.Add(self.tlblEventTime  , 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
-        bsEDInfo.Add(self.tlblEventLevel , 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
-        bsEDInfo.Add(self.tlblEventCode  , 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
+        bsEDInfo.Add(self.tlblEventID, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
+        bsEDInfo.Add(self.tlblEventTime, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
+        bsEDInfo.Add(self.tlblEventLevel, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
+        bsEDInfo.Add(self.tlblEventCode, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
         bsEDInfo.Add(self.tlblEventSource, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
-        bsEDInfo.Add(self.chkEventPublic , 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
+        bsEDInfo.Add(self.chkEventPublic, 0, wx.ALIGN_LEFT | wx.GROW, labelBorder)
         #Long (and longer!) information text...
         bsEDInfoLong = wx.BoxSizer(wx.VERTICAL)
-        bsEDInfoLong.Add(self.tlblEventText  , 0, wx.ALIGN_LEFT, labelBorder)
+        bsEDInfoLong.Add(self.tlblEventText, 0, wx.ALIGN_LEFT, labelBorder)
         bsEDInfoLong.Add(self.txtEventVerbose, 1, wx.GROW, 0)
 
         #All the info together...
         sbEventDetails = wx.StaticBox(self, -1, "Event details")
         bsEventDetails = wx.StaticBoxSizer(sbEventDetails, wx.HORIZONTAL)
-        bsEventDetails.Add(bsEDLabels  , 0, wx.ALIGN_LEFT | wx.RIGHT, 5)
-        bsEventDetails.Add(bsEDInfo    , 1, wx.ALIGN_LEFT, 0)
+        bsEventDetails.Add(bsEDLabels, 0, wx.ALIGN_LEFT | wx.RIGHT, 5)
+        bsEventDetails.Add(bsEDInfo, 1, wx.ALIGN_LEFT, 0)
         bsEventDetails.Add(bsEDInfoLong, 4, wx.ALIGN_LEFT | wx.GROW, 0)
 
         ##The master sizer
@@ -514,18 +526,20 @@ class MyFrame(wx.Frame):
         RootSizer.SetSizeHints(self)
         self.Layout()
 
+
 class EventViewerApp(wx.App):
     def OnExit(self):
         print "App exited!"
 
+
 class LogViewer(object):
-    def __init__(self, EventDataSource, EventSourceCounter, EventSourceList, debug = False):
+    def __init__(self, EventDataSource, EventSourceCounter, EventSourceList, debug=False):
         self._EventDataSource = EventDataSource
         self._EventSourceCounter = EventSourceCounter
         self._EventSourceList = EventSourceList
         self.commandQueue = Queue.Queue(0)
         self.app = EventViewerApp(0)
-        self.frame_1 = MyFrame(None, -1, "", size=(900,700))
+        self.frame_1 = MyFrame(None, -1, "", size=(900, 700))
         self.frame_1.debug_mode = debug
         self.frame_1.Initialize(DataSource = EventDataSource, \
             SourceEventCounter = EventSourceCounter, EventSourceList = EventSourceList, \
@@ -545,30 +559,32 @@ class LogViewer(object):
         #print "MainLoop completed"
         self.ViewerNotRunning.set()
         #print "ViewerNotRunning set"
+
     # Functions are curried and enqueued for execution within GUI thread
 
     def ShutDown(self):
         def _ShutDown():
             self.frame_1.Close()
-        self.commandQueue.put(_ShutDown)
 
+        self.commandQueue.put(_ShutDown)
 
     def UpdateEventData(self):
         def _UpdateEventData():
             # Events will appear on screen when CommandTimer fires next
             #update the event count in the status bar...
             self.frame_1.StatusBar.SetStatusText("%6s events" % len(self._EventDataSource), 0)
-        self.commandQueue.put(_UpdateEventData)
 
+        self.commandQueue.put(_UpdateEventData)
 
     def ChangeDataSource(self, EventDataSource):
         def _ChangeDataSource():
             self._EventDataSource = EventDataSource
             self.frame_1.lstEventLog._DataSource = EventDataSource
+
         self.commandQueue.put(_ChangeDataSource)
 
 
 if __name__ == "__main__":
-    eventList =[]
-    va = LogViewer(eventList, debug = True)
+    eventList = []
+    va = LogViewer(eventList, debug=True)
     va.Launch()

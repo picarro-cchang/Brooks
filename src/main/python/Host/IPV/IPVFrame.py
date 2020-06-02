@@ -3,13 +3,14 @@ from os.path import dirname, abspath
 import wx
 import wx.grid
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = abspath(AppPath)
 
 SEC_TITLES = ["Laser Status", "Wavelength Monitor Status", "Cavity Status"]
+
 
 class IPVFrame(wx.Frame):
     def __init__(self, numRowsList, *args, **kwds):
@@ -35,15 +36,19 @@ class IPVFrame(wx.Frame):
             gridLabel.SetBackgroundColour('#736AFF')
             self.gridLabelList.append(gridLabel)
 
-        self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE)
-        self.textCtrlStatus.SetMinSize((800,100))
+        self.textCtrlStatus = wx.TextCtrl(self.panel_3, -1, "", style=wx.TE_READONLY | wx.TE_MULTILINE)
+        self.textCtrlStatus.SetMinSize((800, 100))
 
-        self.labelTimestamp = wx.StaticText(self.panel_3, -1, "Timestamp", size=(-1,25))
+        self.labelTimestamp = wx.StaticText(self.panel_3, -1, "Timestamp", size=(-1, 25))
         self.labelTimestamp.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        self.textCtrlTimestamp = wx.TextCtrl(self.panel_3, -1, size=(152,24), style=wx.TE_READONLY|wx.TE_CENTER)
-        self.buttonRunIPV = wx.Button(self.panel_3, -1, "Run IPV", size = (152,25), style=wx.BU_EXACTFIT)
-        self.buttonUpload = wx.Button(self.panel_3, -1, "Upload Files", size = (152,25), style=wx.BU_EXACTFIT)
-        self.buttonCreateDiagFile = wx.Button(self.panel_3, -1, "Create Diagnostic File (.h5)", size = (152,25), style=wx.BU_EXACTFIT)
+        self.textCtrlTimestamp = wx.TextCtrl(self.panel_3, -1, size=(152, 24), style=wx.TE_READONLY | wx.TE_CENTER)
+        self.buttonRunIPV = wx.Button(self.panel_3, -1, "Run IPV", size=(152, 25), style=wx.BU_EXACTFIT)
+        self.buttonUpload = wx.Button(self.panel_3, -1, "Upload Files", size=(152, 25), style=wx.BU_EXACTFIT)
+        self.buttonCreateDiagFile = wx.Button(self.panel_3,
+                                              -1,
+                                              "Create Diagnostic File (.h5)",
+                                              size=(152, 25),
+                                              style=wx.BU_EXACTFIT)
 
         self.__set_properties()
         self.__do_layout()
@@ -58,7 +63,7 @@ class IPVFrame(wx.Frame):
         for i in range(self.numSections):
             numRows = self.numRowsList[i]
             self.gridList[i].EnableEditing(False)
-            self.gridList[i].SetDefaultCellAlignment(wx.ALIGN_LEFT,wx.ALIGN_CENTRE)
+            self.gridList[i].SetDefaultCellAlignment(wx.ALIGN_LEFT, wx.ALIGN_CENTRE)
             self.gridList[i].SetDefaultCellFont(wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.NORMAL))
             self.gridList[i].CreateGrid(numRows, 2)
             self.gridList[i].SetColLabelValue(0, "Status")
@@ -82,42 +87,42 @@ class IPVFrame(wx.Frame):
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_6 = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_4.Add(self.label_1, 1, wx.ALL|wx.EXPAND, 15)
+        sizer_4.Add(self.label_1, 1, wx.ALL | wx.EXPAND, 15)
         self.panel_1.SetSizer(sizer_4)
 
         for i in range(self.numSections):
-            sizer_3.Add(self.gridLabelList[i], 0, wx.EXPAND|wx.ALL, 6)
-            sizer_3.Add(self.gridList[i], self.numRowsList[i]+2, wx.EXPAND|wx.ALL, 6)
+            sizer_3.Add(self.gridLabelList[i], 0, wx.EXPAND | wx.ALL, 6)
+            sizer_3.Add(self.gridList[i], self.numRowsList[i] + 2, wx.EXPAND | wx.ALL, 6)
         self.panel_2.SetSizer(sizer_3)
 
-        sizer_5.Add(self.labelTimestamp, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 25)
-        sizer_5.Add((10,-1))
-        sizer_5.Add(self.textCtrlTimestamp, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
-        sizer_5.Add(self.buttonRunIPV, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
-        sizer_5.Add(self.buttonCreateDiagFile, 0, wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 23)
+        sizer_5.Add(self.labelTimestamp, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 25)
+        sizer_5.Add((10, -1))
+        sizer_5.Add(self.textCtrlTimestamp, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 23)
+        sizer_5.Add(self.buttonRunIPV, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 23)
+        sizer_5.Add(self.buttonCreateDiagFile, 0, wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 23)
         sizer_5.Add(self.buttonUpload, 0, wx.ALIGN_CENTER_VERTICAL)
-        sizer_6.Add((-1,10))
-        sizer_6.Add(self.textCtrlStatus, 0, wx.BOTTOM|wx.EXPAND, 15)
+        sizer_6.Add((-1, 10))
+        sizer_6.Add(self.textCtrlStatus, 0, wx.BOTTOM | wx.EXPAND, 15)
         sizer_6.Add(sizer_5)
-        sizer_6.Add(self.labelFooter, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 15)
+        sizer_6.Add(self.labelFooter, 0, wx.TOP | wx.BOTTOM | wx.EXPAND, 15)
         self.panel_3.SetSizer(sizer_6)
 
-        sizer_2.Add(self.panel_1, 0, wx.ALL|wx.EXPAND, 5)
-        sizer_2.Add(self.panel_2, 2, wx.ALL|wx.EXPAND, 5)
-        sizer_2.Add(self.panel_3, 0, wx.ALL|wx.EXPAND, 5)
+        sizer_2.Add(self.panel_1, 0, wx.ALL | wx.EXPAND, 5)
+        sizer_2.Add(self.panel_2, 2, wx.ALL | wx.EXPAND, 5)
+        sizer_2.Add(self.panel_3, 0, wx.ALL | wx.EXPAND, 5)
         self.SetSizer(sizer_2)
         self.Layout()
         height = 0
         for i in range(self.numSections):
-            height = height + 40*(self.numRowsList[i]+1)+25
+            height = height + 40 * (self.numRowsList[i] + 1) + 25
         height = height + 200
-        self.SetSize((820, height+130))
+        self.SetSize((820, height + 130))
 
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    frame_1 = IPVFrame([3,3,3], None, -1, "")
+    frame_1 = IPVFrame([3, 3, 3], None, -1, "")
     app.SetTopWindow(frame_1)
     frame_1.Show()
     app.MainLoop()

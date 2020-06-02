@@ -27,12 +27,9 @@ class ValveExplorer(object):
     N_VALVES = 3
 
     def __init__(self, log=None, dataCb=None):
-        self.streams = [LossStream.LossStream(dataCb),
-                        ValveMaskStream.ValveMaskStream(dataCb)]
+        self.streams = [LossStream.LossStream(dataCb), ValveMaskStream.ValveMaskStream(dataCb)]
         self.valveSeq = None
-        self.driver = CmdFIFO.CmdFIFOServerProxy(
-            "http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-            'ValveExplorer')
+        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, 'ValveExplorer')
         self.log = log
 
         self.ctx = None
@@ -112,8 +109,7 @@ class ValveExplorer(object):
         with self.lock:
             self.doStop = False
 
-        self.acqThread = threading.Thread(target=self._doDataAcquisition,
-                                          kwargs={'completionCb' : completionCb})
+        self.acqThread = threading.Thread(target=self._doDataAcquisition, kwargs={'completionCb': completionCb})
         self.acqThread.start()
 
     def isRunning(self):
@@ -159,12 +155,10 @@ class ValveExplorer(object):
         self._stopAcquisition(stopRequested, kwargs['completionCb'])
 
     def _startAcquisition(self):
-        self.ctx = self.driver.saveRegValues(
-            ['PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER'])
+        self.ctx = self.driver.saveRegValues(['PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER'])
 
         # Override the default Idle valve mask
-        self.driver.wrDasReg(
-            'PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER', 0)
+        self.driver.wrDasReg('PEAK_DETECT_CNTRL_IDLE_VALVE_MASK_AND_VALUE_REGISTER', 0)
 
         for s in self.streams:
             s.start()

@@ -58,7 +58,7 @@ StateName[STATE_INIT] = "INIT"
 StateName[STATE_READY] = "READY"
 StateName[STATE_ENABLED] = "ENABLED"
 
-STATUS_MASK_Analyzing    = 0x40
+STATUS_MASK_Analyzing = 0x40
 # The bit(s) of toggle masks must be higher than the bottom 4 bits (state) which can't be toggled.
 STATUS_MASK_SyncToggle_1 = 0x1000
 STATUS_MASK_SyncToggle_2 = 0x2000
@@ -72,8 +72,8 @@ STATUS_MASK_SyncToggle_8 = 0x80000
 USERCAL_SLOPE_INDEX = 0
 USERCAL_OFFSET_INDEX = 1
 
-DEFAULT_SERIAL_OUT_DELAY = 10.0 # the time delay of sending the fitter results to serial output
-SERIAL_CMD_DELAY = 0.02 # the execution time delay between sending a command and actually receiving the command on the serial output
+DEFAULT_SERIAL_OUT_DELAY = 10.0  # the time delay of sending the fitter results to serial output
+SERIAL_CMD_DELAY = 0.02  # the execution time delay between sending a command and actually receiving the command on the serial output
 
 import sys
 import os
@@ -100,7 +100,7 @@ from Host.Common import InstMgrInc
 from Host.Common import AppStatus
 from Host.Common import timestamp
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_DRIVER, RPC_PORT_DATA_MANAGER
-from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER,RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
+from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER, RPC_PORT_INSTR_MANAGER, RPC_PORT_CONFIG_MONITOR
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DATALOGGER, RPC_PORT_FSR_HOPPING_CONTROLLER
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_FITTER_BASE
 from Host.Common.SharedTypes import STATUS_PORT_DATA_MANAGER, STATUS_PORT_INST_MANAGER
@@ -117,7 +117,7 @@ from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
 if sys.platform == 'win32':
-    threading._time = time.clock #prevents threading.Timer from getting screwed by local time changes
+    threading._time = time.clock  #prevents threading.Timer from getting screwed by local time changes
 
 ####
 ## Some debugging/development helpers...
@@ -133,6 +133,7 @@ if __debug__:
                 assert __localsNow[__k] <= 0x0F, "Legit state values must be < 0x0F, with 0x0F reserved for ERROR"
     del __localsNow, __k
 
+
 ####
 ## Decorators
 ####
@@ -141,15 +142,19 @@ def docstring_set(DocString):
     def decorator(f):
         f.func_doc = DocString
         return f
+
     return decorator
+
+
 ####
 ## Functions
 ####
 def NameOfThisCall():
     return sys._getframe(1).f_code.co_name
 
+
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -164,55 +169,58 @@ else:
 ####
 ## RPC connections to other CRDS applications...
 ####
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_FreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
+CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, APP_NAME, IsDontCareConnection=False)
+CRDS_FreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, APP_NAME, IsDontCareConnection=False)
 CRDS_ConfigMonitor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_CONFIG_MONITOR,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_SpecColl =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_DataLogger =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_FsrHoppingController =  CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FSR_HOPPING_CONTROLLER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+                                                APP_NAME,
+                                                IsDontCareConnection=False)
+CRDS_SpecColl = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
+                                           APP_NAME,
+                                           IsDontCareConnection=False)
+CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, APP_NAME, IsDontCareConnection=False)
+CRDS_FsrHoppingController = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FSR_HOPPING_CONTROLLER,
+                                                       APP_NAME,
+                                                       IsDontCareConnection=False)
+
+
 ####
 ## Custom exceptions...
 ####
 class DataManagerError(CrdsException):
     """Base class for all DataManager exceptions"""
+
+
 class CommandError(DataManagerError):
     """Root of all exceptions caused by a bad/inappropriate command."""
+
+
 class InvalidModeSelection(DataManagerError):
     """An invalid mode was selected."""
+
+
     ####
     ## Classes...
     ####
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.RpcServer = RpcServer
         self.ExitFunction = ExitFunction
+
     def run(self):
         self.RpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             self.ExitFunction()
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
+
 class MeasTuple(tuple):
     "A tuple that is able to be referenced with .time for [0] and .value for [1]"
+
     def __getattribute__(self, name):
         if name == "time":
             return self[0]
@@ -220,6 +228,7 @@ class MeasTuple(tuple):
             return self[1]
         elif name == "timestamp":
             return timestamp.unixTimeToTimestamp(self[0])
+
 
 class DataManager(object):
     """Container class/structure for DataManager options."""
@@ -233,38 +242,38 @@ class DataManager(object):
             self.StartingMeasMode = ""
             self.maketimetuple = time.gmtime
 
-        def LoadSerialSettings(self,cp):
+        def LoadSerialSettings(self, cp):
             # Get the optional settings for the serial port
             if cp.has_section(_SERIAL_CONFIG_SECTION):
-                self.useSerial = cp.getboolean(_SERIAL_CONFIG_SECTION,"Enable",default=True)
+                self.useSerial = cp.getboolean(_SERIAL_CONFIG_SECTION, "Enable", default=True)
             else:
                 self.useSerial = False
 
             if self.useSerial:
-                self.serialPort = cp.get(_SERIAL_CONFIG_SECTION,"Port",default="COM1")
-                self.serialTimePreserved = cp.getboolean(_SERIAL_CONFIG_SECTION,"TimePreserved",default=False)
+                self.serialPort = cp.get(_SERIAL_CONFIG_SECTION, "Port", default="COM1")
+                self.serialTimePreserved = cp.getboolean(_SERIAL_CONFIG_SECTION, "TimePreserved", default=False)
                 if self.serialTimePreserved:
                     self.serialQueueTimeout = 0.01
                 else:
                     self.serialQueueTimeout = 1
-                self.serialDelay = abs(cp.getfloat(_SERIAL_CONFIG_SECTION,"Delay",default=DEFAULT_SERIAL_OUT_DELAY))
-                self.serialBaud = cp.getint(_SERIAL_CONFIG_SECTION,"Baud",default=9600)
-                self.xonxoff = cp.getboolean(_SERIAL_CONFIG_SECTION,"XonXoff",default=False)
-                self.rtscts = cp.getboolean(_SERIAL_CONFIG_SECTION,"RtsCts",default=False)
+                self.serialDelay = abs(cp.getfloat(_SERIAL_CONFIG_SECTION, "Delay", default=DEFAULT_SERIAL_OUT_DELAY))
+                self.serialBaud = cp.getint(_SERIAL_CONFIG_SECTION, "Baud", default=9600)
+                self.xonxoff = cp.getboolean(_SERIAL_CONFIG_SECTION, "XonXoff", default=False)
+                self.rtscts = cp.getboolean(_SERIAL_CONFIG_SECTION, "RtsCts", default=False)
 
-                bits = cp.getint(_SERIAL_CONFIG_SECTION,"DataBits",default=8)
+                bits = cp.getint(_SERIAL_CONFIG_SECTION, "DataBits", default=8)
                 self.serialDataBits = (bits == 5) and serial.FIVEBITS or \
                                       (bits == 6) and serial.SIXBITS  or \
                                       (bits == 7) and serial.SEVENBITS or \
                                       (bits == 8) and serial.EIGHTBITS
                 if not self.serialDataBits: raise ValueError("Invalid number of data bits")
 
-                bits = cp.getint(_SERIAL_CONFIG_SECTION,"StopBits",default=1)
+                bits = cp.getint(_SERIAL_CONFIG_SECTION, "StopBits", default=1)
                 self.serialStopBits = (bits == 1) and serial.STOPBITS_ONE or \
                                       (bits == 2) and serial.STOPBITS_TWO
                 if not self.serialStopBits: raise ValueError("Invalid number of stop bits")
 
-                p = cp.get(_SERIAL_CONFIG_SECTION,"Parity",default='N')
+                p = cp.get(_SERIAL_CONFIG_SECTION, "Parity", default='N')
                 self.serialParity = (p in ['n','N']) and [serial.PARITY_NONE] or \
                                     (p in ['e','E']) and [serial.PARITY_EVEN] or \
                                     (p in ['o','O']) and [serial.PARITY_ODD]
@@ -272,25 +281,25 @@ class DataManager(object):
                 self.serialParity = self.serialParity[0]
 
                 try:
-                    self.pollChar = eval(cp.get(_SERIAL_CONFIG_SECTION,"PollChar"))
+                    self.pollChar = eval(cp.get(_SERIAL_CONFIG_SECTION, "PollChar"))
                     self.useSerialPoll = True
                 except KeyError:
                     self.useSerialPoll = False
 
-                self.ignoreBadKeys = cp.getboolean(_SERIAL_CONFIG_SECTION,"IgnoreBadKeys",default=True)
-                self.invalidValue = cp.getfloat(_SERIAL_CONFIG_SECTION,"InvalidValue",default=0.0)
+                self.ignoreBadKeys = cp.getboolean(_SERIAL_CONFIG_SECTION, "IgnoreBadKeys", default=True)
+                self.invalidValue = cp.getfloat(_SERIAL_CONFIG_SECTION, "InvalidValue", default=0.0)
 
                 try:
-                    self.emptyString = eval(cp.get(_SERIAL_CONFIG_SECTION,"EmptyString"))
+                    self.emptyString = eval(cp.get(_SERIAL_CONFIG_SECTION, "EmptyString"))
                 except KeyError:
                     self.emptyString = "\r\n"
 
-                self.serialSource = cp.get(_SERIAL_CONFIG_SECTION,"Source")
-                self.serialFormat = eval(cp.get(_SERIAL_CONFIG_SECTION,"Format"))
+                self.serialSource = cp.get(_SERIAL_CONFIG_SECTION, "Source")
+                self.serialFormat = eval(cp.get(_SERIAL_CONFIG_SECTION, "Format"))
                 c = 0
                 self.serialColumns = []
-                while cp.has_option(_SERIAL_CONFIG_SECTION,"Column%d" % c):
-                    self.serialColumns.append(cp.get(_SERIAL_CONFIG_SECTION,"Column%d" % c))
+                while cp.has_option(_SERIAL_CONFIG_SECTION, "Column%d" % c):
+                    self.serialColumns.append(cp.get(_SERIAL_CONFIG_SECTION, "Column%d" % c))
                     c += 1
 
         def Load(self, IniPath):
@@ -312,7 +321,7 @@ class DataManager(object):
             self.LoadSerialSettings(cp)
             self.AutoEnable = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnable", "False")
             self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
-            if cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt").lower() == "local":
+            if cp.get(_MAIN_CONFIG_SECTION, "TimeStandard", "gmt").lower() == "local":
                 self.maketimetuple = time.localtime
             else:
                 self.maketimetuple = time.gmtime
@@ -350,16 +359,16 @@ class DataManager(object):
         self.ReInitRequested = False
         self._EnableEvent = threading.Event()
         self._ClearErrorEvent = threading.Event()
-        self._ShutdownRequested = False #The main state handling loop will exit when this is true
+        self._ShutdownRequested = False  #The main state handling loop will exit when this is true
         self._FatalError = False  #The main state handling loop will also exit when this is true
 
-        self.dataQueue = []        # Priority queue for data from fitters
+        self.dataQueue = []  # Priority queue for data from fitters
         self.dataQueueLock = threading.Lock()
-        self.forwardedDataQueue = []        # Used to hold generated data that need to be processed BEFORE any more collected data
-        self.DataHistory = {}      # keys = data tokens; values = deque of two-tuples (time, value)
-        self.ReportHistory = {}    # keys = data tokens; values = deque of two-tuples (time, value)
-        self.LatestSensorData = {} # keys = sensor names; values = values
-        self.SensorHistory = {}    # keys = sensor names; values = deque of two-tuples (time, value)
+        self.forwardedDataQueue = []  # Used to hold generated data that need to be processed BEFORE any more collected data
+        self.DataHistory = {}  # keys = data tokens; values = deque of two-tuples (time, value)
+        self.ReportHistory = {}  # keys = data tokens; values = deque of two-tuples (time, value)
+        self.LatestSensorData = {}  # keys = sensor names; values = values
+        self.SensorHistory = {}  # keys = sensor names; values = deque of two-tuples (time, value)
 
         #Measurement mode properties...
         # - Modes is a dict of MeasMode info idnicating all the config info per mode
@@ -367,28 +376,32 @@ class DataManager(object):
         #   of each matching the DAS scheme index loaded into...
         self.MeasModes = {}
         self.CurrentMeasMode = None
-        if 0: assert isinstance(self.CurrentMeasMode, ModeDef.MeasMode) #for wing
-        self.AnalyzerCode = {}   # keys = script paths; values = compiled code objects
-        self.InstrData = {}      # keys,values taken from instr files
+        if 0: assert isinstance(self.CurrentMeasMode, ModeDef.MeasMode)  #for wing
+        self.AnalyzerCode = {}  # keys = script paths; values = compiled code objects
+        self.InstrData = {}  # keys,values taken from instr files
         self.ConfigPath = ConfigPath
         self.Config = DataManager.ConfigurationOptions()
         self.cp = None
-        self.UserCalibration = {} #keys = measurement names; values = (slope, offset); default = (1, 0)
-        self.UserCalAppListDict = {} #keys = primary measurement names; values = affected measurement names assoicated with each key
+        self.UserCalibration = {}  #keys = measurement names; values = (slope, offset); default = (1, 0)
+        self.UserCalAppListDict = {
+        }  #keys = primary measurement names; values = affected measurement names assoicated with each key
         self.SensorListener = Listener(None,
-                                     BROADCAST_PORT_SENSORSTREAM,
-                                     interface.SensorEntryType,
-                                     self._SensorFilter,
-                                     retry = True,
-                                     name = "Data manager sensor stream listener",logFunc = Log)
+                                       BROADCAST_PORT_SENSORSTREAM,
+                                       interface.SensorEntryType,
+                                       self._SensorFilter,
+                                       retry=True,
+                                       name="Data manager sensor stream listener",
+                                       logFunc=Log)
         self.fitterListener = []
         for fitterIndex in range(interface.MAX_FITTERS):
-            self.fitterListener.append(Listener(None,
-                                     BROADCAST_PORT_FITTER_BASE+fitterIndex,
-                                     StringPickler.ArbitraryObject,
-                                     self._FitterFilter,
-                                     retry = True,
-                                     name = "Data manager fitter %d listener" % fitterIndex,logFunc = Log))
+            self.fitterListener.append(
+                Listener(None,
+                         BROADCAST_PORT_FITTER_BASE + fitterIndex,
+                         StringPickler.ArbitraryObject,
+                         self._FitterFilter,
+                         retry=True,
+                         name="Data manager fitter %d listener" % fitterIndex,
+                         logFunc=Log))
         self.lastFitAnalyzed = 0
         self.resultsByAnalyzer = {}
         self.InstMgrStatusListener = None
@@ -411,23 +424,23 @@ class DataManager(object):
         self.maxLate = 0
         self.maxScriptDuration = {}
         self.syncScriptDelayHist = {}
-        self.options = options.get("-o","")
+        self.options = options.get("-o", "")
 
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATA_MANAGER),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = "",
-                                                ServerVersion = APP_VERSION,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription="",
+                                               ServerVersion=APP_VERSION,
+                                               threaded=True)
         self.RpcThread = None
         #Register the rpc functions...
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
-                self.RpcServer.register_function(attr, name=s, NameSlice = 4)
+                self.RpcServer.register_function(attr, name=s, NameSlice=4)
 
         self.calEnabled = True
-        self.measBufferConfig = ("",[],20) # (source, colList, bufSize)
+        self.measBufferConfig = ("", [], 20)  # (source, colList, bufSize)
         self.measBuffer = []
         self.pulseBufferSize = 512
         self.pulseBuffer = []
@@ -436,7 +449,7 @@ class DataManager(object):
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
-                                                        IsDontCareConnection = False)
+                                                        IsDontCareConnection=False)
         # Peripheral Interface
         self.CRDS_PeriphIntrf = None
         self.periphIntrfCols = []
@@ -463,10 +476,11 @@ class DataManager(object):
                 self.serialPollLock.release()
             else:
                 try:
-                    (measDataTime, enqueueTime, serialOutputToWrite) = self.serialOutQueue.get(block=True,timeout=self.Config.serialQueueTimeout)
+                    (measDataTime, enqueueTime,
+                     serialOutputToWrite) = self.serialOutQueue.get(block=True, timeout=self.Config.serialQueueTimeout)
                     timeToSend = measDataTime + self.Config.serialDelay - time.time()
                     if self.Config.serialTimePreserved and timeToSend > SERIAL_CMD_DELAY:
-                        time.sleep(timeToSend-SERIAL_CMD_DELAY)
+                        time.sleep(timeToSend - SERIAL_CMD_DELAY)
                     self.serial.write(serialOutputToWrite)
                     if __debug__:
                         curTime = time.time()
@@ -479,7 +493,7 @@ class DataManager(object):
                             # Record the time required to send the data out of queue
                             offSchedule = curTime - enqueueTime
                         if abs(offSchedule) > 1.0:
-                            Log("Serial output %.3f seconds off of schedule" % offSchedule, Level = 1)
+                            Log("Serial output %.3f seconds off of schedule" % offSchedule, Level=1)
                 except Queue.Empty:
                     pass
         self.serialThreadAllowRun = True
@@ -535,14 +549,16 @@ class DataManager(object):
         has not been fixed.
 
         """
-        self._AssertValidCallingState([STATE_ERROR,])
+        self._AssertValidCallingState([
+            STATE_ERROR,
+        ])
         Log("Request received to clear error state")
         self._ClearErrorEvent.set()
 
     @CmdFIFO.rpc_wrap
     def RPC_GetState(self):
         """Returns a dictionary with a text indication of the system states."""
-        ret = dict(State = StateName[self.__State])
+        ret = dict(State=StateName[self.__State])
         return ret
 
     @CmdFIFO.rpc_wrap
@@ -556,26 +572,27 @@ class DataManager(object):
     def RPC_Enable(self):
         """Enables the data manager in the mode set by Mode_Set.
         """
-        try: #catch for DAS errors (and any other remote procedure call error)...
-            if __debug__: Log("System Enable request received - RPC_Enable()", Level = 0)
+        try:  #catch for DAS errors (and any other remote procedure call error)...
+            if __debug__: Log("System Enable request received - RPC_Enable()", Level=0)
             ##Validate that the call is possible and/or makes sense...
-            self._AssertValidCallingState([STATE_INIT,        #Will try and enable when ready
-                                           STATE_READY,       #Triggers transition to ENABLED
-                                           STATE_ENABLED,     #No problem enabling again!
-                                           ])
+            self._AssertValidCallingState([
+                STATE_INIT,  #Will try and enable when ready
+                STATE_READY,  #Triggers transition to ENABLED
+                STATE_ENABLED,  #No problem enabling again!
+            ])
             ##React to the call...
             if not self.CurrentMeasMode:
                 raise CommandError("Cannot enable without setting a measurement mode first")
             if self.__State == STATE_ENABLED:
-                return #we are already sweeping
+                return  #we are already sweeping
             else:
                 #Now to set the enabled event which will get us out of ready state...
                 self._EnableEvent.set()
         except CommandError:
-            if __debug__: LogExc("Command error", dict(State = StateName[self.__State]), Level = 0)
+            if __debug__: LogExc("Command error", dict(State=StateName[self.__State]), Level=0)
             raise
         except:
-            LogExc("Unhandled exception in command call", Data = dict(Command = NameOfThisCall))
+            LogExc("Unhandled exception in command call", Data=dict(Command=NameOfThisCall))
             raise
         return "OK"
 
@@ -583,7 +600,7 @@ class DataManager(object):
     def RPC_Disable(self, keepSyncScripts=False):
         """Disables the measurement system and stops the instrument from scanning.
         """
-        if __debug__: Log("System DISable request received - RPC_Disable()", Level = 0)
+        if __debug__: Log("System DISable request received - RPC_Disable()", Level=0)
         if not keepSyncScripts:
             self._StopSyncScripts()
         self._EnableEvent.clear()
@@ -598,8 +615,9 @@ class DataManager(object):
                                                   STATUS_PORT_INST_MANAGER,
                                                   AppStatus.STREAM_Status,
                                                   self._InstMgrStatusFilter,
-                                                  retry = True,
-                                                  name = "Data manager Instrument Manager listener",logFunc = Log)
+                                                  retry=True,
+                                                  name="Data manager Instrument Manager listener",
+                                                  logFunc=Log)
             return "OK"
         else:
             return "Already started"
@@ -637,10 +655,7 @@ class DataManager(object):
             slope = 1
         newOffset = oldOffset - ObservedOffset
         Log("User calibration request received - AdjustZero",
-            Data = dict(MeasName = MeasName,
-                        OldOffset = oldOffset,
-                        NewOffset = newOffset,
-                        ObservedOffset = ObservedOffset))
+            Data=dict(MeasName=MeasName, OldOffset=oldOffset, NewOffset=newOffset, ObservedOffset=ObservedOffset))
         self.UserCalibration[MeasName] = (slope, newOffset)
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (slope, newOffset)
@@ -663,29 +678,23 @@ class DataManager(object):
         except LookupError:
             calOffset = 0
             oldSlope = 1
-        newSlope = (oldSlope * (ExpectedMeas - calOffset)/(ReportedMeas - calOffset))
+        newSlope = (oldSlope * (ExpectedMeas - calOffset) / (ReportedMeas - calOffset))
         Log("User calibration request received - AdjustSpan",
-            Data = dict(MeasName = MeasName,
-                        OldSlope = oldSlope,
-                        NewSlope = newSlope,
-                        Offset = calOffset))
+            Data=dict(MeasName=MeasName, OldSlope=oldSlope, NewSlope=newSlope, Offset=calOffset))
         self.UserCalibration[MeasName] = (newSlope, calOffset)
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (newSlope, calOffset)
         self._UpdateUserCalibrationFile()
 
     @CmdFIFO.rpc_wrap
-    def RPC_Cal_SetSlopeAndOffset(self, MeasName, Slope = 1, Offset = 0):
+    def RPC_Cal_SetSlopeAndOffset(self, MeasName, Slope=1, Offset=0):
         """Changes both the cal slope and offset for the given MeasName.
 
         - Internal HostCore measured values do not change with this call.
         - Revert to factory defaults with Cal_RestoreFactoryDefaults
 
         """
-        Log("User calibration request received - SetSlopeAndOffset",
-            Data = dict(MeasName = MeasName,
-                        NewSlope = Slope,
-                        NewOffset = Offset))
+        Log("User calibration request received - SetSlopeAndOffset", Data=dict(MeasName=MeasName, NewSlope=Slope, NewOffset=Offset))
         self.UserCalibration[MeasName] = (Slope, Offset)
         for appMeas in self.UserCalAppListDict[MeasName]:
             self.UserCalibration[appMeas] = (Slope, Offset)
@@ -698,7 +707,7 @@ class DataManager(object):
         To restore all factory calibrations, use Cal_RestoreAllFactoryDefaults
 
         """
-        Log("Factory defaults restored for user calibration of measurement", dict(MeasName = MeasName))
+        Log("Factory defaults restored for user calibration of measurement", dict(MeasName=MeasName))
         #just set slope and offset to 1 and 0
         self.UserCalibration[MeasName] = (1, 0)
         for appMeas in self.UserCalAppListDict[MeasName]:
@@ -710,7 +719,7 @@ class DataManager(object):
         """Restores the factory cal (slope = 1, offset = 0) for all measurements.
 
         """
-        Log("Factory default calibration restored for all measured values.", dict(Changed = self.UserCalibration.keys()))
+        Log("Factory default calibration restored for all measured values.", dict(Changed=self.UserCalibration.keys()))
         for MeasName in self.UserCalibration:
             self.UserCalibration[MeasName] = (1, 0)
             for appMeas in self.UserCalAppListDict[MeasName]:
@@ -748,14 +757,25 @@ class DataManager(object):
         return self.InstrData
 
     @CmdFIFO.rpc_wrap
-    def RPC_PulseAnalyzer_Set(self, source, concNameList, targetConc = None, thres1Pair = [0.0, 0.0],
-                              thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
-                              validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0,
-                              bufSize = 500, numPointsToTrigger = 1, numPointsToRelease = 1, armCond = None):
+    def RPC_PulseAnalyzer_Set(self,
+                              source,
+                              concNameList,
+                              targetConc=None,
+                              thres1Pair=[0.0, 0.0],
+                              thres2Pair=[0.0, 0.0],
+                              triggerType="in",
+                              waitTime=0.0,
+                              validTimeAfterTrigger=0.0,
+                              validTimeBeforeEnd=0.0,
+                              timeout=0.0,
+                              bufSize=500,
+                              numPointsToTrigger=1,
+                              numPointsToRelease=1,
+                              armCond=None):
         try:
-            self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
-                                               triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
-                                               timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
+            self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair, triggerType, waitTime,
+                                               validTimeAfterTrigger, validTimeBeforeEnd, timeout, bufSize, numPointsToTrigger,
+                                               numPointsToRelease, armCond)
             self.runPulseAnalyzer = False
             self.addToPulseAnalyzer = False
             return "OK"
@@ -907,7 +927,7 @@ class DataManager(object):
         self.pulseBufferLock.acquire()
         try:
             if len(self.pulseBuffer) >= self.pulseBufferSize:
-                self.pulseBuffer = self.pulseBuffer[-(self.pulseBufferSize-1):]
+                self.pulseBuffer = self.pulseBuffer[-(self.pulseBufferSize - 1):]
             self.pulseBuffer.append(pulseData)
         except:
             pass
@@ -951,7 +971,7 @@ class DataManager(object):
         self.measBufferLock.release()
         return ret
 
-    def startSerial2socket(self,configPath):
+    def startSerial2socket(self, configPath):
         print "Starting serial2socket with configuration %s" % configPath
         app = SingleInstance("RunSerial2Socket")
         if not app.alreadyrunning():
@@ -965,12 +985,12 @@ class DataManager(object):
             return
         self.measBufferLock.acquire()
         try:
-            result = {"measTime":measData.Time}
+            result = {"measTime": measData.Time}
             result["date"] = time.strftime("%Y/%m/%d %H:%M:%S", self.Config.maketimetuple(measData.Time))
             for c in colList:
                 result[c] = measData.Data[c]
             if len(self.measBuffer) >= bufSize:
-                self.measBuffer = self.measBuffer[-(bufSize-1):]
+                self.measBuffer = self.measBuffer[-(bufSize - 1):]
             self.measBuffer.append(result)
         except:
             pass
@@ -990,15 +1010,15 @@ class DataManager(object):
             CRDS_ConfigMonitor.monitor("User calibration changed")
         except Exception, err:
             print "%r" % err
-        Log("User calibration file updated.", dict(Sections = self.UserCalibration.keys()))
+        Log("User calibration file updated.", dict(Sections=self.UserCalibration.keys()))
 
-    def _EnqueueSyncScript(self,sai,startTime,iteration):
+    def _EnqueueSyncScript(self, sai, startTime, iteration):
         assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
-        heapq.heappush(self.syncScriptQueue,(startTime+iteration*sai.Period_s,sai.Period_s,startTime,iteration,sai))
+        heapq.heappush(self.syncScriptQueue, (startTime + iteration * sai.Period_s, sai.Period_s, startTime, iteration, sai))
 
     def _TimeToNextSyncScript(self):
         if self.syncScriptQueue:
-            xeqTime,period,startTime,iteration,sai = self.syncScriptQueue[0]
+            xeqTime, period, startTime, iteration, sai = self.syncScriptQueue[0]
             return xeqTime - time.time()
         else:
             return None
@@ -1008,12 +1028,14 @@ class DataManager(object):
            multiple of the period of the script"""
         self.syncScriptsLaunched = True
         if self.CurrentMeasMode and self.CurrentMeasMode.SyncSetup:
-            Log("Starting synchronous analyzers", dict(Count = len(self.CurrentMeasMode.SyncSetup),
-                SyncAnalyzers = [sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
+            Log(
+                "Starting synchronous analyzers",
+                dict(Count=len(self.CurrentMeasMode.SyncSetup),
+                     SyncAnalyzers=[sai.ReportName for sai in self.CurrentMeasMode.SyncSetup]))
             for sai in self.CurrentMeasMode.SyncSetup:
                 assert isinstance(sai, ModeDef.SyncAnalyzerInfo)
-                startTime = math.ceil(time.time()/sai.Period_s) * sai.Period_s
-                self._EnqueueSyncScript(sai,startTime,0)
+                startTime = math.ceil(time.time() / sai.Period_s) * sai.Period_s
+                self._EnqueueSyncScript(sai, startTime, 0)
             Log("Synchronous analyzers have all been enqueued")
 
     def _ToggleStatusSyncBit(self, SyncInfoObj):
@@ -1039,20 +1061,21 @@ class DataManager(object):
 
     def _RunNextSyncScript(self):
         if self.syncScriptQueue:
-            xeqTime,period,startTime,iteration,sai = heapq.heappop(self.syncScriptQueue)
+            xeqTime, period, startTime, iteration, sai = heapq.heappop(self.syncScriptQueue)
             late = time.time() - xeqTime
             codeObj = self.AnalyzerCode[sai.AnalyzerInfo.ScriptPath]
             scriptArgs = sai.AnalyzerInfo.ScriptArgs
             self._ToggleStatusSyncBit(sai)
-            self._HandleScriptExecution(ScriptCodeObj = codeObj,
-                                        ScriptArgs = scriptArgs,
-                                        ReportSource = sai.ReportName,
-                                        SourceTime_s = xeqTime,  #Want to report the perfect time, not actual time
-                                        DataDict = {}, #no direct data, sync scripts use histories
-                                        )
+            self._HandleScriptExecution(
+                ScriptCodeObj=codeObj,
+                ScriptArgs=scriptArgs,
+                ReportSource=sai.ReportName,
+                SourceTime_s=xeqTime,  #Want to report the perfect time, not actual time
+                DataDict={},  #no direct data, sync scripts use histories
+            )
             if late > 0:
-                bin = math.floor(2*math.log10(late)+6)
-                bin = int(min(max(bin,0),8))
+                bin = math.floor(2 * math.log10(late) + 6)
+                bin = int(min(max(bin, 0), 8))
             else:
                 bin = 0
             if sai.ReportName in self.syncScriptDelayHist:
@@ -1061,32 +1084,32 @@ class DataManager(object):
                 self.syncScriptDelayHist[sai.ReportName] = [0 for bin in range(9)]
 
             if late > self.maxLate:
-                Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late,iteration,sai.ReportName))
+                Log("Max periodic script delay so far %.3fs on iteration %d: %s" % (late, iteration, sai.ReportName))
                 self.maxLate = late
             if late > 0.25:
-                Log("PERIODIC SCRIPT LATE BY %.3fs on iteration %d: %s" % (late,iteration,sai.ReportName), Level = 1)
-            if late > 5*period: # Skip executions if we are very late
-                skip = int(math.floor(late/period))
+                Log("PERIODIC SCRIPT LATE BY %.3fs on iteration %d: %s" % (late, iteration, sai.ReportName), Level=1)
+            if late > 5 * period:  # Skip executions if we are very late
+                skip = int(math.floor(late / period))
                 iteration += skip
-                Log("Skipping %d iterations of synchronous script %s" % (skip,sai.ReportName))
+                Log("Skipping %d iterations of synchronous script %s" % (skip, sai.ReportName))
             # Enqueue next execution time for this script
             if self.syncScriptsLaunched:
-                self._EnqueueSyncScript(sai,startTime,iteration+1)
+                self._EnqueueSyncScript(sai, startTime, iteration + 1)
         else:
             Log("A request to run a sync script occured although none were enqueued")
 
-    def _StopSyncScripts(self, WaitUntilSure = True):
+    def _StopSyncScripts(self, WaitUntilSure=True):
         """Stops the existing sync timer scripts.
         """
         self.syncScriptQueue = []
         self.syncScriptsLaunched = False
-        time.sleep(1)   # Wait to ensure currently running scripts have stopped
+        time.sleep(1)  # Wait to ensure currently running scripts have stopped
         self.syncScriptQueue = []
         Log("Synchronous analyzers have all been stopped.")
 
     def _ChangeMode(self, ModeName):
         """Changes the measurement mode of the DataManager."""
-        if __debug__: Log("Measurement mode change request received", dict(NewMode = ModeName), Level = 0)
+        if __debug__: Log("Measurement mode change request received", dict(NewMode=ModeName), Level=0)
         if self.CurrentMeasMode:
             oldModeName = self.CurrentMeasMode.Name
         else:
@@ -1094,17 +1117,19 @@ class DataManager(object):
         self._StopSyncScripts()
         self.CurrentMeasMode = self.MeasModes[ModeName]
         self._LaunchSyncScripts()
-        Log("Measurement mode changed.", dict(NewMode = ModeName, OldMode = oldModeName))
+        Log("Measurement mode changed.", dict(NewMode=ModeName, OldMode=oldModeName))
 
     def __SetState(self, NewState):
         """Sets the state of the DataManager.  Variable init is done as appropriate."""
         if NewState == self.__State:
             return
 
-        if __debug__: #code helper - make sure state changes are happening only from where we expect
+        if __debug__:  #code helper - make sure state changes are happening only from where we expect
             callerName = sys._getframe(1).f_code.co_name
             if not callerName.startswith("_HandleState_") and not callerName.startswith("_MainLoop"):
-                raise Exception("Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." % callerName)
+                raise Exception(
+                    "Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." %
+                    callerName)
 
         #Do any on-entry state initialization that is needed...
         if NewState == STATE_INIT:
@@ -1126,28 +1151,27 @@ class DataManager(object):
                 #can't be because we need to make InstMgr calls elsewhere where we need
                 #return values, so call it on a thread to avoid any hangup if the
                 #InstMgr is dead...
-                errReportThread = threading.Thread(target = self._ReportInstError, args = (INST_ERROR_DATA_MANAGER, ))
+                errReportThread = threading.Thread(target=self._ReportInstError, args=(INST_ERROR_DATA_MANAGER, ))
                 errReportThread.start()
         elif NewState == STATE_INIT:
             eventLevel = 2
         else:
             eventLevel = 1
         self._Status.UpdateState(self.__State)
-        Log("State changed",
-            dict(State = StateName[NewState],
-                 PreviousState = StateName[self.__LastState]),
-            Level = eventLevel)
+        Log("State changed", dict(State=StateName[NewState], PreviousState=StateName[self.__LastState]), Level=eventLevel)
+
     def _ReportInstError(self, ErrorCode):
         """Small function enabling the InstMgr error reporting call to be called on
         a thread (to get dontcare-like functionality)"""
         self.rdInstMgr.INSTMGR_ReportErrorRpc(ErrorCode)
+
     def _FitterFilter(self, fitterOut):
         # Sort the data queue by timestamp as the primary key and spectrumId
         #  as the secondary key
         self.dataQueueLock.acquire()
         try:
-            avgTimestamp,results,spectrumId = fitterOut
-            if results: heapq.heappush(self.dataQueue,(avgTimestamp,spectrumId,results))
+            avgTimestamp, results, spectrumId = fitterOut
+            if results: heapq.heappush(self.dataQueue, (avgTimestamp, spectrumId, results))
         finally:
             self.dataQueueLock.release()
 
@@ -1156,18 +1180,18 @@ class DataManager(object):
             time.sleep(0.01)
             raise Queue.Empty
 
-        avgTimestamp,spectrumId,results = self.dataQueue[0]
+        avgTimestamp, spectrumId, results = self.dataQueue[0]
         self.dataQueueLock.acquire()
         stragglers = 0
         while avgTimestamp <= self.lastFitAnalyzed:
             heapq.heappop(self.dataQueue)
             stragglers += 1
             if len(self.dataQueue) == 0: break
-            avgTimestamp,spectrumId,results = self.dataQueue[0]
-        if stragglers>0:
+            avgTimestamp, spectrumId, results = self.dataQueue[0]
+        if stragglers > 0:
             self.dataQueueLock.release()
             self.minQueueSamples += 1
-            Log("%d stragglers removed from fitter data queue. MinQueueSamples = %d." % (stragglers,self.minQueueSamples))
+            Log("%d stragglers removed from fitter data queue. MinQueueSamples = %d." % (stragglers, self.minQueueSamples))
             time.sleep(0.01)
             raise Queue.Empty
         # Now coalasce all queue entries with the same timestamp
@@ -1175,10 +1199,10 @@ class DataManager(object):
         #  analyzer
         analyzers = set()
         spectrumNames = set()
-        avgTimestamp,spectrumId,results = self.dataQueue[0]
+        avgTimestamp, spectrumId, results = self.dataQueue[0]
         self.lastFitAnalyzed = avgTimestamp
         while self.lastFitAnalyzed == avgTimestamp:
-            avgTimestamp,spectrumId,results = heapq.heappop(self.dataQueue)
+            avgTimestamp, spectrumId, results = heapq.heappop(self.dataQueue)
             spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
             analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
             if analyzer in self.resultsByAnalyzer:
@@ -1191,7 +1215,7 @@ class DataManager(object):
                     analyzers.add(analyzer)
                     spectrumNames.add(spectrumName)
             if len(self.dataQueue) == 0: break
-            avgTimestamp,spectrumId,results = self.dataQueue[0]
+            avgTimestamp, spectrumId, results = self.dataQueue[0]
         self.dataQueueLock.release()
         measDataList = []
         for name in spectrumNames:
@@ -1201,80 +1225,80 @@ class DataManager(object):
         return measDataList
 
     # def removeStragglers(self):
-        # """Remove entries from the data queue which have timestamps before self.lastFitAnalyzed.
-        # This should be called while holding the dataQueueLock"""
-        # if len(self.dataQueue) == 0: return
-        # avgTimestamp,spectrumId,results = self.dataQueue[0]
-        # stragglers = 0
-        # while avgTimestamp <= self.lastFitAnalyzed:
-            # print avgTimestamp, self.lastFitAnalyzed
-            # heapq.heappop(self.dataQueue)
-            # stragglers += 1
-            # if len(self.dataQueue) == 0: break
-            # avgTimestamp,spectrumId,results = self.dataQueue[0]
-        # if stragglers>0:
-            # Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
+    # """Remove entries from the data queue which have timestamps before self.lastFitAnalyzed.
+    # This should be called while holding the dataQueueLock"""
+    # if len(self.dataQueue) == 0: return
+    # avgTimestamp,spectrumId,results = self.dataQueue[0]
+    # stragglers = 0
+    # while avgTimestamp <= self.lastFitAnalyzed:
+    # print avgTimestamp, self.lastFitAnalyzed
+    # heapq.heappop(self.dataQueue)
+    # stragglers += 1
+    # if len(self.dataQueue) == 0: break
+    # avgTimestamp,spectrumId,results = self.dataQueue[0]
+    # if stragglers>0:
+    # Log("%d stragglers removed from fitter data queue. Consider increasing timeout." % stragglers)
 
     # def getFitterData1(self,timeout):
-        # """Get the data with the most recent timestamp from self.dataQueue, where the result
-        # dictionaries with exactly equal timestamps must be merged. Keep track of latest timestamp
-        # that has been returned so that we can discard stragglers due to fitters which have failed.
-        # If thead(=time at the head of the queue) is later than the current time-timeout, wait until
-        # thead+timeout before processing the data and returning anything.
-        # """
-        # self.dataQueueLock.acquire()
-        # self.removeStragglers()
-        # if len(self.dataQueue) == 0:
-            # # If no data are available, wait and try again at the end
-            # #  of the timeout period
-            # self.dataQueueLock.release()
-            # time.sleep(timeout)
-            # self.dataQueueLock.acquire()
-            # self.removeStragglers()
-            # if len(self.dataQueue) == 0:
-                # # There really is nothing available
-                # self.dataQueueLock.release()
-                # raise Queue.Empty
-        # # Next check if we must wait because it is too soon to coalasce
-        # #  results with the same timestamp
-        # avgTimestamp,spectrumId,results = self.dataQueue[0]
-        # now = timestamp.getTimestamp()
-        # waitTime = 0.001*(avgTimestamp-now)+timeout
-        # if waitTime>0.0:
-            # self.dataQueueLock.release()
-            # time.sleep(waitTime)
-            # self.dataQueueLock.acquire()
-            # self.removeStragglers()
-            # avgTimestamp,spectrumId,results = self.dataQueue[0]
-        # # Now coalasce all queue entries with the same timestamp
-        # #  and make a list of MeasData objects from them, one for each
-        # #  spectrum name
-        # analyzers = set()
-        # spectrumNames = set()
-        # self.lastFitAnalyzed = avgTimestamp
-        # print 0.001*(timestamp.getTimestamp() - avgTimestamp)
-        # while self.lastFitAnalyzed == avgTimestamp:
-            # avgTimestamp,spectrumId,results = heapq.heappop(self.dataQueue)
-            # spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
-            # analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
-            # if analyzer in self.resultsByAnalyzer:
-                # self.resultsByAnalyzer[analyzer].update(results)
-                # analyzers.add(analyzer)
-                # spectrumNames.add(spectrumName)
-            # else:
-                # if results:
-                    # self.resultsByAnalyzer[analyzer] = results.copy()
-                    # analyzers.add(analyzer)
-                    # spectrumNames.add(spectrumName)
-            # if len(self.dataQueue) == 0: break
-            # avgTimestamp,spectrumId,results = self.dataQueue[0]
-        # self.dataQueueLock.release()
-        # measDataList = []
-        # for name in spectrumNames:
-            # analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
-            # results = self.resultsByAnalyzer[analyzer]
-            # measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
-        # return measDataList
+    # """Get the data with the most recent timestamp from self.dataQueue, where the result
+    # dictionaries with exactly equal timestamps must be merged. Keep track of latest timestamp
+    # that has been returned so that we can discard stragglers due to fitters which have failed.
+    # If thead(=time at the head of the queue) is later than the current time-timeout, wait until
+    # thead+timeout before processing the data and returning anything.
+    # """
+    # self.dataQueueLock.acquire()
+    # self.removeStragglers()
+    # if len(self.dataQueue) == 0:
+    # # If no data are available, wait and try again at the end
+    # #  of the timeout period
+    # self.dataQueueLock.release()
+    # time.sleep(timeout)
+    # self.dataQueueLock.acquire()
+    # self.removeStragglers()
+    # if len(self.dataQueue) == 0:
+    # # There really is nothing available
+    # self.dataQueueLock.release()
+    # raise Queue.Empty
+    # # Next check if we must wait because it is too soon to coalasce
+    # #  results with the same timestamp
+    # avgTimestamp,spectrumId,results = self.dataQueue[0]
+    # now = timestamp.getTimestamp()
+    # waitTime = 0.001*(avgTimestamp-now)+timeout
+    # if waitTime>0.0:
+    # self.dataQueueLock.release()
+    # time.sleep(waitTime)
+    # self.dataQueueLock.acquire()
+    # self.removeStragglers()
+    # avgTimestamp,spectrumId,results = self.dataQueue[0]
+    # # Now coalasce all queue entries with the same timestamp
+    # #  and make a list of MeasData objects from them, one for each
+    # #  spectrum name
+    # analyzers = set()
+    # spectrumNames = set()
+    # self.lastFitAnalyzed = avgTimestamp
+    # print 0.001*(timestamp.getTimestamp() - avgTimestamp)
+    # while self.lastFitAnalyzed == avgTimestamp:
+    # avgTimestamp,spectrumId,results = heapq.heappop(self.dataQueue)
+    # spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
+    # analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
+    # if analyzer in self.resultsByAnalyzer:
+    # self.resultsByAnalyzer[analyzer].update(results)
+    # analyzers.add(analyzer)
+    # spectrumNames.add(spectrumName)
+    # else:
+    # if results:
+    # self.resultsByAnalyzer[analyzer] = results.copy()
+    # analyzers.add(analyzer)
+    # spectrumNames.add(spectrumName)
+    # if len(self.dataQueue) == 0: break
+    # avgTimestamp,spectrumId,results = self.dataQueue[0]
+    # self.dataQueueLock.release()
+    # measDataList = []
+    # for name in spectrumNames:
+    # analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
+    # results = self.resultsByAnalyzer[analyzer]
+    # measDataList.append(MeasData(name, timestamp.unixTime(avgTimestamp), results))
+    # return measDataList
 
     def _SensorFilter(self, obj):
         """Updates the latest sensor readings.
@@ -1283,18 +1307,19 @@ class DataManager(object):
         broadcast.
 
         """
-        if 0: assert isinstance(obj, interface.SensorEntryType) #for Wing
+        if 0: assert isinstance(obj, interface.SensorEntryType)  #for Wing
 
-        streamTime  = obj.timestamp
+        streamTime = obj.timestamp
         sensorName = interface.STREAM_MemberTypeDict[obj.streamNum][len("STREAM_"):]
         sensorValue = obj.value
 
         self.LatestSensorData[sensorName] = sensorValue
         #TODO: May want to fix the streamTime in the next edition, but relative *should* be fine...
-        self._AddToHistory(self.SensorHistory, {sensorName:sensorValue}, streamTime)
+        self._AddToHistory(self.SensorHistory, {sensorName: sensorValue}, streamTime)
+
     def _InstMgrStatusFilter(self, obj):
         """Updates the local (latest) copy of the instrument manager status bits."""
-        if 0: assert isinstance(obj, AppStatus.STREAM_Status) #for Wing
+        if 0: assert isinstance(obj, AppStatus.STREAM_Status)  #for Wing
         self.LatestInstMgrStatus = obj.status
 
     def _HandleState_INIT(self):
@@ -1307,7 +1332,7 @@ class DataManager(object):
         try:
             self.InitCount += 1
             if self.InitCount > 1:
-                Log("Re-initializing application", dict(InitCount = self.InitCount))
+                Log("Re-initializing application", dict(InitCount=self.InitCount))
             #Load the main application configuration settings...
             self.cp = self.Config.Load(self.ConfigPath)
             self.minQueueSamples = self.Config.fitterResequencerLength
@@ -1317,7 +1342,7 @@ class DataManager(object):
                 self.killSerialThread()
                 self.serialThread.join(2.0)
                 if self.serialThread.isAlive():
-                    Log("Cannot kill old serial output thread",Level=2)
+                    Log("Cannot kill old serial output thread", Level=2)
                     raise RuntimeError("Cannot kill old serial output thread")
                 self.serialThread = None
             if self.serial != None:
@@ -1326,14 +1351,14 @@ class DataManager(object):
             if self.Config.useSerial:
                 try:
                     self.serial = SerialInterface.SerialInterface()
-                    self.serial.config( port = self.Config.serialPort,
-                                        baudrate = self.Config.serialBaud,
-                                        bytesize = self.Config.serialDataBits,
-                                        parity = self.Config.serialParity,
-                                        stopbits = self.Config.serialStopBits,
-                                        xonxoff = self.Config.xonxoff,
-                                        rtscts = self.Config.rtscts,
-                                        timeout = 1 )
+                    self.serial.config(port=self.Config.serialPort,
+                                       baudrate=self.Config.serialBaud,
+                                       bytesize=self.Config.serialDataBits,
+                                       parity=self.Config.serialParity,
+                                       stopbits=self.Config.serialStopBits,
+                                       xonxoff=self.Config.xonxoff,
+                                       rtscts=self.Config.rtscts,
+                                       timeout=1)
                     self.serialString = self.Config.emptyString
                     self.serial.open()
                     self.serialThread = threading.Thread(target=self.serialInterfaceSender)
@@ -1351,7 +1376,7 @@ class DataManager(object):
 
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionPath)
-            Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
+            Log("Mode definitions loaded", dict(ModeNames=self.MeasModes.keys()))
             ##Load the instrument data...
             for path in self.Config.InstrDataPaths:
                 cp = CustomConfigObj(path, ignore_option_case=False)
@@ -1365,7 +1390,7 @@ class DataManager(object):
                 if chr(0) in fp.read(): raise Exception("User calibration file corrupted - likely due to improper shutdown")
                 fp.close()
                 #Now read any cals...
-                cp = CustomConfigObj(self.Config.UserCalibrationPath, ignore_option_case=False, list_values = True)
+                cp = CustomConfigObj(self.Config.UserCalibrationPath, ignore_option_case=False, list_values=True)
                 for measName in cp.list_sections():
                     slope = cp.getfloat(measName, "slope")
                     offset = cp.getfloat(measName, "offset")
@@ -1395,13 +1420,13 @@ class DataManager(object):
                     allAnalyzerPaths.append(sai.AnalyzerInfo.ScriptPath)
             import sets
             uniqueAnalyzerPaths = list(sets.Set(allAnalyzerPaths))
-            Log("Starting compilation of identified analyzer scripts", dict(Count = len(uniqueAnalyzerPaths)))
+            Log("Starting compilation of identified analyzer scripts", dict(Count=len(uniqueAnalyzerPaths)))
             for path in uniqueAnalyzerPaths:
-                sourceString = file(path,"r").read()
+                sourceString = file(path, "r").read()
                 if sys.platform != 'win32':
-                    sourceString = sourceString.replace("\r","")
-                Log("Compiling analyzer script", dict(Path = path))
-                codeObj = compile(sourceString, path, "exec") #providing path accurately allows debugging of script
+                    sourceString = sourceString.replace("\r", "")
+                Log("Compiling analyzer script", dict(Path=path))
+                codeObj = compile(sourceString, path, "exec")  #providing path accurately allows debugging of script
                 self.AnalyzerCode[path] = codeObj
             Log("Analyzer script compilation complete")
             # Deal with debug options...
@@ -1412,14 +1437,14 @@ class DataManager(object):
 
             if self.Config.StartingMeasMode:
                 self.CurrentMeasMode = self.MeasModes[self.Config.StartingMeasMode]
-                Log("Current mode name initialized", dict(Name = self.Config.StartingMeasMode))
+                Log("Current mode name initialized", dict(Name=self.Config.StartingMeasMode))
 
             # Handle peripheral interface
             self.CRDS_PeriphIntrf = None
             self.periphIntrfCols = []
             if self.Config.periphIntrfConfig:
                 try:
-                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig,self.DataBroadcaster)
+                    self.CRDS_PeriphIntrf = PeriphIntrf(self.Config.periphIntrfConfig, self.DataBroadcaster)
                     (rawDict, syncDict) = parsePeriphIntrfConfig(self.Config.periphIntrfConfig)
                     self.periphIntrfCols = rawDict["data"][:]
                 except Exception, err:
@@ -1438,15 +1463,15 @@ class DataManager(object):
 
             self.__SetState(STATE_READY)
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             self.__SetState(STATE_ERROR)
 
     def _configPulseAnalyzerFromIni(self):
         source = self.cp.get("PulseAnalyzer", "source")
-        concNameList = [conc.strip() for conc in self.cp.get("PulseAnalyzer","concNameList").split(",")]
+        concNameList = [conc.strip() for conc in self.cp.get("PulseAnalyzer", "concNameList").split(",")]
         targetConc = self.cp.get("PulseAnalyzer", "targetConc")
-        thres1Pair = [float(t) for t in self.cp.get("PulseAnalyzer","thres1Pair").split(",")]
-        thres2Pair = [float(t) for t in self.cp.get("PulseAnalyzer","thres2Pair").split(",")]
+        thres1Pair = [float(t) for t in self.cp.get("PulseAnalyzer", "thres1Pair").split(",")]
+        thres2Pair = [float(t) for t in self.cp.get("PulseAnalyzer", "thres2Pair").split(",")]
         triggerType = self.cp.get("PulseAnalyzer", "triggerType")
         waitTime = self.cp.getfloat("PulseAnalyzer", "waitTime")
         validTimeAfterTrigger = self.cp.getfloat("PulseAnalyzer", "validTimeAfterTrigger")
@@ -1460,9 +1485,9 @@ class DataManager(object):
             armCond = [float(t) for t in armCond.split(",")]
         except:
             armCond = None
-        self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair,
-                                           triggerType, waitTime, validTimeAfterTrigger, validTimeBeforeEnd,
-                                           timeout, bufSize, numPointsToTrigger, numPointsToRelease, armCond)
+        self.pulseAnalyzer = PulseAnalyzer(source, concNameList, targetConc, thres1Pair, thres2Pair, triggerType, waitTime,
+                                           validTimeAfterTrigger, validTimeBeforeEnd, timeout, bufSize, numPointsToTrigger,
+                                           numPointsToRelease, armCond)
         msg = "Pre-defined pulse analyzer started. (%s, %s, %s, %s)" % (targetConc, thres1Pair, thres2Pair, triggerType)
         print msg
         Log(msg)
@@ -1490,7 +1515,7 @@ class DataManager(object):
             else:
                 exitState = STATE_READY
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             exitState = STATE_ERROR
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_READY has a code error - the exitState has not been specified!!")
@@ -1529,7 +1554,7 @@ class DataManager(object):
             except Queue.Empty:
                 exitState = STATE_ENABLED
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             exitState = STATE_ERROR
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_ENABLED has a code error - the exitState has not been specified!!")
@@ -1570,13 +1595,11 @@ class DataManager(object):
         wait_s = 2
         self.RpcThread.join(wait_s)
         if self.RpcThread.isAlive():
-            Log("Timed out while waiting for RpcServerThread to close.  Terminating rudely!",
-                Data = dict(WaitTime_s = wait_s),
-                Level = 2)
+            Log("Timed out while waiting for RpcServerThread to close.  Terminating rudely!", Data=dict(WaitTime_s=wait_s), Level=2)
         if self._FatalError:
-            Log("DataManager terminated due to a fatal error.", Level = 3)
+            Log("DataManager terminated due to a fatal error.", Level=3)
         else:
-            Log("DataManager exited due to shutdown request.", Level = 2)
+            Log("DataManager exited due to shutdown request.", Level=2)
 
     def Start(self):
         self._MainLoop()
@@ -1604,10 +1627,10 @@ class DataManager(object):
                 HistoryDict[k].popleft()
         #endfor
 
-    def _SendSerial(self,measData):
+    def _SendSerial(self, measData):
         # Examine measData and format it for serial output if its report source name matches that specified in the configuration file
         if self.serial == None: return
-        if measData.Source != self.Config.serialSource : return
+        if measData.Source != self.Config.serialSource: return
         result = []
         badKeys = []
         for c in self.Config.serialColumns:
@@ -1621,7 +1644,11 @@ class DataManager(object):
         if badKeys:
             if self.lastTimeGood:
                 Log("Data for column(s) not found for serial output",
-                    Data={"BadKeys":badKeys,"ReportSource":measData.Source},Level=2)
+                    Data={
+                        "BadKeys": badKeys,
+                        "ReportSource": measData.Source
+                    },
+                    Level=2)
             self.lastTimeGood = False
             return
         else:
@@ -1631,7 +1658,11 @@ class DataManager(object):
                 resultAsString = self.Config.serialFormat % tuple(result)
             except:
                 Log("Bad format string for serial output data",
-                    Data={"Format":self.Config.serialFormat,"Data":tuple(result)},Level=2)
+                    Data={
+                        "Format": self.Config.serialFormat,
+                        "Data": tuple(result)
+                    },
+                    Level=2)
                 return
             if self.Config.useSerialPoll:
                 self.serialPollLock.acquire()
@@ -1648,12 +1679,7 @@ class DataManager(object):
             print "Peripheral Interface was interrupted"
             self.CRDS_PeriphIntrf = None
 
-    def _HandleScriptExecution(self,
-                               ScriptCodeObj,
-                               ScriptArgs,
-                               ReportSource,
-                               SourceTime_s,
-                               DataDict):
+    def _HandleScriptExecution(self, ScriptCodeObj, ScriptArgs, ReportSource, SourceTime_s, DataDict):
         """Executes the provided script with the input information provided.
 
         All reported data from the script is broadcasted.
@@ -1667,8 +1693,12 @@ class DataManager(object):
         # Trap for time being None
         if SourceTime_s == None:
             Log("SourceTime invalid in data manager",
-                Data={"SourceTime_s":SourceTime_s,"lastSourceTime_s":self.lastSourceTime_s,
-                      "CompiledFile":ScriptCodeObj.co_filename,"ReportSource":ReportSource},
+                Data={
+                    "SourceTime_s": SourceTime_s,
+                    "lastSourceTime_s": self.lastSourceTime_s,
+                    "CompiledFile": ScriptCodeObj.co_filename,
+                    "ReportSource": ReportSource
+                },
                 Level=2)
             self.lastSourceTime_s = None
             return
@@ -1689,30 +1719,30 @@ class DataManager(object):
         else:
             periphIntrfFunc = None
 
-        ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj = ScriptCodeObj,
-                                             ScriptArgs = ScriptArgs,
-                                             SourceTime_s = SourceTime_s,
-                                             DataDict = DataDict,
-                                             InstrDataDict = self.InstrData,
-                                             SensorDataDict = self.LatestSensorData,
-                                             DataHistory = self.DataHistory,
-                                             ReportHistory = self.ReportHistory,
-                                             SensorHistory = self.SensorHistory,
-                                             DriverRpcServer = CRDS_Driver,
-                                             InstrumentStatus = self.LatestInstMgrStatus,
-                                             MeasSysRpcServer = CRDS_MeasSys,
-                                             FreqConvRpcServer = CRDS_FreqConv,
-                                             SpecCollRpcServer = CRDS_SpecColl,
-                                             DataLoggerRpcServer = CRDS_DataLogger,
-                                             FsrHoppingControllerRpcServer = CRDS_FsrHoppingController,
-                                             PeriphIntrfFunc = periphIntrfFunc,
-                                             PeriphIntrfCols = self.periphIntrfCols,
-                                             SerialInterface = self.serial,
-                                             ScriptName = ReportSource,
-                                             ExcLogFunc = LogExc,
-                                             UserCalDict = UserCalDict,
-                                             CalEnabled = self.calEnabled,
-                                             Options = self.options)
+        ret = ScriptRunner.RunAnalysisScript(ScriptCodeObj=ScriptCodeObj,
+                                             ScriptArgs=ScriptArgs,
+                                             SourceTime_s=SourceTime_s,
+                                             DataDict=DataDict,
+                                             InstrDataDict=self.InstrData,
+                                             SensorDataDict=self.LatestSensorData,
+                                             DataHistory=self.DataHistory,
+                                             ReportHistory=self.ReportHistory,
+                                             SensorHistory=self.SensorHistory,
+                                             DriverRpcServer=CRDS_Driver,
+                                             InstrumentStatus=self.LatestInstMgrStatus,
+                                             MeasSysRpcServer=CRDS_MeasSys,
+                                             FreqConvRpcServer=CRDS_FreqConv,
+                                             SpecCollRpcServer=CRDS_SpecColl,
+                                             DataLoggerRpcServer=CRDS_DataLogger,
+                                             FsrHoppingControllerRpcServer=CRDS_FsrHoppingController,
+                                             PeriphIntrfFunc=periphIntrfFunc,
+                                             PeriphIntrfCols=self.periphIntrfCols,
+                                             SerialInterface=self.serial,
+                                             ScriptName=ReportSource,
+                                             ExcLogFunc=LogExc,
+                                             UserCalDict=UserCalDict,
+                                             CalEnabled=self.calEnabled,
+                                             Options=self.options)
         #unpack the returned tuple (space saving above)...
         (reportDict, forwardDict, newDataDict, measGood, reportSource_out) = ret
         self._Status.UpdateStatusBit(STATUS_MASK_Analyzing, False)
@@ -1757,9 +1787,7 @@ class DataManager(object):
                 try:
                     measValue = float(measValue)
                 except:
-                    Log("Data reported from script is not a number",
-                        Data = {"measName":measName,"measValue":measValue},
-                        Level=2)
+                    Log("Data reported from script is not a number", Data={"measName": measName, "measValue": measValue}, Level=2)
                 if self.UserCalibration.has_key(measName):
                     try:
                         slope = self.UserCalibration[measName][USERCAL_SLOPE_INDEX]
@@ -1771,11 +1799,11 @@ class DataManager(object):
             # - this is the AND of what the script already decided, and what the instrument
             #   conditions are indicating.  All have to indicate good or it isn't.
             if not self.noInstMgr:
-                pressureLocked =    currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
-                cavityTempLocked =  currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+                pressureLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_PRESSURE_LOCKED
+                cavityTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_CAVITY_TEMP_LOCKED
                 warmboxTempLocked = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED
-                warmingUp =         currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
-                systemError =       currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
+                warmingUp = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_WARMING_UP
+                systemError = currentInstMgrStatus & InstMgrInc.INSTMGR_STATUS_SYSTEM_ERROR
                 measGood = measGood and pressureLocked \
                                     and cavityTempLocked \
                                     and warmboxTempLocked \
@@ -1820,7 +1848,8 @@ class DataManager(object):
         for dataPacketLabel in forwardDict.keys():
             dataPacketDict = forwardDict[dataPacketLabel]
             #Force a + prefix on all forwarded data labels...
-            self.forwardedDataQueue.append(MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
+            self.forwardedDataQueue.append(
+                MeasData("+%s" % dataPacketLabel, rptSourceTime_s, dataPacketDict, Mode=self.RPC_Mode_Get()))
         time.sleep(0)
 
     def _AnalyzeData(self, Data):
@@ -1834,8 +1863,9 @@ class DataManager(object):
         if Data.Source in self.CurrentMeasMode.Analyzers:
             analyzerPath = self.CurrentMeasMode.Analyzers[Data.Source].ScriptPath
         else:
-            Log("Analyzer path not found for given data source! Data source = %s, Analyzers are %s"
-                   % (Data.Source, self.CurrentMeasMode.Analyzers.keys()),Level=2)
+            Log("Analyzer path not found for given data source! Data source = %s, Analyzers are %s" %
+                (Data.Source, self.CurrentMeasMode.Analyzers.keys()),
+                Level=2)
             return
         if not self.AnalyzerCode.has_key(analyzerPath):
             #may not always analyze!  Might just let the history collect
@@ -1845,11 +1875,12 @@ class DataManager(object):
         analyzerCode = self.AnalyzerCode[analyzerPath]
         analyzerArgs = self.CurrentMeasMode.Analyzers[Data.Source].ScriptArgs
         #Note that "currentDataDict[k] == self.DataHistory[k][-1]" is now true
-        self._HandleScriptExecution(ScriptCodeObj = analyzerCode,
-                                    ScriptArgs = analyzerArgs,
-                                    ReportSource = os.path.split(analyzerPath)[1][:-3],
-                                    SourceTime_s = measTime,
-                                    DataDict = currentDataDict)
+        self._HandleScriptExecution(ScriptCodeObj=analyzerCode,
+                                    ScriptArgs=analyzerArgs,
+                                    ReportSource=os.path.split(analyzerPath)[1][:-3],
+                                    SourceTime_s=measTime,
+                                    DataDict=currentDataDict)
+
     #endclass (DataManager)
 HELP_STRING = \
 """\
@@ -1863,8 +1894,11 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -1906,13 +1940,17 @@ def HandleCommandSwitches():
         noInstMgr = False
 
     return (configFile, noInstMgr, executeTest, options)
+
+
 def ExecuteTest(DM):
     """A self test executed via the --test command-line switch."""
     print "No self test implemented yet!"
+
+
 def main():
     #Get and handle the command line options...
     configFile, noInstMgr, test, options = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
     try:
         app = DataManager(configFile, noInstMgr, options)
         if test:
@@ -1922,13 +1960,14 @@ def main():
         if __debug__: raise
         LogExc("Exception trapped outside DataManager execution")
 
+
 if __name__ == "__main__":
     try:
         main()
     except:
         Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = traceback.format_exc())
+            Data=dict(Note="<See verbose for debug info>"),
+            Level=3,
+            Verbose=traceback.format_exc())
     Log("Exiting program")
     sys.stdout.flush()

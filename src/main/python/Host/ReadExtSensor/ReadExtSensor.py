@@ -24,28 +24,30 @@ from Host.Common.SerIntrf import SerIntrf
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_MEAS_SYSTEM, RPC_PORT_READ_EXT_SENSOR
 from Host.Common.EventManagerProxy import *
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
+
 class ReadExtSensor(object):
     def __init__(self, configFile):
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_READ_EXT_SENSOR),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = __version__,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=__version__,
+                                               threaded=True)
 
-        self.measSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % (RPC_PORT_MEAS_SYSTEM,),ClientName="ReadExtSensor")
+        self.measSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % (RPC_PORT_MEAS_SYSTEM, ),
+                                                        ClientName="ReadExtSensor")
 
         config = CustomConfigObj(configFile)
         self.comPort = config.get("Setup", "comPort", "")
         self.queryCommand = config.get("Setup", "queryCommand")
-        self.sampleInterval = 1.0/config.getfloat("Setup", "sampleRateHz")
+        self.sampleInterval = 1.0 / config.getfloat("Setup", "sampleRateHz")
         self.dataColumn = config.get("Setup", "dataColumn")
         self.slope = config.getfloat("Setup", "slope")
         self.offset = config.getfloat("Setup", "offset")
@@ -56,7 +58,7 @@ class ReadExtSensor(object):
             # Find the dynamic COM port
             rotValve = None
             for p in range(100):
-                print "Testing COM%d...\n" % (p+1)
+                print "Testing COM%d...\n" % (p + 1)
                 if self.externalSensor:
                     self.externalSensor.close()
                     self.externalSensor = None
@@ -70,7 +72,7 @@ class ReadExtSensor(object):
                     self.externalSensor.sendString("us")
                     status = self.externalSensor.getLine()
                     if "ok" in status:
-                        print "External sensor found at COM%d...\n"% (p+1)
+                        print "External sensor found at COM%d...\n" % (p + 1)
                         self.externalSensorFound = True
                         break
                 except:
@@ -84,20 +86,20 @@ class ReadExtSensor(object):
                 raise Exception, "External sensor not available"
         else:
             try:
-                self.comPort = "COM%d" % (int(self.comPort)+1)
+                self.comPort = "COM%d" % (int(self.comPort) + 1)
             except:
                 pass
             self.externalSensor = SerIntrf(self.comPort)
             self.externalSensor.open()
             self.externalSensorFound = True
-            print "External sensor located at %s...\n"% (self.comPort)
+            print "External sensor located at %s...\n" % (self.comPort)
 
     def read(self):
         try:
             while True:
                 try:
                     self.externalSensor.sendString(self.queryCommand)
-                    reading = self.offset + float(self.externalSensor.getLine())*self.slope
+                    reading = self.offset + float(self.externalSensor.getLine()) * self.slope
                     self.measSystemRpc.Backdoor.SetData(self.dataColumn, reading)
                 except Exception, err:
                     print err
@@ -107,7 +109,7 @@ class ReadExtSensor(object):
         print "ReadExtSensor stopped."
 
     def runApp(self):
-        rpcThread = threading.Thread(target = self.read)
+        rpcThread = threading.Thread(target=self.read)
         rpcThread.setDaemon(True)
         rpcThread.start()
         self.RpcServer.serve_forever()
@@ -120,8 +122,11 @@ Where the options can be a combination of the following:
 -c                   Specify a config file.  Default = "./ReadExtSensor.ini"
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -135,11 +140,11 @@ def HandleCommandSwitches():
 
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
 
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
@@ -154,6 +159,7 @@ def HandleCommandSwitches():
 
     return (configFile)
 
+
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
@@ -165,7 +171,8 @@ def main():
     except Exception, E:
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+        Log(msg, Level=3, Verbose="Exception = %s %r" % (E, E))
+
 
 if __name__ == "__main__":
     main()

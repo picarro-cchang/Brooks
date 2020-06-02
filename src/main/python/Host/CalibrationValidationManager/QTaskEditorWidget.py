@@ -12,9 +12,10 @@ from PyQt4 import QtCore, QtGui
 from collections import OrderedDict
 from Host.Common.configobj import ConfigObj
 
+
 class MyGasSelectorComboBox(QtGui.QComboBox):
-    def __init__(self, default_choice = "Skip", parent = None):
-        super(MyGasSelectorComboBox,self).__init__()
+    def __init__(self, default_choice="Skip", parent=None):
+        super(MyGasSelectorComboBox, self).__init__()
         self.addItems(["Skip", "GAS0", "GAS1", "GAS2", "GAS3"])
         self.setCurrentIndex(self.findText(default_choice))
         return
@@ -23,10 +24,11 @@ class MyGasSelectorComboBox(QtGui.QComboBox):
         # Discard wheel input as requested
         return
 
+
 class QTaskEditorWidget(QtGui.QWidget):
     def __init__(self, parent=None):
         QtGui.QWidget.__init__(self)
-        self.setLayout( self._init_gui() )
+        self.setLayout(self._init_gui())
         self._set_connections()
         self._disable_undo_save()
         self.isEditing = False
@@ -42,7 +44,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         self.taskDictCB = OrderedDict()
         task_id = 0
         # col = 0
-        for col in xrange(0,4,2):
+        for col in xrange(0, 4, 2):
             for row in xrange(2):
                 cb = MyGasSelectorComboBox()
                 cb.setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -51,7 +53,7 @@ class QTaskEditorWidget(QtGui.QWidget):
                 self.taskDictCB[key] = cb
                 lbl = QtGui.QLabel(str)
                 tgl.addWidget(lbl, row, col, QtCore.Qt.AlignRight)
-                tgl.addWidget(cb, row, col+1, QtCore.Qt.AlignLeft)
+                tgl.addWidget(cb, row, col + 1, QtCore.Qt.AlignLeft)
                 task_id = task_id + 1
 
         self.linearRegressionValidationRB = QtGui.QRadioButton("3 or 4 Gas Linear Regression Validation")
@@ -81,7 +83,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         gb.setLayout(hb)
 
         mgl = QtGui.QGridLayout()
-        mgl.setContentsMargins(10,0,10,0)
+        mgl.setContentsMargins(10, 0, 10, 0)
         mgl.addWidget(gb, 0, 0)
         return mgl
 
@@ -122,6 +124,7 @@ class QTaskEditorWidget(QtGui.QWidget):
         self._undoBtn.setEnabled(True)
         self._saveBtn.setEnabled(True)
         self.isEditing = True
+
     # def _widget_changed(self):
     #     print("Something changed!")
     #     return
@@ -250,7 +253,7 @@ class QTaskEditorWidget(QtGui.QWidget):
             dialog.setText(not_saved_str + error_msg)
             dialog.setIcon(QtGui.QMessageBox.Critical)
             dialog.setStandardButtons(QtGui.QMessageBox.Ok)
-            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             dialog.exec_()
         if ok and len(error_msg):
             dialog = QtGui.QMessageBox(self)
@@ -258,7 +261,7 @@ class QTaskEditorWidget(QtGui.QWidget):
             dialog.setIcon(QtGui.QMessageBox.Warning)
             dialog.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
             dialog.setDefaultButton(QtGui.QMessageBox.Cancel)
-            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             rtn = dialog.exec_()
             if rtn == QtGui.QMessageBox.Cancel:
                 ok = False

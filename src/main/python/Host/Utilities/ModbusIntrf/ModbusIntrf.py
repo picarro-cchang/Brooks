@@ -19,6 +19,7 @@ import Host.Utilities.ModbusIntrf.defines as cst
 import _winreg as winreg
 import Host.Utilities.ModbusIntrf.modbus_rtu as modbus_rtu
 
+
 def scanSerialPorts():
     """ Uses the Win32 registry to return an
         iterator of serial (COM) ports
@@ -28,13 +29,14 @@ def scanSerialPorts():
     try:
         key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, path)
     except WindowsError:
-        raise #IterationError
+        raise  #IterationError
     for i in itertools.count():
         try:
             val = winreg.EnumValue(key, i)
             yield str(val[1])
         except EnvironmentError:
             break
+
 
 class ModbusIntrf(object):
     def __init__(self):
@@ -88,7 +90,7 @@ class ModbusIntrf(object):
     def testIntrf(self):
         try:
             ret = self.master.execute(1, cst.READ_HOLDING_REGISTERS, 2014, quantity_of_x=1)
-            if ret[0] in [1,2,3]:
+            if ret[0] in [1, 2, 3]:
                 print "Interface test succeeded"
                 return
             else:
@@ -103,6 +105,7 @@ class ModbusIntrf(object):
             self.ser.close()
             self.ser = None
             raise
+
 
 if __name__ == "__main__":
     m = ModbusIntrf()

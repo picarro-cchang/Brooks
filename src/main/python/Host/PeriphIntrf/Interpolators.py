@@ -2,8 +2,8 @@
 Copyright 2014 Picarro Inc.
 """
 
-class Interpolators(object):
 
+class Interpolators(object):
     @staticmethod
     def linear(pPair, tPair, t):
         try:
@@ -12,9 +12,9 @@ class Interpolators(object):
             pPair = [float(p) for p in pPair]
             dtime = tPair[1] - tPair[0]
             if dtime == 0:
-                return 0.5*(pPair[0] + pPair[1])
+                return 0.5 * (pPair[0] + pPair[1])
             else:
-                return ((t-tPair[0])*pPair[1] + (tPair[1]-t)*pPair[0]) / dtime
+                return ((t - tPair[0]) * pPair[1] + (tPair[1] - t) * pPair[0]) / dtime
         except:
             return None
 

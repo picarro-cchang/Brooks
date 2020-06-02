@@ -61,6 +61,8 @@ def fixed_width(text, width):
             return result
         result.append(atom)
         start += width
+
+
 #
 # Longitude and latitude handling routines
 #
@@ -85,8 +87,8 @@ def distVincenty(lat1, lng1, lat2, lng2):
     for _k in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) +
-                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) * (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
         if sinSigma == 0:
             return 0  # co-incident points
         cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
@@ -109,9 +111,10 @@ def distVincenty(lat1, lng1, lat2, lng2):
     uSq = cosSqAlpha * (a * a - b * b) / (b * b)
     A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
     B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
-    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) -
-                 B / 6 * cos2SigmaM * (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM *
+                                                       (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
     return b * A * (sigma - deltaSigma)
+
 
 def compassBearing(pointA, pointB):
     """
@@ -144,8 +147,7 @@ def compassBearing(pointA, pointB):
     diffLong = math.radians(pointB[1] - pointA[1])
 
     x = math.sin(diffLong) * math.cos(lat2)
-    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1)
-            * math.cos(lat2) * math.cos(diffLong))
+    y = math.cos(lat1) * math.sin(lat2) - (math.sin(lat1) * math.cos(lat2) * math.cos(diffLong))
 
     initial_bearing = math.atan2(x, y)
 
@@ -157,6 +159,7 @@ def compassBearing(pointA, pointB):
 
     return compass_bearing
 
+
 def toXY(lat, lng, lat_ref, lng_ref):
     x = distVincenty(lat_ref, lng_ref, lat_ref, lng)
     if lng < lng_ref:
@@ -165,6 +168,7 @@ def toXY(lat, lng, lat_ref, lng_ref):
     if lat < lat_ref:
         y = -y
     return x, y
+
 
 #
 # Generator-based linear interpolation
@@ -224,13 +228,11 @@ def interpolator(source, interval):
 
 
 class ThreshStore(object):
-
     """Maintain storage for the dynamic threshold.
 
     Conceptually the data array is of arbitrary size. The data are set in order of
     non-decreasing index, and we need to access up to maxStore previous indices.
     """
-
     def __init__(self, maxStore=500):
         self.indexDeque = deque()
         self.store = {}
@@ -269,12 +271,12 @@ class ThreshStore(object):
         assert isinstance(index, (int, long))
         return self.store[index]
 
+
 # Peak finder carries out space-scale analysis to find peaks in methane
 #  concentration associated with leaks
 
 
 class PeakFinder(object):
-
     def __init__(self, *args, **kwargs):
         '''
         Constructor
@@ -379,7 +381,7 @@ class PeakFinder(object):
         if sigmaMaxFactor == None:
             sigmaMaxFactor = 20.0
 
-        self.sigmaMax = sigmaMaxFactor * self.dx   # Widest peak to be detected
+        self.sigmaMax = sigmaMaxFactor * self.dx  # Widest peak to be detected
 
         self.minAmpl = 0.01
         if 'minAmpl' in kwargs:
@@ -413,7 +415,7 @@ class PeakFinder(object):
         self.valveMask = None
 
         self.useSGFilter = False
-        self.delayLengthNDx = 5     # Length of Savitzky-Golay filter is 2*delayLengthNDx + 1
+        self.delayLengthNDx = 5  # Length of Savitzky-Golay filter is 2*delayLengthNDx + 1
 
         self.minFiltLen = None
         if 'minFiltLen' in kwargs:
@@ -496,7 +498,7 @@ class PeakFinder(object):
 
                 try:
                     qry_with_ticket = ('%s?qry=byPos&alog=%s&startPos=%s&limit=2000' %
-                        (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos))
+                                       (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos))
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
 
@@ -573,7 +575,7 @@ class PeakFinder(object):
         while True:
             try:
                 qry_with_ticket = ('%s?qry=byEpoch&anz=%s&startEtm=%s&limit=1&reverse=true' %
-                (self.meta_url.replace("<TICKET>", self.ticket), self.analyzerId, self.lastEtm))
+                                   (self.meta_url.replace("<TICKET>", self.ticket), self.analyzerId, self.lastEtm))
                 if self.debug == True:
                     print "getLastLog() qry_with_ticket", qry_with_ticket
 
@@ -765,7 +767,7 @@ class PeakFinder(object):
         if "uts" in headings:
             headings.remove("uts")
         # print "DEBUG: Headings:", headings
-        DataTuple = namedtuple("DataTuple", ["DISTANCE", "CAR_SPEED_N", "CAR_SPEED_E" ] + headings)
+        DataTuple = namedtuple("DataTuple", ["DISTANCE", "CAR_SPEED_N", "CAR_SPEED_E"] + headings)
         x0, y0 = 0, 0
         lastLat, lastLng = 0., 0.
         dbCount = 0
@@ -811,9 +813,9 @@ class PeakFinder(object):
                     else:
                         jump = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0))
                     x0, y0 = x, y
-                    bearing = compassBearing( ( lastLat, lastLng ), ( lat, lng ) )
-                    carSpeedN = carSpeed * cos( deg2rad( bearing ) )
-                    carSpeedE = carSpeed * sin( deg2rad( bearing ) )
+                    bearing = compassBearing((lastLat, lastLng), (lat, lng))
+                    carSpeedN = carSpeed * cos(deg2rad(bearing))
+                    carSpeedE = carSpeed * sin(deg2rad(bearing))
                     lastLat = lat
                     lastLng = lng
 
@@ -931,14 +933,14 @@ class PeakFinder(object):
             if len(minBuff) > self.minFiltLen:
                 minBuff.popleft()
 
-            minBuffArray = array([ v for v in minBuff ])
+            minBuffArray = array([v for v in minBuff])
             window = self.delayLengthNDx * 2 + 1
             order = self.SGFilterOrder
 
             d = min(minBuff)
             #d = median(minBuff)
             if self.useSGFilter and len(minBuffArray) == self.minFiltLen:
-                d_smooth = savitzky_golay( minBuffArray, window, order, 0 )
+                d_smooth = savitzky_golay(minBuffArray, window, order, 0)
                 d = d_smooth[self.delayLengthNDx + 1]
             stdBuff.append(d)
             sumDat += d
@@ -948,11 +950,11 @@ class PeakFinder(object):
                 sumDat -= dd
                 sumDat2 -= dd * dd
             buffLen = len(stdBuff)
-            stddev = sqrt(max(0.0, sumDat2 / buffLen - (sumDat / buffLen) ** 2))
+            stddev = sqrt(max(0.0, sumDat2 / buffLen - (sumDat / buffLen)**2))
             threshStore.setThresh(int(round(dist / dx)), stddev)
             delayBuff.append(data)
 
-            if len(delayBuff)>self.delayLengthNDx:
+            if len(delayBuff) > self.delayLengthNDx:
                 delayedData = delayBuff.popleft()
                 dist = delayedData[distIndex]
                 vm = data[valveIndex]
@@ -971,10 +973,9 @@ class PeakFinder(object):
                 #                       self.minAmpl * 2.0 * 3.0 ** (-1.5), z, c,
                 #                       concIndex, distIndex, etmIndex, valveIndex, dataLen, nlevels,
                 #                       npoints, maxKernel)
-                minAmpl = self.minAmpl * 2.0 * 3.0 ** (-1.5)
-                p, np = peakF.findPeaks(asarray(delayedData), hList, scaleList, kernels, ssbuff, cache, minAmpl, z, c,
-                                        concIndex, distIndex, etmIndex, valveIndex, dataLen, nlevels,
-                                        npoints, maxKernel)
+                minAmpl = self.minAmpl * 2.0 * 3.0**(-1.5)
+                p, np = peakF.findPeaks(asarray(delayedData), hList, scaleList, kernels, ssbuff, cache, minAmpl, z, c, concIndex,
+                                        distIndex, etmIndex, valveIndex, dataLen, nlevels, npoints, maxKernel)
 
                 peaks = p[:np[0], :]
                 c += 1
@@ -1020,7 +1021,7 @@ class PeakFinder(object):
         dx = self.dx
         source = None
         sigmaMin = self.sigmaMin
-        sigmaMax = self.sigmaMax   # Widest peak to be detected
+        sigmaMax = self.sigmaMax  # Widest peak to be detected
         minAmpl = self.minAmpl
         # Generate a range of scales. If we want to detect a peak of standard deviation
         #  sigma, we get a peak in the space-scale plane when we convolve it with a kernel
@@ -1029,10 +1030,14 @@ class PeakFinder(object):
         t0 = 2 * (sigmaMin / factor) * (sigmaMin / factor)
         nlevels = int(ceil((log(2 * sigmaMax * sigmaMax) - log(t0)) / log(factor))) + 1
         # Quantities to place in peak data file, if they are available
-        headings = ["EPOCH_TIME", "DISTANCE", "GPS_ABS_LONG", "GPS_ABS_LAT", "CH4", "AMPLITUDE",
-                    "THRESHOLD", "SIGMA", "WIND_N", "WIND_E", "WIND_DIR_SDEV", "CAR_SPEED", "CAR_SPEED_N", "CAR_SPEED_E" ]
-        hFormat = ["%-14.2f", "%-14.3f", "%-14.6f", "%-14.6f", "%-14.3f", "%-14.4f",
-                   "%-14.3f", "%-14.3f", "%-14.4f", "%-14.4f", "%-14.3f", "%-14.3f", "%-14.3f", "%-14.3f"]
+        headings = [
+            "EPOCH_TIME", "DISTANCE", "GPS_ABS_LONG", "GPS_ABS_LAT", "CH4", "AMPLITUDE", "THRESHOLD", "SIGMA", "WIND_N", "WIND_E",
+            "WIND_DIR_SDEV", "CAR_SPEED", "CAR_SPEED_N", "CAR_SPEED_E"
+        ]
+        hFormat = [
+            "%-14.2f", "%-14.3f", "%-14.6f", "%-14.6f", "%-14.3f", "%-14.4f", "%-14.3f", "%-14.3f", "%-14.4f", "%-14.4f", "%-14.3f",
+            "%-14.3f", "%-14.3f", "%-14.3f"
+        ]
         handle = None
         while True:
             # Getting source
@@ -1077,12 +1082,11 @@ class PeakFinder(object):
                     alignedData = self.analyzerData(source)
 
                 # Filter by spectrumID for isomethane analyzer
-                selectedData = ((data.DISTANCE, data) for data in alignedData if
-                                (data is not None) and
-                                ('species' not in data._fields or int(data.species) in [2, 150, 25]))
+                selectedData = ((data.DISTANCE, data) for data in alignedData
+                                if (data is not None) and ('species' not in data._fields or int(data.species) in [2, 150, 25]))
 
                 intData = (data for dist, data in interpolator(selectedData, dx))
-                peakData = self.spaceScale(intData, dx, t0, nlevels, factor,  True)
+                peakData = self.spaceScale(intData, dx, t0, nlevels, factor, True)
                 filteredPeakData = (pk for pk in peakData if pk.AMPLITUDE > minAmpl)
 
                 print "DEBUG: PeakFinder line 1064"
@@ -1153,44 +1157,56 @@ def main(argv=None):
 
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
-    parser.add_option("-p", "--pid-path", dest="pid_path",
-                      help="path to specific pid (to test for running process).", metavar="<PID_PATH>")
-    parser.add_option("-l", "--listen-path", dest="listen_path",
-                      help="Search path for constant updates.", metavar="<LISTEN_PATH>")
-    parser.add_option("-f", "--file-path", dest="file_path",
-                      help="path to specific file to upload.", metavar="<FILE_PATH>")
-    parser.add_option("-a", "--analyzer", dest="analyzerId",
-                      help="Analyzer Name.", metavar="<ANALYZER>")
-    parser.add_option("-g", "--logname", dest="logname",
-                      help="Log Name.", metavar="<LOGNAME>")
-    parser.add_option("-t", "--timeout", dest="timeout",
-                      help="timeout value for response from server.", metavar="<TIMEOUT>")
-    parser.add_option("-u", "--anzlog-url", dest="anzlog_url",
-                      help="rest url for AnzLog Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<LOG_URL>")
-    parser.add_option("-m", "--meta-url", dest="meta_url",
-                      help="rest url for AnzLogMeta Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<META_URL>")
-    parser.add_option("-k", "--ticket-url", dest="ticket_url",
-                      help="rest url for authentication ticket. Use the string 'dummy' as the place-holder for the authentication ticket.", metavar="<TICKET_URL>")
-    parser.add_option("-y", "--identity", dest="identity",
-                      help="Authentication identity string.", metavar="<IDENTITY>")
-    parser.add_option("-s", "--sys", dest="psys",
-                      help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
-                      help="Debug mode")
-    parser.add_option("--calc-dx", dest="dx",
-                      help="Default calc value for dx.", metavar="<CALC_dx>")
-    parser.add_option("--calc-sigmaMinFactor", dest="sigmaMinFactor",
-                      help="Default calc value for sigmaMinFactor.", metavar="<CALC_sigmaMinFactor>")
-    parser.add_option("--calc-sigmaMaxFactor", dest="sigmaMaxFactor",
-                      help="Default calc value for sigmaMaxFactor.", metavar="<CALC_sigmaMaxFactor>")
-    parser.add_option("--calc-minAmpl", dest="minAmpl",
-                      help="Default calc value for minAmpl.", metavar="<CALC_minAmpl>")
-    parser.add_option("--calc-factor", dest="factor",
-                      help="Default calc value for factor.", metavar="<CALC_factor>")
-    parser.add_option("--calc-minFiltLen", dest="minFiltLen",
-                      help="Default calc value for length of background finding filter (multiple of dx).", metavar="<CALC_minFiltLen>")
-    parser.add_option("--calc-stdDevFiltLen", dest="stdDevFiltLen",
-                      help="Default calc value for length of background standard deviation filter (multiple of dx).", metavar="<CALC_stdDevFiltLen>")
+    parser.add_option("-p",
+                      "--pid-path",
+                      dest="pid_path",
+                      help="path to specific pid (to test for running process).",
+                      metavar="<PID_PATH>")
+    parser.add_option("-l", "--listen-path", dest="listen_path", help="Search path for constant updates.", metavar="<LISTEN_PATH>")
+    parser.add_option("-f", "--file-path", dest="file_path", help="path to specific file to upload.", metavar="<FILE_PATH>")
+    parser.add_option("-a", "--analyzer", dest="analyzerId", help="Analyzer Name.", metavar="<ANALYZER>")
+    parser.add_option("-g", "--logname", dest="logname", help="Log Name.", metavar="<LOGNAME>")
+    parser.add_option("-t", "--timeout", dest="timeout", help="timeout value for response from server.", metavar="<TIMEOUT>")
+    parser.add_option(
+        "-u",
+        "--anzlog-url",
+        dest="anzlog_url",
+        help="rest url for AnzLog Resource. Use the string <TICKET> as the place-holder for the authentication ticket.",
+        metavar="<LOG_URL>")
+    parser.add_option(
+        "-m",
+        "--meta-url",
+        dest="meta_url",
+        help="rest url for AnzLogMeta Resource. Use the string <TICKET> as the place-holder for the authentication ticket.",
+        metavar="<META_URL>")
+    parser.add_option(
+        "-k",
+        "--ticket-url",
+        dest="ticket_url",
+        help="rest url for authentication ticket. Use the string 'dummy' as the place-holder for the authentication ticket.",
+        metavar="<TICKET_URL>")
+    parser.add_option("-y", "--identity", dest="identity", help="Authentication identity string.", metavar="<IDENTITY>")
+    parser.add_option("-s", "--sys", dest="psys", help="Authentication sys.", metavar="<SYS>")
+    parser.add_option("-d", "--debug", dest="debug", action="store_true", help="Debug mode")
+    parser.add_option("--calc-dx", dest="dx", help="Default calc value for dx.", metavar="<CALC_dx>")
+    parser.add_option("--calc-sigmaMinFactor",
+                      dest="sigmaMinFactor",
+                      help="Default calc value for sigmaMinFactor.",
+                      metavar="<CALC_sigmaMinFactor>")
+    parser.add_option("--calc-sigmaMaxFactor",
+                      dest="sigmaMaxFactor",
+                      help="Default calc value for sigmaMaxFactor.",
+                      metavar="<CALC_sigmaMaxFactor>")
+    parser.add_option("--calc-minAmpl", dest="minAmpl", help="Default calc value for minAmpl.", metavar="<CALC_minAmpl>")
+    parser.add_option("--calc-factor", dest="factor", help="Default calc value for factor.", metavar="<CALC_factor>")
+    parser.add_option("--calc-minFiltLen",
+                      dest="minFiltLen",
+                      help="Default calc value for length of background finding filter (multiple of dx).",
+                      metavar="<CALC_minFiltLen>")
+    parser.add_option("--calc-stdDevFiltLen",
+                      dest="stdDevFiltLen",
+                      help="Default calc value for length of background standard deviation filter (multiple of dx).",
+                      metavar="<CALC_stdDevFiltLen>")
 
     (options, args) = parser.parse_args()
 
@@ -1208,8 +1224,7 @@ def main(argv=None):
     if ((options.listen_path or options.file_path) and options.anzlog_url):
         parser.error("anzlog_url is mutually exclusive to listen-path and/or file-path.")
 
-    if (options.logname or options.anzlog_url or options.meta_url
-        or options.ticket_url or options.identity or options.psys):
+    if (options.logname or options.anzlog_url or options.meta_url or options.ticket_url or options.identity or options.psys):
         if not options.anzlog_url:
             parser.error("AnzLog Resource URL is required when other REST url's are provided.")
         if not options.meta_url:
@@ -1224,27 +1239,47 @@ def main(argv=None):
     class_opts = {}
 
     for copt in [
-        "pid_path"  # path for PID file
-        , "analyzerId"  # Analyzer ID
-        , "anzlog_url"  # URL for AnzLog resource
-        , "meta_url"  # URL for AnzLogMeta resource
-        , "ticket_url"  # URL for Admin (issueTicket) resource
-        , "logname"  # logname (when processing single log)
-        , "identity"  # identity (authentication)
-        , "psys"  # picarro sys (authentication)
-        , "usedb"  # True/False use REST DB calls (instead of file system)
-        , "listen_path"  # listen path (when processing file system)
-        , "file_path"  # file path (when procesing single log from file system)
-        , "dx"  # override default dx value
-        , "sigmaMinFactor"  # override default sigmaMinFactor value
-        , "sigmaMaxFactor"  # override default sigmaMaxFactor value
-        , "factor"  # override default factor value
-        , "minFiltLen"  # override default minFiltLen value
-        , "stdDevFiltLen"  # override default stdDevFiltLen value
-        , "minAmpl"  # override default minAmpl value
-        , "sleep_seconds"  # override default sleep_seconds value
-        , "timeout"  # override default REST timeout value
-        , "debug"  # True/False show debug print (in stdout)
+            "pid_path"  # path for PID file
+            ,
+            "analyzerId"  # Analyzer ID
+            ,
+            "anzlog_url"  # URL for AnzLog resource
+            ,
+            "meta_url"  # URL for AnzLogMeta resource
+            ,
+            "ticket_url"  # URL for Admin (issueTicket) resource
+            ,
+            "logname"  # logname (when processing single log)
+            ,
+            "identity"  # identity (authentication)
+            ,
+            "psys"  # picarro sys (authentication)
+            ,
+            "usedb"  # True/False use REST DB calls (instead of file system)
+            ,
+            "listen_path"  # listen path (when processing file system)
+            ,
+            "file_path"  # file path (when procesing single log from file system)
+            ,
+            "dx"  # override default dx value
+            ,
+            "sigmaMinFactor"  # override default sigmaMinFactor value
+            ,
+            "sigmaMaxFactor"  # override default sigmaMaxFactor value
+            ,
+            "factor"  # override default factor value
+            ,
+            "minFiltLen"  # override default minFiltLen value
+            ,
+            "stdDevFiltLen"  # override default stdDevFiltLen value
+            ,
+            "minAmpl"  # override default minAmpl value
+            ,
+            "sleep_seconds"  # override default sleep_seconds value
+            ,
+            "timeout"  # override default REST timeout value
+            ,
+            "debug"  # True/False show debug print (in stdout)
     ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)

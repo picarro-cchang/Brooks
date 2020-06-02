@@ -4,8 +4,8 @@ from pprint import pprint
 from Host.Common.configobj import ConfigObj
 from ReferenceGas import GasEnum, ComponentGas, ReferenceGas
 
-class TestReferenceGas(unittest.TestCase):
 
+class TestReferenceGas(unittest.TestCase):
     def setUp(self):
         pass
 
@@ -43,6 +43,6 @@ class TestReferenceGas(unittest.TestCase):
         output_conc = rg.getGasConcPpm(GasEnum.CH4)
         self.assertEqual(input_conc, output_conc)
 
+
 if __name__ == '__main__':
     unittest.main()
-

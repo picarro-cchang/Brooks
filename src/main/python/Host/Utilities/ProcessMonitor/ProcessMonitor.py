@@ -8,8 +8,8 @@ import math
 if __name__ == "__main__":
     interval = 10.0
     now = time.time()
-    next = math.ceil(now/interval) * interval
-    fname = "ProcessMonitor_%d.pic" %  int(next)
+    next = math.ceil(now / interval) * interval
+    fname = "ProcessMonitor_%d.pic" % int(next)
     while True:
         time.sleep(next - time.time())
         now = time.time()
@@ -21,7 +21,7 @@ if __name__ == "__main__":
                     # This is a Picarro RPC port
                     if port not in procByPort:
                         procByPort[port] = dict(pid=proc.pid, rss=proc.get_memory_info().rss)
-        fp = open(fname,"ab")
-        cPickle.dump((now,procByPort),fp,-1)
+        fp = open(fname, "ab")
+        cPickle.dump((now, procByPort), fp, -1)
         fp.close()
         next = next + interval

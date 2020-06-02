@@ -4,15 +4,16 @@ import time
 from pyodbc import connect
 from numpy import arctan, arctan2, asarray, cos, pi, sin, sqrt, tan
 
+
 def distVincenty(lat1, lon1, lat2, lon2):
     # WGS-84 ellipsiod. lat and lon in DEGREES
     a = 6378137
     b = 6356752.3142
-    f = 1/298.257223563
-    toRad = pi/180.0
-    L = (lon2-lon1)*toRad
-    U1 = arctan((1-f) * tan(lat1*toRad))
-    U2 = arctan((1-f) * tan(lat2*toRad))
+    f = 1 / 298.257223563
+    toRad = pi / 180.0
+    L = (lon2 - lon1) * toRad
+    U1 = arctan((1 - f) * tan(lat1 * toRad))
+    U2 = arctan((1 - f) * tan(lat2 * toRad))
     sinU1 = sin(U1)
     cosU1 = cos(U1)
     sinU2 = sin(U2)
@@ -23,32 +24,33 @@ def distVincenty(lat1, lon1, lat2, lon2):
     for _ in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
-                        (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
         if sinSigma == 0:
             return 0  # co-incident points
-        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = arctan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha*sinAlpha
+        cosSqAlpha = 1 - sinAlpha * sinAlpha
         if cosSqAlpha == 0:
             cos2SigmaM = 0
         else:
-            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqAlpha
-        C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
+        C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
         lambdaP = Lambda
         Lambda = L + (1-C) * f * sinAlpha * \
           (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
-        if abs(Lambda-lambdaP) <= 1.e-12: break
+        if abs(Lambda - lambdaP) <= 1.e-12: break
     else:
         raise ValueError("Failed to converge")
 
-    uSq = cosSqAlpha * (a*a - b*b) / (b*b)
-    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
-    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
-    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
-                                            B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
-    return b*A*(sigma-deltaSigma)
+    uSq = cosSqAlpha * (a * a - b * b) / (b * b)
+    A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
+    B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM *
+                                                       (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    return b * A * (sigma - deltaSigma)
+
 
 class SQA3Database(object):
     """ Access the database  """
@@ -70,7 +72,7 @@ class SQA3Database(object):
         connection = connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' %
                              (self.server, self.database, self.uid, self.password))
         return connection.cursor()
-    
+
     def get_report(self, title):
         cursor = self._open_db_connection()
         query = """
@@ -82,12 +84,15 @@ class SQA3Database(object):
         results = []
         for row in cursor:
             report_id, title, date_start = row
-            results.append({"title":title, "date_start":date_start, "report_id":report_id})
+            results.append({"title": title, "date_start": date_start, "report_id": report_id})
         return results
 
     def get_report_peaks(self, report_id):
         cursor = self._open_db_connection()
-        verdicts = ["ERROR", "NATURAL_GAS", "NOT_NATURAL_GAS", "POSSIBLE_NATURAL_GAS", "VEHICLE_EXHAUST", "BELOW_THRESHOLD", "EXCLUDED", "EMPTY"]
+        verdicts = [
+            "ERROR", "NATURAL_GAS", "NOT_NATURAL_GAS", "POSSIBLE_NATURAL_GAS", "VEHICLE_EXHAUST", "BELOW_THRESHOLD", "EXCLUDED",
+            "EMPTY"
+        ]
 
         query = """
             SELECT EpochTime, PeakNumber, Amplitude, CH4, GpsLatitude, GpsLongitude, PassedAutoThreshold, EthaneRatio, EthaneRatioSdev, Disposition,
@@ -100,12 +105,24 @@ class SQA3Database(object):
         for row in cursor:
             EpochTime, PeakNumber, Amplitude, CH4, GpsLatitude, GpsLongitude, PassedAutoThreshold, EthaneRatio, EthaneRatioSdev, Disposition, ClassificationConfidence, \
                 AggregatedEthaneRatio, AggregatedEthaneRatioSdev, AggregatedDisposition, AggregatedClassificationConfidence = row
-            results.append(dict(EPOCH_TIME=EpochTime, VERDICT=verdicts[Disposition], AMPLITUDE=Amplitude, ETHANE_RATIO_SDEV=EthaneRatioSdev, GPS_ABS_LAT=GpsLatitude,
-                GPS_ABS_LONG=GpsLongitude, ETHANE_RATIO=EthaneRatio, PEAK_NUM=PeakNumber, PASSED_THRESHOLD=1 if PassedAutoThreshold else 0, CONFIDENCE=ClassificationConfidence,
-                AGG_ETHANE_RATIO=AggregatedEthaneRatio, AGG_ETHANE_RATIO_SDEV=AggregatedEthaneRatioSdev, AGG_VERDICT=verdicts[AggregatedDisposition], 
-                AGG_CONFIDENCE=AggregatedClassificationConfidence))
+            results.append(
+                dict(EPOCH_TIME=EpochTime,
+                     VERDICT=verdicts[Disposition],
+                     AMPLITUDE=Amplitude,
+                     ETHANE_RATIO_SDEV=EthaneRatioSdev,
+                     GPS_ABS_LAT=GpsLatitude,
+                     GPS_ABS_LONG=GpsLongitude,
+                     ETHANE_RATIO=EthaneRatio,
+                     PEAK_NUM=PeakNumber,
+                     PASSED_THRESHOLD=1 if PassedAutoThreshold else 0,
+                     CONFIDENCE=ClassificationConfidence,
+                     AGG_ETHANE_RATIO=AggregatedEthaneRatio,
+                     AGG_ETHANE_RATIO_SDEV=AggregatedEthaneRatioSdev,
+                     AGG_VERDICT=verdicts[AggregatedDisposition],
+                     AGG_CONFIDENCE=AggregatedClassificationConfidence))
         return results
-         
+
+
 if __name__ == "__main__":
     db = SQA3Database()
     name = raw_input('Report Title: ').strip()
@@ -120,7 +137,7 @@ if __name__ == "__main__":
             sys.exit(1)
     elif len(results) > 1:
         for i, result in enumerate(results):
-            print "%d) %s at %s" % (i+1, results[i]["title"], results[i]["date_start"])
+            print "%d) %s at %s" % (i + 1, results[i]["title"], results[i]["date_start"])
         while True:
             ok = raw_input("Enter row number of report: ").strip()
             if len(ok) == 0:
@@ -128,7 +145,7 @@ if __name__ == "__main__":
             try:
                 ok = int(ok)
                 if 0 < ok <= len(results):
-                    report_id = results[ok-1]["report_id"]
+                    report_id = results[ok - 1]["report_id"]
                     break
             except:
                 continue
@@ -140,7 +157,7 @@ if __name__ == "__main__":
     print "Checking all peaks passed threshold"
     for peak in peaks:
         if not peak["PASSED_THRESHOLD"]:
-            print "Peak %d did not pass threshold" % peak["PEAK_NUM"]  
+            print "Peak %d did not pass threshold" % peak["PEAK_NUM"]
     print "Checking minimum distances between peaks which are not vehicle exhaust"
     lat_list = []
     lng_list = []
@@ -155,4 +172,3 @@ if __name__ == "__main__":
         for (lat2, lng2) in zip(lat_list[:i], lng_list[:i]):
             min_dist = min(min_dist, distVincenty(lat1, lng1, lat2, lng2))
     print "Minimum distance: %.2f meters" % (min_dist, )
-    

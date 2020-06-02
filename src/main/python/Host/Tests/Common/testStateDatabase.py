@@ -25,6 +25,7 @@ from Host.Common.StateDatabase import SensorHistory, StateDatabase
 
 scriptDir = os.path.dirname(os.path.realpath(__file__))
 
+
 class StateDatabaseTestCase(unittest.TestCase):
     def setUp(self):
         self.dbFile = os.path.join(scriptDir, "testSqlite.db")
@@ -66,13 +67,13 @@ class StateDatabaseTestCase(unittest.TestCase):
             idList = []
             for i in range(10):
                 idList.append(stateDb.getId())
-            self.assertEqual(idList, range(1,11))
+            self.assertEqual(idList, range(1, 11))
             # Next start a collection of threads all of which are getting IDs
             self.idQueue = Queue.Queue()
             nThreads = 10
             threads = []
             for i in range(nThreads):
-                thread = threading.Thread(target=self.idFetcher, args=(i,))
+                thread = threading.Thread(target=self.idFetcher, args=(i, ))
                 thread.setDaemon(True)
                 threads.append(thread)
             for thread in threads:
@@ -86,7 +87,7 @@ class StateDatabaseTestCase(unittest.TestCase):
                 idList.append(self.idQueue.get())
             idFound = sorted([id for threadNum, id in idList])
             self.assertEqual(len(idFound), nThreads * 200)
-            self.assertEqual(idFound, range(11,11+len(idList)))
+            self.assertEqual(idFound, range(11, 11 + len(idList)))
         finally:
             stateDb.close()
 
@@ -109,6 +110,7 @@ class StateDatabaseTestCase(unittest.TestCase):
     def test_FloatReg(self):
         # Save some floating point registers and fetch them back
         print self.getIntRegNames()
+
 
 if __name__ == "__main__":
     unittest.main()

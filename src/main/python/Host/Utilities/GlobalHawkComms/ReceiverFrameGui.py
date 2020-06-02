@@ -10,6 +10,7 @@ import wx
 from Host.Utilities.GlobalHawkComms.StreamDisplayPanel import StreamDisplayPanel
 # end wxGlade
 
+
 class ReceiverFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ReceiverFrameGui.__init__
@@ -17,7 +18,7 @@ class ReceiverFrameGui(wx.Frame):
         wx.Frame.__init__(self, *args, **kwds)
         self.stream_display_panel1 = StreamDisplayPanel(self, -1)
         self.stream_display_panel2 = StreamDisplayPanel(self, -1)
-        self.list_ctrl_stream = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.list_ctrl_stream = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
 
         self.__set_properties()
         self.__do_layout()
@@ -38,5 +39,6 @@ class ReceiverFrameGui(wx.Frame):
         self.SetSizer(sizer_receiver)
         self.Layout()
         # end wxGlade
+
 
 # end of class ReceiverFrameGui

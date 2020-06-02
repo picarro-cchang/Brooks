@@ -40,15 +40,12 @@ else:
 EventManagerProxy_Init(APP_NAME)
 
 # For convenience in calling driver and frequency converter functions
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                    APP_NAME, IsDontCareConnection=False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
-RDFreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                        APP_NAME, IsDontCareConnection=False)
+RDFreqConv = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, APP_NAME, IsDontCareConnection=False)
 
 
 class Sequencer(object):
-
     """Supervises running of a sequence of schemes, using a block of four scheme table entries. The sequences
     are stored in self.sequences, keyed either by a numeric code (for sequences from the Master.ini file) or by
     the name of the mode (for sequences in non-integration mode).
@@ -114,8 +111,8 @@ class Sequencer(object):
                     nSchemes = int(cs["NSCHEMES"])
                     schemes = []
                     for i in range(nSchemes):
-                        schemeFileName = os.path.join(basePath, cs["SCHEME%02d" % (i + 1,)])
-                        repetitions = int(cs["REPEAT%02d" % (i + 1,)])
+                        schemeFileName = os.path.join(basePath, cs["SCHEME%02d" % (i + 1, )])
+                        repetitions = int(cs["REPEAT%02d" % (i + 1, )])
                         _, ext = os.path.splitext(schemeFileName)
                         schemes.append((Scheme(schemeFileName), repetitions, ext.lower() == ".sch"))
                     self.sequences["%s" % index] = schemes
@@ -214,8 +211,8 @@ class Sequencer(object):
                     self.useIndex = (self.activeIndex + 1) % 4
                     schemes = self.sequences[self.sequence]
                     scheme, rep, freqBased = schemes[self.scheme - 1]
-                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d"
-                        % (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
+                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d" %
+                        (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
                     self.inDas[self.useIndex] = (self.sequence, self.scheme, self.repeat, scheme.fileName)
                     # Increment repeat and scheme number as needed
                     self.repeat += 1
@@ -244,7 +241,7 @@ class Sequencer(object):
                     self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
                     next = Driver.rdDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
                     if next != self.useIndex:
-                        Log("Unexpected next scheme register contents", Data={"expected":self.useIndex, "contents":next})
+                        Log("Unexpected next scheme register contents", Data={"expected": self.useIndex, "contents": next})
                     if self.activeIndex == next:
                         self.state = Sequencer.SEND_SCHEME
                     elif Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:

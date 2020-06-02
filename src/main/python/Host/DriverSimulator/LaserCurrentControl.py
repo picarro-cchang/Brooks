@@ -52,7 +52,7 @@ class LaserCurrentControl(object):
             self.coarse = self.manualCoarse
             fine = 32768
             self.currentEnable = 1
-            self.laserEnable = 1 # 0 In reality, the laser is turned on by the FPGA
+            self.laserEnable = 1  # 0 In reality, the laser is turned on by the FPGA
         elif self.state == interface.LASER_CURRENT_CNTRL_ManualState:
             self.coarse = self.manualCoarse
             fine = self.manualFine
@@ -83,9 +83,12 @@ class Laser1CurrentControl(LaserCurrentControl):
     swpMin = prop_das(interface.LASER1_CURRENT_SWEEP_MIN_REGISTER)
     swpMax = prop_das(interface.LASER1_CURRENT_SWEEP_MAX_REGISTER)
     swpInc = prop_das(interface.LASER1_CURRENT_SWEEP_INCR_REGISTER)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_W)
-    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B, interface.INJECT_CONTROL_MODE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_W)
+    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B,
+                          interface.INJECT_CONTROL_MODE_W)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_FINE_CURRENT)
     laserNum = 1
@@ -98,9 +101,12 @@ class Laser2CurrentControl(LaserCurrentControl):
     swpMin = prop_das(interface.LASER2_CURRENT_SWEEP_MIN_REGISTER)
     swpMax = prop_das(interface.LASER2_CURRENT_SWEEP_MAX_REGISTER)
     swpInc = prop_das(interface.LASER2_CURRENT_SWEEP_INCR_REGISTER)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_W)
-    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B, interface.INJECT_CONTROL_MODE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_W)
+    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B,
+                          interface.INJECT_CONTROL_MODE_W)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_FINE_CURRENT)
     laserNum = 2
@@ -113,9 +119,12 @@ class Laser3CurrentControl(LaserCurrentControl):
     swpMin = prop_das(interface.LASER3_CURRENT_SWEEP_MIN_REGISTER)
     swpMax = prop_das(interface.LASER3_CURRENT_SWEEP_MAX_REGISTER)
     swpInc = prop_das(interface.LASER3_CURRENT_SWEEP_INCR_REGISTER)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_W)
-    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B, interface.INJECT_CONTROL_MODE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_W)
+    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B,
+                          interface.INJECT_CONTROL_MODE_W)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_FINE_CURRENT)
     laserNum = 3
@@ -128,9 +137,12 @@ class Laser4CurrentControl(LaserCurrentControl):
     swpMin = prop_das(interface.LASER4_CURRENT_SWEEP_MIN_REGISTER)
     swpMax = prop_das(interface.LASER4_CURRENT_SWEEP_MAX_REGISTER)
     swpInc = prop_das(interface.LASER4_CURRENT_SWEEP_INCR_REGISTER)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
-    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B, interface.INJECT_CONTROL_MODE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
+    automatic = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MODE_B,
+                          interface.INJECT_CONTROL_MODE_W)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_FINE_CURRENT)
     laserNum = 4

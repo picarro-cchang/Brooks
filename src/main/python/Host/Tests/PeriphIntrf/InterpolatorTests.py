@@ -6,7 +6,6 @@ from Host.PeriphIntrf.Interpolators import Interpolators
 
 
 class TestInterpolators(object):
-
     def testLinear(self):
         assert Interpolators.linear([0.0, 1.0], [0.0, 1.0], 0.5) == 0.5
         assert Interpolators.linear([1.0, 4.0], [1.0, 2.0], 1.5) == 2.5

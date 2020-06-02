@@ -71,7 +71,7 @@ _SCHEME_CONFIG_SECTION = "SCHEME_CONFIG"
 CONFIG_DIR = os.environ['PICARRO_CONF_DIR']
 LOG_DIR = os.environ['PICARRO_LOG_DIR']
 
-EventManagerProxy_Init(APP_NAME, PrintEverything = __debug__)
+EventManagerProxy_Init(APP_NAME, PrintEverything=__debug__)
 
 STATE__UNDEFINED = -100
 STATE_ERROR = 0x0F
@@ -100,6 +100,8 @@ if __debug__:
             if __k != "STATE__UNDEFINED]":
                 assert __localsNow[__k] <= 0x0F, "Legit state values must be < 0x0F, with 0x0F reserved for ERROR"
     del __localsNow, __k
+
+
 ####
 ## Decorators
 ####
@@ -108,7 +110,9 @@ def docstring_set(DocString):
     def decorator(f):
         f.func_doc = DocString
         return f
+
     return decorator
+
 
 ####
 ## Functions
@@ -116,8 +120,9 @@ def docstring_set(DocString):
 def NameOfThisCall():
     return sys._getframe(1).f_code.co_name
 
+
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -129,43 +134,56 @@ if sys.platform == 'win32':
 else:
     TimeStamp = time.time
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                     APP_NAME, IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
 SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, \
                                     APP_NAME, IsDontCareConnection = False)
 
-FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                     APP_NAME, IsDontCareConnection = False)
+FreqConverter = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, APP_NAME, IsDontCareConnection=False)
+
 
 class MeasSystemError(CrdsException):
     """Base class for MeasSystem errors."""
+
+
 class MeasurementDisabled(MeasSystemError):
     """The measurement was disabled in the middle of doing something."""
+
+
 class InvalidModeSelection(MeasSystemError):
     """An invalid mode was selected."""
+
+
 class ShutdownRequestCaptured(MeasSystemError):
     """An invalid mode was selected."""
+
+
 class CommandError(MeasSystemError):
     """Root of all exceptions caused by a bad/inappropriate command."""
+
+
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.RpcServer = RpcServer
         self.ExitFunction = ExitFunction
+
     def run(self):
         self.RpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             self.ExitFunction()
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
+
+
 class MeasSystem(object):
     """Container class/structure for MeasSystem options."""
     class ConfigurationOptions(object):
-        def __init__(self, SimMode = False):
-            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        def __init__(self, SimMode=False):
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                         APP_NAME,
                                                          IsDontCareConnection=False)
             self.SimMode = SimMode
             self.ModeDefinitionFile = ""
@@ -193,18 +211,19 @@ class MeasSystem(object):
                     cp.getint(_MAIN_CONFIG_SECTION,"FitterPort%d" % (nFitters,),RPC_PORT_FITTER_BASE))
                 nFitters += 1
             if nFitters == 0:
-                self.fitterIpAddressList = [ "localhost" ]
-                self.fitterPortList = [ RPC_PORT_FITTER_BASE ]
+                self.fitterIpAddressList = ["localhost"]
+                self.fitterPortList = [RPC_PORT_FITTER_BASE]
 
-            self.Laser0TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser0TunerOffset", default = 0.0)
-            self.Laser1TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser1TunerOffset", default = 0.0)
+            self.Laser0TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser0TunerOffset", default=0.0)
+            self.Laser1TunerOffset = cp.getfloat(_MAIN_CONFIG_SECTION, "Laser1TunerOffset", default=0.0)
 
             self.StartEngine = cp.getboolean(_MAIN_CONFIG_SECTION, "StartEngine", "False")
             self.AutoEnableOnCleanStart = cp.getboolean(_MAIN_CONFIG_SECTION, "AutoEnableOnCleanStart", "False")
             self.StartingMeasMode = cp.get(_MAIN_CONFIG_SECTION, "StartingMeasMode", "")
+
     #endclass (ConfigurationOptions for MeasSystem)
 
-    def __init__(self, ConfigPath, SkipFitting, noInstMgr = False, SimMode = False):
+    def __init__(self, ConfigPath, SkipFitting, noInstMgr=False, SimMode=False):
         # # # IMPORTANT # # #
         # THIS SHOULD ONLY CONTAIN VARIABLE/PROPERTY INITS... any actual code that
         # can fail (like talking to another CRDS app or reading the HDD) should be
@@ -215,7 +234,7 @@ class MeasSystem(object):
         self._Status = AppStatus.AppStatus(STATE_INIT, STATUS_PORT_MEAS_SYSTEM, APP_NAME)
         self._EnableEvent = threading.Event()
         self._ClearErrorEvent = threading.Event()
-        self._ShutdownRequested = False #The main state handling loop will exit when this is true
+        self._ShutdownRequested = False  #The main state handling loop will exit when this is true
         self._FatalError = False  #The main state handling loop will also exit when this is true
         self._ScanInProgress = False
         self.SkipFitting = SkipFitting
@@ -224,8 +243,7 @@ class MeasSystem(object):
         # - Modes is a dict of MeasMode info indicating all the config info per mode
         self.MeasModes = {}
         self.CurrentMeasMode = None
-        if 0: assert isinstance(self.CurrentMeasMode, ModeDef.MeasMode) #for wing
-
+        if 0: assert isinstance(self.CurrentMeasMode, ModeDef.MeasMode)  #for wing
 
         self.ConfigPath = ConfigPath
         self.Config = MeasSystem.ConfigurationOptions(SimMode)
@@ -235,10 +253,10 @@ class MeasSystem(object):
         self.ProcDataBroadcaster = Broadcaster(BROADCAST_PORT_MEAS_SYSTEM, APP_NAME, logFunc=Log)
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_MEAS_SYSTEM),
-                                                ServerName = "MeasSystem",
-                                                ServerDescription = "The measurement system that coordinates gas measurements.",
-                                                ServerVersion = APP_VERSION,
-                                                threaded = True)
+                                               ServerName="MeasSystem",
+                                               ServerDescription="The measurement system that coordinates gas measurements.",
+                                               ServerVersion=APP_VERSION,
+                                               threaded=True)
 
         self.RpcThread = None
 
@@ -249,48 +267,50 @@ class MeasSystem(object):
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and s.startswith("RPC_") and (not isclass(attr)):
-                self.RpcServer.register_function(attr, NameSlice = 4)
+                self.RpcServer.register_function(attr, NameSlice=4)
 
         self.noInstMgr = noInstMgr
         if not self.noInstMgr:
             self.rdInstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
                                                         APP_NAME,
-                                                        IsDontCareConnection = True)
+                                                        IsDontCareConnection=True)
 
     def _AssertValidCallingState(self, StateList):
         if self.__State not in StateList:
             raise CommandError("Command invalid in present state ('%s')." % StateName[self.__State])
+
     def RPC_Enable(self):
         """Enables the measurement system in the mode set by Mode_Set.
         """
-        try: #catch for DAS errors (and any other remote procedure call error)...
-            if __debug__: Log("System Enable request received - RPC_Enable()", Level = 0)
+        try:  #catch for DAS errors (and any other remote procedure call error)...
+            if __debug__: Log("System Enable request received - RPC_Enable()", Level=0)
             ##Validate that the call is possible and/or makes sense...
-            self._AssertValidCallingState([STATE_INIT,        #Will try and enable when ready
-                                           STATE_READY,       #Triggers transition to ENABLED
-                                           STATE_ENABLED,     #No problem enabling again!
-                                           ])
+            self._AssertValidCallingState([
+                STATE_INIT,  #Will try and enable when ready
+                STATE_READY,  #Triggers transition to ENABLED
+                STATE_ENABLED,  #No problem enabling again!
+            ])
             if not self.CurrentMeasMode:
                 raise CommandError("Cannot enable without setting a measurement mode first")
 
             ##React to the call...
             if self.__State == STATE_ENABLED:
-                return #we are already sweeping
+                return  #we are already sweeping
             else:
                 #Now to set the enabled event which will get us out of ready state...
                 self._EnableEvent.set()
         except CommandError:
-            if __debug__: LogExc("Command error", dict(State = StateName[self.__State]), Level = 0)
+            if __debug__: LogExc("Command error", dict(State=StateName[self.__State]), Level=0)
             raise
         except:
-            LogExc("Unhandled exception in command call", Data = dict(Command = NameOfThisCall))
+            LogExc("Unhandled exception in command call", Data=dict(Command=NameOfThisCall))
             raise
         return "OK"
 
     def RPC_Disable(self):
         """Disables the measurement system and stops the instrument from scanning.
         """
-        if __debug__: Log("System DISable request received - RPC_Disable()", Level = 0)
+        if __debug__: Log("System DISable request received - RPC_Disable()", Level=0)
         self._EnableEvent.clear()
         return "OK"
 
@@ -311,9 +331,10 @@ class MeasSystem(object):
         Mode changes are only valid when the instrument is not measuring.
 
         """
-        self._AssertValidCallingState([STATE_READY,
-                                       STATE_ENABLED,
-                                     ])
+        self._AssertValidCallingState([
+            STATE_READY,
+            STATE_ENABLED,
+        ])
 
         if not ModeName in self.MeasModes.keys():
             raise InvalidModeSelection("An invalid mode was selected: '%s'" % ModeName)
@@ -349,7 +370,9 @@ class MeasSystem(object):
         has not been fixed.
 
         """
-        self._AssertValidCallingState([STATE_ERROR,])
+        self._AssertValidCallingState([
+            STATE_ERROR,
+        ])
         Log("Request received to clear error state")
         self._ClearErrorEvent.set()
 
@@ -367,12 +390,12 @@ class MeasSystem(object):
 
     def RPC_GetStates_Number(self):
         """Returns a dictionary with a numeric indication of the system states."""
-        ret = dict(State_MeasSystem = self.__State)
+        ret = dict(State_MeasSystem=self.__State)
         return ret
 
     def RPC_GetStates(self):
         """Returns a dictionary with a text indication of the system states."""
-        ret = dict(State_MeasSystem = StateName[self.__State])
+        ret = dict(State_MeasSystem=StateName[self.__State])
         return ret
 
     def RPC_GetSensorData(self):
@@ -391,7 +414,7 @@ class MeasSystem(object):
         if not self.noInstMgr:
             modeDict = self.CurrentMeasMode._GetInstrumentMode()
             self.rdInstMgr.INSTMGR_SetInstrumentModeRpc(modeDict)
-            Log("Setting instrument mode: %s" % (modeDict,))
+            Log("Setting instrument mode: %s" % (modeDict, ))
         else:
             Log("Running without Instrument Manager - can't set mode in instrument")
 
@@ -400,10 +423,12 @@ class MeasSystem(object):
         if NewState == self.__State:
             return
 
-        if __debug__: #code helper - make sure state changes are happening only from where we expect
+        if __debug__:  #code helper - make sure state changes are happening only from where we expect
             callerName = sys._getframe(1).f_code.co_name
             if not callerName.startswith("_HandleState_"):
-                raise Exception("Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." % callerName)
+                raise Exception(
+                    "Code error!  State changes should only be made/managed in _MainLoop!!  Change attempt made from %s." %
+                    callerName)
 
         #Do any state initialization that is needed...
         if NewState == STATE_READY:
@@ -424,10 +449,7 @@ class MeasSystem(object):
         else:
             eventLevel = 1
         self._Status.UpdateState(self.__State)
-        Log("State changed",
-            dict(State = StateName[NewState],
-                 PreviousState = StateName[self.__LastState]),
-            Level = eventLevel)
+        Log("State changed", dict(State=StateName[NewState], PreviousState=StateName[self.__LastState]), Level=eventLevel)
 
     def _HandleState_INIT(self):
         try:
@@ -438,10 +460,10 @@ class MeasSystem(object):
 
             ##Figure out what modes are available and load all details...
             self.MeasModes = ModeDef.LoadModeDefinitions(self.Config.ModeDefinitionFile)
-            Log("Mode definitions loaded", dict(ModeNames = self.MeasModes.keys()))
+            Log("Mode definitions loaded", dict(ModeNames=self.MeasModes.keys()))
 
             for m in self.MeasModes.values():
-                SpectrumCollector.addNamedSequenceOfSchemeConfigs(m.Name,m.SchemeConfigs)
+                SpectrumCollector.addNamedSequenceOfSchemeConfigs(m.Name, m.SchemeConfigs)
 
             # Deal with startup configuration options...
             if self.Config.StartEngine:
@@ -455,11 +477,11 @@ class MeasSystem(object):
             # Set up the starting measurement mode (if defined... normally we wait to be told in ready state)
             if self.Config.StartingMeasMode:
                 self._ChangeMode(self.Config.StartingMeasMode)
-                Log("Startup measurement mode name initialized", dict(Name = self.Config.StartingMeasMode))
+                Log("Startup measurement mode name initialized", dict(Name=self.Config.StartingMeasMode))
 
             self.__SetState(STATE_READY)
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             self.__SetState(STATE_ERROR)
             #self._FatalError = True
     def _HandleState_READY(self):
@@ -473,11 +495,12 @@ class MeasSystem(object):
             else:
                 exitState = STATE_READY
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             exitState = STATE_ERROR
         if exitState == STATE__UNDEFINED:
             raise Exception("HandleState_READY has a code error - the exitState has not been specified!!")
         self.__SetState(exitState)
+
     def _HandleState_ENABLED(self):
         #TODO: Keep running track of the number of pending spectra that need to be sent
         #TODO: Do not let spectral count accumulate
@@ -495,7 +518,7 @@ class MeasSystem(object):
                 time.sleep(1.0)
                 exitState = STATE_ENABLED
         except:
-            LogExc(Data = dict(State = StateName[self.__State]))
+            LogExc(Data=dict(State=StateName[self.__State]))
             exitState = STATE_ERROR
             self.__SetState(STATE_ERROR)
         #endtry
@@ -503,10 +526,12 @@ class MeasSystem(object):
             raise Exception("HandleState_ENABLED has a code error - the exitState has not been specified!!")
 
         self.__SetState(exitState)
+
     def _HandleState_ERROR(self):
         self._ClearErrorEvent.wait(0.05)
         if self._ClearErrorEvent.isSet():
             self.__SetState(STATE_INIT)
+
     def _MainLoop(self):
         #When started, sit and wait until a sweep is started (which sets the
         #Enabled Event). If enabled, loop and keep assembling spectra.  When
@@ -531,7 +556,7 @@ class MeasSystem(object):
         while not self._ShutdownRequested and not self._FatalError:
             stateHandler[self.__State]()
             now = TimeStamp()
-            loopTimes.append(now-lastTime)
+            loopTimes.append(now - lastTime)
             if len(loopTimes) == 50:
                 # print self.__State, np.mean(loopTimes), np.std(loopTimes), min(loopTimes), max(loopTimes)
                 loopTimes = []
@@ -544,14 +569,12 @@ class MeasSystem(object):
         wait_s = 2
         self.RpcThread.join(wait_s)
         if self.RpcThread.isAlive():
-            Log("Timed out while waiting for RpcServerThread to close.  Terminating rudely!",
-                Data = dict(WaitTime_s = wait_s),
-                Level = 2)
+            Log("Timed out while waiting for RpcServerThread to close.  Terminating rudely!", Data=dict(WaitTime_s=wait_s), Level=2)
 
         if self._FatalError:
-            Log("MeasSystem terminated due to a fatal error.", Level = 3)
+            Log("MeasSystem terminated due to a fatal error.", Level=3)
         else:
-            Log("MeasSystem exited due to shutdown request.", Level = 2)
+            Log("MeasSystem exited due to shutdown request.", Level=2)
 
     def Start(self):
         # Load the calibration file info and start the main loop
@@ -573,8 +596,11 @@ Where the options can be a combination of the following:
 --no_inst_mgr  Run this application without Instrument Manager.
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     shortOpts = 'hs'
     longOpts = ["help", "test", "no_fitter", "no_inst_mgr", "simulation", "ini="]
@@ -619,6 +645,7 @@ def HandleCommandSwitches():
 
     return (configFile, executeTest, noFitter, noInstMgr, simMode)
 
+
 def ExecuteTest(MS):
     """A self test executed via the --test command-line switch."""
     assert isinstance(MS, MeasSystem)
@@ -626,6 +653,7 @@ def ExecuteTest(MS):
     MS.RPC_Enable()
     print "MS enabled!!!"
     #MS.Disable()
+
 
 def main():
     my_instance = SingleInstance(APP_NAME)

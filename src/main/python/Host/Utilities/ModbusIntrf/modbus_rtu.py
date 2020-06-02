@@ -16,10 +16,10 @@ import sys
 import time
 from Host.Utilities.ModbusIntrf.hooks import call_hooks
 
+
 #-------------------------------------------------------------------------------
 class RtuQuery(Query):
     """Subclass of a Query. Adds the Modbus RTU specific part of the protocol"""
-
     def __init__(self):
         """Constructor"""
         Query.__init__(self)
@@ -72,10 +72,10 @@ class RtuQuery(Query):
         crc = struct.pack(">H", utils.calculate_crc(data))
         return (data + crc)
 
+
 #-------------------------------------------------------------------------------
 class RtuMaster(Master):
     """Subclass of Master. Implements the Modbus RTU MAC layer"""
-
     def __init__(self, serial, interchar_multiplier=1.5):
         """Constructor. Pass the pyserial.Serial object"""
         self._serial = serial
@@ -121,7 +121,7 @@ class RtuMaster(Master):
         while read_bytes:
             read_bytes = self._serial.read(1)
             response += read_bytes
-            if expected_length>=0 and len(response)>=expected_length:
+            if expected_length >= 0 and len(response) >= expected_length:
                 #if the expected number of byte is received consider that the response is done
                 #improve performance by avoiding end-of-response detection by timeout
                 break
@@ -135,10 +135,10 @@ class RtuMaster(Master):
         """Returns an instance of a Query subclass implementing the modbus RTU protocol"""
         return RtuQuery()
 
+
 #-------------------------------------------------------------------------------
 class RtuServer(Server):
     """This class implements a simple and mono-threaded modbus rtu server"""
-
     def __init__(self, serial, databank=None):
         """Constructor: initializes the server settings"""
         Server.__init__(self, databank if databank else Databank())

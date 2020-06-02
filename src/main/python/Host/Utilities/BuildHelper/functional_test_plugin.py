@@ -13,7 +13,6 @@ try:
 except ImportError:
     from Queue import Empty
 
-
 from pybuilder.core import init, use_plugin, task, description, after
 from pybuilder.utils import discover_files_matching, execute_command, Timer, read_file
 from pybuilder.terminal import print_text_line, print_file_content, print_text
@@ -22,10 +21,10 @@ from pybuilder.terminal import styled_text, fg, GREEN, MAGENTA, GREY
 
 use_plugin("python.core")
 
+
 @init
 def initialize_functionaltest_plugin(project):
-    project.set_property_if_unset(
-        "dir_source_functionaltest_python", "src/unittest/python")
+    project.set_property_if_unset("dir_source_functionaltest_python", "src/unittest/python")
     project.set_property_if_unset("functionaltest_file_glob", "*_uitests.py")
     project.set_property_if_unset("functionaltest_additional_environment", {})
     project.set_property_if_unset("functionaltest_inherit_environment", True)
@@ -34,13 +33,13 @@ def initialize_functionaltest_plugin(project):
 
 @after("run_unit_tests")
 def run_functional_tests(project, logger):
-    reports, total_time = run_functional_tests_sequentially(
-        project, logger)
+    reports, total_time = run_functional_tests_sequentially(project, logger)
 
     reports_processor = ReportsProcessor(project, logger)
     reports_processor.process_reports(reports, total_time)
     reports_processor.report_to_ci_server(project)
     reports_processor.write_report_and_ensure_all_tests_passed()
+
 
 def run_functional_tests_sequentially(project, logger):
     logger.debug("Running functional tests")
@@ -64,18 +63,15 @@ def discover_functional_tests(source_path, suffix=".py"):
 
 
 def discover_functional_tests_for_project(project, logger=None):
-    functionaltest_source_dir = project.expand_path(
-        "$dir_source_functionaltest_python")
+    functionaltest_source_dir = project.expand_path("$dir_source_functionaltest_python")
     functionaltest_glob = project.expand("$functionaltest_file_glob")
     return discover_files_matching(functionaltest_source_dir, functionaltest_glob)
 
 
 def add_additional_environment_keys(env, project):
-    additional_environment = project.get_property(
-        "functionaltest_additional_environment", {})
+    additional_environment = project.get_property("functionaltest_additional_environment", {})
     if not isinstance(additional_environment, dict):
-        raise ValueError("Additional environment %r is not a map." %
-                         additional_environment)
+        raise ValueError("Additional environment %r is not a map." % additional_environment)
     for key in additional_environment:
         env[key] = additional_environment[key]
 
@@ -89,9 +85,8 @@ def inherit_environment(env, project):
 
 def prepare_environment(project):
     env = {
-        "PYTHONPATH": os.pathsep.join((
-            project.expand_path("$dir_source_main_python"),
-            project.expand_path("$dir_source_functionaltest_python")))
+        "PYTHONPATH":
+        os.pathsep.join((project.expand_path("$dir_source_main_python"), project.expand_path("$dir_source_functionaltest_python")))
     }
 
     inherit_environment(env, project)
@@ -129,15 +124,9 @@ def run_single_test(logger, project, reports_dir, test, output_test_names=True):
 
     report_file_name = os.path.join(reports_dir, name)
     error_file_name = report_file_name + ".err"
-    return_code = execute_command(
-        command_and_arguments, report_file_name, env, error_file_name=error_file_name)
+    return_code = execute_command(command_and_arguments, report_file_name, env, error_file_name=error_file_name)
     test_time.stop()
-    report_item = {
-        "test": name,
-        "test_file": test,
-        "time": test_time.get_millis(),
-        "success": True
-    }
+    report_item = {"test": name, "test_file": test, "time": test_time.get_millis(), "success": True}
     if return_code != 0:
         logger.error("Functional test failed: %s", test)
         report_item["success"] = False

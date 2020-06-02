@@ -20,6 +20,7 @@ except:
 
 Fault = xmlrpclib.Fault
 
+
 class JSONRPCHandler(Dispatcher):
     """
     This is the basic JSON-RPC handler class. To use it, you create it::
@@ -53,8 +54,7 @@ class JSONRPCHandler(Dispatcher):
     :param multicall: Whether to register the :obj:`system.multicall`
                       function. (It won't by default.)
     """
-    def __init__(self, endpoint_name=None, instance=None, introspection=True,
-                 multicall=False):
+    def __init__(self, endpoint_name=None, instance=None, introspection=True, multicall=False):
         if sys.version_info[:2] < (2, 5):
             Dispatcher.__init__(self)
         else:
@@ -139,10 +139,9 @@ class JSONRPCHandler(Dispatcher):
         """
         if endpoint_name is None:
             endpoint_name = self.endpoint_name
-            if endpoint_name is None:   # still
+            if endpoint_name is None:  # still
                 raise RuntimeError("No endpoint name given!")
-        app_module.add_url_rule(route, endpoint_name, self.handle_request,
-                                methods=['POST'])
+        app_module.add_url_rule(route, endpoint_name, self.handle_request, methods=['POST'])
 
     def handle_request(self):
         """
@@ -151,8 +150,7 @@ class JSONRPCHandler(Dispatcher):
         to the client.
         """
         response_data = self._marshaled_dispatch(request.data)
-        return current_app.response_class(response_data,
-                                          content_type='text/json')
+        return current_app.response_class(response_data, content_type='text/json')
 
     def namespace(self, prefix):
         """
@@ -240,7 +238,8 @@ def dump_method_call(method, *params):
     :param method: The name of the method to call.
     :param params: The parameters to pass to the method.
     """
-    return json.dumps({'method':method, 'params':params})
+    return json.dumps({'method': method, 'params': params})
+
 
 def load_method_response(response):
     """
@@ -268,13 +267,11 @@ def test_jsonrpc_call(client, rpc_path, method, *params):
     :param method: The method to call.
     :param params: The parameters to pass to the method.
     """
-    rv = client.post(
-        rpc_path,
-        data=dump_method_call(method, *params),
-        content_type='text/json'
-    )
+    rv = client.post(rpc_path, data=dump_method_call(method, *params), content_type='text/json')
     return load_method_response(rv.data)
-test_jsonrpc_call.__test__ = False   # prevents Nose from collecting it
+
+
+test_jsonrpc_call.__test__ = False  # prevents Nose from collecting it
 
 
 class JSONRPCTester(object):
@@ -287,7 +284,7 @@ class JSONRPCTester(object):
     :param client: A :obj:`werkzeug.Client`.
     :param rpc_path: The path to the JSON-RPC handler.
     """
-    __test__ = False    # prevents Nose from collecting it
+    __test__ = False  # prevents Nose from collecting it
 
     def __init__(self, client, rpc_path):
         self.client = client

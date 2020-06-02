@@ -29,9 +29,9 @@ LOGGER = logging.getLogger("modbus_tk")
 #Exceptions
 #-------------------------------------------------------------------------------
 
+
 class ModbusError(Exception):
     """Exception raised when the modbus slave returns an error"""
-
     def __init__(self, exception_code, value=""):
         """constructor: set the exception code returned by the slave"""
         if not value:
@@ -43,12 +43,14 @@ class ModbusError(Exception):
         """return the exception code returned by the slave (see defines)"""
         return self._exception_code
 
+
 #-------------------------------------------------------------------------------
 class ModbusFunctionNotSupportedError(Exception):
     """
     Exception raised when calling a modbus function not supported by modbus_tk
     """
     pass
+
 
 class DuplicatedKeyError(Exception):
     """
@@ -57,15 +59,18 @@ class DuplicatedKeyError(Exception):
     """
     pass
 
+
 class MissingKeyError(Exception):
     """
     Exception raised when trying to get an object with a key that doesn't exist
     """
     pass
 
+
 class InvalidModbusBlockError(Exception):
     """Exception raised when a modbus block is not valid"""
     pass
+
 
 class InvalidArgumentError(Exception):
     """
@@ -74,6 +79,7 @@ class InvalidArgumentError(Exception):
     """
     pass
 
+
 class OverlapModbusBlockError(Exception):
     """
     Exception raised when adding modbus block on a memory address
@@ -81,9 +87,11 @@ class OverlapModbusBlockError(Exception):
     """
     pass
 
+
 class OutOfModbusBlockError(Exception):
     """Exception raised when accessing out of a modbus block"""
     pass
+
 
 class ModbusInvalidResponseError(Exception):
     """
@@ -92,6 +100,7 @@ class ModbusInvalidResponseError(Exception):
     """
     pass
 
+
 class ModbusInvalidRequestError(Exception):
     """
     Exception raised when the request by the master doesn't fit
@@ -99,18 +108,19 @@ class ModbusInvalidRequestError(Exception):
     """
     pass
 
+
 class ModbusNotConnectedError(Exception):
     """
     Exception raised when the master is not connected to the slave
     """
     pass
 
+
 #-------------------------------------------------------------------------------
 class Query:
     """
     Interface to be implemented in subclass for every specific modbus MAC layer
     """
-
     def __init__(self):
         """Constructor"""
         pass
@@ -147,13 +157,13 @@ class Query:
         """
         raise NotImplementedError()
 
+
 #-------------------------------------------------------------------------------
 class Master:
     """
     This class implements the Modbus Application protocol for a master
     To be subclassed with a class implementing the MAC layer
     """
-
     def __init__(self, timeout_in_sec, hooks=None):
         """Constructor: can define a timeout"""
         self._timeout = timeout_in_sec
@@ -208,8 +218,7 @@ class Master:
         raise NotImplementedError()
 
     @threadsafe_function
-    def execute(self, slave, function_code, starting_address,
-                quantity_of_x=0, output_value=0, data_format="", expected_length=-1):
+    def execute(self, slave, function_code, starting_address, quantity_of_x=0, output_value=0, data_format="", expected_length=-1):
         """
         Execute a modbus query and returns the data part of the answer as a tuple
         The returned tuple depends on the query function code. see modbus protocol
@@ -235,7 +244,7 @@ class Master:
                 byte_count += 1
             nb_of_digits = quantity_of_x
             if not data_format:
-                data_format = ">"+(byte_count*"B")
+                data_format = ">" + (byte_count * "B")
             if expected_length < 0:  #No lenght was specified and calculated length can be used:
                 expected_length = byte_count + 5  #slave + func + bytcodeLen + bytecode + crc1 + crc2
 
@@ -243,9 +252,9 @@ class Master:
             is_read_function = True
             pdu = struct.pack(">BHH", function_code, starting_address, quantity_of_x)
             if not data_format:
-                data_format = ">"+(quantity_of_x*"H")
+                data_format = ">" + (quantity_of_x * "H")
             if expected_length < 0:  #No lenght was specified and calculated length can be used:
-                expected_length = 2*quantity_of_x + 5  #slave + func + bytcodeLen + bytecode x 2 + crc1 + crc2
+                expected_length = 2 * quantity_of_x + 5  #slave + func + bytcodeLen + bytecode x 2 + crc1 + crc2
 
         elif (function_code == defines.WRITE_SINGLE_COIL) or (function_code == defines.WRITE_SINGLE_REGISTER):
             if function_code == defines.WRITE_SINGLE_COIL:
@@ -361,16 +370,16 @@ class Master:
         """Gets the current value of the MAC layer timeout"""
         return self._timeout
 
+
 #-------------------------------------------------------------------------------
 class ModbusBlock:
     """This class represents the values for a range of addresses"""
-
     def __init__(self, starting_address, size):
         """
         Contructor: defines the address range and creates the array of values
         """
         self.starting_address = starting_address
-        self._data = [0]*size
+        self._data = [0] * size
         self.size = len(self._data)
 
     def is_in(self, starting_address, size):
@@ -379,9 +388,9 @@ class ModbusBlock:
         would overlap this block
         """
         if starting_address > self.starting_address:
-            return (self.starting_address+self.size)>starting_address
+            return (self.starting_address + self.size) > starting_address
         elif starting_address < self.starting_address:
-            return (starting_address+size)>self.starting_address
+            return (starting_address + size) > self.starting_address
         return True
 
     def __getitem__(self, r):
@@ -400,32 +409,32 @@ class Slave:
     This class define a modbus slave which is in charge of making the action
     asked by a modbus query
     """
-
     def __init__(self, id):
         """Constructor"""
         self._id = id
-        self._blocks = {} # the map registring all blocks of the slave
+        self._blocks = {}  # the map registring all blocks of the slave
         # a shortcut to find blocks per type
-        self._memory = {1:[], 2:[], 3:[], 4:[]}
+        self._memory = {1: [], 2: [], 3: [], 4: []}
         # a lock for mutual access to the _blocks and _memory maps
         self._data_lock = threading.Lock()
         #map modbus function code to a function:
-        self._fn_code_map = {defines.READ_COILS: self._read_coils,
-                             defines.READ_DISCRETE_INPUTS: self._read_discrete_inputs,
-                             defines.READ_INPUT_REGISTERS: self._read_input_registers,
-                             defines.READ_HOLDING_REGISTERS: self._read_holding_registers,
-                             defines.WRITE_SINGLE_COIL: self._write_single_coil,
-                             defines.WRITE_SINGLE_REGISTER: self._write_single_register,
-                             defines.WRITE_MULTIPLE_COILS: self._write_multiple_coils,
-                             defines.WRITE_MULTIPLE_REGISTERS: self._write_multiple_registers,
-                             }
+        self._fn_code_map = {
+            defines.READ_COILS: self._read_coils,
+            defines.READ_DISCRETE_INPUTS: self._read_discrete_inputs,
+            defines.READ_INPUT_REGISTERS: self._read_input_registers,
+            defines.READ_HOLDING_REGISTERS: self._read_holding_registers,
+            defines.WRITE_SINGLE_COIL: self._write_single_coil,
+            defines.WRITE_SINGLE_REGISTER: self._write_single_register,
+            defines.WRITE_MULTIPLE_COILS: self._write_multiple_coils,
+            defines.WRITE_MULTIPLE_REGISTERS: self._write_multiple_registers,
+        }
 
     def _get_block_and_offset(self, block_type, address, length):
         """returns the block and offset corresponding to the given address"""
         for block in self._memory[block_type]:
             if address >= block.starting_address:
                 offset = address - block.starting_address
-                if block.size >= offset+length:
+                if block.size >= offset + length:
                     return block, offset
 
         raise ModbusError(defines.ILLEGAL_DATA_ADDRESS)
@@ -434,13 +443,13 @@ class Slave:
         """read the value of coils and discrete inputs"""
         (starting_address, quantity_of_x) = struct.unpack(">HH", request_pdu[1:5])
 
-        if (quantity_of_x <= 0) or (quantity_of_x>2000):
+        if (quantity_of_x <= 0) or (quantity_of_x > 2000):
             # maximum allowed size is 2000 bits in one reading
             raise ModbusError(defines.ILLEGAL_DATA_VALUE)
 
         block, offset = self._get_block_and_offset(block_type, starting_address, quantity_of_x)
 
-        values = block[offset:offset+quantity_of_x]
+        values = block[offset:offset + quantity_of_x]
 
         #pack bits in bytes
         byte_count = quantity_of_x / 8
@@ -488,7 +497,7 @@ class Slave:
         block, offset = self._get_block_and_offset(block_type, starting_address, quantity_of_x)
 
         #get the values
-        values = block[offset:offset+quantity_of_x]
+        values = block[offset:offset + quantity_of_x]
 
         #write the response header
         response = struct.pack(">B", 2 * quantity_of_x)
@@ -520,7 +529,7 @@ class Slave:
         count = 0
         for i in xrange(quantity_of_x):
             count += 1
-            block[offset+i] = struct.unpack(">H", request_pdu[6+2*i:8+2*i])[0]
+            block[offset + i] = struct.unpack(">H", request_pdu[6 + 2 * i:8 + 2 * i])[0]
 
         return struct.pack(">HH", starting_address, count)
 
@@ -544,12 +553,12 @@ class Slave:
         for i in xrange(byte_count):
             if count >= quantity_of_x:
                 break
-            (byte_value, ) = struct.unpack(">B", request_pdu[6+i])
+            (byte_value, ) = struct.unpack(">B", request_pdu[6 + i])
             for j in xrange(8):
                 if byte_value & (1 << j):
-                    block[offset+i*8+j] = 1
+                    block[offset + i * 8 + j] = 1
                 else:
-                    block[offset+i*8+j] = 0
+                    block[offset + i * 8 + j] = 0
                 if count >= quantity_of_x:
                     break
                 count += 1
@@ -560,7 +569,7 @@ class Slave:
         (data_address, value) = struct.unpack(">HH", request_pdu[1:5])
         block, offset = self._get_block_and_offset(defines.HOLDING_REGISTERS, data_address, 1)
         block[offset] = value
-        return request_pdu[1:] #returns echo of the command
+        return request_pdu[1:]  #returns echo of the command
 
     def _write_single_coil(self, request_pdu):
         """execute modbus function 5"""
@@ -572,14 +581,14 @@ class Slave:
             block[offset] = 1
         else:
             raise ModbusError(defines.ILLEGAL_DATA_VALUE)
-        return request_pdu[1:] #returns echo of the command
+        return request_pdu[1:]  #returns echo of the command
 
     def handle_request(self, request_pdu, broadcast=False):
         """
         parse the request pdu, makes the corresponding action
         and returns the response pdu
         """
-        with self._data_lock: #thread-safe
+        with self._data_lock:  #thread-safe
             try:
                 retval = call_hooks("modbus.Slave.handle_request", (self, request_pdu))
                 if retval <> None:
@@ -593,8 +602,8 @@ class Slave:
                     raise ModbusError(defines.ILLEGAL_FUNCTION)
 
                 # if read query is broadcasted raises an error
-                cant_be_broadcasted = (defines.READ_COILS, defines.READ_DISCRETE_INPUTS,
-                                      defines.READ_INPUT_REGISTERS, defines.READ_HOLDING_REGISTERS)
+                cant_be_broadcasted = (defines.READ_COILS, defines.READ_DISCRETE_INPUTS, defines.READ_INPUT_REGISTERS,
+                                       defines.READ_HOLDING_REGISTERS)
                 if broadcast and (function_code in cant_be_broadcasted):
                     raise ModbusInvalidRequestError("Function %d can not be broadcasted" % function_code)
 
@@ -612,12 +621,11 @@ class Slave:
             except ModbusError, excpt:
                 LOGGER.debug(str(excpt))
                 call_hooks("modbus.Slave.on_exception", (self, function_code, excpt))
-                return struct.pack(">BB", function_code+128, excpt.get_exception_code())
-
+                return struct.pack(">BB", function_code + 128, excpt.get_exception_code())
 
     def add_block(self, block_name, block_type, starting_address, size):
         """Add a new block identified by its name"""
-        with self._data_lock: #thread-safe
+        with self._data_lock:  #thread-safe
             if size <= 0:
                 raise InvalidArgumentError, "size must be a positive number"
             if starting_address < 0:
@@ -650,7 +658,7 @@ class Slave:
         Remove the block with the given name.
         Raise an exception if not found
         """
-        with self._data_lock: #thread safe
+        with self._data_lock:  #thread safe
             block = self._get_block(block_name)
 
             # the block has been found: remove it from the shortcut
@@ -661,7 +669,7 @@ class Slave:
         """
         Remove all the blocks
         """
-        with self._data_lock: #thread safe
+        with self._data_lock:  #thread safe
             self._blocks.clear()
             for key in self._memory:
                 self._memory[key] = []
@@ -682,12 +690,12 @@ class Slave:
         If values is a list or a tuple, the value of every item is written
         If values is a number, only one value is written
         """
-        with self._data_lock: #thread safe
+        with self._data_lock:  #thread safe
             block = self._get_block(block_name)
 
             # the block has been found
             # check that it doesn't write out of the block
-            offset = address-block.starting_address
+            offset = address - block.starting_address
 
             size = 1
             if (type(values) is list) or (type(values) is tuple):
@@ -698,7 +706,7 @@ class Slave:
 
             #if Ok: write the values
             if (type(values) is list) or (type(values) is tuple):
-                block[offset:offset+len(values)] = values
+                block[offset:offset + len(values)] = values
             else:
                 block[offset] = values
 
@@ -706,33 +714,33 @@ class Slave:
         """
         return the values of n items at the given address of the given block
         """
-        with self._data_lock: #thread safe
+        with self._data_lock:  #thread safe
             block = self._get_block(block_name)
 
             # the block has been found
             # check that it doesn't write out of the block
             offset = address - block.starting_address
 
-            if (offset<0) or ((offset + size) > block.size):
+            if (offset < 0) or ((offset + size) > block.size):
                 raise OutOfModbusBlockError, "address %s size %d is out of block %s" % (address, size, block_name)
 
             #returns the values
             if size == 1:
-                return (block[offset],)
+                return (block[offset], )
             else:
-                return tuple(block[offset:offset+size])
+                return tuple(block[offset:offset + size])
+
 
 class Databank:
     """A databank is a shared place containing the data of all slaves"""
-
     def __init__(self):
         """Constructor"""
-        self._slaves = {} # the map of slaves by ids
-        self._lock = threading.Lock() # protect access to the map of slaves
+        self._slaves = {}  # the map of slaves by ids
+        self._lock = threading.Lock()  # protect access to the map of slaves
 
     def add_slave(self, slave_id):
         """Add a new slave with the given id"""
-        with self._lock: #thread-safe
+        with self._lock:  #thread-safe
             if (slave_id <= 0) or (slave_id > 255):
                 raise Exception, "Invalid slave id %d" % (slave_id)
             if not self._slaves.has_key(slave_id):
@@ -743,7 +751,7 @@ class Databank:
 
     def get_slave(self, slave_id):
         """Get the slave with the given id"""
-        with self._lock: #thread-safe
+        with self._lock:  #thread-safe
             if self._slaves.has_key(slave_id):
                 return self._slaves[slave_id]
             else:
@@ -751,7 +759,7 @@ class Databank:
 
     def remove_slave(self, slave_id):
         """Remove the slave with the given id"""
-        with self._lock: #thread-safe
+        with self._lock:  #thread-safe
             if self._slaves.has_key(slave_id):
                 self._slaves.pop(slave_id)
             else:
@@ -759,7 +767,7 @@ class Databank:
 
     def remove_all_slaves(self):
         """clean the list of slaves"""
-        with self._lock: #thread-safe
+        with self._lock:  #thread-safe
             self._slaves.clear()
 
     def handle_request(self, query, request):
@@ -793,7 +801,8 @@ class Databank:
         func_code = 1
         if len(request_pdu) > 0:
             (func_code, ) = struct.unpack(">B", request_pdu[0])
-        return struct.pack(">BB", func_code+0x80, defines.SLAVE_DEVICE_FAILURE)
+        return struct.pack(">BB", func_code + 0x80, defines.SLAVE_DEVICE_FAILURE)
+
 
 #-------------------------------------------------------------------------------
 class Server:
@@ -801,10 +810,9 @@ class Server:
     This class owns several slaves and defines an interface
     to be implemented for a TCP or RTU server
     """
-
     def __init__(self, databank=None):
         """Constructor"""
-        self._databank = databank if databank else Databank() #never use a mutable type as default argument
+        self._databank = databank if databank else Databank()  #never use a mutable type as default argument
         self._verbose = False
         self._thread = None
         self._go = None
@@ -824,7 +832,7 @@ class Server:
 
     def _make_thread(self):
         """create the main thread of the server"""
-        self._thread = threading.Thread(target=Server._run_server, args=(self,))
+        self._thread = threading.Thread(target=Server._run_server, args=(self, ))
         self._go = threading.Event()
 
     def set_verbose(self, verbose):
@@ -879,7 +887,7 @@ class Server:
             self._do_exit()
         except Exception, excpt:
             LOGGER.error("server error: %s" % str(excpt))
-        self._make_thread() #make possible to rerun in future
+        self._make_thread()  #make possible to rerun in future
 
     def _handle(self, request):
         """handle a received sentence"""

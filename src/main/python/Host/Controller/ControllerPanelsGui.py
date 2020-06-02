@@ -59,7 +59,9 @@ class LaserPanelGui(wx.Panel):
         print "Event handler 'onClear' not implemented!"
         event.Skip()
 
+
 # end of class LaserPanelGui
+
 
 class CommandLogPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -168,7 +170,9 @@ class CommandLogPanelGui(wx.Panel):
         print "Event handler 'onStartAcquisition' not implemented!"
         event.Skip()
 
+
 # end of class CommandLogPanelGui
+
 
 class HotBoxPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -268,7 +272,9 @@ class HotBoxPanelGui(wx.Panel):
         print "Event handler 'onWaveformSelectChanged' not implemented!"
         event.Skip()
 
+
 # end of class HotBoxPanelGui
+
 
 class RingdownPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -280,7 +286,18 @@ class RingdownPanelGui(wx.Panel):
         self.clearButton = wx.Button(self.panel_1, wx.ID_CLEAR, "")
         self.uncorrectedCheckBox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Uncorrected")
         self.correctedCheckBox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Corrected")
-        self.graphTypeRadioBox = wx.RadioBox(self.panel_1, wx.ID_ANY, "Select Graph Type", choices=["Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2", "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1", "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1", "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber", "IL(fine) vs Time", "Loss vs IL(fine)"], majorDimension=4, style=wx.RA_SPECIFY_ROWS)
+        self.graphTypeRadioBox = wx.RadioBox(self.panel_1,
+                                             wx.ID_ANY,
+                                             "Select Graph Type",
+                                             choices=[
+                                                 "Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2",
+                                                 "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1",
+                                                 "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1",
+                                                 "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber",
+                                                 "IL(fine) vs Time", "Loss vs IL(fine)"
+                                             ],
+                                             majorDimension=4,
+                                             style=wx.RA_SPECIFY_ROWS)
         self.panel_2 = wx.Panel(self.panel_1, wx.ID_ANY)
 
         self.__set_properties()
@@ -331,7 +348,9 @@ class RingdownPanelGui(wx.Panel):
         print "Event handler 'onSelectGraphType' not implemented!"
         event.Skip()
 
+
 # end of class RingdownPanelGui
+
 
 class WarmBoxPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -390,7 +409,9 @@ class WarmBoxPanelGui(wx.Panel):
         print "Event handler 'onWaveformSelectChanged' not implemented!"
         event.Skip()
 
+
 # end of class WarmBoxPanelGui
+
 
 class FilterHeaterPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -432,7 +453,9 @@ class FilterHeaterPanelGui(wx.Panel):
         print "Event handler 'onClear' not implemented!"
         event.Skip()
 
+
 # end of class FilterHeaterPanelGui
+
 
 class ProcessedLossPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -493,7 +516,9 @@ class ProcessedLossPanelGui(wx.Panel):
         print "Event handler 'onProcessedLossChanged' not implemented!"
         event.Skip()
 
+
 # end of class ProcessedLossPanelGui
+
 
 class WlmPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -535,7 +560,9 @@ class WlmPanelGui(wx.Panel):
         print "Event handler 'onClear' not implemented!"
         event.Skip()
 
+
 # end of class WlmPanelGui
+
 
 class PressurePanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -631,7 +658,9 @@ class PressurePanelGui(wx.Panel):
         print "Event handler 'onValveWaveformSelectChanged' not implemented!"
         event.Skip()
 
+
 # end of class PressurePanelGui
+
 
 class StatsPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -721,7 +750,9 @@ class StatsPanelGui(wx.Panel):
         print "Event handler 'onStartStop' not implemented!"
         event.Skip()
 
+
 # end of class StatsPanelGui
+
 
 class AccelerometerPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -763,5 +794,6 @@ class AccelerometerPanelGui(wx.Panel):
     def onClear(self, event):  # wxGlade: AccelerometerPanelGui.<event_handler>
         print "Event handler 'onClear' not implemented!"
         event.Skip()
+
 
 # end of class AccelerometerPanelGui

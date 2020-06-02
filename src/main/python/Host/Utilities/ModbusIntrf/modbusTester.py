@@ -43,11 +43,9 @@ if __name__ == "__main__":
     else:
         repeat = 1
 
-    actionDict = {0: cst.READ_HOLDING_REGISTERS,
-                  1: cst.WRITE_SINGLE_REGISTER}
+    actionDict = {0: cst.READ_HOLDING_REGISTERS, 1: cst.WRITE_SINGLE_REGISTER}
 
-    argDict = {0: {"quantity_of_x": arg},
-               1: {"output_value": arg}}
+    argDict = {0: {"quantity_of_x": arg}, 1: {"output_value": arg}}
 
     baudrate = 9600
     print "\n%d" % baudrate

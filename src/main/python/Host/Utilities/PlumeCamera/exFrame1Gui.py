@@ -51,6 +51,7 @@ class ExFrame1Gui(wx.Frame):
         print "Event handler `onEvaluate' not implemented!"
         event.Skip()
 
+
 # end of class ExFrame1Gui
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

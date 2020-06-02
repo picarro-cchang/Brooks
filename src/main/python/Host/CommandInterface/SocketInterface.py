@@ -17,15 +17,16 @@ import select
 
 from SocketServer import BaseRequestHandler, TCPServer
 
+
 class SocketInterface(object):
     def __init__(self):
         """ Initializes TCP Socket Interface """
         self.terminate = False
-        self.sock      = None
-        self.client    = None
+        self.sock = None
+        self.client = None
 
-    def config( self, port=None, backlog=1 ):
-        self.port    = port
+    def config(self, port=None, backlog=1):
+        self.port = port
         self.backlog = backlog
 
     """
@@ -44,7 +45,7 @@ class SocketInterface(object):
 
     def listener(self):
         (ir, iw, ie) = ([self.sock], [], [])
-        while self.terminate==False:
+        while self.terminate == False:
             try:
                 r, w, e = select.select(ir, iw, ie, 0.5)
                 if r:
@@ -58,41 +59,42 @@ class SocketInterface(object):
             except:
                 pass
 
-    def open( self ):
+    def open(self):
         """ Opens port """
         if self.sock == None:
             self.close()
             self.terminate = False
             self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             #self.sock.settimeout(0.5)
-            self.sock.bind(('',self.port))
-            self.sock.listen( self.backlog )
-            self.sockThread = threading.Thread( target = self.listener )
+            self.sock.bind(('', self.port))
+            self.sock.listen(self.backlog)
+            self.sockThread = threading.Thread(target=self.listener)
             self.sockThread.setDaemon(True)
             self.sockThread.start()
 
-    def close( self ):
+    def close(self):
         """ Closes port """
         if self.sock != None:
             self.sock.close()
             self.sock = None
-        if  self.client != None:
+        if self.client != None:
             self.client.close()
             self.client = None
         self.terminate = True
 
-    def read( self ):
+    def read(self):
         return self.client.recv(1)
 
     def write(self, msg):
         self.client.sendall(msg)
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     s = SocketInterface()
-    s.config( port=88888, backlog=2 )
+    s.config(port=88888, backlog=2)
     s.open()
     while True:
         i = s.read()
-        if i!= None and len(i):
+        if i != None and len(i):
             print "(%r)" % i
     s.close()

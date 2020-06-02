@@ -29,29 +29,32 @@ from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.WlmCalUtilities import WlmFile
 from Host.Common.ctypesConvert import ctypesToDict, dictToCtypes
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="writeWlmEeprom")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="writeWlmEeprom")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+
 class WriteWlmEeprom(object):
     """Write parameters from a collection of WLM files to the WLM EEPROM"""
-    def __init__(self,configFile,options):
+    def __init__(self, configFile, options):
         self.config = ConfigObj(configFile)
         self.wlmFiles = []
         # Input files
@@ -60,7 +63,7 @@ class WriteWlmEeprom(object):
                 fname = options["--laser1"]
             else:
                 fname = self.config["FILES"]["LASER1"]
-            self.wlmFiles.append(file(fname + ".wlm","r"))
+            self.wlmFiles.append(file(fname + ".wlm", "r"))
         except KeyError:
             self.wlmFiles.append(None)
         try:
@@ -68,7 +71,7 @@ class WriteWlmEeprom(object):
                 fname = options["--laser2"]
             else:
                 fname = self.config["FILES"]["LASER2"]
-            self.wlmFiles.append(file(fname + ".wlm","r"))
+            self.wlmFiles.append(file(fname + ".wlm", "r"))
         except KeyError:
             self.wlmFiles.append(None)
         try:
@@ -76,7 +79,7 @@ class WriteWlmEeprom(object):
                 fname = options["--laser3"]
             else:
                 fname = self.config["FILES"]["LASER3"]
-            self.wlmFiles.append(file(fname + ".wlm","r"))
+            self.wlmFiles.append(file(fname + ".wlm", "r"))
         except KeyError:
             self.wlmFiles.append(None)
         try:
@@ -84,7 +87,7 @@ class WriteWlmEeprom(object):
                 fname = options["--laser4"]
             else:
                 fname = self.config["FILES"]["LASER4"]
-            self.wlmFiles.append(file(fname + ".wlm","r"))
+            self.wlmFiles.append(file(fname + ".wlm", "r"))
         except KeyError:
             self.wlmFiles.append(None)
 
@@ -98,12 +101,12 @@ class WriteWlmEeprom(object):
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
 
         wlmCal = WLMCalibrationType()
         etalon1_offset, etalon2_offset, reference1_offset, reference2_offset = [], [], [], []
         waveNumber, ratio1, ratio2, etalon_temperature = [], [], [], []
-        for i,fp in enumerate(self.wlmFiles):
+        for i, fp in enumerate(self.wlmFiles):
             laserNum = i + 1
             if fp is not None:
                 wlmFile = WlmFile(fp)
@@ -122,19 +125,19 @@ class WriteWlmEeprom(object):
         # Calculate means and standard deviations
         wlmCal.header.etalon_temperature = np.mean(etalon_temperature)
         if np.std(etalon_temperature) > 0.010:
-            print "WARNING: Etalon temperature std dev: %.3f" % (np.std(etalon_temperature),)
+            print "WARNING: Etalon temperature std dev: %.3f" % (np.std(etalon_temperature), )
         wlmCal.header.etalon1_offset = np.mean(etalon1_offset)
         if np.std(etalon1_offset) > 5:
-            print "WARNING: Etalon1 offset std dev: %.1f" % (np.std(etalon1_offset),)
+            print "WARNING: Etalon1 offset std dev: %.1f" % (np.std(etalon1_offset), )
         wlmCal.header.etalon2_offset = np.mean(etalon2_offset)
         if np.std(etalon2_offset) > 5:
-            print "WARNING: Etalon2 offset std dev: %.1f" % (np.std(etalon2_offset),)
+            print "WARNING: Etalon2 offset std dev: %.1f" % (np.std(etalon2_offset), )
         wlmCal.header.reference1_offset = np.mean(reference1_offset)
         if np.std(reference1_offset) > 5:
-            print "WARNING: Reference1 offset std dev: %.1f" % (np.std(reference1_offset),)
+            print "WARNING: Reference1 offset std dev: %.1f" % (np.std(reference1_offset), )
         wlmCal.header.reference2_offset = np.mean(reference2_offset)
         if np.std(reference2_offset) > 5:
-            print "WARNING: Reference2 offset std dev: %.1f" % (np.std(reference2_offset),)
+            print "WARNING: Reference2 offset std dev: %.1f" % (np.std(reference2_offset), )
         # Sort the wavenumbers into order and use same permutation for ratios
         perm = waveNumber.argsort()
         waveNumber = waveNumber[perm]
@@ -143,10 +146,10 @@ class WriteWlmEeprom(object):
         if len(waveNumber) > len(wlmCal.wlmCalRows):
             print "WARNING: Too many measurements in WLM files: %d" % len(waveNumber)
         for i in range(len(waveNumber)):
-            wlmCal.wlmCalRows[i].waveNumberAsUint = int(100000*waveNumber[i]+0.5)
+            wlmCal.wlmCalRows[i].waveNumberAsUint = int(100000 * waveNumber[i] + 0.5)
             wlmCal.wlmCalRows[i].ratio1 = ratio1[i]
             wlmCal.wlmCalRows[i].ratio2 = ratio2[i]
-        for j,c in enumerate("%s" % self.serialNo):
+        for j, c in enumerate("%s" % self.serialNo):
             wlmCal.header.identifier[j] = ord(c)
         # Write to the EEPROM
         print "Writing WLM data to EEPROM"
@@ -154,11 +157,12 @@ class WriteWlmEeprom(object):
         # Read back the data
         print "Writing complete. Starting verification"
         wlmCalReadback = WLMCalibrationType()
-        dictToCtypes(Driver.fetchWlmCal(),wlmCalReadback)
+        dictToCtypes(Driver.fetchWlmCal(), wlmCalReadback)
         if buffer(wlmCalReadback) == buffer(wlmCal):
             print "EEPROM contents verified"
         else:
             print "ERROR: WLMCAL read back incorrectly."
+
 
 HELP_STRING = """writeWlmEeprom.py [-c<FILENAME>] [-h|--help]
 
@@ -174,12 +178,14 @@ settings in the configuration file:
 -s                   serial number of wavelength monitor
 """
 
+
 def printUsage():
     print HELP_STRING
 
+
 def handleCommandSwitches():
     shortOpts = 'hc:'
-    longOpts = ["help","laser1=","laser2=","laser3=","laser4="]
+    longOpts = ["help", "laser1=", "laser2=", "laser3=", "laser4="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -187,10 +193,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in options or "--help" in options:
@@ -199,6 +205,7 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
     return configFile, options
+
 
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()

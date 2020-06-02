@@ -30,19 +30,20 @@ class PulseAnalyzerStatus(object):
         self.kwargs = kwargs
 
         # Make sure proper defaults used if not passed in the configuration
-        defaults = { "targetConc": None,
-                     "thres1Pair": [0.0, 0.0],
-                     "thres2Pair": [0.0, 0.0],
-                     "triggerType": "in",
-                     "waitTime": 0.0,
-                     "validTimeAfterTrigger": 0.0,
-                     "validTimeBeforeEnd": 0.0,
-                     "timeout": 0.0,
-                     "bufSize": 500,
-                     "numPointsToTrigger": 1,
-                     "numPointsToRelease": 1,
-                     "armCond": None
-                   }
+        defaults = {
+            "targetConc": None,
+            "thres1Pair": [0.0, 0.0],
+            "thres2Pair": [0.0, 0.0],
+            "triggerType": "in",
+            "waitTime": 0.0,
+            "validTimeAfterTrigger": 0.0,
+            "validTimeBeforeEnd": 0.0,
+            "timeout": 0.0,
+            "bufSize": 500,
+            "numPointsToTrigger": 1,
+            "numPointsToRelease": 1,
+            "armCond": None
+        }
 
         for key in defaults:
             if key not in self.kwargs:
@@ -56,7 +57,7 @@ class PulseAnalyzerStatus(object):
         self.logFunc("------------------\n")
         self.logFunc("printConfiguration:\n")
         self.logFunc("  source= %s\n" % self.source)
-        self.logFunc("  concNameList=%s\n" %str(self.concNameList))
+        self.logFunc("  concNameList=%s\n" % str(self.concNameList))
         self.logFunc("  args=%r\n\n" % self.args)
         self.logFunc("  kwargs=%s\n" % str(self.kwargs))
         self.logFunc("------------------\n")

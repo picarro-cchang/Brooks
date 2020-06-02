@@ -14,7 +14,7 @@ import time
 import os.path
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -22,8 +22,10 @@ AppPath = os.path.abspath(AppPath)
 
 DEFAULT_CONFIG_NAME = "ReadMemUsage.ini"
 
-def differenceFound(a,b):
+
+def differenceFound(a, b):
     return len(set(a).symmetric_difference(set(b))) > 0
+
 
 class ReadMemUsage(object):
     def __init__(self, configFile):
@@ -55,13 +57,13 @@ class ReadMemUsage(object):
 
     def createNewFile(self):
         self.cnt = 0
-        filename = "MemLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S",time.localtime()))
+        filename = "MemLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S", time.localtime()))
         self.filepath = os.path.abspath(os.path.join(self.targetDir, filename))
         print "%s Created" % self.filepath
         self._writeHeader()
 
     def _writeEntry(self, fp, string):
-        fp.write((string[:self.colWidth-1]).ljust(self.colWidth))
+        fp.write((string[:self.colWidth - 1]).ljust(self.colWidth))
 
     def _writeHeader(self):
         fp = open(self.filepath, "a")
@@ -88,7 +90,7 @@ class ReadMemUsage(object):
             try:
                 for p in self.procList:
                     output["%s_%d" % (p.name, p.pid)] = "%s %s" % p.get_memory_info()
-                output["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(time.time()))
+                output["timestamp"] = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time()))
                 self._writeData(output)
                 if self.cnt > self.maxLines:
                     self.createNewFile()
@@ -104,8 +106,11 @@ Where the options can be a combination of the following:
 -c                   Specify a config file.  Default = "./ReadMemUsage.ini"
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -119,11 +124,11 @@ def HandleCommandSwitches():
 
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
 
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
 
     #Start with option defaults...
     configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME
@@ -137,6 +142,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return (configFile)
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

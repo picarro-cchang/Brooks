@@ -138,4 +138,5 @@ class LaserControlPanelGui(wx.Panel):
         print "Event handler 'onUpdateWaveformCheck' not implemented!"
         event.Skip()
 
+
 # end of class LaserControlPanelGui

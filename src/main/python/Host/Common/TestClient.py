@@ -5,7 +5,6 @@
 # File History:
 # 05-09-12 russ  Created first release.
 # 06-02-16 russ  Sorted and left justified rpc buttons; (several un-doc'd before this)
-
 """This executable script provides a generic GUI for accessing all applications
 that use CmdFIFO server.
 
@@ -40,11 +39,11 @@ import Host.Common.CmdFIFO as CmdFIFO
 #import Host.Common.BetterTraceback as BetterTraceback
 
 CmdTypeChoicesDict = {
-    "CMD_TYPE_Default"   : CmdFIFO.CMD_TYPE_Default,
-    "CMD_TYPE_Blocking"  : CmdFIFO.CMD_TYPE_Blocking,
+    "CMD_TYPE_Default": CmdFIFO.CMD_TYPE_Default,
+    "CMD_TYPE_Blocking": CmdFIFO.CMD_TYPE_Blocking,
     "CMD_TYPE_VerifyOnly": CmdFIFO.CMD_TYPE_VerifyOnly,
-    "CMD_TYPE_Callback"  : CmdFIFO.CMD_TYPE_Callback,
-    }
+    "CMD_TYPE_Callback": CmdFIFO.CMD_TYPE_Callback,
+}
 
 
 class MyMenuBar(wx.MenuBar):
@@ -66,7 +65,9 @@ class MyMenuBar(wx.MenuBar):
         pass
         # end wxGlade
 
+
 # end of class MyMenuBar
+
 
 class MyFrame(wx.Frame):
     def __init__(self, *args, **kwds):
@@ -92,20 +93,20 @@ class MyFrame(wx.Frame):
         self.choice_1 = wx.Choice(self, -1, choices=choiceList)
 
         #Make the buttons that will call core CmdFIFO RPCs...
-        self.btnGetName        = wx.Button(self, -1, "Get Server Name")
+        self.btnGetName = wx.Button(self, -1, "Get Server Name")
         self.btnGetDescription = wx.Button(self, -1, "Get Server Desc")
-        self.btnGetVersion     = wx.Button(self, -1, "Get Server Version")
+        self.btnGetVersion = wx.Button(self, -1, "Get Server Version")
         self.btnGetQueueLength = wx.Button(self, -1, "Get Queue Length")
-        self.btnEnableLogging  = wx.Button(self, -1, "Enable Logging")
+        self.btnEnableLogging = wx.Button(self, -1, "Enable Logging")
         self.btnDisableLogging = wx.Button(self, -1, "Disable Logging")
-        self.btnPingFIFO       = wx.Button(self, -1, "Ping FIFO")
+        self.btnPingFIFO = wx.Button(self, -1, "Ping FIFO")
         self.btnPingDispatcher = wx.Button(self, -1, "Ping Dispatcher")
-        self.btnShowFIFOGUI    = wx.Button(self, -1, "Show FIFO GUI")
-        self.btnHideFIFOGUI    = wx.Button(self, -1, "Hide FIFO GUI")
-        self.btnGetProcessID   = wx.Button(self, -1, "Get Process ID")
-        self.btnStopServer     = wx.Button(self, -1, "Stop Server")
-        self.btnKillServer     = wx.Button(self, -1, "Kill Server")
-        self.btnDebugDelay     = wx.Button(self, -1, "Debug Delay")
+        self.btnShowFIFOGUI = wx.Button(self, -1, "Show FIFO GUI")
+        self.btnHideFIFOGUI = wx.Button(self, -1, "Hide FIFO GUI")
+        self.btnGetProcessID = wx.Button(self, -1, "Get Process ID")
+        self.btnStopServer = wx.Button(self, -1, "Stop Server")
+        self.btnKillServer = wx.Button(self, -1, "Kill Server")
+        self.btnDebugDelay = wx.Button(self, -1, "Debug Delay")
 
         self.Bind(wx.EVT_BUTTON, self.OnGetNameClick, self.btnGetName)
         self.Bind(wx.EVT_BUTTON, self.OnGetDescriptionClick, self.btnGetDescription)
@@ -129,11 +130,11 @@ class MyFrame(wx.Frame):
         self.lblProxyPort = wx.StaticText(self, -1, "Port:")
         self.tlblProxyPort = wx.StaticText(self, -1, "---")
 
-        self.text_ctrl_1 = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE+wx.HSCROLL)
+        self.text_ctrl_1 = wx.TextCtrl(self, -1, "", style=wx.TE_MULTILINE + wx.HSCROLL)
 
         self.__set_properties()
         self.__do_layout()
-          # end wxGlade
+        # end wxGlade
 
     def __set_properties(self):
         # begin wxGlade: MyFrame.__set_properties
@@ -168,24 +169,24 @@ class MyFrame(wx.Frame):
         #bsvRPCButtonContainer.SetSizeHints(self.swRegRPCs)
 
         #Add the choice and ScrollingWindow (containing the sizer with buttons in it) to the RegRPCs sizer...
-        bssbRegRPCs.Add(self.choice_1, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
+        bssbRegRPCs.Add(self.choice_1, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
         bssbRegRPCs.Add(self.swRegRPCs, 1, wx.EXPAND, 0)
 
         #Fill up the CmdFIFO buttons sizer...
-        bsvCmdFifoRPCs.Add(self.btnGetName, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnGetDescription, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnGetVersion, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnGetQueueLength, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnEnableLogging, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnDisableLogging, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnPingFIFO, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnPingDispatcher, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnShowFIFOGUI, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnHideFIFOGUI, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnGetProcessID, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnStopServer, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnKillServer, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
-        bsvCmdFifoRPCs.Add(self.btnDebugDelay, 0, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnGetName, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnGetDescription, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnGetVersion, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnGetQueueLength, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnEnableLogging, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnDisableLogging, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnPingFIFO, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnPingDispatcher, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnShowFIFOGUI, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnHideFIFOGUI, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnGetProcessID, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnStopServer, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnKillServer, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
+        bsvCmdFifoRPCs.Add(self.btnDebugDelay, 0, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
 
         #Now stuff what will be the left side of the main sizer (the
         #registered RPC call buttons and the core buttons)...
@@ -193,19 +194,19 @@ class MyFrame(wx.Frame):
         bsvButtonGroups.Add(bsvCmdFifoRPCs, 0, wx.EXPAND, 0)
 
         #Now stuff the ServerInfo sizer...
-        bshServerInfo.Add(self.lblServerName, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
-        bshServerInfo.Add(self.tlblServerName, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
-        bshServerInfo.Add(self.lblProxyAddress, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
-        bshServerInfo.Add(self.tlblProxyAddress, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
-        bshServerInfo.Add(self.lblProxyPort, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
-        bshServerInfo.Add(self.tlblProxyPort, 0, wx.ALL|wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.lblServerName, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.tlblServerName, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.lblProxyAddress, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.tlblProxyAddress, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.lblProxyPort, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
+        bshServerInfo.Add(self.tlblProxyPort, 0, wx.ALL | wx.ADJUST_MINSIZE, 5)
 
         #Stuff the Transaction sizer...
-        bsTransactions.Add(self.text_ctrl_1, 1, wx.EXPAND|wx.ADJUST_MINSIZE, 0)
+        bsTransactions.Add(self.text_ctrl_1, 1, wx.EXPAND | wx.ADJUST_MINSIZE, 0)
 
         #Now stuff what will be the right side of the main sizer...
-        bsvMain01.Add(bshServerInfo, 0, wx.EXPAND|wx.ALL, 3)
-        bsvMain01.Add(bsTransactions, 1, wx.EXPAND|wx.ALL, 3)
+        bsvMain01.Add(bshServerInfo, 0, wx.EXPAND | wx.ALL, 3)
+        bsvMain01.Add(bsTransactions, 1, wx.EXPAND | wx.ALL, 3)
 
         #Stuff the main sizer...
         bshMain.Add(bsvButtonGroups, 0, wx.EXPAND, 0)
@@ -220,21 +221,21 @@ class MyFrame(wx.Frame):
 
     def CreateRPCButtons(self, rpcMethodDict):
         "Dynamically creates buttons in 'registered rpc' window."
-        assert isinstance(rpcMethodDict, dict) #for Wing
+        assert isinstance(rpcMethodDict, dict)  #for Wing
         self.RPCMethodDict = rpcMethodDict
         bsvRPCButtonContainer = wx.BoxSizer(wx.VERTICAL)
-        i=0
+        i = 0
         methods = rpcMethodDict.keys()
         methods.sort()
         for methodName in methods:
             if (methodName.find("system.") < 0) and (methodName.find("CmdFIFO.") < 0):
                 i += 1
                 btnName = "btnRPC%s" % i
-                btn = wx.Button(self.swRegRPCs, -1, "  " + methodName, style = wx.BU_LEFT)
+                btn = wx.Button(self.swRegRPCs, -1, "  " + methodName, style=wx.BU_LEFT)
                 self.__setattr__(btnName, btn)
                 bsvRPCButtonContainer.Add(self.__getattribute__(btnName), 0, \
                                           wx.EXPAND|wx.ADJUST_MINSIZE|wx.RIGHT, 25)
-                self.ButtonIDDict.setdefault(str(btn.GetId()),methodName)
+                self.ButtonIDDict.setdefault(str(btn.GetId()), methodName)
                 self.Bind(wx.EVT_BUTTON, self.OnRPCButtonClick, btn)
                 toolTip = self.Server.system.methodHelp(methodName)
                 btn.SetToolTipString(toolTip)
@@ -248,11 +249,10 @@ class MyFrame(wx.Frame):
         argsOkay = True
         argTuple = None
         dlg = wx.TextEntryDialog(
-                self, "The selected RPC function requires arguments of the form:"
-                      "\n\n%s\n\n"
-                      "Please enter the arguments below as if you were calling\n"
-                      "the function in a Python shell (without outside parentheses)." % Args,
-                FuncName, '')
+            self, "The selected RPC function requires arguments of the form:"
+            "\n\n%s\n\n"
+            "Please enter the arguments below as if you were calling\n"
+            "the function in a Python shell (without outside parentheses)." % Args, FuncName, '')
         if dlg.ShowModal() != wx.ID_OK:
             argsOkay = False
             dlg.Destroy()
@@ -263,18 +263,17 @@ class MyFrame(wx.Frame):
             execStr = "argTuple = (" + dlgValue + ")"
             try:
                 #security hole here since this executes code...
-                exec(execStr)
+                exec (execStr)
             except Exception:
                 argsOkay = False
                 dlg = wx.MessageDialog(self, 'There was a problem with the typed arguments.\n\n'
-                                              'Expected form: %s\n'
-                                              'What you typed: %s\n\n'
-                                              'The RPC call will not be executed.\n\n'
-                                              'Possible problems:\n'
-                                              '  - String args must be enclosed in quotes\n'
-                                              '  - do not surround with brackets (unless sending a tuple)' % (Args, dlgValue),
-                                       'Error with arguments!',
-                                       wx.OK | wx.ICON_ERROR
+                                       'Expected form: %s\n'
+                                       'What you typed: %s\n\n'
+                                       'The RPC call will not be executed.\n\n'
+                                       'Possible problems:\n'
+                                       '  - String args must be enclosed in quotes\n'
+                                       '  - do not surround with brackets (unless sending a tuple)' % (Args, dlgValue),
+                                       'Error with arguments!', wx.OK | wx.ICON_ERROR
                                        #wx.YES_NO | wx.NO_DEFAULT | wx.CANCEL | wx.ICON_INFORMATION
                                        )
                 dlg.ShowModal()
@@ -287,7 +286,7 @@ class MyFrame(wx.Frame):
         return argTuple
 
     def _InvokeRPC(self, FuncName, ArgTuple):
-        assert isinstance(ArgTuple,tuple)
+        assert isinstance(ArgTuple, tuple)
         assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)
         argStr = ", ".join([repr(x) for x in ArgTuple])
         self.text_ctrl_1.AppendText("Calling function: %s(%s)\n" % (FuncName, argStr))
@@ -296,7 +295,7 @@ class MyFrame(wx.Frame):
         except Exception, E:
             self.text_ctrl_1.AppendText("  Exception raised: %s\n" % E)
         else:
-            self.text_ctrl_1.AppendText("  Response = %r\n" % (ret,))
+            self.text_ctrl_1.AppendText("  Response = %r\n" % (ret, ))
 
     def OnRPCButtonClick(self, event):
         assert isinstance(self.Server, CmdFIFO.CmdFIFOServerProxy)
@@ -321,42 +320,56 @@ class MyFrame(wx.Frame):
 
     def OnGetNameClick(self, event):
         self._InvokeRPC('CmdFIFO.GetName', ())
+
     def OnGetDescriptionClick(self, event):
         self._InvokeRPC('CmdFIFO.GetDescription', ())
+
     def OnGetVersionClick(self, event):
         self._InvokeRPC('CmdFIFO.GetVersion', ())
+
     def OnGetQueueLengthClick(self, event):
         self._InvokeRPC('CmdFIFO.GetQueueLength', ())
+
     def OnPingFIFOClick(self, event):
         self._InvokeRPC('CmdFIFO.PingFIFO', ())
+
     def OnPingDispatcherClick(self, event):
         self._InvokeRPC('CmdFIFO.PingDispatcher', ())
+
     def OnShowFIFOGUIClick(self, event):
         self._InvokeRPC('CmdFIFO.ShowGUI', ())
+
     def OnShowFIFOGUIClick(self, event):
         self._InvokeRPC('CmdFIFO.ShowGUI', ())
+
     def OnHideFIFOGUIClick(self, event):
         self._InvokeRPC('CmdFIFO.HideGUI', ())
+
     def OnEnableLoggingClick(self, event):
-        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (True,))
+        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (True, ))
+
     def OnDisableLoggingClick(self, event):
-        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (False,))
+        self._InvokeRPC('CmdFIFO.SetLoggingStatus', (False, ))
+
     def OnGetProcessIDClick(self, event):
         self._InvokeRPC('CmdFIFO.GetProcessID', ())
+
     def OnStopServerClick(self, event):
-        dlg = wx.SingleChoiceDialog(self, 'Are you sure?','Are you sure?',['Yes','No'], wx.CHOICEDLG_STYLE)
+        dlg = wx.SingleChoiceDialog(self, 'Are you sure?', 'Are you sure?', ['Yes', 'No'], wx.CHOICEDLG_STYLE)
         if dlg.ShowModal() == wx.ID_OK:
             if dlg.GetStringSelection() == 'Yes':
                 self._InvokeRPC('CmdFIFO.StopServer', ())
         dlg.Destroy()
+
     def OnKillServerClick(self, event):
-        dlg = wx.TextEntryDialog(self,
-                  "Killing the server requires a password to confirm the kill.\n\nPlease enter the password now (no quotes required):",
-                  "Kill Server Confirmation","")
+        dlg = wx.TextEntryDialog(
+            self,
+            "Killing the server requires a password to confirm the kill.\n\nPlease enter the password now (no quotes required):",
+            "Kill Server Confirmation", "")
         if dlg.ShowModal() == wx.ID_OK:
             pwd = dlg.GetValue()
             if pwd != "":
-                self._InvokeRPC('CmdFIFO.KillServer',(pwd,))
+                self._InvokeRPC('CmdFIFO.KillServer', (pwd, ))
         dlg.Destroy()
 
     def OnDebugDelayClick(self, event):
@@ -365,13 +378,15 @@ class MyFrame(wx.Frame):
             self._InvokeRPC('CmdFIFO.DebugDelay', argTuple)
 
     def CallbackTest(self, ReturnedVars, Fault):
-        self.text_ctrl_1.AppendText("  *** Callback received.  Ret = %r  Fault = %r\n" %(ReturnedVars,Fault))
+        self.text_ctrl_1.AppendText("  *** Callback received.  Ret = %r  Fault = %r\n" % (ReturnedVars, Fault))
 
 
 # end of class MyFrame
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def main():
     try:
@@ -381,18 +396,15 @@ def main():
         import getopt
 
         try:
-            options, args = getopt.getopt(
-                                      sys.argv[1:],
-                                      'a:p:c:hs',
-                                      ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple']
-                                         )
+            options, args = getopt.getopt(sys.argv[1:], 'a:p:c:hs',
+                                          ['serveraddr=', 'serverport=', 'callbackaddr=', 'help', '--simple'])
         except getopt.GetoptError, e:
             print e
             sys.exit(1)
 
-        proxyAddress="127.0.0.1"
-        proxyPort=8001
-        callbackServerAddress = 8002 #default
+        proxyAddress = "127.0.0.1"
+        proxyPort = 8001
+        callbackServerAddress = 8002  #default
         simpleMode = False
         for o, a in options:
             if o in ['-h', '--help']:
@@ -429,8 +441,8 @@ def main():
                     sig = server.system.methodSignature(method)
                     assert isinstance(sig, str)
                     #strip the self arg if a method...
-                    sig = sig.replace("(self,","(",1)
-                    sig = sig.replace("(self)","",1)
+                    sig = sig.replace("(self,", "(", 1)
+                    sig = sig.replace("(self)", "", 1)
                     rpcDict.setdefault(method, sig)
                 #print "RPCDict = ", repr(rpcDict)
                 if len(rpcDict) == 0:
@@ -444,13 +456,14 @@ def main():
             wx.InitAllImageHandlers()
             frame_1 = MyFrame(None, -1, "")
             #attach the server to the frame (bad code, but anyway)...
-            frame_1.Server=server
+            frame_1.Server = server
             #Set some visuals...
             frame_1.tlblServerName.SetLabel(server.CmdFIFO.GetName())
             frame_1.tlblProxyAddress.SetLabel(proxyAddress)
             frame_1.tlblProxyPort.SetLabel(str(proxyPort))
             #set up a listening server (for callbacks)...
-            callbackServer = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost",callbackServerAddress),CallbackList=(frame_1.CallbackTest,))
+            callbackServer = CmdFIFO.CmdFIFOSimpleCallbackServer(("localhost", callbackServerAddress),
+                                                                 CallbackList=(frame_1.CallbackTest, ))
             callbackServer.Launch()
             if not simpleMode:
                 #Now autogenerate some buttons...
@@ -463,6 +476,8 @@ def main():
             pass
     except Exception, E:
         raise E
+
+
 #    if not isinstance(E, SystemExit):
 #      BetterTraceback.print_exc_plus()
 

@@ -11,11 +11,14 @@
 from ctypes import windll, c_int
 import time
 
+
 class TimeoutError(Exception):
     pass
 
+
 class DriverError(Exception):
     pass
+
 
 class IbaseDio(object):
     def __init__(self):
@@ -31,31 +34,32 @@ class IbaseDio(object):
 
         self.installDriver = self.dioDLL.InstallDriver
         self.installDriver.argtypes = []
-        self.installDriver.restype  = c_int
+        self.installDriver.restype = c_int
 
         self.removeDriver = self.dioDLL.RemoveDriver
         self.removeDriver.argtypes = []
-        self.removeDriver.restype  = c_int
+        self.removeDriver.restype = c_int
 
         self.isDioAvailable = self.dioDLL.IsDioAvailable
         self.isDioAvailable.argtypes = [c_int]
-        self.isDioAvailable.restype  = c_int
+        self.isDioAvailable.restype = c_int
 
         self.setDioInputMask = self.dioDLL.SetDioInputMask
         self.setDioInputMask.argtypes = [c_int]
-        self.setDioInputMask.restype  = c_int
+        self.setDioInputMask.restype = c_int
 
         self.setDioOutputMask = self.dioDLL.SetDioOutputMask
         self.setDioOutputMask.argtypes = [c_int]
-        self.setDioOutputMask.restype  = c_int
+        self.setDioOutputMask.restype = c_int
 
         self.getDioInput = self.dioDLL.GetDioInput
         self.getDioInput.argtypes = [c_int]
-        self.getDioInput.restype  = c_int
+        self.getDioInput.restype = c_int
 
         self.setDioOutput = self.dioDLL.SetDioOutput
         self.setDioOutput.argtypes = [c_int]
-        self.setDioOutput.restype  = c_int
+        self.setDioOutput.restype = c_int
+
 
 class TTLIntrf(object):
     def __init__(self, assertSig, deassertSig):
@@ -82,9 +86,9 @@ class TTLIntrf(object):
     def initialize(self):
         self.open()
 
-    def setControl(self,line,value):
+    def setControl(self, line, value):
         """Sets the value of control line (1-4) to specified value (0 or 1)"""
-        mask = 1<<(3+line)
+        mask = 1 << (3 + line)
         self.dio.shadow &= ~mask
         if value:
             self.dio.shadow |= mask
@@ -92,18 +96,18 @@ class TTLIntrf(object):
 
     def assertControl(self, line):
         """Asserts the value of control line (1-4)"""
-        self.setControl(line,self.assertSig)
+        self.setControl(line, self.assertSig)
 
     def deassertControl(self, line):
         """Deasserts the value of control line (1-4)"""
-        self.setControl(line,self.deassertSig)
+        self.setControl(line, self.deassertSig)
 
-    def getControl(self,line):
+    def getControl(self, line):
         """Gets the value of control line (1-4). Returns 1 if asserted."""
-        mask = 1<<(3+line)
-        return self.assertSig == (self.dio.shadow & mask)>>(3+line)
+        mask = 1 << (3 + line)
+        return self.assertSig == (self.dio.shadow & mask) >> (3 + line)
 
-    def getStatus(self,line):
+    def getStatus(self, line):
         """Gets the value of status line (1-4). Returns 1 if asserted."""
-        mask = 1<<(line-1)
-        return self.assertSig == (self.dio.getDioInput(0) & mask)>>(line-1)
+        mask = 1 << (line - 1)
+        return self.assertSig == (self.dio.getDioInput(0) & mask) >> (line - 1)

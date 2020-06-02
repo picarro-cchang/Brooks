@@ -56,44 +56,48 @@ OK = 1
 EXCEPTION = 2
 TIMEOUT = 3
 
+
 class State(object):
     """A state consists of a name, and an action which is a block of code which performs some actions
     and then sets the pseudo-variable NEXT to a string containing the name of the next state."""
-    def __init__(self,name):
+    def __init__(self, name):
         self.name = name
         self.code = None
         self.actionString = ""
-    def setAction(self,action):
+
+    def setAction(self, action):
         self.actionString = action
-        self.code = compile(self.actionString,"<State %s action>" % self.name,"exec")
+        self.code = compile(self.actionString, "<State %s action>" % self.name, "exec")
+
 
 class GuiProxy(object):
     """This class allows methods belonging to the main frame (gui) to be called from within a thread.
        A method of the proxy object is mapped to the corresponding method of the gui. The arguments
        passed to the function are use to curry the main frame method, so that the resulting function
        object (with no arguments) may be passed to the main frame via the control queue for execution."""
-
-    def __init__(self,gui,controlFunc):
+    def __init__(self, gui, controlFunc):
         self.gui = gui
         self.controlFunc = controlFunc
         self.guiMethods = []
 
-    def __getattr__(self,name):
+    def __getattr__(self, name):
         # A queue of methods is needed here. If only the most recent method is kept, it may be overwritten before it gets a chance
         #  to be curried
-        self.guiMethods.append(getattr(self.gui,name))
+        self.guiMethods.append(getattr(self.gui, name))
         return self.getArgsAndEnqueue
 
-    def getArgsAndEnqueue(self,*a,**k):
+    def getArgsAndEnqueue(self, *a, **k):
         def curried():
-            return self.guiMethods.pop(0)(*a,**k)
-        stat,reply = self.controlFunc(curried)
+            return self.guiMethods.pop(0)(*a, **k)
+
+        stat, reply = self.controlFunc(curried)
         if stat == OK:
             return reply
         elif stat == EXCEPTION:
             raise reply
         elif stat == TIMEOUT:
             print reply
+
 
 class BaseMachine(object):
     """Base class for constructing state machines. All the
@@ -107,17 +111,18 @@ class BaseMachine(object):
        which is the name of the next state
     """
     def state_start(self):
-        self.logFunc( "In state_start. Override this in subclass" )
+        self.logFunc("In state_start. Override this in subclass")
         return "state_done"
 
     def state_done(self):
-        self.logFunc( "All done" )
+        self.logFunc("All done")
 
     def state_error(self, state, exc):
-        self.logFunc( "Error in %s" % state )
-        self.logFunc( format_exc(exc) )
-        return "state_done"            
-            
+        self.logFunc("Error in %s" % state)
+        self.logFunc(format_exc(exc))
+        return "state_done"
+
+
 class StateMachine(object):
     # The scriptFile is compiled and executed when run is called to provide an environment within which
     #  the state machine actions can be executed. If the scriptFile is not specified, the 'script' option
@@ -132,18 +137,18 @@ class StateMachine(object):
     #   script file so that the script can call functions of the main GUI even though it is not in the main thread.
     #   These function calls are actually enqueued so that the main GUI thread can execute them when idle.
     #
-    def __init__(self,iniFile,gui,scriptFile=None,logFunc=None,fileDataFunc=None,controlFunc=None,editParamDict=None):
-        if logFunc==None: logFunc = self.defaultLogger
-        if fileDataFunc==None: fileDataFunc = self.defaultLogger
+    def __init__(self, iniFile, gui, scriptFile=None, logFunc=None, fileDataFunc=None, controlFunc=None, editParamDict=None):
+        if logFunc == None: logFunc = self.defaultLogger
+        if fileDataFunc == None: fileDataFunc = self.defaultLogger
         self.logFunc = logFunc
         self.fileDataFunc = fileDataFunc
         self.controlFunc = controlFunc
         self.editParamDict = editParamDict
-        self.guiProxy = GuiProxy(gui,controlFunc)
+        self.guiProxy = GuiProxy(gui, controlFunc)
         self.gui = gui
         self.scriptEnv = {}
         # Parse the configuration file containing the state machine
-        self.config = CustomConfigObj(iniFile, list_values = True)
+        self.config = CustomConfigObj(iniFile, list_values=True)
         self.portDict = {}
         self.machine = None
         if "SerialPorts" in self.config:
@@ -160,7 +165,7 @@ class StateMachine(object):
             #  Compile the script file within its own environment
             with open(scriptFile, "r") as fp:
                 self.script = compile(fp.read().replace("\r\n", "\n"), scriptFile, "exec")
-                exec(self.script, self.scriptEnv)
+                exec (self.script, self.scriptEnv)
                 machine = self.scriptEnv["MACHINE_CLASS"]
                 if not issubclass(machine, BaseMachine):
                     raise ValueError("MACHINE_CLASS must be set to a sub-class of StateMachine")
@@ -168,7 +173,7 @@ class StateMachine(object):
                 self.initialState = "state_start"
                 self.finalState = "state_done"
                 self.errorState = "state_error"
-        else:   # legacy coordinator files
+        else:  # legacy coordinator files
             self.stateNames = [s for s in self.config.sections if s.startswith('State')]
             self.states = {}
             for name in self.stateNames:
@@ -201,33 +206,43 @@ class StateMachine(object):
         self.running = False
 
     def setupSciptEnv(self):
-        CoordinatorScripts.SUPERVISOR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, ClientName = "Coordinator")
-        CoordinatorScripts.DRIVER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "Coordinator")
-        CoordinatorScripts.MEASSYS = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, ClientName = "Coordinator")
-        CoordinatorScripts.SAMPLEMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = "Coordinator")
-        CoordinatorScripts.DATAMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "Coordinator")
-        CoordinatorScripts.DATALOGGER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "Coordinator")
-        CoordinatorScripts.QUICKGUI = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI, ClientName = "Coordinator")
-        CoordinatorScripts.INSTMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "Coordinator")
-        CoordinatorScripts.FREQCONV = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER, ClientName = "Coordinator")
-        CoordinatorScripts.SPECTCOLLECTOR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR, ClientName = "Coordinator")
-        CoordinatorScripts.VALSEQ = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = "Coordinator")
+        CoordinatorScripts.SUPERVISOR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                                   ClientName="Coordinator")
+        CoordinatorScripts.DRIVER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName="Coordinator")
+        CoordinatorScripts.MEASSYS = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
+                                                                ClientName="Coordinator")
+        CoordinatorScripts.SAMPLEMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR,
+                                                                  ClientName="Coordinator")
+        CoordinatorScripts.DATAMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
+                                                                ClientName="Coordinator")
+        CoordinatorScripts.DATALOGGER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER,
+                                                                   ClientName="Coordinator")
+        CoordinatorScripts.QUICKGUI = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
+                                                                 ClientName="Coordinator")
+        CoordinatorScripts.INSTMGR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
+                                                                ClientName="Coordinator")
+        CoordinatorScripts.FREQCONV = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                                                                 ClientName="Coordinator")
+        CoordinatorScripts.SPECTCOLLECTOR = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
+                                                                       ClientName="Coordinator")
+        CoordinatorScripts.VALSEQ = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER,
+                                                               ClientName="Coordinator")
         CoordinatorScripts.LOGFUNC = self.logFunc
         CoordinatorScripts.CONFIG = self.config
-        self.newAutosampler = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_AUTOSAMPLER, ClientName = "Coordinator")
+        self.newAutosampler = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_AUTOSAMPLER, ClientName="Coordinator")
         BaseMachine.logFunc = self.logFunc
         scriptSyms = dir(CoordinatorScripts)
         for sym in scriptSyms:
             if sym[:2] != "__":
-                self.scriptEnv[sym] = getattr(CoordinatorScripts,sym)
+                self.scriptEnv[sym] = getattr(CoordinatorScripts, sym)
         self.scriptEnv.update({"logFunc":self.logFunc,"fileDataFunc":self.fileDataFunc,\
                           "config":self.config,"Autosampler":Autosampler,"DummyAutosampler":DummyAutosampler,\
                           "GC":GC,"SerIntrf":SerIntrf,"GUI":self.guiProxy,"getDescription":self.getDescription,\
                           "time":time,"editParamDict":self.editParamDict,"runningFlag":True,"pause":self.turnOffRunningFlag,\
                           "resume":self.turnOnRunningFlag, "portDict":self.portDict, "configObj":CustomConfigObj,
                           "NEWAUTOSAMPLER":self.newAutosampler, "ModbusIntrf":ModbusIntrf, "StateMachine": BaseMachine})
-        
-    def defaultLogger(self,str):
+
+    def defaultLogger(self, str):
         print str
 
     def stop(self):
@@ -237,8 +252,8 @@ class StateMachine(object):
     def isRunning(self):
         return self.running
 
-    def getDescription(self,key):
-        return self.gui.sampleDescriptionDict.get(key,"")
+    def getDescription(self, key):
+        return self.gui.sampleDescriptionDict.get(key, "")
 
     def turnOffRunningFlag(self):
         self.scriptEnv["runningFlag"] = False
@@ -248,17 +263,17 @@ class StateMachine(object):
 
     def run(self):
         self.running = True
-        self.state = self.initialState     
+        self.state = self.initialState
 
         while True:
-            if not self.running: # Always leave via the final state
-                    self.state = self.finalState
-            if self.machine is None: # legacy coordinator script
+            if not self.running:  # Always leave via the final state
+                self.state = self.finalState
+            if self.machine is None:  # legacy coordinator script
                 try:
                     self.scriptEnv["NEXT"] = self.state.name
                     if self.state.code != None:
                         exec self.state.code in self.scriptEnv
-                except Exception,e:  # Transition to error state on an exception
+                except Exception, e:  # Transition to error state on an exception
                     self.scriptEnv["ERROR_STATE"] = self.state.name
                     self.scriptEnv["ERROR_MSG"] = "%s" % e
                     if self.state.name != self.finalState.name:
@@ -274,7 +289,7 @@ class StateMachine(object):
                     self.state = self.states[self.scriptEnv["NEXT"]]
                 except:
                     raise ValueError("State %s does not exist\nCurrent state: %s\nCurrent action: %s" %
-                        (self.scriptEnv["NEXT"],self.state.name,self.state.actionString))
+                                     (self.scriptEnv["NEXT"], self.state.name, self.state.actionString))
             else:
                 state = self.state
                 try:
@@ -287,7 +302,8 @@ class StateMachine(object):
         self.running = False
         return self.scriptEnv
 
+
 if __name__ == "__main__":
-    fsm = StateMachine(file("Coordinator.ini"),file("CoordinatorScripts.py"))
+    fsm = StateMachine(file("Coordinator.ini"), file("CoordinatorScripts.py"))
     env = fsm.run()
     print "Program termination"

@@ -57,8 +57,10 @@ use fine?0=TRUE
 vary coefficients= 1,0,0, 1,0, 0, 0,1,1,0,0
 """
 
-class BunchWithItems(Bunch,dict):
+
+class BunchWithItems(Bunch, dict):
     pass
+
 
 class FitPeakTestCase(unittest.TestCase):
     def setUp(self):
@@ -68,45 +70,49 @@ class FitPeakTestCase(unittest.TestCase):
         loadSplineLibrary(ini)
         Analysis.resetIndex()
         self.config = CustomConfigObj(StringIO(sampleAnalysis1))
+
     def tearDown(self):
         pass
+
     def testPeakAmplitude(self):
-        self.assertEqual(Analysis.index,0,"Unexpected analysis index")
+        self.assertEqual(Analysis.index, 0, "Unexpected analysis index")
         aList = [Analysis(self.config)]
 
         # Generate the data which is to be fitted
-        shiftList = linspace(-0.1,0.1,21)
+        shiftList = linspace(-0.1, 0.1, 21)
         for shift in shiftList:
             m = Model()
             g0 = Galatry(peakNum=0)
-            m.addToModel(g0,0)
+            m.addToModel(g0, 0)
             # N.B. Need to call setAttributes BEFORE createParamVector for the values to be used
-            m.setAttributes(x_center=6237.408,pressure=140,temperature=318)
+            m.setAttributes(x_center=6237.408, pressure=140, temperature=318)
             iv = InitialValues()
-            iv[0,"scaled_strength"] = 0.1
-            iv[0,"scaled_y"] = 0.02
-            iv[0,"center"] = 6237.408 + shift
+            iv[0, "scaled_strength"] = 0.1
+            iv[0, "scaled_y"] = 0.02
+            iv[0, "center"] = 6237.408 + shift
             m.createParamVector(iv)
             # Generate simulated FSR data
-            x = arange(6237.20,6237.60,0.0206)
+            x = arange(6237.20, 6237.60, 0.0206)
             y = m(x)
             # x = linspace(6237.20,6237.60,101)
             # plot(x,m(x),'x')
             # gca().xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
             # grid(True)
-            d = BunchWithItems(sensorDict={"Time_s":1280332987},fitData={"freq":x,"loss":m(x)+800.0,"sdev":ones(x.shape)})
+            d = BunchWithItems(sensorDict={"Time_s": 1280332987}, fitData={"freq": x, "loss": m(x) + 800.0, "sdev": ones(x.shape)})
             d["cavityPressure"] = 140
             d["cavityTemperature"] = 45
             r = aList[0](d)
-            print shift, r['base',3]
+            print shift, r['base', 3]
             # print r['base',0], r['base',1], r['base',2], r['base',3]
             # print r[0,'peak'], r[0,'base'], r[0,'center'], r[0,'scaled_strength'], r[0,'scaled_y'], r[0,'scaled_z']
         # show()
+
 
 class FitPeakTestSuite(unittest.TestSuite):
     def __init__(self):
         unittest.TestSuite.__init__(self)
         self.addTest(FitPeakTestCase("testPeakAmplitude"))
+
 
 if __name__ == "__main__":
     runner = unittest.TextTestRunner()

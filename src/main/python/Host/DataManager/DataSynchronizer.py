@@ -48,7 +48,8 @@ APP_NAME = "DataSynchronizer"
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
-def interp(old,var,condVar,condVal,ts):
+
+def interp(old, var, condVar, condVal, ts):
     status = True
     result = 0.0
     if (var not in old) or (condVar and condVar not in old):
@@ -67,17 +68,18 @@ def interp(old,var,condVar,condVal,ts):
                     raise LookupError("Cannot find timestamp in saved data")
                 ts1 = v.timestamp
                 if ts1 != cv.timestamp:
-                    Log("Timestamp mismatch between condition %s (%s) and variable %s (%s)" % (condVar,cv.timestamp,var,ts1),Level=2)
+                    Log("Timestamp mismatch between condition %s (%s) and variable %s (%s)" % (condVar, cv.timestamp, var, ts1),
+                        Level=2)
                 if cv.value == condVal:
-                    if ts1<=ts:
+                    if ts1 <= ts:
                         if tsLast is None:
                             result = v.value
                             status = False
                         else:
                             if tsLast != ts1:
-                                result = valLast + (ts - tsLast)*(v.value-valLast)/(ts1 - tsLast)
+                                result = valLast + (ts - tsLast) * (v.value - valLast) / (ts1 - tsLast)
                             else:
-                                result = 0.5*(v.value + valLast)
+                                result = 0.5 * (v.value + valLast)
                         break
                     tsLast = ts1
                     valLast = v.value
@@ -90,21 +92,22 @@ def interp(old,var,condVar,condVal,ts):
                 except IndexError:
                     raise LookupError("Cannot find timestamp in saved data")
                 ts1 = v.timestamp
-                if ts1<=ts:
+                if ts1 <= ts:
                     if tsLast is None:
                         result = v.value
                         status = False
                     else:
                         if tsLast != ts1:
-                            result = valLast + (ts - tsLast)*(v.value-valLast)/(ts1 - tsLast)
+                            result = valLast + (ts - tsLast) * (v.value - valLast) / (ts1 - tsLast)
                         else:
-                            result = 0.5*(v.value + valLast)
+                            result = 0.5 * (v.value + valLast)
                     break
                 tsLast = ts1
                 valLast = v.value
     return result, status
 
-def resync(analyzer,env):
+
+def resync(analyzer, env):
     pp = env["_PERSISTENT_"]
     gg = env["_GLOBALS_"]
     dd = env["_DATA_"]
@@ -114,7 +117,7 @@ def resync(analyzer,env):
     report = {}
 
     if "synchronizer" not in pp:
-        pp["synchronizer"] = dict(resampTimestamp=None,lastMeasTimestamp=None)
+        pp["synchronizer"] = dict(resampTimestamp=None, lastMeasTimestamp=None)
 
     p = pp["synchronizer"]
     g = gg["synchronizer"][analyzer]
@@ -126,25 +129,25 @@ def resync(analyzer,env):
     varList = g["varList"]
 
     ts = int(dd["timestamp"])
-    if lastMeasTimestamp is None or ts>lastMeasTimestamp:
+    if lastMeasTimestamp is None or ts > lastMeasTimestamp:
         p["lastMeasTimestamp"] = lastMeasTimestamp = ts
-    if resampTimestamp is None or lastMeasTimestamp-resampTimestamp>maxDelay:
-        p["resampTimestamp"] = syncInterval*(lastMeasTimestamp//syncInterval)
+    if resampTimestamp is None or lastMeasTimestamp - resampTimestamp > maxDelay:
+        p["resampTimestamp"] = syncInterval * (lastMeasTimestamp // syncInterval)
         return report
     else:
-        nextResampTimestamp = resampTimestamp+g["syncInterval"]
+        nextResampTimestamp = resampTimestamp + g["syncInterval"]
 
-    if nextResampTimestamp<lastMeasTimestamp-g["syncLatency"]:
-        report = {"timestamp":nextResampTimestamp}
+    if nextResampTimestamp < lastMeasTimestamp - g["syncLatency"]:
+        report = {"timestamp": nextResampTimestamp}
         good = True
-        for var,syncVar,condVar,condVal in varList:
+        for var, syncVar, condVar, condVal in varList:
             try:
-                report[syncVar],status = interp(oo,var,condVar,condVal,nextResampTimestamp)
+                report[syncVar], status = interp(oo, var, condVar, condVal, nextResampTimestamp)
                 good = good and status
             except LookupError:
                 pass
         report['syncStatus'] = int(status)
         # print "Resampling at %s" % nextResampTimestamp
         p["resampTimestamp"] = nextResampTimestamp
-        aa[analyzer] = {"timestamp":lastMeasTimestamp}
+        aa[analyzer] = {"timestamp": lastMeasTimestamp}
     return report

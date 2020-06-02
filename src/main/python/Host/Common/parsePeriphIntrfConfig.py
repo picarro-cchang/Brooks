@@ -1,9 +1,10 @@
 from Host.Common.CustomConfigObj import CustomConfigObj
 
+
 def parsePeriphIntrfConfig(periphIntrfConfig, selectAll=True):
     periphCo = CustomConfigObj(periphIntrfConfig)
-    rawDict = {"source":[], "data":[]}
-    syncDict = {"source":[], "data":[]}
+    rawDict = {"source": [], "data": []}
+    syncDict = {"source": [], "data": []}
     try:
         for src in [s.strip() for s in periphCo.get("SETUP", "RAWSOURCE", "").split(",") if s.strip()]:
             rawDict["source"].append(src)
@@ -27,7 +28,7 @@ def parsePeriphIntrfConfig(periphIntrfConfig, selectAll=True):
                     labelList = dataLabelList
                 for col in labelList:
                     rawDict["data"].append(col)
-                    syncDict["data"].append(col+"_sync")
+                    syncDict["data"].append(col + "_sync")
             except:
                 pass
 

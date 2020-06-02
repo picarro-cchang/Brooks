@@ -28,35 +28,43 @@ from Host.Common.timestamp import unixTime
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
 EventManagerProxy_Init("SaveData")
 
-ctype2coltype = { c_byte:Int8Col, c_uint:UInt32Col, c_int:Int32Col,
-                  c_short:Int16Col, c_ushort:UInt16Col, c_longlong:Int64Col,
-                  c_float:Float32Col, c_double:Float64Col }
+ctype2coltype = {
+    c_byte: Int8Col,
+    c_uint: UInt32Col,
+    c_int: Int32Col,
+    c_short: Int16Col,
+    c_ushort: UInt16Col,
+    c_longlong: Int64Col,
+    c_float: Float32Col,
+    c_double: Float64Col
+}
+
 
 class SaveData(object):
     def __init__(self):
-        filters = Filters(complevel=1,fletcher32=True)
-        self.h5f = openFile("test.h5","w")
+        filters = Filters(complevel=1, fletcher32=True)
+        self.h5f = openFile("test.h5", "w")
         self.rdQueue = Queue.Queue()
         self.sensorQueue = Queue.Queue()
-        self.colDict = { }
-        for name,cls in ProcessedRingdownEntryType._fields_:
+        self.colDict = {}
+        for name, cls in ProcessedRingdownEntryType._fields_:
             self.colDict[name] = (ctype2coltype[cls])()
-        TableType = type("TableType",(IsDescription,),self.colDict)
-        self.rdTable = self.h5f.createTable(self.h5f.root,"ringdowns",TableType,filters=filters)
+        TableType = type("TableType", (IsDescription, ), self.colDict)
+        self.rdTable = self.h5f.createTable(self.h5f.root, "ringdowns", TableType, filters=filters)
 
-        self.colDict = { "timestamp" : Int64Col() }
+        self.colDict = {"timestamp": Int64Col()}
         for name in STREAM_MemberTypeDict.values():
             self.colDict[name[7:]] = Float32Col()
-        TableType = type("TableType",(IsDescription,),self.colDict)
-        filters = Filters(complevel=1,fletcher32=True)
-        self.sensorTable = self.h5f.createTable(self.h5f.root,"sensors",TableType,filters=filters)
+        TableType = type("TableType", (IsDescription, ), self.colDict)
+        filters = Filters(complevel=1, fletcher32=True)
+        self.sensorTable = self.h5f.createTable(self.h5f.root, "sensors", TableType, filters=filters)
 
         self.numRd = 0
         self.streamFilterState = "COLLECTING_DATA"
@@ -65,10 +73,11 @@ class SaveData(object):
         self.lastTime = 0
         self.numSens = 0
         # Define listeners for the ringdown and sensor data
-        self.rdListener = Listener(self.rdQueue,SharedTypes.BROADCAST_PORT_RD_RECALC,ProcessedRingdownEntryType,retry=True)
-        self.sensorListener = Listener(self.sensorQueue,SharedTypes.BROADCAST_PORT_SENSORSTREAM,SensorEntryType,self.streamFilter)
+        self.rdListener = Listener(self.rdQueue, SharedTypes.BROADCAST_PORT_RD_RECALC, ProcessedRingdownEntryType, retry=True)
+        self.sensorListener = Listener(self.sensorQueue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType,
+                                       self.streamFilter)
 
-    def streamFilter(self,result):
+    def streamFilter(self, result):
         # This filter is designed to enqueue sensor entries which all have the same timestamp.
         #  A 3-ple consisting of the timestamp, a dictionary of sensor data at that time
         #  and a dictionary of the most current sensor data as of that time
@@ -81,13 +90,13 @@ class SaveData(object):
 
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
-            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:] : self.cachedResult.value}
+            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:]: self.cachedResult.value}
 
         if result.timestamp != self.lastTime:
-            self.cachedResult = SensorEntryType(result.timestamp,result.streamNum,result.value)
+            self.cachedResult = SensorEntryType(result.timestamp, result.streamNum, result.value)
             self.streamFilterState = "RETURNED_RESULT"
             if self.resultDict:
-                return self.lastTime,self.resultDict.copy(),self.latestDict.copy()
+                return self.lastTime, self.resultDict.copy(), self.latestDict.copy()
             else:
                 return
         else:
@@ -99,10 +108,10 @@ class SaveData(object):
             while True:
                 while True:
                     try:
-                        entry = self.rdQueue.get(block=False,timeout=0.5)
+                        entry = self.rdQueue.get(block=False, timeout=0.5)
                         row = self.rdTable.row
-                        for name,cls in ProcessedRingdownEntryType._fields_:
-                            row[name] = getattr(entry,name)
+                        for name, cls in ProcessedRingdownEntryType._fields_:
+                            row[name] = getattr(entry, name)
                         self.numRd += 1
                         row.append()
                         if self.numRd % 200 == 0: sys.stdout.write("^")
@@ -110,7 +119,7 @@ class SaveData(object):
                         break
                 while True:
                     try:
-                        timestamp,result,latest = self.sensorQueue.get(block=False,timeout=0.5)
+                        timestamp, result, latest = self.sensorQueue.get(block=False, timeout=0.5)
                         row = self.sensorTable.row
                         row["timestamp"] = timestamp
                         for name in latest:
@@ -125,6 +134,7 @@ class SaveData(object):
             self.rdTable.flush()
             self.sensorTable.flush()
             self.h5f.close()
+
 
 if __name__ == "__main__":
     e = SaveData()

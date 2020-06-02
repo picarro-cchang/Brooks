@@ -5,40 +5,41 @@ import numpy as np
 from math import erf
 from traitlets import (Bool, Dict, Float, Instance, Integer, Unicode)
 from traitlets.config.configurable import Configurable
-DTR = np.pi/180.0
-RTD = 180.0/np.pi
+DTR = np.pi / 180.0
+RTD = 180.0 / np.pi
 EARTH_RADIUS = 6378100.
+
 
 def ratio_analysis(main_conc, trace_conc, sigma_ratio):
     # sigma_ratio = sigma_main/sigma_trace (typically < 1)
     N = len(main_conc)
-    P = np.mean(trace_conc*main_conc) - np.mean(trace_conc)*np.mean(main_conc)
-    vm = np.mean(main_conc**2)-np.mean(main_conc)**2
-    ve = np.mean(trace_conc**2)-np.mean(trace_conc)**2
-    Q = vm/sigma_ratio - sigma_ratio*ve
+    P = np.mean(trace_conc * main_conc) - np.mean(trace_conc) * np.mean(main_conc)
+    vm = np.mean(main_conc**2) - np.mean(main_conc)**2
+    ve = np.mean(trace_conc**2) - np.mean(trace_conc)**2
+    Q = vm / sigma_ratio - sigma_ratio * ve
     # Aratio is the estimate of the trace to main ratio
     if P == 0:
         Aratio = 0.0
         Asdev = 0.0
         sigma_trace = 0.0
         sigma_main = np.std(main_conc)
-        pip_energy = len(main_conc)*np.std(main_conc)**2
+        pip_energy = len(main_conc) * np.std(main_conc)**2
     else:
-        rho = 0.5*Q/P
-        trho = np.sign(P)*np.sqrt(1 + rho**2)
-        Aratio = (trho - rho)/sigma_ratio
+        rho = 0.5 * Q / P
+        trho = np.sign(P) * np.sqrt(1 + rho**2)
+        Aratio = (trho - rho) / sigma_ratio
         # Use the amplitude estimate to estimate sigma_trace, the trace_conc concentration noise
-        p = (main_conc + Aratio*trace_conc*sigma_ratio**2)/(1 + (Aratio*sigma_ratio)**2)
-        n2 = trace_conc - Aratio*p
-        sigma_trace = np.sqrt(np.mean(n2**2)-np.mean(n2)**2)
+        p = (main_conc + Aratio * trace_conc * sigma_ratio**2) / (1 + (Aratio * sigma_ratio)**2)
+        n2 = trace_conc - Aratio * p
+        sigma_trace = np.sqrt(np.mean(n2**2) - np.mean(n2)**2)
         sigma_main = sigma_ratio * sigma_trace
-        srho = np.sqrt((1 + rho**2)/(N*P**2))*np.sqrt(vm*sigma_trace**2 + ve*sigma_main**2)
+        srho = np.sqrt((1 + rho**2) / (N * P**2)) * np.sqrt(vm * sigma_trace**2 + ve * sigma_main**2)
         # Asdev is the standard deviation of the amplitude ratio estimate
-        Asdev = srho*(1 - rho/trho)/sigma_ratio
+        Asdev = srho * (1 - rho / trho) / sigma_ratio
         # The pip energy gives the energy in the pulse which is present in the main_conc
         #  concentration, and which is scaled by the amplitude ratio in the trace_conc
         #  concentration
-        pip_energy = len(p)*np.std(p)**2
+        pip_energy = len(p) * np.std(p)**2
     # The peak-to-peak main_conc concentration may be used to estimate the amplitude
     return Aratio, Asdev, sigma_main, sigma_trace, pip_energy, main_conc.ptp()
 
@@ -64,7 +65,7 @@ class EthaneClassifier(Configurable):
         the interval a to  b and a normal distribution of standard deviation sigma. It is the likelihood
         of a hypothesis that a quantity is uniformly distributed between a and b when a measurement with
         uncertainty sigma yields the result x."""
-        return (erf((x - a)/(np.sqrt(2)*sigma)) - erf((x-b)/(np.sqrt(2)*sigma)))/(2*(b-a))
+        return (erf((x - a) / (np.sqrt(2) * sigma)) - erf((x - b) / (np.sqrt(2) * sigma))) / (2 * (b - a))
 
     def post_prob(self, measurement, uncertainty, nng_lower, nng_upper, ng_lower, ng_upper, nng_prior, reg):
         ng_prior = 1 - nng_prior
@@ -75,16 +76,15 @@ class EthaneClassifier(Configurable):
         return post1, post2
 
     def verdict(self, ethane_ratio, ethane_ratio_sdev):
-        post1, post2 = self.post_prob(ethane_ratio, ethane_ratio_sdev,
-                                      self.nng_lower, self.nng_upper,
-                                      self.ng_lower, self.ng_upper,
+        post1, post2 = self.post_prob(ethane_ratio, ethane_ratio_sdev, self.nng_lower, self.nng_upper, self.ng_lower, self.ng_upper,
                                       self.nng_prior, self.reg)
         if post1 >= self.thresh_confidence:
             return 'NOT_NATURAL_GAS', min(post1, self.max_confidence)
         elif post2 >= self.thresh_confidence:
             return 'NATURAL_GAS', min(post2, self.max_confidence)
         else:
-            return 'POSSIBLE_NATURAL_GAS', max(min(post2, self.max_confidence), 1.0-self.thresh_confidence)
+            return 'POSSIBLE_NATURAL_GAS', max(min(post2, self.max_confidence), 1.0 - self.thresh_confidence)
+
 
 class VehicleExhaustClassifier(Configurable):
     ve_ethylene_sdev_factor = Float(None, allow_none=True, config=True)  # Ethylene standard deviation factor for vehicle exhaust
@@ -104,16 +104,16 @@ class VehicleExhaustClassifier(Configurable):
         return value + sdev_factor * sdev < upper_threshold
 
     def verdict(self, ethane_ratio, ethane_ratio_sdev, ethylene_ratio, ethylene_ratio_sdev):
-        if (self.compare_above(ethylene_ratio, ethylene_ratio_sdev, self.ve_ethylene_sdev_factor, self.ve_ethylene_lower) and
-            self.compare_below(ethane_ratio, ethane_ratio_sdev, self.ve_ethane_sdev_factor, self.ve_ethane_upper)):
+        if (self.compare_above(ethylene_ratio, ethylene_ratio_sdev, self.ve_ethylene_sdev_factor, self.ve_ethylene_lower)
+                and self.compare_below(ethane_ratio, ethane_ratio_sdev, self.ve_ethane_sdev_factor, self.ve_ethane_upper)):
             return 'VEHICLE_EXHAUST'
         else:
             return 'NOT_VEHICLE_EXHAUST'
 
+
 class EthaneDispositionBlock(TransformBlock):
     ethane_classifier = Instance(EthaneClassifier, allow_none=True)
     vehicle_exhaust_classifier = Instance(VehicleExhaustClassifier, allow_none=True)
-
     """Computes the disposition of an indication"""
     def __init__(self, **kwargs):
         super(EthaneDispositionBlock, self).__init__(self.newData, **kwargs)
@@ -126,11 +126,11 @@ class EthaneDispositionBlock(TransformBlock):
         ethylene_ratio = newDat['ETHYLENE_RATIO']
         ethylene_ratio_sdev = newDat['ETHYLENE_RATIO_SDEV']
         confidence = float('nan')
-        verdict = self.vehicle_exhaust_classifier.verdict(ethane_ratio, ethane_ratio_sdev, ethylene_ratio,
-                                                          ethylene_ratio_sdev)
+        verdict = self.vehicle_exhaust_classifier.verdict(ethane_ratio, ethane_ratio_sdev, ethylene_ratio, ethylene_ratio_sdev)
         if verdict == 'NOT_VEHICLE_EXHAUST':
             verdict, confidence = self.ethane_classifier.verdict(ethane_ratio, ethane_ratio_sdev)
         return dict(newDat, VERDICT=verdict, CONFIDENCE=confidence)
+
 
 class EthaneComputationBlock(MergeBlock):
     """Computes ethane to methane ratio from the distance interpolated analyzer data (connected
@@ -151,6 +151,7 @@ class EthaneComputationBlock(MergeBlock):
     lookup = Dict()
     min_key = Integer(allow_none=True)
     max_key = Integer(allow_none=True)
+
     def __init__(self, interval, maxLookback=1000, **kwargs):
         super(EthaneComputationBlock, self).__init__(self.newData, nInputs=2, **kwargs)
         assert isinstance(interval, float)
@@ -178,22 +179,23 @@ class EthaneComputationBlock(MergeBlock):
         ethylene_ratio, ethylene_ratio_sdev, _, ethylene_sdev, _, _ = \
             self.ratio_analysis(methane, ethylene, self.methane_ethylene_sdev_ratio)
 
-        ethylene_nominal_sdev = ethane_nominal_sdev * self.methane_ethane_sdev_ratio / self.methane_ethylene_sdev_ratio;
+        ethylene_nominal_sdev = ethane_nominal_sdev * self.methane_ethane_sdev_ratio / self.methane_ethylene_sdev_ratio
         sdev_factor = max(ethylene_nominal_sdev / ethylene_sdev, 1.0)
         ethylene_sdev *= sdev_factor
         ethylene_ratio_sdev = ethylene_ratio_sdev * sdev_factor
-            
-        return {'ETHANE_RATIO':ethane_ratio,
-                'ETHANE_RATIO_SDEV_RAW':ethane_ratio_sdev,
-                'ETHANE_RATIO_SDEV':ethane_ratio_sdev*max(1.0, methane_ptp/amplitude),
-                'ETHANE_CONC_SDEV':ethane_sdev,
-                'ETHYLENE_RATIO':ethylene_ratio,
-                'ETHYLENE_RATIO_SDEV_RAW':ethylene_ratio_sdev,
-                'ETHYLENE_RATIO_SDEV':ethylene_ratio_sdev*max(1.0, methane_ptp/amplitude),
-                'ETHYLENE_CONC_SDEV':ethylene_sdev,
-                'PIP_ENERGY':pip_energy,
-                'METHANE_PTP':methane_ptp
-               }
+
+        return {
+            'ETHANE_RATIO': ethane_ratio,
+            'ETHANE_RATIO_SDEV_RAW': ethane_ratio_sdev,
+            'ETHANE_RATIO_SDEV': ethane_ratio_sdev * max(1.0, methane_ptp / amplitude),
+            'ETHANE_CONC_SDEV': ethane_sdev,
+            'ETHYLENE_RATIO': ethylene_ratio,
+            'ETHYLENE_RATIO_SDEV_RAW': ethylene_ratio_sdev,
+            'ETHYLENE_RATIO_SDEV': ethylene_ratio_sdev * max(1.0, methane_ptp / amplitude),
+            'ETHYLENE_CONC_SDEV': ethylene_sdev,
+            'PIP_ENERGY': pip_energy,
+            'METHANE_PTP': methane_ptp
+        }
 
     def newData(self, deque0, deque1, lastCall=False):
         while len(deque0) > 0:
@@ -201,13 +203,15 @@ class EthaneComputationBlock(MergeBlock):
             data = deque0.popleft()
             distance = data[self.distance_key]
             if isfinite(distance):
-                key = int(round(distance/self.interval))
+                key = int(round(distance / self.interval))
                 self.min_key = min(self.min_key, key) if self.min_key is not None else key
-                self.max_key = max(self.max_key, key+1) if self.max_key is not None else key+1
-                self.lookup[key] = {self.methane_key:data[self.methane_key],
-                                    self.ethane_key:data[self.ethane_key],
-                                    self.ethylene_key:data.get(self.ethylene_key, 0.0),
-                                    self.ethane_nominal_sdev_key:data.get(self.ethane_nominal_sdev_key, 0.004)}
+                self.max_key = max(self.max_key, key + 1) if self.max_key is not None else key + 1
+                self.lookup[key] = {
+                    self.methane_key: data[self.methane_key],
+                    self.ethane_key: data[self.ethane_key],
+                    self.ethylene_key: data.get(self.ethylene_key, 0.0),
+                    self.ethane_nominal_sdev_key: data.get(self.ethane_nominal_sdev_key, 0.004)
+                }
 
         if self.min_key is not None and self.max_key is not None:
             while self.max_key - self.maxLookback > self.min_key:
@@ -227,8 +231,8 @@ class EthaneComputationBlock(MergeBlock):
                     if isfinite(distance):
                         width = max(5.0, data[self.width_key])
                         amplitude = data[self.amplitude_key]
-                        min_key = int(round((distance - 3.0*width)/self.interval))
-                        max_key = int(round((distance + 3.0*width)/self.interval))
+                        min_key = int(round((distance - 3.0 * width) / self.interval))
+                        max_key = int(round((distance + 3.0 * width) / self.interval))
                         # Check that we have data available to do the amplitude comparison
                         if self.min_key <= min_key and self.max_key >= max_key:
                             methane = []
@@ -240,31 +244,41 @@ class EthaneComputationBlock(MergeBlock):
                                 ethane.append(self.lookup[key][self.ethane_key])
                                 ethylene.append(self.lookup[key][self.ethylene_key])
                                 ethane_nominal_sdev = self.lookup[key][self.ethane_nominal_sdev_key]
-                            yield dict(data, **self.calculate_ratios(asarray(methane),
-                                                                     asarray(ethane),
-                                                                     asarray(ethylene),
-                                                                     amplitude,
-                                                                     width,
-                                                                     ethane_nominal_sdev))
+                            yield dict(
+                                data,
+                                **self.calculate_ratios(asarray(methane), asarray(ethane), asarray(ethylene), amplitude, width,
+                                                        ethane_nominal_sdev))
                         elif lastCall or min_key < self.min_key:
                             if min_key < 0:
                                 return
                             if min_key < self.min_key:
                                 raise RuntimeError("Please increase value of maxLookback in EthaneComputationBlock")
-                            yield dict(data, **{"ETHANE_RATIO":nan, "ETHANE_RATIO_SDEV":nan,
-                                                "ETHYLENE_RATIO":nan, "ETHYLENE_RATIO_SDEV":nan})
+                            yield dict(
+                                data, **{
+                                    "ETHANE_RATIO": nan,
+                                    "ETHANE_RATIO_SDEV": nan,
+                                    "ETHYLENE_RATIO": nan,
+                                    "ETHYLENE_RATIO_SDEV": nan
+                                })
                         else:
                             deque1.appendleft(data)
                             return
                     # If the distance is not finite, return nan
                     else:
-                        yield dict(data, **{"ETHANE_RATIO":nan, "ETHANE_RATIO_SDEV":nan,
-                                            "ETHYLENE_RATIO":nan, "ETHYLENE_RATIO_SDEV":nan})
+                        yield dict(
+                            data, **{
+                                "ETHANE_RATIO": nan,
+                                "ETHANE_RATIO_SDEV": nan,
+                                "ETHYLENE_RATIO": nan,
+                                "ETHYLENE_RATIO_SDEV": nan
+                            })
+
 
 class JsonWriterBlock(ActionBlock):
     filename = Unicode()
     fp = Instance(file)
     firstRow = Bool()
+
     def __init__(self, filename, **kwargs):
         super(JsonWriterBlock, self).__init__(self.newData, **kwargs)
         self.filename = filename

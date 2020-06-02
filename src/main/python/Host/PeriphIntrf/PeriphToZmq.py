@@ -37,7 +37,6 @@ BROADCAST_PORT_PERIPH_ZMQ = 45065
 
 
 class QManager(object):
-
     def __init__(self, queue):
         self.queue = queue
 
@@ -46,7 +45,6 @@ class QManager(object):
 
 
 class PeriphToZmq(object):
-
     def __init__(self, configFile):
         self.context = zmq.Context()
         self.broadcastSock = self.context.socket(zmq.PUB)
@@ -107,6 +105,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

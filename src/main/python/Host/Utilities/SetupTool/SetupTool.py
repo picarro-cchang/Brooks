@@ -24,28 +24,31 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI, RPC
 
 APP_NAME = "SetupTool"
 
-CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
+CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI, APP_NAME, IsDontCareConnection=False)
 
-CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
-TRANSLATE_TABLE = {"dataLogger": "Data Logger", "archiver": "Archiver", "valveSequencer": "Valve Sequencer MPV",
-                   "commandInterface": "Command Interface", "dataManager": "Data Streaming",
-                   "coordinator": "Coordinator", "readGPSWS": "GPS and WS", "electricalInterface": "Electrical Interface"}
+TRANSLATE_TABLE = {
+    "dataLogger": "Data Logger",
+    "archiver": "Archiver",
+    "valveSequencer": "Valve Sequencer MPV",
+    "commandInterface": "Command Interface",
+    "dataManager": "Data Streaming",
+    "coordinator": "Coordinator",
+    "readGPSWS": "GPS and WS",
+    "electricalInterface": "Electrical Interface"
+}
+
 
 class SetupTool(SetupToolFrame):
     def __init__(self, setupToolIni, *args, **kwds):
-        self.setupCp = CustomConfigObj(setupToolIni, list_values = True)
+        self.setupCp = CustomConfigObj(setupToolIni, list_values=True)
         self.appConfigPath = self.setupCp.get("Setup", "appConfigPath")
         try:
-            self.clCp =  CustomConfigObj(os.path.join(self.appConfigPath, "Utilities\%s" % self.setupCp.get("Setup", "coordinatorLauncher")))
+            self.clCp = CustomConfigObj(
+                os.path.join(self.appConfigPath, "Utilities\%s" % self.setupCp.get("Setup", "coordinatorLauncher")))
         except:
             self.clCp = None
         archiverDir = os.path.join(self.appConfigPath, "Archiver")
@@ -59,12 +62,26 @@ class SetupTool(SetupToolFrame):
         readGPSWSDir = os.path.join(self.appConfigPath, "Utilities")
         electricalInterfaceDir = os.path.join(self.appConfigPath, "ElectricalInterface")
 
-        self.pageAppDict = {0: ["dataLogger", "archiver"], 1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
-                            2: ["remoteAccess"], 3:["quickGui"], 4:["commandInterface"], 5:["dataManager"], 6:["electricalInterface"]}
-        self.appIniDirDict = {"archiver": archiverDir, "dataLogger": dataLoggerDir, "dataManager": dataMgrDir,
-                              "valveSequencer": valveDir, "commandInterface": cmdDir,
-                              "remoteAccess": remoteAccessDir, "quickGui": quickGuiDir,
-                              "coordinator": coordinatorDir, "electricalInterface": electricalInterfaceDir}
+        self.pageAppDict = {
+            0: ["dataLogger", "archiver"],
+            1: ["dataManager", "valveSequencer", "commandInterface", "coordinator"],
+            2: ["remoteAccess"],
+            3: ["quickGui"],
+            4: ["commandInterface"],
+            5: ["dataManager"],
+            6: ["electricalInterface"]
+        }
+        self.appIniDirDict = {
+            "archiver": archiverDir,
+            "dataLogger": dataLoggerDir,
+            "dataManager": dataMgrDir,
+            "valveSequencer": valveDir,
+            "commandInterface": cmdDir,
+            "remoteAccess": remoteAccessDir,
+            "quickGui": quickGuiDir,
+            "coordinator": coordinatorDir,
+            "electricalInterface": electricalInterfaceDir
+        }
         self.hasReadGPSWS = False
         if os.path.isfile(os.path.join(readGPSWSDir, self.setupCp.get("Setup", "ReadGPSWS", ""))):
             self.hasReadGPSWS = True
@@ -76,7 +93,7 @@ class SetupTool(SetupToolFrame):
         # Example: comPortMapping = COM1:/dev/ttyS0, COM2:/dev/ttyS1, OFF:OFF
         if "comPortMapping" in self.setupCp["Setup"]:
             mapping = self.setupCp["Setup"]["comPortMapping"]
-            comPortMapping = {p.split(":")[0]:p.split(":")[1] for p in mapping}
+            comPortMapping = {p.split(":")[0]: p.split(":")[1] for p in mapping}
 
         self._getCoordinatorPathAndPortList()
         self.dataColsFile = self.setupCp.get("Setup", "dataColsFile")
@@ -104,7 +121,7 @@ class SetupTool(SetupToolFrame):
                 coorPath = os.path.join(self.appIniDirDict["coordinator"], coordintaorFile)
             else:
                 coorPath = coordintaorFile
-            cp = CustomConfigObj(coorPath, list_values = True)
+            cp = CustomConfigObj(coorPath, list_values=True)
             try:
                 for port in cp["SerialPorts"].keys():
                     if port not in self.coordinatorPortList:
@@ -123,13 +140,17 @@ class SetupTool(SetupToolFrame):
         self.Bind(wx.EVT_CLOSE, self.onClose)
 
     def onAboutMenu(self, event):
-        d = wx.MessageDialog(None, "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Setup Tool", wx.OK)
+        d = wx.MessageDialog(
+            None,
+            "Software tool to customize Picarro G2000 analyzer\n\nCopyright 1999-2011 Picarro Inc. All rights reserved.\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.",
+            "About Setup Tool", wx.OK)
         d.ShowModal()
         d.Destroy()
 
     def onInterfaceMenu(self, event):
         if not self.fullInterface:
-            d = wx.TextEntryDialog(self, 'Service Mode Password: ','Authorization required', '', wx.STAY_ON_TOP|wx.OK|wx.CANCEL|wx.TE_PASSWORD)
+            d = wx.TextEntryDialog(self, 'Service Mode Password: ', 'Authorization required', '',
+                                   wx.STAY_ON_TOP | wx.OK | wx.CANCEL | wx.TE_PASSWORD)
             password = "picarro"
             okClicked = d.ShowModal() == wx.ID_OK
             d.Destroy()
@@ -163,13 +184,16 @@ class SetupTool(SetupToolFrame):
         except:
             analyzerRunning = False
         if analyzerRunning and not self.fullInterface:
-            printError("Analyzer software is currently running.\nPlease stop analyzer software and try to apply configuration changes again.", "Error", "Unapplied changes will be lost if exiting Setup Tool now." )
+            printError(
+                "Analyzer software is currently running.\nPlease stop analyzer software and try to apply configuration changes again.",
+                "Error", "Unapplied changes will be lost if exiting Setup Tool now.")
             return
 
         page = self.nb.GetSelection()
         response = self.pages[page].apply()
         if response:
-            d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page), "Changes Applied", wx.STAY_ON_TOP|wx.OK|wx.ICON_INFORMATION)
+            d = wx.MessageDialog(None, "Changes on \"%s\" page were successfully applied.   " % self.nb.GetPageText(page),
+                                 "Changes Applied", wx.STAY_ON_TOP | wx.OK | wx.ICON_INFORMATION)
             d.ShowModal()
             d.Destroy()
         else:
@@ -210,7 +234,7 @@ class SetupTool(SetupToolFrame):
                         self.setupCp.write()
                     iniPath = self.getIniPath(app, iniName)
                 elif app == "coordinator":
-                    iniPath = self.getIniPath(app, None) # a list of paths
+                    iniPath = self.getIniPath(app, None)  # a list of paths
                 elif app == "readGPSWS" and self.hasReadGPSWS:
                     iniName = self.setupCp["Setup"][app]
                     iniPath = self.getIniPath(app, iniName)
@@ -236,9 +260,9 @@ class SetupTool(SetupToolFrame):
                         # Configurations depend on other modes
                         if page == 0:
                             if app == "dataLogger":
-                                pageObj.enable([0,1,2], False)
+                                pageObj.enable([0, 1, 2], False)
                             else:
-                                pageObj.enable([3,4], False)
+                                pageObj.enable([3, 4], False)
                             comment += "* %s controlled by %s Mode\n" % (TRANSLATE_TABLE[app], iniName)
                         elif page == 1:
                             pageObj.enable([appList.index(app)], False)
@@ -249,9 +273,9 @@ class SetupTool(SetupToolFrame):
                     else:
                         if page == 0:
                             if app == "dataLogger":
-                                pageObj.enable([0,1,2], True)
+                                pageObj.enable([0, 1, 2], True)
                             else:
-                                pageObj.enable([3,4], True)
+                                pageObj.enable([3, 4], True)
                         elif page == 1:
                             pageObj.enable([appList.index(app)], True)
                         elif page == 6 and not self.hasElectricalInterface:
@@ -290,8 +314,11 @@ Where the options can be a combination of the following:
 -h                  Print this help.
 -c                  Specify the path of SetupTool.ini.
 """
+
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'c:h'
@@ -321,8 +348,7 @@ def handleCommandSwitches():
     if not os.path.isfile(setupToolIni):
         app = wx.App()
         app.MainLoop()
-        dlg = wx.FileDialog(None, "Select SetupTool.ini",
-                            os.getcwd(), wildcard = "*.ini", style=wx.OPEN)
+        dlg = wx.FileDialog(None, "Select SetupTool.ini", os.getcwd(), wildcard="*.ini", style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             setupToolIni = dlg.GetPath()
             dlg.Destroy()
@@ -336,6 +362,7 @@ def handleCommandSwitches():
     else:
         print "SetupTool.ini specified: %s" % setupToolIni
         return setupToolIni
+
 
 if __name__ == "__main__":
     setupToolIni = handleCommandSwitches()

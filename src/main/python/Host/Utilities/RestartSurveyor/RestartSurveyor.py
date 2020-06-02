@@ -23,25 +23,25 @@ from Host.Common.configobj import ConfigObj
 from Host.Common import SharedTypes
 from Host.Common import EventManagerProxy
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
 EventManagerProxy.EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
+
 class RestartSurveyor(object):
     initialized = False
 
     def __init__(self, configPath=None):
         if not self.initialized:
-            self.rpcServer = CmdFIFO.CmdFIFOServer(
-                ('', SharedTypes.RPC_PORT_RESTART_SUPERVISOR),
-                ServerName=APP_NAME,
-                ServerDescription=APP_DESCRIPTION,
-                ServerVersion=__version__,
-                threaded=True)
-                
+            self.rpcServer = CmdFIFO.CmdFIFOServer(('', SharedTypes.RPC_PORT_RESTART_SUPERVISOR),
+                                                   ServerName=APP_NAME,
+                                                   ServerDescription=APP_DESCRIPTION,
+                                                   ServerVersion=__version__,
+                                                   threaded=True)
+
             self.rpcServer.register_function(self.restart)
 
             if configPath != None:
@@ -56,7 +56,7 @@ class RestartSurveyor(object):
                 self.surveyorAppPath = os.path.split(os.path.abspath(self.surveyorApp))[0]
                 #
                 try:
-                    self.launchArgs= config["Main"]["LaunchArgs"].strip()
+                    self.launchArgs = config["Main"]["LaunchArgs"].strip()
                 except:
                     self.launchArgs = ""
                 #
@@ -74,7 +74,9 @@ class RestartSurveyor(object):
                     self.restartThreshold = 2
             else:
                 raise ValueError("Configuration file must be specified to initialize RestartSupervisor")
-            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_SUPERVISOR,
+                                                         APP_NAME,
+                                                         IsDontCareConnection=False)
             self.initialized = True
 
         EventManagerProxy.Log("%s application started." % APP_NAME)
@@ -129,6 +131,7 @@ class RestartSurveyor(object):
         appThread.start()
         self.rpcServer.serve_forever()
 
+
 HELP_STRING = """RestartSurveyor.py [-c<FILENAME>] [-h|--help]
 
 where the options can be a combination of the following. Note that options override
@@ -138,8 +141,10 @@ settings in the configuration file:
 -c                   specify a config file:  default = "./RestartSurveyor.ini"
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -163,6 +168,7 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
     return configFile, options
+
 
 if __name__ == "__main__":
     restartSurveyorApp = SingleInstance("RestartSurveyor")

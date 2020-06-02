@@ -25,7 +25,8 @@ from Host.Common.SharedTypes import RPC_PORT_ACTIVE_FILE_MANAGER
 from Host.Common.timestamp import getTimestamp
 
 ActiveFileManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ACTIVE_FILE_MANAGER,
-                                    ClientName="ActiveUtils", IsDontCareConnection=False)
+                                               ClientName="ActiveUtils",
+                                               IsDontCareConnection=False)
 
 ANALYZER_DATA = ActiveFileManager.getArchivedFileDir()
 print "Archived analyzer data directory: %s" % ANALYZER_DATA
@@ -35,12 +36,14 @@ def sortByName(top, nameList):
     nameList.sort()
     return nameList
 
+
 def sortByMtime(top, nameList):
     """Sort a list of files by modification time"""
     # Decorate with the modification time of the file for sorting
     fileList = [(os.path.getmtime(os.path.join(top, name)), name) for name in nameList]
     fileList.sort()
     return [name for _, name in fileList]
+
 
 def walkTree(top, onError=None, sortDir=None, sortFiles=None):
     """Generator which traverses a directory tree rooted at "top" in bottom to top order (i.e., the children are visited
@@ -78,6 +81,7 @@ def walkTree(top, onError=None, sortDir=None, sortFiles=None):
     # Yield up the current directory
     yield 'dir', top
 
+
 def overlap(int1, int2):
     """Determines if intervals int1 and int 2 overlap"""
     start1, stop1 = int1
@@ -85,6 +89,7 @@ def overlap(int1, int2):
     if start1 > stop1 or start2 > stop2:
         raise ValueError('Invalid time interval')
     return start2 <= start1 < stop2 or start1 <= start2 < stop1
+
 
 def fetchFilesInRange(top, startTimestamp, stopTimestamp, reverse=False):
     """Generator which yields HDF5 filenames containing data which overlap with
@@ -141,7 +146,8 @@ def fetchFilesInRange(top, startTimestamp, stopTimestamp, reverse=False):
                 if overlap((baseTime, stopTime), (startTimestamp, stopTimestamp)):
                     yield os.path.join(p, f)
 
-def getSensorData(tstart,tstop,streamName):
+
+def getSensorData(tstart, tstop, streamName):
     """Return numpy record array with requested sensor stream and specified start and stop times"""
     result_list = []
     try:
@@ -151,14 +157,14 @@ def getSensorData(tstart,tstop,streamName):
                 a.open(f)
                 table = a.getSensorDataTable()
                 if table is not None:
-                    index = a.streamLookup.get(streamName,streamName)
-                    selected = table.readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %s)' % (tstart,tstop,index))
+                    index = a.streamLookup.get(streamName, streamName)
+                    selected = table.readWhere('(timestamp >= %d) & (timestamp < %d) & (streamNum == %s)' % (tstart, tstop, index))
                     if selected is not None:
-                        result_list.append(recArrayExtract(selected,["timestamp",("value",str(streamName))]))
+                        result_list.append(recArrayExtract(selected, ["timestamp", ("value", str(streamName))]))
             finally:
                 a.close()
     except Exception, e:
-        print "Error %s, %r" % (e,e)
+        print "Error %s, %r" % (e, e)
         traceback.print_exc()
     selected = ActiveFileManager.getSensorData(tstart, tstop, streamName)
     if selected is not None: result_list.append(selected)
@@ -167,10 +173,12 @@ def getSensorData(tstart,tstop,streamName):
     else:
         return None
 
+
 def getLatestSensorData(streamName):
     return ActiveFileManager.getLatestSensorData(streamName)
 
-def getRdData(tstart,tstop,varList):
+
+def getRdData(tstart, tstop, varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
     try:
@@ -182,11 +190,11 @@ def getRdData(tstart,tstop,varList):
                 if table is not None:
                     selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart, tstop))
                     if selected is not None:
-                        result_list.append(recArrayExtract(selected,varList))
+                        result_list.append(recArrayExtract(selected, varList))
             finally:
                 a.close()
     except Exception, e:
-        print "Error %s, %r" % (e,e)
+        print "Error %s, %r" % (e, e)
         traceback.print_exc()
     selected = ActiveFileManager.getRdData(tstart, tstop, varList)
     if selected is not None: result_list.append(selected)
@@ -195,10 +203,12 @@ def getRdData(tstart,tstop,varList):
     else:
         return None
 
+
 def getLatestRdData(varList):
     return ActiveFileManager.getLatestRdData(varList)
 
-def getDmData(mode,source,tstart,tstop,varList):
+
+def getDmData(mode, source, tstart, tstop, varList):
     """Return numpy record array with requested variables and specified start and stop times"""
     result_list = []
     try:
@@ -210,11 +220,11 @@ def getDmData(mode,source,tstart,tstop,varList):
                 if table is not None:
                     selected = table.readWhere('(timestamp >= %d) & (timestamp < %d)' % (tstart, tstop))
                     if selected is not None:
-                        result_list.append(recArrayExtract(selected,varList))
+                        result_list.append(recArrayExtract(selected, varList))
             finally:
                 a.close()
     except Exception, e:
-        print "Error %s, %r" % (e,e)
+        print "Error %s, %r" % (e, e)
         traceback.print_exc()
     selected = ActiveFileManager.getDmData(mode, source, tstart, tstop, varList)
     if selected is not None: result_list.append(selected)
@@ -223,10 +233,12 @@ def getDmData(mode,source,tstart,tstop,varList):
     else:
         return None
 
-def getLatestDmData(mode,source,varList):
-    return ActiveFileManager.getLatestDmData(mode,source,varList)
 
-def getRdDataStruct(tstart,tstop):
+def getLatestDmData(mode, source, varList):
+    return ActiveFileManager.getLatestDmData(mode, source, varList)
+
+
+def getRdDataStruct(tstart, tstop):
     # Generate a dictionary whose keys are the available ringdown data columns. The values
     #  stored are the data types of the desired columns as strings.
     # We iterate backwards through the files since the latest files are more likely to contain
@@ -236,7 +248,7 @@ def getRdDataStruct(tstart,tstop):
         af = ActiveFile()
         af.open(f)
         try:
-            rdDataTable = af.handle.getNode(af.baseGroup,"rdData")
+            rdDataTable = af.handle.getNode(af.baseGroup, "rdData")
             colnames = rdDataTable.colnames
             typeDict = rdDataTable.coltypes
             for c in colnames:
@@ -246,7 +258,8 @@ def getRdDataStruct(tstart,tstop):
             af.close()
     return dataDict
 
-def getDmDataStruct(tstart,tstop):
+
+def getDmDataStruct(tstart, tstop):
     # Generate a nested dictionary, the first level is indexed by mode, the second by analysis
     #  name and the third by available data columns. The values stored are the column data types
     #  as strings.
@@ -257,7 +270,7 @@ def getDmDataStruct(tstart,tstop):
         af = ActiveFile()
         af.open(f)
         try:
-            modes = af.handle.getNode(af.baseGroup,"dataManager")._v_children
+            modes = af.handle.getNode(af.baseGroup, "dataManager")._v_children
             for m in modes:
                 if m not in dataDict:
                     dataDict[m] = {}
@@ -274,14 +287,15 @@ def getDmDataStruct(tstart,tstop):
             af.close()
     return dataDict
 
-def dictMerge(targetDict,srcDict):
+
+def dictMerge(targetDict, srcDict):
     """Recursively updates targetDict so that it contains all the keys in srcDict"""
     for s in srcDict:
         if s not in targetDict:
             targetDict[s] = srcDict[s]
         else:
-            if isinstance(targetDict[s],dict) and isinstance(srcDict[s],dict):
-                dictMerge(targetDict[s],srcDict[s])
+            if isinstance(targetDict[s], dict) and isinstance(srcDict[s], dict):
+                dictMerge(targetDict[s], srcDict[s])
             else:
                 targetDict[s] = srcDict[s]
 
@@ -298,13 +312,13 @@ def getDirectoryDataStruct(path):
         dataDict = {}
         matches = 0
         for f in files:
-            if match(filePatt,f):
+            if match(filePatt, f):
                 matches += 1
-                filename = os.path.join(path,f)
+                filename = os.path.join(path, f)
                 #af = tables.openFile(filename,"r")
                 af = ActiveFile()
                 af.open(filename)
-                modes = af.handle.getNode(af.baseGroup,"dataManager")._v_children
+                modes = af.handle.getNode(af.baseGroup, "dataManager")._v_children
                 for m in modes:
                     if m not in dataDict:
                         dataDict[m] = {}
@@ -313,18 +327,19 @@ def getDirectoryDataStruct(path):
                         if a not in dataDict[m]:
                             colnames = analyses[a].colnames
                             typeDict = analyses[a].coltypes
-                            dataDict[m][a] = (colnames,[typeDict[c] for c in colnames])
+                            dataDict[m][a] = (colnames, [typeDict[c] for c in colnames])
                 af.close()
-            elif match(dsPatt,f):
+            elif match(dsPatt, f):
                 matches += 1
-                filename = os.path.join(path,f)
-                fp = file(filename,"rb")
-                dictMerge(dataDict,load(fp))
+                filename = os.path.join(path, f)
+                fp = file(filename, "rb")
+                dictMerge(dataDict, load(fp))
                 fp.close()
         if matches:
-            fp = file(path+'.pic',"wb")
-            dump(dataDict,fp,HIGHEST_PROTOCOL)
+            fp = file(path + '.pic', "wb")
+            dump(dataDict, fp, HIGHEST_PROTOCOL)
             fp.close()
+
 
 def recArrayToJSON(recArray):
     obj = {}
@@ -332,39 +347,40 @@ def recArrayToJSON(recArray):
         obj[n] = [float(v) for v in recArray[n]]
     return obj
 
+
 if __name__ == "__main__":
-    option = input("Option? ") if len(sys.argv)<=1 else int(sys.argv[1])
+    option = input("Option? ") if len(sys.argv) <= 1 else int(sys.argv[1])
     if option == 0:
         startTimestamp = input("startTimestamp? ")
-        stopTimestamp  = input("stopTimestamp? ")
+        stopTimestamp = input("stopTimestamp? ")
         reverse = input("reverse? ")
         print [f for f in fetchFilesInRange(ANALYZER_DATA, startTimestamp, stopTimestamp, reverse)]
         sys.exit()
     elif option == 1:
         tstop = getTimestamp()
-        tstart = tstop - 2*3600 * 1000
+        tstart = tstop - 2 * 3600 * 1000
         print getDmDataStruct(tstart, tstop)
     elif option == 2:
         tstop = getTimestamp()
-        tstart = tstop - 2*3600 * 1000
+        tstart = tstop - 2 * 3600 * 1000
         mode = "CFADS_mode"
         source = "analyze_CFADS"
-        varList = ["timestamp","CO2","CH4","H2O"]
-        dmData = getDmData(mode,source,tstart,tstop,varList)
+        varList = ["timestamp", "CO2", "CH4", "H2O"]
+        dmData = getDmData(mode, source, tstart, tstop, varList)
         print recArrayToJSON(dmData)
     elif option == 3:
         tstop = getTimestamp()
         tstart = tstop - 3600 * 1000
-        r = getSensorData(tstart,tstop,'WarmBoxTemp')
+        r = getSensorData(tstart, tstop, 'WarmBoxTemp')
         print r
         print 'Number of points', len(r)
     elif option == 4:
         tstop = getTimestamp()
         tstart = tstop - 100 * 1000
-        r = getRdData(tstart,tstop,['timestamp','waveNumber','uncorrectedAbsorbance'])
+        r = getRdData(tstart, tstop, ['timestamp', 'waveNumber', 'uncorrectedAbsorbance'])
         print len(r)
     elif option == 5:
         tstop = getTimestamp()
         tstart = tstop - 10 * 1000
-        r = ActiveFileManager.getRdDataStruct(tstart,tstop)
+        r = ActiveFileManager.getRdDataStruct(tstart, tstop)
         print r

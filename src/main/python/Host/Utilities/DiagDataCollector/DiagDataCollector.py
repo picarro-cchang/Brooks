@@ -27,11 +27,12 @@ for streamNum in interface.STREAM_MemberTypeDict:
     STREAM_NUM_TO_NAME_DICT[streamNum] = interface.STREAM_MemberTypeDict[streamNum][7:]
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 class DiagDataCollector(DiagDataCollectorFrame):
     def __init__(self, configFile, *args, **kwds):
@@ -49,10 +50,10 @@ class DiagDataCollector(DiagDataCollectorFrame):
         dbFilename = co.get("Main", "dbFilename")
         self.dbCon = sqlite3.connect(dbFilename)
         self.filters = tables.Filters(complevel=1, fletcher32=True)
-        colDict = {"time":tables.Int64Col(), "date_time":tables.Int64Col(), "idx":tables.Int32Col()}
+        colDict = {"time": tables.Int64Col(), "date_time": tables.Int64Col(), "idx": tables.Int32Col()}
         for streamName in STREAM_NUM_TO_NAME_DICT.values():
-            colDict[streamName] = tables.Float32Col(shape=(3,))
-        self.TableType = type("TableType",(tables.IsDescription,),colDict)
+            colDict[streamName] = tables.Float32Col(shape=(3, ))
+        self.TableType = type("TableType", (tables.IsDescription, ), colDict)
         self.h5 = None
         self.table = None
         self.timeLimits = None
@@ -66,7 +67,7 @@ class DiagDataCollector(DiagDataCollectorFrame):
 
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
-            urlString = self.textCtrlMsg.GetRange(event.GetURLStart()+5, event.GetURLEnd())
+            urlString = self.textCtrlMsg.GetRange(event.GetURLStart() + 5, event.GetURLEnd())
             print urlString
             wx.LaunchDefaultBrowser(urlString)
         else:
@@ -90,8 +91,8 @@ class DiagDataCollector(DiagDataCollectorFrame):
         self._writeH5File()
 
     def _convToDatetime(self, wxDate, timeStr):
-        return datetime.strptime("%s-%s-%s %s" % (wxDate.GetYear(), wxDate.GetMonth()+1, wxDate.GetDay(), timeStr),
-                                          "%Y-%m-%d %H:%M:%S")
+        return datetime.strptime("%s-%s-%s %s" % (wxDate.GetYear(), wxDate.GetMonth() + 1, wxDate.GetDay(), timeStr),
+                                 "%Y-%m-%d %H:%M:%S")
 
     def _createH5File(self):
         if self.table != None:
@@ -119,10 +120,9 @@ class DiagDataCollector(DiagDataCollectorFrame):
 
     def _writeH5File(self):
         if self.h5 != None and self.timeLimits != None:
-            for level in range(MAX_LEVEL+1):
+            for level in range(MAX_LEVEL + 1):
                 values = self.dbCon.execute(
-                    "select time,idx,streamNum,value,minVal,maxVal from history" +
-                    " where level=? and time >= ? and time <= ?",
+                    "select time,idx,streamNum,value,minVal,maxVal from history" + " where level=? and time >= ? and time <= ?",
                     (level, self.timeLimits[0], self.timeLimits[1])).fetchall()
                 dataDict = {}
                 if len(values) > 0:
@@ -130,7 +130,7 @@ class DiagDataCollector(DiagDataCollectorFrame):
                         dTime = data[0]
                         idx = data[1]
                         if idx not in dataDict:
-                            dataDict[idx] = {"time":dTime}
+                            dataDict[idx] = {"time": dTime}
                         else:
                             dataDict[idx]["time"] = max(dataDict[idx]["time"], dTime)
                         dataDict[idx][STREAM_NUM_TO_NAME_DICT[data[2]]] = tuple(data[3:])
@@ -159,8 +159,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -188,6 +190,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

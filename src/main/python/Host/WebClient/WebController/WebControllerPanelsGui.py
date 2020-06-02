@@ -13,7 +13,6 @@ from Host.Common.GuiWidgets import CheckIndicator
 # end wxGlade
 
 
-
 class LaserPanelGui(wx.Panel):
     def __init__(self, *args, **kwds):
         # begin wxGlade: LaserPanelGui.__init__
@@ -43,7 +42,7 @@ class LaserPanelGui(wx.Panel):
         sizer_1.Add(self.temperatureGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.tecGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.currentGraph, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.clearButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2.Add(self.clearButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 10)
         sizer_2.Add((20, 20), 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
         sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
@@ -51,9 +50,10 @@ class LaserPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: LaserPanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: LaserPanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
+
 
 # end of class LaserPanelGui
 
@@ -83,7 +83,7 @@ class CommandLogPanelGui(wx.Panel):
         self.startAcquisitionButton = wx.Button(self.panel_3, -1, "Start Acquisition")
         self.label_3 = wx.StaticText(self.panel_3, -1, "Sequence")
         self.seqTextCtrl = wx.TextCtrl(self.panel_3, -1, "")
-        self.logListCtrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT|wx.SUNKEN_BORDER)
+        self.logListCtrl = wx.ListCtrl(self, -1, style=wx.LC_REPORT | wx.SUNKEN_BORDER)
         self.sizer_11_staticbox = wx.StaticBox(self, -1, "Log")
 
         self.__set_properties()
@@ -114,21 +114,21 @@ class CommandLogPanelGui(wx.Panel):
         sizer_5 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_4 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_1 = wx.GridSizer(3, 2, 0, 0)
-        sizer_4.Add(self.startEngineButton, 1, wx.ALL|wx.EXPAND, 5)
-        grid_sizer_1.Add(self.laser1State, 1, wx.TOP|wx.BOTTOM, 5)
-        grid_sizer_1.Add(self.laser2State, 1, wx.TOP|wx.BOTTOM, 5)
-        grid_sizer_1.Add(self.laser3State, 1, wx.TOP|wx.BOTTOM, 5)
-        grid_sizer_1.Add(self.laser4State, 1, wx.TOP|wx.BOTTOM, 5)
-        grid_sizer_1.Add(self.warmBoxState, 1, wx.TOP|wx.BOTTOM, 5)
-        grid_sizer_1.Add(self.hotBoxState, 1, wx.TOP|wx.BOTTOM, 5)
-        sizer_4.Add(grid_sizer_1, 0, wx.LEFT|wx.EXPAND, 10)
+        sizer_4.Add(self.startEngineButton, 1, wx.ALL | wx.EXPAND, 5)
+        grid_sizer_1.Add(self.laser1State, 1, wx.TOP | wx.BOTTOM, 5)
+        grid_sizer_1.Add(self.laser2State, 1, wx.TOP | wx.BOTTOM, 5)
+        grid_sizer_1.Add(self.laser3State, 1, wx.TOP | wx.BOTTOM, 5)
+        grid_sizer_1.Add(self.laser4State, 1, wx.TOP | wx.BOTTOM, 5)
+        grid_sizer_1.Add(self.warmBoxState, 1, wx.TOP | wx.BOTTOM, 5)
+        grid_sizer_1.Add(self.hotBoxState, 1, wx.TOP | wx.BOTTOM, 5)
+        sizer_4.Add(grid_sizer_1, 0, wx.LEFT | wx.EXPAND, 10)
         sizer_3.Add(sizer_4, 1, wx.EXPAND, 0)
         sizer_5.Add(self.streamFileCheckbox, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         sizer_5.Add(self.streamFileTextCtrl, 1, wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(sizer_5, 0, wx.ALL|wx.EXPAND, 6)
+        sizer_3.Add(sizer_5, 0, wx.ALL | wx.EXPAND, 6)
         self.panel_1.SetSizer(sizer_3)
-        sizer_2.Add(self.panel_1, 1, wx.LEFT|wx.RIGHT|wx.EXPAND, 25)
-        sizer_6.Add(self.loadCalibrationButton, 1, wx.ALL|wx.EXPAND, 5)
+        sizer_2.Add(self.panel_1, 1, wx.LEFT | wx.RIGHT | wx.EXPAND, 25)
+        sizer_6.Add(self.loadCalibrationButton, 1, wx.ALL | wx.EXPAND, 5)
         grid_sizer_3.Add(self.label_1, 0, wx.ALIGN_CENTER_VERTICAL, 0)
         grid_sizer_3.Add(self.warmBoxCalFileTextCtrl, 0, wx.EXPAND, 0)
         grid_sizer_3.Add(self.label_2, 0, wx.ALIGN_CENTER_VERTICAL, 0)
@@ -136,35 +136,36 @@ class CommandLogPanelGui(wx.Panel):
         grid_sizer_3.AddGrowableCol(1)
         sizer_6.Add(grid_sizer_3, 1, wx.EXPAND, 0)
         self.panel_2.SetSizer(sizer_6)
-        sizer_2.Add(self.panel_2, 1, wx.LEFT|wx.RIGHT|wx.EXPAND, 25)
-        sizer_9.Add(self.startAcquisitionButton, 1, wx.ALL|wx.EXPAND, 5)
-        sizer_10.Add(self.label_3, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 0)
-        sizer_10.Add(self.seqTextCtrl, 1, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.panel_2, 1, wx.LEFT | wx.RIGHT | wx.EXPAND, 25)
+        sizer_9.Add(self.startAcquisitionButton, 1, wx.ALL | wx.EXPAND, 5)
+        sizer_10.Add(self.label_3, 0, wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 0)
+        sizer_10.Add(self.seqTextCtrl, 1, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_9.Add(sizer_10, 0, wx.EXPAND, 6)
         self.panel_3.SetSizer(sizer_9)
-        sizer_2.Add(self.panel_3, 1, wx.LEFT|wx.RIGHT|wx.EXPAND, 25)
-        sizer_1.Add(sizer_2, 0, wx.TOP|wx.EXPAND, 20)
+        sizer_2.Add(self.panel_3, 1, wx.LEFT | wx.RIGHT | wx.EXPAND, 25)
+        sizer_1.Add(sizer_2, 0, wx.TOP | wx.EXPAND, 20)
         sizer_11.Add(self.logListCtrl, 1, wx.EXPAND, 0)
         sizer_1.Add(sizer_11, 1, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onStartEngine(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
+    def onStartEngine(self, event):  # wxGlade: CommandLogPanelGui.<event_handler>
         print "Event handler `onStartEngine' not implemented!"
         event.Skip()
 
-    def onStreamFileCheck(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
+    def onStreamFileCheck(self, event):  # wxGlade: CommandLogPanelGui.<event_handler>
         print "Event handler `onStreamFileCheck' not implemented!"
         event.Skip()
 
-    def onLoadCalibration(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
+    def onLoadCalibration(self, event):  # wxGlade: CommandLogPanelGui.<event_handler>
         print "Event handler `onLoadCalibration' not implemented!"
         event.Skip()
 
-    def onStartAcquisition(self, event): # wxGlade: CommandLogPanelGui.<event_handler>
+    def onStartAcquisition(self, event):  # wxGlade: CommandLogPanelGui.<event_handler>
         print "Event handler `onStartAcquisition' not implemented!"
         event.Skip()
+
 
 # end of class CommandLogPanelGui
 
@@ -207,10 +208,10 @@ class HotBoxPanelGui(wx.Panel):
         sizer_1.Add(self.temperatureGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.tecGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.heaterGraph, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.clearButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 15)
-        sizer_3.Add(self.cavityTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.heatsinkTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.dasTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.clearButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 15)
+        sizer_3.Add(self.cavityTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.heatsinkTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.dasTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_2.Add(sizer_3, 1, wx.EXPAND, 0)
         sizer_2.Add((20, 20), 1, wx.EXPAND, 0)
         self.panel_1.SetSizer(sizer_2)
@@ -219,13 +220,14 @@ class HotBoxPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: HotBoxPanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: HotBoxPanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onWaveformSelectChanged(self, event): # wxGlade: HotBoxPanelGui.<event_handler>
+    def onWaveformSelectChanged(self, event):  # wxGlade: HotBoxPanelGui.<event_handler>
         print "Event handler `onWaveformSelectChanged' not implemented!"
         event.Skip()
+
 
 # end of class HotBoxPanelGui
 
@@ -241,7 +243,17 @@ class RingdownPanelGui(wx.Panel):
         self.uncorrectedCheckBox = wx.CheckBox(self.panel_1, -1, "Uncorrected")
         self.correctedCheckBox = wx.CheckBox(self.panel_1, -1, "Corrected")
         self.sizer_4_staticbox = wx.StaticBox(self.panel_1, -1, "Loss Type")
-        self.graphTypeRadioBox = wx.RadioBox(self.panel_1, -1, "Select Graph Type", choices=["Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2", "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1", "Tuner vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber", "IL(fine) vs Time"], majorDimension=4, style=wx.RA_SPECIFY_ROWS)
+        self.graphTypeRadioBox = wx.RadioBox(self.panel_1,
+                                             -1,
+                                             "Select Graph Type",
+                                             choices=[
+                                                 "Loss vs Wavenumber", "Loss vs Time", "Loss vs Ratio 1", "Loss vs Ratio 2",
+                                                 "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1",
+                                                 "Tuner vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber",
+                                                 "IL(fine) vs Time"
+                                             ],
+                                             majorDimension=4,
+                                             style=wx.RA_SPECIFY_ROWS)
         self.panel_2 = wx.Panel(self.panel_1, -1)
 
         self.__set_properties()
@@ -268,10 +280,10 @@ class RingdownPanelGui(wx.Panel):
         sizer_4 = wx.StaticBoxSizer(self.sizer_4_staticbox, wx.VERTICAL)
         sizer_1.Add(self.ringdownGraph, 1, wx.EXPAND, 0)
         sizer_3.Add(self.clearButton, 0, wx.ALL, 10)
-        sizer_4.Add(self.uncorrectedCheckBox, 0, wx.TOP|wx.BOTTOM, 3)
-        sizer_4.Add(self.correctedCheckBox, 0, wx.TOP|wx.BOTTOM, 3)
+        sizer_4.Add(self.uncorrectedCheckBox, 0, wx.TOP | wx.BOTTOM, 3)
+        sizer_4.Add(self.correctedCheckBox, 0, wx.TOP | wx.BOTTOM, 3)
         sizer_3.Add(sizer_4, 1, wx.EXPAND, 0)
-        sizer_2.Add(sizer_3, 0, wx.ALL|wx.EXPAND, 10)
+        sizer_2.Add(sizer_3, 0, wx.ALL | wx.EXPAND, 10)
         sizer_2.Add(self.graphTypeRadioBox, 0, wx.ALL, 10)
         sizer_2.Add(self.panel_2, 1, wx.EXPAND, 10)
         self.panel_1.SetSizer(sizer_2)
@@ -280,17 +292,18 @@ class RingdownPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: RingdownPanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: RingdownPanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onSelectLossType(self, event): # wxGlade: RingdownPanelGui.<event_handler>
+    def onSelectLossType(self, event):  # wxGlade: RingdownPanelGui.<event_handler>
         print "Event handler `onSelectLossType' not implemented!"
         event.Skip()
 
-    def onSelectGraphType(self, event): # wxGlade: RingdownPanelGui.<event_handler>
+    def onSelectGraphType(self, event):  # wxGlade: RingdownPanelGui.<event_handler>
         print "Event handler `onSelectGraphType' not implemented!"
         event.Skip()
+
 
 # end of class RingdownPanelGui
 
@@ -331,10 +344,10 @@ class WarmBoxPanelGui(wx.Panel):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add(self.temperatureGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.tecGraph, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.clearButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 15)
-        sizer_3.Add(self.etalonTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.warmBoxTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.heatsinkTemperatureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.clearButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 15)
+        sizer_3.Add(self.etalonTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.warmBoxTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.heatsinkTemperatureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_2.Add(sizer_3, 0, wx.EXPAND, 0)
         sizer_2.Add((20, 20), 1, wx.EXPAND, 0)
         self.panel_1.SetSizer(sizer_2)
@@ -343,13 +356,14 @@ class WarmBoxPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: WarmBoxPanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: WarmBoxPanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onWaveformSelectChanged(self, event): # wxGlade: WarmBoxPanelGui.<event_handler>
+    def onWaveformSelectChanged(self, event):  # wxGlade: WarmBoxPanelGui.<event_handler>
         print "Event handler `onWaveformSelectChanged' not implemented!"
         event.Skip()
+
 
 # end of class WarmBoxPanelGui
 
@@ -381,7 +395,7 @@ class WlmPanelGui(wx.Panel):
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_1.Add(self.photocurrentGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.ratioGraph, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.clearButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 15)
+        sizer_2.Add(self.clearButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 15)
         sizer_2.Add((20, 20), 1, wx.EXPAND, 0)
         self.panel_1.SetSizer(sizer_2)
         sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
@@ -389,9 +403,10 @@ class WlmPanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: WlmPanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: WlmPanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
+
 
 # end of class WlmPanelGui
 
@@ -446,12 +461,12 @@ class PressurePanelGui(wx.Panel):
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
         sizer_1.Add(self.pressureGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.propValveGraph, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.clearButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 15)
-        sizer_3.Add(self.ambientPressureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_3.Add(self.cavityPressureCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.clearButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 15)
+        sizer_3.Add(self.ambientPressureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_3.Add(self.cavityPressureCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_2.Add(sizer_3, 0, wx.EXPAND, 0)
-        sizer_4.Add(self.inletValveCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_4.Add(self.outletValveCheckbox, 0, wx.LEFT|wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_4.Add(self.inletValveCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_4.Add(self.outletValveCheckbox, 0, wx.LEFT | wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL, 5)
         sizer_2.Add(sizer_4, 0, wx.EXPAND, 0)
         sizer_2.Add((20, 20), 1, wx.EXPAND, 0)
         grid_sizer_2.Add(self.valve1State, 1, wx.EXPAND, 0)
@@ -468,17 +483,18 @@ class PressurePanelGui(wx.Panel):
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onClear(self, event): # wxGlade: PressurePanelGui.<event_handler>
+    def onClear(self, event):  # wxGlade: PressurePanelGui.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onPressureWaveformSelectChanged(self, event): # wxGlade: PressurePanelGui.<event_handler>
+    def onPressureWaveformSelectChanged(self, event):  # wxGlade: PressurePanelGui.<event_handler>
         print "Event handler `onPressureWaveformSelectChanged' not implemented!"
         event.Skip()
 
-    def onValveWaveformSelectChanged(self, event): # wxGlade: PressurePanelGui.<event_handler>
+    def onValveWaveformSelectChanged(self, event):  # wxGlade: PressurePanelGui.<event_handler>
         print "Event handler `onValveWaveformSelectChanged' not implemented!"
         event.Skip()
+
 
 # end of class PressurePanelGui
 
@@ -545,29 +561,30 @@ class StatsPanelGui(wx.Panel):
         grid_sizer_1.Add(self.ratio1Graph, 1, wx.EXPAND, 0)
         grid_sizer_1.Add(self.ratio2Graph, 1, wx.EXPAND, 0)
         sizer_1.Add(grid_sizer_1, 1, wx.EXPAND, 0)
-        sizer_2.Add(self.startStopButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 10)
-        sizer_2.Add(self.label_ringdowns, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.ringdownsTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_mean_loss, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.meanLossTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_sdev_loss, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.stdLossTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_shot_to_shot, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.shotToShotTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_rate, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.rateTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_sensitivity, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.sensitivityTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.label_freq_std_dev, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 5)
-        sizer_2.Add(self.freqStdDevTextCtrl, 1, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.startStopButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2.Add(self.label_ringdowns, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.ringdownsTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_mean_loss, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.meanLossTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_sdev_loss, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.stdLossTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_shot_to_shot, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.shotToShotTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_rate, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.rateTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_sensitivity, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.sensitivityTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.label_freq_std_dev, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 5)
+        sizer_2.Add(self.freqStdDevTextCtrl, 1, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 5)
         self.panel_1.SetSizer(sizer_2)
         sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         # end wxGlade
 
-    def onStartStop(self, event): # wxGlade: StatsPanelGui.<event_handler>
+    def onStartStop(self, event):  # wxGlade: StatsPanelGui.<event_handler>
         print "Event handler `onStartStop' not implemented!"
         event.Skip()
+
 
 # end of class StatsPanelGui

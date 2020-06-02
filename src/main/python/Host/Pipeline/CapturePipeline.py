@@ -12,7 +12,8 @@ from traitlets.config.application import Application
 from Host.Pipeline.Blocks import Pipeline
 from Host.Pipeline.PeaksBlocks import (AddDistanceBlock)
 from Host.Pipeline.UtilityBlocks import (FrameFetcherBlock, LineCountBlock, PrinterBlock, ProcessStatusBlock)
-from Host.Pipeline.CaptureBlocks import (CaptureAnalyzerBlock, )
+from Host.Pipeline.CaptureBlocks import (
+    CaptureAnalyzerBlock, )
 from Host.Pipeline.EthaneBlocks import (EthaneClassifier, JsonWriterBlock)
 
 
@@ -45,14 +46,15 @@ class CapturePipeline(Pipeline):
         self.addDistanceBlock.linkTo(self.captureAnalyzerBlock)
         self.captureAnalyzerBlock.linkTo(self.jsonWriterBlock)
 
+
 class CapturePipelineApp(Application):
     aliases = Dict(dict(config='AnalysisPipelineApp.config_file'))
     classes = List([CaptureAnalyzerBlock, EthaneClassifier])
     config_file = Unicode('', config=True, help="Name of configuration file")
 
     def initialize(self, argv=None):
-        self.config.CaptureAnalyzerBlock.captureType = "Isotopic"            # Type of capture mode to use
-        self.config.CaptureAnalyzerBlock.methane_ethane_sdev_ratio = 0.2     # Ratio of methane conc. sdev to ethane conc. sdev
+        self.config.CaptureAnalyzerBlock.captureType = "Isotopic"  # Type of capture mode to use
+        self.config.CaptureAnalyzerBlock.methane_ethane_sdev_ratio = 0.2  # Ratio of methane conc. sdev to ethane conc. sdev
         self.config.CaptureAnalyzerBlock.methane_ethylene_sdev_ratio = 0.09  # Ratio of methane conc. sdev to ethylene conc. sdev
         self.config.EthaneClassifier.nng_lower = 0.0  # Lower limit of ratio for not natural gas hypothesis
         self.config.EthaneClassifier.nng_upper = 0.1e-2  # Upper limit of ratio for not natural gas hypothesis
@@ -75,7 +77,7 @@ class CapturePipelineApp(Application):
         for inputFilename in filenamesToProcess:
             baseFilename = os.path.splitext(inputFilename)[0]
             dataFrame = pd.read_table(inputFilename, delim_whitespace=True, na_values=['NAN'])
-            if "C2H6" in dataFrame.columns.values.tolist():             # Heuristic to find type of capture mode to use
+            if "C2H6" in dataFrame.columns.values.tolist():  # Heuristic to find type of capture mode to use
                 self.config.CaptureAnalyzerBlock.captureType = "Ethane"
             else:
                 self.config.CaptureAnalyzerBlock.captureType = "Isotopic"
@@ -90,8 +92,8 @@ class CapturePipelineApp(Application):
             except:
                 print traceback.format_exc()
 
+
 if __name__ == "__main__":
     app = CapturePipelineApp()
     app.initialize()
     app.start()
-

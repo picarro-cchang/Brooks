@@ -1,7 +1,6 @@
 from Host.Common.EventManagerProxy import EventManagerProxy_Init
 from Host.SpectrumCollector.SpectrumCollector import main
 
-
 APP_NAME = "SpectrumCollector"
 EventManagerProxy_Init(APP_NAME)
 

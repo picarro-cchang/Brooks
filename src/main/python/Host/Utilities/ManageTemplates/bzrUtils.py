@@ -4,7 +4,6 @@ import os
 #import sys
 #import subprocess
 
-
 # Folder structure examples
 #
 # Backup
@@ -82,7 +81,7 @@ def getBzrFolder(root, excludeDirs):
 
             else:
                 # build a destination folder name to return
-                destName = parentDirName    # default to parent folder name
+                destName = parentDirName  # default to parent folder name
 
                 if dirName == "AppConfig" or dirName == "InstrConfig":
                     # strip off the Templates suffix on the parent folder name if there is one

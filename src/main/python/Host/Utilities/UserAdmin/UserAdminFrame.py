@@ -2,6 +2,7 @@ import os
 from PyQt4.QtCore import *
 from PyQt4.QtGui import *
 
+
 class UserAdminFrame(QMainWindow):
     """
     Define user interface of UserAdmin program
@@ -11,7 +12,7 @@ class UserAdminFrame(QMainWindow):
 
         # Set-up Drop Shadow effect to be used on elements
         self.shadow = QGraphicsDropShadowEffect(self)
-        self.shadow.setColor(QColor(30,30,30,180))
+        self.shadow.setColor(QColor(30, 30, 30, 180))
         self.shadow.setBlurRadius(5)
         self.curr_dir = os.path.dirname(os.path.realpath(__file__))
         # Open, read, and close stylesheet
@@ -26,7 +27,7 @@ class UserAdminFrame(QMainWindow):
 
         self.create_widgets()
         self.setWindowTitle("User Management")
-        self.resize(800,600)
+        self.resize(800, 600)
 
     def create_widgets(self):
         def spin_box(value=0, min=0, max=100, step=1):
@@ -66,8 +67,8 @@ class UserAdminFrame(QMainWindow):
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
         logo_box = QVBoxLayout()
-        logo_box.addWidget(picarro_label,0,Qt.AlignHCenter)
-        logo_box.addWidget(QLabel("<h3>User Management Tool</h3>"),0,Qt.AlignHCenter)
+        logo_box.addWidget(picarro_label, 0, Qt.AlignHCenter)
+        logo_box.addWidget(QLabel("<h3>User Management Tool</h3>"), 0, Qt.AlignHCenter)
 
         # Set the form layouts in widgets so hide/show works.
         # Set home form as a the initially visible form.
@@ -225,12 +226,12 @@ class UserAdminFrame(QMainWindow):
         button_layout.addStretch(1)
         button_layout.addWidget(self.button_user_revert_policy)
         button_layout.addStretch(1)
-        user_policy_layout.addRow(self.check_password_length, control_box("characters",self.input_password_length))
+        user_policy_layout.addRow(self.check_password_length, control_box("characters", self.input_password_length))
         user_policy_layout.addRow(self.check_password_mix_charset)
-        user_policy_layout.addRow(self.check_password_lifetime, control_box("days",self.input_password_lifetime))
-        user_policy_layout.addRow(self.check_password_reuse_period, control_box("old passwords",self.input_password_reuse_period))
-        user_policy_layout.addRow(self.check_user_login_attempts, control_box("login attempts",self.input_user_login_attempts))
-        user_policy_layout.addRow(self.check_user_session_lifetime, control_box("minutes",self.input_user_session_lifetime))
+        user_policy_layout.addRow(self.check_password_lifetime, control_box("days", self.input_password_lifetime))
+        user_policy_layout.addRow(self.check_password_reuse_period, control_box("old passwords", self.input_password_reuse_period))
+        user_policy_layout.addRow(self.check_user_login_attempts, control_box("login attempts", self.input_user_login_attempts))
+        user_policy_layout.addRow(self.check_user_session_lifetime, control_box("minutes", self.input_user_session_lifetime))
         user_policy_layout.addRow(self.check_save_history)
         user_policy_layout.addRow(button_layout)
 
@@ -248,7 +249,7 @@ class UserAdminFrame(QMainWindow):
         self.button_next_history = QPushButton(">")
         self.button_next_history.setAccessibleName("history")
         self.button_next_history.clicked.connect(self.next_history_page)
-        self.button_next_history.setEnabled(False)        
+        self.button_next_history.setEnabled(False)
         self.button_download_history = QPushButton("Download")
         self.button_download_history.clicked.connect(self.download_history)
         self.button_refresh_history = QPushButton("Refresh")
@@ -260,7 +261,7 @@ class UserAdminFrame(QMainWindow):
         button_line1.addStretch(1)
         action_history_layout.addLayout(button_line1)
         button_line2 = QHBoxLayout()
-        button_line2.addStretch(1)        
+        button_line2.addStretch(1)
         button_line2.addWidget(self.button_refresh_history)
         button_line2.addWidget(self.button_download_history)
         action_history_layout.addLayout(button_line2)
@@ -315,14 +316,14 @@ class UserAdminFrame(QMainWindow):
         # when the user changes views.
         #
         grid_layout = QGridLayout()
-        grid_layout.setColumnStretch(1,1)
-        grid_layout.setColumnStretch(3,1)
-        grid_layout.setRowStretch(0,2)
-        grid_layout.addWidget(self.home_widget,1,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.user_admin_widget,2,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.add_user_widget,3,2,Qt.AlignHCenter)
-        grid_layout.addWidget(self.change_password_widget,4,2,Qt.AlignHCenter)
-        grid_layout.setRowStretch(5,2)
+        grid_layout.setColumnStretch(1, 1)
+        grid_layout.setColumnStretch(3, 1)
+        grid_layout.setRowStretch(0, 2)
+        grid_layout.addWidget(self.home_widget, 1, 2, Qt.AlignHCenter)
+        grid_layout.addWidget(self.user_admin_widget, 2, 2, Qt.AlignHCenter)
+        grid_layout.addWidget(self.add_user_widget, 3, 2, Qt.AlignHCenter)
+        grid_layout.addWidget(self.change_password_widget, 4, 2, Qt.AlignHCenter)
+        grid_layout.setRowStretch(5, 2)
 
         main_layout = QVBoxLayout()
         main_layout.addSpacing(25)

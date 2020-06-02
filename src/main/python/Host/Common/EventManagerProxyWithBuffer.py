@@ -1,5 +1,4 @@
-
-from Host.Common import SharedTypes #to get the right TCP port to use
+from Host.Common import SharedTypes  #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
 from Host.EventManager.EventLog import EventLog
@@ -20,13 +19,13 @@ except KeyError:
 
 
 class EventManagerProxyWithBuffer:
-
-    def __init__(self, application_name,
-                           dont_care_connection = True,
-                           print_everything = False,
-                           min_ms_interval = min_ms_interval,
-                           buffer_size = 10,
-                           buffer_periodical_flush_timing_ms=100.0):
+    def __init__(self,
+                 application_name,
+                 dont_care_connection=True,
+                 print_everything=False,
+                 min_ms_interval=min_ms_interval,
+                 buffer_size=10,
+                 buffer_periodical_flush_timing_ms=100.0):
 
         # clean exit event
         import atexit
@@ -40,11 +39,11 @@ class EventManagerProxyWithBuffer:
         self.buffer_size = buffer_size
         self.application_name = application_name
         self.buffer_lock = threading.RLock()
-        self.buffer_periodical_flush_timing = (buffer_periodical_flush_timing_ms/1000.0)
+        self.buffer_periodical_flush_timing = (buffer_periodical_flush_timing_ms / 1000.0)
         self.__event_manager_proxy = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_LOGGER,
-                                                              application_name,
-                                                              IsDontCareConnection=dont_care_connection,
-                                                              min_ms_interval=min_ms_interval)
+                                                                application_name,
+                                                                IsDontCareConnection=dont_care_connection,
+                                                                min_ms_interval=min_ms_interval)
         self.timer_thread = threading.Thread(target=self._timer_log)
         self.timer_thread.daemon = True
         self.thread_running = True
@@ -61,8 +60,15 @@ class EventManagerProxyWithBuffer:
             if len(self.event_log_list) > 0:
                 self._flush_log()
 
-    def _create_event_log(self, Desc, Data="", Level=1, Code=-1, AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY, Verbose="",
-                        SourceTime=0, SourceNameOverride=None):
+    def _create_event_log(self,
+                          Desc,
+                          Data="",
+                          Level=1,
+                          Code=-1,
+                          AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY,
+                          Verbose="",
+                          SourceTime=0,
+                          SourceNameOverride=None):
         # And the time that the dispatcher received the log (there may be some lag we
         # don't want if the log queue gets jammed while archiving or something)...
         #  - only do it this way if not provided by the caller...
@@ -75,12 +81,10 @@ class EventManagerProxyWithBuffer:
                              Code=Code,
                              AccessLevel=AccessLevel,
                              VerboseDescription=Verbose,
-                             EventTime=sourceTime
-                             )
+                             EventTime=sourceTime)
         return thisEvent
 
-    def Log(self, Desc, Data=None, Level=1, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, Verbose="", SourceTime=0,
-            LogInBuffer=False):
+    def Log(self, Desc, Data=None, Level=1, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, Verbose="", SourceTime=0, LogInBuffer=False):
         """Short global log function that sends a log to the EventManager."""
         if __debug__:
             if self.print_everything or Level >= 2:
@@ -94,7 +98,13 @@ class EventManagerProxyWithBuffer:
         if len(self.event_log_list) >= self.buffer_size:
             self._flush_log()
 
-    def LogExc(self, Msg="Exception occurred", Data={}, Level=2, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, SourceTime=0,
+    def LogExc(self,
+               Msg="Exception occurred",
+               Data={},
+               Level=2,
+               Code=-1,
+               AccessLevel=ACCESS_PICARRO_ONLY,
+               SourceTime=0,
                LogInBuffer=False):
         """Sends a log of the current exception to the EventManager.
 

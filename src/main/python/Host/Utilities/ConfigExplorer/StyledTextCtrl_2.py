@@ -1,10 +1,9 @@
+import keyword
 
-import  keyword
+import wx
+import wx.stc as stc
 
-import  wx
-import  wx.stc  as  stc
-
-import  Host.Utilities.ConfigExplorer.images as images
+import Host.Utilities.ConfigExplorer.images as images
 
 #----------------------------------------------------------------------
 
@@ -17,42 +16,42 @@ demoText = """\
 
 #----------------------------------------------------------------------
 
-
 if wx.Platform == '__WXMSW__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Courier New',
-              'helv' : 'Arial',
-              'other': 'Comic Sans MS',
-              'size' : 10,
-              'size2': 8,
-             }
+    faces = {
+        'times': 'Times New Roman',
+        'mono': 'Courier New',
+        'helv': 'Arial',
+        'other': 'Comic Sans MS',
+        'size': 10,
+        'size2': 8,
+    }
 elif wx.Platform == '__WXMAC__':
-    faces = { 'times': 'Times New Roman',
-              'mono' : 'Monaco',
-              'helv' : 'Arial',
-              'other': 'Comic Sans MS',
-              'size' : 12,
-              'size2': 10,
-             }
+    faces = {
+        'times': 'Times New Roman',
+        'mono': 'Monaco',
+        'helv': 'Arial',
+        'other': 'Comic Sans MS',
+        'size': 12,
+        'size2': 10,
+    }
 else:
-    faces = { 'times': 'Times',
-              'mono' : 'Courier',
-              'helv' : 'Helvetica',
-              'other': 'new century schoolbook',
-              'size' : 12,
-              'size2': 10,
-             }
-
+    faces = {
+        'times': 'Times',
+        'mono': 'Courier',
+        'helv': 'Helvetica',
+        'other': 'new century schoolbook',
+        'size': 12,
+        'size2': 10,
+    }
 
 #----------------------------------------------------------------------
+
 
 class PythonSTC(stc.StyledTextCtrl):
 
     fold_symbols = 2
 
-    def __init__(self, parent, ID,
-                 pos=wx.DefaultPosition, size=wx.DefaultSize,
-                 style=0):
+    def __init__(self, parent, ID, pos=wx.DefaultPosition, size=wx.DefaultSize, style=0):
         stc.StyledTextCtrl.__init__(self, parent, ID, pos, size, style)
 
         self.CmdKeyAssign(ord('B'), stc.STC_SCMOD_CTRL, stc.STC_CMD_ZOOMIN)
@@ -64,7 +63,7 @@ class PythonSTC(stc.StyledTextCtrl):
 
         self.SetProperty("fold", "1")
         self.SetProperty("tab.timmy.whinge.level", "1")
-        self.SetMargins(0,0)
+        self.SetMargins(0, 0)
 
         self.SetViewWhiteSpace(False)
         #self.SetBufferedDraw(False)
@@ -84,44 +83,43 @@ class PythonSTC(stc.StyledTextCtrl):
 
         if self.fold_symbols == 0:
             # Arrow pointing right for contracted folders, arrow pointing down for expanded
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN,    stc.STC_MARK_ARROWDOWN, "black", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDER,        stc.STC_MARK_ARROW, "black", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB,     stc.STC_MARK_EMPTY, "black", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL,    stc.STC_MARK_EMPTY, "black", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND,     stc.STC_MARK_EMPTY,     "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY,     "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY,     "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_ARROWDOWN, "black", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_ARROW, "black", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "black", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "black", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black")
 
         elif self.fold_symbols == 1:
             # Plus for contracted folders, minus for expanded
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN,    stc.STC_MARK_MINUS, "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDER,        stc.STC_MARK_PLUS,  "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB,     stc.STC_MARK_EMPTY, "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL,    stc.STC_MARK_EMPTY, "white", "black")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND,     stc.STC_MARK_EMPTY, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_MINUS, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_PLUS, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_EMPTY, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_EMPTY, "white", "black")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_EMPTY, "white", "black")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_EMPTY, "white", "black")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_EMPTY, "white", "black")
 
         elif self.fold_symbols == 2:
             # Like a flattened tree control using circular headers and curved joins
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN,    stc.STC_MARK_CIRCLEMINUS,          "white", "#404040")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDER,        stc.STC_MARK_CIRCLEPLUS,           "white", "#404040")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB,     stc.STC_MARK_VLINE,                "white", "#404040")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL,    stc.STC_MARK_LCORNERCURVE,         "white", "#404040")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND,     stc.STC_MARK_CIRCLEPLUSCONNECTED,  "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_CIRCLEMINUS, "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_CIRCLEPLUS, "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNERCURVE, "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_CIRCLEPLUSCONNECTED, "white", "#404040")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_CIRCLEMINUSCONNECTED, "white", "#404040")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE,         "white", "#404040")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNERCURVE, "white", "#404040")
 
         elif self.fold_symbols == 3:
             # Like a flattened tree control using square headers
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN,    stc.STC_MARK_BOXMINUS,          "white", "#808080")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDER,        stc.STC_MARK_BOXPLUS,           "white", "#808080")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB,     stc.STC_MARK_VLINE,             "white", "#808080")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL,    stc.STC_MARK_LCORNER,           "white", "#808080")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND,     stc.STC_MARK_BOXPLUSCONNECTED,  "white", "#808080")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPEN, stc.STC_MARK_BOXMINUS, "white", "#808080")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDER, stc.STC_MARK_BOXPLUS, "white", "#808080")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERSUB, stc.STC_MARK_VLINE, "white", "#808080")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERTAIL, stc.STC_MARK_LCORNER, "white", "#808080")
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDEREND, stc.STC_MARK_BOXPLUSCONNECTED, "white", "#808080")
             self.MarkerDefine(stc.STC_MARKNUM_FOLDEROPENMID, stc.STC_MARK_BOXMINUSCONNECTED, "white", "#808080")
-            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER,           "white", "#808080")
-
+            self.MarkerDefine(stc.STC_MARKNUM_FOLDERMIDTAIL, stc.STC_MARK_TCORNER, "white", "#808080")
 
         self.Bind(stc.EVT_STC_UPDATEUI, self.OnUpdateUI)
         self.Bind(stc.EVT_STC_MARGINCLICK, self.OnMarginClick)
@@ -132,15 +130,15 @@ class PythonSTC(stc.StyledTextCtrl):
         # Scintilla sample property files.
 
         # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
         self.StyleClearAll()  # Reset all to be like the default
 
         # Global default styles for all languages
-        self.StyleSetSpec(stc.STC_STYLE_DEFAULT,     "face:%(helv)s,size:%(size)d" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_LINENUMBER,  "back:#C0C0C0,face:%(helv)s,size:%(size2)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_DEFAULT, "face:%(helv)s,size:%(size)d" % faces)
+        self.StyleSetSpec(stc.STC_STYLE_LINENUMBER, "back:#C0C0C0,face:%(helv)s,size:%(size2)d" % faces)
         self.StyleSetSpec(stc.STC_STYLE_CONTROLCHAR, "face:%(other)s" % faces)
-        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT,  "fore:#FFFFFF,back:#0000FF,bold")
-        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD,    "fore:#000000,back:#FF0000,bold")
+        self.StyleSetSpec(stc.STC_STYLE_BRACELIGHT, "fore:#FFFFFF,back:#0000FF,bold")
+        self.StyleSetSpec(stc.STC_STYLE_BRACEBAD, "fore:#000000,back:#FF0000,bold")
 
         # Python styles
         # Default
@@ -174,13 +172,10 @@ class PythonSTC(stc.StyledTextCtrl):
 
         self.SetCaretForeground("BLUE")
 
-
         # register some images for use in the AutoComplete box.
         self.RegisterImage(1, images.Smiles.GetBitmap())
-        self.RegisterImage(2,
-            wx.ArtProvider.GetBitmap(wx.ART_NEW, size=(16,16)))
-        self.RegisterImage(3,
-            wx.ArtProvider.GetBitmap(wx.ART_COPY, size=(16,16)))
+        self.RegisterImage(2, wx.ArtProvider.GetBitmap(wx.ART_NEW, size=(16, 16)))
+        self.RegisterImage(3, wx.ArtProvider.GetBitmap(wx.ART_COPY, size=(16, 16)))
 
     def RegisterKeyPressedHandler(self, eventHandler):
         self.keyPressedHandler = eventHandler
@@ -220,7 +215,7 @@ class PythonSTC(stc.StyledTextCtrl):
         if braceAtCaret >= 0:
             braceOpposite = self.BraceMatch(braceAtCaret)
 
-        if braceAtCaret != -1  and braceOpposite == -1:
+        if braceAtCaret != -1 and braceOpposite == -1:
             self.BraceBadLight(braceAtCaret)
         else:
             self.BraceHighlight(braceAtCaret, braceOpposite)
@@ -228,7 +223,6 @@ class PythonSTC(stc.StyledTextCtrl):
             #self.Refresh(True, wxRect(pt.x, pt.y, 5,5))
             #print pt
             #self.Refresh(False)
-
 
     def OnMarginClick(self, evt):
         # fold and unfold as needed
@@ -251,7 +245,6 @@ class PythonSTC(stc.StyledTextCtrl):
                             self.Expand(lineClicked, True, True, 100)
                     else:
                         self.ToggleFold(lineClicked)
-
 
     def FoldAll(self):
         lineCount = self.GetLineCount()
@@ -279,11 +272,9 @@ class PythonSTC(stc.StyledTextCtrl):
                     self.SetFoldExpanded(lineNum, False)
 
                     if lastChild > lineNum:
-                        self.HideLines(lineNum+1, lastChild)
+                        self.HideLines(lineNum + 1, lastChild)
 
             lineNum = lineNum + 1
-
-
 
     def Expand(self, line, doExpand, force=False, visLevels=0, level=-1):
         lastChild = self.GetLastChild(line, level)
@@ -309,13 +300,13 @@ class PythonSTC(stc.StyledTextCtrl):
                     else:
                         self.SetFoldExpanded(line, False)
 
-                    line = self.Expand(line, doExpand, force, visLevels-1)
+                    line = self.Expand(line, doExpand, force, visLevels - 1)
 
                 else:
                     if doExpand and self.GetFoldExpanded(line):
-                        line = self.Expand(line, True, force, visLevels-1)
+                        line = self.Expand(line, True, force, visLevels - 1)
                     else:
-                        line = self.Expand(line, False, force, visLevels-1)
+                        line = self.Expand(line, False, force, visLevels - 1)
             else:
                 line = line + 1
 
@@ -326,17 +317,17 @@ class PythonSTC(stc.StyledTextCtrl):
 
 _USE_PANEL = 1
 
+
 def runTest(frame, nb, log):
     if not _USE_PANEL:
         ed = p = PythonSTC(nb, -1)
     else:
-        p = wx.Panel(nb, -1, style = wx.NO_FULL_REPAINT_ON_RESIZE)
+        p = wx.Panel(nb, -1, style=wx.NO_FULL_REPAINT_ON_RESIZE)
         ed = PythonSTC(p, -1)
         s = wx.BoxSizer(wx.HORIZONTAL)
         s.Add(ed, 1, wx.EXPAND)
         p.SetSizer(s)
         p.SetAutoLayout(True)
-
 
     ed.SetText(demoText + open('Main.py').read())
     ed.EmptyUndoBuffer()
@@ -349,9 +340,7 @@ def runTest(frame, nb, log):
     return p
 
 
-
 #----------------------------------------------------------------------
-
 
 overview = """\
 <html><body>
@@ -361,16 +350,11 @@ be helpful.
 </body><html>
 """
 
-
 if __name__ == '__main__':
     import sys
     import os
     import run
     run.main(['', os.path.basename(sys.argv[0])] + sys.argv[1:])
-
-
-
-
 
 #----------------------------------------------------------------------
 #----------------------------------------------------------------------

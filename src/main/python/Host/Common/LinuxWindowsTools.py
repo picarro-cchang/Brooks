@@ -11,7 +11,8 @@ import signal
 import re
 import errno
 
-def fixpath(path, operatingsystem = sys.platform):
+
+def fixpath(path, operatingsystem=sys.platform):
     """
     fixpath
     Convert a Windows or Linux path to a format compatible
@@ -28,7 +29,7 @@ def fixpath(path, operatingsystem = sys.platform):
 
     Notes:
     05SEP2016 - Probably not the best solution as I'm new to Python.
-    """ 
+    """
 
     # Make Windows style paths posix compliant.
     # If the path starts with C: assume we want the root
@@ -37,7 +38,7 @@ def fixpath(path, operatingsystem = sys.platform):
     # know where the mount point is.
     #
     if operatingsystem == "linux2":
-        path = re.sub(r"(\\)+",'/', path)
+        path = re.sub(r"(\\)+", '/', path)
         if path.startswith("C:"):
             path = path[2:]
 
@@ -45,7 +46,7 @@ def fixpath(path, operatingsystem = sys.platform):
     # start with ~ or .. we assume an absolute path on C:
     #
     if operatingsystem == "win32":
-        path = path.replace('/','\\')
+        path = path.replace('/', '\\')
         if path.startswith("\\"):
             path = "C:" + path
 
@@ -58,23 +59,24 @@ def __path_test():
     windowspath = r"..\dir\subdir\subsubdir"
     unixpath = "../dir/subdir/subsubdir"
 
-    newpath = fixpath(unixpath, operatingsystem = 'win32')
+    newpath = fixpath(unixpath, operatingsystem='win32')
     print("Unix in:", unixpath, "Windows out:", newpath)
 
-    newpath = fixpath(windowspath, operatingsystem = 'linux2')
+    newpath = fixpath(windowspath, operatingsystem='linux2')
     print("Windows in:", windowspath, "Unix out:", newpath)
 
     # Absolute path test
     windowspath = r"C:\root\dir\subdir\subsubdir"
     unixpath = "/root/dir/subdir/subsubdir"
 
-    newpath = fixpath(unixpath, operatingsystem = 'win32')
+    newpath = fixpath(unixpath, operatingsystem='win32')
     print("Unix in:", unixpath, "Windows out:", newpath)
 
-    newpath = fixpath(windowspath, operatingsystem = 'linux2')
+    newpath = fixpath(windowspath, operatingsystem='linux2')
     print("Windows in:", windowspath, "Unix out:", newpath)
 
     return
+
 
 # Notify the Supervisor of a catastrophic failure.  This can be used as a backup
 # to RPC. This code can send Unix user defined signals SIGUSR1 or SIGUSR2.
@@ -102,11 +104,11 @@ def __path_test():
 #
 # writeSupervisorPidFile() doesn't grant an exclusive lock so if Supervisor is
 # accidentally started twice the second instance will overwrite the PID of the first.
-# 
+#
 # writeSupervisorPidFile() doesn't delete the file when Supervisor is gracefully or
 # abruptly killed.
 #
-def signalFlare(userSignal = 1):
+def signalFlare(userSignal=1):
     supervisorPID = getSupervisorPid()
     if userSignal == 1:
         print("Sending SIGUSR1 to Supervisor:", supervisorPID)
@@ -115,7 +117,8 @@ def signalFlare(userSignal = 1):
         print("Sending SIGUSR2 to Supervisor:", supervisorPID)
         os.kill(supervisorPID, signal.SIGUSR2)
 
-def writeSupervisorPidFile(pidFileName = 'supervisor.pid', pidFilePath = None):
+
+def writeSupervisorPidFile(pidFileName='supervisor.pid', pidFilePath=None):
     if pidFilePath == None:
         pidFilePath = os.path.expanduser('~')
     pid = str(os.getpid())
@@ -123,13 +126,15 @@ def writeSupervisorPidFile(pidFileName = 'supervisor.pid', pidFilePath = None):
     f.write(pid)
     f.close()
 
-def getSupervisorPid(pidFileName = 'supervisor.pid', pidFilePath = None):
+
+def getSupervisorPid(pidFileName='supervisor.pid', pidFilePath=None):
     if pidFilePath == None:
         pidFilePath = os.path.expanduser('~')
     f = open(os.path.join(pidFilePath, pidFileName), 'r')
     pidStr = f.readline()
     f.close()
     return int(pidStr)
+
 
 def makeDirs(path):
     """
@@ -149,7 +154,7 @@ def makeDirs(path):
     # permissions.
     #
     try:
-        os.makedirs(path,0775)
+        os.makedirs(path, 0775)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise e

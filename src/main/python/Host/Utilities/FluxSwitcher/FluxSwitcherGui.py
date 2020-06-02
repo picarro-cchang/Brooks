@@ -23,11 +23,12 @@ from Host.Common.FluxSwitcher import FluxSwitcher
 DEFAULT_CONFIG_NAME = "FluxSwitcherGui.ini"
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 class FluxSwitcherGui(FluxSwitcherGuiFrame):
     def __init__(self, configFile, supervisorConfigFile, flux, *args, **kwds):
@@ -56,14 +57,16 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hc:s:", ["help","not_flux"])
+        switches, args = getopt.getopt(sys.argv[1:], "hc:s:", ["help", "not_flux"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -91,6 +94,7 @@ def HandleCommandSwitches():
     flux = "--not_flux" not in options
 
     return configFile, supervisorConfigFile, flux
+
 
 if __name__ == "__main__":
     configFile, supervisorConfigFile, flux = HandleCommandSwitches()

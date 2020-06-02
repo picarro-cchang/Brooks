@@ -11,7 +11,6 @@ import csv
 
 
 class DatFile(object):
-
     @staticmethod
     def _load(fname, allowedCols):
         """
@@ -21,7 +20,7 @@ class DatFile(object):
         """
 
         data = {}
-        names= {}
+        names = {}
         with open(fname, 'r') as fp:
             lines = fp.readlines()
             for i, col in enumerate(lines[0].split()):
@@ -52,8 +51,7 @@ class DatFile(object):
         """
 
         if stream not in self.data.keys():
-            raise AttributeError("'%s' is not a data column for '%s'." %
-                                 (stream, self.fname))
+            raise AttributeError("'%s' is not a data column for '%s'." % (stream, self.fname))
 
         return self.data[stream]
 

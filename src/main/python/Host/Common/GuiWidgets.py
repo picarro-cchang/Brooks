@@ -9,6 +9,7 @@
 # 09-08-29 sze  Initial version
 import wx
 
+
 class CheckIndicator(wx.CheckBox):
     """ Use a checkbox as a read-only state indicator. Disable user interaction """
     def __init__(self, *args, **kwds):
@@ -20,5 +21,5 @@ class CheckIndicator(wx.CheckBox):
         self.Bind(wx.EVT_LEFT_DCLICK, self.Pass)
         self.SetForegroundColour(wx.BLUE)
 
-    def Pass(self,e):
+    def Pass(self, e):
         pass

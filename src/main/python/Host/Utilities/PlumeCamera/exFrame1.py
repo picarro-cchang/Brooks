@@ -11,9 +11,10 @@ context = zmq.Context()
 CMD_PORT = 5101
 BROADCAST_PORT = 5102
 
+
 class ExFrame1(ExFrame1Gui):
-    def __init__(self,*args,**kwargs):
-        ExFrame1Gui.__init__(self,*args,**kwargs)
+    def __init__(self, *args, **kwargs):
+        ExFrame1Gui.__init__(self, *args, **kwargs)
         self.cmdSock = context.socket(zmq.REQ)
         self.cmdSock.connect("tcp://127.0.0.1:%d" % CMD_PORT)
         self.broadcastSock = context.socket(zmq.SUB)
@@ -22,29 +23,30 @@ class ExFrame1(ExFrame1Gui):
         self.poller = zmq.Poller()
         self.poller.register(self.broadcastSock, zmq.POLLIN)
         self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER,self.onTimer,self.timer)
-        self.Bind(wx.EVT_CLOSE,self.onClose)
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
+        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.timer.Start(20)
 
-    def onTimer(self,evt):
+    def onTimer(self, evt):
         self.timer.Stop()
         socks = dict(self.poller.poll(timeout=0))
         if socks.get(self.broadcastSock) == zmq.POLLIN:
             packet = self.broadcastSock.recv()
-            msg,data = packet.split("\n",2)
+            msg, data = packet.split("\n", 2)
             print "Received packet", data
             self.text_ctrl_output.SetValue(data)
         self.timer.Start()
 
-    def onEvaluate(self,evt):
-        self.cmdSock.send(json.dumps({"func": "squareAndStore", "args":( float(self.text_ctrl_input.GetValue()),) }))
+    def onEvaluate(self, evt):
+        self.cmdSock.send(json.dumps({"func": "squareAndStore", "args": (float(self.text_ctrl_input.GetValue()), )}))
         self.cmdSock.recv()
 
-    def onClose(self,evt):
+    def onClose(self, evt):
         self.timer.Stop()
         self.cmdSock.close()
         self.broadcastSock.close()
         evt.Skip()
+
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

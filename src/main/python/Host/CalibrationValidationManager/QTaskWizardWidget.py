@@ -3,8 +3,9 @@ import QGuiText
 import os
 from PyQt4 import QtCore, QtGui
 
+
 class QReportDisplayDialog(QtGui.QDialog):
-    def __init__(self, fileName = None, textDoc = None, parent = None):
+    def __init__(self, fileName=None, textDoc=None, parent=None):
         QtGui.QDialog.__init__(self, parent=parent)
 
         try:
@@ -23,7 +24,7 @@ class QReportDisplayDialog(QtGui.QDialog):
         self._textEditWidget.setDocument(textDoc)
         self._textEditWidget.setReadOnly(True)
         self._fileNameWidget = QtGui.QLineEdit(fileName)
-        self.setLayout( self._initGui() )
+        self.setLayout(self._initGui())
         self.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         self._setConnections()
         return
@@ -49,6 +50,7 @@ class QReportDisplayDialog(QtGui.QDialog):
         self._okBtn.clicked.connect(self.close)
         return
 
+
 class QTaskWizardWidget(QtGui.QWidget):
     start_run_signal = QtCore.pyqtSignal()
     next_signal = QtCore.pyqtSignal()
@@ -60,11 +62,11 @@ class QTaskWizardWidget(QtGui.QWidget):
     def __init__(self, co=None, db=None, parent=None):
         QtGui.QWidget.__init__(self)
         self.db = db
-        self._reportTextObj = None          # QTextDocument object containing the measurement report
-        self._reportFileName = None         # File name of the PDF doc containing _reportTextObj
-        self._running = False               # Track if we are in a validation run
-        self._co = co                       # configobj, ini settings
-        self.setLayout( self._init_gui() )
+        self._reportTextObj = None  # QTextDocument object containing the measurement report
+        self._reportFileName = None  # File name of the PDF doc containing _reportTextObj
+        self._running = False  # Track if we are in a validation run
+        self._co = co  # configobj, ini settings
+        self.setLayout(self._init_gui())
         self._startup_settings()
         self._set_connections()
         self.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -77,8 +79,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         self._viewReportBtn = QtGui.QPushButton("View Report")
         self._openFileManagerBtn = QtGui.QPushButton("Download Report")
 
-        self._text_edit = QtGui.QTextEdit(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"],
-                                                                self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
+        self._text_edit = QtGui.QTextEdit(
+            QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"], self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
         self._text_edit.setReadOnly(True)
         self._task_progressbar = QtGui.QProgressBar()
 
@@ -113,7 +115,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         gb.setLayout(vb)
 
         mgl = QtGui.QGridLayout()
-        mgl.setContentsMargins(10,0,10,0)
+        mgl.setContentsMargins(10, 0, 10, 0)
         mgl.addWidget(gb, 0, 0)
         return mgl
 
@@ -184,7 +186,7 @@ class QTaskWizardWidget(QtGui.QWidget):
             dialog.setText("Close all gas valves then click OK")
             dialog.setIcon(QtGui.QMessageBox.Critical)
             dialog.setStandardButtons(QtGui.QMessageBox.Ok)
-            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             dialog.exec_()
             self.abort_signal.emit()
         else:
@@ -194,7 +196,7 @@ class QTaskWizardWidget(QtGui.QWidget):
     def _view_report(self):
         logStr = "viewed system validation report. Report file: {0}".format(self._reportFileName)
         self.db.log(logStr)
-        report_dialog = QReportDisplayDialog(fileName = self._reportFileName, textDoc = self._reportTextObj, parent = self)
+        report_dialog = QReportDisplayDialog(fileName=self._reportFileName, textDoc=self._reportTextObj, parent=self)
         report_dialog.exec_()
         return
 
@@ -207,12 +209,10 @@ class QTaskWizardWidget(QtGui.QWidget):
         self.timer.timeout.connect(self._enableButton)
         logStr = "clicked download system validation report"
         self.db.log(logStr)
-        cmd = ["python",
-               "/usr/local/picarro/qtLauncher/FileManager/main.py",
-               "--dir",
-               "/home/picarro/I2000/Log/ValidationReport",
-               "--name",
-               "ValidationReport"]
+        cmd = [
+            "python", "/usr/local/picarro/qtLauncher/FileManager/main.py", "--dir", "/home/picarro/I2000/Log/ValidationReport",
+            "--name", "ValidationReport"
+        ]
         p = subprocess32.Popen(cmd, stdin=None, stdout=None, stderr=None)
         return
 
@@ -225,8 +225,8 @@ class QTaskWizardWidget(QtGui.QWidget):
         if self._editors_visible:
             self._editors_visible = False
             if not self._running:
-                self._text_edit.setText(QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"],
-                                                              self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
+                self._text_edit.setText(
+                    QGuiText.welcome_text(self._co["TASKS"]["Gas_HTML"], self._co["TASKS"]["Recommended_Gas_Concentrations_PPM"]))
             self._showEditorsBtn.setText("Show Editors")
             self.hide_editors_signal.emit()
         else:
@@ -303,7 +303,7 @@ class QTaskWizardWidget(QtGui.QWidget):
         dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         dialog.exec_()
 
-        self.abort_signal.emit()    # This will re-enable the main GUI close button
+        self.abort_signal.emit()  # This will re-enable the main GUI close button
         self._startup_settings()
         return
 
@@ -315,6 +315,6 @@ class QTaskWizardWidget(QtGui.QWidget):
         dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
         dialog.exec_()
 
-        self.abort_signal.emit()    # This will re-enable the main GUI close button
+        self.abort_signal.emit()  # This will re-enable the main GUI close button
         self._startup_settings()
         return

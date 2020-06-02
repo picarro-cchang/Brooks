@@ -9,6 +9,7 @@ from Host.Common.ParameterGrid import ParameterGrid
 
 # end wxGlade
 
+
 class ParameterDialogGui(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ParameterDialogGui.__init__
@@ -39,27 +40,28 @@ class ParameterDialogGui(wx.Dialog):
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_1.Add(self.parameterGrid, 1, wx.EXPAND, 0)
         sizer_2.Add((5, 20), 1, 0, 0)
-        sizer_2.Add(self.commitButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 20)
-        sizer_2.Add(self.applyButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 20)
-        sizer_2.Add(self.discardButton, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 20)
+        sizer_2.Add(self.commitButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 20)
+        sizer_2.Add(self.applyButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 20)
+        sizer_2.Add(self.discardButton, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 20)
         sizer_2.Add((5, 20), 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
-        sizer_1.Add(self.panel_1, 0, wx.EXPAND|wx.ALL, 20)
+        sizer_1.Add(self.panel_1, 0, wx.EXPAND | wx.ALL, 20)
         self.SetSizerAndFit(sizer_1)
         self.Layout()
         # end wxGlade
 
-    def onCommit(self, event): # wxGlade: ParameterDialogGui.<event_handler>
+    def onCommit(self, event):  # wxGlade: ParameterDialogGui.<event_handler>
         print "Event handler `onCommit' not implemented!"
         event.Skip()
 
-    def onApply(self, event): # wxGlade: ParameterDialogGui.<event_handler>
+    def onApply(self, event):  # wxGlade: ParameterDialogGui.<event_handler>
         print "Event handler `onApply' not implemented!"
         event.Skip()
 
-    def onDiscard(self, event): # wxGlade: ParameterDialogGui.<event_handler>
+    def onDiscard(self, event):  # wxGlade: ParameterDialogGui.<event_handler>
         print "Event handler `onDiscard' not implemented!"
         event.Skip()
+
 
 # end of class ParameterDialogGui
 
@@ -69,4 +71,3 @@ if __name__ == "__main__":
     dialog_1 = ParameterDialogGui(None, wx.ID_ANY, "")
     app.SetTopWindow(dialog_1)
     dialog_1.ShowModal()
-

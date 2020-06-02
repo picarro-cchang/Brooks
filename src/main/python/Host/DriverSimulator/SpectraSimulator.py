@@ -17,18 +17,14 @@ import numpy as np
 
 from Host.autogen import interface
 from Host.Common.CustomConfigObj import CustomConfigObj
-from Host.Fitter.fitterCoreWithFortran import (BiSpline, FrequencySquish,
-                                               Galatry, Model, Quadratic,
-                                               Sinusoid, Spline,
-                                               loadPhysicalConstants,
-                                               loadSpectralLibrary,
-                                               loadSplineLibrary)
+from Host.Fitter.fitterCoreWithFortran import (BiSpline, FrequencySquish, Galatry, Model, Quadratic, Sinusoid, Spline,
+                                               loadPhysicalConstants, loadSpectralLibrary, loadSplineLibrary)
 
 
 class Spectrum(object):
-    def __init__(self,name,config,basePath,env):
+    def __init__(self, name, config, basePath, env):
         self.name = name
-        libName = os.path.join(basePath,eval(config["Library"],env))
+        libName = os.path.join(basePath, eval(config["Library"], env))
         self.spectralLibrary = loadSpectralLibrary(libName)
         self.splineLibrary = loadSplineLibrary(libName)
         self.physicalConstants = loadPhysicalConstants(libName)
@@ -36,39 +32,42 @@ class Spectrum(object):
 
     def setupModel(self, env):
         config = self.config
-        self.basisArray = np.asarray(eval(config["identification"]+",",env))
-        self.centerFrequency = eval(config["center"],env) if "center" in config else 0
+        self.basisArray = np.asarray(eval(config["identification"] + ",", env))
+        self.centerFrequency = eval(config["center"], env) if "center" in config else 0
         self.basisFunctions = {}
         m = Model()
         m.setAttributes(x_center=self.centerFrequency)
-        m.addToModel(Quadratic(offset=0.0,slope=0.0,curvature=0.0),index=None)
-        m.registerXmodifier(FrequencySquish(offset=0.0,squish=0.0))
-        m.addDummyParameter(sum(self.basisArray<1000))
+        m.addToModel(Quadratic(offset=0.0, slope=0.0, curvature=0.0), index=None)
+        m.registerXmodifier(FrequencySquish(offset=0.0, squish=0.0))
+        m.addDummyParameter(sum(self.basisArray < 1000))
         for basisName in config:
             if basisName.startswith("function"):
                 self.basisFunctions[basisName] = dict(config[basisName])
         for i in self.basisArray:
-            if i<1000:
-                m.addToModel(Galatry(peakNum=i,physicalConstants=self.physicalConstants,spectralLibrary=self.spectralLibrary),index=i)
-            else: # We need to get details of the basis function
+            if i < 1000:
+                m.addToModel(Galatry(peakNum=i, physicalConstants=self.physicalConstants, spectralLibrary=self.spectralLibrary),
+                             index=i)
+            else:  # We need to get details of the basis function
                 basisParams = self.basisFunctions["function%d" % i]
+
                 # Local function to construct a basis function with parameters "a%d" from the ini file
-                def FP(basisFunc,extra={}):
+                def FP(basisFunc, extra={}):
                     nParams = basisFunc.numParams()
                     a = []
-                    for j in range(nParams): a.append(eval(basisParams["a%d" % j],env))
-                    return basisFunc(params=np.asarray(a),**extra)
+                    for j in range(nParams):
+                        a.append(eval(basisParams["a%d" % j], env))
+                    return basisFunc(params=np.asarray(a), **extra)
 
-                form = eval(basisParams["functional_form"],env)
+                form = eval(basisParams["functional_form"], env)
                 if form == "sinusoid":
-                    m.addToModel(FP(Sinusoid),index=i)
+                    m.addToModel(FP(Sinusoid), index=i)
                 elif form[:6] == "spline":
-                    m.addToModel(FP(Spline,dict(splineLibrary=self.splineLibrary,splineIndex=int(form[6:]))),index=i)
+                    m.addToModel(FP(Spline, dict(splineLibrary=self.splineLibrary, splineIndex=int(form[6:]))), index=i)
                 elif form[:8] == "bispline":
                     ndx = form[8:].split("_")
-                    m.addToModel(FP(BiSpline,dict(splineLibrary=self.splineLibrary,
-                                                  splineIndexA=int(ndx[0]),
-                                                  splineIndexB=int(ndx[1]))),index=i)
+                    m.addToModel(FP(BiSpline,
+                                    dict(splineLibrary=self.splineLibrary, splineIndexA=int(ndx[0]), splineIndexB=int(ndx[1]))),
+                                 index=i)
                 else:
                     raise ValueError("Unimplemented functional form: %s" % form)
         self.model = m
@@ -78,9 +77,9 @@ class Spectrum(object):
         config = self.config
         m = self.model
         if "pressure" in env:
-            m.setAttributes(pressure = env["pressure"])
+            m.setAttributes(pressure=env["pressure"])
         if "temperature" in env:
-            m.setAttributes(temperature = env["temperature"])
+            m.setAttributes(temperature=env["temperature"])
         m.createParamVector()
         # Modify parameter values according to [base] and [peak] sections
         for basisName in config:
@@ -92,7 +91,7 @@ class Spectrum(object):
                     except:
                         print "Invalid argument name %s for base" % var
                         raise
-                    m["base",index] = eval(config["base"][var],env)
+                    m["base", index] = eval(config["base"][var], env)
             elif basisName.startswith("peak"):
                 pkNum = int(basisName[4:])
                 for var in config[basisName]:
@@ -100,12 +99,12 @@ class Spectrum(object):
                     if var[0] == 'a':
                         try:
                             index = int(var[1:])
-                            m[pkNum,index] = eval(config[basisName][var],env)
+                            m[pkNum, index] = eval(config[basisName][var], env)
                             done = True
                         except:
                             pass
                     if not done:
-                        m[pkNum,var] = eval(config[basisName][var],env)
+                        m[pkNum, var] = eval(config[basisName][var], env)
         self.model = m
 
 
@@ -140,9 +139,9 @@ class SpectraSimulator(object):
             v = variables[k]
             e = eval(v, self.env)
             if operator.isSequenceType(e):
-                sequences.append((k,e))
+                sequences.append((k, e))
             else:
-                constants.append((k,e))
+                constants.append((k, e))
         return constants, sequences
 
     def __call__(self, wavenumber, pressure, temperature):

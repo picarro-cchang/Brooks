@@ -19,64 +19,75 @@ from copy import deepcopy
 # Memoize configuration files for efficiency
 configMemo = {}
 
+
 def clearMemo():
     configMemo.clear()
 
+
 class Row(object):
-    keynames = {'setpoint':0,
-                'dwell':1,
-                'subschemeId':2,
-                'virtualLaser':3,
-                'threshold':4,
-                'pzt':5,
-                'laserTemp':6,
-                'extra1':7,
-                'extra2':8,
-                'extra3':9,
-                'extra4':10}
-    def __init__(self,*a,**k):
-        self.data = 11*[0]
+    keynames = {
+        'setpoint': 0,
+        'dwell': 1,
+        'subschemeId': 2,
+        'virtualLaser': 3,
+        'threshold': 4,
+        'pzt': 5,
+        'laserTemp': 6,
+        'extra1': 7,
+        'extra2': 8,
+        'extra3': 9,
+        'extra4': 10
+    }
+
+    def __init__(self, *a, **k):
+        self.data = 11 * [0]
         self.data[:len(a)] = a
         for n in k:
             if n in self.keynames:
                 self.data[self.keynames[n]] = k[n]
             else:
                 raise IndexError('Unknown key %s in scheme row' % n)
-    def __getattr__(self,n):
+
+    def __getattr__(self, n):
         if n in self.keynames:
             return self.data[self.keynames[n]]
         else:
             raise AttributeError('Unknown key %s when getting scheme row attribute' % n)
-    def __setattr__(self,n,v):
+
+    def __setattr__(self, n, v):
         if n in self.keynames:
             self.data[self.keynames[n]] = v
         else:
-            object.__setattr__(self,n,v)
+            object.__setattr__(self, n, v)
+
 
 class SchemeError(Exception):
     pass
 
+
 class Scheme(object):
-    def __init__(self,fileName=None):
+    def __init__(self, fileName=None):
         self.fileName = fileName
         self.lineNum = 0
         self.errors = []
         self.numErrors = 0
         # Define sandbox environment for scheme
-        self.env = {'Row':Row, 'schemeVersion':0, 'repeat':0, 'numRows':None, 'schemeRows':[], 'deepcopy':deepcopy}
+        self.env = {'Row': Row, 'schemeVersion': 0, 'repeat': 0, 'numRows': None, 'schemeRows': [], 'deepcopy': deepcopy}
 
         if fileName is not None:
             schemePath = os.path.split(os.path.abspath(fileName))[0]
+
             def getConfig(relPath):
-                path = os.path.abspath(os.path.join(schemePath,relPath))
-                path = path.replace('\\','/')
+                path = os.path.abspath(os.path.join(schemePath, relPath))
+                path = path.replace('\\', '/')
                 if path not in configMemo:
-                    fp = file(path,'r')
+                    fp = file(path, 'r')
                     try:
                         configMemo[path] = ConfigObj(fp)
                     finally:
                         fp.close()
-                return configMemo.get(path,{})
+                return configMemo.get(path, {})
+
             self.env['getConfig'] = getConfig
 
         #
@@ -102,33 +113,33 @@ class Scheme(object):
 
     def __str__(self):
         descr = ['Scheme version %d from %s' % (self.version, self.fileName)]
-        if self.numErrors>0:
+        if self.numErrors > 0:
             descr.append('Errors encountered while processing scheme:')
             descr += self.errors
         else:
             descr.append('Repeat count: %d, Rows: %d' % (self.nrepeat, self.numEntries))
         return '\n'.join(descr)
 
-    def evalInEnv(self,x):
+    def evalInEnv(self, x):
         try:
-            return eval(x,self.env)
+            return eval(x, self.env)
         except Exception, e:
             self.numErrors += 1
-            self.errors.append("Line %d [%s]: %s" % (self.lineNum,e.__class__.__name__,e))
+            self.errors.append("Line %d [%s]: %s" % (self.lineNum, e.__class__.__name__, e))
 
-    def execInEnv(self,x):
+    def execInEnv(self, x):
         try:
             exec x in self.env
         except Exception, e:
             self.numErrors += 1
-            self.errors.append("Line %d [%s]: %s" % (self.lineNum,e.__class__.__name__,e))
+            self.errors.append("Line %d [%s]: %s" % (self.lineNum, e.__class__.__name__, e))
 
     def compile(self):
         try:
-            fp = file(self.fileName,"r")
+            fp = file(self.fileName, "r")
         except Exception, e:
             self.numErrors += 1
-            self.errors.append("[%s]: %s" % (e.__class__.__name__,e))
+            self.errors.append("[%s]: %s" % (e.__class__.__name__, e))
             return
         try:
             state = 'NORMAL'
@@ -139,18 +150,18 @@ class Scheme(object):
                     x = x.strip()
                     if x:
                         cpos = x.find('#')
-                        if cpos>=0: x=x[:cpos]
+                        if cpos >= 0: x = x[:cpos]
                         if not x:
-                            continue    # Discard comments
+                            continue  # Discard comments
                         elif x[0] == '$':
                             if x[1:3] == '$$':  # Start of a code block
                                 state = 'CODE_BLOCK'
-                                block =[]
+                                block = []
                             else:
                                 x = x[1:].strip()
                                 # print 'Code: ', x
                                 self.execInEnv(x)
-                        else:   # This is a normal scheme line
+                        else:  # This is a normal scheme line
                             if self.env['schemeVersion'] == 0:  # This is an old-style scheme file
                                 x = ",".join(x.split()) if "," not in x else x
                                 if rowType == 'repeat':
@@ -174,17 +185,17 @@ class Scheme(object):
                         block.append(x.rstrip())
             if state == 'CODE_BLOCK':
                 self.numErrors += 1
-                self.errors.append("Line %d: Scheme ended within a code block" % (self.lineNum,))
+                self.errors.append("Line %d: Scheme ended within a code block" % (self.lineNum, ))
 
             numRows = self.env['numRows']
             schemeRows = self.env['schemeRows']
             self.numEntries = len(schemeRows) if numRows is None else numRows
             if self.numEntries != len(schemeRows):
                 self.numErrors += 1
-                self.errors.append("Scheme has incorrect number of rows (%d != %d)" % (len(schemeRows),self.numEntries))
+                self.errors.append("Scheme has incorrect number of rows (%d != %d)" % (len(schemeRows), self.numEntries))
             if self.numEntries > NUM_SCHEME_ROWS:
                 self.numErrors += 1
-                self.errors.append("Scheme has more than %d rows" % (NUM_SCHEME_ROWS,))
+                self.errors.append("Scheme has more than %d rows" % (NUM_SCHEME_ROWS, ))
             if self.numErrors == 0:
                 self.nrepeat = self.env['repeat']
                 self.version = self.env['schemeVersion']
@@ -227,14 +238,16 @@ class Scheme(object):
     def repack(self):
         # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
         #  from the scheme, which is appropriate for sending it to the DAS
-        return (self.nrepeat,zip(self.setpoint,self.dwell,self.subschemeId,self.virtualLaser,self.threshold,
-                                 self.pztSetpoint,self.laserTemp))
+        return (self.nrepeat,
+                zip(self.setpoint, self.dwell, self.subschemeId, self.virtualLaser, self.threshold, self.pztSetpoint,
+                    self.laserTemp))
+
 
 from sys import argv
 import numpy as np
 
 if __name__ == "__main__":
-    if len(argv)>1:
+    if len(argv) > 1:
         fname = argv[1]
     else:
         fname = raw_input("Name of scheme file")

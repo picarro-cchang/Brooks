@@ -54,9 +54,7 @@ class UsbPacketLengthError(Exception):
 
 
 class AnalyzerUsb(Singleton):
-
     """Represents USB connection between host and analyzer at specified VID and PID"""
-
     def __init__(self, vid, pid):
         self.context = usb1.USBContext()
         self.device = None
@@ -73,11 +71,9 @@ class AnalyzerUsb(Singleton):
     def connect(self):
         def _connect():
             self.checkHandleAndClose()
-            self.device = self.context.getByVendorIDAndProductID(
-                self.vid, self.pid)
+            self.device = self.context.getByVendorIDAndProductID(self.vid, self.pid)
             if self.device is None:
-                raise UsbConnectionError(
-                    "Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid, self.pid))
+                raise UsbConnectionError("Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid, self.pid))
             self.handle = self.device.open()
             self.handle.setConfiguration(1)
 
@@ -96,17 +92,14 @@ class AnalyzerUsb(Singleton):
         sv = sizeof(var)
         result = self.handle.controlRead(0xC0, cmd, value, index, sv, 5000)
         if len(result) != sv:
-            raise UsbPacketLengthError(
-                "Unexpected packet length %d [%d] in controlIn transaction 0x%2x" % (len(result), sv, cmd))
+            raise UsbPacketLengthError("Unexpected packet length %d [%d] in controlIn transaction 0x%2x" % (len(result), sv, cmd))
         memmove(addressof(var), result, sv)
 
     def controlOutTransaction(self, msg, cmd, value=0, index=0):
         sm = sizeof(msg)
-        actual = self.handle.controlWrite(
-            0x40, cmd, value, index, buffer(msg)[:], 5000)
+        actual = self.handle.controlWrite(0x40, cmd, value, index, buffer(msg)[:], 5000)
         if actual != sm:
-            raise UsbPacketLengthError(
-                "Unexpected packet length %d [%d] in controlOut transaction 0x%2x" % (actual, sm, cmd))
+            raise UsbPacketLengthError("Unexpected packet length %d [%d] in controlOut transaction 0x%2x" % (actual, sm, cmd))
 
     def controlOutBlock(self, cmd, address, data):
         """Write an arbitrarily sized (but must be a multiple of 4) block of data to the USB control port
@@ -130,6 +123,7 @@ class AnalyzerUsb(Singleton):
             version = c_ushort()
             self.controlInTransaction(version, usbdefs.VENDOR_GET_VERSION)
             return version.value
+
         return self._claimInterfaceWrapper(_getUsbVersion)
 
     def _claimInterfaceWrapper(self, func, *args, **kwargs):
@@ -138,8 +132,7 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.claimInterface(0)
             except Exception, e:
-                raise ClaimInterfaceError(
-                    "Error %s while claiming interface for %s" % (e, func.__name__))
+                raise ClaimInterfaceError("Error %s while claiming interface for %s" % (e, func.__name__))
             self.interfaceClaimed = True
         try:
             return func(*args, **kwargs)
@@ -148,8 +141,7 @@ class AnalyzerUsb(Singleton):
                 try:
                     self.handle.releaseInterface(0)
                 except Exception, e:
-                    raise ClaimInterfaceError(
-                        "Error %s while releasing interface for %s" % (e, func.__name__))
+                    raise ClaimInterfaceError("Error %s while releasing interface for %s" % (e, func.__name__))
                 self.interfaceClaimed = False
 
     def checkHandleAndClose(self):
@@ -157,7 +149,7 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.close()
             except Exception, e:
-                raise UsbConnectionError("Error %s while closing USB" % (e,))
+                raise UsbConnectionError("Error %s while closing USB" % (e, ))
             self.handle = None
 
     def disconnect(self):
@@ -165,8 +157,7 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.releaseInterface(0)
             except Exception, e:
-                raise ClaimInterfaceError(
-                    "Error %s while releasing interface" % (e,))
+                raise ClaimInterfaceError("Error %s while releasing interface" % (e, ))
             self.interfaceClaimed = False
         self.checkHandleAndClose()
 
@@ -174,10 +165,10 @@ class AnalyzerUsb(Singleton):
         """Use vendor command to start FPGA programming"""
         def _startFpgaProgram():
             result = c_ubyte(0x0)
-            self.controlInTransaction(
-                result, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_START_PROGRAM)
+            self.controlInTransaction(result, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_START_PROGRAM)
             if result.value != 1:
                 raise ValueError("Invalid response in startFpgaProgram")
+
         self._claimInterfaceWrapper(_startFpgaProgram)
 
     def getFpgaStatus(self):
@@ -185,17 +176,17 @@ class AnalyzerUsb(Singleton):
         INIT in b0 and DONE in b1"""
         def _getFpgaStatus():
             status = c_ubyte()
-            self.controlInTransaction(
-                status, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_GET_STATUS)
+            self.controlInTransaction(status, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_GET_STATUS)
             return status.value
+
         return self._claimInterfaceWrapper(_getFpgaStatus)
 
     def sendToFpga(self, string):
         """Use vendor command to send string to FPGA. Characters are sent MSB first. """
         def _sendToFpga():
-            self.controlOutTransaction(
-                create_string_buffer(bitReverse(string), len(string)),
-                usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_SEND_DATA)
+            self.controlOutTransaction(create_string_buffer(bitReverse(string), len(string)), usbdefs.VENDOR_FPGA_CONFIGURE,
+                                       usbdefs.FPGA_SEND_DATA)
+
         self._claimInterfaceWrapper(_sendToFpga)
 
     def getUsbSpeed(self):
@@ -204,28 +195,28 @@ class AnalyzerUsb(Singleton):
         def _getUsbSpeed():
             global USB_MAX_PACKET_SIZE
             speed = c_ubyte()
-            self.controlInTransaction(
-                speed, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_SPEED)
+            self.controlInTransaction(speed, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_SPEED)
             USB_MAX_PACKET_SIZE = 512 if speed.value else 64
             return speed.value
+
         return self._claimInterfaceWrapper(_getUsbSpeed)
 
     def getGpifTrig(self):
         """Returns current value of the GPIFTRIG register"""
         def _getGpifTrig():
             gpiftrig = c_ubyte()
-            self.controlInTransaction(
-                gpiftrig, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTRIG)
+            self.controlInTransaction(gpiftrig, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTRIG)
             return gpiftrig.value
+
         return self._claimInterfaceWrapper(_getGpifTrig)
 
     def getGpifTc(self):
         """Returns current value of the GPIF transaction count"""
         def _getGpifTc():
             tc = c_uint()
-            self.controlInTransaction(
-                tc, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTC)
+            self.controlInTransaction(tc, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTC)
             return tc.value
+
         return self._claimInterfaceWrapper(_getGpifTc)
 
     def hpicRead(self):
@@ -234,6 +225,7 @@ class AnalyzerUsb(Singleton):
             data = c_uint(0)
             self.controlInTransaction(data, usbdefs.VENDOR_READ_HPIC)
             return data.value
+
         return self._claimInterfaceWrapper(_hpicRead)
 
     def hpicWrite(self, w):
@@ -241,6 +233,7 @@ class AnalyzerUsb(Singleton):
         def _hpicWrite():
             data = c_uint(w)
             self.controlOutTransaction(data, usbdefs.VENDOR_WRITE_HPIC)
+
         self._claimInterfaceWrapper(_hpicWrite)
 
     def hpiaRead(self):
@@ -249,6 +242,7 @@ class AnalyzerUsb(Singleton):
             data = c_uint(0)
             self.controlInTransaction(data, usbdefs.VENDOR_READ_HPIA)
             return data.value
+
         return self._claimInterfaceWrapper(_hpiaRead)
 
     def hpiaWrite(self, w):
@@ -256,6 +250,7 @@ class AnalyzerUsb(Singleton):
         def _hpiaWrite():
             data = c_uint(w)
             self.controlOutTransaction(data, usbdefs.VENDOR_WRITE_HPIA)
+
         self._claimInterfaceWrapper(_hpiaWrite)
 
     def hpidWriteString(self, string):
@@ -269,8 +264,7 @@ class AnalyzerUsb(Singleton):
             self.handle.bulkWrite(DEFAULT_OUT_ENDPOINT, buffer(data)[:], 5000)
 
         if 0 != dataLength & 0x3 or 0 == dataLength or 512 < dataLength:
-            raise UsbPacketLengthError(
-                "Invalid data length %d in hpidWrite" % (dataLength,))
+            raise UsbPacketLengthError("Invalid data length %d in hpidWrite" % (dataLength, ))
         self._claimInterfaceWrapper(_hpidWrite)
 
     def hpiWrite(self, address, data):
@@ -296,8 +290,7 @@ class AnalyzerUsb(Singleton):
         """Use bulk read to acquire block of 32 bit words from HPID"""
         nBytes = sizeof(result)
         if 0 != nBytes & 0x3 or 0 >= nBytes or 512 < nBytes:
-            raise UsbPacketLengthError(
-                "Invalid data length %d in hpidRead" % (nBytes,))
+            raise UsbPacketLengthError("Invalid data length %d in hpidRead" % (nBytes, ))
 
         def _hpidRead():
             data = c_short(nBytes)
@@ -330,10 +323,10 @@ class AnalyzerUsb(Singleton):
         """Use vendor command to reset input FIFO from HPID"""
         def _resetHpidInFifo():
             result = c_ubyte(0x0)
-            self.controlInTransaction(
-                result, usbdefs.VENDOR_RESET_HPID_IN_FIFO)
+            self.controlInTransaction(result, usbdefs.VENDOR_RESET_HPID_IN_FIFO)
             if result.value != 1:
                 raise ValueError("Invalid response in resetHpidInFifo")
+
         self._claimInterfaceWrapper(_resetHpidInFifo)
 
     def wrAuxiliary(self, data):
@@ -341,88 +334,87 @@ class AnalyzerUsb(Singleton):
         dataLength = sizeof(data)
 
         def _wrAuxiliary():
-            self.handle.bulkWrite(
-                AUXILIARY_OUT_ENDPOINT, buffer(data)[:], 5000)
+            self.handle.bulkWrite(AUXILIARY_OUT_ENDPOINT, buffer(data)[:], 5000)
 
         if 0 == dataLength or 512 < dataLength:
-            raise UsbPacketLengthError(
-                "Invalid data length %d in auxiliaryWrite" % (dataLength,))
+            raise UsbPacketLengthError("Invalid data length %d in auxiliaryWrite" % (dataLength, ))
         self._claimInterfaceWrapper(_wrAuxiliary)
 
     def pingWatchdog(self):
         """Use vendor command to ping watchdog"""
         def _pingWatchdog():
             result = c_ubyte(0)
-            self.controlInTransaction(result,usbdefs.VENDOR_PING_WATCHDOG)
+            self.controlInTransaction(result, usbdefs.VENDOR_PING_WATCHDOG)
+
         self._claimInterfaceWrapper(_pingWatchdog)
 
     def setDspControl(self, value):
         """Use vendor command to reset DSP or send HINT"""
         def _setDspControl():
             result = c_ubyte(0)
-            self.controlInTransaction(
-                result, usbdefs.VENDOR_DSP_CONTROL, value)
+            self.controlInTransaction(result, usbdefs.VENDOR_DSP_CONTROL, value)
             if result.value != value:
                 raise ValueError("Invalid response in setDspControl")
+
         self._claimInterfaceWrapper(_setDspControl)
 
     def wrDac(self, channel, value):
         """Use vendor command to write to DAC on analog interface board"""
         def _wrDac():
-            self.controlOutTransaction(create_string_buffer(
-                struct.pack(">H", value), 2), usbdefs.VENDOR_SET_DAC, channel)
+            self.controlOutTransaction(create_string_buffer(struct.pack(">H", value), 2), usbdefs.VENDOR_SET_DAC, channel)
+
         self._claimInterfaceWrapper(_wrDac)
 
     # def getDacQueueFreeSlots(self):
-        # """Returns list with the number of slots available for each DAC queue"""
-        # def _getDacQueueFreeSlots():
-            # freeSlots = (c_ubyte*8)()
-            # self.controlInTransaction(freeSlots,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_FREE)
-            # return [f for f in freeSlots]
-        # return self._claimInterfaceWrapper(_getDacQueueFreeSlots)
+    # """Returns list with the number of slots available for each DAC queue"""
+    # def _getDacQueueFreeSlots():
+    # freeSlots = (c_ubyte*8)()
+    # self.controlInTransaction(freeSlots,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_FREE)
+    # return [f for f in freeSlots]
+    # return self._claimInterfaceWrapper(_getDacQueueFreeSlots)
 
     # def getDacQueueErrors(self):
-        # """Returns bit masks of underflows and overflows in the DAC queues"""
-        # def _getDacQueueErrors():
-            # errors = (c_ubyte*4)()
-            # self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
-            # return dict(underflows = errors[0], overflows = errors[1], now = (errors[3]<<8) + errors[2])
-        # return self._claimInterfaceWrapper(_getDacQueueErrors)
+    # """Returns bit masks of underflows and overflows in the DAC queues"""
+    # def _getDacQueueErrors():
+    # errors = (c_ubyte*4)()
+    # self.controlInTransaction(errors,usbdefs.VENDOR_DAC_QUEUE_STATUS,usbdefs.DAC_QUEUE_GET_ERRORS)
+    # return dict(underflows = errors[0], overflows = errors[1], now = (errors[3]<<8) + errors[2])
+    # return self._claimInterfaceWrapper(_getDacQueueErrors)
 
     # def setDacQueuePeriod(self,channel,period):
-        # """Sets service period (in hundredth's of a second) of a DAC queue"""
-        # if channel<0 or channel>=8:
-            # raise ValueError('Only channels 0..7 are available')
-        # if period<0 or period>=65535:
-            # raise ValueError('Period must be in range 0..65535')
-        # def _setDacQueuePeriod():
-            # data = (c_ubyte*3)()
-            # data[0] = channel
-            # data[1] = period & 0xFF
-            # data[2] = (period>>8) & 0xFF
-            # self.controlOutTransaction(data,
-                # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SET_PERIOD)
-        # self._claimInterfaceWrapper(_setDacQueuePeriod)
+    # """Sets service period (in hundredth's of a second) of a DAC queue"""
+    # if channel<0 or channel>=8:
+    # raise ValueError('Only channels 0..7 are available')
+    # if period<0 or period>=65535:
+    # raise ValueError('Period must be in range 0..65535')
+    # def _setDacQueuePeriod():
+    # data = (c_ubyte*3)()
+    # data[0] = channel
+    # data[1] = period & 0xFF
+    # data[2] = (period>>8) & 0xFF
+    # self.controlOutTransaction(data,
+    # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SET_PERIOD)
+    # self._claimInterfaceWrapper(_setDacQueuePeriod)
 
     # def resetDacQueues(self):
-        # """Stop serving from DAC queues and set them all to empty"""
-        # def _resetDacQueues():
-            # self.controlOutTransaction(c_ubyte(0),
-                # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_RESET)
-        # self._claimInterfaceWrapper(_resetDacQueues)
+    # """Stop serving from DAC queues and set them all to empty"""
+    # def _resetDacQueues():
+    # self.controlOutTransaction(c_ubyte(0),
+    # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_RESET)
+    # self._claimInterfaceWrapper(_resetDacQueues)
 
     # def serveDacQueues(self):
-        # """Start serving from DAC queues"""
-        # def _serveDacQueues():
-            # self.controlOutTransaction(c_ubyte(0),
-                # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SERVE)
-        # self._claimInterfaceWrapper(_serveDacQueues)
+    # """Start serving from DAC queues"""
+    # def _serveDacQueues():
+    # self.controlOutTransaction(c_ubyte(0),
+    # usbdefs.VENDOR_DAC_QUEUE_CONTROL,usbdefs.DAC_QUEUE_SERVE)
+    # self._claimInterfaceWrapper(_serveDacQueues)
 
     def resetDacQueue(self):
         """Reset DAC queue and clear error flags"""
         def _resetDacQueue():
-            self.controlOutTransaction(c_ubyte(0),
-                                       usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_QUEUE_RESET)
+            self.controlOutTransaction(c_ubyte(0), usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_QUEUE_RESET)
+
         self._claimInterfaceWrapper(_resetDacQueue)
 
     def setDacTimestamp(self, timestamp):
@@ -432,8 +424,8 @@ class AnalyzerUsb(Singleton):
 
         def _setDacTimestamp():
             data = (c_ushort)(timestamp)
-            self.controlOutTransaction(data,
-                                       usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_SET_TIMESTAMP)
+            self.controlOutTransaction(data, usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_SET_TIMESTAMP)
+
         self._claimInterfaceWrapper(_setDacTimestamp)
 
     def setDacReloadCount(self, reloadCount):
@@ -443,44 +435,44 @@ class AnalyzerUsb(Singleton):
 
         def _setDacReloadCount():
             data = (c_ushort)(reloadCount)
-            self.controlOutTransaction(data,
-                                       usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_SET_RELOAD_COUNT)
+            self.controlOutTransaction(data, usbdefs.VENDOR_DAC_QUEUE_CONTROL, usbdefs.DAC_SET_RELOAD_COUNT)
+
         self._claimInterfaceWrapper(_setDacReloadCount)
 
     def getDacTimestamp(self):
         """Returns current value of DAC timestamp"""
         def _getDacTimestamp():
             data = (c_ushort)(0)
-            self.controlInTransaction(
-                data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_GET_TIMESTAMP)
+            self.controlInTransaction(data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_GET_TIMESTAMP)
             return data.value
+
         return self._claimInterfaceWrapper(_getDacTimestamp)
 
     def getDacReloadCount(self):
         """Returns current value of DAC timestamp clock divisor reload count"""
         def _getDacReloadCount():
             data = (c_ushort)(0)
-            self.controlInTransaction(
-                data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_GET_RELOAD_COUNT)
+            self.controlInTransaction(data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_GET_RELOAD_COUNT)
             return data.value
+
         return self._claimInterfaceWrapper(_getDacReloadCount)
 
     def getDacQueueFree(self):
         """Returns number of bytes available in DAC queue"""
         def _getDacQueueFree():
             data = (c_ushort)(0)
-            self.controlInTransaction(
-                data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_QUEUE_GET_FREE)
+            self.controlInTransaction(data, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_QUEUE_GET_FREE)
             return data.value
+
         return self._claimInterfaceWrapper(_getDacQueueFree)
 
     def getDacQueueErrors(self):
         """Returns error bit mask"""
         def _getDacQueueErrors():
             errors = c_ubyte()
-            self.controlInTransaction(
-                errors, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_QUEUE_GET_ERRORS)
+            self.controlInTransaction(errors, usbdefs.VENDOR_DAC_QUEUE_STATUS, usbdefs.DAC_QUEUE_GET_ERRORS)
             return errors.value
+
         return self._claimInterfaceWrapper(_getDacQueueErrors)
 
     def enqueueDacSamples(self, data):
@@ -489,9 +481,9 @@ class AnalyzerUsb(Singleton):
 
         def _enqueueDacSamples():
             self.controlOutTransaction(data, usbdefs.VENDOR_DAC_ENQUEUE_DATA)
+
         if 0 == dataLength or 64 < dataLength:
-            raise UsbPacketLengthError(
-                "Invalid data length %d in enqueueDacSamples" % (dataLength,))
+            raise UsbPacketLengthError("Invalid data length %d in enqueueDacSamples" % (dataLength, ))
         return self._claimInterfaceWrapper(_enqueueDacSamples)
 
     def dspWrite(self, addrValueList):
@@ -507,8 +499,7 @@ class AnalyzerUsb(Singleton):
         regions = hexFile.process()
         for r in regions:
             # r.data contains the data as a list of bytes.
-            self.hpiWrite(
-                r.address, create_string_buffer("".join(r.data), len(r.data)))
+            self.hpiWrite(r.address, create_string_buffer("".join(r.data), len(r.data)))
 
     def loadHexFile(self, fp):
         """Use vendor command 0xA0 to load hex file to device and renumerate"""
@@ -522,12 +513,12 @@ class AnalyzerUsb(Singleton):
 
             for r in regions:
                 # r.data contains the data as a list of bytes.
-                self.controlOutBlock(
-                    0xA0, r.address, create_string_buffer("".join(r.data), len(r.data)))
+                self.controlOutBlock(0xA0, r.address, create_string_buffer("".join(r.data), len(r.data)))
 
             # Release the reset to renumerate
             self.controlOutTransaction(c_ubyte(0x0), 0xA0, 0xE600)
             self.disconnect()
+
         # Do not wrap function, since it disconnects on completion
         return _loadHexFile()
 
@@ -550,6 +541,7 @@ bitrevList = \
      0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF]
 
 bitrevStr = "".join([chr(b) for b in bitrevList])
+
 
 def bitReverse(inputStr):
     return inputStr.translate(bitrevStr)

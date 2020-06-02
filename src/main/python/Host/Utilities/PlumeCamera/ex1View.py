@@ -15,6 +15,7 @@ context = zmq.Context()
 CMD_PORT = 5101
 BROADCAST_PORT = 5102
 
+
 class View(object):
     def __init__(self):
         self.cmdSock = context.socket(zmq.REQ)
@@ -33,6 +34,7 @@ class View(object):
                 print data
         self.cmdSock.close()
         self.broadcastSock.close()
+
 
 if __name__ == "__main__":
     v = View()

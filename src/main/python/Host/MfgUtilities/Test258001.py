@@ -28,31 +28,34 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.Listener import Listener
 from Host.Common.timestamp import unixTime
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="MakeWlmFile1")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+
 class CavityLeakRateTest(object):
-    def __init__(self,tp):
+    def __init__(self, tp):
         self.testParameters = tp
         self.hdfName = "data1.h5"
-        self.h5 = openFile(tp.absoluteTestDirectory + self.hdfName,"w")
+        self.h5 = openFile(tp.absoluteTestDirectory + self.hdfName, "w")
         self.graph1Name = "graph1.png"
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
 
         # Define a queue for the sensor stream data
         self.queue = Queue(0)
@@ -69,7 +72,7 @@ class CavityLeakRateTest(object):
             except Empty:
                 break
 
-    def streamFilter(self,result):
+    def streamFilter(self, result):
         # This filter is designed to enqueue sensor entries which all have the same timestamp.
         #  A 3-ple consisting of the timestamp, a dictionary of sensor data at that time
         #  and a dictionary of the most current sensor data as of that time
@@ -82,13 +85,13 @@ class CavityLeakRateTest(object):
 
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
-            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:] : self.cachedResult.value}
+            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:]: self.cachedResult.value}
 
         if result.timestamp != self.lastTime:
-            self.cachedResult = SensorEntryType(result.timestamp,result.streamNum,result.value)
+            self.cachedResult = SensorEntryType(result.timestamp, result.streamNum, result.value)
             self.streamFilterState = "RETURNED_RESULT"
             if self.resultDict:
-                return self.lastTime,self.resultDict.copy(),self.latestDict.copy()
+                return self.lastTime, self.resultDict.copy(), self.latestDict.copy()
             else:
                 return
         else:
@@ -96,32 +99,31 @@ class CavityLeakRateTest(object):
             self.streamFilterState = "COLLECTING_DATA"
 
     def run(self):
-        self.listener = Listener(self.queue,SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-                                 SensorEntryType,self.streamFilter)
-        filters = Filters(complevel=1,fletcher32=True)
+        self.listener = Listener(self.queue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType, self.streamFilter)
+        filters = Filters(complevel=1, fletcher32=True)
         try:
             regVault = Driver.saveRegValues(["VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER"])
             dataList = []
-            testDuration = 1200 # Number of seconds for test
-            sampleInterval = 10 # Time between samples
+            testDuration = 1200  # Number of seconds for test
+            sampleInterval = 10  # Time between samples
             # Close all valves and watch the pressure change
-            Driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+            Driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_DisabledState")
             self.flushQueue()
-            tStart,d,last = self.queue.get()
+            tStart, d, last = self.queue.get()
             t = tStart
             tNextReport = tStart
-            while t-tStart < 1000*testDuration:
-                if t >= tNextReport-100:
-                    print "%20.1f %20.3f" % (0.001*(t-tStart),d["CavityPressure"])
-                    dataList.append((t,0.001*(t-tStart),d["CavityPressure"]))
-                    tNextReport += 1000*sampleInterval
-                t,d,last = self.queue.get()
+            while t - tStart < 1000 * testDuration:
+                if t >= tNextReport - 100:
+                    print "%20.1f %20.3f" % (0.001 * (t - tStart), d["CavityPressure"])
+                    dataList.append((t, 0.001 * (t - tStart), d["CavityPressure"]))
+                    tNextReport += 1000 * sampleInterval
+                t, d, last = self.queue.get()
         finally:
             self.listener.stop()
             Driver.restoreRegValues(regVault)
 
-        results = array(dataList,[('timestamp',int64),('TimeSinceStart',float32),('CavityPressure',float32)])
-        table = self.h5.createTable("/","results",results,title="Cavity Leak Test",filters=filters)
+        results = array(dataList, [('timestamp', int64), ('TimeSinceStart', float32), ('CavityPressure', float32)])
+        table = self.h5.createTable("/", "results", results, title="Cavity Leak Test", filters=filters)
         table.attrs.EngineName = tp.parameters["EngineName"]
         table.attrs.DateTime = tp.parameters["DateTime"]
         table.attrs.TestCode = tp.parameters["TestCode"]
@@ -130,16 +132,17 @@ class CavityLeakRateTest(object):
         self.h5.close()
 
         figure(1)
-        plot(results['TimeSinceStart'],results['CavityPressure'])
+        plot(results['TimeSinceStart'], results['CavityPressure'])
         grid(True)
         xlabel("Time (s)")
         ylabel("Pressure (torr)")
         title("Pressure with valves closed")
         savefig(tp.absoluteTestDirectory + self.graph1Name)
         close(1)
-        print >> tp.rstFile, "\nData `directory <%s>`__, " % (tp.relativeTestDirectory,)
-        print >> tp.rstFile, "\nHDF5 `datafile <%s>`__, " % (tp.relativeTestDirectory+self.hdfName,)
-        print >> tp.rstFile, "PNG `graph <%s>`__" % (tp.relativeTestDirectory+self.graph1Name,)
+        print >> tp.rstFile, "\nData `directory <%s>`__, " % (tp.relativeTestDirectory, )
+        print >> tp.rstFile, "\nHDF5 `datafile <%s>`__, " % (tp.relativeTestDirectory + self.hdfName, )
+        print >> tp.rstFile, "PNG `graph <%s>`__" % (tp.relativeTestDirectory + self.graph1Name, )
+
 
 if __name__ == "__main__":
     pname = sys.argv[0]
@@ -148,8 +151,8 @@ if __name__ == "__main__":
         engineName = raw_input("Engine name? ")
     else:
         engineName = sys.argv[1]
-    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname,)
-    tp = TestParameters(engineName,bname[4:10])
+    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname, )
+    tp = TestParameters(engineName, bname[4:10])
     tst = CavityLeakRateTest(tp)
     tst.run()
     tp.appendReport()

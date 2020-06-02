@@ -20,6 +20,7 @@ import threading
 import unittest
 import Queue
 
+
 class LockExample(object):
     def __init__(self):
         self.idLock = threading.Lock()
@@ -34,6 +35,7 @@ class LockExample(object):
 
     def close(self):
         pass
+
 
 class LockExampleTestCase(unittest.TestCase):
     def setUp(self):
@@ -51,21 +53,21 @@ class LockExampleTestCase(unittest.TestCase):
             idList = []
             for i in range(10):
                 idList.append(self.obj.getId())
-            self.assertEqual(idList, range(1,11))
+            self.assertEqual(idList, range(1, 11))
             # Next start a collection of threads all of which are
             #  getting IDs
             self.idQueue = Queue.Queue()
             nThreads = 10
             threads = []
             for i in range(nThreads):
-                thread = threading.Thread(target=self.idFetcher, args=(i,))
+                thread = threading.Thread(target=self.idFetcher, args=(i, ))
                 thread.setDaemon(True)
                 threads.append(thread)
             for thread in threads:
                 thread.start()
             print "All threads started"
             # Wait for all threads to finish
-            for i,thread in enumerate(threads):
+            for i, thread in enumerate(threads):
                 thread.join()
                 print i,
             print
@@ -77,9 +79,10 @@ class LockExampleTestCase(unittest.TestCase):
             print max(idFound)
             print "Number of ids %d" % len(idFound)
             self.assertEqual(len(idFound), nThreads * 200)
-            self.assertEqual(idFound, range(11,11+len(idList)))
+            self.assertEqual(idFound, range(11, 11 + len(idList)))
         finally:
             self.obj.close()
+
 
 if __name__ == "__main__":
     unittest.main()

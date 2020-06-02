@@ -104,8 +104,7 @@ class TempControl(object):
             self.tec = self.manualTec
             self.firstIteration = True
             self.prbsReg = 0x1
-        elif self.state in [interface.TEMP_CNTRL_EnabledState,
-                            interface.TEMP_CNTRL_AutomaticState]:
+        elif self.state in [interface.TEMP_CNTRL_EnabledState, interface.TEMP_CNTRL_AutomaticState]:
             if self.state == interface.TEMP_CNTRL_EnabledState:
                 self.r = self.userSetpoint
             self.setDasStatusBit(self.activeBit)
@@ -201,7 +200,7 @@ class TempControl(object):
         change = self.ffwd * (self.temp - self.dasTemp)
         # Calculate contributions to the change of the actuator value
         # self.u is the actuator value calculated by PID algorithm
-        # self.a is the constrained actuator value, limited by 
+        # self.a is the constrained actuator value, limited by
         # self.Amin, self.Amax and self.Imax
         Pincr = self.K * (perr - self.perr)
         Iincr = (self.K * self.h / self.Ti) * err + (self.a - self.u - change) / self.S
@@ -372,6 +371,7 @@ class Laser4TempControl(TempControl):
         self.lockBit = interface.DAS_STATUS_Laser4TempCntrlLockedBit
         self.resetDasStatusBit(self.lockBit)
 
+
 class DummyTempControl(object):
     r = None
     userSetpoint = None
@@ -389,7 +389,7 @@ class DummyTempControl(object):
     thermA = None
     thermB = None
     thermC = None
-    
+
     def __init__(self, sim):
         self.sim = sim
         self.das_registers = sim.das_registers
@@ -421,8 +421,7 @@ class DummyTempControl(object):
             self.setDasStatusBit(self.activeBit)
             self.resetDasStatusBit(self.lockBit)
             self.tec = self.manualTec
-        elif self.state in [interface.TEMP_CNTRL_EnabledState,
-                            interface.TEMP_CNTRL_AutomaticState]:
+        elif self.state in [interface.TEMP_CNTRL_EnabledState, interface.TEMP_CNTRL_AutomaticState]:
             if self.state == interface.TEMP_CNTRL_EnabledState:
                 self.r = self.userSetpoint
             self.setDasStatusBit(self.activeBit)
@@ -453,17 +452,18 @@ class DummyTempControl(object):
                 self.r = self.swpMin
                 self.swpDir = 1
         # The dummy temperature controller quickly approaches the setpoint
-        newTemp = 0.2*self.temp + 0.8*self.r
+        newTemp = 0.2 * self.temp + 0.8 * self.r
         self.thermRes = self.tempToResistance(newTemp)
-        newTemp = 0.2*self.heatsinkTemp + 0.8*self.r
+        newTemp = 0.2 * self.heatsinkTemp + 0.8 * self.r
         self.heatsinkThermRes = self.tempToResistance(newTemp)
 
     def tempToResistance(self, temp):
         def cubeRoot(x):
-            return x ** (1.0/3.0)
-        y = (self.thermA-1.0/(temp + 273.15))/self.thermC
-        x = math.sqrt((self.thermB/(3.0*self.thermC))**3 + (y/2.0)**2)
-        return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
+            return x**(1.0 / 3.0)
+
+        y = (self.thermA - 1.0 / (temp + 273.15)) / self.thermC
+        x = math.sqrt((self.thermB / (3.0 * self.thermC))**3 + (y / 2.0)**2)
+        return math.exp(cubeRoot(x - 0.5 * y) - cubeRoot(x + 0.5 * y))
 
 
 class CavityTempControl(DummyTempControl):
@@ -489,6 +489,7 @@ class CavityTempControl(DummyTempControl):
         self.activeBit = interface.DAS_STATUS_CavityTempCntrlActiveBit
         self.lockBit = interface.DAS_STATUS_CavityTempCntrlLockedBit
         self.resetDasStatusBit(self.lockBit)
+
 
 class WarmBoxTempControl(DummyTempControl):
     r = prop_das(interface.WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER)

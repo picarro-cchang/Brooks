@@ -2,6 +2,7 @@ import os
 import csv
 import xmlrpclib
 
+
 class ReportSender(object):
     def __init__(self, uri, user, passwd):
         self.xmlProxy = xmlrpclib.ServerProxy(uri)
@@ -17,7 +18,7 @@ class ReportSender(object):
 
     def sendDiagFile(self, filename):
         basename = os.path.basename(filename)
-        diagfile = xmlrpclib.Binary(open(filename,"rb").read())
+        diagfile = xmlrpclib.Binary(open(filename, "rb").read())
         dataDict = {}
         dataDict["user"] = self.xmlUser
         dataDict["passwd"] = self.xmlPasswd
@@ -33,12 +34,12 @@ class ReportSender(object):
         identifier = "%s_%s" % (docName, ymdhms)
 
         try:
-            reportFile = open(filename,"rb")
+            reportFile = open(filename, "rb")
             reportReader = csv.reader(reportFile, )
         except:
             raise RuntimeError("Failed to read report")
 
-        colDescRow = reportReader.next() # Just move the pointer in reportReader
+        colDescRow = reportReader.next()  # Just move the pointer in reportReader
 
         dataDict = {}
         dataDict["user"] = self.xmlUser

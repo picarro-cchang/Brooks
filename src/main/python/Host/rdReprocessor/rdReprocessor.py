@@ -26,15 +26,16 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.timestamp import getTimestamp
 
 APP_NAME = "rdReprocessor"
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
 #AddPath and Def Config Name copied from ReadMemUsage.py
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 DEFAULT_CONFIG_NAME = "../../AppConfig/Config/rdReprocessor/rdReprocessor.ini"
+
 
 def convHdf5ToDict(h5Filename, selfTiming):
     h5File = openFile(h5Filename, "r")
@@ -48,10 +49,11 @@ def convHdf5ToDict(h5Filename, selfTiming):
                 if selfTiming > 0:
                     length = len(r[colKey])
                     currTime = getTimestamp()
-                    r[colKey] = [currTime - 5*i for i in range(length)]
-            retDict[tableName][colKey] = r[colKey] # table.read(field=colKey)
+                    r[colKey] = [currTime - 5 * i for i in range(length)]
+            retDict[tableName][colKey] = r[colKey]  # table.read(field=colKey)
     h5File.close()
     return retDict
+
 
 # Read in one or more *.h5 ringdown files.  Each file is one scheme that is composed
 # of one or more sub-schemes.  Sub-schemes are collected into a spectrum that are
@@ -70,9 +72,9 @@ class rdReprocessor(object):
         self.loop = loop
 
     def run(self):
-        broadcaster =  Broadcaster.Broadcaster(
-                    port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
-                    name="Spectrum Collector broadcaster",logFunc = Log)
+        broadcaster = Broadcaster.Broadcaster(port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
+                                              name="Spectrum Collector broadcaster",
+                                              logFunc=Log)
         self.files = sorted(glob(self.dirName + r'/*.h5'))
         fnum = len(self.files)
         index = 0
@@ -86,12 +88,12 @@ class rdReprocessor(object):
             # raw_input("Press <Enter> to send %s" % f)
             broadcaster.send(StringPickler.PackArbitraryObject(rdfDict))
             if self.loop == 1:  # loop2
-                if index == fnum-1:
+                if index == fnum - 1:
                     step = -1
                 elif index == 0:
                     step = 1
-            elif self.loop == 2:    # loop
-                if index == fnum-1:
+            elif self.loop == 2:  # loop
+                if index == fnum - 1:
                     index = -1
             index += step
             time.sleep(2.0)
@@ -105,8 +107,12 @@ Where the options can be a combination of the following:
 --loop2              process data files from the first to the last then back to the first. Repeat this procedure forever
 --loop               loop processing data files forever
 """
+
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -120,14 +126,14 @@ def HandleCommandSwitches():
 
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
 
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
 
     #Start with option defaults...
-    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME # this is not working...
+    configFile = os.path.dirname(AppPath) + "/" + DEFAULT_CONFIG_NAME  # this is not working...
     #configFile = DEFAULT_CONFIG_NAME
     loop = 0
 
@@ -144,8 +150,9 @@ def HandleCommandSwitches():
 
     return (configFile, loop)
 
+
 if __name__ == "__main__":
     configFile, loop = HandleCommandSwitches()
-    print  "The name of configFile is %s" % configFile
+    print "The name of configFile is %s" % configFile
     app = rdReprocessor(configFile, loop)
     app.run()

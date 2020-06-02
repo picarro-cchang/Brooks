@@ -13,7 +13,6 @@
 #
 # File History:
 # 08-09-16  Alex  Created file
-
 """Customized configuration file parser using ConfigObj.
 
 Based on the enhanced configuration parser ConfigObj, which supports
@@ -106,26 +105,30 @@ CustomConfigObj -- responsible for parsing a list of
 import configobj
 import types
 
+
 class Error(Exception):
     """Base class for ConfigParser exceptions."""
-
     def __init__(self, msg=''):
         self.message = msg
         Exception.__init__(self, msg)
 
     def __repr__(self):
         return self.message
+
     __str__ = __repr__
+
 
 class DuplicateSectionError(Error):
     """Raised when a section is multiply-created."""
     def __init__(self, section):
         Error.__init__(self, "Section %r already exists" % section)
 
+
 class DuplicateOptionError(Error):
     """Raised when an option is present in several cases, and ignore_option_case_on is in effect."""
     def __init__(self, option):
         Error.__init__(self, "Option %r already exists" % option)
+
 
 class CustomConfigObj(configobj.ConfigObj):
     def __init__(self, infile=None, options=None, ignore_option_case=True, print_case_convert=False, **kwargs):
@@ -141,19 +144,19 @@ class CustomConfigObj(configobj.ConfigObj):
         else:
             self.shadow = None
 
-    def _lowerCaseOpts(self,subDict):
+    def _lowerCaseOpts(self, subDict):
         """Recursive routine which takes a nested dictionary and lower-cases
         the keys of the leaf nodes"""
         newDict = {}
         for k in subDict:
             v = subDict[k]
-            if isinstance(v,dict):
+            if isinstance(v, dict):
                 newDict[k] = self._lowerCaseOpts(v)
             else:
                 if k.lower() in newDict:
                     raise DuplicateOptionError(k)
                 else:
-                    newDict[k.lower()] = (v,k)
+                    newDict[k.lower()] = (v, k)
         return newDict
 
     def get(self, section, option, default=None):
@@ -161,7 +164,7 @@ class CustomConfigObj(configobj.ConfigObj):
             if not self.ignoreOptionCase:
                 return self[section][option]
             else:
-                v,origKey = self.shadow[section][option.lower()]
+                v, origKey = self.shadow[section][option.lower()]
                 return v
         else:
             default = str(default)
@@ -169,7 +172,7 @@ class CustomConfigObj(configobj.ConfigObj):
                 if not self.ignoreOptionCase:
                     return self[section][option]
                 else:
-                    v,origKey = self.shadow[section][option.lower()]
+                    v, origKey = self.shadow[section][option.lower()]
                     return v
             except KeyError:
                 self._add_value(section, option, default)
@@ -184,8 +187,7 @@ class CustomConfigObj(configobj.ConfigObj):
     def getfloat(self, section, option, default=None):
         return float(self.get(section, option, default))
 
-    _boolean_states = {'1': True, 'yes': True, 'true': True, 'on': True,
-                       '0': False, 'no': False, 'false': False, 'off': False}
+    _boolean_states = {'1': True, 'yes': True, 'true': True, 'on': True, '0': False, 'no': False, 'false': False, 'off': False}
 
     def getboolean(self, section, option, default=None):
         v = self.get(section, option, default)
@@ -195,7 +197,7 @@ class CustomConfigObj(configobj.ConfigObj):
 
     def set(self, section, option, value, format=None):
         if format != None:
-            value = format%value
+            value = format % value
 
         if not self.ignoreOptionCase:
             self[section].update({option: str(value)})
@@ -204,10 +206,10 @@ class CustomConfigObj(configobj.ConfigObj):
             if optionLc in self.shadow[section]:
                 v, k = self.shadow[section][optionLc]
                 self[section].update({k: str(value)})
-                self.shadow[section].update({optionLc: (str(value),option)})
+                self.shadow[section].update({optionLc: (str(value), option)})
             else:
                 self[section].update({option: str(value)})
-                self.shadow[section].update({optionLc: (str(value),option)})
+                self.shadow[section].update({optionLc: (str(value), option)})
 
     def has_section(self, section):
         return self.has_key(section)
@@ -260,7 +262,7 @@ class CustomConfigObj(configobj.ConfigObj):
                     return False
             else:
                 try:
-                    v,k = self.shadow[section][option.lower()]
+                    v, k = self.shadow[section][option.lower()]
                     del self[section][k]
                     del self.shadow[section][option.lower()]
                     return True
@@ -275,7 +277,7 @@ class CustomConfigObj(configobj.ConfigObj):
         if not self.ignoreOptionCase:
             return self[section].items()
         else:
-            return [(k.lower(),self[section][k]) for k in self[section]]
+            return [(k.lower(), self[section][k]) for k in self[section]]
 
     def ignore_option_case_on(self):
         """ The class treats options as case non-sensitive

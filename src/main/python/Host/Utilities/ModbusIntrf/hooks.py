@@ -15,6 +15,7 @@ import threading
 _lock = threading.RLock()
 _hooks = {}
 
+
 def install_hook(name, fct):
     """
     Install one of the following hook
@@ -66,6 +67,7 @@ def install_hook(name, fct):
         except KeyError:
             _hooks[name] = [fct]
 
+
 def uninstall_hook(name, fct=None):
     """remove the function from the hooks"""
     with _lock:
@@ -73,6 +75,7 @@ def uninstall_hook(name, fct=None):
             _hooks[name].remove(fct)
         else:
             del _hooks[name][:]
+
 
 def call_hooks(name, args):
     """call the function associated with the hook and pass the given args"""

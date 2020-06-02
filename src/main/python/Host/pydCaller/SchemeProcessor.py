@@ -1,9 +1,9 @@
 from Host.Common.SchemeProcessor import Scheme
 
 if __name__ == "__main__":
-    if len(argv)>1:
+    if len(argv) > 1:
         fname = argv[1]
-    else:    
+    else:
         fname = raw_input("Name of scheme file")
     s = Scheme(fname)
     print "%-10d # Repetitions" % s.nrepeat

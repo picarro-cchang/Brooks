@@ -3,15 +3,16 @@ import wx
 
 DEFAULT_NUM_ROWS = 10
 
+
 class DataRecalFrame(wx.Frame):
     def __init__(self, dataList, *args, **kwds):
         self.numRows = DEFAULT_NUM_ROWS
 
         #kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
-        kwds["style"] = wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL
+        kwds["style"] = wx.CAPTION | wx.MINIMIZE_BOX | wx.SYSTEM_MENU | wx.TAB_TRAVERSAL
         wx.Frame.__init__(self, *args, **kwds)
-        self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
-        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL|wx.ALWAYS_SHOW_SB)
+        self.panel1 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL | wx.ALWAYS_SHOW_SB)
+        self.panel2 = wx.Panel(self, -1, style=wx.TAB_TRAVERSAL | wx.ALWAYS_SHOW_SB)
         self.panel3 = wx.Panel(self, -1)
         self.panel1.SetBackgroundColour("#E0FFFF")
         self.panel2.SetBackgroundColour("#BDEDFF")
@@ -56,15 +57,15 @@ class DataRecalFrame(wx.Frame):
 
         for row in range(self.numRows):
             acceptId = wx.NewId()
-            textCtrl = wx.TextCtrl(self.panel1, acceptId, "0.00000", style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
+            textCtrl = wx.TextCtrl(self.panel1, acceptId, "0.00000", style=wx.TE_PROCESS_ENTER | wx.TE_CENTRE)
             self.acceptTextCtrlList.append(textCtrl)
 
             reportId = wx.NewId()
-            textCtrl = wx.TextCtrl(self.panel1, reportId, "0.00000", style=wx.TE_PROCESS_ENTER|wx.TE_CENTRE)
+            textCtrl = wx.TextCtrl(self.panel1, reportId, "0.00000", style=wx.TE_PROCESS_ENTER | wx.TE_CENTRE)
             self.reportTextCtrlList.append(textCtrl)
 
             recalId = wx.NewId()
-            textCtrl = wx.TextCtrl(self.panel1, recalId, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
+            textCtrl = wx.TextCtrl(self.panel1, recalId, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
             textCtrl.SetBackgroundColour(wx.Colour(206, 206, 206))
             self.recalTextCtrlList.append(textCtrl)
 
@@ -74,20 +75,24 @@ class DataRecalFrame(wx.Frame):
             self.checkboxList.append(checkbox)
 
         # The calibration value table
-        self.labelOption= wx.StaticText(self.panel2, -1, "Calibration Options", style=wx.ALIGN_CENTRE)
-        self.labelData= wx.StaticText(self.panel2, -1, "Data Options", style=wx.ALIGN_CENTRE)
+        self.labelOption = wx.StaticText(self.panel2, -1, "Calibration Options", style=wx.ALIGN_CENTRE)
+        self.labelData = wx.StaticText(self.panel2, -1, "Data Options", style=wx.ALIGN_CENTRE)
         self.labelCurCal = wx.StaticText(self.panel2, -1, "Current Calibration", style=wx.ALIGN_CENTRE)
         self.labelNewCal = wx.StaticText(self.panel2, -1, "New Calibration", style=wx.ALIGN_CENTRE)
         self.labelOffset = wx.StaticText(self.panel2, -1, "Offset", style=wx.ALIGN_CENTRE)
         self.labelSlope = wx.StaticText(self.panel2, -1, "Slope", style=wx.ALIGN_CENTRE)
         self.labelR2 = wx.StaticText(self.panel2, -1, "R2", style=wx.ALIGN_CENTRE)
-        self.optionComboBox = wx.ComboBox(self.panel2, -1, value = " Offset Only", choices = [" Offset Only", " Offset + Slope"], style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        self.dataComboBox = wx.ComboBox(self.panel2, -1, value = dataList[0], choices = dataList, style = wx.CB_READONLY|wx.CB_DROPDOWN)
-        self.curOffsetTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
-        self.curSlopeTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
-        self.newOffsetTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
-        self.newSlopeTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
-        self.r2TextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY|wx.TE_CENTRE)
+        self.optionComboBox = wx.ComboBox(self.panel2,
+                                          -1,
+                                          value=" Offset Only",
+                                          choices=[" Offset Only", " Offset + Slope"],
+                                          style=wx.CB_READONLY | wx.CB_DROPDOWN)
+        self.dataComboBox = wx.ComboBox(self.panel2, -1, value=dataList[0], choices=dataList, style=wx.CB_READONLY | wx.CB_DROPDOWN)
+        self.curOffsetTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
+        self.curSlopeTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
+        self.newOffsetTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
+        self.newSlopeTextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
+        self.r2TextCtrl = wx.TextCtrl(self.panel2, -1, "0.00000", style=wx.TE_READONLY | wx.TE_CENTRE)
         self.curOffsetTextCtrl.SetBackgroundColour(wx.Colour(206, 206, 206))
         self.curSlopeTextCtrl.SetBackgroundColour(wx.Colour(206, 206, 206))
         self.newOffsetTextCtrl.SetBackgroundColour(wx.Colour(206, 206, 206))
@@ -123,24 +128,24 @@ class DataRecalFrame(wx.Frame):
         sizerPanel1Margin = wx.BoxSizer(wx.VERTICAL)
         sizerColTitles = wx.BoxSizer(wx.HORIZONTAL)
 
-        sizerPanel1.Add(self.labelTitle, 0, wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 20)
-        sizerColTitles.Add(self.labelRecalSel, 0, wx.LEFT|wx.RIGHT, 20)
-        sizerColTitles.Add(self.labelAccept, 0, wx.LEFT|wx.RIGHT, 32)
-        sizerColTitles.Add(self.labelReport, 0, wx.LEFT|wx.RIGHT, 22)
-        sizerColTitles.Add(self.labelRecal, 0, wx.LEFT|wx.RIGHT, 20)
+        sizerPanel1.Add(self.labelTitle, 0, wx.BOTTOM | wx.ALIGN_CENTER_HORIZONTAL, 20)
+        sizerColTitles.Add(self.labelRecalSel, 0, wx.LEFT | wx.RIGHT, 20)
+        sizerColTitles.Add(self.labelAccept, 0, wx.LEFT | wx.RIGHT, 32)
+        sizerColTitles.Add(self.labelReport, 0, wx.LEFT | wx.RIGHT, 22)
+        sizerColTitles.Add(self.labelRecal, 0, wx.LEFT | wx.RIGHT, 20)
         sizerPanel1.Add(sizerColTitles, 0, wx.EXPAND, 0)
         for row in range(self.numRows):
             sizerPanel1Column = wx.BoxSizer(wx.HORIZONTAL)
             sizerChecklist = wx.BoxSizer(wx.HORIZONTAL)
-            sizerChecklist.Add((50,-1),0)
-            sizerChecklist.Add(self.checkboxList[row], 0, wx.TOP|wx.BOTTOM, 5)
-            sizerChecklist.Add((40,-1),0)
+            sizerChecklist.Add((50, -1), 0)
+            sizerChecklist.Add(self.checkboxList[row], 0, wx.TOP | wx.BOTTOM, 5)
+            sizerChecklist.Add((40, -1), 0)
             sizerPanel1Column.Add(sizerChecklist, 0, wx.EXPAND)
-            sizerPanel1Column.Add(self.acceptTextCtrlList[row], 0, wx.ALL|wx.EXPAND, 5)
-            sizerPanel1Column.Add(self.reportTextCtrlList[row], 0, wx.ALL|wx.EXPAND, 5)
-            sizerPanel1Column.Add(self.recalTextCtrlList[row], 0, wx.ALL|wx.EXPAND, 5)
-            sizerPanel1.Add(sizerPanel1Column, 0, wx.EXPAND|wx.BOTTOM, 10)
-        sizerPanel1Margin.Add(sizerPanel1, 0, wx.EXPAND|wx.LEFT|wx.RIGHT|wx.TOP, 20)
+            sizerPanel1Column.Add(self.acceptTextCtrlList[row], 0, wx.ALL | wx.EXPAND, 5)
+            sizerPanel1Column.Add(self.reportTextCtrlList[row], 0, wx.ALL | wx.EXPAND, 5)
+            sizerPanel1Column.Add(self.recalTextCtrlList[row], 0, wx.ALL | wx.EXPAND, 5)
+            sizerPanel1.Add(sizerPanel1Column, 0, wx.EXPAND | wx.BOTTOM, 10)
+        sizerPanel1Margin.Add(sizerPanel1, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 20)
         self.panel1.SetSizer(sizerPanel1Margin)
         sizerMainLayout.Add(self.panel1, 0, wx.EXPAND, 0)
         sizerMainLayout.Add(self.staticLine1, 0, wx.EXPAND, 0)
@@ -154,39 +159,39 @@ class DataRecalFrame(wx.Frame):
         sizerComboBox1 = wx.BoxSizer(wx.VERTICAL)
         sizerComboBox2 = wx.BoxSizer(wx.VERTICAL)
         grid_sizer = wx.FlexGridSizer(0, 5)
-        addSpacer = (40,0)
+        addSpacer = (40, 0)
 
-        sizerSpace1.Add(self.labelData, 0, wx.TOP|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 10)
+        sizerSpace1.Add(self.labelData, 0, wx.TOP | wx.ALIGN_BOTTOM | wx.ALIGN_LEFT, 10)
         grid_sizer.Add(sizerSpace1, 0, wx.LEFT, 22)
-        grid_sizer.Add((0,0))
+        grid_sizer.Add((0, 0))
         grid_sizer.Add(addSpacer)
-        grid_sizer.Add(self.labelCurCal, 0, wx.TOP|wx.ALIGN_BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 10)
-        sizerSpace2.Add(self.labelNewCal, 0, wx.TOP|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 10)
+        grid_sizer.Add(self.labelCurCal, 0, wx.TOP | wx.ALIGN_BOTTOM | wx.ALIGN_CENTER_HORIZONTAL, 10)
+        sizerSpace2.Add(self.labelNewCal, 0, wx.TOP | wx.ALIGN_BOTTOM | wx.ALIGN_LEFT, 10)
         grid_sizer.Add(sizerSpace2, 0, wx.LEFT, 12)
 
-        sizerComboBox1.Add(self.dataComboBox, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizerComboBox1.Add(self.dataComboBox, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer.Add(sizerComboBox1, 0, wx.LEFT, 10)
         grid_sizer.Add(addSpacer)
-        grid_sizer.Add(self.labelOffset, 0, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 10)
-        grid_sizer.Add(self.curOffsetTextCtrl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer.Add(self.newOffsetTextCtrl, 0, wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer.Add(self.labelOffset, 0, wx.LEFT | wx.TOP | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 10)
+        grid_sizer.Add(self.curOffsetTextCtrl, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer.Add(self.newOffsetTextCtrl, 0, wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
 
-        sizerSpace3.Add(self.labelOption, 0, wx.TOP|wx.ALIGN_BOTTOM|wx.ALIGN_LEFT, 15)
+        sizerSpace3.Add(self.labelOption, 0, wx.TOP | wx.ALIGN_BOTTOM | wx.ALIGN_LEFT, 15)
         grid_sizer.Add(sizerSpace3, 0, wx.LEFT, 22)
         grid_sizer.Add(addSpacer)
-        grid_sizer.Add(self.labelSlope, 0, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 10)
-        grid_sizer.Add(self.curSlopeTextCtrl, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer.Add(self.newSlopeTextCtrl, 0, wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer.Add(self.labelSlope, 0, wx.LEFT | wx.TOP | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 10)
+        grid_sizer.Add(self.curSlopeTextCtrl, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer.Add(self.newSlopeTextCtrl, 0, wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
 
-        sizerComboBox2.Add(self.optionComboBox, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizerComboBox2.Add(self.optionComboBox, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
         grid_sizer.Add(sizerComboBox2, 0, wx.LEFT, 10)
         grid_sizer.Add(addSpacer)
-        grid_sizer.Add(self.labelR2, 0, wx.LEFT|wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_RIGHT, 10)
-        grid_sizer.Add((80,10))
-        grid_sizer.Add(self.r2TextCtrl, 0, wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer.Add(self.labelR2, 0, wx.LEFT | wx.TOP | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_RIGHT, 10)
+        grid_sizer.Add((80, 10))
+        grid_sizer.Add(self.r2TextCtrl, 0, wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
 
-        sizerPanel2.Add(grid_sizer, 0, wx.EXPAND|wx.BOTTOM, 10)
-        sizerPanel2Margin.Add(sizerPanel2, 0, wx.EXPAND|wx.LEFT|wx.RIGHT, 20)
+        sizerPanel2.Add(grid_sizer, 0, wx.EXPAND | wx.BOTTOM, 10)
+        sizerPanel2Margin.Add(sizerPanel2, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 20)
         self.panel2.SetSizer(sizerPanel2Margin)
         sizerMainLayout.Add(self.panel2, 0, wx.EXPAND, 0)
         sizerMainLayout.Add(self.staticLine2, 0, wx.EXPAND, 0)
@@ -195,22 +200,23 @@ class DataRecalFrame(wx.Frame):
         sizerPanel3 = wx.BoxSizer(wx.HORIZONTAL)
         sizerPanel3Margin = wx.BoxSizer(wx.VERTICAL)
 
-        sizerPanel3.Add(self.buttonCompute, 1, wx.ALL|wx.EXPAND, 4)
-        sizerPanel3.Add(self.buttonApply, 1, wx.ALL|wx.EXPAND, 4)
-        sizerPanel3.Add(self.buttonClear, 1, wx.ALL|wx.EXPAND, 4)
-        sizerPanel3.Add(self.buttonExit, 1, wx.ALL|wx.EXPAND, 4)
-        sizerPanel3Margin.Add(sizerPanel3, 0, wx.EXPAND|wx.ALL, 10)
-        sizerPanel3Margin.Add(self.labelFooter, 0, wx.EXPAND|wx.BOTTOM, 5)
+        sizerPanel3.Add(self.buttonCompute, 1, wx.ALL | wx.EXPAND, 4)
+        sizerPanel3.Add(self.buttonApply, 1, wx.ALL | wx.EXPAND, 4)
+        sizerPanel3.Add(self.buttonClear, 1, wx.ALL | wx.EXPAND, 4)
+        sizerPanel3.Add(self.buttonExit, 1, wx.ALL | wx.EXPAND, 4)
+        sizerPanel3Margin.Add(sizerPanel3, 0, wx.EXPAND | wx.ALL, 10)
+        sizerPanel3Margin.Add(self.labelFooter, 0, wx.EXPAND | wx.BOTTOM, 5)
         self.panel3.SetSizer(sizerPanel3Margin)
         sizerMainLayout.Add(self.panel3, 0, wx.EXPAND)
 
         # Put everything together
-        sizerToplevel.Add(sizerMainLayout, 1, wx.ALL|wx.ALIGN_CENTER_HORIZONTAL, 0)
+        sizerToplevel.Add(sizerMainLayout, 1, wx.ALL | wx.ALIGN_CENTER_HORIZONTAL, 0)
 
         # Finalize the main frame and panel
         self.SetSizer(sizerToplevel)
         sizerToplevel.Fit(self)
         self.Layout()
+
 
 if __name__ == "__main__":
     app = wx.PySimpleApp()

@@ -6,11 +6,11 @@ from pylab import *
 
 fname = 'FitterOutput.dat'
 basename = 'FitterConfig'
-fp = file(fname,'rb')
+fp = file(fname, 'rb')
 results = []
 while True:
     try:
-        l, = unpack('=i',fp.read(4))
+        l, = unpack('=i', fp.read(4))
         results.append(cPickle.loads(fp.read(l)))
     except:
         break
@@ -24,49 +24,49 @@ for r in results:
 
 for k in arrays:
     x = asarray(arrays[k])
-    arrays[k] = dict(data=x,mean=mean(x),std=std(x))
+    arrays[k] = dict(data=x, mean=mean(x), std=std(x))
 
 #good = asarray(arrays['h2o_ppmv']['data'] < 80)
 #print good
 
 figure()
-subplot(2,1,1)
+subplot(2, 1, 1)
 a = arrays['amp_ripp_1']
 plot(a['data'])
 grid(True)
-title('function 1000 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-subplot(2,1,2)
+title('function 1000 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+subplot(2, 1, 2)
 a = arrays['phase_ripp_1']
 plot(a['data'])
 grid(True)
-title('function 1000 Phase, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-savefig(basename+'_ripp1.png')
+title('function 1000 Phase, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+savefig(basename + '_ripp1.png')
 
 figure()
-subplot(2,1,1)
+subplot(2, 1, 1)
 a = arrays['amp_ripp_2']
 plot(a['data'])
 grid(True)
-title('function 1001 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-subplot(2,1,2)
+title('function 1001 Amplitude, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+subplot(2, 1, 2)
 a = arrays['phase_ripp_2']
 plot(a['data'])
 grid(True)
-title('function 1001 Phase, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-savefig(basename+'_ripp2.png')
+title('function 1001 Phase, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+savefig(basename + '_ripp2.png')
 
 figure()
-subplot(2,1,1)
+subplot(2, 1, 1)
 a = arrays['base0']
 plot(a['data'])
 grid(True)
-title('Base 0, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-subplot(2,1,2)
+title('Base 0, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+subplot(2, 1, 2)
 a = arrays['base1']
 plot(a['data'])
 grid(True)
-title('Base 1, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-savefig(basename+'_base.png')
+title('Base 1, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+savefig(basename + '_base.png')
 
 # figure()
 # subplot(2,1,1)
@@ -82,21 +82,20 @@ savefig(basename+'_base.png')
 #savefig(basename+'_residual_h2o.png')
 
 figure()
-subplot(2,1,1)
+subplot(2, 1, 1)
 a = arrays['cm_shift']
 plot(a['data'])
 grid(True)
-title('Frequency shift, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-subplot(2,1,2)
+title('Frequency shift, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+subplot(2, 1, 2)
 a = arrays['stddevres']
 plot(a['data'])
 grid(True)
-title('Residuals, Mean %.3f, StdDev %.3f' % (a['mean'],a['std']))
-savefig(basename+'_misc.png')
-
+title('Residuals, Mean %.3f, StdDev %.3f' % (a['mean'], a['std']))
+savefig(basename + '_misc.png')
 
 output = []
-output.append("# Fitter configuration parameters from HF baseline fit "+time.asctime())
+output.append("# Fitter configuration parameters from HF baseline fit " + time.asctime())
 output.append("Baseline_level = %.6f" % arrays['base0']['mean'])
 output.append("Baseline_slope = %.6f" % arrays['base1']['mean'])
 output.append("Sine0_ampl =%.3f" % arrays['amp_ripp_1']['mean'])
@@ -109,4 +108,4 @@ output.append("Sine1_period = %.6f" % arrays['freq_ripp_2']['mean'])
 output.append("Sine1_phase = %.6f" % arrays['phase_ripp_2']['mean'])
 
 print "\n".join(output)
-print>>file(basename+".ini","w"), "\n".join(output)
+print >> file(basename + ".ini", "w"), "\n".join(output)

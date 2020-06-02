@@ -40,8 +40,6 @@ _DEFAULT_PREFS_SPEC_FILENAME = "AppPrefsSpec.ini"
 _DEFAULT_USER_PREFS_FILENAME_WIN = "UserPrefs.ini"
 _DEFAULT_USER_PREFS_FILENAME_OSX = ".UserPrefs"
 _DEFAULT_USER_PREFS_FILENAME_UNIX = ".UserPrefs"
-
-
 """
 # I couldn't get this working the way I want. Still need to
 # do a conversion back to a list for wx.Size (also wx.Point)
@@ -133,10 +131,7 @@ class DatViewerPrefs(object):
                               in the defaultConfigSpec file. User preferences are
                               ignored.
     """
-    def __init__(self, appname, appversion,
-                 defaultConfigSpec=None,
-                 defaultUserPrefsFilename=None,
-                 fPrefsReset=False):
+    def __init__(self, appname, appversion, defaultConfigSpec=None, defaultUserPrefsFilename=None, fPrefsReset=False):
         self.defaultConfigSpec = defaultConfigSpec
 
         # look for the config spec file in the executing app's folder
@@ -206,9 +201,7 @@ class DatViewerPrefs(object):
 
         if self.fPrefsReset is False:
             if os.path.isfile(self.userPrefsPath):
-                self._LoadConfigFile(self.userPrefsPath,
-                                     configspec=self.defaultConfigSpec,
-                                     fCopy=True)
+                self._LoadConfigFile(self.userPrefsPath, configspec=self.defaultConfigSpec, fCopy=True)
                 fLoaded = True
 
                 # check whether prefs reset on next app start is set in
@@ -252,8 +245,7 @@ class DatViewerPrefs(object):
                 self.config.clear()
 
             # now load prefs with only the config spec
-            self._LoadConfigFile(None, configspec=self.defaultConfigSpec,
-                                 fCopy=True)
+            self._LoadConfigFile(None, configspec=self.defaultConfigSpec, fCopy=True)
 
             # last saved version is the current, remove version so it
             # isn't persisted
@@ -301,6 +293,7 @@ class DatViewerPrefs(object):
 
         self.config.filename = configPath
         self.config.write()
+
 
 """
 class DatViewerPrefs(object):

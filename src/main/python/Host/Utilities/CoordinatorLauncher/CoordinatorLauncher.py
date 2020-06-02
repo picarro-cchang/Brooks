@@ -21,14 +21,15 @@ from Host.Common.SharedTypes import RPC_PORT_VALVE_SEQUENCER
 APP_NAME = "CoordinatorLauncher"
 DEFAULT_CONFIG_NAME = "CoordinatorLauncher.ini"
 
-CRDS_ValveSequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+CRDS_ValveSequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName=APP_NAME)
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 class CoordinatorLauncher(CoordinatorLauncherFrame):
     def __init__(self, configFile, *args, **kwds):
@@ -91,7 +92,7 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         except Exception, err:
             print "%r" % err
 
-        launchCoordinatorThread = threading.Thread(target = self._launchCoordinator)
+        launchCoordinatorThread = threading.Thread(target=self._launchCoordinator)
         launchCoordinatorThread.setDaemon(True)
         launchCoordinatorThread.start()
         time.sleep(3)
@@ -105,9 +106,10 @@ class CoordinatorLauncher(CoordinatorLauncherFrame):
         if self.launchType != "exe":
             if sys.platform == "win32":
                 info = subprocess.STARTUPINFO()
-                proc = subprocess.Popen(["python.exe", "Coordinator.py"] + argList + ["-c",self.coordinatorIni], startupinfo=info)
+                proc = subprocess.Popen(["python.exe", "Coordinator.py"] + argList + ["-c", self.coordinatorIni], startupinfo=info)
             elif sys.platform == "linux2":
-                cmd = ["python", "-O", "/home/picarro/I2000/Host/Coordinator/Coordinator.py"] + argList + ["-c",self.coordinatorIni] #self.supervisorIni]
+                cmd = ["python", "-O", "/home/picarro/I2000/Host/Coordinator/Coordinator.py"
+                       ] + argList + ["-c", self.coordinatorIni]  #self.supervisorIni]
                 proc = subprocess.Popen(cmd)
 
 HELP_STRING = \
@@ -121,8 +123,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -150,6 +154,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

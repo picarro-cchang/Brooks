@@ -16,6 +16,7 @@ context = zmq.Context()
 CMD_PORT = 5101
 BROADCAST_PORT = 5102
 
+
 class Model(object):
     def __init__(self):
         self.cmdSock = context.socket(zmq.REP)
@@ -26,7 +27,7 @@ class Model(object):
         self.input = None
         self.output = None
 
-    def squareAndStore(self,data):
+    def squareAndStore(self, data):
         self.output = data**2
         return self.output
 
@@ -37,9 +38,9 @@ class Model(object):
         poller = zmq.Poller()
         poller.register(self.cmdSock, zmq.POLLIN)
         while not self.terminate:
-            timeout = 1000*(nextTime - time.time())
+            timeout = 1000 * (nextTime - time.time())
             socks = {}
-            if timeout>0: socks = dict(poller.poll(timeout=timeout))
+            if timeout > 0: socks = dict(poller.poll(timeout=timeout))
             # Check for no available sockets, indicating that the timeout occured
             if not socks:
                 print "Broadcasting"
@@ -50,13 +51,14 @@ class Model(object):
                 func = cmd["func"]
                 self.input = cmd["args"]
                 try:
-                    print getattr(self,func)(*self.input)
-                    self.cmdSock.send(json.dumps({"result":"OK"}))
+                    print getattr(self, func)(*self.input)
+                    self.cmdSock.send(json.dumps({"result": "OK"}))
                 except Exception, e:
-                    self.cmdSock.send(json.dumps({"error":"%s"%e, "traceback":traceback.format_exc()}))
+                    self.cmdSock.send(json.dumps({"error": "%s" % e, "traceback": traceback.format_exc()}))
                 self.broadcastSock.send("RESULT\n" + json.dumps({"time": time.time(), "output": self.output}))
         self.cmdSock.close()
         self.broadcastSock.close()
+
 
 if __name__ == "__main__":
     m = Model()

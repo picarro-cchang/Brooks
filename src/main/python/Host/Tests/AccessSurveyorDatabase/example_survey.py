@@ -1,4 +1,3 @@
-
 import numpy as np
 import pyodbc
 
@@ -7,8 +6,7 @@ server = "b-eng-db01.picarro.int"
 database = "SurveyorEngineering"
 uid = "engineering"
 password = "aDs76WoiJn"
-connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' %
-                        (server, database, uid, password))
+connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' % (server, database, uid, password))
 cursor = connection.cursor()
 
 # Get table names
@@ -19,7 +17,6 @@ cursor.execute("""
 print "\nTables Available"
 for row in cursor:
     print row
-
 
 # Get analyzer table column names
 cursor.execute("""
@@ -52,7 +49,7 @@ cursor.execute("""
 
 for row in cursor:
     print row
-    
+
 # Get survey table column names
 print "\nSurvey table columns"
 cursor.execute("""
@@ -63,7 +60,7 @@ cursor.execute("""
 
 for row in cursor:
     print row
-        
+
 # Get surveys
 print "\nSurveys"
 cursor.execute("""
@@ -83,9 +80,8 @@ for survey in surveys:
     maxSpeed = []
     for row in cursor:
         if row[1] is not None:
-            carSpeed = abs(row[1]+1j*row[2])
+            carSpeed = abs(row[1] + 1j * row[2])
             wsLon = row[3]
             maxSpeed.append(abs(carSpeed - wsLon))
     if maxSpeed:
         print "%s, %.2f" % (survey[0], max(maxSpeed))
-    

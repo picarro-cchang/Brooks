@@ -174,7 +174,6 @@ class Singleton(object):
 class Bunch(object):
     """ This class is used to group together a collection as a single object,
         so that they may be accessed as attributes of that object"""
-
     def __init__(self, **kwds):
         """ The namespace of the object may be initialized using keyword arguments """
         self.__dict__.update(kwds)
@@ -188,8 +187,8 @@ class Bunch(object):
     def __repr__(self):
         return self.__str__()
 
-HandlerTuple = namedtuple(
-    'HandlerTuple', ['duration', 'nprocessed', 'finished'])
+
+HandlerTuple = namedtuple('HandlerTuple', ['duration', 'nprocessed', 'finished'])
 
 
 class makeHandler(object):
@@ -200,7 +199,6 @@ class makeHandler(object):
     It is useful when handling a number of queues within a single threaded environment
     so that we do not spend too much time trying to empty out a queue while others
     remain unserviced."""
-
     def __init__(self, readerFunc, processFunc):
         """
         Args:
@@ -242,6 +240,7 @@ class makeHandler(object):
         duration = time.time() - start
         return HandlerTuple(duration=duration, nprocessed=nprocessed, finished=finished)
 
+
 schemeTableClassMemo = {}
 
 
@@ -261,11 +260,11 @@ def getSchemeTableClass(numRows):
         SchemeRowArray = interface.SchemeRowType * numRows
 
         class SchemeTableType(ctypes.Structure):
-            _fields_ = [("numRepeats", ctypes.c_uint),
-                        ("numRows", ctypes.c_uint),
-                        ("rows", SchemeRowArray)]
+            _fields_ = [("numRepeats", ctypes.c_uint), ("numRows", ctypes.c_uint), ("rows", SchemeRowArray)]
+
         schemeTableClassMemo[numRows] = SchemeTableType
     return schemeTableClassMemo[numRows]
+
 
 ##########################################################################
 # Utilities for converting between ctypes objects and dictionaries
@@ -345,11 +344,9 @@ class Operation(object):  # pylint: disable=R0903
         env: Start address of environment in DSP environment area for storing persistent information
             associated with this action
     """
-
     def __init__(self, opcode, operandList=None, env=0):
         assert isinstance(opcode, (int, long, str, unicode))
-        assert isinstance(operandList, types.NoneType) or hasattr(
-            operandList, '__iter__')
+        assert isinstance(operandList, types.NoneType) or hasattr(operandList, '__iter__')
         assert isinstance(opcode, (int, long, str, unicode))
         self.opcode = lookup(opcode)
         self.env = lookup(env)
@@ -367,12 +364,10 @@ class OperationGroup(object):
         period: Period associated with this group (multiples of 100ms)
         operationList: List of Operation instances comprising this group
     """
-
     def __init__(self, priority, period, operationList=None):
         assert isinstance(priority, (int, long))
         assert isinstance(period, (int, long))
-        assert isinstance(operationList, types.NoneType) or hasattr(
-            operationList, '__iter__')
+        assert isinstance(operationList, types.NoneType) or hasattr(operationList, '__iter__')
 
         if priority < 0 or priority >= 16:
             raise ValueError("Priority out of range (0-15)")
@@ -400,6 +395,7 @@ class OperationGroup(object):
         """
         return len(self.operationList)
 
+
 # Routines for reading scheme files
 
 
@@ -416,6 +412,7 @@ def getNextNonNullLine(sp):
         else:
             return line
 
+
 # Misc stuff...
 
 if __debug__:
@@ -428,8 +425,8 @@ if __debug__:
         if k.startswith("RPC_PORT_") or k.startswith("TCP_PORT_") or k.startswith("BROADCAST_PORT_"):
             p = str(locals()[k])
             if p in usedPorts:
-                raise Exception("An IP port has been duplicated and must be fixed!" +
-                                "'%s' and '%s' are both %s" % (k, usedPorts[p], p))
+                raise Exception("An IP port has been duplicated and must be fixed!" + "'%s' and '%s' are both %s" %
+                                (k, usedPorts[p], p))
             else:
                 usedPorts[p] = k
     del localsNow, k, usedPorts

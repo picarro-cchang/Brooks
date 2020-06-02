@@ -19,11 +19,12 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DATA_MANAGER
 from Host.Utilities.DataRecal.DataRecalFrame import DataRecalFrame
-DATA_MANAGER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "DataRecal")
+DATA_MANAGER = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName="DataRecal")
+
 
 class DataRecal(DataRecalFrame):
     def __init__(self, calIniFile, defaultPath, *args, **kwds):
-        cp = CustomConfigObj(calIniFile, list_values = True)
+        cp = CustomConfigObj(calIniFile, list_values=True)
         try:
             dataList = cp.list_sections()
         except:
@@ -41,7 +42,7 @@ class DataRecal(DataRecalFrame):
         self.r2 = None
         self.filename = None
         self.defaultPath = defaultPath
-        self.activeFile = os.getcwd()+"\\active.cfg"
+        self.activeFile = os.getcwd() + "\\active.cfg"
         self.bindEvents()
         if self._getNumSelectedRows() == 0:
             self.buttonCompute.Enable(False)
@@ -72,41 +73,42 @@ class DataRecal(DataRecalFrame):
                     accDataList.append(float(self.acceptTextCtrlList[row].GetValue()))
                     repDataList.append(float(self.reportTextCtrlList[row].GetValue()))
                 except:
-                    d = wx.MessageDialog(None, "Invalid value entered.", "Invalid Value", wx.OK|wx.ICON_ERROR)
+                    d = wx.MessageDialog(None, "Invalid value entered.", "Invalid Value", wx.OK | wx.ICON_ERROR)
                     d.ShowModal()
                     d.Destroy()
                     return
         accAry = array(accDataList)
         repAry = array(repDataList)
         if len(repAry) < 1:
-            d = wx.MessageDialog(None, "Recal data not selected, action cancelled.", "Error", wx.OK|wx.ICON_ERROR)
+            d = wx.MessageDialog(None, "Recal data not selected, action cancelled.", "Error", wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             d.Destroy()
             return
 
         recalDataList = []
         if self.optionComboBox.GetValue() == " Offset Only":
-            aveOffsetShift = mean(accAry-repAry)
+            aveOffsetShift = mean(accAry - repAry)
             self.newOffset = self.curOffset + aveOffsetShift
             self.newSlope = self.curSlope
             # Update recalibrated values
             for row in range(self.numRows):
-                recalValue = float(self.reportTextCtrlList[row].GetValue())+aveOffsetShift
+                recalValue = float(self.reportTextCtrlList[row].GetValue()) + aveOffsetShift
                 self.recalTextCtrlList[row].SetValue("%.5f" % recalValue)
                 if self.checkboxList[row].GetValue():
                     recalDataList.append(recalValue)
         else:
             if len(repAry) < 2:
-                d = wx.MessageDialog(None, "'Offset + Slope' option requires at least 2 recal data points, action cancelled.", "Error", wx.OK|wx.ICON_ERROR)
+                d = wx.MessageDialog(None, "'Offset + Slope' option requires at least 2 recal data points, action cancelled.",
+                                     "Error", wx.OK | wx.ICON_ERROR)
                 d.ShowModal()
                 d.Destroy()
                 return
             (m, b) = polyfit(repAry, accAry, 1)
-            self.newOffset = m*self.curOffset+b
-            self.newSlope = m*self.curSlope
+            self.newOffset = m * self.curOffset + b
+            self.newSlope = m * self.curSlope
             # Update recalibrated values
             for row in range(self.numRows):
-                recalValue = m*float(self.reportTextCtrlList[row].GetValue())+b
+                recalValue = m * float(self.reportTextCtrlList[row].GetValue()) + b
                 self.recalTextCtrlList[row].SetValue("%.5f" % recalValue)
                 if self.checkboxList[row].GetValue():
                     recalDataList.append(recalValue)
@@ -115,7 +117,7 @@ class DataRecal(DataRecalFrame):
         resSq = sum((accAry - recAry)**2)
         accSq = sum((accAry - mean(accAry))**2)
         if accSq != 0.0:
-            self.r2 = 1 - (resSq/accSq)
+            self.r2 = 1 - (resSq / accSq)
         else:
             self.r2 = "invalid"
         if self.r2 != "invalid":
@@ -125,7 +127,8 @@ class DataRecal(DataRecalFrame):
         self.newOffsetTextCtrl.SetValue("%.5f" % self.newOffset)
         self.newSlopeTextCtrl.SetValue("%.5f" % self.newSlope)
         if abs(self.newSlope) < 1e-10:
-            d = wx.MessageDialog(None, "New slope value (=0) not acceptable. Please change calibration setup and try again.", "Invalid new slope value", wx.OK|wx.ICON_ERROR)
+            d = wx.MessageDialog(None, "New slope value (=0) not acceptable. Please change calibration setup and try again.",
+                                 "Invalid new slope value", wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             d.Destroy()
             return
@@ -139,14 +142,17 @@ class DataRecal(DataRecalFrame):
 
     def onApplyButton(self, event):
         # Use password to protect user cal function
-        d = wx.TextEntryDialog(self, 'Please ensure you want to change the calibration factors.\n\nTHIS ACTION CANNOT BE UNDONE.\n\nUser Calibration Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        d = wx.TextEntryDialog(
+            self,
+            'Please ensure you want to change the calibration factors.\n\nTHIS ACTION CANNOT BE UNDONE.\n\nUser Calibration Password: ',
+            'Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
         password = "picarro"
         okClicked = d.ShowModal() == wx.ID_OK
         d.Destroy()
         if not okClicked:
             return
         elif d.GetValue() != password:
-            d = wx.MessageDialog(None, "Password incorrect, action cancelled.", "Incorrect Password", wx.OK|wx.ICON_ERROR)
+            d = wx.MessageDialog(None, "Password incorrect, action cancelled.", "Incorrect Password", wx.OK | wx.ICON_ERROR)
             d.ShowModal()
             d.Destroy()
             return
@@ -164,21 +170,16 @@ class DataRecal(DataRecalFrame):
 
         # Save sequence to the "active" file
         self.cfgData = []
-        self.cfgData.append("%10s %10s\n" % ("data",self.dataType))
+        self.cfgData.append("%10s %10s\n" % ("data", self.dataType))
         for row in range(self.numRows):
             if self.checkboxList[row].GetValue():
-                newData = "%10s %10s %10s\n" % (self.acceptTextCtrlList[row].GetValue(),
-                                                self.reportTextCtrlList[row].GetValue(),
+                newData = "%10s %10s %10s\n" % (self.acceptTextCtrlList[row].GetValue(), self.reportTextCtrlList[row].GetValue(),
                                                 self.recalTextCtrlList[row].GetValue())
                 self.cfgData.append(newData)
-        newData = "%10s %10s %10s\n" % ("cc",
-                                        self.curOffsetTextCtrl.GetValue(),
-                                        self.curSlopeTextCtrl.GetValue())
+        newData = "%10s %10s %10s\n" % ("cc", self.curOffsetTextCtrl.GetValue(), self.curSlopeTextCtrl.GetValue())
         self.cfgData.append(newData)
-        newData = "%10s %10s %10s %10s\n" % ("nc",
-                                        self.newOffsetTextCtrl.GetValue(),
-                                        self.newSlopeTextCtrl.GetValue(),
-                                        self.r2TextCtrl.GetValue())
+        newData = "%10s %10s %10s %10s\n" % ("nc", self.newOffsetTextCtrl.GetValue(), self.newSlopeTextCtrl.GetValue(),
+                                             self.r2TextCtrl.GetValue())
         self.cfgData.append(newData)
         self.cfgData.append("%10s %10s\n" % ("option", self.optionComboBox.GetValue()))
 
@@ -189,7 +190,7 @@ class DataRecal(DataRecalFrame):
         except Exception, errMsg:
             wx.MessageBox("Saving %s failed!\nPython Error: %s" % (self.activeFile, errMsg))
 
-        d = wx.MessageDialog(None,"Recalibration done", "Calibration Updated", wx.ICON_INFORMATION | wx.STAY_ON_TOP)
+        d = wx.MessageDialog(None, "Recalibration done", "Calibration Updated", wx.ICON_INFORMATION | wx.STAY_ON_TOP)
         d.ShowModal()
         d.Destroy()
 
@@ -287,7 +288,8 @@ class DataRecal(DataRecalFrame):
         accValuePlotList = []
         recalValuePlotList = []
         for row in range(self.numRows):
-            if (float(self.reportTextCtrlList[row].GetValue()) != 0.0) or (float(self.acceptTextCtrlList[row].GetValue()) != 0.0) or self.checkboxList[row].GetValue():
+            if (float(self.reportTextCtrlList[row].GetValue()) != 0.0) or (float(self.acceptTextCtrlList[row].GetValue()) !=
+                                                                           0.0) or self.checkboxList[row].GetValue():
                 accValuePlotList.append(float(self.acceptTextCtrlList[row].GetValue()))
                 repValuePlotList.append(float(self.reportTextCtrlList[row].GetValue()))
                 recalValuePlotList.append(float(self.recalTextCtrlList[row].GetValue()))
@@ -303,42 +305,45 @@ class DataRecal(DataRecalFrame):
             resPlotAry = accPlotAry - recalPlotAry
 
             fig = pyplot.figure()
-            fig.subplots_adjust(hspace = 0.35)
-            sp1 = fig.add_subplot(2,1,1)
+            fig.subplots_adjust(hspace=0.35)
+            sp1 = fig.add_subplot(2, 1, 1)
             if self.r2 != "invalid":
                 sp1.set_title("Linear fitting (Offset = %.5f, Slope = %.5f, R2 = %.5f)" % (self.newOffset, self.newSlope, self.r2))
             else:
                 sp1.set_title("Linear fitting (Offset = %.5f, Slope = %.5f, R2 = N/A)" % (self.newOffset, self.newSlope))
             sp1.grid()
-            line1 = sp1.plot(repPlotAry, accPlotAry,'x')
-            line2 = sp1.plot(repPlotAry, recalPlotAry,'-')
+            line1 = sp1.plot(repPlotAry, accPlotAry, 'x')
+            line2 = sp1.plot(repPlotAry, recalPlotAry, '-')
             setp(line1, linewidth=1, markeredgewidth=2, markersize=10)
             setp(line2, linewidth=1, markeredgewidth=2, markersize=10)
-            sp1.legend([line2],["Calibration Fit"],"best")
+            sp1.legend([line2], ["Calibration Fit"], "best")
             sp1.set_xlabel("Reported Value")
             sp1.set_ylabel("Certified Value")
-            sp1.set_xlim((repPlotAry[0]-1, repPlotAry[-1]+1))
-            ymax = max(max(accPlotAry),max(recalPlotAry))
-            ymin = min(min(accPlotAry),min(recalPlotAry))
-            sp1.set_ylim((ymin-1, ymax+1))
+            sp1.set_xlim((repPlotAry[0] - 1, repPlotAry[-1] + 1))
+            ymax = max(max(accPlotAry), max(recalPlotAry))
+            ymin = min(min(accPlotAry), min(recalPlotAry))
+            sp1.set_ylim((ymin - 1, ymax + 1))
 
-            sp2 = fig.add_subplot(2,1,2)
+            sp2 = fig.add_subplot(2, 1, 2)
             #sp2.set_title("Residual")
             sp2.grid()
-            bars = sp2.vlines(repPlotAry, zeros(len(resPlotAry)), resPlotAry, color = "red")
+            bars = sp2.vlines(repPlotAry, zeros(len(resPlotAry)), resPlotAry, color="red")
             setp(bars, linewidth=5)
-            sp2.plot(repPlotAry, zeros(len(repPlotAry)),'-')
+            sp2.plot(repPlotAry, zeros(len(repPlotAry)), '-')
             sp2.set_xlabel("Reported Value")
             sp2.set_ylabel("Residual (Certified-Calibrated)")
-            sp2.set_xlim((repPlotAry[0]-1, repPlotAry[-1]+1))
+            sp2.set_xlim((repPlotAry[0] - 1, repPlotAry[-1] + 1))
             pyplot.show()
 
-    def onLoadFileMenu(self, event, filename = None, disableControls = True):
+    def onLoadFileMenu(self, event, filename=None, disableControls=True):
         if not filename:
             if not self.defaultPath:
                 self.defaultPath = os.getcwd()
-            dlg = wx.FileDialog(self, "Select IsoCO2 Delta Recalibration Configuration File...",
-                                self.defaultPath, wildcard = "*.cfg", style=wx.OPEN)
+            dlg = wx.FileDialog(self,
+                                "Select IsoCO2 Delta Recalibration Configuration File...",
+                                self.defaultPath,
+                                wildcard="*.cfg",
+                                style=wx.OPEN)
             if dlg.ShowModal() == wx.ID_OK:
                 self.filename = dlg.GetPath()
                 dlg.Destroy()
@@ -411,8 +416,12 @@ class DataRecal(DataRecalFrame):
         if not self.defaultPath:
             self.defaultPath = os.getcwd()
 
-        dlg = wx.FileDialog(self, "Save IsoCO2 Delta Recalibration Configuration as...",
-                            self.defaultPath, self._makeFilename(), wildcard = "*.cfg", style=wx.SAVE|wx.OVERWRITE_PROMPT)
+        dlg = wx.FileDialog(self,
+                            "Save IsoCO2 Delta Recalibration Configuration as...",
+                            self.defaultPath,
+                            self._makeFilename(),
+                            wildcard="*.cfg",
+                            style=wx.SAVE | wx.OVERWRITE_PROMPT)
 
         if dlg.ShowModal() == wx.ID_OK:
             filename = dlg.GetPath()
@@ -431,7 +440,7 @@ class DataRecal(DataRecalFrame):
 
     def _makeFilename(self):
         baseFname = "UserRecal"
-        return time.strftime(baseFname+"_%Y%m%d_%H%M%S.cfg",time.localtime())
+        return time.strftime(baseFname + "_%Y%m%d_%H%M%S.cfg", time.localtime())
 
 
 HELP_STRING = \
@@ -443,8 +452,11 @@ Where the options can be a combination of the following:
 -c                  Specify the path UserCal.ini.
 -o                  Specify the default log file location.
 """
+
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'o:c:h'
@@ -474,8 +486,7 @@ def handleCommandSwitches():
     if not os.path.isfile(calIniFile):
         app = wx.App()
         app.MainLoop()
-        dlg = wx.FileDialog(None, "Select Data Recalibration .INI file.",
-                            os.getcwd(), wildcard = "*.ini", style=wx.OPEN)
+        dlg = wx.FileDialog(None, "Select Data Recalibration .INI file.", os.getcwd(), wildcard="*.ini", style=wx.OPEN)
         if dlg.ShowModal() == wx.ID_OK:
             calIniFile = dlg.GetPath()
             dlg.Destroy()
@@ -499,6 +510,7 @@ def handleCommandSwitches():
     else:
         print "Data Recalibration .INI file specified: %s" % calIniFile
         return (calIniFile, defaultPath)
+
 
 if __name__ == "__main__":
     calIniFile, defaultPath = handleCommandSwitches()

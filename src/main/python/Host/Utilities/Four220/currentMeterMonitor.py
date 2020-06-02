@@ -36,19 +36,19 @@ class MyFrame(wx.Frame):
         self.SetSizer(sizer_1)
         self.Layout()
         # end wxGlade
-        
-        
+
+
 class CurrentMeter(MyFrame):
     def __init__(self, *args, **kwds):
         MyFrame.__init__(self, *args, **kwds)
-        
+
         try:
-            self.ser = serial.Serial('COM10', timeout = 5)
+            self.ser = serial.Serial('COM10', timeout=5)
         except:
             print "Can not connect to the port."
-            
+
         thread.start_new_thread(self.update, ())
-        
+
     def update(self):
         while 1:
             self.ser.write(b'meas:curr:dc?\r')
@@ -57,9 +57,7 @@ class CurrentMeter(MyFrame):
             if s != '':
                 self.Current.SetLabel(s[:18] + ' ')
             time.sleep(1)
-        
-    
-    
+
 
 # end of class MyFrame
 if __name__ == "__main__":

@@ -17,7 +17,7 @@ from _winreg import ConnectRegistry, SetValueEx, CloseKey, OpenKey
 from _winreg import KEY_WRITE, REG_SZ, HKEY_LOCAL_MACHINE
 from Host.Common.CMOS import CMOS
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -25,11 +25,11 @@ else:
 if __name__ == "__main__":
     cmos = CMOS()
     cmos.setAlarmEnable(False)
-    aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
+    aReg = ConnectRegistry(None, HKEY_LOCAL_MACHINE)
     aKey = OpenKey(aReg, r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", 0, KEY_WRITE)
     try:
         exePath = join(dirname(AppPath), "RestoreStartup.exe")
-        SetValueEx(aKey,"MyNewKey",0, REG_SZ, exePath)
+        SetValueEx(aKey, "MyNewKey", 0, REG_SZ, exePath)
     except EnvironmentError:
         print "Encountered problems writing into the Registry..."
     CloseKey(aKey)

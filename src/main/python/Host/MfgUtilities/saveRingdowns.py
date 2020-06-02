@@ -5,11 +5,14 @@ import sys
 import tables
 import time
 
+
 class Waveform(tables.IsDescription):
     index = tables.Int16Col()
     value = tables.Int16Col()
 
-driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "", IsDontCareConnection = False)
+
+driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "", IsDontCareConnection=False)
+
 
 def genData():
     while True:
@@ -22,17 +25,18 @@ def genData():
         yield np.asarray(data1) & 0x3FFF
         yield np.asarray(data2) & 0x3FFF
 
+
 outputFile = raw_input("Name of output file? ")
 numRingdowns = int(raw_input("Number of ringdowns? "))
 
-tSamp = (1.0 + driverRpc.rdFPGA("FPGA_RDMAN","RDMAN_DIVISOR")) * 40.0e-9
-h5f = tables.openFile(outputFile,"w")
-filters = tables.Filters(complevel=1,fletcher32=True)
-table = h5f.createTable(h5f.root,"ringdown",Waveform,filters=filters)
+tSamp = (1.0 + driverRpc.rdFPGA("FPGA_RDMAN", "RDMAN_DIVISOR")) * 40.0e-9
+h5f = tables.openFile(outputFile, "w")
+filters = tables.Filters(complevel=1, fletcher32=True)
+table = h5f.createTable(h5f.root, "ringdown", Waveform, filters=filters)
 table.attrs.sample_time = tSamp
 table.attrs.next_index = 0
 
-for k,data in enumerate(genData()):
+for k, data in enumerate(genData()):
     if k == numRingdowns:
         break
     for v in data:
@@ -43,7 +47,7 @@ for k,data in enumerate(genData()):
     table.attrs.next_index += 1
     table.flush()
     sys.stdout.write(".")
-    if (k+1) % 50 == 0:
-        print " %d" % (k+1,)
-print "\nTotal of %d ringdowns collected" % (k,)
+    if (k + 1) % 50 == 0:
+        print " %d" % (k + 1, )
+print "\nTotal of %d ringdowns collected" % (k, )
 h5f.close()

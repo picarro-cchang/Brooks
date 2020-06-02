@@ -7,27 +7,27 @@ from PeakAnalyzer import PeakAnalyzer
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_PEAK_ANALYZER
 from Host.Common import CmdFIFO
 
-
 UNIX_EPOCH_BEGIN = 0.0
 HEAT_DEATH_OF_UNIVERSE = 1300000000.0
 
 
 def getLocalAnalyzerId():
     try:
-        CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "RunPeakAnalyzer")
+        CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName="RunPeakAnalyzer")
         curValDict = CRDS_Driver.fetchLogicEEPROM()[0]
-        localAnalyzerId = curValDict["Analyzer"]+curValDict["AnalyzerNum"]
+        localAnalyzerId = curValDict["Analyzer"] + curValDict["AnalyzerNum"]
         print "Local analyzer id found: %s" % localAnalyzerId
     except:
         localAnalyzerId = None
     return localAnalyzerId
+
 
 def appMain(checkForCancellation):
     localAnalyzerId = getLocalAnalyzerId()
     if localAnalyzerId:
         # Local
         analyzer = localAnalyzerId
-        data_dir = 'C:/UserData/AnalyzerServer' # local Analyzer data location
+        data_dir = 'C:/UserData/AnalyzerServer'  # local Analyzer data location
         debug = False
     else:
         # P3
@@ -41,16 +41,17 @@ def appMain(checkForCancellation):
         else:
             debug = None
 
-        data_dir = os.path.join('/data/mdudata/datalogAdd', analyzer) # P3 Server data location
+        data_dir = os.path.join('/data/mdudata/datalogAdd', analyzer)  # P3 Server data location
 
         pidpath = os.path.join(data_dir, 'peakAnalyzerMain.pid')
         try:
             testf = open(pidpath, 'r')
             testf.close()
-            raise RuntimeError('pidfile exists. Verify that there is not another peakFinderMain task for the directory. path: %s.' % data_dir)
+            raise RuntimeError('pidfile exists. Verify that there is not another peakFinderMain task for the directory. path: %s.' %
+                               data_dir)
         except:
             try:
-                pidf = open(pidpath, 'wb+', 0) #open file with NO buffering
+                pidf = open(pidpath, 'wb+', 0)  #open file with NO buffering
             except:
                 raise RuntimeError('Cannot open pidfile for output. path: %s.' % pidpath)
 
@@ -65,9 +66,7 @@ def appMain(checkForCancellation):
     if not checkForCancellation:
         valveCheckTime = HEAT_DEATH_OF_UNIVERSE
 
-
-    pf = PeakAnalyzer(analyzerId=analyzer,
-                      legacyValveStop=valveCheckTime)
+    pf = PeakAnalyzer(analyzerId=analyzer, legacyValveStop=valveCheckTime)
     pf.userlogfiles = ulog
     pf.debug = debug
     pf.run()
@@ -80,11 +79,11 @@ def main(checkForCancellation):
     th = threading.Thread(target=appMain, args=[checkForCancellation])
     th.setDaemon(True)
     th.start()
-    rpcServer = CmdFIFO.CmdFIFOServer(("",RPC_PORT_PEAK_ANALYZER),
-                                       ServerName="PeakAnalyzer",
-                                       ServerDescription="PeakAnalyzer",
-                                       ServerVersion="1.0",
-                                       threaded=True)
+    rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_PEAK_ANALYZER),
+                                      ServerName="PeakAnalyzer",
+                                      ServerDescription="PeakAnalyzer",
+                                      ServerVersion="1.0",
+                                      threaded=True)
     try:
         while True:
             rpcServer.daemon.handleRequests(0.5)
@@ -93,10 +92,10 @@ def main(checkForCancellation):
     except:
         print "CmdFIFO stopped"
 
+
 if __name__ == '__main__':
     parser = optparse.OptionParser()
-    parser.add_option('--without-cancellation', dest='checkForCancellation',
-                      default=True, action='store_false')
+    parser.add_option('--without-cancellation', dest='checkForCancellation', default=True, action='store_false')
     options, _ = parser.parse_args()
 
     main(options.checkForCancellation)

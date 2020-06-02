@@ -19,21 +19,22 @@ from Host.Fitter.fitterCoreWithFortran import *
 DEFAULT_OUTPUT_FILENAME = "SpectrumMaker.ini"
 FITTER_PATH = r"..\..\AppConfig\Config\Fitter"
 
+
 class FitScript(object):
-#extract spectral library, fit definition file and spectrumId from fit script
-    def __init__(self, pyFile = ""):
+    #extract spectral library, fit definition file and spectrumId from fit script
+    def __init__(self, pyFile=""):
         self.fileName = pyFile
-        self.speclib=[]
-        self.fitDef=[]
+        self.speclib = []
+        self.fitDef = []
         if len(pyFile) > 0:
             self.analyze()
 
     def analyze(self):
-    #Assume one FitScript object corresponding to one species. If multiple species are fitted in one fitScript, use config file for SupervisorAnalyzer
+        #Assume one FitScript object corresponding to one species. If multiple species are fitted in one fitScript, use config file for SupervisorAnalyzer
         pyFile = self.fileName
         if not os.path.exists(pyFile):
             raise Exception("Fit script '%s' not found" % pyFile)
-        f = open(pyFile,'r')
+        f = open(pyFile, 'r')
         content = f.read()
         count = 0
         for line in content.splitlines():
@@ -70,6 +71,7 @@ class FitScript(object):
             raise Exception("Mupltiple spectrumId found in %s" % pyFile)
         f.close()
 
+
 class SupervisorAnalyzer(object):
     def __init__(self, configFile, SupervisorConfigFile):
         if not os.path.exists(configFile):
@@ -87,7 +89,7 @@ class SupervisorAnalyzer(object):
         else:
             self.SupervisorEXE = False
         FitScriptFromConfig = False
-        if len(configFile) > 0: #extract fitScript info from config file
+        if len(configFile) > 0:  #extract fitScript info from config file
             co_analyzer = CustomConfigObj(configFile)
             for section in co_analyzer.list_sections():
                 if section.startswith("FitScript"):
@@ -169,12 +171,12 @@ class SupervisorAnalyzer(object):
         co.write("[SCHEME_CONFIG]\n")
         co.write("SchemeCount=%d\n" % self.SchemeCount)
         for i in range(self.SchemeCount):
-            co.write("Scheme_%d_Path=\"%s\"\n" % (i+1, self.SchemePath[i]))
+            co.write("Scheme_%d_Path=\"%s\"\n" % (i + 1, self.SchemePath[i]))
         # SPECTRUM
         for i in range(len(self.fitScript)):
             fs = self.fitScript[i]
             co_fitDef = CustomConfigObj(fs.fitDef[0])
-            section = "SPECTRUM_%d" % (i+1)
+            section = "SPECTRUM_%d" % (i + 1)
             co.write("[%s]\n" % section)
             co.write("SpectrumId=%s\n" % fs.spectrumId)
             co.write("Library=\"%s\"\n" % fs.speclib[0])
@@ -198,6 +200,7 @@ class SupervisorAnalyzer(object):
         print "Config file generated: %s" % fileName
         co.close()
 
+
 HELP_STRING = """SupervisorAnalyzer.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following. Note that options override
@@ -207,6 +210,7 @@ settings in the configuration file:
 -c                   specify config file: default = "SupervisorAnalyzer.ini"
 -s                   specify config file of the supervisor: default = "../../AppConfig/Config/Supervisor/Supervisor.ini"
 """
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:s:'
@@ -218,10 +222,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = "SupervisorAnalyzer.ini"
     SupervisorConfigFile = "../../AppConfig/Config/Supervisor/Supervisor.ini"
@@ -233,6 +237,7 @@ def handleCommandSwitches():
     if "-s" in options:
         SupervisorConfigFile = options["-s"]
     return configFile, SupervisorConfigFile, options
+
 
 if __name__ == "__main__":
     configFile, SupervisorConfigFile, options = handleCommandSwitches()

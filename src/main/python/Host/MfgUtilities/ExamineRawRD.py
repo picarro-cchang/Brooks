@@ -32,27 +32,28 @@ from Host.Common.WlmCalUtilities import bestFit
 #APPROX_FSR = 0.077
 APPROX_FSR = 0.1
 
-
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
 EventManagerProxy_Init("ExamineRD")
 
+
 class ExamineRawRD(object):
     def __init__(self):
         # Define a listener for the ringdown data
-        self.listener = Listener(None,SharedTypes.BROADCAST_PORT_RDRESULTS,RingdownEntryType,self.rdFilter,retry=True)
+        self.listener = Listener(None, SharedTypes.BROADCAST_PORT_RDRESULTS, RingdownEntryType, self.rdFilter, retry=True)
 
-    def rdFilter(self,entry):
-        assert isinstance(entry,RingdownEntryType)
+    def rdFilter(self, entry):
+        assert isinstance(entry, RingdownEntryType)
         print entry.status, entry.count, entry.schemeTable, entry.schemeRow, entry.wlmAngle, entry.laserUsed
 
     def run(self):
         while True:
             sys.stdout.write(".")
             time.sleep(1)
+
 
 if __name__ == "__main__":
     e = ExamineRawRD()

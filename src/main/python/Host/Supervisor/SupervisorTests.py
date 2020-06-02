@@ -3,15 +3,10 @@ import sys
 import argparse
 from Host.Supervisor.SupervisorUtilities import RunningApps
 
-
 # Parse command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--interval",
-                    help="minutes to wait between test cycles",
-                    required=True)
-parser.add_argument("--type",
-                    help="type of test to run (kill or restart)",
-                    required=True)
+parser.add_argument("--interval", help="minutes to wait between test cycles", required=True)
+parser.add_argument("--type", help="type of test to run (kill or restart)", required=True)
 args = parser.parse_args()
 
 # Give feedback to user if necessary
@@ -72,8 +67,7 @@ def run_test():
 
 def main():
     try:
-        print("\n\nStarting up SupervisorTests\n\nType: %s\nInterval: %s minutes\n\n"
-              % (test_type, test_interval))
+        print("\n\nStarting up SupervisorTests\n\nType: %s\nInterval: %s minutes\n\n" % (test_type, test_interval))
         run_test()
     except KeyboardInterrupt:
         sys.exit(0)

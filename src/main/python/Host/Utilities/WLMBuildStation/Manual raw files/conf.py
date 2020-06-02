@@ -20,15 +20,11 @@ sys.path.append(os.path.abspath('sphinxext'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['matplotlib.sphinxext.only_directives',
-              'matplotlib.sphinxext.plot_directive',
-              'IPython.sphinxext.ipython_directive',
-              'IPython.sphinxext.ipython_console_highlighting',
-              'sphinx.ext.mathjax',
-              'sphinx.ext.autodoc',
-              'sphinx.ext.doctest',
-              'sphinx.ext.inheritance_diagram',
-              'numpydoc']
+extensions = [
+    'matplotlib.sphinxext.only_directives', 'matplotlib.sphinxext.plot_directive', 'IPython.sphinxext.ipython_directive',
+    'IPython.sphinxext.ipython_console_highlighting', 'sphinx.ext.mathjax', 'sphinx.ext.autodoc', 'sphinx.ext.doctest',
+    'sphinx.ext.inheritance_diagram', 'numpydoc'
+]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -92,7 +88,6 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
-
 # -- Options for HTML output ---------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
@@ -138,7 +133,7 @@ html_static_path = ['_static']
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {
-   '**': ['globaltoc.html', 'searchbox.html'],
+    '**': ['globaltoc.html', 'searchbox.html'],
 }
 
 # Additional templates that should be rendered to pages, maps page names to
@@ -168,7 +163,6 @@ html_use_index = True
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'WLMstation'
 
-
 # -- Options for LaTeX output --------------------------------------------------
 
 # The paper size ('letter' or 'a4').
@@ -180,8 +174,7 @@ htmlhelp_basename = 'WLMstation'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'WLMstation.tex', u'WLMstation Documentation',
-   u'Picarro Inc.', 'manual'),
+    ('index', 'WLMstation.tex', u'WLMstation Documentation', u'Picarro Inc.', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of

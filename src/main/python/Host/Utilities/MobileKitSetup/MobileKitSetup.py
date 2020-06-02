@@ -19,18 +19,20 @@ from Host.Utilities.MobileKitSetup.MobileKitSetupFrame import MobileKitSetupFram
 
 DEFAULT_CONFIG_NAME = "MobileKitSetup.ini"
 
-OPACITY_DICT = {"25%":"3F", "50%":"7F", "75%":"BF", "100%":"FF"}
+OPACITY_DICT = {"25%": "3F", "50%": "7F", "75%": "BF", "100%": "FF"}
 OPACITY_LIST = ["25%", "50%", "75%", "100%"]
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
+
 def getPidList():
     return [p.pid for p in psutil.get_process_list()]
+
 
 class MobileKitSetup(MobileKitSetupFrame):
     def __init__(self, configFile, *args, **kwds):
@@ -42,14 +44,14 @@ class MobileKitSetup(MobileKitSetupFrame):
         else:
             self.targetIniFile = self.inactiveIniFile
         if not os.path.isfile(self.targetIniFile):
-            d = wx.MessageDialog(None, "Mobile Kit INI file not found", "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
+            d = wx.MessageDialog(None, "Mobile Kit INI file not found", "Error", wx.ICON_ERROR | wx.STAY_ON_TOP)
             d.ShowModal()
             return
         try:
             self.targetConfig = CustomConfigObj(self.targetIniFile)
         except Exception, err:
             print err
-            d = wx.MessageDialog(None, "Error in Mobile Kit INI file: %r" % err, "Error", wx.ICON_ERROR|wx.STAY_ON_TOP)
+            d = wx.MessageDialog(None, "Error in Mobile Kit INI file: %r" % err, "Error", wx.ICON_ERROR | wx.STAY_ON_TOP)
             d.ShowModal()
             return
 
@@ -82,11 +84,11 @@ class MobileKitSetup(MobileKitSetupFrame):
         self.Bind(wx.EVT_BUTTON, self.onNewRunButton, self.buttonNewRun)
 
     def _convertColor2KML(self, colorTuple, opacity):
-        [r,g,b] = [hex(c).upper()[2:].zfill(2) for c in colorTuple]
-        return opacity+b+g+r
+        [r, g, b] = [hex(c).upper()[2:].zfill(2) for c in colorTuple]
+        return opacity + b + g + r
 
     def _convertKML2Color(self, KMLColor):
-        opacSel = OPACITY_LIST[eval("0x%s" % KMLColor[:2])/64]
+        opacSel = OPACITY_LIST[eval("0x%s" % KMLColor[:2]) / 64]
         b = eval("0x%s" % KMLColor[2:4])
         g = eval("0x%s" % KMLColor[4:6])
         r = eval("0x%s" % KMLColor[6:8])
@@ -107,7 +109,8 @@ class MobileKitSetup(MobileKitSetupFrame):
         currentPid = self.co.getint("Server", "pid")
         if self.buttonLaunchServer.GetLabel() == "Stop Mobile Kit Server":
             if currentPid in getPidList():
-                d = wx.MessageDialog(self, "Mobile Kit Server is currently running. Are you sure you want to stop it?", "Stop Mobile Kit Server", wx.ICON_EXCLAMATION|wx.YES_NO|wx.NO_DEFAULT|wx.STAY_ON_TOP)
+                d = wx.MessageDialog(self, "Mobile Kit Server is currently running. Are you sure you want to stop it?",
+                                     "Stop Mobile Kit Server", wx.ICON_EXCLAMATION | wx.YES_NO | wx.NO_DEFAULT | wx.STAY_ON_TOP)
                 if d.ShowModal() != wx.ID_YES:
                     return
                 currentProc = psutil.Process(currentPid)
@@ -161,8 +164,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -191,6 +196,7 @@ def HandleCommandSwitches():
 
     return configFile
 
+
 if __name__ == "__main__":
     mobileKitApp = SingleInstance("MobileKitSetup")
     if mobileKitApp.alreadyrunning():
@@ -200,7 +206,7 @@ if __name__ == "__main__":
         except:
             pass
     else:
-        configFile= HandleCommandSwitches()
+        configFile = HandleCommandSwitches()
         app = wx.PySimpleApp()
         wx.InitAllImageHandlers()
         frame = MobileKitSetup(configFile, None, -1, "")

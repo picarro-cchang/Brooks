@@ -11,15 +11,17 @@ from numpy import arange, arctan, arctan2, asarray, ceil, cos, cumsum, exp, isna
 from traitlets import Any, Bool, Float, Instance, Integer, List, Tuple, Unicode, Union
 
 NOT_A_NUMBER = float('nan')
+
+
 def distVincenty(lat1, lon1, lat2, lon2):
     # WGS-84 ellipsiod. lat and lon in DEGREES
     a = 6378137
     b = 6356752.3142
-    f = 1/298.257223563
-    toRad = pi/180.0
-    L = (lon2-lon1)*toRad
-    U1 = arctan((1-f) * tan(lat1*toRad))
-    U2 = arctan((1-f) * tan(lat2*toRad))
+    f = 1 / 298.257223563
+    toRad = pi / 180.0
+    L = (lon2 - lon1) * toRad
+    U1 = arctan((1 - f) * tan(lat1 * toRad))
+    U2 = arctan((1 - f) * tan(lat2 * toRad))
     sinU1 = sin(U1)
     cosU1 = cos(U1)
     sinU2 = sin(U2)
@@ -30,38 +32,40 @@ def distVincenty(lat1, lon1, lat2, lon2):
     for _ in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
-                        (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
         if sinSigma == 0:
             return 0  # co-incident points
-        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = arctan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha*sinAlpha
+        cosSqAlpha = 1 - sinAlpha * sinAlpha
         if cosSqAlpha == 0:
             cos2SigmaM = 0
         else:
-            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqAlpha
-        C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
+        C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
         lambdaP = Lambda
         Lambda = L + (1-C) * f * sinAlpha * \
           (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
-        if abs(Lambda-lambdaP) <= 1.e-12: break
+        if abs(Lambda - lambdaP) <= 1.e-12: break
     else:
         raise ValueError("Failed to converge")
 
-    uSq = cosSqAlpha * (a*a - b*b) / (b*b)
-    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
-    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
-    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
-                                            B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
-    return b*A*(sigma-deltaSigma)
+    uSq = cosSqAlpha * (a * a - b * b) / (b * b)
+    A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
+    B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM *
+                                                       (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    return b * A * (sigma - deltaSigma)
+
 
 class AddDistanceBlock(TransformBlock):
     jumpMax = Float()
     dist = Float(allow_none=True)
     lastLat = Float(allow_none=True)
     lastLng = Float(allow_none=True)
+
     def __init__(self, jumpMax=500):
         super(AddDistanceBlock, self).__init__(self.newData)
         self.jumpMax = jumpMax
@@ -90,12 +94,14 @@ class AddDistanceBlock(TransformBlock):
             self.lastLng = lng
         return dict(newDat, DISTANCE=result)
 
+
 class BaselineFilterBlock(TransformBlock):
     baselineFiltLen = Integer()
     dataKey = Unicode()
     baselineBuffer = Instance(deque)
     warmupDist = Integer()
     countDown = Integer()
+
     def __init__(self, dataKey, baselineFilterLength):
         super(BaselineFilterBlock, self).__init__(self.newData)
         self.baselineFiltLen = baselineFilterLength
@@ -108,7 +114,7 @@ class BaselineFilterBlock(TransformBlock):
         if newDat["PATH_TYPE"] != 0:
             self.countDown = self.warmupDist
         else:
-            self.countDown = max(self.countDown-1, 0)
+            self.countDown = max(self.countDown - 1, 0)
         if self.countDown > 0:
             self.baselineBuffer.clear()
         self.baselineBuffer.append(newDat[self.dataKey])
@@ -116,12 +122,14 @@ class BaselineFilterBlock(TransformBlock):
             self.baselineBuffer.popleft()
         return dict(DISTANCE=newDat["DISTANCE"], BASELINE_FILT_OUT=std(self.baselineBuffer))
 
+
 class MinimumFilterBlock(TransformBlock):
     minFiltLen = Integer()
     dataKey = Unicode()
     minBuffer = Instance(deque)
     warmupDist = Integer()
     countDown = Integer()
+
     def __init__(self, dataKey, minimumFilterLength):
         super(MinimumFilterBlock, self).__init__(self.newData)
         self.minFiltLen = minimumFilterLength
@@ -134,13 +142,14 @@ class MinimumFilterBlock(TransformBlock):
         if newDat["PATH_TYPE"] != 0:
             self.countDown = self.warmupDist
         else:
-            self.countDown = max(self.countDown-1, 0)
+            self.countDown = max(self.countDown - 1, 0)
         if self.countDown > 0:
             self.minBuffer.clear()
         self.minBuffer.append(newDat[self.dataKey])
         if len(self.minBuffer) > self.minFiltLen:
             self.minBuffer.popleft()
         return dict(DISTANCE=newDat["DISTANCE"], MIN_FILT_OUT=min(self.minBuffer), PATH_TYPE=newDat["PATH_TYPE"])
+
 
 class PeakFilterBlock(TransformManyBlock):
     minAmpl = Float()
@@ -158,6 +167,7 @@ class PeakFilterBlock(TransformManyBlock):
         newDat['PASSED_THRESHOLD'] = int(ampl >= amplThreshold)
         if ampl >= self.minAmpl and sigma <= self.maxWidth:
             yield newDat
+
 
 class SpaceScaleAnalyzerBlock(TransformManyBlock):
     dx = Float()
@@ -185,6 +195,7 @@ class SpaceScaleAnalyzerBlock(TransformManyBlock):
     sumDat = Float()
     sumDat2 = Float()
     valveIndex = Integer(allow_none=True)
+
     def __init__(self, dx, minAmpl, t_0, nlevels, tfactor):
         """Analyze source at a variety of scales using the differences of Gaussians of
         different scales. We define
@@ -224,7 +235,7 @@ class SpaceScaleAnalyzerBlock(TransformManyBlock):
         self.initKernels(t_0, tfactor)
 
     def initKernels(self, t_0, tfactor):
-        self.hList = [] # Kernels are defined on -h,...,0,...,h
+        self.hList = []  # Kernels are defined on -h,...,0,...,h
         kernelList = []
         self.scaleList = []
         ta, tb = t_0, tfactor * t_0
@@ -286,11 +297,10 @@ class SpaceScaleAnalyzerBlock(TransformManyBlock):
                     -data[self.concIndex] * cumsum(self.kernels[i][0:2 * self.hList[i] + 1])
             self.initBuff = False
 
-        minAmpl = self.minAmpl * 2.0 * 3.0 ** (-1.5)
-        p, np = peakF.findPeaks(asarray(data), self.hList, self.scaleList, self.kernels, self.ssbuff, self.cache,
-                                minAmpl, self.indexToClear, self.kernelCenterIndex, self.concIndex, self.distIndex,
-                                self.etmIndex, self.valveIndex, self.dataLen, self.nlevels, self.npoints,
-                                self.maxKernel)
+        minAmpl = self.minAmpl * 2.0 * 3.0**(-1.5)
+        p, np = peakF.findPeaks(asarray(data), self.hList, self.scaleList, self.kernels, self.ssbuff, self.cache, minAmpl,
+                                self.indexToClear, self.kernelCenterIndex, self.concIndex, self.distIndex, self.etmIndex,
+                                self.valveIndex, self.dataLen, self.nlevels, self.npoints, self.maxKernel)
         peaks = p[:np[0], :]
 
         self.kernelCenterIndex += 1
@@ -302,4 +312,3 @@ class SpaceScaleAnalyzerBlock(TransformManyBlock):
 
         for peak in peaks:
             yield dict(self.PeakTuple(*peak)._asdict())
-

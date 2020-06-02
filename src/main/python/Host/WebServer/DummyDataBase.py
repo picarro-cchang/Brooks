@@ -1,18 +1,19 @@
 import datetime
 from flask_security import utils
 
+
 class Bunch(object):
     """ 
     This class is used to group together a collection as a single object, 
     so that they may be accessed as attributes of that object
     """
-
     def __init__(self, **kwds):
         """ The namespace of the object may be initialized using keyword arguments """
         self.__dict__.update(kwds)
 
     def __call__(self, *args, **kwargs):
         return self.call(self, *args, **kwargs)
+
 
 class User(object):
     def __init__(self, username, password, roles):
@@ -41,6 +42,7 @@ class User(object):
     def is_active(self):
         return self.active
 
+
 class DummyDataBase(object):
     def __init__(self):
         self.pwd_model = []
@@ -48,17 +50,17 @@ class DummyDataBase(object):
         self.system_model = [
             Bunch(name='password_length', value='6'),
             Bunch(name='password_mix_charset', value='False'),
-            Bunch(name='password_lifetime', value='183'),    # days
+            Bunch(name='password_lifetime', value='183'),  # days
             Bunch(name='password_reuse_period', value='3'),  # times
-            Bunch(name='user_login_attempts', value='3'),    # times
+            Bunch(name='user_login_attempts', value='3'),  # times
             Bunch(name='user_session_lifetime', value='10'),  # minutes
             Bunch(name='save_history', value='True')
         ]
         self.action_model = []
         self.user_model = [
-            User(username="admin",password="admin", roles=["Admin"]),
-            User(username="tech",password="tech", roles=["Technician"]),
-            User(username="operator",password="operator", roles=["Operator"])
+            User(username="admin", password="admin", roles=["Admin"]),
+            User(username="tech", password="tech", roles=["Technician"]),
+            User(username="operator", password="operator", roles=["Operator"])
         ]
 
     def add_role_to_user(self, user, role):
@@ -100,13 +102,13 @@ class DummyDataBase(object):
         return getattr(self, model_name)
 
     def get_password(self, username):
-        result = [p for p in self.pwd_model if p.username==username]
+        result = [p for p in self.pwd_model if p.username == username]
         result.reverse()
         return result
 
     def get_latest_password(self, username):
         length = len(self.pwd_model)
-        for idx in range(length-1, -1, -1):
+        for idx in range(length - 1, -1, -1):
             p = self.pwd_model[idx]
             if p.username == username:
                 return p
@@ -118,18 +120,12 @@ class DummyDataBase(object):
                 return 0
 
     def save_system_variable(self, name, value):
-        self.system_model.append(
-            Bunch(name=name, value=value)
-        )
+        self.system_model.append(Bunch(name=name, value=value))
 
     def save_user_action(self, username, action):
-        self.action_model.append(
-            Bunch(username=username, action=action, taken_at=datetime.datetime.utcnow())
-        )
+        self.action_model.append(Bunch(username=username, action=action, taken_at=datetime.datetime.utcnow()))
 
     def save_user_password(self, username, password, created_time=None):
         if created_time is None:
             created_time = datetime.datetime.utcnow()
-        self.pwd_model.append(
-            Bunch(username=username, value=password, created_at=created_time)
-        )
+        self.pwd_model.append(Bunch(username=username, value=password, created_at=created_time))

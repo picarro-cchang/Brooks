@@ -5,7 +5,8 @@ from Host.Common.SharedTypes import RPC_PORT_O2_SENSOR_MONITOR
 app = wx.PySimpleApp()
 try:
     O2Sensor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_O2_SENSOR_MONITOR,
-                                        "StartO2SensorCalibration", IsDontCareConnection=False)
+                                          "StartO2SensorCalibration",
+                                          IsDontCareConnection=False)
     if O2Sensor:
         O2Sensor.showGui()
 except:

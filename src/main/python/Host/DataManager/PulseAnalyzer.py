@@ -11,13 +11,25 @@ import threading
 from numpy import *
 from collections import deque
 
+
 class PulseAnalyzer(object):
-    def __init__(self, source, concNameList, targetConc = None,
-                 thres1Pair = [0.0, 0.0], thres2Pair = [0.0, 0.0], triggerType = "in", waitTime = 0.0,
-                 validTimeAfterTrigger = 0.0, validTimeBeforeEnd = 0.0, timeout = 0.0, bufSize = 500, numPointsToTrigger = 1,
-                 numPointsToRelease = 1, armCond = None):
+    def __init__(self,
+                 source,
+                 concNameList,
+                 targetConc=None,
+                 thres1Pair=[0.0, 0.0],
+                 thres2Pair=[0.0, 0.0],
+                 triggerType="in",
+                 waitTime=0.0,
+                 validTimeAfterTrigger=0.0,
+                 validTimeBeforeEnd=0.0,
+                 timeout=0.0,
+                 bufSize=500,
+                 numPointsToTrigger=1,
+                 numPointsToRelease=1,
+                 armCond=None):
         self.source = source
-        self.concBufferDict = {"timestamp":deque()}
+        self.concBufferDict = {"timestamp": deque()}
         self.concNameList = concNameList
         for concName in concNameList:
             self.concBufferDict[concName] = deque()
@@ -102,7 +114,7 @@ class PulseAnalyzer(object):
         else:
             return False
 
-    def addToBuffer(self, measData, maxTimeDuration = -1):
+    def addToBuffer(self, measData, maxTimeDuration=-1):
         if measData.Source != self.source:
             return
 
@@ -133,7 +145,7 @@ class PulseAnalyzer(object):
         self.bufferLock.acquire()
         try:
             timeArray = array(self.concBufferDict["timestamp"])
-            lastIdx = nonzero(timeArray >= (timeArray[-1]-self.validTimeBeforeEnd))[0][0]
+            lastIdx = nonzero(timeArray >= (timeArray[-1] - self.validTimeBeforeEnd))[0][0]
             for concName in self.concBufferDict:
                 self.concBufferDict[concName] = deque(list(self.concBufferDict[concName])[:lastIdx])
         except Exception, err:
@@ -161,7 +173,7 @@ class PulseAnalyzer(object):
         if self.status == "waiting":
             if self.validTimeAfterTrigger < 0:
                 # Extend time before triggering
-                self.addToBuffer(measData, -1*self.validTimeAfterTrigger)
+                self.addToBuffer(measData, -1 * self.validTimeAfterTrigger)
             if self.currMeasTime - self.timeMark >= self.waitTime:
                 if self.armCond == None:
                     self.status = "armed"
@@ -171,7 +183,7 @@ class PulseAnalyzer(object):
         if self.status == "armed":
             if self.validTimeAfterTrigger < 0:
                 # Extend time before triggering
-                self.addToBuffer(measData, -1*self.validTimeAfterTrigger)
+                self.addToBuffer(measData, -1 * self.validTimeAfterTrigger)
             if self.isTriggered(measData.Data[self.targetConc]):
                 self.timeMark = self.currMeasTime + self.validTimeAfterTrigger
                 self.pulseFinished = False
@@ -248,9 +260,9 @@ class PulseAnalyzer(object):
                     statSlope = polyfit(timeArray, dataArray, 1)[0]
                 except:
                     continue
-                statDict["%s_mean"%concName] = statMean
-                statDict["%s_std"%concName] = statStd
-                statDict["%s_slope"%concName] = statSlope
+                statDict["%s_mean" % concName] = statMean
+                statDict["%s_std" % concName] = statStd
+                statDict["%s_slope" % concName] = statSlope
         except:
             pass
 

@@ -25,9 +25,5 @@ def traceCalls(frame, event, arg):
     callerLineNum = caller.f_lineno
     callerFileName = caller.f_code.co_filename
 
-    print 'Call to %s on line %s of %s from line %s of %s' % (funcName,
-                                                              funcLineNum,
-                                                              funcFileName,
-                                                              callerLineNum,
-                                                              callerFileName)
+    print 'Call to %s on line %s of %s from line %s of %s' % (funcName, funcLineNum, funcFileName, callerLineNum, callerFileName)
     return

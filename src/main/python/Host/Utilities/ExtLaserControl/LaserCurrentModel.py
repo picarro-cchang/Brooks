@@ -1,6 +1,7 @@
 from Host.Utilities.ExtLaserControl.Subject import Subject
 import time
 
+
 class StatsCollector(object):
     """Statistics collection object which transitions from arithmetic
     averaging to exponential averaging"""
@@ -16,6 +17,7 @@ class StatsCollector(object):
 
     def __repr__(self):
         return "Average of %d points: %s" % (self.num_samples, self.average)
+
 
 class LaserCurrentModel(Subject):
     def __init__(self, *args, **kwargs):
@@ -45,6 +47,7 @@ class LaserCurrentModel(Subject):
         if fsr_index not in self.fsr_stats:
             self.fsr_stats[fsr_index] = StatsCollector(self.max_samples)
         self.fsr_stats[fsr_index].add_sample(current)
+
 
 class LaserCurrentModels(object):
     def __init__(self):

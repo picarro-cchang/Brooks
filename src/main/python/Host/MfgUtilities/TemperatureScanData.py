@@ -12,7 +12,6 @@ class TemperatureScanData(object):
     Convenience container for storing temperature scan data. Should provide
     clean access to scan results.
     """
-
     def __init__(self):
         self.temps = []
         self.thetas = []

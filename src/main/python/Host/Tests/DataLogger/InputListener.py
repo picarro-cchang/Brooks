@@ -34,24 +34,35 @@ APP_NAME = "InputListener"
 
 EventManagerProxy_Init(APP_NAME)
 
-
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
-
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
 
 class InputListener(object):
     def __init__(self):
         self.q = Queue(0)
-        self.Listener = Listener.Listener(self.q, BROADCAST_PORT_DATA_MANAGER, StringPickler.ArbitraryObject, self._DataListener, retry = True,
-                                              name = "Data Logger data listener",logFunc = Log)
+        self.Listener = Listener.Listener(self.q,
+                                          BROADCAST_PORT_DATA_MANAGER,
+                                          StringPickler.ArbitraryObject,
+                                          self._DataListener,
+                                          retry=True,
+                                          name="Data Logger data listener",
+                                          logFunc=Log)
 
-        self.alarmListener = Listener.Listener(self.q, STATUS_PORT_ALARM_SYSTEM, STREAM_Status, self._AlarmListener, retry = True,
-                                              name = "Data Logger alarm status listener",logFunc = Log)
+        self.alarmListener = Listener.Listener(self.q,
+                                               STATUS_PORT_ALARM_SYSTEM,
+                                               STREAM_Status,
+                                               self._AlarmListener,
+                                               retry=True,
+                                               name="Data Logger alarm status listener",
+                                               logFunc=Log)
 
-        self.instStatusListener = Listener.Listener(self.q, STATUS_PORT_INST_MANAGER, STREAM_Status, self._InstListener, retry = True,
-                                              name = "Data Logger instrument status listener",logFunc = Log)
+        self.instStatusListener = Listener.Listener(self.q,
+                                                    STATUS_PORT_INST_MANAGER,
+                                                    STREAM_Status,
+                                                    self._InstListener,
+                                                    retry=True,
+                                                    name="Data Logger instrument status listener",
+                                                    logFunc=Log)
 
     def _DataListener(self, data):
         #print "DataManager: ", data
@@ -85,12 +96,12 @@ if __name__ == "__main__":
     CreateLogTime = timestamp.unixTime(CreateLogTimestamp)
 
     if TimeStandard == "local":
-        LogHour = time.localtime(CreateLogTime).tm_hour #used to determine when we reached midnight
-        timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(CreateLogTime))
+        LogHour = time.localtime(CreateLogTime).tm_hour  #used to determine when we reached midnight
+        timeString = time.strftime("%Y%m%d-%H%M%S", time.localtime(CreateLogTime))
     else:
         # Use GMT (UTC)
-        LogHour = time.gmtime(CreateLogTime).tm_hour #used to determine when we reached midnight
-        timeString = time.strftime("%Y%m%d-%H%M%SZ",time.gmtime(CreateLogTime))
+        LogHour = time.gmtime(CreateLogTime).tm_hour  #used to determine when we reached midnight
+        timeString = time.strftime("%Y%m%d-%H%M%SZ", time.gmtime(CreateLogTime))
         # Z is for GMT (UTC) according to ISO 8601 format
 
     LogName = "capture"

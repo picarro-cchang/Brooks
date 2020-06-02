@@ -1,22 +1,22 @@
-
 import sys
 import time
 from PyQt4 import QtCore
 from PyQt4 import QtGui
 from functools import partial
 
+
 class QNonBlockingTimer(QtCore.QObject):
     finish_signal = QtCore.pyqtSignal()
-    tick_signal = QtCore.pyqtSignal(int,int, str, bool)
-    ping_signal = QtCore.pyqtSignal(int,str)
+    tick_signal = QtCore.pyqtSignal(int, int, str, bool)
+    ping_signal = QtCore.pyqtSignal(int, str)
 
-    def __init__(self,
-                 set_time_sec = None,       # How long the timer runs, 'None' runs forever
-                 tick_interval_sec = 1,     # Interval between tick signals
-                 description = "",          # Desc. emitted with timer signals
-                 busy_hint = False,         # If True, progress bars can show busy or waiting indication
-                 parent = None
-                 ):
+    def __init__(
+            self,
+            set_time_sec=None,  # How long the timer runs, 'None' runs forever
+            tick_interval_sec=1,  # Interval between tick signals
+            description="",  # Desc. emitted with timer signals
+            busy_hint=False,  # If True, progress bars can show busy or waiting indication
+            parent=None):
         super(QNonBlockingTimer, self).__init__(parent)
         self.set_time_sec = set_time_sec
         self.countdown_sec = set_time_sec
@@ -51,16 +51,16 @@ class QNonBlockingTimer(QtCore.QObject):
 
 class QThreadedTimer(QtCore.QThread):
     finish_signal = QtCore.pyqtSignal()
-    tick_signal = QtCore.pyqtSignal(int,int, str, bool)
-    ping_signal = QtCore.pyqtSignal(int,str)
+    tick_signal = QtCore.pyqtSignal(int, int, str, bool)
+    ping_signal = QtCore.pyqtSignal(int, str)
 
-    def __init__(self,
-                 set_time_sec = None,       # How long the timer runs, 'None' runs forever
-                 tick_interval_sec = 1,     # Interval between tick signals
-                 description = "",          # Desc. emitted with timer signals
-                 busy_hint = False,         # If True, progress bars can show busy or waiting indication
-                 parent = None
-                 ):
+    def __init__(
+            self,
+            set_time_sec=None,  # How long the timer runs, 'None' runs forever
+            tick_interval_sec=1,  # Interval between tick signals
+            description="",  # Desc. emitted with timer signals
+            busy_hint=False,  # If True, progress bars can show busy or waiting indication
+            parent=None):
         QtCore.QThread.__init__(self)
         self.set_time_sec = set_time_sec
         self.countdown_sec = set_time_sec
@@ -127,10 +127,8 @@ def main():
 
     exit(1)
 
+
 if __name__ == "__main__":
     app = QtCore.QCoreApplication(sys.argv)
     main()
     sys.exit(app.exec_())
-
-
-

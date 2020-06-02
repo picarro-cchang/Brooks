@@ -15,13 +15,15 @@ from os.path import abspath, join, split
 from shutil import move
 from glob import glob
 
-def moveWildToDir(src,dest):
+
+def moveWildToDir(src, dest):
     srcFiles = glob(src)
     for f in srcFiles:
-        move(abspath(f),join(dest,split(f)[1]))
+        move(abspath(f), join(dest, split(f)[1]))
+
 
 if __name__ == "__main__":
-    dest  = r"C:\Documents and Settings\picarro\Start Menu\Programs\Startup"
-    src   = r"C:\Picarro\G2000\Log\DisabledStartup"
+    dest = r"C:\Documents and Settings\picarro\Start Menu\Programs\Startup"
+    src = r"C:\Picarro\G2000\Log\DisabledStartup"
     moveWildToDir(src + "\\*", dest)
     system('shutdown -r -t 5 -c "Picarro analyzer reset (phase 3 of 3)"')

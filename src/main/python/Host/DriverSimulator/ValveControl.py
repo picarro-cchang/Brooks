@@ -21,6 +21,7 @@ EventManagerProxy_Init(APP_NAME)
 
 INVALID_PRESSURE_VALUE = -100.0
 
+
 class ValveControl(object):
     # Hard-wired constants for flow control when locked
     flowFractionalFlowTol = 0.02
@@ -84,13 +85,13 @@ class ValveControl(object):
         self.savedOutletValue = 0
         self.savedState = interface.VALVE_CNTRL_DisabledState
         self.last5 = deque()
-        self.valveSequence = [] # ???
+        self.valveSequence = []  # ???
         return interface.STATUS_OK
 
     def proportionalValveStep(self):
-        
+
         # Calculate finite difference approximation to pressure change rate
-        #  and update self.nonDecreasingCount 
+        #  and update self.nonDecreasingCount
         if self.lastPressure > INVALID_PRESSURE_VALUE:
             dpdt = (self.cavityPressure - self.lastPressure) / self.deltaT
             if self.cavityPressure - self.lastPressure > -0.2:
@@ -104,7 +105,8 @@ class ValveControl(object):
 
         # Check if we exceed maximum rate of change allowed
         if abs(dpdt) > self.dpdtAbort:
-            self.sim.message_puts(interface.LOG_LEVEL_STANDARD, "Maximum pressure change exceeded. Valves closed to protect cavity.")
+            self.sim.message_puts(interface.LOG_LEVEL_STANDARD,
+                                  "Maximum pressure change exceeded. Valves closed to protect cavity.")
             state = interface.VALVE_CNTRL_DisabledState
 
         if self.state == interface.VALVE_CNTRL_DisabledState:
@@ -123,15 +125,15 @@ class ValveControl(object):
             elif self.flowState == interface.FLOW_CNTRL_EnabledState:
                 # Control the flow using the inlet valve
                 flowGain = self.flowControlGain
-                if (abs(self.flow - self.flowSetpoint) < self.flowFractionalFlowTol * self.flowSetpoint and
-                    abs(self.setpoint - self.cavityPressure) < self.flowPressureTol):
+                if (abs(self.flow - self.flowSetpoint) < self.flowFractionalFlowTol * self.flowSetpoint
+                        and abs(self.setpoint - self.cavityPressure) < self.flowPressureTol):
                     flowGain = self.flowControlLockedGain
                 delta = flowGain * (self.flowSetpoint - self.flow)
                 delta = min(max(delta, -self.inletMaxChange), self.inletMaxChange)
                 valveValue = self.inlet + delta
                 valveValue = min(max(valveValue, self.inletMin), self.inletMax)
                 self.inlet = valveValue
-            # Control of outlet valve 
+            # Control of outlet valve
             # Gain2 sets how the pressure rate setpoint depends on the pressure error
             dpdtSet = self.outletGain2 * error
             dpdtSet = min(max(dpdtSet, -self.dpdtMax), self.dpdtMax)
@@ -152,15 +154,14 @@ class ValveControl(object):
             elif self.flowState == interface.FLOW_CNTRL_EnabledState:
                 # Control the flow using the outlet valve
                 flowGain = self.flowControlGain
-                if (abs(self.flow - self.flowSetpoint) < 5.0 and
-                    abs(self.setpoint - self.cavityPressure) < 1.0):
+                if (abs(self.flow - self.flowSetpoint) < 5.0 and abs(self.setpoint - self.cavityPressure) < 1.0):
                     flowGain = 1.0
                 delta = flowGain * (self.flowSetpoint - self.flow)
                 delta = min(max(delta, -self.outletMaxChange), self.outletMaxChange)
                 valveValue = self.outlet + delta
                 valveValue = min(max(valveValue, self.outletMin), self.outletMax)
                 self.outlet = valveValue
-            # Control of inlet valve 
+            # Control of inlet valve
             # Gain2 sets how the pressure rate setpoint depends on the pressure error
             dpdtSet = self.inletGain2 * error
             dpdtSet = min(max(dpdtSet, -self.dpdtMax), self.dpdtMax)
@@ -173,7 +174,7 @@ class ValveControl(object):
             valveValue = min(max(valveValue, self.inletMin), self.inletMax)
             self.inlet = valveValue
         elif self.state == interface.VALVE_CNTRL_SaveAndCloseValvesState:
-            # Remember state of valves so they can be restored later 
+            # Remember state of valves so they can be restored later
             if self.state != self.previousState:
                 self.savedState = self.previousState
                 self.savedInletValue = self.inlet
@@ -187,7 +188,7 @@ class ValveControl(object):
         self.userInlet = self.inlet
         self.userOutlet = self.outlet
         if self.outlet >= self.outletMax and self.nonDecreasingCount > 10:
-            self.sim.message_puts(interface.LOG_LEVEL_STANDARD, "Check vacuum pump connection, valves closed to protect cavity.")    
+            self.sim.message_puts(interface.LOG_LEVEL_STANDARD, "Check vacuum pump connection, valves closed to protect cavity.")
             self.state = interface.VALVE_CNTRL_DisabledState
         self.previousState = self.state
 
@@ -206,7 +207,7 @@ class ValveControl(object):
         while len(self.last5) > 5:
             self.last5.popleft()
         # Find median of values in deque
-        lossPpb = sorted(self.last5)[len(self.last5)//2]
+        lossPpb = sorted(self.last5)[len(self.last5) // 2]
         # Calculate rate of change of loss
         lossRate = (lossPpb - self.lastLossPpb) / self.deltaT
         self.lastLossPpb = lossPpb

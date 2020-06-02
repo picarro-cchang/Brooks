@@ -14,8 +14,6 @@ class MplPanel(wx.Panel):
     '''
     Panel containing a matplotlib graph with a navigation toolbar for use with wxGlade
     '''
-
-
     def __init__(self, *args, **kwds):
         '''
         Constructor
@@ -31,8 +29,8 @@ class MplPanel(wx.Panel):
         self.figure = Figure()
         self.figure.add_subplot(111)
         self.canvas = FigureCanvas(self, wx.ID_ANY, self.figure)
-#        self.toolbar = NavigationToolbar2Wx(self.canvas)
-#        self.toolbar.Realize()
+        #        self.toolbar = NavigationToolbar2Wx(self.canvas)
+        #        self.toolbar.Realize()
 
         if fCanvasSize is True:
             self.canvas.SetSize(canvasSize)
@@ -41,10 +39,10 @@ class MplPanel(wx.Panel):
         #self.fi = FigureInteraction(self.figure,RLock())
 
         self.sizer = wx.BoxSizer(wx.VERTICAL)
-#        self.sizer.Add(self.toolbar,0,wx.LEFT | wx.EXPAND)
+        #        self.sizer.Add(self.toolbar,0,wx.LEFT | wx.EXPAND)
         self.sizer.Add(self.canvas, 1, wx.LEFT | wx.TOP | wx.EXPAND)
         self.SetAutoLayout(True)
-#        self.toolbar.Show()
+        #        self.toolbar.Show()
         self.SetSizer(self.sizer)
         self.sizer.SetSizeHints(self)
         self.Fit()
@@ -108,8 +106,7 @@ class TestFrame(wx.Frame):
     def __init__(self, nPanels=1, name="Test Plot Frame", debug=False):
         wx.Frame.__init__(self, None, -1, name)
 
-        plot = MplPanel(self, wx.ID_ANY,
-                        style=wx.RAISED_BORDER)
+        plot = MplPanel(self, wx.ID_ANY, style=wx.RAISED_BORDER)
 
 
 class App(wx.App):
@@ -139,6 +136,7 @@ def main():
     redirect = False
     app = App(redirect=redirect)
     app.MainLoop()
+
 
 if __name__ == "__main__":
     main()

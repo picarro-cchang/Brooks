@@ -3,14 +3,16 @@ import time
 
 MAX_RETRY_TIMES = 3
 
+
 class TimeoutError(Exception):
     pass
+
 
 class RotValveCtrl(object):
     def __init__(self, port):
         # port = 0 means port = "COM1"
         self.port = port
-        self.ser = serial.Serial(port=port,baudrate=9600,timeout=1,xonxoff=1, writeTimeout=1.0)
+        self.ser = serial.Serial(port=port, baudrate=9600, timeout=1, xonxoff=1, writeTimeout=1.0)
 
     def open(self):
         # Win7 throws an exception if try to open port that is already open
@@ -26,7 +28,7 @@ class RotValveCtrl(object):
     def flush(self):
         self.ser.flushInput()
 
-    def sendString(self,str):
+    def sendString(self, str):
         self.ser.write(str + "\r")
 
     def getLine(self):
@@ -59,7 +61,7 @@ class RotValveCtrl(object):
 
     def reopen(self):
         self.ser.close()
-        self.ser = serial.Serial(port=self.port,baudrate=9600,timeout=1,xonxoff=1, writeTimeout=1.0)
+        self.ser = serial.Serial(port=self.port, baudrate=9600, timeout=1, xonxoff=1, writeTimeout=1.0)
         self.ser.open()
 
     def setPosition(self, pos):

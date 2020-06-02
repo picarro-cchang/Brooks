@@ -16,16 +16,16 @@ from matplotlib.figure import Figure
 
 import wx
 
-class CanvasFrame(wx.Frame):
 
+class CanvasFrame(wx.Frame):
     def __init__(self):
-        wx.Frame.__init__(self,None,-1,
-                         'CanvasFrame',size=(550,350))
+        wx.Frame.__init__(self, None, -1, 'CanvasFrame', size=(550, 350))
 
         self.SetBackgroundColour(wx.NamedColour("WHITE"))
 
         self.figure = Figure()
         self.axes = self.figure.add_subplot(111)
+
         def f(x, y):
             return np.sin(x) + np.cos(y)
 
@@ -43,15 +43,16 @@ class CanvasFrame(wx.Frame):
         self.add_toolbar()  # comment this out for no toolbar
 
         self.updateTimer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER,self.onUpdateTimer,self.updateTimer)
+        self.Bind(wx.EVT_TIMER, self.onUpdateTimer, self.updateTimer)
         self.updateTimer.Start(milliseconds=50)
 
-    def onUpdateTimer(self,event):
+    def onUpdateTimer(self, event):
         def f(x, y):
             return np.sin(x) + np.cos(y)
+
         self.x += np.pi / 15.
         self.y += np.pi / 20.
-        self.im.set_array(f(self.x,self.y))
+        self.im.set_array(f(self.x, self.y))
         self.axes.draw_artist(self.im)
         self.canvas.blit(self.axes.bbox)
         #self.canvas.draw()
@@ -77,18 +78,18 @@ class CanvasFrame(wx.Frame):
         # update the axes menu on the toolbar
         self.toolbar.update()
 
-
     def OnPaint(self, event):
         self.canvas.draw()
 
-class App(wx.App):
 
+class App(wx.App):
     def OnInit(self):
         'Create the main window and insert the custom frame'
         frame = CanvasFrame()
         frame.Show(True)
 
         return True
+
 
 app = App(0)
 app.MainLoop()

@@ -21,7 +21,6 @@ class LossStream(object):
     """
     Provide a stream of ProcessedLoss1 values.
     """
-
     def __init__(self, filterCb=None):
         """
         filterCb is called any time a filtered data point appears
@@ -37,11 +36,10 @@ class LossStream(object):
         self.lock = threading.Lock()
         self.isActive = False
 
-        self.listener = Listener.Listener(
-            queue=None,
-            port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-            elementType=SensorEntryType,
-            streamFilter=self._streamFilter)
+        self.listener = Listener.Listener(queue=None,
+                                          port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
+                                          elementType=SensorEntryType,
+                                          streamFilter=self._streamFilter)
 
     def _streamFilter(self, data):
         """
@@ -53,8 +51,7 @@ class LossStream(object):
 
         if isActive and data.streamNum == STREAM_ProcessedLoss1:
             if self.filterCb is not None:
-                self.filterCb(STREAM_ProcessedLoss1, data.timestamp,
-                              data.value)
+                self.filterCb(STREAM_ProcessedLoss1, data.timestamp, data.value)
 
     def start(self):
         with self.lock:

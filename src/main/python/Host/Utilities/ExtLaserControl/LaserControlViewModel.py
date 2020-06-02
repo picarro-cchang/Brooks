@@ -1,5 +1,6 @@
 import wx
 
+
 class LaserControlViewModel(object):
     def __init__(self, model, view):
         self.model = model
@@ -9,5 +10,3 @@ class LaserControlViewModel(object):
 
     def on_timer(self, event):
         self.model.process_task()
-
-

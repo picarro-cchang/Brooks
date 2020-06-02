@@ -8,8 +8,10 @@ import fnmatch
 src = r"c:\temp\Templates"
 #src = r"C:\Users\twalder\Documents\Testing\TemplateResults"
 
-patts = ["analyze*.py", "parse*.py", "processor*.py", "fit*.py", "update_cal*.py", "Propo*.py",
-         "*analyze*.py", "resync*.py", "slow_display.py", "noiseReduction.py"]
+patts = [
+    "analyze*.py", "parse*.py", "processor*.py", "fit*.py", "update_cal*.py", "Propo*.py", "*analyze*.py", "resync*.py",
+    "slow_display.py", "noiseReduction.py"
+]
 regex1 = re.compile('print(?!\s*>>)(?!\S)')
 
 for base, dirs, files in os.walk(src):

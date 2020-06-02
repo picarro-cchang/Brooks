@@ -86,7 +86,7 @@ LOG_DIR = os.environ['PICARRO_LOG_DIR']
 EventManagerProxy_Init(APP_NAME)
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -103,12 +103,12 @@ else:
 # Enumerated definitions for DASCNTRL_StateType
 from ctypes import *
 DASCNTRL_StateType = c_ushort
-DASCNTRL_Reset = 0 # DASCNTRL Reset state.
-DASCNTRL_Ready = 1 # DASCNTRL Ready state.
-DASCNTRL_Startup = 2 # DASCNTRL Startup state.
-DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
-DASCNTRL_Error = 4 # DASCNTRL Error state.
-DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
+DASCNTRL_Reset = 0  # DASCNTRL Reset state.
+DASCNTRL_Ready = 1  # DASCNTRL Ready state.
+DASCNTRL_Startup = 2  # DASCNTRL Startup state.
+DASCNTRL_Diagnostic = 3  # DASCNTRL Diagnostic state.
+DASCNTRL_Error = 4  # DASCNTRL Error state.
+DASCNTRL_DspNotBooted = 5  # DASCNTRL Dsp Not Booted.
 # ---------------------------------------------------------------------------
 
 # INSTRMGR state type
@@ -117,9 +117,9 @@ INSTMGR_WARMING_STATE = 1
 INSTMGR_MEASURING_STATE = 2
 
 # INSTMGR Shutdown types
-INSTMGR_SHUTDOWN_PREP_SHIPMENT = 0 # shutdown host and DAS and prepare for shipment
-INSTMGR_SHUTDOWN_HOST_AND_DAS  = 1 # shutdown host and DAS
-INSTMGR_SHUTDOWN_HOST          = 2 # shutdown host and leave DAS in current state
+INSTMGR_SHUTDOWN_PREP_SHIPMENT = 0  # shutdown host and DAS and prepare for shipment
+INSTMGR_SHUTDOWN_HOST_AND_DAS = 1  # shutdown host and DAS
+INSTMGR_SHUTDOWN_HOST = 2  # shutdown host and leave DAS in current state
 
 # INSTMGR RPC return codes
 INSTMGR_RPC_SUCCESS = 0
@@ -168,10 +168,10 @@ MeasStateName[MEAS_STATE_CONT_MEASURING] = "MEAS_CONT_MEASURING"
 MeasStateName[MEAS_STATE_BATCH_MEASURING] = "MEAS_BATCH_MEASURING"
 
 # LockedStatus indexes
-LASER_TEMP_LOCKED_STATUS         = 0
-CAVITY_TEMP_LOCKED_STATUS        = 1
-WARM_CHAMBER_TEMP_LOCKED_STATUS  = 2
-PRESSURE_LOCKED_STATUS           = 3
+LASER_TEMP_LOCKED_STATUS = 0
+CAVITY_TEMP_LOCKED_STATUS = 1
+WARM_CHAMBER_TEMP_LOCKED_STATUS = 2
+PRESSURE_LOCKED_STATUS = 3
 
 EVENT_TEMP_LOCKED = 0
 EVENT_PRESSURE_LOCKED = 1
@@ -190,19 +190,25 @@ EVENT_PARK = 12
 # Maximum number of entries in error list
 MAX_ERROR_LIST_NUM = 64
 
+
 # including these error definitions will enable RPC calls to print out correct errors
 class CommandError(Exception):
     """Root of all exceptions caused by a bad/inappropriate command."""
+
+
 class InvalidModeSelection(Exception):
     """An invalid mode was selected."""
+
 
 class DummySampleManager(object):
     def __init__(self):
         self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                            "DummySampleManager",
-                                            IsDontCareConnection = False)
+                                                    "DummySampleManager",
+                                                    IsDontCareConnection=False)
+
     def _SetMode(self, mode):
-        Log("Running without Sample Manager - mode set skipped", Level = 0)
+        Log("Running without Sample Manager - mode set skipped", Level=0)
+
     def FlowStart(self):
         #self.pressureTarget = 140
         #self.DriverRpc.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", self.pressureTarget)
@@ -216,15 +222,20 @@ class DummySampleManager(object):
         #maxPressureChange = 10
         #self._StepInletValve( start, step, iterations, interval, maxPressureChange)
         #self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", 18000)
-        Log("Flow started by Dummy Sample Manager", Level = 0)
+        Log("Flow started by Dummy Sample Manager", Level=0)
+
     def FlowStop(self):
-        Log("Running with Dummy Sample Manager - flow stop skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - flow stop skipped", Level=0)
+
     def Prepare(self):
-        Log("Running with Dummy Sample Manager - prepare skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - prepare skipped", Level=0)
+
     def FlowPumpDisable(self):
-        Log("Running with Dummy Sample Manager - flow pump disable skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - flow pump disable skipped", Level=0)
+
     def Park(self):
-        Log("Running with Dummy Sample Manager - park skipped", Level = 0)
+        Log("Running with Dummy Sample Manager - park skipped", Level=0)
+
     def GetStatus(self):
         pass
         # Log("Running with Dummy Sample Manager - always returns pressure stable status", Level = 0)
@@ -233,7 +244,7 @@ class DummySampleManager(object):
         #    return SAMPLEMGR_STATUS_STABLE | SAMPLEMGR_STATUS_FLOWING
         #else:
         #    return SAMPLEMGR_STATUS_FLOWING
-    def _StepInletValve( self, start, step, iterations, interval, maxPressureChange):
+    def _StepInletValve(self, start, step, iterations, interval, maxPressureChange):
         index = 0
         value = start
         prevPressure = self.DriverRpc.getPressureReading()
@@ -241,10 +252,10 @@ class DummySampleManager(object):
             if self.DriverRpc.rdDasReg("VALVE_CNTRL_STATE_REGISTER") == interface.VALVE_CNTRL_OutletControlState:
                 pressure = self.DriverRpc.getPressureReading()
                 # check pressure, we do not want to harm cavity
-                if abs(pressure-prevPressure) < maxPressureChange:
+                if abs(pressure - prevPressure) < maxPressureChange:
                     self.DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", value)
                     value += step
-                    index+=1
+                    index += 1
                 time.sleep(interval)
                 prevPressure = pressure
             else:
@@ -253,6 +264,7 @@ class DummySampleManager(object):
                 value = start
                 prevPressure = self.DriverRpc.getPressureReading()
 
+
 class ConfigurationOptions(object):
     def __init__(self):
         # - AutoEnableAfterBadShutdown is to avoid auto-measure after power failures
@@ -260,29 +272,35 @@ class ConfigurationOptions(object):
         self.AutoStartEngine = False
         self.StartAppType = 0
         self.TempLockTimeout = 120  # 120 minutes
-        self.PressureLockTimeout = 5 # 5 minutes
-        self.AutoRestartFlow = True # Flow restarts automatically if valves are disabled
+        self.PressureLockTimeout = 5  # 5 minutes
+        self.AutoRestartFlow = True  # Flow restarts automatically if valves are disabled
+
+
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.RpcServer = RpcServer
         self.ExitFunction = ExitFunction
+
     def run(self):
         self.RpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             self.ExitFunction()
             Log("RpcServer exited and no longer serving.")
         except:
             tbMsg = traceback.format_exc()
             Log("Exception raised when calling exit function at exit of RPC server.",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=3,
+                Verbose=tbMsg)
+
+
 class InstMgr(object):
     """This is the Instrument Manager application object."""
     def __init__(self, configPath, noSampleMgr=False):
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         self.noSampleMgr = noSampleMgr
         self.flowStarted = False
@@ -308,51 +326,51 @@ class InstMgr(object):
 
         if __debug__: Log("Setting up RPC connections.")
         #set up a connections to other apps
-        self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                                    APP_NAME,
-                                                    IsDontCareConnection = False)
+        self.DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
         self.MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
                                                      APP_NAME,
-                                                     IsDontCareConnection = False)
+                                                     IsDontCareConnection=False)
 
         self.DataMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
                                                      APP_NAME,
-                                                     IsDontCareConnection = False)
+                                                     IsDontCareConnection=False)
 
-        self.FreqConvRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
-                                                     APP_NAME,
-                                                     IsDontCareConnection = False)
+        self.FreqConvRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_FREQ_CONVERTER,
+                                                      APP_NAME,
+                                                      IsDontCareConnection=False)
 
         self.SpectrumCollectorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
-                                                        APP_NAME,
-                                                        IsDontCareConnection = False)
+                                                               APP_NAME,
+                                                               IsDontCareConnection=False)
 
         self.SupervisorRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
                                                         APP_NAME,
-                                                        IsDontCareConnection = False)
+                                                        IsDontCareConnection=False)
 
         if not self.noSampleMgr:
             self.SampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR,
-                                                            APP_NAME,
-                                                            IsDontCareConnection = False)
+                                                           APP_NAME,
+                                                           IsDontCareConnection=False)
         else:
             self.SampleMgrRpc = DummySampleManager()
 
         # used during error recovery
-        self.rpcDict = {RPC_PORT_DATA_MANAGER:INST_ERROR_DATA_MANAGER_RESTART,
-                        RPC_PORT_MEAS_SYSTEM:INST_ERROR_MEAS_SYS_RESTART,
-                        RPC_PORT_DRIVER:INST_ERROR_DRIVER_RESTART}
+        self.rpcDict = {
+            RPC_PORT_DATA_MANAGER: INST_ERROR_DATA_MANAGER_RESTART,
+            RPC_PORT_MEAS_SYSTEM: INST_ERROR_MEAS_SYS_RESTART,
+            RPC_PORT_DRIVER: INST_ERROR_DRIVER_RESTART
+        }
         if not self.noSampleMgr:
             self.rpcDict[RPC_PORT_SAMPLE_MGR] = INST_ERROR_SAMPLE_MANAGER_RESTART
 
         if __debug__: Log("Setting up RPC server.")
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_INSTR_MANAGER),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = "The instrument manager.",
-                                                ServerVersion = APP_VERSION,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription="The instrument manager.",
+                                               ServerVersion=APP_VERSION,
+                                               threaded=True)
 
         if __debug__: Log("Registering RPC functions.")
         #Register the rpc functions...
@@ -380,45 +398,59 @@ class InstMgr(object):
 
         if __debug__: Log("Setting up RPC callback functions.")
         # register callback functions
-        self.AppStatus = AppStatus(0,STATUS_PORT_INST_MANAGER,APP_NAME)
+        self.AppStatus = AppStatus(0, STATUS_PORT_INST_MANAGER, APP_NAME)
         self.DisplayBroadcaster = Broadcaster.Broadcaster(BROADCAST_PORT_INSTMGR_DISPLAY)
+
     def _SendDisplayMessage(self, msg):
         try:
-            Log(msg, Level = 0)
-            formatString=">%ds" %(len(msg)+1)  #Initial format string: - '>' for big endian(labview GUI uses big endian byte order)
-                                               #                       - +1 for null terminator
+            Log(msg, Level=0)
+            formatString = ">%ds" % (len(msg) + 1
+                                     )  #Initial format string: - '>' for big endian(labview GUI uses big endian byte order)
+            #                       - +1 for null terminator
             # add null termination before broadcasting.
-            self.DisplayBroadcaster.send(struct.pack(formatString, "%s\n" %msg))
+            self.DisplayBroadcaster.send(struct.pack(formatString, "%s\n" % msg))
         except:
             tbMsg = traceback.format_exc()
-            Log("Exception occurred on Display message Broadcast",Data = dict(Note = "<See verbose for debug info>"),Level = 2,Verbose = tbMsg)
+            Log("Exception occurred on Display message Broadcast",
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=2,
+                Verbose=tbMsg)
+
     def _SetStatus(self, bitMask):
         self.AppStatus._Status |= bitMask
         try:
             self.AppStatus._SendStatus()
         except:
             tbMsg = traceback.format_exc()
-            Log("Exception occurred on Set Status Broadcast:", Data = dict(Note = "<See verbose for debug info>"),Level = 2,Verbose = tbMsg)
+            Log("Exception occurred on Set Status Broadcast:",
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=2,
+                Verbose=tbMsg)
+
     def _ClearStatus(self, bitMask):
         self.AppStatus._Status &= ~bitMask
         try:
             self.AppStatus._SendStatus()
         except:
             tbMsg = traceback.format_exc()
-            Log("Exception occurred on Clear Status Broadcast:",Data = dict(Note = "<See verbose for debug info>"),Level = 2,Verbose = tbMsg)
+            Log("Exception occurred on Clear Status Broadcast:",
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=2,
+                Verbose=tbMsg)
+
     def _HandleError(self, error):
         """ Handles error recovery scenarios.  DO NOT CALL from within _StateHandler to
             avoid recursion."""
-        Log("Handling Error %s." % error_info[-error].name, Level = 2)
+        Log("Handling Error %s." % error_info[-error].name, Level=2)
 
         errorRec = error_info[-error].errorRec
-        Log("Error recovery action: %s" % errorActionDict[errorRec], Level = 2)
+        Log("Error recovery action: %s" % errorActionDict[errorRec], Level=2)
         if errorRec == CLEAR_ERROR:
             rpcPortNum = error_info[-error].rpcPortNum
             if rpcPortNum in self.rpcDict:
-            # call appropriate clearError RPC
+                # call appropriate clearError RPC
                 self.rpcDict[rpcPortNum].Error_Clear()
-        elif errorRec != DO_NOTHING :
+        elif errorRec != DO_NOTHING:
             if errorRec == SHUTDOWN_INST:
                 self._StateHandler(EVENT_SHUTDOWN_INST)
             elif errorRec == RESTART_INST:
@@ -447,11 +479,12 @@ class InstMgr(object):
             del self.ErrorList[0]
 
         # errorList consist of a list of tuples containing time, error number and error name
-        timeStr = "%s" % ( time.strftime("%y/%m/%d %H:%M:%S.%S",time.localtime(time.time())))
+        timeStr = "%s" % (time.strftime("%y/%m/%d %H:%M:%S.%S", time.localtime(time.time())))
         errorTuple = (timeStr, -error, error_info[-error].name)
         self.ErrorList.append(errorTuple)
 
         self._SetStatus(INSTMGR_STATUS_SYSTEM_ERROR)
+
     def _EnterWarming(self):
         """ called when entering warming state """
         self._SendDisplayMessage("Warming...")
@@ -480,7 +513,7 @@ class InstMgr(object):
                 clear2 = True
 
             count = 0
-            while(clear1 or clear2):
+            while (clear1 or clear2):
                 stateDict = self.MeasSysRpc.GetStates()
                 if stateDict['State_MeasSystem'] != 'ERROR':
                     clear1 = False
@@ -492,16 +525,16 @@ class InstMgr(object):
                 if count >= 5:
                     if clear1:
                         tbMsg = traceback.format_exc()
-                        Log("Failed to clear MeaSys",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                        Log("Failed to clear MeaSys", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
                         return INST_ERROR_MEAS_SYS
                     elif clear2:
                         tbMsg = traceback.format_exc()
-                        Log("Failed to clear DataMgr",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                        Log("Failed to clear DataMgr", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
                         return INST_ERROR_DATA_MANAGER
                 time.sleep(1)
         except:
             tbMsg = traceback.format_exc()
-            Log("Clear error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Clear error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_MEAS_SYS
 
         # Put the data manager into the warming mode
@@ -509,7 +542,7 @@ class InstMgr(object):
             self.DataMgrRpc.Mode_Set(self.Config.warmMode)
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Set mode error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
         # start DAS engine, i.e. laser current and laser, warm chamber and cavity temperature control
@@ -520,7 +553,7 @@ class InstMgr(object):
                 return status
         except:
             tbMsg = traceback.format_exc()
-            Log("Start temp control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Start temp control: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_LASER_TEMP_CONTROL_ENABLE_FAILED
 
         try:
@@ -530,7 +563,7 @@ class InstMgr(object):
                 return status
         except:
             tbMsg = traceback.format_exc()
-            Log("Start laser control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Start laser control: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_LASER_I_CONTROL_ENABLE_FAILED
 
         self._SendDisplayMessage("Uploading warmbox cal to DAS...")
@@ -543,13 +576,13 @@ class InstMgr(object):
             self.SampleMgrRpc._SetMode(self.Config.sampleMgrMode)
         except:
             tbMsg = traceback.format_exc()
-            Log("SampleMgr mode set: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("SampleMgr mode set: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
         # go into warming state and wait for temperatures and pressure to stabilize.
         self.State = INSTMGR_STATE_WARMING
         self.WarmingState = WARMING_STATE_TEMP_STAB
-        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self.LockedStatus = ["Unlocked", "Unlocked", "Unlocked", "Unlocked"]
         self._SetStatus(INSTMGR_STATUS_WARMING_UP)
         self.MeasuringState = MEAS_STATE_PRESSURE_STAB
         self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
@@ -565,17 +598,17 @@ class InstMgr(object):
 
         for waitTime in range(5):
             stateDict = self.MeasSysRpc.GetStates()
-            if stateDict['State_MeasSystem'] in ['READY','ENABLED']:
+            if stateDict['State_MeasSystem'] in ['READY', 'ENABLED']:
                 break
             time.sleep(1)
         else:
-            Log("MeasSys fails to enter READY or ENABLED state in _EnterMeasure",Level=2)
+            Log("MeasSys fails to enter READY or ENABLED state in _EnterMeasure", Level=2)
 
         try:
             self.MeasSysRpc.Mode_Set(self.Config.measMode)
         except:
             tbMsg = traceback.format_exc()
-            Log("MeasSys Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("MeasSys Set mode error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_MEAS_SYS_RPC_FAILED
 
         self.State = INSTMGR_STATE_MEASURING
@@ -599,32 +632,33 @@ class InstMgr(object):
             self.MeasSysRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("MeasSys Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("MeasSys Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_MEAS_SYS_RPC_FAILED
 
         try:
             self.DataMgrRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-        #if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
-        #    try:
-        #        if not self.noSampleMgr: self.SampleMgrRpc.FlowStart()
-        #    except:
-        #        tbMsg = traceback.format_exc()
-        #        Log("Start Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
-        #        return INST_ERROR_SAMPLE_MGR_RPC_FAILED
+            #if self.Config.sampleMgrMode in ["ProportionalMode", "BatchMode"]:
+            #    try:
+            #        if not self.noSampleMgr: self.SampleMgrRpc.FlowStart()
+            #    except:
+            #        tbMsg = traceback.format_exc()
+            #        Log("Start Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            #        return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
             self.pressureLockCount = 0
             self.MeasuringState = MEAS_STATE_PRESSURE_STAB
-        #    self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
+            #    self._SetStatus(INSTMGR_STATUS_GAS_FLOWING)
             self._SendDisplayMessage("Pressure stabilizing...")
             self.LockedStatus[PRESSURE_LOCKED_STATUS] = "Unlocked"
             return INST_ERROR_OKAY
         else:
             return INST_ERROR_INVALID_MEAS_SYS_MODE
+
     def _ExitMeasure(self):
         """ called when exiting measuring state """
         self._SendDisplayMessage("Leaving Measuring")
@@ -636,7 +670,7 @@ class InstMgr(object):
                 self._SendDisplayMessage("Disabling Data Manager")
             except:
                 tbMsg = traceback.format_exc()
-                Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                Log("DataMgr Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
         else:
             # Put the data manager back into the warming mode
             try:
@@ -644,21 +678,21 @@ class InstMgr(object):
                 self._SendDisplayMessage("Putting Data Manager in warming mode")
             except:
                 tbMsg = traceback.format_exc()
-                Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                Log("DataMgr Set mode error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
                 return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
         try:
             self.SampleMgrRpc.FlowStop()
         except:
             tbMsg = traceback.format_exc()
-            Log("Stop Flow: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Stop Flow: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
         try:
             self.MeasSysRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("MeasSys Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("MeasSys Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_MEAS_SYS_RPC_FAILED
 
         self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_MEAS_ACTIVE)
@@ -673,21 +707,21 @@ class InstMgr(object):
             self.DataMgrRpc.Mode_Set(self.Config.measMode)
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Set mode error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Set mode error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
         try:
             self.MeasSysRpc.Enable()
         except:
             tbMsg = traceback.format_exc()
-            Log("MeasSys Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("MeasSys Enable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_MEAS_SYS_RPC_FAILED
 
         try:
             self.DataMgrRpc.Enable()
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Enable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Enable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
         self.MeasuringState = MEAS_STATE_CONT_MEASURING
@@ -706,10 +740,11 @@ class InstMgr(object):
             self.SampleMgrRpc.Prepare()
         except:
             tbMsg = traceback.format_exc()
-            Log("SampleMgr Prepare: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("SampleMgr Prepare: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_SAMPLE_MGR_RPC_FAILED
 
         return INST_ERROR_INVALID_SAMPLE_MGR_MODE
+
     def _ResetSequence(self):
         """ perform reset sequence"""
         # Cannot turn off pump with G2000
@@ -723,47 +758,54 @@ class InstMgr(object):
             self.MeasSysRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("Disable Measure error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Disable Measure error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
 
         try:
             self.DataMgrRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
-        Log("Analyzer operation halted",Level = 3)
+        Log("Analyzer operation halted", Level=3)
 
         try:
             self.DriverRpc.hostReady('False')
         except:
             tbMsg = traceback.format_exc()
-            Log("Host Ready failed ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Host Ready failed ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
+
     def _Reset(self):
         """ called to reset instrument """
         self._SendDisplayMessage("Reset")
 
-        self._ClearStatus(INSTMGR_STATUS_READY | INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_PRESSURE_LOCKED | INSTMGR_STATUS_WARMING_UP | INSTMGR_STATUS_MEAS_ACTIVE | INSTMGR_STATUS_CAVITY_TEMP_LOCKED | INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED)
+        self._ClearStatus(INSTMGR_STATUS_READY | INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_PRESSURE_LOCKED
+                          | INSTMGR_STATUS_WARMING_UP | INSTMGR_STATUS_MEAS_ACTIVE | INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+                          | INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED)
 
         self.State = INSTMGR_STATE_RESET
-        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self.LockedStatus = ["Unlocked", "Unlocked", "Unlocked", "Unlocked"]
 
         self._ResetSequence()
 
         return INST_ERROR_OKAY
+
     def _Abort(self):
         """ called to abort instrument """
         self._SendDisplayMessage("Aborted")
 
-        self._ClearStatus(INSTMGR_STATUS_READY | INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_PRESSURE_LOCKED | INSTMGR_STATUS_WARMING_UP | INSTMGR_STATUS_MEAS_ACTIVE | INSTMGR_STATUS_CAVITY_TEMP_LOCKED | INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED)
+        self._ClearStatus(INSTMGR_STATUS_READY | INSTMGR_STATUS_GAS_FLOWING | INSTMGR_STATUS_PRESSURE_LOCKED
+                          | INSTMGR_STATUS_WARMING_UP | INSTMGR_STATUS_MEAS_ACTIVE | INSTMGR_STATUS_CAVITY_TEMP_LOCKED
+                          | INSTMGR_STATUS_WARM_CHAMBER_TEMP_LOCKED)
         self._SetStatus(INSTMGR_STATUS_SYSTEM_ERROR)
 
         self.State = INSTMGR_STATE_ERROR
-        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self.LockedStatus = ["Unlocked", "Unlocked", "Unlocked", "Unlocked"]
 
         self._ResetSequence()
 
         return INST_ERROR_OKAY
+
     def _Park(self):
         """ called when entering parking state """
         self._SendDisplayMessage("Parking")
@@ -777,7 +819,7 @@ class InstMgr(object):
             self._SendDisplayMessage("Parking Sample Manager")
         except:
             tbMsg = traceback.format_exc()
-            Log("Park instrument: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Park instrument: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
 
         return INST_ERROR_OKAY
 
@@ -795,7 +837,7 @@ class InstMgr(object):
                 self.DriverRpc.resetDas()
             except:
                 tbMsg = traceback.format_exc()
-                Log("Reset DAS ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                Log("Reset DAS ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
                 # expecting an exception since we're resetting the DAS
                 pass
 
@@ -856,9 +898,10 @@ class InstMgr(object):
             raise Exception("Instrument Event %d Doesn't Exist" % event)
 
         return status
+
     def _LoadConfigFile(self, configPath):
         if not FileExists(configPath):
-            Log("Configuration file not found.", Data = dict(Path = configPath), Level = 2)
+            Log("Configuration file not found.", Data=dict(Path=configPath), Level=2)
             raise Exception("File '%s' not found." % configPath)
 
         self.cp = CustomConfigObj(configPath)
@@ -876,7 +919,7 @@ class InstMgr(object):
             self.Config.AppTypeList = self.cp.list_sections()
 
             if self.Config.StartAppType in self.Config.AppTypeList:
-                self.Config.measMode = self.cp.get(self.Config.StartAppType,"MeasMode", "")
+                self.Config.measMode = self.cp.get(self.Config.StartAppType, "MeasMode", "")
                 self.Config.sampleMgrMode = self.cp.get(self.Config.StartAppType, "SampleMgrMode", "")
                 self.Config.warmMode = self.cp.get(self.Config.StartAppType, "WarmMode", "")
             else:
@@ -884,7 +927,10 @@ class InstMgr(object):
                 self.Config.sampleMgrMode = ""
         except:
             tbMsg = traceback.format_exc()
-            Log("LoadConfigFile failed, using default config",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("LoadConfigFile failed, using default config",
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=3,
+                Verbose=tbMsg)
             self.Config.AppTypeList = []
 
         if self.Config.measMode == "":
@@ -893,9 +939,11 @@ class InstMgr(object):
     def _VerifyInstallerId(self):
         (validInstallerId, analyzerType, installerId) = self.DriverRpc.verifyInstallerId()
         if not validInstallerId:
-            Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" % (analyzerType,installerId),Level=3)
+            Log("EEPROM ID (%s) does not match Software Installer ID (%s) - please correct EEPROM or re-install software" %
+                (analyzerType, installerId),
+                Level=3)
         elif analyzerType != None and installerId != None:
-            Log("EEPROM ID matches Software Installer ID (%s)" % (analyzerType,),Level=1)
+            Log("EEPROM ID matches Software Installer ID (%s)" % (analyzerType, ), Level=1)
 
     def _Monitor(self):
 
@@ -913,7 +961,7 @@ class InstMgr(object):
                     self._ClearStatus(INSTMGR_STATUS_GAS_FLOWING)
 
                 sampleMgrStatus = self.SampleMgrRpc.GetStatus()
-                if (( sampleMgrStatus & SAMPLEMGR_STATUS_STABLE ) == SAMPLEMGR_STATUS_STABLE ):
+                if ((sampleMgrStatus & SAMPLEMGR_STATUS_STABLE) == SAMPLEMGR_STATUS_STABLE):
                     pressureLocked = "Locked"
                 else:
                     pressureLocked = "Unlocked"
@@ -928,7 +976,7 @@ class InstMgr(object):
                     self.flowStarted = True
 
             except Exception, e:
-                Log("Das Monitor: error %s" % (e,),Level = 2)
+                Log("Das Monitor: error %s" % (e, ), Level=2)
 
                 lockStatus = None
                 resetCount = None
@@ -937,11 +985,11 @@ class InstMgr(object):
 
             if self.State != INSTMGR_STATE_ERROR:
                 if dasState != None:
-                    if dasState == DASCNTRL_Error or dasState == DASCNTRL_Reset: #or dasState == DASCNTRL_DspNotBooted:
-                    # DAS needs to be reset
+                    if dasState == DASCNTRL_Error or dasState == DASCNTRL_Reset:  #or dasState == DASCNTRL_DspNotBooted:
+                        # DAS needs to be reset
                         self._HandleError(INST_ERROR_DAS_ERROR_OCCURRED)
 
-            if (( self.State != INSTMGR_STATE_ERROR ) and ( self.State != INSTMGR_STATE_RESET )):
+            if ((self.State != INSTMGR_STATE_ERROR) and (self.State != INSTMGR_STATE_RESET)):
                 if lockStatus != None:
                     if lockStatus["laserTempLockStatus"] != self.LockedStatus[LASER_TEMP_LOCKED_STATUS]:
                         self.LockedStatus[LASER_TEMP_LOCKED_STATUS] = lockStatus["laserTempLockStatus"]
@@ -975,7 +1023,8 @@ class InstMgr(object):
                             self._SendDisplayMessage("Pressure unlocked")
 
                 if self.State == INSTMGR_STATE_WARMING:
-                    if self.LockedStatus[CAVITY_TEMP_LOCKED_STATUS] == "Locked" and self.LockedStatus[WARM_CHAMBER_TEMP_LOCKED_STATUS] == "Locked":
+                    if self.LockedStatus[CAVITY_TEMP_LOCKED_STATUS] == "Locked" and self.LockedStatus[
+                            WARM_CHAMBER_TEMP_LOCKED_STATUS] == "Locked":
                         status = self._StateHandler(EVENT_TEMP_LOCKED)
                         if status != INST_ERROR_OKAY:
                             self._HandleError(status)
@@ -985,14 +1034,14 @@ class InstMgr(object):
                         self.cavitytempLockCount = 0
                     else:
                         self.cavityTempLockCount = self.cavityTempLockCount + 1
-                        if self.cavityTempLockCount >= self.Config.TempLockTimeout*30: #DAS monitor runs every 2 seconds and TempLockTimeout config is in minutes
+                        if self.cavityTempLockCount >= self.Config.TempLockTimeout * 30:  #DAS monitor runs every 2 seconds and TempLockTimeout config is in minutes
                             self._HandleError(INST_ERROR_TEMP_LOCK_TIMEOUT)
 
                     if self.LockedStatus[WARM_CHAMBER_TEMP_LOCKED_STATUS] == "Locked":
                         self.warmChambertempLockCount = 0
                     else:
                         self.warmChamberTempLockCount = self.warmChamberTempLockCount + 1
-                        if self.warmChamberTempLockCount >= self.Config.TempLockTimeout*30: #DAS monitor runs every 2 seconds and TempLockTimeout config is in minutes
+                        if self.warmChamberTempLockCount >= self.Config.TempLockTimeout * 30:  #DAS monitor runs every 2 seconds and TempLockTimeout config is in minutes
                             self._HandleError(INST_ERROR_TEMP_LOCK_TIMEOUT)
 
                 if self.State == INSTMGR_STATE_MEASURING:
@@ -1003,19 +1052,19 @@ class InstMgr(object):
                             self._HandleError(status)
                     else:
                         self.pressureLockCount = self.pressureLockCount + 1
-                        if self.pressureLockCount >= self.Config.PressureLockTimeout*30: #DAS monitor runs every 2 seconds and PressureLockTimeout config is in minutes
+                        if self.pressureLockCount >= self.Config.PressureLockTimeout * 30:  #DAS monitor runs every 2 seconds and PressureLockTimeout config is in minutes
                             self._HandleError(INST_ERROR_PRESSURE_LOCK_TIMEOUT)
 
                     if self.MeasuringState == MEAS_STATE_PURGING:
-                        if (( sampleMgrStatus & SAMPLEMGR_STATUS_PURGED ) == SAMPLEMGR_STATUS_PURGED ):
+                        if ((sampleMgrStatus & SAMPLEMGR_STATUS_PURGED) == SAMPLEMGR_STATUS_PURGED):
                             status = self._StateHandler(EVENT_PURGING_COMPLETE)
                     if self.MeasuringState == MEAS_STATE_SAMPLE_PREPARE:
-                        if (( sampleMgrStatus & SAMPLEMGR_STATUS_PREPARED ) == SAMPLEMGR_STATUS_PREPARED ):
+                        if ((sampleMgrStatus & SAMPLEMGR_STATUS_PREPARED) == SAMPLEMGR_STATUS_PREPARED):
                             status = self._StateHandler(EVENT_SAMPLE_PREPARE)
 
                 if self.State == INSTMGR_STATE_PARKING:
                     self._SendDisplayMessage("Pressure = %d Torr" % pressure)
-                    if (( sampleMgrStatus & SAMPLEMGR_STATUS_PARKED ) == SAMPLEMGR_STATUS_PARKED ):
+                    if ((sampleMgrStatus & SAMPLEMGR_STATUS_PARKED) == SAMPLEMGR_STATUS_PARKED):
                         status = self._StateHandler(EVENT_SHUTDOWN_INST)
                         # ask supervisor to terminate all applications including INSTMGR
                         self.SupervisorRpc.TerminateApplications(self.powerOff, self.terminateProtectedProcess)
@@ -1036,22 +1085,26 @@ class InstMgr(object):
                         pass
 
             time.sleep(5)
+
     def _PurgingCompleteCallback(self):
         self._SendDisplayMessage("Purge complete")
 
         status = self._StateHandler(EVENT_PURGING_COMPLETE)
         if status != INST_ERROR_OKAY:
             self._HandleError(status)
+
     def _SamplePrepareCompleteCallback(self):
         self._SendDisplayMessage("Sample prepare complete")
 
         status = self._StateHandler(EVENT_SAMPLE_PREPARE)
         if status != INST_ERROR_OKAY:
             self._HandleError(status)
+
     def INSTMGR_Shutdown(self):
         self._SendDisplayMessage("Shutdown")
 
         status = self._StateHandler(EVENT_SHUTDOWN_INST)
+
     def INSTMGR_Start(self):
         self._SendDisplayMessage("Starting")
         self._LoadConfigFile(self.configPath)
@@ -1059,7 +1112,7 @@ class InstMgr(object):
         self.restartCount = 0
         self.dasRestartCount = 0
         self.measRestartCount = 0
-        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self.LockedStatus = ["Unlocked", "Unlocked", "Unlocked", "Unlocked"]
         self._ClearStatus(INSTMGR_STATUS_CLEAR_MASK)
         self.ErrorList = []
         self.State = INSTMGR_STATE_RESET
@@ -1074,21 +1127,24 @@ class InstMgr(object):
             self.version = self.DriverRpc.allVersions()["interface"]
         except:
             tbMsg = traceback.format_exc()
-            Log("INSTMGR_Start:Interface Version Get error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("INSTMGR_Start:Interface Version Get error ",
+                Data=dict(Note="<See verbose for debug info>"),
+                Level=3,
+                Verbose=tbMsg)
             self.version = 0
 
         try:
             self.MeasSysRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("Disable Measure error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Disable Measure error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
 
         try:
             self.DataMgrRpc.StartInstMgrListener()
             self.DataMgrRpc.Disable()
         except:
             tbMsg = traceback.format_exc()
-            Log("DataMgr Disable error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("DataMgr Disable error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             return INST_ERROR_DATA_MANAGER_RPC_FAILED
 
         if self.Config.AutoStartEngine == True:
@@ -1114,7 +1170,7 @@ class InstMgr(object):
         self.restartCount = 0
         self.dasRestartCount = 0
         self.measRestartCount = 0
-        self.LockedStatus = [ "Unlocked", "Unlocked", "Unlocked", "Unlocked" ]
+        self.LockedStatus = ["Unlocked", "Unlocked", "Unlocked", "Unlocked"]
         self._ClearStatus(INSTMGR_STATUS_CLEAR_MASK)
         self.ErrorList = []
         self.State = INSTMGR_STATE_RESET
@@ -1149,6 +1205,7 @@ class InstMgr(object):
     def _RpcServerExit(self):
         self.MonitorShutdown = True
         self.RpcServer.stop_server()
+
     def INSTMGR_StartRpc(self):
         self.flowStarted = False
         self.restartCount = 0
@@ -1163,6 +1220,7 @@ class InstMgr(object):
                 return INSTMGR_RPC_FAILED
         else:
             return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_ShutdownRpc(self, shutdownType, shutdown=True):
 
         self.powerOff = True
@@ -1194,7 +1252,7 @@ class InstMgr(object):
                 self.DriverRpc.stopTempControl()
             except:
                 tbMsg = traceback.format_exc()
-                Log("Stop temp control: error ",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                Log("Stop temp control: error ", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             if status == INST_ERROR_OKAY:
                 return status
         elif shutdownType == INSTMGR_SHUTDOWN_HOST:
@@ -1216,6 +1274,7 @@ class InstMgr(object):
                 return INSTMGR_RPC_FAILED
         else:
             return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_StartMeasureRpc(self):
         self.measRestartCount = 0
         status = self._StateHandler(EVENT_START_MEAS)
@@ -1227,6 +1286,7 @@ class InstMgr(object):
                 return INSTMGR_RPC_FAILED
         else:
             return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_StopMeasureRpc(self):
         status = self._StateHandler(EVENT_STOP_MEAS)
         if status != INST_ERROR_OKAY:
@@ -1237,6 +1297,7 @@ class InstMgr(object):
                 return INSTMGR_RPC_FAILED
         else:
             return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_startFlowRpc(self):
         status = self.SampleMgrRpc.FlowStart()
         if status == INST_ERROR_OKAY:
@@ -1244,6 +1305,7 @@ class InstMgr(object):
             return INSTMGR_RPC_SUCCESS
         else:
             return INSTMGR_RPC_FAILED
+
     def INSTMGR_stopFlowRpc(self):
         status = self.SampleMgrRpc.FlowStop()
         if status == INST_ERROR_OKAY:
@@ -1252,17 +1314,20 @@ class InstMgr(object):
         else:
             return INSTMGR_RPC_FAILED
 
-    def INSTMGR_simulateErrorRpc(self,error):
+    def INSTMGR_simulateErrorRpc(self, error):
         # Force instrument to handle the specified error
         return self._HandleError(error)
 
     def INSTMGR_disablePumpRpc(self):
         # No pump to be disabled in G2000
         return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_StartSelfTestRpc(self, selfTestType):
         Log("self test not supported")
+
     def INSTMGR_StopSelfTestRpc(self, selfTestType):
         Log("self test not supported")
+
     def INSTMGR_ReportErrorRpc(self, error):
         if self.State == INSTMGR_STATE_PARKING:
             # Don't do anything when instrument is parking
@@ -1275,9 +1340,10 @@ class InstMgr(object):
             return INSTMGR_RPC_SUCCESS
         else:
             raise Exception("Invalid Error Code")
+
     def INSTMGR_ReportRestartRpc(self, portList):
 
-        if __debug__:Log ("Restart Reported port=%s" %portList)
+        if __debug__: Log("Restart Reported port=%s" % portList)
 
         restartPort = None
         for port in portList:
@@ -1295,6 +1361,7 @@ class InstMgr(object):
             self._SetStatus(INSTMGR_STATUS_ERROR_IN_BUFFER)
 
         return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_GetErrorRpc(self, numErrors):
         listSize = len(self.ErrorList)
         if numErrors > listSize:
@@ -1302,6 +1369,7 @@ class InstMgr(object):
 
         # returns list of time, error code, error name tuple(s).
         return self.ErrorList[0:numErrors]
+
     def INSTMGR_ClearErrorRpc(self, numErrors):
         listSize = len(self.ErrorList)
         if numErrors > listSize:
@@ -1313,7 +1381,8 @@ class InstMgr(object):
             self._ClearStatus(INSTMGR_STATUS_ERROR_IN_BUFFER)
 
         return INSTMGR_RPC_SUCCESS
-    def INSTMGR_ModifyAuxStatusRpc(self,auxStatus,auxStatusMask=0xFFFF):
+
+    def INSTMGR_ModifyAuxStatusRpc(self, auxStatus, auxStatusMask=0xFFFF):
         # Modify auxiliary status bits, which are the high-order 16 bits of
         #  the 32-bit status word. Only the bits specified in the mask are
         #  modified
@@ -1322,24 +1391,30 @@ class InstMgr(object):
         self._ClearStatus(auxStatusMask << 16)
         self._SetStatus(status << 16)
         return INSTMGR_RPC_SUCCESS
+
     def INSTMGR_GetStatusRpc(self):
         return self.AppStatus._Status
+
     def INSTMGR_GetStateRpc(self):
-        return {"InstMgr":StateName[self.State],
-                "Warming":WarmingStateName[self.WarmingState],
-                "Measuring":MeasStateName[self.MeasuringState]}
+        return {
+            "InstMgr": StateName[self.State],
+            "Warming": WarmingStateName[self.WarmingState],
+            "Measuring": MeasStateName[self.MeasuringState]
+        }
+
     def INSTMGR_SendDisplayMessageRpc(self, message):
         self._SendDisplayMessage(message)
         return INSTMGR_RPC_SUCCESS
-    def INSTMGR_SetInstrumentModeRpc(self,modeDict):
+
+    def INSTMGR_SetInstrumentModeRpc(self, modeDict):
         """Instrument modes are set up as a list of key=value pairs in the INSTRUMENT_MODE section of a measurement mode file.
         When a new measurement mode is started, these pairs are compared against a set of previously-cached values to see if
         any have changed. Those which have changed cause a function defined in InstModeDispatcher to be dispatched."""
-        for key,value in modeDict.items():
+        for key, value in modeDict.items():
             if key not in self.ValidInstrumentModes:
-                raise KeyError("Unknown instrument mode key: %s" % (key,))
+                raise KeyError("Unknown instrument mode key: %s" % (key, ))
             if value not in self.ValidInstrumentModes[key]:
-                raise ValueError("Unknown value for instrument mode: %s=%s" % (key,value))
+                raise ValueError("Unknown value for instrument mode: %s=%s" % (key, value))
         changedModes = self._FindChangedInstrumentModes(modeDict)
         # Do whatever actions are needed to effect the mode change
         for key in changedModes:
@@ -1354,11 +1429,11 @@ class InstMgr(object):
         self.Config.AutoRestartFlow = False
         Log("Disabled auto-restart-flow")
 
-    def _FindChangedInstrumentModes(self,modeDict):
+    def _FindChangedInstrumentModes(self, modeDict):
         changedModes = {}
-        for key,value in modeDict.items():
+        for key, value in modeDict.items():
             if key not in self.InstrumentMode or self.InstrumentMode[key] != value:
-                changedModes[key]=value
+                changedModes[key] = value
         return changedModes
 
     def _SetInstMode_Tuning_CavityLength(self):
@@ -1377,7 +1452,7 @@ class InstMgr(object):
         self.InstModeDispatcher["Tuning"]["LaserCurrent"] = self._SetInstMode_Tuning_LaserCurrent
         self.InstModeDispatcher["Tuning"]["FsrHopping"] = self._SetInstMode_Tuning_FsrHopping
         self.ValidInstrumentModes = {}
-        for key,validModes in self.InstModeDispatcher.items():
+        for key, validModes in self.InstModeDispatcher.items():
             self.ValidInstrumentModes[key] = validModes.keys()
 
 HELP_STRING = \
@@ -1392,8 +1467,11 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     shortOpts = 'h'
     longOpts = ["no_sample_mgr", "help", "vi", "ini="]
@@ -1417,7 +1495,7 @@ def HandleCommandSwitches():
 
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
-        Log ("Config file specified at command line: %s" % configFile)
+        Log("Config file specified at command line: %s" % configFile)
 
     if "--no_sample_mgr" in options:
         noSampleMgr = True
@@ -1430,6 +1508,8 @@ def HandleCommandSwitches():
         virtualMode = False
 
     return (configFile, noSampleMgr, virtualMode)
+
+
 def main():
     #Get and handle the command line options...
     configFile, noSampleMgr, virtualMode = HandleCommandSwitches()

@@ -14,12 +14,14 @@ from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
 from Host.Common import AppStatus
 
+
 def Log(msg):
     print msg
 
+
 class DataManagerOutput(object):
     def __init__(self, configFile):
-        co = CustomConfigObj(configFile, list_values = True)
+        co = CustomConfigObj(configFile, list_values=True)
         self.source = co.get("Main", "sourcescript")
         self.datalist = co.get("Main", "datalist")
         self.targetDir = co.get("Main", "targetDir", "C:/UserData")
@@ -30,13 +32,13 @@ class DataManagerOutput(object):
 
     def createNewFile(self):
         self.cnt = 0
-        filename = "TempDataLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S",time.localtime()))
+        filename = "TempDataLog-%s.dat" % (time.strftime("%Y%m%d-%H%M%S", time.localtime()))
         self.filepath = os.path.abspath(os.path.join(self.targetDir, filename))
         print "%s Created" % self.filepath
         self._writeHeader()
 
     def _writeEntry(self, fp, string):
-        fp.write((string[:self.colWidth-1]).ljust(self.colWidth))
+        fp.write((string[:self.colWidth - 1]).ljust(self.colWidth))
 
     def _writeHeader(self):
         fp = open(self.filepath, "a")
@@ -58,11 +60,12 @@ class DataManagerOutput(object):
 
     def listen(self):
         self.dmListener = Listener(self.dmQueue,
-                                    BROADCAST_PORT_DATA_MANAGER,
-                                    StringPickler.ArbitraryObject,
-                                    retry = True,
-                                    name = "DataManagerOutput Listener",
-                                    logFunc = Log)
+                                   BROADCAST_PORT_DATA_MANAGER,
+                                   StringPickler.ArbitraryObject,
+                                   retry=True,
+                                   name="DataManagerOutput Listener",
+                                   logFunc=Log)
+
     def run(self):
         while True:
             while not self.dmQueue.empty():
@@ -74,6 +77,7 @@ class DataManagerOutput(object):
                     #outlist = [time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(output["data"]["time"]))] + [output["data"][c] for c in self.datalist]
                     #print outlist
             time.sleep(1)
+
 
 def HandleCommandSwitches():
     import getopt
@@ -96,6 +100,7 @@ def HandleCommandSwitches():
         configFile = ".\WriteDataManagerOutput.ini"
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

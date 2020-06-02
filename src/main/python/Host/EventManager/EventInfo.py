@@ -1,5 +1,5 @@
+from Host.Common import SharedTypes  #to get the right TCP port to use
 
-from Host.Common import SharedTypes #to get the right TCP port to use
 
 class EventInfo(object):
     """The general class object for identifying event types - NOT discrete events.
@@ -27,11 +27,10 @@ class EventInfo(object):
                     should really not be used for one-time-only message events
                     that are created.
     """
-    def __init__(self, Description, Data = "", Level = 1, Code = 0, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY,
-                 VerboseDesc = ""):
+    def __init__(self, Description, Data="", Level=1, Code=0, AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY, VerboseDesc=""):
         self.Description = Description
         self.Level = Level
-        self.Code = Code      #Numeric code for the eventr.  Should be
+        self.Code = Code  #Numeric code for the eventr.  Should be
         self.AccessLevel = AccessLevel  #
         self.VerboseDescription = VerboseDesc
         if self.AccessLevel < SharedTypes.ACCESS_PICARRO_ONLY:

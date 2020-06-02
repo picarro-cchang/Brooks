@@ -12,11 +12,12 @@ from Host.Pipeline.CaptureBlocks import CaptureAnalyzerBlock
 from traitlets.config import Config
 import pylab as plt
 
+
 class CaptureBlockTest(unittest.TestCase):
     def test_capture1(self):
         myconfig = Config()
-        myconfig.CaptureAnalyzerBlock.captureType = "Ethane"              # Type of capture mode to use
-        myconfig.CaptureAnalyzerBlock.methane_ethane_sdev_ratio = 0.2     # Ratio of methane conc. sdev to ethane conc. sdev
+        myconfig.CaptureAnalyzerBlock.captureType = "Ethane"  # Type of capture mode to use
+        myconfig.CaptureAnalyzerBlock.methane_ethane_sdev_ratio = 0.2  # Ratio of methane conc. sdev to ethane conc. sdev
         myconfig.CaptureAnalyzerBlock.methane_ethylene_sdev_ratio = 0.09  # Ratio of methane conc. sdev to ethylene conc. sdev
         myconfig.EthaneClassifier.nng_lower = 0.0  # Lower limit of ratio for not natural gas hypothesis
         myconfig.EthaneClassifier.nng_upper = 0.1e-2  # Upper limit of ratio for not natural gas hypothesis
@@ -41,29 +42,34 @@ class CaptureBlockTest(unittest.TestCase):
         tStop = 200.0
         A = 0.07
         ratio = 0.03
-        pulse = A * np.exp(-0.5*((t-tPulse) / wPulse) **2) + A * np.exp(-0.5 * ((t-tReplayPeak) / wPulse) **2)
-        pulse[t>=tHoldStart] = pulse[t==tHoldStart]
-        pulse[t>=tPulse] = np.maximum(pulse[t>=tPulse], pulse[t==tBaseStart])
-        pulse[t>=tStop] = 0
+        pulse = A * np.exp(-0.5 * ((t - tPulse) / wPulse)**2) + A * np.exp(-0.5 * ((t - tReplayPeak) / wPulse)**2)
+        pulse[t >= tHoldStart] = pulse[t == tHoldStart]
+        pulse[t >= tPulse] = np.maximum(pulse[t >= tPulse], pulse[t == tBaseStart])
+        pulse[t >= tStop] = 0
         ch4 = 0.5 + pulse + 0.001 * np.random.randn(len(pulse))
-        c2h6 =  ratio * pulse + 0.004 * np.random.randn(len(pulse))
+        c2h6 = ratio * pulse + 0.004 * np.random.randn(len(pulse))
         valveMask = np.zeros_like(pulse)
         valveOffset = 0.0
         peakDetectorOffset = 0.0
-        valveMask[(t>=tBaseStart+valveOffset) & (t<tStop+valveOffset)] = 3
-        valveMask[t<=tPulse+valveOffset] = 8
+        valveMask[(t >= tBaseStart + valveOffset) & (t < tStop + valveOffset)] = 3
+        valveMask[t <= tPulse + valveOffset] = 8
         #valveMask[(t>=tHoldStart) & (t<tHoldStart + 2.0)] = 16
         peakDetectState = np.zeros_like(pulse)
-        peakDetectState[t<tPulse+peakDetectorOffset] = 1
-        peakDetectState[(t>=tPulse+peakDetectorOffset) & (t<tBaseStart+peakDetectorOffset)] = 2
-        peakDetectState[(t>=tBaseStart+peakDetectorOffset) & (t<tReplayPeak-3*wPulse+peakDetectorOffset)] = 3
-        peakDetectState[(t>=tReplayPeak-3*wPulse+peakDetectorOffset) & (t<tHoldStart+peakDetectorOffset)] = 9
-        peakDetectState[(t>=tHoldStart+peakDetectorOffset) & (t<tStop+peakDetectorOffset)] = 10
+        peakDetectState[t < tPulse + peakDetectorOffset] = 1
+        peakDetectState[(t >= tPulse + peakDetectorOffset) & (t < tBaseStart + peakDetectorOffset)] = 2
+        peakDetectState[(t >= tBaseStart + peakDetectorOffset) & (t < tReplayPeak - 3 * wPulse + peakDetectorOffset)] = 3
+        peakDetectState[(t >= tReplayPeak - 3 * wPulse + peakDetectorOffset) & (t < tHoldStart + peakDetectorOffset)] = 9
+        peakDetectState[(t >= tHoldStart + peakDetectorOffset) & (t < tStop + peakDetectorOffset)] = 10
         # Create a mock data set
         data = []
         for i in range(len(t)):
-            data.append(dict(EPOCH_TIME=1300000000+t[i], ValveMask=valveMask[i], peak_detector_state=peakDetectState[i],
-                             CH4=ch4[i], C2H6=c2h6[i], species=170))
+            data.append(
+                dict(EPOCH_TIME=1300000000 + t[i],
+                     ValveMask=valveMask[i],
+                     peak_detector_state=peakDetectState[i],
+                     CH4=ch4[i],
+                     C2H6=c2h6[i],
+                     species=170))
 
         cab = CaptureAnalyzerBlock(config=myconfig)
         for newDat in data:
@@ -79,6 +85,7 @@ class CaptureBlockTest(unittest.TestCase):
         #plt.subplot(4, 1, 4, sharex=ax1)
         #plt.plot(t, peakDetectState)
         #plt.show()
+
 
 if __name__ == "__main__":
     unittest.main()

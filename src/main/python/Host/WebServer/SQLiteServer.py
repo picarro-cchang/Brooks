@@ -18,14 +18,13 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.AppRequestRestart import RequestRestart
 from Host.Common.SingleInstance import SingleInstance
 
-
 # _DEFAULT_CONFIG_FILE = os.environ["PICARRO_CONF_DIR"] + "/Host/WebServer/SQLiteDataBase.ini"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 AppPath = sys.argv[0]
 APP_NAME = "SQLiteServer"
 EventManagerProxy_Init(APP_NAME)
 app = Flask(__name__, static_url_path='', static_folder='')
-     
+
 api = Api(app, prefix='/api/v1.0', doc='/apidoc')
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0)
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
@@ -33,8 +32,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///PicarroDataBase.sqlite'
 app.config['SECURITY_TRACKABLE'] = False
 app.config['SECURITY_CONFIRMABLE'] = False
 app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication'
-app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(7)    # 7 days
-app.config['SECURITY_TOKEN_MAX_AGE'] = 7 * 24 * 60 * 60    # 7 days
+app.config['PERMANENT_SESSION_LIFETIME'] = datetime.timedelta(7)  # 7 days
+app.config['SECURITY_TOKEN_MAX_AGE'] = 7 * 24 * 60 * 60  # 7 days
 app.config['SECRET_KEY'] = 'picarro'
 app.config['SECURITY_PASSWORD_HASH'] = 'pbkdf2_sha512'
 app.config['SECURITY_PASSWORD_SALT'] = 'xxxxxxxxxxxxxxxxxx'
@@ -42,29 +41,30 @@ app.config['SECURITY_PASSWORD_SALT'] = 'xxxxxxxxxxxxxxxxxx'
 
 class SQLiteServer(object):
     def __init__(self, dummy=False):
-        self.user_login_attempts = {"username":None, "attempts":0}
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.user_login_attempts = {"username": None, "attempts": 0}
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
-        if dummy:   # used for unit testing
+        if dummy:  # used for unit testing
             import DummyDataBase
             self.ds = DummyDataBase.DummyDataBase()
             self.load_config_from_database()
         else:
             self.ds = pds
-            
+
     def load_config_from_ini(self, configFile):
         if os.path.exists(configFile):
             self.config = CustomConfigObj(configFile)
-            self.setup = {'host': self.config.get('Setup', "Host_IP", "0.0.0.0"),
-                          'port': self.config.getint('Setup', "Port", 3600),
-                          'debug': self.config.getboolean('Setup', "Debug_Mode", True)}
+            self.setup = {
+                'host': self.config.get('Setup', "Host_IP", "0.0.0.0"),
+                'port': self.config.getint('Setup', "Port", 3600),
+                'debug': self.config.getboolean('Setup', "Debug_Mode", True)
+            }
         else:
             print "Configuration file not found: %s. Using default settings." % configFile
             # sys.exit(1)
-            self.setup = {'host' : "0.0.0.0",
-                          'port' : 3600,
-                          'debug' : False}
-                      
+            self.setup = {'host': "0.0.0.0", 'port': 3600, 'debug': False}
+
     def load_config_from_database(self):
         vars = self.ds.get_all_from_model("system_model")
         self.system_varialbes = {v.name: self._convert_string(v.value) for v in vars}
@@ -86,11 +86,9 @@ class SQLiteServer(object):
         elif api == "action" and action == "post":
             request_dict["command"] = "save_action"
         return self.process_request_dict(request_dict)
-        
+
     def _convert_string(self, s):
-        converter = ["float", "int",
-                    "lambda x: True if x=='True' else False if x=='False' else 1/0",
-                    "str"]
+        converter = ["float", "int", "lambda x: True if x=='True' else False if x=='False' else 1/0", "str"]
         for c in converter:
             try:
                 return eval(c)(s)
@@ -106,12 +104,12 @@ class SQLiteServer(object):
             level = 1
         else:
             level = 0
-        if requester in ["UserAdmin","qtLauncher_Config", "NetworkSettingsWidget"] and level < 3:
+        if requester in ["UserAdmin", "qtLauncher_Config", "NetworkSettingsWidget"] and level < 3:
             return {"error": "Permission denied. Only Admin users can log in."}, 403
         elif (requester == "H2O2Validation" or requester == "CalibrationValidationTool") and level < 2:
             return {"error": "Permission denied. Only Admin and Technician can log in."}, 403
         return {}
-                
+
     def check_password(self, username, password):
         responses = []
         ret = self.check_password_length(password)
@@ -123,8 +121,8 @@ class SQLiteServer(object):
         ret = self.check_password_history(username, password)
         if ret:
             return ret
-        return {}    # no error
-                
+        return {}  # no error
+
     def check_password_history(self, username, password):
         period = self.system_varialbes["password_reuse_period"]
         if period >= 0:
@@ -133,12 +131,12 @@ class SQLiteServer(object):
             if history is not None:
                 for idx, p in enumerate(history):
                     if idx >= period:
-                        return {}    # no error
+                        return {}  # no error
                     else:
                         if utils.verify_password(password, p.value):
                             return {"error": "Error in reusing passwords!"}, 409
-        return {}    # no error
-        
+        return {}  # no error
+
     def check_password_charset(self, password):
         if self.system_varialbes["password_mix_charset"]:
             errors = []
@@ -153,16 +151,16 @@ class SQLiteServer(object):
                 errors.append("Password must contain at least one special character!")
             if len(errors) > 0:
                 return {"error": "\n".join(errors)}, 422
-        return {}    # no error
-                
+        return {}  # no error
+
     def check_password_length(self, password):
         length = self.system_varialbes["password_length"]
         if length >= 0 and len(password) < length:
             return {"error": "Password is too short! Minimum length: %d" % length}, 411
         if len(password) > 15:
             return {"error": "Password is too long! Maximum length: 15."}, 411
-        return {}    # no error
-        
+        return {}  # no error
+
     def check_password_age(self, username, password):
         lifetime = self.system_varialbes["password_lifetime"]
         if lifetime >= 0:
@@ -172,10 +170,10 @@ class SQLiteServer(object):
                 # those accounts are considered "permanent"
                 return {}
             td = datetime.datetime.utcnow() - latest_password.created_at
-            if (td.days*86400 + td.seconds)*1000 + td.microseconds//1000 > lifetime*86400000:
+            if (td.days * 86400 + td.seconds) * 1000 + td.microseconds // 1000 > lifetime * 86400000:
                 return {"error": "Password expires!"}, 401
-        return {}    # no error                
-    
+        return {}  # no error
+
     def check_user_login_attempts(self, username):
         # Check to see how many times user fails to login
         # Disable user if attempts exceeds system setting
@@ -186,8 +184,13 @@ class SQLiteServer(object):
                 self.user_login_attempts = {"username": username, "attempts": 1}
             if self.user_login_attempts["attempts"] >= self.system_varialbes["user_login_attempts"]:
                 # disable user
-                self.process_request_dict({"command": "update_user", "username": username, 
-                    "active": 0, "password": None, "roles": None})
+                self.process_request_dict({
+                    "command": "update_user",
+                    "username": username,
+                    "active": 0,
+                    "password": None,
+                    "roles": None
+                })
                 return {"error": "Username and password do not match! User account is disabled!"}, 423
             else:
                 remain_login = self.system_varialbes["user_login_attempts"] - self.user_login_attempts["attempts"]
@@ -206,7 +209,7 @@ class SQLiteServer(object):
             if len(phone_ext) == 2 and len(phone_ext[1]) > 6:
                 return {"error": "Extension number is too long. Maximum length: 6."}, 411
         return {}
-                      
+
     def log_in_user(self, username, password, requester, no_commit=False):
         user = self.ds.find_user(username=username)
         if user is not None:
@@ -225,16 +228,18 @@ class SQLiteServer(object):
                 self.ds.commit()
                 self.session_active_time = time.time()
                 self.user_login_attempts = {"username": username, "attempts": 0}
-                return {"username":user.username,
-                        "first_name":user.first_name,
-                        "last_name":user.last_name,
-                        "roles":roles,
-                        "token":user.get_auth_token()}
+                return {
+                    "username": user.username,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "roles": roles,
+                    "token": user.get_auth_token()
+                }
             else:
                 return self.check_user_login_attempts(username)
         else:
             return {"error": "Username does not exist!"}, 400
-            
+
     def create_user_account(self, username, request_dict):
         if not username or not request_dict["password"]:
             abort(400)
@@ -245,10 +250,10 @@ class SQLiteServer(object):
         ret = self.check_phone_number(request_dict["phone_number"])
         if ret: return ret
         user = self.ds.find_user(username=username)
-        if user: # User already exists
+        if user:  # User already exists
             return {"error": "Username already exists!"}, 409
         ret = self.check_password(username, request_dict["password"])
-        if ret: return ret                
+        if ret: return ret
         user = self.ds.create_user( \
             username=username,
             last_name=request_dict["last_name"],
@@ -262,7 +267,7 @@ class SQLiteServer(object):
         self.save_action_history(current_user.username, "create %s as %s" % (username, request_dict["roles"]))
         self.save_password_history(username, request_dict["password"])
         return {"username": username}
-        
+
     def change_user_password(self, username, password, new_password):
         if new_password is None:
             return {"error": "New password is not specified!"}, 400
@@ -280,12 +285,12 @@ class SQLiteServer(object):
         self.save_password_history(username, new_password)
         self.ds.commit()
         return {"username": username}
-            
+
     def update_user_account(self, username, request_dict):
         if not username:
             return {"error": "Username is not specified!"}, 400
         user = self.ds.find_user(username=username)
-        if not user: # User does not exist
+        if not user:  # User does not exist
             return {"error": "Username does not exist!"}, 404
         if "active" in request_dict and request_dict["active"] is not None:
             user.active = bool(request_dict["active"])
@@ -308,11 +313,11 @@ class SQLiteServer(object):
             self.save_action_history(current_user.username, "set %s role to %s" % (username, request_dict["roles"]))
         self.ds.commit()
         return {"username": username}
-           
+
     def save_action_history(self, username, action):
         if self.system_varialbes["save_history"]:
-            self.ds.save_user_action(username, action)            
-            
+            self.ds.save_user_action(username, action)
+
     def save_password_history(self, username, password):
         if (self.system_varialbes["password_reuse_period"] >= 0) \
                 or (self.system_varialbes["password_lifetime"] >= 0):
@@ -323,27 +328,25 @@ class SQLiteServer(object):
             var = self.ds.find_system_variable(name)
             if var is None:
                 self.ds.save_system_variable(name, request_dict[name])
-                self.save_action_history(current_user.username, 
-                    "create system variable %s=%s" % (name, request_dict[name]))
+                self.save_action_history(current_user.username, "create system variable %s=%s" % (name, request_dict[name]))
             else:
                 new_value = request_dict[name]
                 if new_value != var.value:
                     var.value = new_value
                     if new_value == "-1":
-                        self.save_action_history(current_user.username,
-                            "system variable %s is disabled" % (name))
+                        self.save_action_history(current_user.username, "system variable %s is disabled" % (name))
                     else:
                         self.save_action_history(current_user.username,
-                            "set system variable %s as %s" % (name.replace('_', ' '), request_dict[name]))
+                                                 "set system variable %s as %s" % (name.replace('_', ' '), request_dict[name]))
             self.system_varialbes[name] = self._convert_string(request_dict[name])
         self.ds.commit()
-    
+
     def process_request_dict(self, request_dict):
         cmd = request_dict.pop("command")
         username = request_dict["username"] if "username" in request_dict else None
-        if cmd == "change_password":    # AccountAPI, post
+        if cmd == "change_password":  # AccountAPI, post
             return self.change_user_password(username, request_dict["password"], request_dict["new_password"])
-        elif cmd == "create_user":    # UsersAPI, post
+        elif cmd == "create_user":  # UsersAPI, post
             return self.create_user_account(username, request_dict)
         elif cmd == "delete_user":
             user = self.ds.find_user(username=username)
@@ -352,14 +355,15 @@ class SQLiteServer(object):
             self.ds.delete_user(user)
             self.ds.commit()
             return {"username": username}
-        elif cmd == "get_actions":      # ActionAPI, get
+        elif cmd == "get_actions":  # ActionAPI, get
             actions = self.ds.get_all_from_model("action_model")
             return [[datetimeToTimestamp(a.taken_at), a.username, a.action] for a in actions]
-        elif cmd == "get_all_users":    # UsersAPI, get
+        elif cmd == "get_all_users":  # UsersAPI, get
+
             def get_item(foo, item_name):
                 res = getattr(foo, item_name)
                 return res if res is not None else ""
-                
+
             users = self.ds.get_all_from_model("user_model")
             return [{
                 "username": user.username,
@@ -369,19 +373,21 @@ class SQLiteServer(object):
                 "phone_number": get_item(user, "phone_number"),
                 "roles": [role.name for role in user.roles],
                 "active": get_item(user, "active")
-                } for user in users]
-        elif cmd == "get_all_variables":    # SystemAPI, get
+            } for user in users]
+        elif cmd == "get_all_variables":  # SystemAPI, get
             vars = self.ds.get_all_from_model("system_model")
-            return {v.name:v.value for v in vars}
+            return {v.name: v.value for v in vars}
         elif cmd == "get_current_user":
             try:
-                return {"username":current_user.username, 
-                        "first_name":current_user.first_name,
-                        "last_name":current_user.last_name,
-                        "roles":[role.name for role in current_user.roles]}
+                return {
+                    "username": current_user.username,
+                    "first_name": current_user.first_name,
+                    "last_name": current_user.last_name,
+                    "roles": [role.name for role in current_user.roles]
+                }
             except:
                 return {"error": traceback.format_exc()}, 404
-        elif cmd == "get_roles":    # UsersAPI, get
+        elif cmd == "get_roles":  # UsersAPI, get
             roles = self.ds.get_all_from_model("role_model")
             return [role.name for role in roles]
         elif cmd == "log_in_user":  # AccountAPI, post
@@ -397,7 +403,7 @@ class SQLiteServer(object):
                 status = "Username or password are incorrect"
             self.save_action_history(username, "log in from %s: %s" % (requester, status))
             return ret
-        elif cmd == "log_out_user": # AccountAPI, post
+        elif cmd == "log_out_user":  # AccountAPI, post
             userInactivity = request_dict["Logout_InActivity"] if "Logout_InActivity" in request_dict else False
             username = current_user.username
             utils.logout_user()
@@ -410,21 +416,23 @@ class SQLiteServer(object):
         elif cmd == "save_action":  # ActionAPI, post
             self.save_action_history(username, request_dict["action"])
             return {"status": "succeed"}
-        elif cmd == "save_system_variables":    # SystemAPI, post
+        elif cmd == "save_system_variables":  # SystemAPI, post
             self.save_system_variables(request_dict)
             return {"status": "succeed"}
         elif cmd == "update_user":  # UsersAPI, post
             ret = self.update_user_account(username, request_dict)
             return ret
-    
+
     def run(self):
         pass
         #self.startServer()
+
 
 # Initialize
 pds.db.init_app(app)
 security = Security(app, pds)
 db_server = SQLiteServer()
+
 
 def any_role_required(*roles):
     def decorator(f):
@@ -434,7 +442,9 @@ def any_role_required(*roles):
                 if current_user.has_role(pds.find_role(role)):
                     return f(*args, **kwargs)
             abort(403)
+
         return decorated_function
+
     return decorator
 
 HELP_STRING = \
@@ -444,13 +454,17 @@ SQLiteServer.py [-h] [-c<FILENAME>]
 Where the options can be a combination of the following:
 -h              Print this help.
 -c              Specify a different config file.  Default = "./SQLiteDateBase.ini"
-"""    
+"""
+
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
     shortOpts = 'h'
-    longOpts = ["help","ini="]
+    longOpts = ["help", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -476,7 +490,7 @@ def HandleCommandSwitches():
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
     print "Config file specified at command line: %s" % configFile
-    
+
     return configFile
 
 
@@ -491,26 +505,21 @@ def before_first_request():
         pds.create_role(name='Technician')
         pds.create_role(name='Operator')
         # create a default admin account
-        admin = pds.create_user(username='admin',
-            password=utils.encrypt_password('admin'),
-            phone_number='1-408-962-3900')
+        admin = pds.create_user(username='admin', password=utils.encrypt_password('admin'), phone_number='1-408-962-3900')
         pds.add_role_to_user(admin, pds.find_role("Admin"))
-        technician = pds.create_user(username='tech',
-            password=utils.encrypt_password('tech'))
+        technician = pds.create_user(username='tech', password=utils.encrypt_password('tech'))
         pds.add_role_to_user(technician, pds.find_role("Technician"))
-        operator = pds.create_user(username='operator',
-            password=utils.encrypt_password('operator'))
+        operator = pds.create_user(username='operator', password=utils.encrypt_password('operator'))
         pds.add_role_to_user(operator, pds.find_role("Operator"))
         # add default user policies
         default_policies = dict(
             password_length='6',
             password_mix_charset='False',
-            password_lifetime='-1',    # days
+            password_lifetime='-1',  # days
             password_reuse_period='5',  # times
-            user_login_attempts='3',    # times
+            user_login_attempts='3',  # times
             user_session_lifetime='10',  # minutes
-            save_history='True'
-        )
+            save_history='True')
         for p in default_policies:
             var = pds.system_model(p, default_policies[p])
             pds.put(var)
@@ -518,18 +527,18 @@ def before_first_request():
     # get configurations from database
     db_server.load_config_from_database()
 
+
 @api.route('/system')
 class SystemAPI(Resource):
     get_parser = reqparse.RequestParser()
     get_parser.add_argument('command', type=str, required=True, help="Commands: get_all_variables")
     post_parser = reqparse.RequestParser()
-    post_parser.add_argument(
-        '_', type=str, required=False, location='form',
-        help='Dictionary containing name-value pairs.')
+    post_parser.add_argument('_', type=str, required=False, location='form', help='Dictionary containing name-value pairs.')
+
     @api.expect(get_parser)
     def get(self):
         return db_server.process_request_dict(self.get_parser.parse_args())
-    
+
     @auth_token_required
     @any_role_required("Admin")
     @api.expect(post_parser)
@@ -538,14 +547,15 @@ class SystemAPI(Resource):
         request_dict = {k: request.form[k] for k in request.form}
         request_dict["command"] = "save_system_variables"
         return db_server.process_request_dict(request_dict)
-        
+
+
 @api.route('/action')
 class ActionAPI(Resource):
     get_parser = reqparse.RequestParser()
     post_parser = reqparse.RequestParser()
     post_parser.add_argument('username', type=str, required=True)
     post_parser.add_argument('action', type=str, required=True)
-    
+
     @auth_token_required
     @any_role_required("Admin")
     @api.expect(get_parser)
@@ -560,7 +570,8 @@ class ActionAPI(Resource):
         request_dict = self.post_parser.parse_args()
         request_dict["command"] = "save_action"
         return db_server.process_request_dict(request_dict)
-            
+
+
 @api.route('/account')
 class AccountAPI(Resource):
     """
@@ -575,13 +586,15 @@ class AccountAPI(Resource):
     post_parser.add_argument('requester', type=str, required=True, help="Name of request program")
     post_parser.add_argument('Logout_InActivity', type=inputs.boolean, required=False, location='form')
     post_parser.add_argument('command', type=str, required=True, help="Commands: log_in_user, log_out_user, change_password.")
+
     @api.expect(get_parser)
     def get(self):
-        return db_server.process_request_dict(self.get_parser.parse_args())            
+        return db_server.process_request_dict(self.get_parser.parse_args())
 
-    @api.expect(post_parser)            
+    @api.expect(post_parser)
     def post(self):
-        return db_server.process_request_dict(self.post_parser.parse_args())         
+        return db_server.process_request_dict(self.post_parser.parse_args())
+
 
 @api.route('/users')
 class UsersAPI(Resource):
@@ -600,7 +613,7 @@ class UsersAPI(Resource):
     post_parser.add_argument('password', type=str, required=False)
     post_parser.add_argument('roles', type=str, required=False)
     post_parser.add_argument('active', type=int, required=False)
-    
+
     @auth_token_required
     @any_role_required("Admin")
     @api.expect(get_parser)
@@ -612,7 +625,7 @@ class UsersAPI(Resource):
     @api.expect(post_parser)
     def post(self):
         return db_server.process_request_dict(self.post_parser.parse_args())
-        
+
 
 def main():
     my_instance = SingleInstance(APP_NAME)

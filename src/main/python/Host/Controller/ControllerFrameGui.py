@@ -30,7 +30,7 @@ class ControllerFrameGui(wx.Frame):
         # begin wxGlade: ControllerFrameGui.__init__
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
-        
+
         # Menu Bar
         self.controllerFrameGui_menubar = wx.MenuBar()
         self.interface = wx.Menu()
@@ -203,5 +203,6 @@ class ControllerFrameGui(wx.Frame):
     def onAbout(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler 'onAbout' not implemented!"
         event.Skip()
+
 
 # end of class ControllerFrameGui

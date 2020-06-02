@@ -11,11 +11,10 @@ RPC_PORT_TEST_CMDFIFO_CALLBACK = 8001
 
 class RpcProvider(object):
     def __init__(self):
-        self.rpcServer = CmdFIFO.CmdFIFOServer(
-            ("", RPC_PORT_TEST_CMDFIFO),
-            ServerName="TestCmdFIFO",
-            ServerDescription="Test server for CmdFIFO functionality",
-            threaded=True)
+        self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_TEST_CMDFIFO),
+                                               ServerName="TestCmdFIFO",
+                                               ServerDescription="Test server for CmdFIFO functionality",
+                                               threaded=True)
         self.rpcServer.register_function(self.remoteProduct)
         self.rpcServer.register_function(self.remoteQuotient)
         self.rpcServer.register_function(self.remoteVarSum)
@@ -23,11 +22,11 @@ class RpcProvider(object):
 
     def remoteProduct(self, x, y):
         "Computes product of x and y"
-        return x*y
+        return x * y
 
     def remoteQuotient(self, x, y):
         "Computes quotient of x and y"
-        return x/y
+        return x / y
 
     def remoteVarSum(self, *a):
         "Computes sum of any number of arguments"
@@ -37,6 +36,7 @@ class RpcProvider(object):
         "Delay by x seconds and return epoch time at completion"
         time.sleep(x)
         return time.time()
+
 
 if __name__ == "__main__":
     server = RpcProvider().rpcServer

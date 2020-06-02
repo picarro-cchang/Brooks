@@ -3,9 +3,11 @@ import zmq
 from Host.autogen import interface
 from Host.Common import SharedTypes
 
+
 class LossDataTableType(tables.IsDescription):
     time = tables.Int64Col()
     uncorrectedLoss = tables.Float32Col()
+
 
 class RdResultsListener(object):
     def __init__(self, ipAddr, port):
@@ -64,15 +66,16 @@ class RdResultsListener(object):
         except zmq.ZMQError:
             return None
 
-    def getAvailableData(self,deque,maxLength):
-         while True:
+    def getAvailableData(self, deque, maxLength):
+        while True:
             obj = self.saveAndFetch()
             if not obj: break
             deque.append((obj.timestamp, obj.uncorrectedAbsorbance))
-            while len(deque)>maxLength: deque.popleft()
+            while len(deque) > maxLength:
+                deque.popleft()
 
-    def binAvailableData(self,tsOffset,binAverager,streamNum):
-         while True:
+    def binAvailableData(self, tsOffset, binAverager, streamNum):
+        while True:
             obj = self.saveAndFetch()
             if not obj: break
-            binAverager.insertData(obj.timestamp-tsOffset, streamNum, obj.uncorrectedAbsorbance)
+            binAverager.insertData(obj.timestamp - tsOffset, streamNum, obj.uncorrectedAbsorbance)

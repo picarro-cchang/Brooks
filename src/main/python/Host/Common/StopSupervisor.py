@@ -3,7 +3,7 @@
 # File Name: StopSupervisor.py
 # Purpose: Stop supervisor and all supervised components.
 #
-# 
+#
 
 import sys
 import os
@@ -14,19 +14,18 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 
 APP_NAME = "SupervisorTerminator"
 
-CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
+
 class StopSupervisorFrame(wx.Frame):
     def __init__(self, *args, **kwds):
-        kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
+        kwds["style"] = wx.DEFAULT_FRAME_STYLE & ~(wx.RESIZE_BORDER | wx.RESIZE_BOX | wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.SetTitle("Stop CRDS Software")
         self.SetBackgroundColour("#E0FFFF")
@@ -35,9 +34,13 @@ class StopSupervisorFrame(wx.Frame):
         self.labelTitle = wx.StaticText(self, -1, "Stop CRDS Software", style=wx.ALIGN_CENTRE)
         self.labelTitle.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
 
-        self.selectShutdownType = wx.RadioBox(self, -1, "Select shutdown method",
-        choices=["Stop software but keep driver running", "Stop software and driver", "Turn off analyzer in current state"],
-        majorDimension=1, style=wx.RA_SPECIFY_COLS)
+        self.selectShutdownType = wx.RadioBox(
+            self,
+            -1,
+            "Select shutdown method",
+            choices=["Stop software but keep driver running", "Stop software and driver", "Turn off analyzer in current state"],
+            majorDimension=1,
+            style=wx.RA_SPECIFY_COLS)
 
         # button
         self.buttonStop = wx.Button(self, -1, "Stop", style=wx.ALIGN_CENTRE, size=(110, 20))
@@ -48,19 +51,20 @@ class StopSupervisorFrame(wx.Frame):
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_1.Add(self.labelTitle, 0, wx.TOP|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
-        sizer_1.Add(self.selectShutdownType, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
-        sizer_1.Add(self.buttonStop, 0, wx.BOTTOM|wx.ALIGN_CENTER_VERTICAL|wx.ALIGN_CENTER, 20)
+        sizer_1.Add(self.labelTitle, 0, wx.TOP | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER, 20)
+        sizer_1.Add(self.selectShutdownType, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER, 20)
+        sizer_1.Add(self.buttonStop, 0, wx.BOTTOM | wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER, 20)
 
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
         self.Layout()
 
+
 class StopSupervisor(StopSupervisorFrame):
     def __init__(self, *args, **kwds):
         StopSupervisorFrame.__init__(self, *args, **kwds)
         self.Bind(wx.EVT_BUTTON, self.onStop, self.buttonStop)
-        
+
     def onStop(self, event):
         try:
             if CRDS_Supervisor.CmdFIFO.PingFIFO() == "Ping OK":
@@ -73,14 +77,14 @@ class StopSupervisor(StopSupervisorFrame):
                 else:
                     return
             else:
-                d = wx.MessageDialog(None,"Analyzer is not running\n", "Action cancelled", style=wx.ICON_EXCLAMATION)
+                d = wx.MessageDialog(None, "Analyzer is not running\n", "Action cancelled", style=wx.ICON_EXCLAMATION)
                 d.ShowModal()
                 d.Destroy()
         except:
-            d = wx.MessageDialog(None,"Analyzer is not running\n", "Action cancelled", style=wx.ICON_EXCLAMATION)
+            d = wx.MessageDialog(None, "Analyzer is not running\n", "Action cancelled", style=wx.ICON_EXCLAMATION)
             d.ShowModal()
             d.Destroy()
-            
+
     def Stop(self, option=None):
         appsToKill = ["RestartSurveyor", "RestartSupervisor", "HostStartup", "QuickGui", \
             "Controller", "Serial2Socket", "ControlBridge", "DataManagerPublisher"]
@@ -91,7 +95,7 @@ class StopSupervisor(StopSupervisorFrame):
                     if app in cmd:
                         proc.kill()
                         appsToKill.remove(app)
-                        break            
+                        break
             if option is None:
                 sel = self.selectShutdownType.GetSelection()
             else:
@@ -121,8 +125,11 @@ Where the options can be a combination of the following:
                     2: Turn off analyzer in current state
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
     alarmConfigFile = None
@@ -145,16 +152,17 @@ def HandleCommandSwitches():
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit()
-    
+
     #Start with option defaults...
     shutDownOption = -1
 
     if "-o" in options:
         shutDownOption = int(options["-o"])
         print "Shutdown option specified at command line: %d" % shutDownOption
-        
-    return shutDownOption            
-            
+
+    return shutDownOption
+
+
 if __name__ == "__main__":
     app = wx.App(False)
     shutDownOption = HandleCommandSwitches()

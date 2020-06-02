@@ -18,6 +18,7 @@ from Host.Common.GraphPanel import GraphPanel
 def _(x):
     return x
 
+
 class WlmCalUtilityGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: WlmCalUtilityGui.__init__
@@ -210,9 +211,10 @@ class WlmCalUtilityGui(wx.Frame):
         print "Event handler 'onSaveData' not implemented!"
         event.Skip()
 
+
 # end of class WlmCalUtilityGui
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
+    gettext.install("app")  # replace with the appropriate catalog name
 
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

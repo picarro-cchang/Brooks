@@ -9,7 +9,6 @@ from Host.Common.GraphPanel import GraphPanel
 # end wxGlade
 
 
-
 class GraphicsFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: GraphicsFrameGui.__init__
@@ -44,12 +43,12 @@ class GraphicsFrameGui(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def onPlot(self, event): # wxGlade: GraphicsFrameGui.<event_handler>
+    def onPlot(self, event):  # wxGlade: GraphicsFrameGui.<event_handler>
         print "Event handler `onPlot' not implemented!"
         event.Skip()
 
-# end of class GraphicsFrameGui
 
+# end of class GraphicsFrameGui
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

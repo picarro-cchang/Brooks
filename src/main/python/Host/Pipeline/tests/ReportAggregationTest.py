@@ -9,6 +9,7 @@ from ReportExclusionRadiusTest import SQA3Database, distVincenty
 from Host.Pipeline.EthaneAggregation import EthaneAggregation
 from traitlets.config import Config
 
+
 def get_peaks(name):
     results = db.get_report(name)
     report_id = None
@@ -21,7 +22,7 @@ def get_peaks(name):
             sys.exit(1)
     elif len(results) > 1:
         for i, result in enumerate(results):
-            print "%d) %s at %s" % (i+1, results[i]["title"], results[i]["date_start"])
+            print "%d) %s at %s" % (i + 1, results[i]["title"], results[i]["date_start"])
         while True:
             ok = raw_input("Enter row number of report: ").strip()
             if len(ok) == 0:
@@ -29,7 +30,7 @@ def get_peaks(name):
             try:
                 ok = int(ok)
                 if 0 < ok <= len(results):
-                    report_id = results[ok-1]["report_id"]
+                    report_id = results[ok - 1]["report_id"]
                     break
             except:
                 continue
@@ -37,7 +38,8 @@ def get_peaks(name):
         print "Report not found"
         exit(1)
     return db.get_report_peaks(report_id)
-         
+
+
 if __name__ == "__main__":
     db = SQA3Database()
     print "Specify two reports with identical parameters, except for exclusion radius"
@@ -62,7 +64,7 @@ if __name__ == "__main__":
         ok = True
         if abs(peak_times[min_pos] - epoch_time) > 1.0:
             ok = False
-            print "Peak number %d from second file not in first" % (peak["PEAK_NUM"],)
+            print "Peak number %d from second file not in first" % (peak["PEAK_NUM"], )
             break
         else:
             peak_map[peak["PEAK_NUM"]] = (perm[min_pos], peak_numbers[min_pos])
@@ -79,12 +81,12 @@ if __name__ == "__main__":
         if ok:
             matches0.append(perm[min_pos])
         else:
-            print "--------------------------- NON-MATCHING PEAK ---------------------------" 
+            print "--------------------------- NON-MATCHING PEAK ---------------------------"
             print "Peak from zero ER file", match
             print "Peak from non-zero ER file", peak
-            
+
     print
-    print "Comparing results with Python code" 
+    print "Comparing results with Python code"
     config = Config()
     config.EthaneClassifier.nng_lower = 0.0  # Lower limit of ratio for not natural gas hypothesis
     config.EthaneClassifier.nng_upper = 0.1e-2  # Upper limit of ratio for not natural gas hypothesis
@@ -100,7 +102,7 @@ if __name__ == "__main__":
     config.VehicleExhaustClassifier.ve_ethane_upper = 10.0  # Ethane upper level for vehicle exhaust
 
     # Pass the peaks from the first file through Python processor
-    ea  = EthaneAggregation(indications=peaks0, exclusion_radius=excl_radius, config=config)
+    ea = EthaneAggregation(indications=peaks0, exclusion_radius=excl_radius, config=config)
     sorted_indications = ea.process()
 
     # Go through the sorted indications and compare them with the results from the second file
@@ -114,7 +116,7 @@ if __name__ == "__main__":
     for indication in sorted_indications:
         if indication["AGG_VERDICT"] not in ["EXCLUDED", "BELOW_THRESHOLD"]:
             python_peaks += 1
-            # We should find it in peaksER        
+            # We should find it in peaksER
             epoch_time = indication["EPOCH_TIME"]
             min_pos = np.argmin(abs(peak_times - epoch_time))
             if abs(peak_times[min_pos] - epoch_time) > 1.0:
@@ -134,18 +136,17 @@ if __name__ == "__main__":
                 if ok:
                     matchesP.append(perm[min_pos])
                 else:
-                    print "========================== NON-MATCHING PEAK ==========================" 
+                    print "========================== NON-MATCHING PEAK =========================="
                     print "Peak from C# code", peak
                     print "Peak from Python", indication
-            
+
     if missing:
         for peak in missing:
-            print "========================== MISSING PEAK ==========================" 
+            print "========================== MISSING PEAK =========================="
             print "Peak from Python", indication
-            
 
-    print "Matched %d out of %d peaks from non-zero ER file" % (len(matches0), len(peaksER))       
+    print "Matched %d out of %d peaks from non-zero ER file" % (len(matches0), len(peaksER))
     print "Matched %d out of %d peaks between Python and non-zero ER file" % (len(matchesP), len(peaksER))
-    print "Total number of Python peaks %d" % (python_peaks,)
+    print "Total number of Python peaks %d" % (python_peaks, )
     if missing:
-        print "%d peaks from Python are missing from non-zero ER file" % (len(missing),)
+        print "%d peaks from Python are missing from non-zero ER file" % (len(missing), )

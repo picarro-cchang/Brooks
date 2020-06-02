@@ -4,8 +4,7 @@ import Queue
 import sys
 import threading
 import time
-from traitlets import (Any, Bool, Dict, Float, ForwardDeclaredInstance,
-                       Instance, Integer, List, Tuple, Unicode, Union)
+from traitlets import (Any, Bool, Dict, Float, ForwardDeclaredInstance, Instance, Integer, List, Tuple, Unicode, Union)
 from traitlets.config.configurable import Configurable
 from types import FunctionType, MethodType
 
@@ -48,7 +47,7 @@ class Pipeline(Configurable):
         if not self.exc_info:
             self.exc_info = exc_info
             for block in self.blocks:
-                block.fault(exc_info)   # Tell all blocks about error
+                block.fault(exc_info)  # Tell all blocks about error
 
     def isComplete(self):
         """
@@ -88,6 +87,7 @@ class Pipeline(Configurable):
             if self.exc_info:
                 raise self.exc_info[1], None, self.exc_info[2]
 
+
 class BlockInput(Configurable):
     """Class for inputs to blocks"""
     parent = ForwardDeclaredInstance("Block", allow_none=True)
@@ -112,6 +112,7 @@ class BlockInput(Configurable):
             raise RuntimeError("Cannot post after calling complete or an exception has occured")
         else:
             self.parent.enqueue(msg, self.index)
+
 
 class Block(Configurable):
     """Base class for blocks which can be connected into a pipeline.
@@ -238,6 +239,7 @@ class Block(Configurable):
                 c.complete()
             self.consumersLock.release()
 
+
 class SourceBlock(Block):
     """Block which periodically calls a function that generates an output message
 
@@ -277,6 +279,7 @@ class SourceBlock(Block):
             else:
                 time.sleep(wait_time)
 
+
 class SingleInputBlock(Block):
     """Block which has a single input.
 
@@ -290,6 +293,7 @@ class SingleInputBlock(Block):
     """
     func = Union([Instance(FunctionType), Instance(MethodType)])
     inQueue = Instance(Queue.Queue)
+
     def __init__(self, func, qLength=10, **kwargs):
         super(SingleInputBlock, self).__init__(**kwargs)
         self.func = func
@@ -315,6 +319,7 @@ class SingleInputBlock(Block):
         assert index == 0
         self.inQueue.put(msg)
 
+
 class ActionBlock(SingleInputBlock):
     """A block with an input but no outputs"""
     def __init__(self, func, qLength=10, **kwargs):
@@ -331,12 +336,15 @@ class ActionBlock(SingleInputBlock):
                 continue
             self.func(msg)
 
+
 class _TransformBlock(SingleInputBlock):
     """Base class for a block with an input and an output."""
     def __init__(self, func, qLength=10, **kwargs):
         super(_TransformBlock, self).__init__(func, qLength, **kwargs)
+
     def mainLoop(self):
         raise NotImplementedError("This must be defined in a subclass")
+
 
 class TransformBlock(_TransformBlock):
     """A block in which a single input message gives rise to a single output message"""
@@ -359,6 +367,7 @@ class TransformBlock(_TransformBlock):
                 c.post(result)
             self.consumersLock.release()
 
+
 class TransformManyBlock(_TransformBlock):
     """A block in which a single input message gives rise to a zero or more output messages"""
     def __init__(self, func, qLength=10, **kwargs):
@@ -379,6 +388,7 @@ class TransformManyBlock(_TransformBlock):
                     c = self.consumers[i]
                     c.post(result)
                 self.consumersLock.release()
+
 
 class MergeBlock(Block):
     """A block with many inputs. Results are sent to func in deques. Processing results in zero or more output messages"""
@@ -426,7 +436,7 @@ class MergeBlock(Block):
                     nMsg += 1
             except Queue.Empty:
                 continue
-            if nMsg>0:
+            if nMsg > 0:
                 self.callFunc()
 
     def defaultContinuation(self, srcBlock):
@@ -437,6 +447,7 @@ class MergeBlock(Block):
         """
         self.callFunc(lastCall=True)
         Block.defaultContinuation(self, srcBlock)
+
 
 def MergeManyBlock(nInputs):
     return lambda func: MergeBlock(func, nInputs)

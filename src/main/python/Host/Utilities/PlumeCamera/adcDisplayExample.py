@@ -23,14 +23,15 @@ ADC_BROADCAST_PORT = 5202
 
 APP_NAME = "adcDisplayExample"
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = os.path.abspath(sys.argv[0])
 
+
 class ScopePanel(wx.Panel):
     def __init__(self, *args, **kwds):
-        nGraphs = kwds.get("nGraphs",1)
+        nGraphs = kwds.get("nGraphs", 1)
         if "nGraphs" in kwds: del kwds["nGraphs"]
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
@@ -41,28 +42,36 @@ class ScopePanel(wx.Panel):
         vbox = wx.BoxSizer(wx.VERTICAL)
         self.maxWaveformPoints = 4096
         for i in range(nGraphs):
-            gp = GraphPanel(parent=self,id=-1)
-            gp.SetGraphProperties(xlabel='Time (ms)',timeAxes=(False,False),ylabel='Channel %d' % i,
-                                  grid=True,frameColour=bg,backgroundColour=bg)
+            gp = GraphPanel(parent=self, id=-1)
+            gp.SetGraphProperties(xlabel='Time (ms)',
+                                  timeAxes=(False, False),
+                                  ylabel='Channel %d' % i,
+                                  grid=True,
+                                  frameColour=bg,
+                                  backgroundColour=bg)
             gp.Update()
-            vbox.Add(gp,proportion=1,flag=wx.GROW)
+            vbox.Add(gp, proportion=1, flag=wx.GROW)
             self.graphPanels.append(gp)
             gw = Series(self.maxWaveformPoints)
             self.graphWaveforms.append(gw)
-            gp.AddSeriesAsLine(gw,width=2,colour="blue")
+            gp.AddSeriesAsLine(gw, width=2, colour="blue")
         self.SetSizer(vbox)
         vbox.Fit(self)
+
     def Update(self):
         for gp in self.graphPanels:
             gp.Update()
-    def setXLim(self,xMin,xMax,whichGraphs=None):
+
+    def setXLim(self, xMin, xMax, whichGraphs=None):
         for i, gp in enumerate(self.graphPanels):
             if whichGraphs is None or i in whichGraphs:
-                gp.SetGraphProperties(XSpec=(xMin,xMax))
-    def setYLim(self,yMin,yMax,whichGraphs):
+                gp.SetGraphProperties(XSpec=(xMin, xMax))
+
+    def setYLim(self, yMin, yMax, whichGraphs):
         for i, gp in enumerate(self.graphPanels):
             if whichGraphs is None or i in whichGraphs:
-                gp.SetGraphProperties(YSpec=(yMin,yMax))
+                gp.SetGraphProperties(YSpec=(yMin, yMax))
+
 
 class ControlPanel(wx.Panel):
     def __init__(self, *args, **kwds):
@@ -76,37 +85,39 @@ class ControlPanel(wx.Panel):
 
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
 
-        self.button_start = wx.Button(self,-1,"Start")
-        self.button_stop = wx.Button(self,-1,"Stop")
-        self.button_quit = wx.Button(self,-1,"Quit")
+        self.button_start = wx.Button(self, -1, "Start")
+        self.button_stop = wx.Button(self, -1, "Stop")
+        self.button_quit = wx.Button(self, -1, "Quit")
 
-        sizer_1.Add(self.button_start, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
-        sizer_1.Add(self.button_stop, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
-        sizer_1.Add(self.button_quit, 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND, 10)
+        sizer_1.Add(self.button_start, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 10)
+        sizer_1.Add(self.button_stop, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 10)
+        sizer_1.Add(self.button_quit, 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND, 10)
 
         self.SetSizer(sizer_1)
         sizer_1.Fit(self)
 
         self.Bind(wx.EVT_BUTTON, self.onStart, self.button_start)
-        self.Bind(wx.EVT_BUTTON, self.onStop,  self.button_stop)
-        self.Bind(wx.EVT_BUTTON, self.onQuit,  self.button_quit)
+        self.Bind(wx.EVT_BUTTON, self.onStop, self.button_stop)
+        self.Bind(wx.EVT_BUTTON, self.onQuit, self.button_quit)
 
-    def onStart(self,evt):
+    def onStart(self, evt):
         self.root.onStart(evt)
 
-    def onStop(self,evt):
+    def onStop(self, evt):
         self.root.onStop(evt)
 
-    def onQuit(self,evt):
+    def onQuit(self, evt):
         self.root.onQuit(evt)
+
 
 class MeasCompInterface(object):
     """Class for accessing Measurement Computing hardware"""
+
     # Note that we have two zmq contexts, since the subscription to the
     #  ADC data takes place in a thread and the data is placed in a Queue
     #  for access via the main (GUI) thread. The access to the command
     #  port occuurs wholly within the main thread.
-    def __init__(self,root=None):
+    def __init__(self, root=None):
         self.zmqContext = zmq.Context()
         self.cmdSocket = self.zmqContext.socket(zmq.REQ)
         self.cmdSocket.connect("tcp://127.0.0.1:%d" % ADC_CMD_PORT)
@@ -122,7 +133,7 @@ class MeasCompInterface(object):
         listenSocket.connect("tcp://127.0.0.1:%d" % ADC_BROADCAST_PORT)
         listenSocket.setsockopt(zmq.SUBSCRIBE, "")
         poller = zmq.Poller()
-        poller.register(listenSocket,zmq.POLLIN)
+        poller.register(listenSocket, zmq.POLLIN)
         while not self.stopThread:
             # Timeout is present so that we can stop the thread
             socks = dict(poller.poll(1000))
@@ -140,7 +151,7 @@ class MeasCompInterface(object):
         self.listenThread.setDaemon(True)
         self.listenThread.start()
 
-    def sendCommand(self,cmdDict):
+    def sendCommand(self, cmdDict):
         self.cmdSocket.send(json.dumps(cmdDict))
         return json.loads(self.cmdSocket.recv())
 
@@ -155,46 +166,48 @@ class MeasCompInterface(object):
         self.zmqContext.term()
         return ret
 
+
 class Viewer(wx.Frame):
-    def __init__(self,configFile):
-        wx.Frame.__init__(self,parent=None,id=-1,title='ADC Viewer',size=(1000,700))
-        panel = wx.Panel(self,id=-1)
-        self.notebook = wx.Notebook(panel,-1,style=wx.NB_NOPAGETHEME)
-        self.scopePanel = ScopePanel(self.notebook,nGraphs=4)
-        self.notebook.AddPage(self.scopePanel,"ADC Waveforms")
-        self.controlPanel = ControlPanel(panel,-1,root=self)
+    def __init__(self, configFile):
+        wx.Frame.__init__(self, parent=None, id=-1, title='ADC Viewer', size=(1000, 700))
+        panel = wx.Panel(self, id=-1)
+        self.notebook = wx.Notebook(panel, -1, style=wx.NB_NOPAGETHEME)
+        self.scopePanel = ScopePanel(self.notebook, nGraphs=4)
+        self.notebook.AddPage(self.scopePanel, "ADC Waveforms")
+        self.controlPanel = ControlPanel(panel, -1, root=self)
         self.mci = MeasCompInterface(root=self)
         self.config = ConfigObj(configFile)
         sizer_1 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_2 = wx.BoxSizer(wx.VERTICAL)
-        sizer_2.Add(self.notebook,proportion=1,flag=wx.EXPAND)
-        sizer_1.Add(self.controlPanel,proportion=0,flag=wx.EXPAND)
-        sizer_1.Add(sizer_2,proportion=1,flag=wx.EXPAND)
+        sizer_2.Add(self.notebook, proportion=1, flag=wx.EXPAND)
+        sizer_1.Add(self.controlPanel, proportion=0, flag=wx.EXPAND)
+        sizer_1.Add(sizer_2, proportion=1, flag=wx.EXPAND)
         panel.SetSizer(sizer_1)
         self.mci.startListening()
         self.timer = wx.Timer(self)
-        self.Bind(wx.EVT_TIMER,self.onTimer,self.timer)
+        self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
         self.timer.Start(200)
         self.sample = 0
 
-    def onStart(self,evt):
+    def onStart(self, evt):
         print self.mci.sendCommand({"func": "start", "args": []})
 
-    def onStop(self,evt):
+    def onStop(self, evt):
         print self.mci.sendCommand({"func": "stop", "args": []})
 
-    def onQuit(self,evt):
+    def onQuit(self, evt):
         print self.mci.close()
         self.Close()
 
-    def onTimer(self,evt):
+    def onTimer(self, evt):
         while not self.mci.dataQueue.empty():
             data = self.mci.dataQueue.get()
-            for i,d in enumerate(data):
-                self.scopePanel.graphWaveforms[i].Add(self.sample,d)
+            for i, d in enumerate(data):
+                self.scopePanel.graphWaveforms[i].Add(self.sample, d)
             self.sample += 1
         for gp in self.scopePanel.graphPanels:
             gp.Update()
+
 
 _DEFAULT_CONFIG_NAME = "adcDisplayExample.ini"
 
@@ -207,8 +220,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -249,6 +264,7 @@ def main():
     frame = Viewer(configFile)
     frame.Show()
     app.MainLoop()
+
 
 if __name__ == "__main__":
     main()

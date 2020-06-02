@@ -10,8 +10,8 @@ dummy_file = "/var/log/syslog.1"
 # test of the FileEraser's ability to delete directories
 # that are not empty.
 #
-for month in xrange(1,2):
-    for day in xrange(1,31):
+for month in xrange(1, 2):
+    for day in xrange(1, 31):
         date_dir = "{}-{:0>2}-{:0>2}".format(year, month, day)
         rdf_dir = date_dir + "-RDF"
         full_path = os.path.join(base_path, date_dir)
@@ -20,4 +20,3 @@ for month in xrange(1,2):
         os.makedirs(rdf_full_path, 0775)
         shutil.copy(dummy_file, full_path)
         shutil.copy(dummy_file, rdf_full_path)
-

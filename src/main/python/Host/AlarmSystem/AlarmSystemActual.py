@@ -54,8 +54,8 @@ import getopt
 import Queue
 import time
 import threading
-import socket #for transmitting data to the fitter
-import struct #for converting numbers to byte format
+import socket  #for transmitting data to the fitter
+import struct  #for converting numbers to byte format
 import time
 import traceback
 import collections
@@ -70,6 +70,7 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import *
 EventManagerProxy_Init(APP_NAME)
 
+
 # recursive dictionary update
 def update(d, u):
     for k, v in u.iteritems():
@@ -80,8 +81,9 @@ def update(d, u):
             d[k] = u[k]
     return d
 
+
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -95,9 +97,11 @@ else:
 
 ALLOWED_MODES = ["Higher", "Lower", "Inside", "Outside"]
 
+
 class Alarm(object):
     """Class to manage alarms"""
     COLUMN_WIDTH = 26
+
     def __init__(self):
 
         self.Name = ""
@@ -110,7 +114,6 @@ class Alarm(object):
         self.ClearThreshold1 = 0
         self.ClearThreshold2 = 0
         self.AlarmSet = False
-
 
     def _LoadConfig(self, cp, section):
 
@@ -192,6 +195,7 @@ class Alarm(object):
 
         return action
 
+
 ####
 ## Classes...
 ####
@@ -202,8 +206,9 @@ class AlarmSystem(object):
         if __debug__: Log("Loading config options.")
         self.configPath = configPath
 
-        self.AlarmDict = {}    # contains alarm config objects for each alarm section found in the config file.
-        self.SrcDict = {}      # Dictionary of source scripts which contains list of alarm names, which is used for filtering of broadcast data.
+        self.AlarmDict = {}  # contains alarm config objects for each alarm section found in the config file.
+        self.SrcDict = {
+        }  # Dictionary of source scripts which contains list of alarm names, which is used for filtering of broadcast data.
         self.PortDict = {}
         self.lastStatus = None
         self.alarmStatus = 0
@@ -216,10 +221,10 @@ class AlarmSystem(object):
         if __debug__: Log("Setting up RPC server.")
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_ALARM_SYSTEM),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = APP_VERSION,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=APP_VERSION,
+                                               threaded=True)
 
         if __debug__: Log("Registering RPC functions.")
         #Register the rpc functions...
@@ -234,7 +239,6 @@ class AlarmSystem(object):
         self.RpcServer.register_function(self.ALARMSYSTEM_setClearThresholdRpc)
         self.RpcServer.register_function(self.ALARMSYSTEM_getClearThresholdRpc)
 
-
     def _LoadConfigFile(self):
         """Creates log dict which store DataLog object for every log section defined in confile file.
            Also creates SrcDict and PortDict which contains lists of DataLog objects for each source scripts and port number.
@@ -245,12 +249,12 @@ class AlarmSystem(object):
         else:
             self.sys_cp = CustomConfigObj(self.configPath)
             initFiles = self.sys_cp["Init_Files"]
-            self.user_configPath = os.path.join( os.path.dirname(self.configPath), initFiles["useralarms"] )
+            self.user_configPath = os.path.join(os.path.dirname(self.configPath), initFiles["useralarms"])
 
             if "alarmparams" in initFiles:
-                self.instr_configPath = os.path.join( os.path.dirname(self.configPath), initFiles["alarmparams"] )
+                self.instr_configPath = os.path.join(os.path.dirname(self.configPath), initFiles["alarmparams"])
                 instr_cp = CustomConfigObj(self.instr_configPath)
-                self.alarmParamsDict = update( dict(self.sys_cp).copy(), dict(instr_cp) )
+                self.alarmParamsDict = update(dict(self.sys_cp).copy(), dict(instr_cp))
             else:
                 self.alarmParamsDict = dict(self.sys_cp)
 
@@ -261,13 +265,14 @@ class AlarmSystem(object):
             self.maxNumAlarmWords += 1
 
             if "alarmscript" in initFiles:
-                alarmScriptFile = os.path.join( os.path.dirname(self.configPath), initFiles["alarmscript"] )
-                with file(alarmScriptFile,"r") as fh:
+                alarmScriptFile = os.path.join(os.path.dirname(self.configPath), initFiles["alarmscript"])
+                with file(alarmScriptFile, "r") as fh:
                     sourceString = fh.read()
                 if sys.platform == 'win32':
-                    sourceString = sourceString.replace("\r","")
-                Log("Compiling alarm script", dict(Path = alarmScriptFile))
-                self.alarmScriptCodeObj = compile(sourceString, alarmScriptFile, "exec") #providing path accurately allows debugging of script
+                    sourceString = sourceString.replace("\r", "")
+                Log("Compiling alarm script", dict(Path=alarmScriptFile))
+                self.alarmScriptCodeObj = compile(sourceString, alarmScriptFile,
+                                                  "exec")  #providing path accurately allows debugging of script
 
             self.user_cp = CustomConfigObj(self.user_configPath)
 
@@ -282,10 +287,13 @@ class AlarmSystem(object):
                     config._LoadConfig(self.user_cp, section)
                 except:
                     tbMsg = traceback.format_exc()
-                    Log("Exception occurred on Alarm load config:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                    Log("Exception occurred on Alarm load config:",
+                        Data=dict(Note="<See verbose for debug info>"),
+                        Level=3,
+                        Verbose=tbMsg)
                     continue
 
-                self.AlarmDict[section]=config
+                self.AlarmDict[section] = config
 
                 # update Source Script Dict
                 if config.SourceScript not in self.SrcDict:
@@ -302,7 +310,7 @@ class AlarmSystem(object):
                 count += 1
 
         if self.NumAlarms != count:
-            Log("Invalid number of alarm configs.", Data = dict(NumAlarms = self.NumAlarms), Level = 2)
+            Log("Invalid number of alarm configs.", Data=dict(NumAlarms=self.NumAlarms), Level=2)
 
     def _DataListener(self, dataMgrObject):
         measData = MeasData()
@@ -319,34 +327,51 @@ class AlarmSystem(object):
                         action = self.AlarmDict[alarmName]._Monitor(reportDict)
 
                         if action == "Set":
-                            num = (int(alarmName.lstrip("Alarm_"))-1)
+                            num = (int(alarmName.lstrip("Alarm_")) - 1)
                             bitMask = 1 << num
                             self.alarmStatus |= bitMask
                             print 'Alarm status is ordered bit mask'
-                            if __debug__: Log("%s Set: Alarm=%s; Mode=%s; Data=%s; Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, reportDict[self.AlarmDict[alarmName].Data]))
-                            if __debug__: Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
+                            if __debug__:
+                                Log("%s Set: Alarm=%s; Mode=%s; Data=%s; Value=%f" %
+                                    (alarmName, self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode,
+                                     self.AlarmDict[alarmName].Data, reportDict[self.AlarmDict[alarmName].Data]))
+                            if __debug__:
+                                Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %
+                                    (self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2,
+                                     self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
                         elif action == "Clear":
-                            num = (int(alarmName.lstrip("Alarm_"))-1)
+                            num = (int(alarmName.lstrip("Alarm_")) - 1)
                             bitMask = 1 << num
                             self.alarmStatus &= ~bitMask
                             print 'Alarm status is CLEARED ordered bit mask'
-                            if __debug__: Log("%s Clear: Alarm=%s; Mode=%s; Data=%s; Value=%f"%(alarmName,self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode, self.AlarmDict[alarmName].Data, reportDict[self.AlarmDict[alarmName].Data]))
-                            if __debug__: Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %(self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2, self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
-        goodFlag = 0 if measGood else (1<<16)
+                            if __debug__:
+                                Log("%s Clear: Alarm=%s; Mode=%s; Data=%s; Value=%f" %
+                                    (alarmName, self.AlarmDict[alarmName].Name, self.AlarmDict[alarmName].Mode,
+                                     self.AlarmDict[alarmName].Data, reportDict[self.AlarmDict[alarmName].Data]))
+                            if __debug__:
+                                Log("Alarm Threshold 1=%d; Alarm Threshold 2=%d; Clear Threshold 1=%d; Clear Threshold 2=%d" %
+                                    (self.AlarmDict[alarmName].AlarmThreshold1, self.AlarmDict[alarmName].AlarmThreshold2,
+                                     self.AlarmDict[alarmName].ClearThreshold1, self.AlarmDict[alarmName].ClearThreshold2))
+        goodFlag = 0 if measGood else (1 << 16)
         return dict(reportDict, ALARM_STATUS=self.alarmStatus | goodFlag)
 
     def ALARMSYSTEM_start(self):
         """Called to start the alarm system."""
 
         if not FileExists(self.configPath):
-            Log("File not found.", Data = dict(Path = self.configPath), Level = 2)
+            Log("File not found.", Data=dict(Path=self.configPath), Level=2)
             raise Exception("File '%s' not found." % self.configPath)
 
         self._LoadConfigFile()
 
-        for port,value in self.PortDict.iteritems():
-            self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
-                                              name = "Alarm System", logFunc = Log)
+        for port, value in self.PortDict.iteritems():
+            self.Listener = Listener.Listener(None,
+                                              port,
+                                              StringPickler.ArbitraryObject,
+                                              self._DataListener,
+                                              retry=True,
+                                              name="Alarm System",
+                                              logFunc=Log)
 
         self.RpcServer.serve_forever()
         if __debug__: Log("Shutting Down Data Logger.")
@@ -355,7 +380,7 @@ class AlarmSystem(object):
         """Called to start the alarm system."""
 
         if not FileExists(self.configPath):
-            Log("File not found.", Data = dict(Path = self.configPath), Level = 2)
+            Log("File not found.", Data=dict(Path=self.configPath), Level=2)
             raise Exception("File '%s' not found." % self.configPath)
 
         self._LoadConfigFile()
@@ -365,12 +390,11 @@ class AlarmSystem(object):
         #    self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
         #                                      name = "Alarm System", logFunc = Log)
 
-        alarmSystemRpcThread = threading.Thread(target = self.RpcServer.serve_forever)
+        alarmSystemRpcThread = threading.Thread(target=self.RpcServer.serve_forever)
         alarmSystemRpcThread.setDaemon(True)
         alarmSystemRpcThread.start()
 
         ## A. Nottrott
-
 
     def ALARMSYSTEM_getNameRpc(self, alarmIndex):
         """Returns the name of the alarm specified by alarmIndex. Note: alarmIndex is one based."""
@@ -403,7 +427,7 @@ class AlarmSystem(object):
             if alarmName in self.AlarmDict:
                 self.AlarmDict[alarmName].Mode = mode
                 self.user_cp.set(alarmName, "mode", mode)
-                fp = open(self.user_configPath,"wb")
+                fp = open(self.user_configPath, "wb")
                 self.user_cp.write(fp)
                 fp.close()
                 return ALARM_SYSTEM_RPC_SUCCESS
@@ -431,8 +455,8 @@ class AlarmSystem(object):
             if alarmName in self.AlarmDict:
                 self.AlarmDict[alarmName].Enabled = True
 
-                self.user_cp.set(alarmName,"enabled", "true")
-                fp = open(self.user_configPath,"wb")
+                self.user_cp.set(alarmName, "enabled", "true")
+                fp = open(self.user_configPath, "wb")
                 self.user_cp.write(fp)
                 fp.close()
 
@@ -449,8 +473,8 @@ class AlarmSystem(object):
             if alarmName in self.AlarmDict:
                 self.AlarmDict[alarmName].Enabled = False
 
-                self.user_cp.set(alarmName,"enabled", "false")
-                fp = open(self.user_configPath,"wb")
+                self.user_cp.set(alarmName, "enabled", "false")
+                fp = open(self.user_configPath, "wb")
                 self.user_cp.write(fp)
                 fp.close()
 
@@ -490,8 +514,8 @@ class AlarmSystem(object):
                 else:
                     return ALARM_SYSTEM_RPC_FAILED
 
-                self.user_cp.set(alarmName,"alarmthreshold%d" %thresholdIndex, threshold)
-                fp = open(self.user_configPath,"wb")
+                self.user_cp.set(alarmName, "alarmthreshold%d" % thresholdIndex, threshold)
+                fp = open(self.user_configPath, "wb")
                 self.user_cp.write(fp)
                 fp.close()
 
@@ -531,8 +555,8 @@ class AlarmSystem(object):
                 else:
                     return ALARM_SYSTEM_RPC_FAILED
 
-                self.user_cp.set(alarmName,"clearthreshold%d" %thresholdIndex, threshold)
-                fp = open(self.user_configPath,"wb")
+                self.user_cp.set(alarmName, "clearthreshold%d" % thresholdIndex, threshold)
+                fp = open(self.user_configPath, "wb")
                 self.user_cp.write(fp)
                 fp.close()
 
@@ -553,8 +577,10 @@ Where the options can be a combination of the following:
 --no_inst_mgr  Run without Instrument Manager.
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     shortOpts = 'hc:'
@@ -580,14 +606,15 @@ def HandleCommandSwitches():
 
     if "-c" in options:
         configFile = options["-c"]
-        Log ("Config file specified at command line: %s" % configFile)
+        Log("Config file specified at command line: %s" % configFile)
 
     return configFile
+
 
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
     try:
         app = AlarmSystem(configFile)
         app.ALARMSYSTEM_start()
@@ -596,7 +623,8 @@ def main():
         if __debug__: raise
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+        Log(msg, Level=3, Verbose="Exception = %s %r" % (E, E))
+
 
 if __name__ == "__main__":
     try:
@@ -604,8 +632,8 @@ if __name__ == "__main__":
     except:
         tbMsg = traceback.format_exc()
         Log("Unhandled exception trapped by last chance handler",
-            Data = dict(Note = "<See verbose for debug info>"),
-            Level = 3,
-            Verbose = tbMsg)
+            Data=dict(Note="<See verbose for debug info>"),
+            Level=3,
+            Verbose=tbMsg)
     Log("Exiting program")
     sys.stdout.flush()

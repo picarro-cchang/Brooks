@@ -29,24 +29,26 @@ DEFAULT_CONFIG_NAME = "FluxScheduler.ini"
 FLUX_TYPES = ["CO2_H2O", "H2O_CH4", "CO2_CH4"]
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 def getWinProcessListStr():
     pList = win32process.EnumProcesses()
     moduleList = []
     for p in pList:
         try:
-            h = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ,0,p)
-            moduleList.append(win32process.GetModuleFileNameEx(h,None))
-        except Exception,e:
+            h = win32api.OpenProcess(win32con.PROCESS_QUERY_INFORMATION | win32con.PROCESS_VM_READ, 0, p)
+            moduleList.append(win32process.GetModuleFileNameEx(h, None))
+        except Exception, e:
             pass
             #print "Cannot fetch information for %s: %s" % (p,e)
     processListStr = "\n".join(moduleList)
     return processListStr
+
 
 class FluxScheduler(FluxSchedulerFrame):
     def __init__(self, configFile, supervisorConfigFile, *args, **kwds):
@@ -100,13 +102,14 @@ class FluxScheduler(FluxSchedulerFrame):
                     self.dwellList.append(dwell)
                     self.selectList.append(self.comboBoxSelect1[i].GetValue())
                 else:
-                    d = wx.MessageDialog(None, "Minimum dwell time is %.1f minutes. Enter 0 to skip a mode." % self.minDwell, "Incorrect Dwell Time", wx.OK|wx.ICON_ERROR)
+                    d = wx.MessageDialog(None, "Minimum dwell time is %.1f minutes. Enter 0 to skip a mode." % self.minDwell,
+                                         "Incorrect Dwell Time", wx.OK | wx.ICON_ERROR)
                     d.ShowModal()
                     d.Destroy()
                     return
             else:
                 continue
-        runSchedulerThread = threading.Thread(target = self._runScheduler)
+        runSchedulerThread = threading.Thread(target=self._runScheduler)
         runSchedulerThread.setDaemon(True)
         runSchedulerThread.start()
 
@@ -120,15 +123,13 @@ class FluxScheduler(FluxSchedulerFrame):
         #runSwitcherThread.start()
 
     def getCurrentFlowMode(self):
-        DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                     "FluxScheduler",
-                      IsDontCareConnection = False)
+        DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "FluxScheduler", IsDontCareConnection=False)
         solValves = DriverRpc.rdDasReg("VALVE_CNTRL_SOLENOID_VALVES_REGISTER")
         self.currentFlowMode = "High" if (solValves and 0x4) else "Low"
 
     def _runSwitcher(self):
         self.getCurrentFlowMode()
-        print "runSwitcher: ",self.currentFlowMode
+        print "runSwitcher: ", self.currentFlowMode
         type = self.comboBoxSelect2.GetValue()
         if type in FLUX_TYPES:
             if self.currentFlowMode != "High":
@@ -139,8 +140,8 @@ class FluxScheduler(FluxSchedulerFrame):
                     time.sleep(1)
                     try:
                         MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                     "FluxScheduler",
-                                      IsDontCareConnection = False)
+                                                                "FluxScheduler",
+                                                                IsDontCareConnection=False)
                         measState = MeasSysRpc.GetStates()['State_MeasSystem']
                     except:
                         measState = None
@@ -171,8 +172,8 @@ class FluxScheduler(FluxSchedulerFrame):
                             time.sleep(1)
                             try:
                                 MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                             "FluxScheduler",
-                                              IsDontCareConnection = False)
+                                                                        "FluxScheduler",
+                                                                        IsDontCareConnection=False)
                                 measState = MeasSysRpc.GetStates()['State_MeasSystem']
                             except:
                                 measState = None
@@ -187,8 +188,8 @@ class FluxScheduler(FluxSchedulerFrame):
                             time.sleep(1)
                             try:
                                 MeasSysRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                             "FluxScheduler",
-                                              IsDontCareConnection = False)
+                                                                        "FluxScheduler",
+                                                                        IsDontCareConnection=False)
                                 measState = MeasSysRpc.GetStates()['State_MeasSystem']
                             except:
                                 measState = None
@@ -196,13 +197,13 @@ class FluxScheduler(FluxSchedulerFrame):
                 if numModes == 1:
                     break
                 startTime = time.time()
-                while time.time() - startTime <= self.dwellList[idx]*60.0:
+                while time.time() - startTime <= self.dwellList[idx] * 60.0:
                     if self.terminate:
                         print "Scheduler stopped by request\n"
                         break
                     else:
                         time.sleep(1)
-                idx = (idx+1) % numModes
+                idx = (idx + 1) % numModes
         else:
             self.onStop(None)
 
@@ -234,8 +235,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -267,6 +270,7 @@ def HandleCommandSwitches():
         print "Supervisor Launcher config file specified at command line: %s" % supervisorConfigFile
 
     return configFile, supervisorConfigFile
+
 
 if __name__ == "__main__":
     fluxSchedulerApp = SingleInstance("PicarroFluxModeScheduler")

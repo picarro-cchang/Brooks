@@ -36,7 +36,6 @@ def protectedRead(func):
     The decorated method is protected by an RLock and executed in a separate thread.
         Communication with the database is serialized via a transmit and a receive queue.
     """
-
     def wrapper(self, *args):
         """Wraps function to execute in thread.
         """
@@ -44,24 +43,25 @@ def protectedRead(func):
             """Create a closure around the method func.
             """
             return func(self, *args)
+
         self.dbLock.acquire()
         txId = self.getId()
         self.safeTxQueuePut((txId, _func, args))
         while True:
             rxId, exc, result = self.rxQueue.get()
             self.dbLock.release()
-            if exc: # This may be from the current read, or from some previous writes
+            if exc:  # This may be from the current read, or from some previous writes
                 raise exc
             if rxId == txId:
                 break
             else:
                 self.logFunc("Unexpected ID when fetching result from database", Level=2)
         return result
+
     return wrapper
 
 
 class StateDatabase(Singleton):
-
     """Database for storing state of the CRDS analyzer.
 
     This is a Singleton which may be accessed after initial creation simply by calling
@@ -116,7 +116,7 @@ class StateDatabase(Singleton):
         self.hThread.join()
         self.initialized = False
 
-    @staticmethod    
+    @staticmethod
     def getId():
         """Get next ID for a database request.
 
@@ -136,11 +136,12 @@ class StateDatabase(Singleton):
             txQueueSize = self.txQueue.qsize()
             if txQueueSize > self.maxTxQueueSize:
                 self.maxTxQueueSize = txQueueSize
-                self.myLog("StateDatabase tx queue new max size = %d while executing (%s, %s)" % 
-                           (txQueueSize, txCmd[0], txCmd[1]), Level=1)
+                self.myLog("StateDatabase tx queue new max size = %d while executing (%s, %s)" % (txQueueSize, txCmd[0], txCmd[1]),
+                           Level=1)
                 if txQueueSize == self.txQueueSizeLimit:
-                    self.myLog("StateDatabase tx queue has reached the max size limit while executing (%s, %s)" % 
-                               (txCmd[0], txCmd[1]), Level=2)
+                    self.myLog("StateDatabase tx queue has reached the max size limit while executing (%s, %s)" %
+                               (txCmd[0], txCmd[1]),
+                               Level=2)
         except Queue.Full:
             self.myLog("Put on database txQueue failed.")
 
@@ -172,9 +173,10 @@ class StateDatabase(Singleton):
         """
         def _saveFloatRegList(floatList):
             """SQL command to save list of registers to the dasRegFloat table.
-            """ 
+            """
             self.con.executemany("insert or replace into dasRegFloat values (?,?)", floatList)
             self.con.commit()
+
         self.safeTxQueuePut((self.getId(), _saveFloatRegList, [copy.copy(floatList)]))
 
     def saveIntRegList(self, intList):
@@ -188,6 +190,7 @@ class StateDatabase(Singleton):
         def _saveIntRegList(intList):  # pylint: disable=C0111
             self.con.executemany("insert or replace into dasRegInt values (?,?)", intList)
             self.con.commit()
+
         self.safeTxQueuePut((self.getId(), _saveIntRegList, [copy.copy(intList)]))
 
     def saveWlmHist(self, wlmHist):
@@ -200,11 +203,12 @@ class StateDatabase(Singleton):
                 self.lastTimeCheckWlmHist = timestamp
             elif timestamp - self.lastTimeCheckWlmHist > self.wlmHistCheckPeriod_s * 1000:
                 cutoffTime = timestamp - self.wlmHistMaxTime_s * 1000
-                self.con.execute("delete from wlmHistory where timestamp<=?", (cutoffTime,))
+                self.con.execute("delete from wlmHistory where timestamp<=?", (cutoffTime, ))
                 self.lastTimeCheckWlmHist = timestamp
             else:
                 pass
             self.con.commit()
+
         self.safeTxQueuePut((self.getId(), _saveWlmHist, wlmHist))
 
     def saveRegList(self, regList):
@@ -223,14 +227,12 @@ class StateDatabase(Singleton):
 
     def writeSnapshot(self, level, sensors, minSensors, maxSensors, sumSensors, pointsInSum, maxIdx):
         """Write the current snapshot to the database"""
+
         # pylint: disable=C0111
-        def _writeSnapshot(level, sensors, minSensors, maxSensors, 
-                           sumSensors, pointsInSum, maxIdx):  
+        def _writeSnapshot(level, sensors, minSensors, maxSensors, sumSensors, pointsInSum, maxIdx):
             maxRows = 1024
             if maxIdx[level] < 0:
-                values = self.con.execute(
-                    "select max(idx) from history where level=?",
-                    (level,)).fetchall()
+                values = self.con.execute("select max(idx) from history where level=?", (level, )).fetchall()
                 maxIdx[level] = values[0][0]
                 if maxIdx[level] is None:
                     maxIdx[level] = -1
@@ -242,17 +244,22 @@ class StateDatabase(Singleton):
                     minVal = minSensors.get(streamNum, value)
                     maxVal = maxSensors.get(streamNum, value)
                     average = sumSensors.get(streamNum, value) / pointsInSum.get(streamNum, 1)
-                    dataList.append((level, timestamp, streamNum, average, minVal,
-                                     maxVal, maxIdx[level]))
-                self.con.executemany(
-                    "insert into history values (?,?,?,?,?,?,?)", dataList)
+                    dataList.append((level, timestamp, streamNum, average, minVal, maxVal, maxIdx[level]))
+                self.con.executemany("insert into history values (?,?,?,?,?,?,?)", dataList)
 
                 if maxIdx[level] % 10 == 0:
-                    self.con.execute("delete from history where level=? and idx<=?",
-                                    (level, maxIdx[level] - maxRows))
+                    self.con.execute("delete from history where level=? and idx<=?", (level, maxIdx[level] - maxRows))
                 self.con.commit()
-        self.safeTxQueuePut((self.getId(), _writeSnapshot, [level, sensors.copy(), minSensors.copy(), maxSensors.copy(),
-                                                            sumSensors.copy(), pointsInSum.copy(), copy.copy(maxIdx)]))
+
+        self.safeTxQueuePut((self.getId(), _writeSnapshot, [
+            level,
+            sensors.copy(),
+            minSensors.copy(),
+            maxSensors.copy(),
+            sumSensors.copy(),
+            pointsInSum.copy(),
+            copy.copy(maxIdx)
+        ]))
 
     @protectedRead
     def getFloatRegList(self):
@@ -269,8 +276,7 @@ class StateDatabase(Singleton):
             
         Returns: Floating point value of register
         """
-        values = self.con.execute(
-            "select value from dasRegFloat where name=?", (regName,)).fetchall()
+        values = self.con.execute("select value from dasRegFloat where name=?", (regName, )).fetchall()
         if len(values) != 1:
             raise IndexError("Cannot access %s" % regName)
         else:
@@ -291,9 +297,7 @@ class StateDatabase(Singleton):
             
         Returns: Integer value of register
         """
-        values = self.con.execute(
-            "select value from dasRegInt where name=?",
-            (regName,)).fetchall()
+        values = self.con.execute("select value from dasRegInt where name=?", (regName, )).fetchall()
         if len(values) != 1:
             raise KeyError("Cannot access %s" % regName)
         else:
@@ -308,10 +312,8 @@ class StateDatabase(Singleton):
         Returns:
             List of tuples containing time, value, level, minVal and maxVal
         """
-        values = self.con.execute(
-            "select time,value,level,minVal,maxVal from history" +
-            " where streamNum=?",
-            (streamNum,)).fetchall()
+        values = self.con.execute("select time,value,level,minVal,maxVal from history" + " where streamNum=?",
+                                  (streamNum, )).fetchall()
         return values
 
     @protectedRead
@@ -322,18 +324,18 @@ class StateDatabase(Singleton):
             command: SQL command with ? for arguments
             args: Arguments to fill out SQL command
         """
-        argsTuple = (args,) if args is not None else ()
+        argsTuple = (args, ) if args is not None else ()
         values = self.con.execute(command, *argsTuple).fetchall()
         return values
 
     def txQueueHandler(self):
         """Creates the connection to the database and services the queue of requests"""
-        
+
         self.con = sqlite3.connect(self.fileName)
         try:
             tableNames = [s[0] for s in self.con.execute("select tbl_name from sqlite_master where type='table'").fetchall()]
             if not tableNames:
-                if sys.version_info < (2,7):
+                if sys.version_info < (2, 7):
                     self.con.execute("pragma auto_vacuum=FULL")
                 else:
                     self.con.execute("pragma journal_mode=WAL")
@@ -342,19 +344,16 @@ class StateDatabase(Singleton):
             if "dasRegFloat" not in tableNames:
                 self.con.execute("create table dasRegFloat (name text primary key,value real)")
             if "wlmHistory" not in tableNames:
-                self.con.execute("create table wlmHistory (timestamp integer," +
-                                 "vLaserNum integer, wlmOffset real," +
+                self.con.execute("create table wlmHistory (timestamp integer," + "vLaserNum integer, wlmOffset real," +
                                  "freqMin real, valMin real, freqMax real, valMax real)")
             if "history" not in tableNames:
-                self.con.execute(
-                    "create table history (level integer," +
-                    "time integer,streamNum integer,value real," +
-                    "minVal real,maxVal real,idx integer)")
+                self.con.execute("create table history (level integer," + "time integer,streamNum integer,value real," +
+                                 "minVal real,maxVal real,idx integer)")
             self.con.commit()
             while not self.stopThread.isSet():
                 try:
-                    txId,func,args = self.txQueue.get(timeout=0.5)
-                except Queue.Empty: # See if we need to stop
+                    txId, func, args = self.txQueue.get(timeout=0.5)
+                except Queue.Empty:  # See if we need to stop
                     continue
                 # Place a response on rxQueue if there is a return value or if an error occurs
                 #  N.B. If a tx request does not return a value but throws an exception, this will
@@ -368,7 +367,7 @@ class StateDatabase(Singleton):
                 except Exception, e:
                     pass
                 if (r is not None) or (e is not None):
-                    self._safeRxQueuePut((txId,e,r))
+                    self._safeRxQueuePut((txId, e, r))
         finally:
             self.con.commit()
             self.con.close()
@@ -432,15 +431,10 @@ class SensorHistory(Singleton):
             #  an interval boundary for that level.
             for i, period_s in enumerate(self.periods):
                 period_ms = int(1000 * period_s)
-                if self.needToArchive(
-                        self.lastArchived[i], data.timestamp, period_ms):
+                if self.needToArchive(self.lastArchived[i], data.timestamp, period_ms):
                     stateDatabase = StateDatabase()
-                    stateDatabase.writeSnapshot(i, self.latestSensors,
-                                                self.minSensors[i],
-                                                self.maxSensors[i],
-                                                self.sumSensors[i],
-                                                self.pointsInSum[i],
-                                                self.maxIdx)
+                    stateDatabase.writeSnapshot(i, self.latestSensors, self.minSensors[i], self.maxSensors[i], self.sumSensors[i],
+                                                self.pointsInSum[i], self.maxIdx)
                     self.lastArchived[i] = data.timestamp
                     self.minSensors[i] = {}
                     self.maxSensors[i] = {}

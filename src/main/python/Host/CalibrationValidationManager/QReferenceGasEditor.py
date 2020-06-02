@@ -37,6 +37,7 @@ import sys
 from functools import partial
 from Host.Common.configobj import ConfigObj
 
+
 class MyDoubleValidator(QtGui.QDoubleValidator):
     """
     QDoubleValidator can be used to check the range of input but it is lacking in that
@@ -49,8 +50,8 @@ class MyDoubleValidator(QtGui.QDoubleValidator):
     value, preventing the user from typing any combination of numbers that exceeds the
     specified range.  It also blocks invalid characters and a blank.
     """
-    def __init__(self, parent = None):
-        super(MyDoubleValidator,self).__init__()
+    def __init__(self, parent=None):
+        super(MyDoubleValidator, self).__init__()
         return
 
     def validate(self, str, in_int):
@@ -62,13 +63,14 @@ class MyDoubleValidator(QtGui.QDoubleValidator):
             state = QtGui.QValidator.Invalid
         return state, input
 
+
 class MyGasConcLineEdit(QtGui.QLineEdit):
     """
     This class is a gas concentration line edit that limits input in the
     range 0 - 1,000,000 ppm and is limited to 4 decimal places.
     """
-    def __init__(self, min = 0, max = 1000000, decimal_places = 4, text = "", parent = None):
-        super(MyGasConcLineEdit,self).__init__()
+    def __init__(self, min=0, max=1000000, decimal_places=4, text="", parent=None):
+        super(MyGasConcLineEdit, self).__init__()
         validator = MyDoubleValidator()
         validator.setRange(min, max, decimal_places)
         validator.setNotation(QtGui.QDoubleValidator.StandardNotation)
@@ -76,9 +78,10 @@ class MyGasConcLineEdit(QtGui.QLineEdit):
         self.setText(text)
         return
 
+
 class MyZeroAirSelectorComboBox(QtGui.QComboBox):
-    def __init__(self, default_choice = "", parent = None):
-        super(MyZeroAirSelectorComboBox,self).__init__()
+    def __init__(self, default_choice="", parent=None):
+        super(MyZeroAirSelectorComboBox, self).__init__()
         self.addItems(["No", "Standard Zero < 1 ppm", "Ultra Zero < 0.1 ppm"])
         self.setCurrentIndex(self.findText(default_choice))
         return
@@ -87,9 +90,10 @@ class MyZeroAirSelectorComboBox(QtGui.QComboBox):
         # Discard wheel input as requested
         return
 
+
 class MyAccuracySelectorComboBox(QtGui.QComboBox):
-    def __init__(self, default_choice = "", parent = None):
-        super(MyAccuracySelectorComboBox,self).__init__()
+    def __init__(self, default_choice="", parent=None):
+        super(MyAccuracySelectorComboBox, self).__init__()
         self.addItems(["Unk", "0.5 %", "1.0 %", "2.0 %", "5.0 %", "10.0 %"])
         self.setCurrentBestMatchIndex(default_choice)
         return
@@ -120,7 +124,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._saveBtn.setFocusPolicy(QtCore.Qt.NoFocus)
         self._undoBtn.setFocusPolicy(QtCore.Qt.NoFocus)
         self._table = QReferenceGasEditor()
-        self.setLayout( self._init_gui() )
+        self.setLayout(self._init_gui())
         self._set_connections()
         self.isEditing = False
         return
@@ -138,8 +142,8 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         gb = QtGui.QGroupBox("Reference Gas Editor")
         gb.setLayout(gl)
         mgl = QtGui.QGridLayout()
-        mgl.setContentsMargins(10,0,10,0)
-        mgl.addWidget(gb,0,0)
+        mgl.setContentsMargins(10, 0, 10, 0)
+        mgl.addWidget(gb, 0, 0)
         self._disable_undo_save()
         return mgl
 
@@ -171,6 +175,7 @@ class QReferenceGasEditorWidget(QtGui.QWidget):
         self._saveBtn.setEnabled(True)
         self.isEditing = True
 
+
 class QReferenceGasEditor(QtGui.QTableWidget):
     save_failed_signal = QtCore.pyqtSignal()
     save_success_signal = QtCore.pyqtSignal()
@@ -178,8 +183,8 @@ class QReferenceGasEditor(QtGui.QTableWidget):
     def __init__(self, data=None, *args):
         QtGui.QTableWidget.__init__(self, *args)
         self.data = data
-        self.co = None                  # Ini handle (configobj)
-        self.rgco = None                # Ini handle (reference gas configobj)
+        self.co = None  # Ini handle (configobj)
+        self.rgco = None  # Ini handle (reference gas configobj)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
 
     def display_reference_gas_data(self, reference_gases_configobj=None):
@@ -215,7 +220,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         self.setColumnCount(len(self.rgco))
         self.setHorizontalHeaderLabels(sorted(self.rgco.keys()))
         idx = 0
-        for k,v in self.rgco.items():
+        for k, v in self.rgco.items():
             labels = []
             values = []
             if "Zero_Air" not in v:
@@ -250,7 +255,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                     cb.currentIndexChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, cb)
                 elif j == 3:
-                    le = MyGasConcLineEdit(text = values[j])
+                    le = MyGasConcLineEdit(text=values[j])
                     le.textChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, le)
                 elif j == 4:
@@ -258,7 +263,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                     cb.currentIndexChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, cb)
                 else:
-                    le = QtGui.QLineEdit(text = values[j])
+                    le = QtGui.QLineEdit(text=values[j])
                     le.textChanged.connect(partial(self.cellChanged.emit, j, idx))
                     self.setCellWidget(j, idx, le)
                 self.cellWidget(j, idx).setFocusPolicy(QtCore.Qt.ClickFocus)
@@ -279,7 +284,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             for col in range(self.columnCount()):
                 col_key = str(self.horizontalHeaderItem(col).text())
                 i = 0
-                self.rgco[col_key]["Name"] = str(self.cellWidget(i,col).text())
+                self.rgco[col_key]["Name"] = str(self.cellWidget(i, col).text())
                 i += 1
                 self.rgco[col_key]["SN"] = str(self.cellWidget(i, col).text())
                 i += 1
@@ -288,8 +293,8 @@ class QReferenceGasEditor(QtGui.QTableWidget):
                 concentration = []
                 uncertainty = []
                 for row in range(i, self.rowCount(), 2):
-                    concentration.append(str(self.cellWidget(row,col).text()))
-                    uncertainty.append(str(self.cellWidget(row+1,col).currentText()))
+                    concentration.append(str(self.cellWidget(row, col).text()))
+                    uncertainty.append(str(self.cellWidget(row + 1, col).currentText()))
                 if len(concentration) > 1:
                     self.rgco[col_key]["Concentration"] = concentration
                     self.rgco[col_key]["Uncertainty"] = uncertainty
@@ -345,13 +350,13 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         # the column number user friendly.
         zero_air_error_columns = []
         for col in range(self.columnCount()):
-            i = 2 # Zero-Air
+            i = 2  # Zero-Air
             zero_air_choice = str(self.cellWidget(i, col).currentText())
-            i = 3 # gas conc
+            i = 3  # gas conc
             user_gas_conc = float(self.cellWidget(i, col).text())
             if "No" in zero_air_choice and user_gas_conc < 0.0001:
                 ok = False
-                zero_air_error_columns.append(col+1)
+                zero_air_error_columns.append(col + 1)
         if len(zero_air_error_columns) == 1:
             error_msg += "Error in column {0}.\n\n".format(', '.join(str(x) for x in zero_air_error_columns))
             error_msg += "For non-zero-air gases, set the gas concentration to more than 0.0001 ppm.\n\n"
@@ -364,7 +369,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
         if ok:
             for col in range(self.columnCount()):
                 i = 0
-                name = str(self.cellWidget(i,col).text())
+                name = str(self.cellWidget(i, col).text())
                 i += 1
                 sn = str(self.cellWidget(i, col).text())
                 if not name or not sn:
@@ -374,14 +379,13 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             error_msg += "Please fill out the gas information according to\n"
             error_msg += "your company's standard procedures."
 
-
         if not ok:
             not_saved_str = "CHANGES NOT SAVED\n\n"
             dialog = QtGui.QMessageBox(self)
             dialog.setText(not_saved_str + error_msg)
             dialog.setIcon(QtGui.QMessageBox.Critical)
             dialog.setStandardButtons(QtGui.QMessageBox.Ok)
-            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             rtn = dialog.exec_()
         if ok and len(error_msg):
             dialog = QtGui.QMessageBox(self)
@@ -389,7 +393,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
             dialog.setIcon(QtGui.QMessageBox.Warning)
             dialog.setStandardButtons(QtGui.QMessageBox.Save | QtGui.QMessageBox.Cancel)
             dialog.setDefaultButton(QtGui.QMessageBox.Cancel)
-            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint|QtCore.Qt.Dialog)
+            dialog.setWindowFlags(QtCore.Qt.FramelessWindowHint | QtCore.Qt.Dialog)
             rtn = dialog.exec_()
             if rtn == QtGui.QMessageBox.Cancel:
                 ok = False
@@ -398,6 +402,7 @@ class QReferenceGasEditor(QtGui.QTableWidget):
     def wheelEvent(self, event):
         # Disable wheel input as requested
         return
+
 
 def main(args):
     data = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]

@@ -14,8 +14,10 @@ from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
 from Host.Common import AppStatus
 
+
 def Log(msg):
     print msg
+
 
 class DataManagerListeners(object):
     def __init__(self):
@@ -39,34 +41,39 @@ class DataManagerListeners(object):
 
     def run(self):
         self.measSystemListener = Listener(self.measSystemQueue,
-                                         BROADCAST_PORT_MEAS_SYSTEM,
-                                         StringPickler.ArbitraryObject,
-                                         self._MeasDataFilter,
-                                         retry = True,
-                                         name = "Data manager sandbox measurement system listener",logFunc = Log)
+                                           BROADCAST_PORT_MEAS_SYSTEM,
+                                           StringPickler.ArbitraryObject,
+                                           self._MeasDataFilter,
+                                           retry=True,
+                                           name="Data manager sandbox measurement system listener",
+                                           logFunc=Log)
         self.sensorListener = Listener(self.sensorQueue,
-                                         BROADCAST_PORT_SENSORSTREAM,
-                                         interface.SensorEntryType,
-                                         self._SensorFilter,
-                                         retry = True,
-                                         name = "Data manager sandbox sensor stream listener",logFunc = Log)
+                                       BROADCAST_PORT_SENSORSTREAM,
+                                       interface.SensorEntryType,
+                                       self._SensorFilter,
+                                       retry=True,
+                                       name="Data manager sandbox sensor stream listener",
+                                       logFunc=Log)
         self.instMgrListener = Listener(self.instMgrStatusQueue,
-                                         STATUS_PORT_INST_MANAGER,
-                                         AppStatus.STREAM_Status,
-                                         self._InstMgrStatusFilter,
-                                         retry = True,
-                                         name = "Data manager sandbox instrument manager listener",logFunc = Log)
+                                        STATUS_PORT_INST_MANAGER,
+                                        AppStatus.STREAM_Status,
+                                        self._InstMgrStatusFilter,
+                                        retry=True,
+                                        name="Data manager sandbox instrument manager listener",
+                                        logFunc=Log)
+
     def stop(self):
         self.measSystemListener.stop()
         self.sensorListener.stop()
         self.instMgrListener.stop()
+
 
 if __name__ == "__main__":
     dm = DataManagerListeners()
     dm.run()
     while True:
         while not dm.measSystemQueue.empty():
-            idx,ts,ms = dm.measSystemQueue.get()
+            idx, ts, ms = dm.measSystemQueue.get()
             print ms
         while not dm.sensorQueue.empty():
             dm.sensorQueue.get()

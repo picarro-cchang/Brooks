@@ -118,6 +118,7 @@ except:
 
 import traceback
 
+
 class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
     """Mix-in class that dispatches JSON-RPC requests.
     Based on SimpleXMLRPCDispatcher, but overrides
@@ -127,7 +128,7 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
     and then to dispatch them. There should never be any
     reason to instantiate this class directly.
     """
-    def _marshaled_dispatch(self, data, dispatch_method = None):
+    def _marshaled_dispatch(self, data, dispatch_method=None):
         """Dispatches a JSON-RPC method from marshalled (JSON) data.
 
         JSON-RPC methods are dispatched from the marshalled (JSON) data
@@ -145,7 +146,7 @@ class SimpleJSONRPCDispatcher(SimpleXMLRPCServer.SimpleXMLRPCDispatcher):
         method = rawreq['method']
         params = rawreq.get('params', [])
 
-        responseDict = {'id':id}
+        responseDict = {'id': id}
 
         # generate response
         try:
@@ -191,10 +192,8 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler)
             # SimpleXMLRPCDispatcher. To maintain backwards compatibility,
             # check to see if a subclass implements _dispatch and dispatch
             # using that method if present.
-            response = self.server._marshaled_dispatch(
-                    data, getattr(self, '_dispatch', None)
-                )
-        except: # This should only happen if the module is buggy
+            response = self.server._marshaled_dispatch(data, getattr(self, '_dispatch', None))
+        except:  # This should only happen if the module is buggy
             # internal error, report as HTTP server error
             self.send_response(500)
             self.end_headers()
@@ -210,8 +209,8 @@ class SimpleJSONRPCRequestHandler(SimpleXMLRPCServer.SimpleXMLRPCRequestHandler)
             self.wfile.flush()
             self.connection.shutdown(1)
 
-class SimpleJSONRPCServer(SocketServer.TCPServer,
-                         SimpleJSONRPCDispatcher):
+
+class SimpleJSONRPCServer(SocketServer.TCPServer, SimpleJSONRPCDispatcher):
     """Simple JSON-RPC server.
 
     Simple JSON-RPC server that allows functions and a single instance
@@ -220,12 +219,12 @@ class SimpleJSONRPCServer(SocketServer.TCPServer,
     installed in the server. Override the _dispatch method inhereted
     from SimpleJSONRPCDispatcher to change this behavior.
     """
-    def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler,
-                 logRequests=1):
+    def __init__(self, addr, requestHandler=SimpleJSONRPCRequestHandler, logRequests=1):
         self.logRequests = logRequests
 
         SimpleJSONRPCDispatcher.__init__(self)
         SocketServer.TCPServer.__init__(self, addr, requestHandler)
+
 
 class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
     """Simple handler for JSON-RPC data passed through CGI."""
@@ -255,7 +254,7 @@ class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
         print
         sys.stdout.write(response)
 
-    def handle_request(self, request_text = None):
+    def handle_request(self, request_text=None):
         """Handle a single JSON-RPC request passed through a CGI post method.
 
         If no JSON data is given then it is read from stdin. The resulting
@@ -282,8 +281,9 @@ class CGIJSONRPCRequestHandler(SimpleJSONRPCDispatcher):
         print
         sys.stdout.write(response)
 
+
 if __name__ == '__main__':
     server = SimpleJSONRPCServer(("localhost", 8000))
     server.register_function(pow)
-    server.register_function(lambda x,y: x+y, 'add')
+    server.register_function(lambda x, y: x + y, 'add')
     server.serve_forever()

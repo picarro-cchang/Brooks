@@ -17,6 +17,7 @@ SUPERVISORLAUNCHERINI_PATH = DEV_DIR + r'/AppConfig/Config/Utilities/SupervisorL
 SUPERVISOR_PATH = r'/Host/Supervisor/'
 SUPERVISOREXE_PATH = 'Supervisor.py'
 
+
 class SupervisorModeDlg(wx.Dialog):
     def __init__(self, *args, **kwds):
         # begin wxGlade: SupervisorModeDlg.__init__
@@ -75,23 +76,24 @@ class SupervisorModeDlg(wx.Dialog):
 #        subprocess.Popen(args)
 #        self.Destroy()
 
-    # Linux version, hardcoded for git
-    #
+# Linux version, hardcoded for git
+#
 
     def OnNextDlgClicked(self, event):
         index = self.choice_mode.GetCurrentSelection()
         ini = os.path.join(DEV_DIR + r"/AppConfig/Config/Supervisor", self.config[index])
         os.chdir(DEV_DIR + SUPERVISOR_PATH)
         rdReprocessorIni = '/home/rsf/git/host/src/main/python/Host/Utilities/VirtualAnalyzer/rdReprocessor.ini'
-        args = ['python','Supervisor.py', '--vi', rdReprocessorIni, '-c', ini]
-        termList = ['xterm','-hold','-T','Supervisor','-e']
+        args = ['python', 'Supervisor.py', '--vi', rdReprocessorIni, '-c', ini]
+        termList = ['xterm', '-hold', '-T', 'Supervisor', '-e']
         print(termList + args)
         #subprocess.Popen(termList + args)
         #self.Destroy()
 
+
 # end of class SupervisorModeDlg
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
+    gettext.install("app")  # replace with the appropriate catalog name
 
     # app = wx.PySimpleApp(0)
     app = wx.App(False)

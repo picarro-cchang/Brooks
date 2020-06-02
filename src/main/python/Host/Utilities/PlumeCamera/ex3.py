@@ -1,6 +1,7 @@
 import tornado.ioloop
 import tornado.web
 
+
 class MyFormHandler(tornado.web.RequestHandler):
     def get(self):
         self.write('<html><body><form action="/myform" method="post">'
@@ -13,6 +14,7 @@ class MyFormHandler(tornado.web.RequestHandler):
     def post(self):
         self.set_header("Content-Type", "text/plain")
         self.write("You wrote " + self.get_argument("message"))
+
 
 application = tornado.web.Application([
     (r"/myform", MyFormHandler),

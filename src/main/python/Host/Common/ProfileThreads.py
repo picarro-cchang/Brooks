@@ -1,6 +1,7 @@
 import profile
 import tempfile
 
+
 def profileThread(func):
     result = None
     p = profile.Profile()
@@ -14,7 +15,7 @@ def profileThread(func):
         else:
             tmpfname = tempfile.mktemp() + "unknownfuncname"
 
-        print "thread finished %s\n" % (tmpfname,)
+        print "thread finished %s\n" % (tmpfname, )
         p.dump_stats(tmpfname)
         p = None
         del p

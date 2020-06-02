@@ -100,7 +100,7 @@ if sys.platform == 'win32':
 else:
     TimeStamp = time.time
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -113,11 +113,10 @@ _DEFAULT_EVENT_LOG_CACHE_FILENAME = ".EventLogWatcherCache"
 _DEFAULT_EVENT_LOG_RESULTS_FILENAME = ".EventLogWatcherResults"
 _DEFAULT_EVENT_LOG_WHITELIST_FILENAME = ".EventLogWatcherWhitelist"
 
-WAIT_BETWEEN_FIND_FILES = 10.0    # number of seconds to wait after an iteration of watching all of the files in the log dir
+WAIT_BETWEEN_FIND_FILES = 10.0  # number of seconds to wait after an iteration of watching all of the files in the log dir
 
-
-g_logMsgLevel = 0   # should be 0 for check-in
-g_debugDelay = 0    # should also be 0 for check-in (no delay between parsing each file)
+g_logMsgLevel = 0  # should be 0 for check-in
+g_debugDelay = 0  # should also be 0 for check-in (no delay between parsing each file)
 
 SECONDS_PER_HOUR = 3600.0
 
@@ -129,9 +128,11 @@ def datetimeToTimestamp(t):
     td = t - ORIGIN
     return float((td.days * 86400 + td.seconds) * 1000 + td.microseconds // 1000)
 
+
 def timestampToUtcDatetime(timestamp):
     """Converts 64-bit millisecond resolution timestamp to UTC datetime"""
     return ORIGIN + datetime.timedelta(microseconds=1000 * timestamp)
+
 
 def formatTime(dateTime):
     # Event logs only have second resolution
@@ -139,10 +140,12 @@ def formatTime(dateTime):
     #return dateTime.strftime("%Y-%m-%d %H:%M:%S") + (".%03d" % ms)
     return dateTime.strftime("%Y-%m-%d %H:%M:%S")
 
+
 def timestampToString(timestamp):
     """Converts 64-bit timestamp value to a string in UTC time"""
     ts = timestampToUtcDatetime(timestamp)
     return formatTime(ts)
+
 
 def LogErrmsg(str):
     print >> sys.stderr, str
@@ -162,7 +165,7 @@ def _getVersionFromJsonFile():
 
     versionConfig = "version.json"
     VERSION = {}
-    verStr = "0.0.0.0"      # default
+    verStr = "0.0.0.0"  # default
 
     try:
         with open(versionConfig, 'r') as ver:
@@ -272,7 +275,6 @@ def hashLines(lines, includeRawHash=False):
 
         normLine = getNormalizedText(line)
         normText = normText + LINENUM_RX.sub("", normLine)
-
     """
     print "*******"
     print "rawText:'%s'" % rawText
@@ -406,7 +408,7 @@ class ErrorCollection(object):
 
     def __init__(self, filename, isWhitelist):
         self.filename = filename
-        self.errorList = []     # this is an array of errorItem
+        self.errorList = []  # this is an array of errorItem
         self.isWhitelist = isWhitelist
 
         # load up any previously saved error items
@@ -472,9 +474,7 @@ class ErrorCollection(object):
 
                 group = dict((k, int(group[k])) for k in group)
 
-                dt = datetime.datetime(group['year'], group['month'],
-                                       group['day'], group['hour'],
-                                       group['minute'], group['second'])
+                dt = datetime.datetime(group['year'], group['month'], group['day'], group['hour'], group['minute'], group['second'])
 
                 timestamp = datetimeToTimestamp(dt)
 
@@ -684,9 +684,7 @@ class EventLogFilenameCache(object):
     def __init__(self, cacheFilename):
         self.filename = cacheFilename
 
-        self.cacheDict = { "SearchedFiles": [],
-                           "SearchedFilesInvalid": []
-                         }
+        self.cacheDict = {"SearchedFiles": [], "SearchedFilesInvalid": []}
 
         # load the file if it exists
         if os.path.isfile(self.filename):
@@ -700,9 +698,7 @@ class EventLogFilenameCache(object):
             if not os.path.isdir(path):
                 os.makedirs(path)
 
-
             #self.config.read(cacheFilename)
-
         """
         # create sections for previously searched filenames (valid and invalid)
         # and initialize the file counter to 0
@@ -762,8 +758,7 @@ class EventLogWatcher(object):
                            r'(?P<day>[0-3][0-9])_'
                            r'(?P<hour>[0-2][0-9])_'
                            r'(?P<minute>[0-6][0-9])_'
-                           r'(?P<second>[0-6][0-9])Z'
-                           )
+                           r'(?P<second>[0-6][0-9])Z')
 
     def __init__(self, options):
         #print "EventLogWatcher::__init__()"
@@ -947,7 +942,6 @@ class EventLogWatcher(object):
         # instantiate the cache of previously searched files
         self.filenameCache = EventLogFilenameCache(self.logCacheFilename)
 
-
     def loadWhitelistFromFile(self, filename):
         if not os.path.isfile(filename):
             LogErrmsg("Whitelist text file '%s' does not exist, aborting!" % filename)
@@ -968,9 +962,9 @@ class EventLogWatcher(object):
                 self.whitelist.save(stackTraceLines, None)
 
         except InvalidFileFormatError:
-                    # file is not the correct format, log it as if we've already searched it
-                    LogErrmsg("Whitelist input text file not the correct format, aborting! filename='%s'" % filename)
-                    sys.exit(1)
+            # file is not the correct format, log it as if we've already searched it
+            LogErrmsg("Whitelist input text file not the correct format, aborting! filename='%s'" % filename)
+            sys.exit(1)
 
     def run(self):
         #print "EventLogWatcher::run()"
@@ -1079,9 +1073,7 @@ class EventLogWatcher(object):
 
             group = dict((k, int(group[k])) for k in group)
 
-            fTime = datetime.datetime(group['year'], group['month'],
-                                      group['day'], group['hour'],
-                                      group['minute'], group['second'])
+            fTime = datetime.datetime(group['year'], group['month'], group['day'], group['hour'], group['minute'], group['second'])
 
             LogMsg(4, "fTime=%s" % fTime)
 
@@ -1110,64 +1102,103 @@ Application to monitor event logs, looking for crashers.
 
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-v', '--version', dest='getVersion',
-                      action='store_true', default=None,
+    parser.add_option('-v',
+                      '--version',
+                      dest='getVersion',
+                      action='store_true',
+                      default=None,
                       help=('Return the version number for this application.'))
 
-    parser.add_option('-c', '--config', dest='configFile',
-                      default=None, help=('File containing run-time configuration '
-                                          'data for this application.'))
+    parser.add_option('-c',
+                      '--config',
+                      dest='configFile',
+                      default=None,
+                      help=('File containing run-time configuration '
+                            'data for this application.'))
 
-    parser.add_option('-d', '--dumpAll', dest='dumpAll',
-                      action='store_true', default=False,
+    parser.add_option('-d',
+                      '--dumpAll',
+                      dest='dumpAll',
+                      action='store_true',
+                      default=False,
                       help=('Dump the whitelist and log data in a human-readable format.'))
 
-    parser.add_option('--dumpLog', dest='dumpLog',
-                      action='store_true', default=False,
+    parser.add_option('--dumpLog',
+                      dest='dumpLog',
+                      action='store_true',
+                      default=False,
                       help=('Dump the results in a human-readable format.'))
 
-    parser.add_option('--dumpWhitelist', dest='dumpWhitelist',
-                      action='store_true', default=False,
+    parser.add_option('--dumpWhitelist',
+                      dest='dumpWhitelist',
+                      action='store_true',
+                      default=False,
                       help=('Dump the whitelist in a human-readable format.'))
 
-    parser.add_option('--summary', dest='summary',
-                      action='store_true', default=False,
+    parser.add_option('--summary',
+                      dest='summary',
+                      action='store_true',
+                      default=False,
                       help=('Output a summary of the overall results in CSV format.'))
 
-    parser.add_option('--summaryDetails', dest='summaryDetails',
-                      action='store_true', default=False,
+    parser.add_option('--summaryDetails',
+                      dest='summaryDetails',
+                      action='store_true',
+                      default=False,
                       help=('Output a details of the overall results in CSV format. '
                             'This includes timestamps and hashes for similar hits.'))
 
-    parser.add_option('--duration', dest='duration', action='store', type='string',
-                      default=None, help=('Duration to watch the event logs, in hours. Default is to '
-                                          'monitor the logs infinitely.'))
+    parser.add_option('--duration',
+                      dest='duration',
+                      action='store',
+                      type='string',
+                      default=None,
+                      help=('Duration to watch the event logs, in hours. Default is to '
+                            'monitor the logs infinitely.'))
 
-    parser.add_option('--once', dest='doOnePass',
-                      action='store_true', default=False,
+    parser.add_option('--once',
+                      dest='doOnePass',
+                      action='store_true',
+                      default=False,
                       help=('Do a single pass through the event logs and exit. Ignores the duration setting.'))
 
-    parser.add_option('-r', '--resetLogs', dest='resetLogs',
-                      action='store_true', default=False,
+    parser.add_option('-r',
+                      '--resetLogs',
+                      dest='resetLogs',
+                      action='store_true',
+                      default=False,
                       help=('Refresh the logs by clearing the cached file list and results buffer before '
                             'searching the event logs for errors.'))
 
-    parser.add_option('--loadWhitelist', dest='loadWhitelistFromFilename',
-                      default=None, help=('Load the whitelist from the error strings in the specified file. '
-                        'Clears the existing whitelist first.'))
+    parser.add_option('--loadWhitelist',
+                      dest='loadWhitelistFromFilename',
+                      default=None,
+                      help=('Load the whitelist from the error strings in the specified file. '
+                            'Clears the existing whitelist first.'))
 
-    parser.add_option('--logpath', dest='logPath', action='store',
-                      default=None, help=('Specify the folder path '
-                      'for the event logs (overrides the config file setting).'))
+    parser.add_option('--logpath',
+                      dest='logPath',
+                      action='store',
+                      default=None,
+                      help=('Specify the folder path '
+                            'for the event logs (overrides the config file setting).'))
 
-    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
-                      default=g_logMsgLevel, help=('Use this option to specify logging level to '
-                                                   'debug this application. 0=highest, 5=lowest (noisy)'))
+    parser.add_option('-l',
+                      '--loglevel',
+                      dest='loglevel',
+                      action='store',
+                      type='int',
+                      default=g_logMsgLevel,
+                      help=('Use this option to specify logging level to '
+                            'debug this application. 0=highest, 5=lowest (noisy)'))
 
-    parser.add_option('--debug-delay', dest='debugDelay', action='store', type='int',
-                      default=g_debugDelay, help=('Use this option to specify a delay, in seconds, between parsing '
-                                                   'each file. Useful for debugging this application.'))
-
+    parser.add_option('--debug-delay',
+                      dest='debugDelay',
+                      action='store',
+                      type='int',
+                      default=g_debugDelay,
+                      help=('Use this option to specify a delay, in seconds, between parsing '
+                            'each file. Useful for debugging this application.'))
 
     options, args = parser.parse_args()
     #print "options=", options
@@ -1181,7 +1212,6 @@ Application to monitor event logs, looking for crashers.
 
     watcher = EventLogWatcher(options)
     watcher.run()
-
 
 
 if __name__ == '__main__':

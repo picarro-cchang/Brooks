@@ -28,8 +28,7 @@ from Host.Common import SharedTypes
 from Host.Common import EventManagerProxy
 from Host.Common.Win32 import Kernel32
 
-
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -42,12 +41,11 @@ class RestartSupervisor(object):
 
     def __init__(self, configPath=None):
         if not self.initialized:
-            self.rpcServer = CmdFIFO.CmdFIFOServer(
-                ('', SharedTypes.RPC_PORT_RESTART_SUPERVISOR),
-                ServerName=APP_NAME,
-                ServerDescription=APP_DESCRIPTION,
-                ServerVersion=__version__,
-                threaded=True)
+            self.rpcServer = CmdFIFO.CmdFIFOServer(('', SharedTypes.RPC_PORT_RESTART_SUPERVISOR),
+                                                   ServerName=APP_NAME,
+                                                   ServerDescription=APP_DESCRIPTION,
+                                                   ServerVersion=__version__,
+                                                   threaded=True)
 
             for s in dir(self):
                 attr = self.__getattribute__(s)
@@ -73,8 +71,7 @@ class RestartSupervisor(object):
                 except:
                     hostDir = "Host"
                 self.supervisorHostDir = os.path.join(apacheDir, hostDir)
-                self.startupSupervisorIni = os.path.join(self.supervisorIniDir,
-                                                         config["Main"]["StartupSupervisorIni"].strip())
+                self.startupSupervisorIni = os.path.join(self.supervisorIniDir, config["Main"]["StartupSupervisorIni"].strip())
                 self.supervisorIni = self.startupSupervisorIni
                 # Number of missed pings before restarting supervisor and driver
                 try:
@@ -88,11 +85,12 @@ class RestartSupervisor(object):
                     self.rebootThreshold = 10
             else:
                 raise ValueError("Configuration file must be specified to initialize RestartSupervisor")
-            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                         APP_NAME,
+                                                         IsDontCareConnection=False)
             self.initialized = True
 
         EventManagerProxy.Log("%s application started." % APP_NAME)
-
 
     @CmdFIFO.rpc_wrap
     def RPC_Terminate(self):
@@ -135,7 +133,9 @@ class RestartSupervisor(object):
         if self.launchType == "exe":
             subprocess.Popen(["supervisor.exe", "-f", "-c", self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
         else:
-            subprocess.Popen(["python.exe", "Supervisor.py", "-f", "-c", self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
+            subprocess.Popen(["python.exe", "Supervisor.py", "-f", "-c", self.supervisorIni],
+                             startupinfo=info,
+                             creationflags=dwCreationFlags)
 
         # Launch HostStartup
         if self.launchType == "exe":
@@ -217,6 +217,7 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
     return configFile, options
+
 
 if __name__ == "__main__":
     restartSupervisorApp = SingleInstance("RestartSupervisor")

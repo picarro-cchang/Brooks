@@ -19,10 +19,7 @@ class DummyPlot(wx.Panel):
         wx.Panel.__init__(self, *args, **kwds)
 
         self.model = Subject(name=name)
-        self.model.settings = {"mean": "",
-                               "stdDev": "",
-                               "peakToPeak": "",
-                               "nAvg": ""}
+        self.model.settings = {"mean": "", "stdDev": "", "peakToPeak": "", "nAvg": ""}
 
         self.model.changed = ""
 
@@ -170,7 +167,7 @@ class PlotControlPanel(PlotControlPanelGui):
             panelNum = -1
 
         # get settings for autoscale Y and show points
-        fAutoscaleY = False     # defaults
+        fAutoscaleY = False  # defaults
         fShowPoints = True
 
         if "fAutoscaleY" in kwds:
@@ -184,10 +181,7 @@ class PlotControlPanel(PlotControlPanelGui):
         PlotControlPanelGui.__init__(self, *a, **kwds)
         self.model = Subject(name=panelName)
 
-        self.model.settings = {"fAutoscaleY": fAutoscaleY,
-                               "fShowPoints": fShowPoints,
-                               "strDataSetName": "",
-                               "strVarName": ""}
+        self.model.settings = {"fAutoscaleY": fAutoscaleY, "fShowPoints": fShowPoints, "strDataSetName": "", "strVarName": ""}
 
         self.model.changed = ""
 
@@ -294,7 +288,6 @@ class ListenerWrapper(object):
         print "  index=", self.index
         print "  settings=", model.settings
         print "  changed=", model.changed
-
         """
         for key in model.settings:
             value = model.settings[key]
@@ -344,10 +337,7 @@ class TestFrame(wx.Frame):
             # plot panel name isn't exposed in the UI but useful for debugging
             panelName = "%s - %d" % (name, ix)
 
-            panel = PlotControlPanel(self, wx.ID_ANY,
-                                     style=wx.RAISED_BORDER,
-                                     panelNum=ix,
-                                     panelName=panelName)
+            panel = PlotControlPanel(self, wx.ID_ANY, style=wx.RAISED_BORDER, panelNum=ix, panelName=panelName)
             self.panels.append(panel)
 
             # wrap a sizer around the panel with a margin
@@ -355,14 +345,12 @@ class TestFrame(wx.Frame):
             controlsSizer.Add(panel, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
 
             # create a dummy plot (right now it just has a couple of buttons)
-            plot = DummyPlot(self, wx.ID_ANY,
-                             style=wx.RAISED_BORDER)
+            plot = DummyPlot(self, wx.ID_ANY, style=wx.RAISED_BORDER)
             self.plots.append(plot)
 
             # wrap a sizer around this plot with a margin
             plotSizer = wx.BoxSizer(wx.VERTICAL)
             plotSizer.Add(plot, 0, wx.LEFT | wx.TOP | wx.RIGHT | wx.BOTTOM, 15)
-
             """
             # wrap the plot sizer and its controls sizer in a sizer
             plotAndControlsSizer = wx.FlexGridSizer(rows=1, cols=2, hgap=15, vgap=15)
@@ -435,6 +423,7 @@ def main():
     redirect = False
     app = App(redirect=redirect)
     app.MainLoop()
+
 
 if __name__ == "__main__":
     main()

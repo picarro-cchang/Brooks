@@ -24,18 +24,16 @@ class TestCoordinator(object):
         os.makedirs(TestCoordinator.TEST_OUTPUT_DIR)
 
     def testUserEditableParamsInHeader(self):
-        coord = psutil.Process(subprocess.Popen(
-                ['python',
-                 os.path.join('..', '..', 'Coordinator', 'Coordinator.py'),
-                 '-c', 'CoordinatorTest.ini']).pid)
+        coord = psutil.Process(
+            subprocess.Popen(['python',
+                              os.path.join('..', '..', 'Coordinator', 'Coordinator.py'), '-c', 'CoordinatorTest.ini']).pid)
 
         # Wait for the window to launch
         time.sleep(3.0)
 
         # Auto-generated from swapy.
         pwa_app = pywinauto.application.Application()
-        w_handle = pywinauto.findwindows.find_windows(
-            title=u'User Editable Parameters', class_name='#32770')[0]
+        w_handle = pywinauto.findwindows.find_windows(title=u'User Editable Parameters', class_name='#32770')[0]
         window = pwa_app.window_(handle=w_handle)
         window.SetFocus()
         ctrl = window['OK']
@@ -65,18 +63,16 @@ class TestCoordinator(object):
             prevLine = line
 
     def testNoUserEditableParamsInHeader(self):
-        coord = psutil.Process(subprocess.Popen(
-                ['python',
-                 os.path.join('..', '..', 'Coordinator', 'Coordinator.py'),
-                 '-c', 'CoordinatorTestNoHeader.ini']).pid)
+        coord = psutil.Process(
+            subprocess.Popen(
+                ['python', os.path.join('..', '..', 'Coordinator', 'Coordinator.py'), '-c', 'CoordinatorTestNoHeader.ini']).pid)
 
         # Wait for the window to launch
         time.sleep(3.0)
 
         # Auto-generated from swapy.
         pwa_app = pywinauto.application.Application()
-        w_handle = pywinauto.findwindows.find_windows(
-            title=u'User Editable Parameters', class_name='#32770')[0]
+        w_handle = pywinauto.findwindows.find_windows(title=u'User Editable Parameters', class_name='#32770')[0]
         window = pwa_app.window_(handle=w_handle)
         window.SetFocus()
         ctrl = window['OK']

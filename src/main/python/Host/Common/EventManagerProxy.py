@@ -19,7 +19,7 @@
 # 18-07-09 gts   Added timeout to prevent log flooding from bringing a
 #                system to its knees
 
-from Host.Common import SharedTypes #to get the right TCP port to use
+from Host.Common import SharedTypes  #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_LOGGER, ACCESS_PICARRO_ONLY
 
@@ -40,20 +40,19 @@ _PrintEverything = False
 #set the explicit list of what to export for "from LoggingProxy import *"...
 __all__ = ["EventManagerProxy_Init", "Log", "LogExc"]
 
-def EventManagerProxy_Init(ApplicationName,
-                           DontCareConnection = True,
-                           PrintEverything = False,
-                           min_ms_interval = min_ms_interval):
+
+def EventManagerProxy_Init(ApplicationName, DontCareConnection=True, PrintEverything=False, min_ms_interval=min_ms_interval):
     """Initializes the EventManagerProxy.  Must be done before any other calls."""
     global __EventManagerProxy
     global _PrintEverything
     _PrintEverything = PrintEverything
     __EventManagerProxy = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_LOGGER,
                                                      ApplicationName,
-                                                     IsDontCareConnection = DontCareConnection,
-                                                     min_ms_interval = min_ms_interval)
+                                                     IsDontCareConnection=DontCareConnection,
+                                                     min_ms_interval=min_ms_interval)
 
-def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0):
+
+def Log(Desc, Data=None, Level=1, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, Verbose="", SourceTime=0):
     """Short global log function that sends a log to the EventManager."""
     if __debug__:
         if _PrintEverything or Level >= 2:
@@ -62,7 +61,8 @@ def Log(Desc, Data = None, Level = 1, Code = -1, AccessLevel = ACCESS_PICARRO_ON
                 print "+++ VERBOSE DATA FOLLOWS +++\n%s" % Verbose
     __EventManagerProxy.LogEvent(Desc, Data, Level, Code, AccessLevel, Verbose, SourceTime)
 
-def LogExc(Msg = "Exception occurred", Data = {}, Level = 2, Code = -1, AccessLevel = ACCESS_PICARRO_ONLY, SourceTime = 0):
+
+def LogExc(Msg="Exception occurred", Data={}, Level=2, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, SourceTime=0):
     """Sends a log of the current exception to the EventManager.
 
     Data must be a dictionary - exception info will be added to it.
@@ -72,7 +72,7 @@ def LogExc(Msg = "Exception occurred", Data = {}, Level = 2, Code = -1, AccessLe
     """
     excType, excValue, excTB = sys.exc_info()
     logDict = Data
-    logDict.update(dict(Type = excType.__name__, Value = str(excValue), Note = "<See verbose for debug info>"))
+    logDict.update(dict(Type=excType.__name__, Value=str(excValue), Note="<See verbose for debug info>"))
     #verbose = BetterTraceback.get_advanced_traceback(1)
     verbose = traceback.format_exc()
     Log(Msg, logDict, Level, Code, AccessLevel, verbose, SourceTime)

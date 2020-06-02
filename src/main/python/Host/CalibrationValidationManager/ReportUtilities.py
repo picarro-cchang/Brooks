@@ -1,4 +1,3 @@
-
 import matplotlib
 matplotlib.use("SVG")
 import matplotlib.pyplot as plt
@@ -12,6 +11,7 @@ import numpy
 from terminaltables import AsciiTable
 from datetime import datetime, date
 from PyQt4 import QtCore, QtGui
+
 
 def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
     """
@@ -44,6 +44,7 @@ def make_plot(xdata, ydata, yfitting, title, xlabel, ylabel):
     plt.savefig(buf, format='png')
     return buf
 
+
 def fill_report_template(settings, reference_gases, results):
     report = get_formatted_user_information(results)
     report += "\n"
@@ -68,11 +69,12 @@ def fill_report_template(settings, reference_gases, results):
     report += get_formatted_task_details(settings, reference_gases, results)
     report += "\n"
 
-    for e, g in sorted(reference_gases.items()): # sorted by GAS0, GAS1, GAS2 etc.
+    for e, g in sorted(reference_gases.items()):  # sorted by GAS0, GAS1, GAS2 etc.
         report += g.getFormattedGasDetails(e)
         report += "\n"
     report += "\n"
     return report
+
 
 def get_formatted_user_information(results):
     table_data = []
@@ -86,10 +88,8 @@ def get_formatted_user_information(results):
     table.inner_heading_row_border = False
     return table.table + "\n"
 
-def get_formatted_pass_fail_summary(results,
-                                    show_zero_air_test = False,
-                                    show_slope_test = False,
-                                    show_percent_deviation_test = True):
+
+def get_formatted_pass_fail_summary(results, show_zero_air_test=False, show_slope_test=False, show_percent_deviation_test=True):
     table_data = []
     table_data.append(["Test", "Acceptance Criteria", "Result", "Status"])
 
@@ -100,32 +100,29 @@ def get_formatted_pass_fail_summary(results,
             sorted_zero_test = sorted(results["Zero_Air_Test"], key=lambda x: x[1])
             sorted_zero_test.sort(key=lambda x: x[1], reverse=True)
             (zeroMeas, zeroStatus, zeroMin, zeroMax) = sorted_zero_test[0]  # NEED TO RPT LARGEST AWAY FROM 0.0
-            table_data.append(["Zero Air",
-                               "{0:5.3f} ppm < [{1}] < {2:5.3f} ppm".format(zeroMin, results["Gas_Name"], zeroMax),
-                               "{0:.4f}".format(zeroMeas),
-                               "{0}".format(zeroStatus)])
+            table_data.append([
+                "Zero Air", "{0:5.3f} ppm < [{1}] < {2:5.3f} ppm".format(zeroMin, results["Gas_Name"], zeroMax),
+                "{0:.4f}".format(zeroMeas), "{0}".format(zeroStatus)
+            ])
 
     if show_slope_test:
         (slope, slope_status, slope_min, slope_max) = results["Slope_Test"]
-        table_data.append(["Slope Test",
-                           "{0:5.3f} < m < {1:5.3f}".format(slope_min, slope_max),
-                           "{0:.4f}".format(slope),
-                           "{0}".format(slope_status)])
+        table_data.append([
+            "Slope Test", "{0:5.3f} < m < {1:5.3f}".format(slope_min, slope_max), "{0:.4f}".format(slope),
+            "{0}".format(slope_status)
+        ])
 
     if show_percent_deviation_test:
         # Sort the percent deviation results so that we show the worst result.
         sorted_dev_test = sorted(results["Deviation_Test"], key=lambda x: float(x[1]), reverse=True)
         if sorted_dev_test:
             (measConc, percent_deviation, percent_status, percent_acceptance) = sorted_dev_test[0]
-            table_data.append(["% Deviation",
-                              "%dev < {0:5.3f}".format(percent_acceptance),
-                               "{0:.4f}".format(percent_deviation),
-                               "{0}".format(percent_status)])
+            table_data.append([
+                "% Deviation", "%dev < {0:5.3f}".format(percent_acceptance), "{0:.4f}".format(percent_deviation),
+                "{0}".format(percent_status)
+            ])
         else:
-            table_data.append(["% Deviation",
-                                "See Manual",
-                                "N/A",
-                                "N/A"])
+            table_data.append(["% Deviation", "See Manual", "N/A", "N/A"])
 
     table = AsciiTable(table_data)
     table.title = "Pass/Fail Summary"
@@ -134,6 +131,7 @@ def get_formatted_pass_fail_summary(results,
     table.justify_columns[2] = "right"
     table.justify_columns[3] = "center"
     return table.table + "\n"
+
 
 def get_formatted_linear_regression_results(results):
     table_data = []
@@ -145,6 +143,7 @@ def get_formatted_linear_regression_results(results):
     table.inner_heading_row_border = False
     return table.table + "\n"
 
+
 def get_formatted_task_details(settings, reference_gases, results):
     str = ""
     table_data = []
@@ -153,12 +152,11 @@ def get_formatted_task_details(settings, reference_gases, results):
         percent_deviation = 0
         if not numpy.isnan(results["Percent_Deviation"][idx]):
             percent_deviation = results["Percent_Deviation"][idx]
-        table_data.append([value,
-                           "{0:>.4f}".format(results['Meas_Conc'][idx]),
-                           "{0:>.4f}".format(results['Meas_Conc_Std'][idx]),
-                           "{0:>.4f}".format(results['Ref_Conc'][idx]),
-                           "{0:^8}".format(results['Ref_Acc'][idx]),
-                           "{0:>.4f}".format(percent_deviation)])
+        table_data.append([
+            value, "{0:>.4f}".format(results['Meas_Conc'][idx]), "{0:>.4f}".format(results['Meas_Conc_Std'][idx]),
+            "{0:>.4f}".format(results['Ref_Conc'][idx]), "{0:^8}".format(results['Ref_Acc'][idx]),
+            "{0:>.4f}".format(percent_deviation)
+        ])
     table = AsciiTable(table_data)
     table.title = results["Gas_Name"] + " " + "Measurements"
     table.justify_columns[0] = "center"
@@ -170,6 +168,7 @@ def get_formatted_task_details(settings, reference_gases, results):
     str += table.table + "\n"
     return str
 
+
 def getDateNow():
     """
     Return the current date in YYYYMMDD format.
@@ -178,7 +177,8 @@ def getDateNow():
     dateStr = date.today().strftime("%Y%m%d")
     return dateStr
 
-def getFileCounter(path, which = 0):
+
+def getFileCounter(path, which=0):
     """
     Examine the files in the directory defined by 'path' and determine
     the counter to apply to the next file to be created.
@@ -205,7 +205,7 @@ def getFileCounter(path, which = 0):
     # If no matches are found, we start with the first file '0000'.
     #
     myRegExp = r"(\d{4})\." + "pdf"
-    counterList = [ int(re.search(myRegExp, x).group(1)) for x in fileList]
+    counterList = [int(re.search(myRegExp, x).group(1)) for x in fileList]
     if counterList:
         if 0 == which:
             nextCounter = max(counterList) + 1
@@ -216,6 +216,7 @@ def getFileCounter(path, which = 0):
         else:
             print("Error in FileManager::getFileCounter")
     return str(nextCounter).zfill(4)
+
 
 def makeDirs(path):
     """
@@ -234,11 +235,12 @@ def makeDirs(path):
     # permissions.
     #
     try:
-        os.makedirs(path,0775)
+        os.makedirs(path, 0775)
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise e
     return
+
 
 def create_report(settings, reference_gases, results, obj=None):
 
@@ -251,10 +253,7 @@ def create_report(settings, reference_gases, results, obj=None):
     # except Exception as e:
     #     print("Error in ReportUtilities::create_report(), cound not able to create directory %s" %destinationPath)
     counter = getFileCounter(destinationPath, 0)
-    outputFileName = "{0}/{1}_{2}_{3}_{4}.pdf".format(destinationPath,
-                                                      getDateNow(),
-                                                      settings["Data_Key"],
-                                                      results["analyzer_name"],
+    outputFileName = "{0}/{1}_{2}_{3}_{4}.pdf".format(destinationPath, getDateNow(), settings["Data_Key"], results["analyzer_name"],
                                                       counter)
 
     if obj:
@@ -263,8 +262,8 @@ def create_report(settings, reference_gases, results, obj=None):
 
     myDoc = QtGui.QTextDocument("This is a demo document")
     font = myDoc.defaultFont()
-    font.setFamily("Courier New")   # need a monospace font to line up numeric data
-    font.setPointSize(8)            # default is 11pt and is too big to fit the task summary on 8x11 paper
+    font.setFamily("Courier New")  # need a monospace font to line up numeric data
+    font.setPointSize(8)  # default is 11pt and is too big to fit the task summary on 8x11 paper
     myDoc.setDefaultFont(font)
 
     myDoc.setPlainText(fill_report_template(settings, reference_gases, results))

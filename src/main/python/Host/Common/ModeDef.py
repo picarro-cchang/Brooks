@@ -20,13 +20,26 @@ import os
 from Host.Common.SharedTypes import Bunch
 from Host.Common.CustomConfigObj import CustomConfigObj
 
+
 class ModeDefException(Exception):
     "Base class for ModeDef exceptions"
 
-class IllegalSection(ModeDefException): pass
-class UnknownProcessorType(ModeDefException): pass
-class ProcessorInvalid(ModeDefException): pass
-class InvalidPath(ModeDefException): pass
+
+class IllegalSection(ModeDefException):
+    pass
+
+
+class UnknownProcessorType(ModeDefException):
+    pass
+
+
+class ProcessorInvalid(ModeDefException):
+    pass
+
+
+class InvalidPath(ModeDefException):
+    pass
+
 
 PROCESSOR_TYPE_UNASSIGNED = -1
 PROCESSOR_TYPE_FITTER = 0
@@ -36,6 +49,7 @@ SECTION_MODE_CONFIG = "ModeConfig"
 SECTION_SYNC_ANALYSIS_CONFIG = "SYNC_SETUP"
 SECTION_SCHEME_CONFIG = "SCHEME_CONFIG"
 OPTION_PROCESSOR_COUNT = "ProcessorCount"
+
 
 def LoadModeDefinitions(ModeDefFilePath):
     """Loads mode info according to the def file.  Returns a dict of MeasMode.
@@ -56,11 +70,12 @@ def LoadModeDefinitions(ModeDefFilePath):
         mode = baseDef.copy()
         mode.Name = modeName
         try:
-            mode.ReadDefinition(modePath, IllegalSections = ["AVAILABLE_MODES"])
+            mode.ReadDefinition(modePath, IllegalSections=["AVAILABLE_MODES"])
         except InvalidPath, excData:
             raise InvalidPath("Invalid path in '%s.mode' definition: '%s'" % (modeName, excData))
         modeDict[modeName] = mode
     return modeDict
+
 
 class MeasMode(object):
     """
@@ -78,12 +93,12 @@ class MeasMode(object):
     def __init__(self):
         self.SourcePath = ""
         self.Name = ""
-        self.SchemeConfigs = {} # Dictionary of scheme configurations, keyed by the characters
-                                #  following "SCHEME_CONFIG" in the section name
+        self.SchemeConfigs = {}  # Dictionary of scheme configurations, keyed by the characters
+        #  following "SCHEME_CONFIG" in the section name
 
-        self.SpectrumIdLookup = {} # Keys are spectrum IDs, values are names
+        self.SpectrumIdLookup = {}  # Keys are spectrum IDs, values are names
         self.SyncSetup = []  #List of SyncAnalyzerInfo (what periodic scripts to run and how often)
-        self.Processors = {} # Keys are spectrum names, values are lists of processors
+        self.Processors = {}  # Keys are spectrum names, values are lists of processors
         self.Analyzers = {}  # Dict of analyzers to match data labels
 
         self.SectionHandler = {}
@@ -107,10 +122,10 @@ class MeasMode(object):
         newCopy.InstrumentModeDict.update(self.InstrumentModeDict)
         return newCopy
 
-    def _Read_INSTRUMENT_MODE(self,cp,section):
+    def _Read_INSTRUMENT_MODE(self, cp, section):
         "Reads the instrument mode keys into a dictionary"
         self.InstrumentModeDict = {}
-        for name,value in cp.list_items(section):
+        for name, value in cp.list_items(section):
             self.InstrumentModeDict[name] = value
 
     def _GetInstrumentMode(self):
@@ -124,7 +139,7 @@ class MeasMode(object):
         for i in range(1, schemeCount + 1):
             relPath = cp.get(section, "Scheme_%d_Path" % i)
             schemes.append(os.path.abspath(os.path.join(basePath, relPath)))
-        self.SchemeConfigs[extra] = Bunch(schemeCount=schemeCount,schemes=schemes)
+        self.SchemeConfigs[extra] = Bunch(schemeCount=schemeCount, schemes=schemes)
 
     def _Read_SPECTRUM_IDS(self, cp, section):
         #Note: For some lame reason the string values in cp.items() normally come
@@ -140,8 +155,8 @@ class MeasMode(object):
         basePath = os.path.split(self.SourcePath)[0]
         numSyncAnalyzers = cp.getint(section, "NumSyncAnalyzers")
         for i in range(numSyncAnalyzers):
-            period_s = cp.getfloat(section, "Sync_%d_Period_s" % (i +1))
-            reportName = cp.get(section, "Sync_%d_ReportName" % (i +1))
+            period_s = cp.getfloat(section, "Sync_%d_Period_s" % (i + 1))
+            reportName = cp.get(section, "Sync_%d_ReportName" % (i + 1))
             scriptPath = os.path.join(basePath, cp.get(section, "Sync_%d_Script" % (i + 1)))
             try:
                 scriptArgs = cp.get(section, "Sync_%d_ScriptArgs" % (i + 1)).split()
@@ -177,7 +192,7 @@ class MeasMode(object):
             if cp.has_option(Label, "ResultLabel"):
                 resultLabel = cp.get(Label, "ResultLabel")
             self.Processors[Label] = []
-            self.Processors[Label].append(ProcessorInfo(PROCESSOR_TYPE_FITTER,resultLabel)),
+            self.Processors[Label].append(ProcessorInfo(PROCESSOR_TYPE_FITTER, resultLabel)),
         elif numProcessors > 0:
             self.Processors[Label] = []
             for i in range(1, numProcessors + 1):
@@ -193,7 +208,7 @@ class MeasMode(object):
                 else:
                     raise UnknownProcessorType(processorType)
                 if processorType == PROCESSOR_TYPE_FITTER:
-                    self.Processors[Label].append(ProcessorInfo(PROCESSOR_TYPE_FITTER,resultLabel))
+                    self.Processors[Label].append(ProcessorInfo(PROCESSOR_TYPE_FITTER, resultLabel))
                 elif processorType == PROCESSOR_TYPE_CALMGR:
                     self.Processors[Label].append(ProcessorInfo(PROCESSOR_TYPE_CALMGR, resultLabel))
                 #endif
@@ -217,7 +232,7 @@ class MeasMode(object):
         if not self.Processors.has_key(Label) and not self.Analyzers.has_key(Label):
             raise IllegalSection("Section '%s' is not a valid section and must be fixed/removed!" % Label)
 
-    def ReadDefinitionFP(self, fp, IgnoreSections = [], IllegalSections = []):
+    def ReadDefinitionFP(self, fp, IgnoreSections=[], IllegalSections=[]):
         cp = CustomConfigObj(fp, ignore_option_case=False)
         #To stop the damn lower casing that ConfigParser does with optionxform -> OK....now it is taken care by CustomConfigObj!
         for section in cp.list_sections():
@@ -229,7 +244,7 @@ class MeasMode(object):
                 if section.startswith(i):
                     raise IllegalSection
             if section.startswith(SECTION_SCHEME_CONFIG):
-                self._Read_SCHEME_CONFIG(cp,section)
+                self._Read_SCHEME_CONFIG(cp, section)
             elif section in self.SectionHandler.keys():
                 self.SectionHandler[section](cp, section)
             else:
@@ -240,24 +255,26 @@ class MeasMode(object):
         #print "Spectrum id:", self.SpectrumIdLookup.values()
         for label in self.Processors:
             if label not in self.SpectrumIdLookup.values():
-                raise ProcessorInvalid("'%s' is not a spectrum name!  Processors are only for spectra, not generic data labels." % label)
+                raise ProcessorInvalid("'%s' is not a spectrum name!  Processors are only for spectra, not generic data labels." %
+                                       label)
 
-    def ReadDefinition(self, FilePath, IgnoreSections = [], IllegalSections = []):
+    def ReadDefinition(self, FilePath, IgnoreSections=[], IllegalSections=[]):
         fp = file(FilePath, "r")
         self.SourcePath = FilePath
         return self.ReadDefinitionFP(fp, IgnoreSections, IllegalSections)
 
+
 class ProcessorInfo(object):
-    def __init__(self,
-                 Type,
-                 ResultDataLabel):
+    def __init__(self, Type, ResultDataLabel):
         self.ProcessorType = Type
         self.ResultDataLabel = ResultDataLabel
+
 
 class AnalyzerInfo(object):
     def __init__(self, ScriptPath, ScriptArgs):
         self.ScriptPath = ScriptPath
-        self.ScriptArgs = ScriptArgs #A list of args (or an empty list if none)
+        self.ScriptArgs = ScriptArgs  #A list of args (or an empty list if none)
+
 
 class SyncAnalyzerInfo(object):
     def __init__(self, Period_s, ReportName, AnalyzerInfoObj):

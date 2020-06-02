@@ -95,10 +95,7 @@ def PackArbitraryObject(Obj):
     # print "checkSum = %r  data = %r" % (dataChecksum, data)
     # including cookie & len prefixes and crc suffix
     dataLen = 4 + 4 + len(data) + 4
-    packetStr = "%s%s%s%s" % (ID_COOKIE,
-                              struct.pack("=l", dataLen),
-                              data,
-                              struct.pack("=l", dataChecksum))
+    packetStr = "%s%s%s%s" % (ID_COOKIE, struct.pack("=l", dataLen), data, struct.pack("=l", dataChecksum))
     return packetStr
 
 

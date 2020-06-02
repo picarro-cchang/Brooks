@@ -108,7 +108,7 @@ TWENTY_FOUR_HOURS_IN_SECONDS = 86400
 ONE_HOUR_IN_SECONDS = 3600
 #Set up a useful AppPath reference...
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -120,28 +120,24 @@ if sys.platform == 'win32':
 else:
     from time import time as TimeStamp
 
-CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = True)
+CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, APP_NAME, IsDontCareConnection=True)
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
 # Not used now, but may be useful in the future
-CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER,
-                                            APP_NAME,
-                                            IsDontCareConnection = True)
+CRDS_InstMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, APP_NAME, IsDontCareConnection=True)
+
 
 def deleteFile(filename):
     """Delete a file, reporting any error, but not causing an exception. Returns True if delete succeeded"""
     try:
-        os.chmod(filename,stat.S_IREAD | stat.S_IWRITE)
+        os.chmod(filename, stat.S_IREAD | stat.S_IWRITE)
         os.remove(filename)
         return True
-    except OSError,e:
-        Log("Error deleting file: %s. %s" % (filename,e))
+    except OSError, e:
+        Log("Error deleting file: %s. %s" % (filename, e))
         return False
+
 
 class Mbox(object):
     """Class to manage mailbox directory """
@@ -149,10 +145,12 @@ class Mbox(object):
         self.Enabled = enabled
         self.GroupName = mailGroupName
 
+
 class DataLog(object):
     """Class to manage writing (and reading) of data logs to disk."""
     COLUMN_WIDTH = 26
-    def __init__(self, EngineName, TimeStandard, Mbox, BackupGroupName = None, PeriphDictTuple = ()):
+
+    def __init__(self, EngineName, TimeStandard, Mbox, BackupGroupName=None, PeriphDictTuple=()):
         self.EnabledDataList = []
         self.DecimationFactor = 1
         self.DecimationCount = 0
@@ -190,7 +188,7 @@ class DataLog(object):
 
     def qHandler(self):
         while True:
-            action,args = self.queue.get()
+            action, args = self.queue.get()
             now = TimeStamp()
             if action == "write":
                 self._Write(*args)
@@ -198,13 +196,13 @@ class DataLog(object):
                 self._CopyToMailboxAndArchive(*args)
             duration = TimeStamp() - now
             if duration > 10:
-                Log("Datalog: %s action %s takes %.3fs" % (self.LogPath,action,duration))
-            if duration > self.maxDuration.get(self.LogPath,0):
+                Log("Datalog: %s action %s takes %.3fs" % (self.LogPath, action, duration))
+            if duration > self.maxDuration.get(self.LogPath, 0):
                 self.maxDuration[self.LogPath] = duration
-                Log("Datalog: %s action %s takes new max time %.3f" % (self.LogPath,action,duration))
+                Log("Datalog: %s action %s takes new max time %.3f" % (self.LogPath, action, duration))
 
     def Write(self, Time, DataDict):
-        self.queue.put(("write",[Time,DataDict.copy()]))
+        self.queue.put(("write", [Time, DataDict.copy()]))
 
     def Close(self):
         if self.fp is not None:
@@ -224,10 +222,10 @@ class DataLog(object):
             # The date and time should be two consecutive fields, one with eight digits and the next with six
             m = re.compile("-(\d{8}-\d{6})-").search(os.path.split(srcPath)[1])
             if m:
-                ts = timestamp.unixTimeToTimestamp(time.mktime(time.strptime(m.group(1),"%Y%m%d-%H%M%S")))
+                ts = timestamp.unixTimeToTimestamp(time.mktime(time.strptime(m.group(1), "%Y%m%d-%H%M%S")))
             else:
                 ts = None
-        self.queue.put(("copyToMailboxAndArchive",[srcPath,ts]))
+        self.queue.put(("copyToMailboxAndArchive", [srcPath, ts]))
 
     def LoadConfig(self, ConfigParser, basePath, LogName):
         self.LogName = LogName
@@ -304,10 +302,9 @@ class DataLog(object):
         for root, dirs, files in os.walk(self.srcDir):
             for filename in files:
                 if ('mailbox_copy' not in root) and ('backup_copy' not in root):
-                    path = os.path.join(root,filename)
+                    path = os.path.join(root, filename)
                     # print "Cleaning...", path
                     self.CopyToMailboxAndArchive(path)
-
 
     def _CopyToMailboxAndArchive(self, srcPath="", ts=None):
         if srcPath == "":
@@ -346,8 +343,7 @@ class DataLog(object):
                 CRDS_Archiver.ArchiveFile(self.ArchiveGroupName, srcPath, True, ts)
             else:
                 deleteFile(srcPath)
-        Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath),TimeStamp()-startTime))
-
+        Log("Datalog archive processing %s took %s seconds" % (os.path.basename(srcPath), TimeStamp() - startTime))
 
     def _Create(self, DataList):
         """Creates a new log file named with a header which contains all the tokens in the DataList."""
@@ -362,7 +358,7 @@ class DataLog(object):
             self.LogPath = ""
 
         # check to see if directory exists. If it doesn't create it.
-        if( os.access(self.srcDir, os.F_OK) == False ):
+        if (os.access(self.srcDir, os.F_OK) == False):
             os.makedirs(self.srcDir)
 
         # Create name and path of new file
@@ -377,7 +373,7 @@ class DataLog(object):
 
         if self.useHdf5:
             # Create file and make a new table
-            self.fp = openFile(self.LogPath,"w")
+            self.fp = openFile(self.LogPath, "w")
             self._MakeTable(DataList)
         else:
             # Create file and write header
@@ -394,31 +390,27 @@ class DataLog(object):
         self.CreateLogTime = timestamp.unixTime(self.CreateLogTimestamp)
 
         if self.TimeStandard == "local":
-            self.LogHour = time.localtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
-            self.timeString = time.strftime("%Y%m%d-%H%M%S",time.localtime(self.CreateLogTime))
+            self.LogHour = time.localtime(self.CreateLogTime).tm_hour  #used to determine when we reached midnight
+            self.timeString = time.strftime("%Y%m%d-%H%M%S", time.localtime(self.CreateLogTime))
         else:
             # Use GMT (UTC)
-            self.LogHour = time.gmtime(self.CreateLogTime).tm_hour #used to determine when we reached midnight
-            self.timeString = time.strftime("%Y%m%d-%H%M%SZ",time.gmtime(self.CreateLogTime))
+            self.LogHour = time.gmtime(self.CreateLogTime).tm_hour  #used to determine when we reached midnight
+            self.timeString = time.strftime("%Y%m%d-%H%M%SZ", time.gmtime(self.CreateLogTime))
             # Z is for GMT (UTC) according to ISO 8601 format
 
         if self.useHdf5:
-            self.Fname = "%s-%s-%s.h5" % (self.EngineName,
-                                            self.timeString,
-                                            self.LogName)
+            self.Fname = "%s-%s-%s.h5" % (self.EngineName, self.timeString, self.LogName)
         else:
-            self.Fname = "%s-%s-%s.dat" % (self.EngineName,
-                                            self.timeString,
-                                            self.LogName)
+            self.Fname = "%s-%s-%s.dat" % (self.EngineName, self.timeString, self.LogName)
         self.LogPath = os.path.abspath(os.path.join(self.srcDir, self.Fname))
 
     def _WriteEntry(self, string):
         if self.delimiter:
             self.fp.write(string + self.delimiter)
-        else:   # write data into columns with fixed width
-            self.fp.write((string[:self.COLUMN_WIDTH-1]).ljust(self.COLUMN_WIDTH))
+        else:  # write data into columns with fixed width
+            self.fp.write((string[:self.COLUMN_WIDTH - 1]).ljust(self.COLUMN_WIDTH))
 
-    def _WriteHeader(self,DataList):
+    def _WriteHeader(self, DataList):
         if self.BareTime:
             # ISO8601 UTC time
             self._WriteEntry("DATETIME (ISO8601 UTC)")
@@ -442,13 +434,13 @@ class DataLog(object):
         self.fp.write("\n")
         self.DecimationCount = 0
 
-    def _MakeTable(self,DataList):
+    def _MakeTable(self, DataList):
         """Construct the HDF5 table from the entries in DataList"""
         tableDict = {}
-        filters = Filters(complevel=1,fletcher32=True)
+        filters = Filters(complevel=1, fletcher32=True)
         if not self.BareTime:
             tableDict["FRAC_DAYS_SINCE_JAN1"] = Float32Col()
-            tableDict["FRAC_HRS_SINCE_JAN1"]  = Float32Col()
+            tableDict["FRAC_HRS_SINCE_JAN1"] = Float32Col()
             if self.WriteJulianDays:
                 tableDict["JULIAN_DAYS"] = Float32Col()
         for dataName in DataList:
@@ -461,7 +453,7 @@ class DataLog(object):
         self.DecimationCount = 0
         if self.table is not None:
             self.table.flush()
-        self.table = self.fp.createTable(self.fp.root,"results",tableDict,filters=filters)
+        self.table = self.fp.createTable(self.fp.root, "results", tableDict, filters=filters)
 
     def _MakeListFromDict(self, DataDict):
         DataList = []
@@ -474,7 +466,6 @@ class DataLog(object):
                 DataList.append(data)
         return DataList
 
-
     def _Write(self, Time, DataDict):
         """Writes a representation of the provided data to disk, either in text or H5 mode"""
 
@@ -485,7 +476,7 @@ class DataLog(object):
         else:
             currentTime = time.gmtime(Time)
 
-        self.DecimationCount+=1
+        self.DecimationCount += 1
         if self.DecimationCount >= self.DecimationFactor:
             DataList = self._MakeListFromDict(DataDict)
 
@@ -499,7 +490,7 @@ class DataLog(object):
 
             logDuration = (Time - self.CreateLogTime)
 
-            if ( self.MaxLogDuration % TWENTY_FOUR_HOURS_IN_SECONDS ) == 0:
+            if (self.MaxLogDuration % TWENTY_FOUR_HOURS_IN_SECONDS) == 0:
                 #if DEBUG: Log("24Incr Log Duration =%f. MaxLogDuration=%f" % (logDuration, self.MaxLogDuration))
                 # MaxLogDuration is set to a 24 increment therefore create new file at 12:00 during the last 24 hrs of logging
                 # If difference <= 24 hrs then check to see if it's midnight yet.
@@ -518,9 +509,9 @@ class DataLog(object):
 
             # Start by writing fixed data to file
             #calculate SecondsFromEpoch as of Jan1 of this year
-            string = "%s 01 01 00 00 00" % time.strftime("%Y",currentTime)
-            timeTuple =time.strptime( string, "%Y %m %d %H %M %S")
-            Jan1SecondsSinceEpoch = time.mktime( timeTuple )
+            string = "%s 01 01 00 00 00" % time.strftime("%Y", currentTime)
+            timeTuple = time.strptime(string, "%Y %m %d %H %M %S")
+            Jan1SecondsSinceEpoch = time.mktime(timeTuple)
 
             if DataList != self.oldDataList:
                 # Start a new file since data columns have changed
@@ -530,17 +521,17 @@ class DataLog(object):
             if self.useHdf5:
                 row = self.table.row
                 if not self.BareTime:
-                    days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
+                    days = (Time - Jan1SecondsSinceEpoch) / TWENTY_FOUR_HOURS_IN_SECONDS
                     row["FRAC_DAYS_SINCE_JAN1"] = days
-                    hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
-                    row["FRAC_HRS_SINCE_JAN1"]  = hrs
+                    hrs = (Time - Jan1SecondsSinceEpoch) / ONE_HOUR_IN_SECONDS
+                    row["FRAC_HRS_SINCE_JAN1"] = hrs
                     if self.WriteJulianDays:
-                        row["JULIAN_DAYS"] = days+1.0
+                        row["JULIAN_DAYS"] = days + 1.0
                 for data in DataList:
-                    row[data] = DataDict.get(data,0.0)
+                    row[data] = DataDict.get(data, 0.0)
                 row.append()
                 now = TimeStamp()
-                if now-self.lastFlush >  self.UpdateInterval:
+                if now - self.lastFlush > self.UpdateInterval:
                     self.table.flush()
                     self.lastFlush = now
             else:
@@ -548,14 +539,14 @@ class DataLog(object):
                     # ISO8601 UTC date and time with fractional seconds
                     timeStr = time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(Time))
                     fracSec = Time - int(Time)
-                    timeStr += (".%03d" % int(1000*fracSec))
+                    timeStr += (".%03d" % int(1000 * fracSec))
                     timeStr += "Z"
                     self._WriteEntry(timeStr)
                 else:
                     #write DATE
-                    self._WriteEntry(time.strftime("%Y-%m-%d",currentTime))
+                    self._WriteEntry(time.strftime("%Y-%m-%d", currentTime))
                     #write TIME
-                    timeStr = time.strftime("%H:%M:%S",currentTime)
+                    timeStr = time.strftime("%H:%M:%S", currentTime)
                     fracSec = Time - int(Time)
                     if self.PrintTimeInHalfSecond:
                         if fracSec >= 0.5:
@@ -563,17 +554,17 @@ class DataLog(object):
                         else:
                             timeStr += ".00"
                     else:
-                        timeStr += (".%03d" % int(1000*fracSec))
+                        timeStr += (".%03d" % int(1000 * fracSec))
                     self._WriteEntry(timeStr)
                     #write FRAC_DAYS_SINCE_JAN1
-                    days = (Time-Jan1SecondsSinceEpoch)/TWENTY_FOUR_HOURS_IN_SECONDS
-                    self._WriteEntry("%.8f" %days)
+                    days = (Time - Jan1SecondsSinceEpoch) / TWENTY_FOUR_HOURS_IN_SECONDS
+                    self._WriteEntry("%.8f" % days)
                     #write FRAC_HRS_SINCE_JAN1
-                    hrs = (Time-Jan1SecondsSinceEpoch)/ONE_HOUR_IN_SECONDS
-                    self._WriteEntry("%.6f" %hrs)
+                    hrs = (Time - Jan1SecondsSinceEpoch) / ONE_HOUR_IN_SECONDS
+                    self._WriteEntry("%.6f" % hrs)
                     #write JULIAN_DAYS if enabled
                     if self.WriteJulianDays:
-                        self._WriteEntry("%.8f" % (days+1))
+                        self._WriteEntry("%.8f" % (days + 1))
 
                 #write EPOCH_TIME if enabled
                 if self.WriteEpochTime:
@@ -583,11 +574,11 @@ class DataLog(object):
                 self._WriteEntry("%.0f" % DataDict.get('INST_STATUS', 0))
 
                 for data in DataList:
-                    self._WriteEntry("%.10E" % DataDict.get(data,0.0))
+                    self._WriteEntry("%.10E" % DataDict.get(data, 0.0))
 
                 self.fp.write("\n")
                 now = TimeStamp()
-                if now-self.lastFlush >  self.UpdateInterval:
+                if now - self.lastFlush > self.UpdateInterval:
                     self.fp.flush()
                     self.lastFlush = now
 
@@ -600,7 +591,8 @@ class DataLogger(object):
     def __init__(self, ConfigPath, UserConfigPath, PrivateConfigPath):
 
         if DEBUG: Log("Loading config options.")
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         self.ConfigPath = ConfigPath
         self.UserConfigPath = UserConfigPath
@@ -611,11 +603,10 @@ class DataLogger(object):
         if DEBUG: Log("Setting up RPC server.")
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_DATALOGGER),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = APP_VERSION,
-                                                threaded = True)
-
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=APP_VERSION,
+                                               threaded=True)
 
         if DEBUG: Log("Registering RPC functions.")
         #Register the rpc functions...
@@ -650,7 +641,7 @@ class DataLogger(object):
             mailGroupName = cp.get("DEFAULT", "ArchiveGroupName")
             mailGroupEnabled = cp.getboolean("DEFAULT", "mboxenabled")
             self.backupGroupName = cp.get("DEFAULT", "BackupGroupName")
-            self.timeStandard = cp.get("DEFAULT","TimeStandard",default="gmt")
+            self.timeStandard = cp.get("DEFAULT", "TimeStandard", default="gmt")
             # Handle peripheral interface columns
             try:
                 periphIntrfConfig = os.path.join(self.basePath, cp.get("PeriphIntrf", "periphIntrfConfig"))
@@ -660,7 +651,7 @@ class DataLogger(object):
                 self.periphDictTuple = ()
         except:
             tbMsg = traceback.format_exc()
-            Log("Load Config Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Load Config Exception:", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
             self.engineName = "Unknown Engine"
             mailGroupName = ""
             mailGroupEnabled = False
@@ -682,10 +673,10 @@ class DataLogger(object):
                 dl.LoadConfig(ConfigParser, self.basePath, logName)
             except:
                 tbMsg = traceback.format_exc()
-                Log("Load Log Config Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+                Log("Load Log Config Exception:", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
                 continue
 
-            LogDict[logName]=dl
+            LogDict[logName] = dl
 
             # update Source Script Dict
             if dl.SourceScript not in self.SrcDict:
@@ -703,20 +694,20 @@ class DataLogger(object):
                 logList = self.PortDict[dl.Port]
                 logList.append(logName)
 
-            self.PortDict[dl.Port]= logList
+            self.PortDict[dl.Port] = logList
 
     def _DataListener(self, dataMgrObject):
         try:
             self.md.ImportPickleDict(dataMgrObject)
         except:
             tbMsg = traceback.format_exc()
-            Log("Import Pickle Exception:",Data = dict(Note = "<See verbose for debug info>"),Level = 3,Verbose = tbMsg)
+            Log("Import Pickle Exception:", Data=dict(Note="<See verbose for debug info>"), Level=3, Verbose=tbMsg)
 
         now = TimeStamp()
         if self.DataListenerLastTime != 0:
             rtt = now - self.DataListenerLastTime
             if rtt > self.maxDataListenerRtt:
-                Log("Maximum data listener loop RTT so far: %.3f" % (self.maxDataListenerRtt,))
+                Log("Maximum data listener loop RTT so far: %.3f" % (self.maxDataListenerRtt, ))
                 self.maxDataListenerRtt = rtt
         self.DataListenerLastTime = now
 
@@ -745,20 +736,20 @@ class DataLogger(object):
     def DATALOGGER_start(self):
         """Called to start the Data Logger."""
         #Log("Data Logger started")
-        self.UserLogDict = {}    # contains DataLog objects for each log section found in user config file.
-        self.PrivateLogDict = {} # contains DataLog objects for each log section found in private config file.
-        self.SrcDict = {}      # Dictionary of source scripts which contains list of log names.
-                                 # Used for filtering of broadcast data.
-        self.PortDict = {}     # Dictionary of port numbers which contains list of log names.
+        self.UserLogDict = {}  # contains DataLog objects for each log section found in user config file.
+        self.PrivateLogDict = {}  # contains DataLog objects for each log section found in private config file.
+        self.SrcDict = {}  # Dictionary of source scripts which contains list of log names.
+        # Used for filtering of broadcast data.
+        self.PortDict = {}  # Dictionary of port numbers which contains list of log names.
 
         if not FileExists(self.ConfigPath):
-            Log("File not found.", Data = dict(Path = self.ConfigPath), Level = 2)
+            Log("File not found.", Data=dict(Path=self.ConfigPath), Level=2)
             raise Exception("File '%s' not found." % self.ConfigPath)
         if not FileExists(self.UserConfigPath):
-            Log("File not found.", Data = dict(Path = self.UserConfigPath), Level = 2)
+            Log("File not found.", Data=dict(Path=self.UserConfigPath), Level=2)
             raise Exception("File '%s' not found." % self.UserConfigPath)
         if not FileExists(self.PrivateConfigPath):
-            Log("File not found.", Data = dict(Path = self.PrivateConfigPath), Level = 2)
+            Log("File not found.", Data=dict(Path=self.PrivateConfigPath), Level=2)
             raise Exception("File '%s' not found." % self.PrivateConfigPath)
 
         self.UserCp = CustomConfigObj(self.UserConfigPath)
@@ -767,11 +758,16 @@ class DataLogger(object):
         self._LoadDefaultConfig()
         self._LoadCustomConfig(self.PrivateCp, self.PrivateLogDict)
         self._LoadCustomConfig(self.UserCp, self.UserLogDict)
-        Log("Data Logger: source dict=%s; port dict=%s" % (self.SrcDict,self.PortDict))
+        Log("Data Logger: source dict=%s; port dict=%s" % (self.SrcDict, self.PortDict))
 
-        for port,value in self.PortDict.iteritems():
-            self.Listener = Listener.Listener(None, port, StringPickler.ArbitraryObject, self._DataListener, retry = True,
-                                              name = "Data Logger data listener",logFunc = Log)
+        for port, value in self.PortDict.iteritems():
+            self.Listener = Listener.Listener(None,
+                                              port,
+                                              StringPickler.ArbitraryObject,
+                                              self._DataListener,
+                                              retry=True,
+                                              name="Data Logger data listener",
+                                              logFunc=Log)
 
         self.RpcServer.serve_forever()
         self.DATALOGGER_shutdown()
@@ -785,55 +781,59 @@ class DataLogger(object):
 
     def DATALOGGER_getDataRpc(self, LogName):
         """Returns a string containing a list of data columns being logged for the specified log."""
-        dataListStr=""
+        dataListStr = ""
         if LogName in self.PrivateLogDict:
-            dl =  self.PrivateLogDict[LogName]
+            dl = self.PrivateLogDict[LogName]
             # convert list to string
             for token in dl.EnabledDataList:
-                dataListStr+="%s," %token
+                dataListStr += "%s," % token
             #remove traling comma
             if len(dataListStr) > 0:
-                dataListStr = dataListStr[0:len(dataListStr)-1]
+                dataListStr = dataListStr[0:len(dataListStr) - 1]
 
             return dataListStr
         elif LogName in self.UserLogDict:
-            dl =  self.UserLogDict[LogName]
+            dl = self.UserLogDict[LogName]
             # convert list to string
             for token in dl.EnabledDataList:
-                dataListStr+="%s," %token
+                dataListStr += "%s," % token
             #remove trailing comma
             if len(dataListStr) > 0:
-                dataListStr = dataListStr[0:len(dataListStr)-1]
+                dataListStr = dataListStr[0:len(dataListStr) - 1]
 
             return dataListStr
         else:
             return dataListStr
+
     def DATALOGGER_getFilenameRpc(self, LogName):
         """Returns a string containing the file currently associated with the specified log."""
         if LogName in self.PrivateLogDict:
-            dl =  self.PrivateLogDict[LogName]
+            dl = self.PrivateLogDict[LogName]
             return dl.LogPath
         elif LogName in self.UserLogDict:
-            dl =  self.UserLogDict[LogName]
+            dl = self.UserLogDict[LogName]
             return dl.LogPath
         else:
             return "Invalid LogName"
+
     def DATALOGGER_getUserLogsRpc(self):
         list = []
-        for data,value in self.UserLogDict.iteritems():
+        for data, value in self.UserLogDict.iteritems():
             list.append(data)
 
         return DATALOGGER_RPC_SUCCESS, list
+
     def DATALOGGER_getPrivateLogsRpc(self):
         list = []
-        for data,value in self.PrivateLogDict.iteritems():
+        for data, value in self.PrivateLogDict.iteritems():
             list.append(data)
 
         return DATALOGGER_RPC_SUCCESS, list
+
     def DATALOGGER_addUserDataRpc(self, UserLogName, tokenListStr):
         """Adds a list of data columns to the specified existing user log."""
         if UserLogName in self.UserLogDict:
-            dl =  self.UserLogDict[UserLogName]
+            dl = self.UserLogDict[UserLogName]
             tokenList = tokenListStr.split(',')
             # check to see if token is in DataList. If it isn't, add it.
             listUpdated = False
@@ -849,14 +849,14 @@ class DataLogger(object):
                     self.UserLogDict[UserLogName].LogPath = ""
 
                 # convert list to string
-                dataListStr=""
+                dataListStr = ""
                 for token in dl.EnabledDataList:
-                    dataListStr+="%s," %token
+                    dataListStr += "%s," % token
                 #remove trailing comma
                 if len(dataListStr) > 0:
-                    dataListStr = dataListStr[0:len(dataListStr)-1]
+                    dataListStr = dataListStr[0:len(dataListStr) - 1]
                 # write string to UserConfig
-                self.UserCp.set(UserLogName,"datalist", dataListStr)
+                self.UserCp.set(UserLogName, "datalist", dataListStr)
                 #fp = open(self.UserConfigPath,"wb")
                 #self.UserCp.write(fp)
                 #fp.close()
@@ -864,10 +864,11 @@ class DataLogger(object):
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
+
     def DATALOGGER_removeUserDataRpc(self, UserLogName, tokenListStr):
         """Removes a list of data columns to the specified user log."""
         if UserLogName in self.UserLogDict:
-            dl =  self.UserLogDict[UserLogName]
+            dl = self.UserLogDict[UserLogName]
             tokenList = tokenListStr.split(',')
             # check to see if token is in DataList. If it is remove it.
             listUpdated = False
@@ -883,14 +884,14 @@ class DataLogger(object):
                     self.UserLogDict[UserLogName].LogPath = ""
 
                 # convert list to string
-                dataListStr=""
+                dataListStr = ""
                 for token in dl.EnabledDataList:
-                    dataListStr+="%s," %token
+                    dataListStr += "%s," % token
                 #remove trailing comma
                 if len(dataListStr) > 0:
-                    dataListStr = dataListStr[0:len(dataListStr)-1]
+                    dataListStr = dataListStr[0:len(dataListStr) - 1]
                 # write string to UserConfig
-                self.UserCp.set(UserLogName,"datalist", dataListStr)
+                self.UserCp.set(UserLogName, "datalist", dataListStr)
                 #fp = open(self.UserConfigPath,"wb")
                 #self.UserCp.write(fp)
                 #fp.close()
@@ -898,18 +899,19 @@ class DataLogger(object):
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
-    def DATALOGGER_startLogRpc(self, UserLogName, restart = False):
+
+    def DATALOGGER_startLogRpc(self, UserLogName, restart=False):
         """Called to enable logging of the specified user log."""
         if UserLogName in self.UserLogDict:
-            dl =  self.UserLogDict[UserLogName]
+            dl = self.UserLogDict[UserLogName]
             dl.Enabled = True
             if restart:
                 self.UserLogDict[UserLogName].restart = True
             else:
                 # re-initialize LogPath string to make sure file is created when data comes in.
-                self.UserLogDict[UserLogName].LogPath =""
+                self.UserLogDict[UserLogName].LogPath = ""
 
-            self.UserCp.set(UserLogName,"enabled", "true")
+            self.UserCp.set(UserLogName, "enabled", "true")
             #fp = open(self.UserConfigPath,"wb")
             #self.UserCp.write(fp)
             #fp.close()
@@ -917,13 +919,14 @@ class DataLogger(object):
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
+
     def DATALOGGER_stopLogRpc(self, UserLogName):
         """Called to disable logging of the specified user log."""
         if UserLogName in self.UserLogDict:
-            dl =  self.UserLogDict[UserLogName]
+            dl = self.UserLogDict[UserLogName]
             dl.Enabled = False
             dl.StopPending = True
-            self.UserCp.set(UserLogName,"enabled", "false")
+            self.UserCp.set(UserLogName, "enabled", "false")
             #fp = open(self.UserConfigPath,"wb")
             #self.UserCp.write(fp)
             #fp.close()
@@ -931,36 +934,39 @@ class DataLogger(object):
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
+
     def DATALOGGER_logEnabledRpc(self, LogName):
         """Returns True if the specified user or private log is enabled."""
         if LogName in self.UserLogDict:
-            dl =  self.UserLogDict[LogName]
+            dl = self.UserLogDict[LogName]
             return dl.Enabled
         elif LogName in self.PrivateLogDict:
-            dl =  self.PrivateLogDict[LogName]
+            dl = self.PrivateLogDict[LogName]
             return dl.Enabled
         else:
             return False
+
     def DATALOGGER_setDecimationFactorRpc(self, UserLogName, factor):
         """Called to set the decimation factor of the specified user log."""
         if UserLogName in self.UserLogDict:
-            dl =  self.UserLogDict[UserLogName]
+            dl = self.UserLogDict[UserLogName]
             dl.DecimationFactor = factor
 
-            self.UserCp.set(UserLogName,"decimationfactor", "%d" % factor)
+            self.UserCp.set(UserLogName, "decimationfactor", "%d" % factor)
             #fp = open(self.UserConfigPath,"wb")
             #self.UserCp.write(fp)
             #fp.close()
             return DATALOGGER_RPC_SUCCESS
         else:
             return DATALOGGER_RPC_FAILED
+
     def DATALOGGER_getDecimationFactorRpc(self, LogName):
         """Called to set the decimation factor of the specified user log."""
         if LogName in self.UserLogDict:
-            dl =  self.UserLogDict[LogName]
+            dl = self.UserLogDict[LogName]
             return dl.DecimationFactor
         elif LogName in self.PrivateLogDict:
-            dl =  self.PrivateLogDict[LogName]
+            dl = self.PrivateLogDict[LogName]
             return dl.DecimationFactor
         else:
             return 0
@@ -975,13 +981,16 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "h", ["help","ini=","user_ini=","private_ini="])
+        switches, args = getopt.getopt(sys.argv[1:], "h", ["help", "ini=", "user_ini=", "private_ini="])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -1002,17 +1011,19 @@ def HandleCommandSwitches():
 
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
-        Log ("Config file specified at command line: %s" % configFile)
+        Log("Config file specified at command line: %s" % configFile)
 
     if "--user_ini" in options:
         userConfigFile = os.path.join(CONFIG_DIR, options["--user_ini"])
-        Log ("User Config file specified at command line: %s" % userConfigFile)
+        Log("User Config file specified at command line: %s" % userConfigFile)
 
     if "--private_ini" in options:
         privateConfigFile = os.path.join(CONFIG_DIR, options["--private_ini"])
-        Log ("Private Config file specified at command line: %s" % privateConfigFile)
+        Log("Private Config file specified at command line: %s" % privateConfigFile)
 
     return (configFile, userConfigFile, privateConfigFile)
+
+
 def main():
     DEBUG = __debug__
     #Get and handle the command line options...
@@ -1039,14 +1050,18 @@ def main():
                 Log("Restart request to supervisor sent", Level=0)
             else:
                 Log("Restart request to supervisor not sent", Level=2)
-                
+
 
 if __name__ == "__main__":
     main()
 else:
     # This file is included from within a test harness
     DEBUG = True
-    def Log(string,Data={},Level=0,Verbose=""):
-        print "Log [%d]: %s" % (Level,string,)
-        if Data: print "Data: %s" % (Data,)
+
+    def Log(string, Data={}, Level=0, Verbose=""):
+        print "Log [%d]: %s" % (
+            Level,
+            string,
+        )
+        if Data: print "Data: %s" % (Data, )
         if Verbose: print "Verbose: %s" % Verbose

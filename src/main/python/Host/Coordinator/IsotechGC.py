@@ -18,6 +18,7 @@ STAT_X_SAMPLE_ACK = 2
 CTRL_X_SAMPLE = 1
 CTRL_Y_SAMPLE = 2
 
+
 class GC(TTLIntrf):
     def __init__(self):
         TTLIntrf.__init__(self, ASSERT_SIG, DEASSERT_SIG)

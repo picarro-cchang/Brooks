@@ -31,7 +31,6 @@ from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg as FigureCanvas
 from matplotlib.backends.backend_wx import NavigationToolbar2Wx
 from matplotlib.figure import Figure
 
-
 FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "3.0.0"
@@ -43,7 +42,7 @@ CONFIGVERSION = "3.0"
 APPCONFIGSPEC = "DatViewerPrefs.ini"
 USERCONFIG = "DatViewerUserPrefs.ini"
 
-g_logMsgLevel = 0   # should be 0 for check-in
+g_logMsgLevel = 0  # should be 0 for check-in
 
 
 def LogErrmsg(str):
@@ -153,8 +152,7 @@ class SeriesFrame(wx.Frame):
             style |= wx.FRAME_NO_TASKBAR
             print "don't show frame in taskbar"
 
-        wx.Frame.__init__(self, wx.GetApp().TopWindow, -1,
-                          'SeriesFrame', style=style, size=(550, 350))
+        wx.Frame.__init__(self, wx.GetApp().TopWindow, -1, 'SeriesFrame', style=style, size=(550, 350))
 
         # parse args
         self.tz = k.get("tz", pytz.timezone("UTC"))
@@ -196,7 +194,8 @@ class SeriesFrame(wx.Frame):
             # plot panel name isn't exposed in the UI but useful for debugging
             panelName = "%s - %d" % (self.title, ix)
 
-            panel = PlotControlPanel(self, wx.ID_ANY,
+            panel = PlotControlPanel(self,
+                                     wx.ID_ANY,
                                      style=wx.SUNKEN_BORDER,
                                      panelNum=ix,
                                      panelName=panelName,
@@ -211,7 +210,6 @@ class SeriesFrame(wx.Frame):
 
             panelSize = controlsSizer.GetMinSize()
             print "panelSize=", panelSize
-
             """
             # TODO: get size to use from prefs if it isn't -1 (initial value)
 
@@ -247,16 +245,17 @@ class SeriesFrame(wx.Frame):
 
             # create the plot
             #plot = PlotPanel(self, wx.ID_ANY,
-            plot = MplPanel(self, wx.ID_ANY,
-                            #style=wx.SUNKEN_BORDER,
-                            canvasSize=canvasSize)
+            plot = MplPanel(
+                self,
+                wx.ID_ANY,
+                #style=wx.SUNKEN_BORDER,
+                canvasSize=canvasSize)
 
             # This doesn't work, I need to get it to recalc size
             # somehow...
             #plot.canvas.SetSize(panelSize)
             #plot.sizer.SetSizeHints(plot)
             #plot.Fit()
-
             """
             plotSizer = wx.BoxSizer(wx.VERTICAL)
             plotSizer.Add(plot, 0, wx.LEFT | wx.TOP | wx.EXPAND, 20)
@@ -374,6 +373,7 @@ class SeriesFrame(wx.Frame):
 ## Class for handling H5 files
 ##
 
+
 class H5File(object):
     def __init__(self, filepath):
         self.filepath = filepath
@@ -414,11 +414,7 @@ ID_MENU_PLOTFRAMES_3 = wx.NewId()
 ID_MENU_PLOT_CORR = wx.NewId()
 ID_MENU_PLOT_ALLAN = wx.NewId()
 
-mainMenuItems = [ID_MENU_PLOTFRAMES_1,
-                 ID_MENU_PLOTFRAMES_2,
-                 ID_MENU_PLOTFRAMES_3,
-                 ID_MENU_PLOT_CORR,
-                 ID_MENU_PLOT_ALLAN]
+mainMenuItems = [ID_MENU_PLOTFRAMES_1, ID_MENU_PLOTFRAMES_2, ID_MENU_PLOTFRAMES_3, ID_MENU_PLOT_CORR, ID_MENU_PLOT_ALLAN]
 
 
 class AppFrame(wx.Frame):
@@ -437,17 +433,13 @@ class AppFrame(wx.Frame):
         self.CreateMenus()
 
         # add the controls to the panel
-        topLabel = wx.StaticText(self.panel,
-                                 -1,
-                                 "Current H5 File")
+        topLabel = wx.StaticText(self.panel, -1, "Current H5 File")
 
         topLabel.SetFont(wx.Font(12, wx.SWISS, wx.NORMAL, wx.BOLD))
 
         # filename and dirname text controls are read-only
         filenameLabel = wx.StaticText(self.panel, -1, "Filename:")
-        filename = wx.TextCtrl(self.panel, -1, "",
-                               style=wx.TE_READONLY,
-                               size=(200, -1))
+        filename = wx.TextCtrl(self.panel, -1, "", style=wx.TE_READONLY, size=(200, -1))
 
         dirLabel = wx.StaticText(self.panel, -1, "Folder:")
         dirname = wx.TextCtrl(self.panel, -1, "", style=wx.TE_READONLY)
@@ -462,11 +454,9 @@ class AppFrame(wx.Frame):
         # filenameSizer is a grid that holds the filename info
         filenameSizer = wx.FlexGridSizer(cols=2, hgap=5, vgap=5)
         filenameSizer.AddGrowableCol(1)
-        filenameSizer.Add(filenameLabel, 0,
-                          wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        filenameSizer.Add(filenameLabel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         filenameSizer.Add(filename, 0, wx.EXPAND)
-        filenameSizer.Add(dirLabel, 0,
-                          wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        filenameSizer.Add(dirLabel, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         filenameSizer.Add(dirname, 0, wx.EXPAND)
 
         # add the filenameSizer to the mainSizer
@@ -512,23 +502,16 @@ class AppFrame(wx.Frame):
 
     def CreateFileMenuItems(self):
         menu = wx.Menu()
-        openH5Item = menu.Append(-1,
-                                 "&Open H5...\tCtrl+O",
-                                 "Open an H5 file to plot its data.")
+        openH5Item = menu.Append(-1, "&Open H5...\tCtrl+O", "Open an H5 file to plot its data.")
         menu.AppendSeparator()
-        openZipItem = menu.Append(-1,
-                                  "Concatenate &ZIP to H5...\tZ",
-                                  "Concatenate all H5 files in a ZIP into a single H5 file.")
-        concatFolderItem = menu.Append(-1,
-                                       "Concatenate &folder to H5...\tF",
+        openZipItem = menu.Append(-1, "Concatenate &ZIP to H5...\tZ", "Concatenate all H5 files in a ZIP into a single H5 file.")
+        concatFolderItem = menu.Append(-1, "Concatenate &folder to H5...\tF",
                                        "Concatenate all H5 and zipped H5 files within a folder into a single H5 file.")
         menu.AppendSeparator()
 
         # more File menu items go here...
 
-        exitAppItem = menu.Append(wx.ID_EXIT,
-                                  "E&xit",
-                                  "Quit the H5 Data File Viewer.")
+        exitAppItem = menu.Append(wx.ID_EXIT, "E&xit", "Quit the H5 Data File Viewer.")
 
         # Bindings
         self.Bind(wx.EVT_MENU, self.OnOpenH5, openH5Item)
@@ -542,24 +525,19 @@ class AppFrame(wx.Frame):
         # These menu items have known IDs (generated at run-time) so
         # they can be disabled until a valid H5 filename is set
         menu = wx.Menu()
-        series1Item = menu.Append(ID_MENU_PLOTFRAMES_1,
-                                  "New Time Series Plot (&1 Frame)...\t1",
+        series1Item = menu.Append(ID_MENU_PLOTFRAMES_1, "New Time Series Plot (&1 Frame)...\t1",
                                   "Open a window with one frame to plot the current H5 data.")
-        series2Item = menu.Append(ID_MENU_PLOTFRAMES_2,
-                                  "New Time Series Plot (&2 Frames)...\t2",
+        series2Item = menu.Append(ID_MENU_PLOTFRAMES_2, "New Time Series Plot (&2 Frames)...\t2",
                                   "Open a window with two frames to plot the current H5 data.")
-        series3Item = menu.Append(ID_MENU_PLOTFRAMES_3,
-                                  "New Time Series Plot (&3 Frames)...\t3",
+        series3Item = menu.Append(ID_MENU_PLOTFRAMES_3, "New Time Series Plot (&3 Frames)...\t3",
                                   "Open a window with three viewerFramePos to plot the current H5 data.")
 
         menu.AppendSeparator()
 
-        correlationItem = menu.Append(ID_MENU_PLOT_CORR,
-                                      "&Correlation Plot...\tC",
+        correlationItem = menu.Append(ID_MENU_PLOT_CORR, "&Correlation Plot...\tC",
                                       "Open a new window with a correlation plot of the current H5 data.")
 
-        allenItem = menu.Append(ID_MENU_PLOT_ALLAN,
-                                "&Allan Standard Deviation Plot...\tA",
+        allenItem = menu.Append(ID_MENU_PLOT_ALLAN, "&Allan Standard Deviation Plot...\tA",
                                 "Open a new window with an Allan plot of the current H5 data.")
 
         # Bindings
@@ -578,9 +556,7 @@ class AppFrame(wx.Frame):
 
     def CreateHelpMenuItems(self):
         menuHelp = wx.Menu()
-        aboutItem = menuHelp.Append(wx.ID_ABOUT,
-                                    "About...",
-                                    "Show information about the H5 Data File Viewer.")
+        aboutItem = menuHelp.Append(wx.ID_ABOUT, "About...", "Show information about the H5 Data File Viewer.")
 
         self.Bind(wx.EVT_MENU, self.OnAbout, aboutItem)
         return menuHelp
@@ -610,9 +586,7 @@ class AppFrame(wx.Frame):
             statusMsg = "Open '%s' and bring it to the top." % plotWindow.GetName()
             #print "  name=%s", plotWindow.GetName()
             #print "  id=", plotWindow.GetId()
-            windowItem = self.menuWindow.Append(plotWindow.GetId(),
-                                                plotWindow.GetName(),
-                                                statusMsg)
+            windowItem = self.menuWindow.Append(plotWindow.GetId(), plotWindow.GetName(), statusMsg)
 
             self.Bind(wx.EVT_MENU, self.OnSelectPlotWindow, windowItem)
 
@@ -634,10 +608,7 @@ class AppFrame(wx.Frame):
             wx.MessageBox("Please open or convert a file first")
             return
 
-        window = SeriesFrame(nViewers=nFrames,
-                             h5File=h5File,
-                             parent=self,
-                             onCloseCallback=self.OnCloseSeriesFrame)
+        window = SeriesFrame(nViewers=nFrames, h5File=h5File, parent=self, onCloseCallback=self.OnCloseSeriesFrame)
 
         # add this to the plot window list and update the Window menu
         plotWindow = PlotWindow(window)
@@ -688,7 +659,8 @@ class AppFrame(wx.Frame):
         if not os.path.isdir(defaultDir):
             defaultDir = ""
 
-        d = wx.FileDialog(None, "Open HDF5 file",
+        d = wx.FileDialog(None,
+                          "Open HDF5 file",
                           defaultDir=defaultDir,
                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                           wildcard="h5 files (*.h5)|*.h5")
@@ -720,7 +692,8 @@ class AppFrame(wx.Frame):
             defaultDir = ""
 
         # prompt user for a ZIP file to open
-        d = wx.FileDialog(None, "Open ZIP HD5 archive to concatenate",
+        d = wx.FileDialog(None,
+                          "Open ZIP HD5 archive to concatenate",
                           defaultDir=defaultDir,
                           style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                           wildcard="zip files (*.zip)|*.zip")
@@ -741,8 +714,8 @@ class AppFrame(wx.Frame):
         if os.path.splitext(zipname)[1] == ".zip" and zipfile.is_zipfile(zipname):
             # use the .zip filename to initialize a .h5 output filename
             # path is same as the .zip archive
-            fname = os.path.splitext(zipname)[0] + ".h5"    # change to .h5 extension
-            fname = os.path.split(fname)[1]                 # extract just the filename
+            fname = os.path.splitext(zipname)[0] + ".h5"  # change to .h5 extension
+            fname = os.path.split(fname)[1]  # extract just the filename
 
             defaultDir = self.prefs.config["FileManagement"]["lastZipOpenSaveH5Dir"]
 
@@ -754,7 +727,8 @@ class AppFrame(wx.Frame):
             # Probably not what is wanted.
 
             # give the user a chance to change it and warn about overwrites
-            fd = wx.FileDialog(None, "Output H5 file",
+            fd = wx.FileDialog(None,
+                               "Output H5 file",
                                defaultDir=defaultDir,
                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT,
                                defaultFile=fname,
@@ -860,7 +834,8 @@ class App(wx.App):
         #          1. command line option
         #          2. menu choice to reset prefs at next startup, saves in
         #             user prefs and resets flag
-        self.prefs = DatViewerPrefs(APPNAME, CONFIGVERSION,
+        self.prefs = DatViewerPrefs(APPNAME,
+                                    CONFIGVERSION,
                                     defaultConfigSpec=APPCONFIGSPEC,
                                     defaultUserPrefsFilename=USERCONFIG,
                                     fPrefsReset=False)
@@ -931,10 +906,7 @@ class App(wx.App):
 
     def OnInit(self):
         LogMsg(4, "App::OnInit")
-        self.frame = AppFrame(parent=None,
-                              id=-1,
-                              title=FULLAPPNAME,
-                              prefs=self.prefs)
+        self.frame = AppFrame(parent=None, id=-1, title=FULLAPPNAME, prefs=self.prefs)
 
         # TODO: throw up a splash screen while the app loads
 
@@ -994,20 +966,38 @@ Picarro H5 file viewer and converter.
 
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-v', '--version', dest='version', action='store_true',
-                      default=None, help=('report version number for this application'))
+    parser.add_option('-v',
+                      '--version',
+                      dest='version',
+                      action='store_true',
+                      default=None,
+                      help=('report version number for this application'))
 
-    parser.add_option('-r', '--redirect', dest='redirect', action='store_true',
-                      default=False, help=('redirect output to a separate console window, '
-                                           'useful for debugging'))
+    parser.add_option('-r',
+                      '--redirect',
+                      dest='redirect',
+                      action='store_true',
+                      default=False,
+                      help=('redirect output to a separate console window, '
+                            'useful for debugging'))
 
-    parser.add_option('-o', '--outfile', dest='outputFile', action='store', type='string',
-                      default=None, help=('output filename for console output, '
-                                          'useful for debugging'))
+    parser.add_option('-o',
+                      '--outfile',
+                      dest='outputFile',
+                      action='store',
+                      type='string',
+                      default=None,
+                      help=('output filename for console output, '
+                            'useful for debugging'))
 
-    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
-                      default=g_logMsgLevel, help=('set message logging level, '
-                                                   '0=highest  5=lowest (noisy)'))
+    parser.add_option('-l',
+                      '--loglevel',
+                      dest='loglevel',
+                      action='store',
+                      type='int',
+                      default=g_logMsgLevel,
+                      help=('set message logging level, '
+                            '0=highest  5=lowest (noisy)'))
 
     options, _ = parser.parse_args()
 

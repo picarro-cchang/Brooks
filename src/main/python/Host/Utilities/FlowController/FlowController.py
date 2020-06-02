@@ -6,18 +6,18 @@ from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 from Host.Coordinator.CoordinatorParamGui import InitialParamDialogGui
 
+PARAM_LIST = [
+    ("start", "Starting Inlet Value", "10000"),
+    ("end", "Target Inlet Value", "50000"),
+    ("increment", "Inlet Value Increment", "1000"),
+    ("incrementTime", "Increment Time Interval (second)", "1"),
+]
 
-PARAM_LIST = [("start", "Starting Inlet Value", "10000"),
-              ("end", "Target Inlet Value", "50000"),
-              ("increment", "Inlet Value Increment", "1000"),
-              ("incrementTime", "Increment Time Interval (second)", "1"),
-              ]
+DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName="AutoThresStats")
 
-DriverRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "AutoThresStats")
-
-if __name__ == "__main__" :
+if __name__ == "__main__":
     guiParamDict = {}
-    app=wx.App()
+    app = wx.App()
     app.MainLoop()
     dlg = InitialParamDialogGui(PARAM_LIST, None, -1, "")
     dlg.SetTitle("Flow Controller for G2000")
@@ -48,7 +48,7 @@ if __name__ == "__main__" :
     inletValList = range(start, end, increment)
     if inletValList[-1] != end:
         inletValList.append(end)
-    dlg = wx.ProgressDialog("Flow Controller Progress", "Flow Controller Running", maximum = len(inletValList))
+    dlg = wx.ProgressDialog("Flow Controller Progress", "Flow Controller Running", maximum=len(inletValList))
     count = 0
     for inletVal in inletValList:
         DriverRpc.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", inletVal)
