@@ -81,23 +81,26 @@ from Host.autogen.interface import INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_B, INJ
 from MyHDL.Common.LaserDac import LaserDac
 from MyHDL.Common.UnsignedMultiplier import UnsignedMultiplier
 
-OptSwitchState = enum("IDLE","PULSING_1","SELECTED_1","PULSING_2","SELECTED_2")
-SwitchPulserState = enum("START","PULSING","WAITING")
+OptSwitchState = enum("IDLE", "PULSING_1", "SELECTED_1", "PULSING_2",
+                      "SELECTED_2")
+SwitchPulserState = enum("START", "PULSING", "WAITING")
 
 LOW, HIGH = bool(0), bool(1)
-def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
-           laser_dac_clk_in,strobe_in,laser_fine_current_in,
-           laser_shutdown_in,soa_shutdown_in,fiber_amp_pwm_in,
-           laser_extra_in,laser1_fine_ext_in,laser2_fine_ext_in,
-           laser3_fine_ext_in,laser4_fine_ext_in,laser1_dac_sync_out,
-           laser2_dac_sync_out,laser3_dac_sync_out,laser4_dac_sync_out,
-           laser1_dac_din_out,laser2_dac_din_out,laser3_dac_din_out,
-           laser4_dac_din_out,laser1_disable_out,laser2_disable_out,
-           laser3_disable_out,laser4_disable_out,laser1_shutdown_out,
-           laser2_shutdown_out,laser3_shutdown_out,laser4_shutdown_out,
-           soa_shutdown_out,sel_laser_out,sel_coarse_current_out,
-           sel_fine_current_out,optical_switch1_out,optical_switch2_out,
-           optical_switch4_out,ext_mode_out,map_base):
+
+
+def Inject(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
+           laser_dac_clk_in, strobe_in, laser_fine_current_in,
+           laser_shutdown_in, soa_shutdown_in, fiber_amp_pwm_in,
+           laser_extra_in, laser1_fine_ext_in, laser2_fine_ext_in,
+           laser3_fine_ext_in, laser4_fine_ext_in, laser1_dac_sync_out,
+           laser2_dac_sync_out, laser3_dac_sync_out, laser4_dac_sync_out,
+           laser1_dac_din_out, laser2_dac_din_out, laser3_dac_din_out,
+           laser4_dac_din_out, laser1_disable_out, laser2_disable_out,
+           laser3_disable_out, laser4_disable_out, laser1_shutdown_out,
+           laser2_shutdown_out, laser3_shutdown_out, laser4_shutdown_out,
+           soa_shutdown_out, sel_laser_out, sel_coarse_current_out,
+           sel_fine_current_out, optical_switch1_out, optical_switch2_out,
+           optical_switch4_out, ext_mode_out, map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -265,7 +268,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     use_extra_r = Signal(LOW)
     mode = Signal(LOW)
     extended_mode = Signal(LOW)
-    sel  = Signal(intbv(0)[2:])
+    sel = Signal(intbv(0)[2:])
     laser_current_en = Signal(intbv(0)[4:])
     manual_laser_en = Signal(intbv(0)[4:])
     manual_soa_en = Signal(LOW)
@@ -293,23 +296,27 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     sw4_4way = Signal(LOW)
     last_sel = Signal(intbv(0)[2:])
 
-    OPTICAL_SWITCH_WIDTH = 100 # Units of 10us
-    optical_switch_counter = Signal(intbv(0,min=0,max=OPTICAL_SWITCH_WIDTH))
+    OPTICAL_SWITCH_WIDTH = 100  # Units of 10us
+    optical_switch_counter = Signal(intbv(0, min=0, max=OPTICAL_SWITCH_WIDTH))
     optSwitchState = Signal(OptSwitchState.IDLE)
     switchPulserState = Signal(SwitchPulserState.START)
-    pulse_counter = Signal(intbv(0,min=0,max=OPTICAL_SWITCH_WIDTH))
+    pulse_counter = Signal(intbv(0, min=0, max=OPTICAL_SWITCH_WIDTH))
     extra_current_counter = Signal(intbv(0)[4:])
 
     # Multipliers used for calculating coarse current DAC value in extra current mode
     cs_mult_a = Signal(intbv(0)[17:])
     cs_mult_b = Signal(intbv(0)[17:])
     cs_mult_p = Signal(intbv(0)[34:])
-    coarse_scale_multiplier = UnsignedMultiplier(p=cs_mult_p,a=cs_mult_a,b=cs_mult_b)
+    coarse_scale_multiplier = UnsignedMultiplier(p=cs_mult_p,
+                                                 a=cs_mult_a,
+                                                 b=cs_mult_b)
 
     fs_mult_a = Signal(intbv(0)[17:])
     fs_mult_b = Signal(intbv(0)[17:])
     fs_mult_p = Signal(intbv(0)[34:])
-    fine_scale_multiplier = UnsignedMultiplier(p=fs_mult_p,a=fs_mult_a,b=fs_mult_b)
+    fine_scale_multiplier = UnsignedMultiplier(p=fs_mult_p,
+                                               a=fs_mult_a,
+                                               b=fs_mult_b)
 
     @instance
     def logic():
@@ -353,84 +360,134 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 sw4_4way.next = 1
                 use_extra_r.next = LOW
             else:
-                if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
+                if dsp_addr[EMIF_ADDR_WIDTH - 1] == FPGA_REG_MASK:
                     if False: pass
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_control_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_control_addr:  # rw
                         if dsp_wr: control.next = dsp_data_out
                         dsp_data_in.next = control
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_control2_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_control2_addr:  # rw
                         if dsp_wr: control2.next = dsp_data_out
                         dsp_data_in.next = control2
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_coarse_current_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser1_coarse_current_addr:  # rw
                         if dsp_wr: laser1_coarse_current.next = dsp_data_out
                         dsp_data_in.next = laser1_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_coarse_current_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser2_coarse_current_addr:  # rw
                         if dsp_wr: laser2_coarse_current.next = dsp_data_out
                         dsp_data_in.next = laser2_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_coarse_current_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser3_coarse_current_addr:  # rw
                         if dsp_wr: laser3_coarse_current.next = dsp_data_out
                         dsp_data_in.next = laser3_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_coarse_current_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser4_coarse_current_addr:  # rw
                         if dsp_wr: laser4_coarse_current.next = dsp_data_out
                         dsp_data_in.next = laser4_coarse_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_fine_current_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser1_fine_current_addr:  # rw
                         if dsp_wr: laser1_fine_current.next = dsp_data_out
                         dsp_data_in.next = laser1_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_fine_current_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser2_fine_current_addr:  # rw
                         if dsp_wr: laser2_fine_current.next = dsp_data_out
                         dsp_data_in.next = laser2_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_fine_current_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser3_fine_current_addr:  # rw
                         if dsp_wr: laser3_fine_current.next = dsp_data_out
                         dsp_data_in.next = laser3_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_fine_current_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser4_fine_current_addr:  # rw
                         if dsp_wr: laser4_fine_current.next = dsp_data_out
                         dsp_data_in.next = laser4_fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_fine_current_range_addr: # rw
-                        if dsp_wr: laser1_fine_current_range.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser1_fine_current_range_addr:  # rw
+                        if dsp_wr:
+                            laser1_fine_current_range.next = dsp_data_out
                         dsp_data_in.next = laser1_fine_current_range
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_fine_current_range_addr: # rw
-                        if dsp_wr: laser2_fine_current_range.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser2_fine_current_range_addr:  # rw
+                        if dsp_wr:
+                            laser2_fine_current_range.next = dsp_data_out
                         dsp_data_in.next = laser2_fine_current_range
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_fine_current_range_addr: # rw
-                        if dsp_wr: laser3_fine_current_range.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser3_fine_current_range_addr:  # rw
+                        if dsp_wr:
+                            laser3_fine_current_range.next = dsp_data_out
                         dsp_data_in.next = laser3_fine_current_range
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_fine_current_range_addr: # rw
-                        if dsp_wr: laser4_fine_current_range.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser4_fine_current_range_addr:  # rw
+                        if dsp_wr:
+                            laser4_fine_current_range.next = dsp_data_out
                         dsp_data_in.next = laser4_fine_current_range
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_extra_coarse_scale_addr: # rw
-                        if dsp_wr: laser1_extra_coarse_scale.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser1_extra_coarse_scale_addr:  # rw
+                        if dsp_wr:
+                            laser1_extra_coarse_scale.next = dsp_data_out
                         dsp_data_in.next = laser1_extra_coarse_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_extra_coarse_scale_addr: # rw
-                        if dsp_wr: laser2_extra_coarse_scale.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser2_extra_coarse_scale_addr:  # rw
+                        if dsp_wr:
+                            laser2_extra_coarse_scale.next = dsp_data_out
                         dsp_data_in.next = laser2_extra_coarse_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_extra_coarse_scale_addr: # rw
-                        if dsp_wr: laser3_extra_coarse_scale.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser3_extra_coarse_scale_addr:  # rw
+                        if dsp_wr:
+                            laser3_extra_coarse_scale.next = dsp_data_out
                         dsp_data_in.next = laser3_extra_coarse_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_extra_coarse_scale_addr: # rw
-                        if dsp_wr: laser4_extra_coarse_scale.next = dsp_data_out
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser4_extra_coarse_scale_addr:  # rw
+                        if dsp_wr:
+                            laser4_extra_coarse_scale.next = dsp_data_out
                         dsp_data_in.next = laser4_extra_coarse_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_extra_fine_scale_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser1_extra_fine_scale_addr:  # rw
                         if dsp_wr: laser1_extra_fine_scale.next = dsp_data_out
                         dsp_data_in.next = laser1_extra_fine_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_extra_fine_scale_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser2_extra_fine_scale_addr:  # rw
                         if dsp_wr: laser2_extra_fine_scale.next = dsp_data_out
                         dsp_data_in.next = laser2_extra_fine_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_extra_fine_scale_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser3_extra_fine_scale_addr:  # rw
                         if dsp_wr: laser3_extra_fine_scale.next = dsp_data_out
                         dsp_data_in.next = laser3_extra_fine_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_extra_fine_scale_addr: # rw
+                    elif dsp_addr[
+                            EMIF_ADDR_WIDTH -
+                            1:] == inject_laser4_extra_fine_scale_addr:  # rw
                         if dsp_wr: laser4_extra_fine_scale.next = dsp_data_out
                         dsp_data_in.next = laser4_extra_fine_scale
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser1_extra_offset_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser1_extra_offset_addr:  # rw
                         if dsp_wr: laser1_extra_offset.next = dsp_data_out
                         dsp_data_in.next = laser1_extra_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser2_extra_offset_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser2_extra_offset_addr:  # rw
                         if dsp_wr: laser2_extra_offset.next = dsp_data_out
                         dsp_data_in.next = laser2_extra_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser3_extra_offset_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser3_extra_offset_addr:  # rw
                         if dsp_wr: laser3_extra_offset.next = dsp_data_out
                         dsp_data_in.next = laser3_extra_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == inject_laser4_extra_offset_addr: # rw
+                    elif dsp_addr[EMIF_ADDR_WIDTH -
+                                  1:] == inject_laser4_extra_offset_addr:  # rw
                         if dsp_wr: laser4_extra_offset.next = dsp_data_out
                         dsp_data_in.next = laser4_extra_offset
                     else:
@@ -479,15 +536,15 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         else:
                             laser4_fine.next = laser_fine_current_in
                         if extinguish_deselected:
-                            if sel==0:
+                            if sel == 0:
                                 laser2_fine.next = 0
                                 laser3_fine.next = 0
                                 laser4_fine.next = 0
-                            elif sel==1:
+                            elif sel == 1:
                                 laser1_fine.next = 0
                                 laser3_fine.next = 0
                                 laser4_fine.next = 0
-                            elif sel==2:
+                            elif sel == 2:
                                 laser1_fine.next = 0
                                 laser2_fine.next = 0
                                 laser4_fine.next = 0
@@ -500,7 +557,6 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     laser2_fine.next = laser2_fine_current
                     laser3_fine.next = laser3_fine_current
                     laser4_fine.next = laser4_fine_current
-
 
                 # State machine for generating 2-way optical switch signals
                 if optSwitchState == OptSwitchState.IDLE:
@@ -515,8 +571,8 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 elif optSwitchState == OptSwitchState.PULSING_1:
                     sw1_2way.next = 1
                     sw2_2way.next = 0
-                    if edge_strobe: # This goes high for one clock cycle every 10us
-                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
+                    if edge_strobe:  # This goes high for one clock cycle every 10us
+                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH - 1:
                             optSwitchState.next = OptSwitchState.SELECTED_1
                             optical_switch_counter.next = 0
                         else:
@@ -530,8 +586,8 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 elif optSwitchState == OptSwitchState.PULSING_2:
                     sw1_2way.next = 0
                     sw2_2way.next = 1
-                    if edge_strobe: # This goes high for one clock cycle every 10us
-                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH-1:
+                    if edge_strobe:  # This goes high for one clock cycle every 10us
+                        if optical_switch_counter >= OPTICAL_SWITCH_WIDTH - 1:
                             optSwitchState.next = OptSwitchState.SELECTED_2
                             optical_switch_counter.next = 0
                         else:
@@ -554,8 +610,8 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     elif switchPulserState == SwitchPulserState.PULSING:
                         sw4_4way.next = 0
                         last_sel.next = sel
-                        if edge_strobe: # This goes high for one clock cycle every 10us
-                            if pulse_counter >= OPTICAL_SWITCH_WIDTH-1:
+                        if edge_strobe:  # This goes high for one clock cycle every 10us
+                            if pulse_counter >= OPTICAL_SWITCH_WIDTH - 1:
                                 switchPulserState.next = SwitchPulserState.WAITING
                                 pulse_counter.next = 0
                             else:
@@ -576,50 +632,66 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                     if edge_strobe:
                         use_extra_r.next = use_extra
                         extra_current_counter.next = 1
-                        cs_mult_a.next = concat(laser1_extra_coarse_scale,intbv(0)[1:])
-                        cs_mult_b.next = concat(laser1_coarse,intbv(0)[1:])
-                        fs_mult_a.next = concat(laser1_extra_fine_scale,intbv(0)[1:])
-                        fs_mult_b.next = concat(laser1_fine,intbv(0)[1:])
+                        cs_mult_a.next = concat(laser1_extra_coarse_scale,
+                                                intbv(0)[1:])
+                        cs_mult_b.next = concat(laser1_coarse, intbv(0)[1:])
+                        fs_mult_a.next = concat(laser1_extra_fine_scale,
+                                                intbv(0)[1:])
+                        fs_mult_b.next = concat(laser1_fine, intbv(0)[1:])
                 elif extra_current_counter == 1:
                     extra_current_counter.next = 2
                     if use_extra_r:
-                        laser1_coarse_scaled.next = (cs_mult_p[33:17] + fs_mult_p[34:18] + laser1_extra_offset) % 65536
+                        laser1_coarse_scaled.next = (
+                            cs_mult_p[33:17] + fs_mult_p[34:18] +
+                            laser1_extra_offset) % 65536
                     else:
                         laser1_coarse_scaled.next = laser1_coarse
                 elif extra_current_counter == 2:
                     extra_current_counter.next = 3
-                    cs_mult_a.next = concat(laser2_extra_coarse_scale,intbv(0)[1:])
-                    cs_mult_b.next = concat(laser2_coarse,intbv(0)[1:])
-                    fs_mult_a.next = concat(laser2_extra_fine_scale,intbv(0)[1:])
-                    fs_mult_b.next = concat(laser2_fine,intbv(0)[1:])
+                    cs_mult_a.next = concat(laser2_extra_coarse_scale,
+                                            intbv(0)[1:])
+                    cs_mult_b.next = concat(laser2_coarse, intbv(0)[1:])
+                    fs_mult_a.next = concat(laser2_extra_fine_scale,
+                                            intbv(0)[1:])
+                    fs_mult_b.next = concat(laser2_fine, intbv(0)[1:])
                 elif extra_current_counter == 3:
                     extra_current_counter.next = 4
                     if use_extra_r:
-                        laser2_coarse_scaled.next = (cs_mult_p[33:17] + fs_mult_p[34:18] + laser2_extra_offset) % 65536
+                        laser2_coarse_scaled.next = (
+                            cs_mult_p[33:17] + fs_mult_p[34:18] +
+                            laser2_extra_offset) % 65536
                     else:
                         laser2_coarse_scaled.next = laser2_coarse
                 elif extra_current_counter == 4:
                     extra_current_counter.next = 5
-                    cs_mult_a.next = concat(laser3_extra_coarse_scale,intbv(0)[1:])
-                    cs_mult_b.next = concat(laser3_coarse,intbv(0)[1:])
-                    fs_mult_a.next = concat(laser3_extra_fine_scale,intbv(0)[1:])
-                    fs_mult_b.next = concat(laser3_fine,intbv(0)[1:])
+                    cs_mult_a.next = concat(laser3_extra_coarse_scale,
+                                            intbv(0)[1:])
+                    cs_mult_b.next = concat(laser3_coarse, intbv(0)[1:])
+                    fs_mult_a.next = concat(laser3_extra_fine_scale,
+                                            intbv(0)[1:])
+                    fs_mult_b.next = concat(laser3_fine, intbv(0)[1:])
                 elif extra_current_counter == 5:
                     extra_current_counter.next = 6
                     if use_extra_r:
-                        laser3_coarse_scaled.next = (cs_mult_p[33:17] + fs_mult_p[34:18] + laser3_extra_offset) % 65536
+                        laser3_coarse_scaled.next = (
+                            cs_mult_p[33:17] + fs_mult_p[34:18] +
+                            laser3_extra_offset) % 65536
                     else:
                         laser3_coarse_scaled.next = laser3_coarse
                 elif extra_current_counter == 6:
                     extra_current_counter.next = 7
-                    cs_mult_a.next = concat(laser4_extra_coarse_scale,intbv(0)[1:])
-                    cs_mult_b.next = concat(laser4_coarse,intbv(0)[1:])
-                    fs_mult_a.next = concat(laser4_extra_fine_scale,intbv(0)[1:])
-                    fs_mult_b.next = concat(laser4_fine,intbv(0)[1:])
+                    cs_mult_a.next = concat(laser4_extra_coarse_scale,
+                                            intbv(0)[1:])
+                    cs_mult_b.next = concat(laser4_coarse, intbv(0)[1:])
+                    fs_mult_a.next = concat(laser4_extra_fine_scale,
+                                            intbv(0)[1:])
+                    fs_mult_b.next = concat(laser4_fine, intbv(0)[1:])
                 elif extra_current_counter == 7:
                     extra_current_counter.next = 8
                     if use_extra_r:
-                        laser4_coarse_scaled.next = (cs_mult_p[33:17] + fs_mult_p[34:18] + laser4_extra_offset) % 65536
+                        laser4_coarse_scaled.next = (
+                            cs_mult_p[33:17] + fs_mult_p[34:18] +
+                            laser4_extra_offset) % 65536
                     else:
                         laser4_coarse_scaled.next = laser4_coarse
                 elif extra_current_counter == 15:
@@ -633,13 +705,15 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 dac_strobe.next = (extra_current_counter == 15)
 
     @always_comb
-    def  comb1():
-        s = control[INJECT_CONTROL_LASER_SELECT_B+INJECT_CONTROL_LASER_SELECT_W:INJECT_CONTROL_LASER_SELECT_B]
+    def comb1():
+        s = control[INJECT_CONTROL_LASER_SELECT_B +
+                    INJECT_CONTROL_LASER_SELECT_W:
+                    INJECT_CONTROL_LASER_SELECT_B]
         m = control[INJECT_CONTROL_MODE_B]
         e = control2[INJECT_CONTROL2_EXTINGUISH_DESELECTED_B]
         ext_mode = control2[INJECT_CONTROL2_EXTENDED_CURRENT_MODE_B]
         mode.next = m
-        sel.next  = s
+        sel.next = s
         extinguish_deselected.next = e
         extended_mode.next = ext_mode
         ext_mode_out.next = ext_mode
@@ -658,15 +732,23 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         if control2[INJECT_CONTROL2_FIBER_AMP_PRESENT_B]:
             optical_switch4_out.next = fiber_amp_pwm_in
 
-        laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B+INJECT_CONTROL_LASER_CURRENT_ENABLE_W:INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
-        manual_laser_en.next  = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B+INJECT_CONTROL_MANUAL_LASER_ENABLE_W:INJECT_CONTROL_MANUAL_LASER_ENABLE_B]
+        laser_current_en.next = control[INJECT_CONTROL_LASER_CURRENT_ENABLE_B +
+                                        INJECT_CONTROL_LASER_CURRENT_ENABLE_W:
+                                        INJECT_CONTROL_LASER_CURRENT_ENABLE_B]
+        manual_laser_en.next = control[INJECT_CONTROL_MANUAL_LASER_ENABLE_B +
+                                       INJECT_CONTROL_MANUAL_LASER_ENABLE_W:
+                                       INJECT_CONTROL_MANUAL_LASER_ENABLE_B]
         manual_soa_en.next = control[INJECT_CONTROL_MANUAL_SOA_ENABLE_B]
-        laser_shutdown_en.next = control[INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B]
+        laser_shutdown_en.next = control[
+            INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_B]
         soa_shutdown_en.next = control[INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B]
         soa_present.next = control[INJECT_CONTROL_SOA_PRESENT_B]
         extra_mode.next = control2[INJECT_CONTROL2_EXTRA_MODE_B]
         extra_enable.next = control2[INJECT_CONTROL2_EXTRA_ENABLE_B]
-        disable_soa_with_laser_mask.next = control2[INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_B+INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_W:INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_B]
+        disable_soa_with_laser_mask.next = control2[
+            INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_B +
+            INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_W:
+            INJECT_CONTROL2_DISABLE_SOA_WITH_LASER_B]
         sel_laser_out.next = s
 
         if s == 0:
@@ -683,7 +765,7 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             sel_fine_current_out.next = laser4_fine
 
     @always_comb
-    def  comb2():
+    def comb2():
         laser1_disable_out.next = not laser_current_en[0]
         laser2_disable_out.next = not laser_current_en[1]
         laser3_disable_out.next = not laser_current_en[2]
@@ -716,15 +798,15 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             #    laser3_coarse.next = 0
             #    laser4_coarse.next = 0
             if extinguish_deselected:
-                if sel==0:
+                if sel == 0:
                     laser2_coarse.next = 0
                     laser3_coarse.next = 0
                     laser4_coarse.next = 0
-                elif sel==1:
+                elif sel == 1:
                     laser1_coarse.next = 0
                     laser3_coarse.next = 0
                     laser4_coarse.next = 0
-                elif sel==2:
+                elif sel == 2:
                     laser1_coarse.next = 0
                     laser2_coarse.next = 0
                     laser4_coarse.next = 0
@@ -740,11 +822,10 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
             laser4_shutdown_out.next = not manual_laser_en[3]
 
         # Turn off the SOA if it is disabled for the selected laser
-        if ((not soa_present) or
-            (sel == 0 and disable_soa_with_laser_mask[0]) or
-            (sel == 1 and disable_soa_with_laser_mask[1]) or
-            (sel == 2 and disable_soa_with_laser_mask[2]) or
-            (sel == 3 and disable_soa_with_laser_mask[3])):
+        if ((not soa_present) or (sel == 0 and disable_soa_with_laser_mask[0])
+                or (sel == 1 and disable_soa_with_laser_mask[1])
+                or (sel == 2 and disable_soa_with_laser_mask[2])
+                or (sel == 3 and disable_soa_with_laser_mask[3])):
             soa_shutdown_out.next = True
 
         if extra_mode:  # Use control2 register bit extra_enable
@@ -752,27 +833,44 @@ def Inject(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
         else:  # Use input port laser_extra
             use_extra.next = laser_shutdown_en and laser_extra_in
 
-    laser1_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
-        chanA_data_in=laser1_coarse_scaled,chanB_data_in=laser1_fine,
-        strobe_in=dac_strobe,dac_sync_out=laser1_dac_sync_out,
-        dac_din_out=laser1_dac_din_out)
+    laser1_dac = LaserDac(clk=clk,
+                          reset=reset,
+                          dac_clock_in=laser_dac_clk_in,
+                          chanA_data_in=laser1_coarse_scaled,
+                          chanB_data_in=laser1_fine,
+                          strobe_in=dac_strobe,
+                          dac_sync_out=laser1_dac_sync_out,
+                          dac_din_out=laser1_dac_din_out)
 
-    laser2_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
-        chanA_data_in=laser2_coarse_scaled,chanB_data_in=laser2_fine,
-        strobe_in=dac_strobe,dac_sync_out=laser2_dac_sync_out,
-        dac_din_out=laser2_dac_din_out)
+    laser2_dac = LaserDac(clk=clk,
+                          reset=reset,
+                          dac_clock_in=laser_dac_clk_in,
+                          chanA_data_in=laser2_coarse_scaled,
+                          chanB_data_in=laser2_fine,
+                          strobe_in=dac_strobe,
+                          dac_sync_out=laser2_dac_sync_out,
+                          dac_din_out=laser2_dac_din_out)
 
-    laser3_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
-        chanA_data_in=laser3_coarse_scaled,chanB_data_in=laser3_fine,
-        strobe_in=dac_strobe,dac_sync_out=laser3_dac_sync_out,
-        dac_din_out=laser3_dac_din_out)
+    laser3_dac = LaserDac(clk=clk,
+                          reset=reset,
+                          dac_clock_in=laser_dac_clk_in,
+                          chanA_data_in=laser3_coarse_scaled,
+                          chanB_data_in=laser3_fine,
+                          strobe_in=dac_strobe,
+                          dac_sync_out=laser3_dac_sync_out,
+                          dac_din_out=laser3_dac_din_out)
 
-    laser4_dac = LaserDac(clk=clk, reset=reset, dac_clock_in=laser_dac_clk_in,
-        chanA_data_in=laser4_coarse_scaled,chanB_data_in=laser4_fine,
-        strobe_in=dac_strobe,dac_sync_out=laser4_dac_sync_out,
-        dac_din_out=laser4_dac_din_out)
+    laser4_dac = LaserDac(clk=clk,
+                          reset=reset,
+                          dac_clock_in=laser_dac_clk_in,
+                          chanA_data_in=laser4_coarse_scaled,
+                          chanB_data_in=laser4_fine,
+                          strobe_in=dac_strobe,
+                          dac_sync_out=laser4_dac_sync_out,
+                          dac_din_out=laser4_dac_din_out)
 
     return instances()
+
 
 if __name__ == "__main__":
     clk = Signal(LOW)
@@ -818,9 +916,14 @@ if __name__ == "__main__":
     ext_mode_out = Signal(LOW)
     map_base = FPGA_INJECT
 
-    toVHDL(Inject, clk=clk, reset=reset, dsp_addr=dsp_addr,
-           dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in,
-           dsp_wr=dsp_wr, laser_dac_clk_in=laser_dac_clk_in,
+    toVHDL(Inject,
+           clk=clk,
+           reset=reset,
+           dsp_addr=dsp_addr,
+           dsp_data_out=dsp_data_out,
+           dsp_data_in=dsp_data_in,
+           dsp_wr=dsp_wr,
+           laser_dac_clk_in=laser_dac_clk_in,
            strobe_in=strobe_in,
            laser_fine_current_in=laser_fine_current_in,
            laser_shutdown_in=laser_shutdown_in,
@@ -854,4 +957,5 @@ if __name__ == "__main__":
            optical_switch1_out=optical_switch1_out,
            optical_switch2_out=optical_switch2_out,
            optical_switch4_out=optical_switch4_out,
-           ext_mode_out=ext_mode_out, map_base=map_base)
+           ext_mode_out=ext_mode_out,
+           map_base=map_base)
