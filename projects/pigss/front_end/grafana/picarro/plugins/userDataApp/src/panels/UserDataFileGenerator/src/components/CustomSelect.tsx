@@ -40,14 +40,17 @@ const Option = props => {
   return (
     <div style={{ display: 'flex' }}>
       <components.Option {...props}>
-        <label className="checkbox-label">
+        <div className="checkbox-div">
           <input className="check-input" type="checkbox" checked={props.isSelected} onChange={e => null} />
-          <span className="checkbox-span"></span>
-          <span className="checkbox-name">
-            {'   '}
-            {props.value}
-          </span>
-        </label>
+          <label className="checkbox-label">
+            <span className="checkbox-span">
+              <span className="checkbox-name">
+                {'   '}
+                {props.value}
+              </span>
+            </span>
+          </label>
+        </div>
       </components.Option>
     </div>
   );

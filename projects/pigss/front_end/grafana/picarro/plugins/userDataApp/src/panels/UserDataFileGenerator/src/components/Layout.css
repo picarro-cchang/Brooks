@@ -25,7 +25,7 @@
   /* To be used in future to fix the timerange custom panel alignment */
 }
 
-.checkbox-label input {
+.checkbox-div input {
   position: absolute;
   opacity: 0;
   cursor: pointer;
@@ -46,7 +46,7 @@
   border-width: 0px 3px 3px 0px;
 }
 
-.checkbox-label input:checked ~ .checkbox-span {
+.checkbox-div input:checked ~ .checkbox-label .checkbox-span {
   background-image: url('./../img/checkbox.png');
   background-repeat: no-repeat;
   border-radius: 5px;
@@ -55,7 +55,7 @@
 }
 
 .checkbox-name {
-  padding-left: 5px;
+  padding-left: 15px;
   font-size: 14px;
   font-weight: 400;
 }
