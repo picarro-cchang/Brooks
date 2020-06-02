@@ -638,12 +638,18 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                 printFp(intPyFp, "\n# Form: %s\n\n__p = []\n" % titleStr)
             elif node.localName == 'fpga_register':
                 offset = node.attributes['offset'].value
+                cond = None
+                try:
+                    cond = node.attributes['cond'].value
+                except KeyError:
+                    pass
                 block = fpgaBlockByMapName[offset]
                 regName = node.firstChild.data
                 t,access,format,units,label,bitfields = fpgaRegisterDescriptor[block][regName]
                 if t in paramTypes:
-                    printFp(intPyFp, "__p.append(('fpga','%s',%s+%s_%s,'%s','%s','%s',%d,%d))" %
-                        (paramTypes[t],
+                    printFp(intPyFp, "__p.append([%r, ('fpga','%s',%s+%s_%s,'%s','%s','%s',%d,%d)])" %
+                        (cond,
+                         paramTypes[t],
                          offset, block, regName,
                          label,units,format,
                          'r' in access,
@@ -651,8 +657,9 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                          )
                     )
                 elif t == 'mask':
-                    printFp(intPyFp, "__p.append(('fpga','mask',%s+%s_%s,%r,None,None,%d,%d))" %
-                        (offset, block, regName,
+                    printFp(intPyFp, "__p.append([%r, ('fpga','mask',%s+%s_%s,%r,None,None,%d,%d)])" %
+                        (cond,
+                         offset, block, regName,
                          bitfields,
                          'r' in access,
                          'w' in access,
@@ -661,12 +668,18 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
 
             elif node.localName == 'register':
                 registerStr = node.firstChild.data
+                cond = None
+                try:
+                    cond = node.attributes['cond'].value
+                except KeyError:
+                    pass
                 reg_index = definitions[registerStr]
                 label,units,format = registerDisplay[reg_index]
                 t = types[reg_index]
                 if t in paramTypes:
-                    printFp(intPyFp, "__p.append(('dsp','%s',%s,'%s','%s','%s',%d,%d))" %
-                        (paramTypes[t],
+                    printFp(intPyFp, "__p.append([%r, ('dsp','%s',%s,'%s','%s','%s',%d,%d)])" %
+                        (cond, 
+                         paramTypes[t],
                          registerNames[reg_index],
                          label,units,format,
                          'r' in registerAccess[reg_index],
@@ -678,8 +691,9 @@ for guiPages in docEl.getElementsByTagName('gui_pages'):
                     for ident,value,caption in enumLookup[t]:
                         format += '(%s,"%s"),' % (ident,caption)
                     format += "]"
-                    printFp(intPyFp, "__p.append(('dsp','%s',%s,'%s','%s',%s,%d,%d))" %
-                        ("choices",
+                    printFp(intPyFp, "__p.append([%r, ('dsp','%s',%s,'%s','%s',%s,%d,%d)])" %
+                        (cond,
+                         "choices",
                          registerNames[reg_index],
                          label,units,format,
                          'r' in registerAccess[reg_index],
