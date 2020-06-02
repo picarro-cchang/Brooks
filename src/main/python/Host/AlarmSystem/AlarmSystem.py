@@ -35,11 +35,10 @@ LOG_DIR = os.environ['PICARRO_LOG_DIR']
 EventManagerProxy_Init(APP_NAME)
 
 # Set up supervisor RPC
-supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
-                                                     IsDontCareConnection=False)
+supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -54,8 +53,10 @@ Where the options can be a combination of the following:
 -c  Specify a different alarm config file.  Default = "./AlarmSystem.ini"
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     shortOpts = 'h'
@@ -79,9 +80,10 @@ def HandleCommandSwitches():
     configFile = ""
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
-        Log ("Config file specified at command line: %s" % configFile)
+        Log("Config file specified at command line: %s" % configFile)
 
     return configFile
+
 
 def main():
     #Get and handle the command line options...
@@ -93,9 +95,10 @@ def main():
         Log("%s started." % APP_NAME, Level=1)
         try:
             DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
-                                                     APP_NAME, IsDontCareConnection=False)
+                                                     APP_NAME,
+                                                     IsDontCareConnection=False)
             rtn = DataManager.SetLegacyAlarmConfig(configFile)
-            assert(rtn == interface.STATUS_OK)
+            assert (rtn == interface.STATUS_OK)
             Log("Exiting program")
         except Exception, e:
             LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)

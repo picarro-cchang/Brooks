@@ -19,7 +19,7 @@ from datetime import datetime, timedelta
 
 MESSAGE_LIST = \
 [
-r"""What is IPV?
+    r"""What is IPV?
 
 Picarro's Instrument Performance Verification (IPV) is a software service designed to allow Picarro support engineers to monitor key sensors embedded within Picarro instruments and automatically detect instrument anomalies. IPV allows Picarro's support team to move quickly to correct problems and, in some cases, react to potential instrument problems before they happen.
 
@@ -30,14 +30,14 @@ The IPV service continuously monitors instrument "health" by collecting readings
 For more information, please visit:
 http://www.picarro.com/gas_analyzers/peripherals/ipv""",
 
-r"""Your %d-Day IPV Trial has ended!
+    r"""Your %d-Day IPV Trial has ended!
 
 With IPV, Picarro can monitor your instruments around the world and around the clock, so you don't have to. IPV allows Picarro's support team to move quickly to correct problems and, in some cases, react to potential instrument problems before they happen.
 
 IPV has been disabled on your instrument. If you would like to continue to use IPV, please contact your Picarro sales representative, or send an email to support@picarro.com
 """,
 
-r"""Your %d-Day IPV Subscription has ended!
+    r"""Your %d-Day IPV Subscription has ended!
 
 With IPV, Picarro can monitor your instruments around the world and around the clock, so you don't have to. IPV allows Picarro's support team to move quickly to correct problems and, in some cases, react to potential instrument problems before they happen.
 
@@ -47,15 +47,16 @@ IPV has been disabled on your instrument. If you would like to continue to use I
 
 TITLE_LIST = \
 [ "%d-Day Trial",
-"%d-Day Trial",
-"%d-Day Subscription"
-]
+    "%d-Day Trial",
+    "%d-Day Subscription"
+   ]
 
 YES_BUTTON_LIST = ["Activate IPV Trial", "OK", "OK"]
 
+
 class IPVLicenseFrame(wx.Frame):
     def __init__(self, selector, trialDays, *args, **kwds):
-        kwds["style"] = (wx.CAPTION|wx.MINIMIZE_BOX|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL|wx.STAY_ON_TOP) &~ (wx.CLOSE_BOX)
+        kwds["style"] = (wx.CAPTION | wx.MINIMIZE_BOX | wx.SYSTEM_MENU | wx.TAB_TRAVERSAL | wx.STAY_ON_TOP) & ~(wx.CLOSE_BOX)
         #kwds["style"] = wx.DEFAULT_FRAME_STYLE &~ (wx.RESIZE_BORDER|wx.RESIZE_BOX|wx.MAXIMIZE_BOX)
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1)
@@ -69,19 +70,25 @@ class IPVLicenseFrame(wx.Frame):
         self.labelTitle2.SetFont(wx.Font(14, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
         self.staticLine = wx.StaticLine(self.panel2, -1)
         self.labelFooter = wx.StaticText(self.panel2, -1, "Copyright Picarro, Inc. 1999-2011", style=wx.ALIGN_CENTER)
-        self.textCtrlMessage = wx.TextCtrl(self.panel2, -1, "", style = wx.TE_READONLY|wx.TE_MULTILINE|wx.TE_AUTO_URL|wx.TE_RICH|wx.TE_LEFT)
+        self.textCtrlMessage = wx.TextCtrl(self.panel2,
+                                           -1,
+                                           "",
+                                           style=wx.TE_READONLY | wx.TE_MULTILINE | wx.TE_AUTO_URL | wx.TE_RICH | wx.TE_LEFT)
         self.textCtrlMessage.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, ""))
-        self.textCtrlMessage.SetMinSize((500,300))
+        self.textCtrlMessage.SetMinSize((500, 300))
         if selector == 0:
             self.textCtrlMessage.WriteText(MESSAGE_LIST[selector])
         else:
             self.textCtrlMessage.WriteText(MESSAGE_LIST[selector] % trialDays)
         self.textCtrlMessage.SetInsertionPoint(0)
         if selector == 0:
-            self.textCtrlMessage.SetStyle(0, 12, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
-            self.textCtrlMessage.SetStyle(388, 405, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
+            self.textCtrlMessage.SetStyle(
+                0, 12, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
+            self.textCtrlMessage.SetStyle(
+                388, 405, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
         else:
-            self.textCtrlMessage.SetStyle(0, 45, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
+            self.textCtrlMessage.SetStyle(
+                0, 45, wx.TextAttr(wx.NullColour, wx.NullColour, wx.Font(11, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, "")))
 
         # Buttons
         self.buttonAnsYes = wx.Button(self.panel2, -1, YES_BUTTON_LIST[selector], style=wx.BU_EXACTFIT)
@@ -110,25 +117,25 @@ class IPVLicenseFrame(wx.Frame):
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
         sizer_5 = wx.BoxSizer(wx.VERTICAL)
 
-        sizer_1.Add(self.labelTitle, 0, wx.TOP|wx.ALIGN_CENTER, 10)
-        sizer_1.Add(self.labelTitle2, 0, wx.BOTTOM|wx.ALIGN_CENTER, 10)
+        sizer_1.Add(self.labelTitle, 0, wx.TOP | wx.ALIGN_CENTER, 10)
+        sizer_1.Add(self.labelTitle2, 0, wx.BOTTOM | wx.ALIGN_CENTER, 10)
         self.panel1.SetSizer(sizer_1)
 
-        sizer_2.Add(self.staticLine, 0, wx.EXPAND|wx.BOTTOM, 5)
-        sizer_2.Add(self.textCtrlMessage, 0, wx.LEFT|wx.RIGHT, 10)
+        sizer_2.Add(self.staticLine, 0, wx.EXPAND | wx.BOTTOM, 5)
+        sizer_2.Add(self.textCtrlMessage, 0, wx.LEFT | wx.RIGHT, 10)
 
-        sizer_3.Add(self.buttonAnsYes, 0, wx.ALL|wx.ALIGN_CENTER, 10)
+        sizer_3.Add(self.buttonAnsYes, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         if selector == 0:
-            sizer_3.Add(self.buttonAnsNo, 0, wx.ALL|wx.ALIGN_CENTER, 10)
+            sizer_3.Add(self.buttonAnsNo, 0, wx.ALL | wx.ALIGN_CENTER, 10)
         else:
-            sizer_3.Add(self.buttonRemind, 0, wx.ALL|wx.ALIGN_CENTER, 10)
+            sizer_3.Add(self.buttonRemind, 0, wx.ALL | wx.ALIGN_CENTER, 10)
 
         sizer_4.Add(sizer_2, 0, wx.BOTTOM, 20)
         sizer_4.Add(sizer_3, 0, wx.LEFT, 70)
-        sizer_4.Add((-1,5))
+        sizer_4.Add((-1, 5))
         if selector == 0:
-            sizer_4.Add(self.buttonRemind, 0, wx.ALL|wx.ALIGN_CENTER, 5)
-        sizer_4.Add(self.labelFooter, 0, wx.EXPAND|wx.BOTTOM|wx.TOP, 10)
+            sizer_4.Add(self.buttonRemind, 0, wx.ALL | wx.ALIGN_CENTER, 5)
+        sizer_4.Add(self.labelFooter, 0, wx.EXPAND | wx.BOTTOM | wx.TOP, 10)
         self.panel2.SetSizer(sizer_4)
 
         sizer_5.Add(self.panel1, 0, wx.EXPAND, 0)
@@ -137,6 +144,7 @@ class IPVLicenseFrame(wx.Frame):
         self.SetSizer(sizer_5)
         sizer_5.Fit(self)
         self.Layout()
+
 
 class IPVLicense(IPVLicenseFrame):
     def __init__(self, configFile, selector, trialDays, remindDays, *args, **kwds):
@@ -152,13 +160,13 @@ class IPVLicense(IPVLicenseFrame):
             self.cp.write()
             self.killIPV()
         self.renewMsgSelector = self.cp.getint("License", "renewMsgSelector", 1)
-        if self.renewMsgSelector not in [1,2]:
+        if self.renewMsgSelector not in [1, 2]:
             self.renewMsgSelector = 1
-        f1=os.popen("echo %userdomain%","r")
-        f2=os.popen("echo %username%","r")
-        d=f1.read().strip()
-        u=f2.read().strip()
-        self.user = "%s\%s" % (d,u)
+        f1 = os.popen("echo %userdomain%", "r")
+        f2 = os.popen("echo %username%", "r")
+        d = f1.read().strip()
+        u = f2.read().strip()
+        self.user = "%s\%s" % (d, u)
         self.password = "picarro"
 
     def bindEvents(self):
@@ -182,11 +190,14 @@ class IPVLicense(IPVLicenseFrame):
         self.cp.set("Main", "enabled", "True")
         self.cp.write()
         self.killIPV()
-        nextRunTime = datetime.now()+ timedelta(days=self.trialDays)
+        nextRunTime = datetime.now() + timedelta(days=self.trialDays)
         startTime = datetime.strftime(nextRunTime, "%H:%M:%S")
         startDate = datetime.strftime(nextRunTime, "%m/%d/%Y")
         os.system(r'schtasks.exe /delete /tn IPVLicense /f')
-        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.configFileName, self.renewMsgSelector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
+        os.system(
+            r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s'
+            % (self.configFileName, self.renewMsgSelector, self.remindDays, self.trialDays, startTime, startDate, self.user,
+               self.password))
         self.Destroy()
 
     def onOKButton(self, event):
@@ -199,15 +210,18 @@ class IPVLicense(IPVLicenseFrame):
         self.Destroy()
 
     def onRemindButton(self, event):
-        nextRunTime = datetime.now()+ timedelta(days=self.remindDays)
+        nextRunTime = datetime.now() + timedelta(days=self.remindDays)
         startTime = datetime.strftime(nextRunTime, "%H:%M:%S")
         startDate = datetime.strftime(nextRunTime, "%m/%d/%Y")
         os.system(r'schtasks.exe /delete /tn IPVLicense /f')
-        os.system(r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s' % (self.configFileName, self.selector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
+        os.system(
+            r'schtasks.exe /create /tn IPVLicense /tr "C:\Picarro\G2000\HostExe\IPVLicense.exe -c %s -s %d -r %f -t %f" /sc ONCE /st %s /sd %s /ru %s /rp %s'
+            % (self.configFileName, self.selector, self.remindDays, self.trialDays, startTime, startDate, self.user, self.password))
         self.Destroy()
 
     def killIPV(self):
         os.system(r'taskkill.exe /IM IPV.exe /F')
+
 
 def handleCommandSwitches():
     shortOpts = "c:s:t:r:"
@@ -242,7 +256,8 @@ def handleCommandSwitches():
 
     return configFile, selector, trialDays, remindDays
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     configFile, selector, trialDays, remindDays = handleCommandSwitches()
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

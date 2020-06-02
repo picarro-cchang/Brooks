@@ -1,6 +1,7 @@
 import re, inspect, textwrap, pydoc
 from docscrape import NumpyDocString, FunctionDoc, ClassDoc
 
+
 class SphinxDocString(NumpyDocString):
     # string conversion routines
     def _str_header(self, name, symbol='`'):
@@ -12,7 +13,7 @@ class SphinxDocString(NumpyDocString):
     def _str_indent(self, doc, indent=4):
         out = []
         for line in doc:
-            out += [' '*indent + line]
+            out += [' ' * indent + line]
         return out
 
     def _str_signature(self):
@@ -33,11 +34,10 @@ class SphinxDocString(NumpyDocString):
         if self[name]:
             out += self._str_field_list(name)
             out += ['']
-            for param,param_type,desc in self[name]:
-                out += self._str_indent(['**%s** : %s' % (param.strip(),
-                                                          param_type)])
+            for param, param_type, desc in self[name]:
+                out += self._str_indent(['**%s** : %s' % (param.strip(), param_type)])
                 out += ['']
-                out += self._str_indent(desc,8)
+                out += self._str_indent(desc, 8)
                 out += ['']
         return out
 
@@ -72,7 +72,7 @@ class SphinxDocString(NumpyDocString):
         if len(idx) == 0:
             return out
 
-        out += ['.. index:: %s' % idx.get('default','')]
+        out += ['.. index:: %s' % idx.get('default', '')]
         for section, references in idx.iteritems():
             if section == 'default':
                 continue
@@ -98,22 +98,24 @@ class SphinxDocString(NumpyDocString):
         out += self._str_index() + ['']
         out += self._str_summary()
         out += self._str_extended_summary()
-        for param_list in ('Parameters', 'Attributes', 'Methods',
-                           'Returns','Raises'):
+        for param_list in ('Parameters', 'Attributes', 'Methods', 'Returns', 'Raises'):
             out += self._str_param_list(param_list)
         out += self._str_warnings()
         out += self._str_see_also(func_role)
         out += self._str_section('Notes')
         out += self._str_references()
         out += self._str_section('Examples')
-        out = self._str_indent(out,indent)
+        out = self._str_indent(out, indent)
         return '\n'.join(out)
+
 
 class SphinxFunctionDoc(SphinxDocString, FunctionDoc):
     pass
 
+
 class SphinxClassDoc(SphinxDocString, ClassDoc):
     pass
+
 
 def get_doc_object(obj, what=None, doc=None):
     if what is None:
@@ -133,4 +135,3 @@ def get_doc_object(obj, what=None, doc=None):
         if doc is None:
             doc = pydoc.getdoc(obj)
         return SphinxDocString(doc)
-

@@ -4,6 +4,7 @@
 
 import wx
 
+
 class PulseAnalyzerGui(wx.Dialog):
     def __init__(self, paramTupleList, *args, **kwds):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
@@ -11,7 +12,7 @@ class PulseAnalyzerGui(wx.Dialog):
         self.panel_1 = wx.Panel(self, -1)
         self.panel_2 = wx.Panel(self, -1)
         self.nameList = []
-        self.labelList =[]
+        self.labelList = []
         self.textCtrlList = []
         self.numParams = len(paramTupleList)
         for name, label, default in paramTupleList:
@@ -33,18 +34,18 @@ class PulseAnalyzerGui(wx.Dialog):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
-        grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
-        for idx in range(1,self.numParams):
-            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
-            grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND | wx.ALIGN_CENTER_VERTICAL, 10)
+        for idx in range(1, self.numParams):
+            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 10)
+            grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT | wx.RIGHT | wx.EXPAND | wx.ALIGN_CENTER_VERTICAL, 10)
         self.panel_2.SetSizer(grid_sizer_1)
         grid_sizer_1.AddGrowableCol(1)
         sizer_1.Add(self.panel_2, 1, wx.EXPAND, 0)
         sizer_2.Add((20, 20), 1, 0, 0)
-        sizer_2.Add(self.okButton, 0, wx.TOP|wx.BOTTOM, 15)
+        sizer_2.Add(self.okButton, 0, wx.TOP | wx.BOTTOM, 15)
         sizer_2.Add((20, 40), 0, 0, 0)
-        sizer_2.Add(self.cancelButton, 0, wx.TOP|wx.BOTTOM|wx.RIGHT, 15)
+        sizer_2.Add(self.cancelButton, 0, wx.TOP | wx.BOTTOM | wx.RIGHT, 15)
         #sizer_2.Add((20, 20), 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
         sizer_1.Add(self.panel_1, 0, wx.EXPAND, 0)
@@ -52,10 +53,13 @@ class PulseAnalyzerGui(wx.Dialog):
         sizer_1.Fit(self)
         self.Layout()
 
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    paramTupleList = [("co2Thres", "CO2 Threshold", "500.0"), ("ch4Thres", "CH4 Threshold", "1.0"), ("waitTime", "Wait Time (seconds)", "5"), ("triggerTime", "Trigger Time (seconds)", "60"), ("bufferSize", "Buffer Size", "20")]
+    paramTupleList = [("co2Thres", "CO2 Threshold", "500.0"), ("ch4Thres", "CH4 Threshold", "1.0"),
+                      ("waitTime", "Wait Time (seconds)", "5"), ("triggerTime", "Trigger Time (seconds)", "60"),
+                      ("bufferSize", "Buffer Size", "20")]
     dlg = PulseAnalyzerGui(paramTupleList, None, -1, "")
     app.SetTopWindow(dlg)
     getParamVals = (dlg.ShowModal() == wx.ID_OK)

@@ -10,7 +10,6 @@ src = r"c:\temp\Templates"
 
 patts = ["*.py"]
 
-
 regex1 = re.compile('print(?!\s*>>)(?!\S)')
 
 # same as above but ignores leading whitespace so does not pick up words with 'print' embedded

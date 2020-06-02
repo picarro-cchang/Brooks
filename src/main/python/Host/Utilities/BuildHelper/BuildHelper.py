@@ -5,6 +5,7 @@ into BuildInfo.py in this folder.
 """
 import time
 
+
 def isAnalyzerToBuild(analyzerTypeList):
     # return True if one type in analyzerTypeList matches buildTypes of PyBuilder
     try:
@@ -16,6 +17,7 @@ def isAnalyzerToBuild(analyzerTypeList):
         return False
     except:
         return False
+
 
 def getBuildFolder():
     try:

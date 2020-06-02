@@ -8,9 +8,10 @@ import tempfile
 import traceback
 import unittest
 from Host.Pipeline.Blocks import Pipeline
-from Host.Pipeline.EthaneBlocks import (EthaneClassifier, EthaneComputationBlock, EthaneDispositionBlock,
-                                        JsonWriterBlock, VehicleExhaustClassifier)
+from Host.Pipeline.EthaneBlocks import (EthaneClassifier, EthaneComputationBlock, EthaneDispositionBlock, JsonWriterBlock,
+                                        VehicleExhaustClassifier)
 from traitlets.config import Config
+
 
 class EthaneDispositionBlockTest(unittest.TestCase):
     def test_verdict_calls1(self):
@@ -41,15 +42,13 @@ class EthaneDispositionBlockTest(unittest.TestCase):
 
         result = self.edb.newData(newDat)
         # Check ethylene comparison
-        self.edb.vehicle_exhaust_classifier.compare_above.assert_called_once_with(ethylene_ratio,
-                                                                                  ethylene_ratio_sdev,
-                                                                                  self.edb.vehicle_exhaust_classifier.ve_ethylene_sdev_factor,
-                                                                                  self.edb.vehicle_exhaust_classifier.ve_ethylene_lower)
+        self.edb.vehicle_exhaust_classifier.compare_above.assert_called_once_with(
+            ethylene_ratio, ethylene_ratio_sdev, self.edb.vehicle_exhaust_classifier.ve_ethylene_sdev_factor,
+            self.edb.vehicle_exhaust_classifier.ve_ethylene_lower)
         # Check ethane comparison
-        self.edb.vehicle_exhaust_classifier.compare_below.assert_called_once_with(ethane_ratio,
-                                                                                  ethane_ratio_sdev,
-                                                                                  self.edb.vehicle_exhaust_classifier.ve_ethane_sdev_factor,
-                                                                                  self.edb.vehicle_exhaust_classifier.ve_ethane_upper)
+        self.edb.vehicle_exhaust_classifier.compare_below.assert_called_once_with(
+            ethane_ratio, ethane_ratio_sdev, self.edb.vehicle_exhaust_classifier.ve_ethane_sdev_factor,
+            self.edb.vehicle_exhaust_classifier.ve_ethane_upper)
         #
         self.assertDictContainsSubset(dict(VERDICT='VEHICLE_EXHAUST'), result)
         self.edb.stop()
@@ -89,7 +88,7 @@ class EthaneDispositionBlockTest(unittest.TestCase):
             a = 2.0 * (np.random.random() - 0.5)
             b = a + (1.0 - a) * np.random.random()
             sigma = 0.05 + 0.09 * np.random.random()
-            xvec = np.linspace(-1.0-4*sigma, 1.0+4*sigma, 2001)
+            xvec = np.linspace(-1.0 - 4 * sigma, 1.0 + 4 * sigma, 2001)
             y = [self.ec.likelihood(x, a, b, sigma) for x in xvec]
             self.assertAlmostEquals((sum(y) - 0.5 * (y[0] + y[-1])) * (xvec[1] - xvec[0]), 1.0, delta=1e-3)
 
@@ -150,8 +149,9 @@ class EthaneDispositionBlockTest(unittest.TestCase):
             reg = 0.05
             post1, post2 = self.ec.post_prob(None, None, None, None, None, None, p1, reg)
             p2 = 1.0 - p1
-            self.assertAlmostEqual(post1, p1*0.3/(p1*0.3+p2*0.4+reg))
-            self.assertAlmostEqual(post2, p2*0.4/(p1*0.3+p2*0.4+reg))
+            self.assertAlmostEqual(post1, p1 * 0.3 / (p1 * 0.3 + p2 * 0.4 + reg))
+            self.assertAlmostEqual(post2, p2 * 0.4 / (p1 * 0.3 + p2 * 0.4 + reg))
+
 
 class EthaneComputationBlockTest(unittest.TestCase):
     def setUp(self):
@@ -163,7 +163,7 @@ class EthaneComputationBlockTest(unittest.TestCase):
     def test_newData1(self):
         deque0 = deque()
         for i in range(100):
-            deque0.append(dict(DISTANCE=i, CH4=2.0*i, C2H6=3.0*i, PF_c2h4_conc=4.0*i))
+            deque0.append(dict(DISTANCE=i, CH4=2.0 * i, C2H6=3.0 * i, PF_c2h4_conc=4.0 * i))
         deque1 = deque()
         distance = 40
         sigma = 6.5
@@ -177,9 +177,9 @@ class EthaneComputationBlockTest(unittest.TestCase):
             self.assertDictContainsSubset(dict(peak, HELLO=43), result)
         self.assertEqual(len(self.ecb.calculate_ratios.call_args_list), 1)
         args, kwargs = self.ecb.calculate_ratios.call_args_list[0]
-        np.testing.assert_allclose(args[0], 2.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
-        np.testing.assert_allclose(args[1], 3.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
-        np.testing.assert_allclose(args[2], 4.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
+        np.testing.assert_allclose(args[0], 2.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
+        np.testing.assert_allclose(args[1], 3.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
+        np.testing.assert_allclose(args[2], 4.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
         self.assertEqual(args[3], amplitude)
         self.assertEqual(args[4], width)
         self.assertEqual(args[5], ethane_nominal_sdev)
@@ -188,7 +188,7 @@ class EthaneComputationBlockTest(unittest.TestCase):
         deque0 = deque()
         ethane_nominal_sdev = 0.010
         for i in range(100):
-            deque0.append(dict(DISTANCE=i, CH4=2.0*i, C2H6=3.0*i, PF_c2h4_conc=4.0*i, C2H6_nominal_sdev=ethane_nominal_sdev))
+            deque0.append(dict(DISTANCE=i, CH4=2.0 * i, C2H6=3.0 * i, PF_c2h4_conc=4.0 * i, C2H6_nominal_sdev=ethane_nominal_sdev))
         deque1 = deque()
         distance = 40
         sigma = 6.5
@@ -201,9 +201,9 @@ class EthaneComputationBlockTest(unittest.TestCase):
             self.assertDictContainsSubset(dict(peak, HELLO=43), result)
         self.assertEqual(len(self.ecb.calculate_ratios.call_args_list), 1)
         args, kwargs = self.ecb.calculate_ratios.call_args_list[0]
-        np.testing.assert_allclose(args[0], 2.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
-        np.testing.assert_allclose(args[1], 3.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
-        np.testing.assert_allclose(args[2], 4.0*np.arange(np.ceil(distance-3.0*width), np.ceil(distance+3.0*width)))
+        np.testing.assert_allclose(args[0], 2.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
+        np.testing.assert_allclose(args[1], 3.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
+        np.testing.assert_allclose(args[2], 4.0 * np.arange(np.ceil(distance - 3.0 * width), np.ceil(distance + 3.0 * width)))
         self.assertEqual(args[3], amplitude)
         self.assertEqual(args[4], width)
         self.assertEqual(args[5], ethane_nominal_sdev)
@@ -212,7 +212,7 @@ class EthaneComputationBlockTest(unittest.TestCase):
         self.ecb.maxLookback = 1
         deque0 = deque()
         for i in range(100):
-            deque0.append(dict(DISTANCE=i, CH4=2.0*i, C2H6=3.0*i, PF_c2h4_conc=4.0*i))
+            deque0.append(dict(DISTANCE=i, CH4=2.0 * i, C2H6=3.0 * i, PF_c2h4_conc=4.0 * i))
         deque1 = deque()
         distance = 40
         sigma = 6.5
@@ -237,8 +237,8 @@ class EthaneComputationBlockTest(unittest.TestCase):
         sigma_e_oob = 0
         for _ in range(ntrials):
             pos = 50.0 + 20.0 * np.random.random()
-            width = 2.0  + 18.0 * np.random.random()
-            pulse = np.exp(-0.5*((base - pos) /width) ** 2)
+            width = 2.0 + 18.0 * np.random.random()
+            pulse = np.exp(-0.5 * ((base - pos) / width)**2)
             sigma_m = 0.001 + 0.001 * np.random.random()
             sigma_e = 0.001 + 0.010 * np.random.random()
             sigma_ratio = sigma_m / sigma_e
@@ -246,17 +246,17 @@ class EthaneComputationBlockTest(unittest.TestCase):
             methane = 2.0 + pulse + sigma_m * np.random.randn(len(pulse))
             ethane = 0.01 + ampl * pulse + sigma_e * np.random.randn(len(pulse))
             Aratio, Astd, sigma_main, sigma_trace, pip_energy, methane_ptp = self.ecb.ratio_analysis(methane, ethane, sigma_ratio)
-            self.assertAlmostEqual(methane_ptp, methane.ptp(), delta=1e-4*abs(methane_ptp))
-            self.assertAlmostEqual(pip_energy, len(methane) * np.std(methane) **2, delta=1e-4*abs(pip_energy))
-            if abs(ampl-Aratio) > nsigma * Astd:
+            self.assertAlmostEqual(methane_ptp, methane.ptp(), delta=1e-4 * abs(methane_ptp))
+            self.assertAlmostEqual(pip_energy, len(methane) * np.std(methane)**2, delta=1e-4 * abs(pip_energy))
+            if abs(ampl - Aratio) > nsigma * Astd:
                 ampl_oob += 1
-            var_trace = sigma_trace ** 2
-            var_trace_std = (sigma_e ** 2) * np.sqrt(2.0/len(methane))
-            if abs(sigma_e**2-var_trace) > nsigma * var_trace_std:
+            var_trace = sigma_trace**2
+            var_trace_std = (sigma_e**2) * np.sqrt(2.0 / len(methane))
+            if abs(sigma_e**2 - var_trace) > nsigma * var_trace_std:
                 sigma_e_oob += 1
-            var_main = sigma_main ** 2
-            var_main_std = (sigma_m ** 2) * np.sqrt(2.0/len(methane))
-            if abs(sigma_m**2-var_main) > nsigma * var_main_std:
+            var_main = sigma_main**2
+            var_main_std = (sigma_m**2) * np.sqrt(2.0 / len(methane))
+            if abs(sigma_m**2 - var_main) > nsigma * var_main_std:
                 sigma_m_oob += 1
             if ampl < 0.1 and sigma_ratio < 0.5:
                 self.assertLess(abs(1.0 - sigma_trace / (np.sqrt(pip_energy) * Astd)), 0.01)
@@ -269,7 +269,7 @@ class EthaneComputationBlockTest(unittest.TestCase):
         base = np.arange(0, 100)
         pos = 50.0
         width = 15.0
-        pulse = np.exp(-0.5*((base - pos) /width) ** 2)
+        pulse = np.exp(-0.5 * ((base - pos) / width)**2)
         sigma_ratio = 0.1
         methane = 2.0 + pulse
         ethane = np.zeros_like(methane)
@@ -289,9 +289,7 @@ class EthaneComputationBlockTest(unittest.TestCase):
         methane_ethylene_sdev_ratio = 0.09
         ethane_nominal_sdev = 0.01
 
-        self.ecb.ratio_analysis = MagicMock(
-            side_effect=[(1, 2, 3, 4, 5, 6),
-                         (7, 8, 9, 10, 11, 12)])
+        self.ecb.ratio_analysis = MagicMock(side_effect=[(1, 2, 3, 4, 5, 6), (7, 8, 9, 10, 11, 12)])
         self.ecb.calculate_ratios(methane, ethane, ethylene, amplitude, width, ethane_nominal_sdev)
 
         self.assertEqual(len(self.ecb.ratio_analysis.call_args_list), 2)  # Check called twice
@@ -316,17 +314,15 @@ class EthaneComputationBlockTest(unittest.TestCase):
         ethane_nominal_sdev = 0.01
 
         ethane_conc_sdev = 0.02
-        self.ecb.ratio_analysis = MagicMock(
-            side_effect=[(1, 2, 3, ethane_conc_sdev, 5, 6),
-                         (7, 8, 9, 10, 11, 12)])
+        self.ecb.ratio_analysis = MagicMock(side_effect=[(1, 2, 3, ethane_conc_sdev, 5, 6), (7, 8, 9, 10, 11, 12)])
         result = self.ecb.calculate_ratios(methane, ethane, ethylene, amplitude, width, ethane_nominal_sdev)
         self.assertDictContainsSubset(dict(ETHANE_RATIO=1), result)
         self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV_RAW=2), result)
-        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV=2*max(1.0, 6/amplitude)), result)
+        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV=2 * max(1.0, 6 / amplitude)), result)
         self.assertDictContainsSubset(dict(ETHANE_CONC_SDEV=ethane_conc_sdev), result)
         self.assertDictContainsSubset(dict(ETHYLENE_RATIO=7), result)
         self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV_RAW=8), result)
-        self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV=8*max(1.0, 6/amplitude)), result)
+        self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV=8 * max(1.0, 6 / amplitude)), result)
         self.assertDictContainsSubset(dict(ETHYLENE_CONC_SDEV=10), result)
         self.assertDictContainsSubset(dict(PIP_ENERGY=5), result)
         self.assertDictContainsSubset(dict(METHANE_PTP=6), result)
@@ -345,20 +341,19 @@ class EthaneComputationBlockTest(unittest.TestCase):
 
         ethane_conc_sdev = 0.005
         factor = ethane_nominal_sdev / ethane_conc_sdev
-        self.ecb.ratio_analysis = MagicMock(
-            side_effect=[(1, 2, 3, ethane_conc_sdev, 5, 6),
-                         (7, 8, 9, 10, 11, 12)])
+        self.ecb.ratio_analysis = MagicMock(side_effect=[(1, 2, 3, ethane_conc_sdev, 5, 6), (7, 8, 9, 10, 11, 12)])
         result = self.ecb.calculate_ratios(methane, ethane, ethylene, amplitude, width, ethane_nominal_sdev)
         self.assertDictContainsSubset(dict(ETHANE_RATIO=1), result)
-        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV_RAW=factor*2), result)
-        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV=factor*2*max(1.0, 6/amplitude)), result)
-        self.assertDictContainsSubset(dict(ETHANE_CONC_SDEV=factor*ethane_conc_sdev), result)
+        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV_RAW=factor * 2), result)
+        self.assertDictContainsSubset(dict(ETHANE_RATIO_SDEV=factor * 2 * max(1.0, 6 / amplitude)), result)
+        self.assertDictContainsSubset(dict(ETHANE_CONC_SDEV=factor * ethane_conc_sdev), result)
         self.assertDictContainsSubset(dict(ETHYLENE_RATIO=7), result)
         self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV_RAW=8), result)
-        self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV=8*max(1.0, 6/amplitude)), result)
+        self.assertDictContainsSubset(dict(ETHYLENE_RATIO_SDEV=8 * max(1.0, 6 / amplitude)), result)
         self.assertDictContainsSubset(dict(ETHYLENE_CONC_SDEV=10), result)
         self.assertDictContainsSubset(dict(PIP_ENERGY=5), result)
         self.assertDictContainsSubset(dict(METHANE_PTP=6), result)
+
 
 class JsonWriterBlockTest(unittest.TestCase):
     def setUp(self):
@@ -408,18 +403,28 @@ class JsonWriterBlockTest(unittest.TestCase):
         # nan, inf and -inf should be all converted to None by JSON roundtrip
         blk = JsonWriterBlock(self.fname)
         blk.newData({'x': 1, 'y': float('nan'), 'z': float('inf')})
-        blk.newData({'a': -float('inf'), 'b': 17, 'c': 95,})
+        blk.newData({
+            'a': -float('inf'),
+            'b': 17,
+            'c': 95,
+        })
         blk.continuationFunc(None)
         with file(self.fname, "rb") as ip:
             result = json.load(ip)
-            self.assertListEqual(result,
-                                 [{'x': 1, 'y': None, 'z': None},
-                                  {'a': None, 'b': 17, 'c': 95,}])
+            self.assertListEqual(result, [{
+                'x': 1,
+                'y': None,
+                'z': None
+            }, {
+                'a': None,
+                'b': 17,
+                'c': 95,
+            }])
         blk.stop()  # Stop the mainLoop
-
 
     def tearDown(self):
         os.unlink(self.fname)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,8 +4,9 @@ import logging
 import time
 from threading import Thread
 
+
 class DspSimulator(object):
-    def __init__(self,regBase,hostBase):
+    def __init__(self, regBase, hostBase):
         self.regBase = regBase
         self.hostBase = hostBase
 
@@ -24,25 +25,25 @@ class DspSimulator(object):
         #self.writeBlock.restype  = c_int
 
         self.hwiHpiInterrupt = dspDll._hwiHpiInterrupt
-        self.hwiHpiInterrupt.argtypes = [c_uint,c_uint]
+        self.hwiHpiInterrupt.argtypes = [c_uint, c_uint]
 
         self.simReadRegMem = dspDll._simReadRegMem
-        self.simReadRegMem.argtypes = [c_uint,c_uint,POINTER(c_uint)]
+        self.simReadRegMem.argtypes = [c_uint, c_uint, POINTER(c_uint)]
 
         self.simWriteHostMem = dspDll._simWriteHostMem
-        self.simWriteHostMem.argtypes = [c_uint,c_uint,POINTER(c_uint)]
+        self.simWriteHostMem.argtypes = [c_uint, c_uint, POINTER(c_uint)]
 
         self.simReadUser = dspDll._simReadUser
         self.simReadUser.argtypes = []
         self.simReadUser.restype = c_int
 
         self.main = dspDll._main
-        self.main.argtypes = [c_int,POINTER(c_char_p)]
+        self.main.argtypes = [c_int, POINTER(c_char_p)]
 
         self.scheduler = dspDll._scheduler
 
-        self.main(0,POINTER(c_char_p)())
-        self.prdThread = Thread(target = self.runPrd)
+        self.main(0, POINTER(c_char_p)())
+        self.prdThread = Thread(target=self.runPrd)
         self.prdThread.setDaemon(True)
         self.prdThread.start()
 
@@ -51,14 +52,14 @@ class DspSimulator(object):
             time.sleep(0.1)
             self.scheduler()
 
-    def readMem(self,address,uintArray):
+    def readMem(self, address, uintArray):
         if self.regBase <= address < self.hostBase:
-            self.simReadRegMem((address-self.regBase)/4,sizeof(uintArray)/4,uintArray)
+            self.simReadRegMem((address - self.regBase) / 4, sizeof(uintArray) / 4, uintArray)
         else:
             logging.debug("Reading from outside register region. Address = %x" % address)
 
-    def writeMem(self,address,uintArray):
+    def writeMem(self, address, uintArray):
         if self.hostBase <= address < self.hostBase + 1024:
-            self.simWriteHostMem((address-self.hostBase)/4,sizeof(uintArray)/4,uintArray)
+            self.simWriteHostMem((address - self.hostBase) / 4, sizeof(uintArray) / 4, uintArray)
         else:
             logging.debug("Writing to outside host region. Address = %x" % address)

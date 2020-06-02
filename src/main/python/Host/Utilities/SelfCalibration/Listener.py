@@ -28,9 +28,16 @@ import traceback
 
 class Listener(threading.Thread):
     """ Listener object which allows access to broadcasts via INET sockets """
-
-    def __init__(self, queue, port, elementType, streamFilter=None, notify=None, retry=False,
-                 name="Listener", logFunc=None, autoDropOldest=False):
+    def __init__(self,
+                 queue,
+                 port,
+                 elementType,
+                 streamFilter=None,
+                 notify=None,
+                 retry=False,
+                 name="Listener",
+                 logFunc=None,
+                 autoDropOldest=False):
         """ Create a listener running in a new daemonic thread which subscribes to broadcasts at
         the specified "port". The broadcast consists of entries of type "elementType" (a subclass of
         ctypes.Structure)
@@ -123,13 +130,11 @@ class Listener(threading.Thread):
                         self.socket.connect("tcp://localhost:%s" % self.port)
                         self.socket.setsockopt(zmq.SUBSCRIBE, "")
                         poller.register(self.socket, zmq.POLLIN)
-                        self.safeLog("Connection made by %s to port %d." %
-                                     (self.name, self.port))
+                        self.safeLog("Connection made by %s to port %d." % (self.name, self.port))
                     except Exception:
                         self.socket = None
                         if self.notify is not None:
-                            msg = "Attempt to connect port %d by %s failed." % (
-                                self.port, self.name)
+                            msg = "Attempt to connect port %d by %s failed." % (self.port, self.name)
                             self.safeLog(msg, Level=2)
                             self.notify(msg)
                         time.sleep(1.0)
@@ -143,8 +148,7 @@ class Listener(threading.Thread):
                     if socks.get(self.socket) == zmq.POLLIN:
                         self.data += self.socket.recv()
                 except Exception, e:  # Error accessing or reading from socket
-                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (
-                        self.port, self.name, e), Level=3)
+                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port, self.name, e), Level=3)
                     if self.socket != None:
                         self.socket.close()
                         self.socket = None
@@ -156,8 +160,9 @@ class Listener(threading.Thread):
                 else:
                     self._ProcessCtypesStream()
             except Exception, e:
-                self.safeLog("Communication from %s to port %d disconnected." % (
-                    self.name, self.port), Verbose=traceback.format_exc(), Level=2)
+                self.safeLog("Communication from %s to port %d disconnected." % (self.name, self.port),
+                             Verbose=traceback.format_exc(),
+                             Level=2)
                 if self.socket != None:
                     self.socket.close()
                     self.socket = None
@@ -205,8 +210,7 @@ class Listener(threading.Thread):
 
     def _ProcessCtypesStream(self):
         while len(self.data) >= self.recordLength:
-            result = StringPickler.StringAsObject(
-                self.data[0:self.recordLength], self.elementType)
+            result = StringPickler.StringAsObject(self.data[0:self.recordLength], self.elementType)
             if self.streamFilter is not None:
                 e = self.streamFilter(result)
             else:
@@ -215,6 +219,7 @@ class Listener(threading.Thread):
                 self.queue.put(e)
             self.data = self.data[self.recordLength:]
         # endwhile
+
 
 if __name__ == "__main__":
     import ctypes
@@ -231,10 +236,10 @@ if __name__ == "__main__":
         ]
 
     def myNotify(e):
-        print "Notification: %s" % (e,)
+        print "Notification: %s" % (e, )
 
     def myLogger(s):
-        print "Log: %s" % (s,)
+        print "Log: %s" % (s, )
 
     def myFilter(m):
         assert isinstance(m, MyTime * 10000)
@@ -242,8 +247,7 @@ if __name__ == "__main__":
 
     queue = Queue.Queue(0)
     port = 8881
-    listener = Listener(queue, port, MyTime * 10000, myFilter, retry=True,
-                        notify=myNotify, name="Test Listener", logFunc=myLogger)
+    listener = Listener(queue, port, MyTime * 10000, myFilter, retry=True, notify=myNotify, name="Test Listener", logFunc=myLogger)
 
     while listener.isAlive():
         try:

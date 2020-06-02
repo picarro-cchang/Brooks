@@ -8,7 +8,7 @@ if __name__ == "__main__":
     spectListener = Listener.Listener(spectQueue,
                                       BROADCAST_PORT_SPECTRUM_COLLECTOR,
                                       StringPickler.ArbitraryObject,
-                                      retry = True,
-                                      name = "Fitter listener")
+                                      retry=True,
+                                      name="Fitter listener")
     while True:
         print spectQueue.get()

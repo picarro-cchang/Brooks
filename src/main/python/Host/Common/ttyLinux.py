@@ -11,30 +11,34 @@ import termios
 import sys
 import time
 
-def setSpecial () :
+
+def setSpecial():
     "set keyboard to read single chars lookahead only"
     global oldTermiosSettings
     fd = sys.stdin.fileno()
     oldTermiosSettings = termios.tcgetattr(fd)
     new = termios.tcgetattr(fd)
-    new[3] = new[3] & ~termios.ECHO # lflags
-    new[3] = new[3] & ~termios.ICANON # lflags
-    new[6][6] = '\000' # Set VMIN to zero for lookahead only
+    new[3] = new[3] & ~termios.ECHO  # lflags
+    new[3] = new[3] & ~termios.ICANON  # lflags
+    new[6][6] = '\000'  # Set VMIN to zero for lookahead only
     termios.tcsetattr(fd, termios.TCSADRAIN, new)
 
-def setNormal () :
+
+def setNormal():
     "restore previous keyboard settings"
     global oldTermiosSettings
     fd = sys.stdin.fileno()
     termios.tcsetattr(fd, termios.TCSADRAIN, oldTermiosSettings)
 
-def readLookAhead () :
+
+def readLookAhead():
     "read max 1 chars (arrow escape seq) from look ahead"
     return sys.stdin.read(1)
 
+
 if __name__ == "__main__":
     setSpecial()
-    for i in range(10) :
+    for i in range(10):
         time.sleep(1)
         keys = readLookAhead()
         print "Got", [keys]

@@ -14,9 +14,11 @@ import logging
 import socket
 import select
 
+
 def threadsafe_function(fcn):
     """decorator making sure that the decorated function is thread safe"""
     lock = threading.Lock()
+
     def new(*args, **kwargs):
         """lock and call the decorated function"""
         lock.acquire()
@@ -27,7 +29,9 @@ def threadsafe_function(fcn):
         finally:
             lock.release()
         return ret
+
     return new
+
 
 def flush_socket(socks, lim=0):
     """remove the data present on the socket"""
@@ -35,15 +39,16 @@ def flush_socket(socks, lim=0):
     cnt = 0
     while 1:
         i_socks, o_socks, e_socks = select.select(input_socks, input_socks, input_socks, 0.0)
-        if len(i_socks)==0:
+        if len(i_socks) == 0:
             break
         for sock in i_socks:
             sock.recv(1024)
-        if lim>0:
+        if lim > 0:
             cnt += 1
-            if cnt>=lim:
+            if cnt >= lim:
                 #avoid infinite loop due to loss of connection
                 raise Exception("flush_socket: maximum number of iterations reached")
+
 
 def get_log_buffer(prefix, buff):
     """Format binary data into a string for debug purpose"""
@@ -52,9 +57,9 @@ def get_log_buffer(prefix, buff):
         log += str(ord(i)) + "-"
     return log[:-1]
 
+
 class ConsoleHandler(logging.Handler):
     """This class is a logger handler. It prints on the console"""
-
     def __init__(self):
         """Constructor"""
         logging.Handler.__init__(self)
@@ -63,9 +68,9 @@ class ConsoleHandler(logging.Handler):
         """format and print the record on the console"""
         print self.format(record)
 
+
 class LogitHandler(logging.Handler):
     """This class is a logger handler. It send to a udp socket"""
-
     def __init__(self, dest):
         """Constructor"""
         logging.Handler.__init__(self)
@@ -74,11 +79,11 @@ class LogitHandler(logging.Handler):
 
     def emit(self, record):
         """format and send the record over udp"""
-        self._sock.sendto(self.format(record)+"\r\n", self._dest)
+        self._sock.sendto(self.format(record) + "\r\n", self._dest)
+
 
 class DummyHandler(logging.Handler):
     """This class is a logger handler. It doesn't do anything"""
-
     def __init__(self):
         """Constructor"""
         logging.Handler.__init__(self)
@@ -105,11 +110,13 @@ def create_logger(name="dummy", level=logging.DEBUG, \
     logger.addHandler(log_handler)
     return logger
 
+
 def swap_bytes(word_val):
     """swap lsb and msb of a word"""
     msb = word_val >> 8
     lsb = word_val % 256
     return (lsb << 8) + msb
+
 
 def calculate_crc(data):
     """Calculate the CRC16 of a datagram"""
@@ -123,12 +130,14 @@ def calculate_crc(data):
                 crc = crc ^ 0xA001
     return swap_bytes(crc)
 
+
 def calculate_rtu_inter_char(baudrate):
     """calculates the interchar delay from the baudrate"""
     if baudrate <= 19200:
         return 11.0 / baudrate
     else:
         return 0.0005
+
 
 class WorkerThread:
     """
@@ -139,7 +148,7 @@ class WorkerThread:
         """Constructor"""
         self._fcts = [init_fct, main_fct, exit_fct]
         self._args = args
-        self._thread = threading.Thread(target=WorkerThread._run, args=(self,))
+        self._thread = threading.Thread(target=WorkerThread._run, args=(self, ))
         self._go = threading.Event()
 
     def start(self):

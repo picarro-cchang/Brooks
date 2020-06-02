@@ -1,1 +1,1 @@
-__all__ = ["Driver","Common","InstMgr","SampleManager","CommandInterface"]
+__all__ = ["Driver", "Common", "InstMgr", "SampleManager", "CommandInterface"]

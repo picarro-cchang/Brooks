@@ -6,7 +6,7 @@ if _PERSISTENT_["init"]:
     except Exception, err:
         print "_DATA_LOGGER_ Error: %r" % err
 
-try :
+try:
     for sensorKey in _OLD_SENSOR_:
         _REPORT_[sensorKey] = _OLD_SENSOR_[sensorKey][-1][1]
 except:
@@ -14,7 +14,7 @@ except:
 
 if _PERIPH_INTRF_:
     try:
-        interpData = _PERIPH_INTRF_( _MEAS_TIMESTAMP_-PERIPH_DELAY, _PERIPH_INTRF_COLS_)
+        interpData = _PERIPH_INTRF_(_MEAS_TIMESTAMP_ - PERIPH_DELAY, _PERIPH_INTRF_COLS_)
         #print interpData
         for i in range(len(_PERIPH_INTRF_COLS_)):
             if interpData[i]:

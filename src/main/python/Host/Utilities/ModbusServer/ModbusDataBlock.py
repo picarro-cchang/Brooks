@@ -2,71 +2,72 @@ import threading
 from contextlib import contextmanager
 from pymodbus.datastore import ModbusSequentialDataBlock
 
+
 class ReadWriteLock(object):
     ''' This is a write-preferring RW lock from pymodbus document:
     https://pymodbus.readthedocs.io/en/latest/examples/thread-safe-datastore.html
     '''
-
     def __init__(self):
         ''' Initializes a new instance of the ReadWriteLock
         '''
-        self.queue   = []                                  # waiting list of readers and writers
-        self.lock    = threading.Lock()                    # the underlying condition lock
-        self.read_condition = threading.Condition(self.lock) # the single reader condition
-        self.readers = 0                                   # the number of current readers
-        self.writer  = False                               # is there a current writer
+        self.queue = []  # waiting list of readers and writers
+        self.lock = threading.Lock()  # the underlying condition lock
+        self.read_condition = threading.Condition(self.lock)  # the single reader condition
+        self.readers = 0  # the number of current readers
+        self.writer = False  # is there a current writer
 
     def __is_pending_writer(self):
-        return (self.writer                                # if there is a current writer
-            or (self.queue                                 # or if queue is not empty
-           and (self.queue[0] != self.read_condition)))    # and the queue head is a writer
+        return (self.writer  # if there is a current writer
+                or (self.queue  # or if queue is not empty
+                    and (self.queue[0] != self.read_condition)))  # and the queue head is a writer
 
     def acquire_reader(self):
         ''' Notifies the lock that a new reader is requesting
         the underlying resource.
         '''
         with self.lock:
-            if self.__is_pending_writer():                 # if there are existing writers waiting
+            if self.__is_pending_writer():  # if there are existing writers waiting
                 if self.read_condition not in self.queue:  # do not pollute the queue with more than 1 reader condition
-                    self.queue.append(self.read_condition) # add the readers in line for the queue
-                while self.__is_pending_writer():          # until the current writer is finished
-                    self.read_condition.wait(1)            # wait on our condition
-                if self.queue and self.read_condition == self.queue[0]: # if the read condition is at the queue head
-                    self.queue.pop(0)                      # then go ahead and remove it
-            self.readers += 1                              # update the current number of readers
+                    self.queue.append(self.read_condition)  # add the readers in line for the queue
+                while self.__is_pending_writer():  # until the current writer is finished
+                    self.read_condition.wait(1)  # wait on our condition
+                if self.queue and self.read_condition == self.queue[0]:  # if the read condition is at the queue head
+                    self.queue.pop(0)  # then go ahead and remove it
+            self.readers += 1  # update the current number of readers
 
     def acquire_writer(self):
         ''' Notifies the lock that a new writer is requesting
         the underlying resource.
         '''
         with self.lock:
-            if self.writer or self.readers:                # if we need to wait on a writer or readers
-                condition = threading.Condition(self.lock) # create a condition just for this writer
-                self.queue.append(condition)               # and put it on the waiting queue
-                while self.writer or self.readers:         # until the write lock is free
-                    condition.wait(1)                      # wait on our condition
+            if self.writer or self.readers:  # if we need to wait on a writer or readers
+                condition = threading.Condition(self.lock)  # create a condition just for this writer
+                self.queue.append(condition)  # and put it on the waiting queue
+                while self.writer or self.readers:  # until the write lock is free
+                    condition.wait(1)  # wait on our condition
                 # when this condition is released, it must be at the queue head
-                self.queue.pop(0)                          # remove our condition after our condition is met
-            self.writer = True                             # stop other writers from operating
+                self.queue.pop(0)  # remove our condition after our condition is met
+            self.writer = True  # stop other writers from operating
 
     def release_reader(self):
         ''' Notifies the lock that an existing reader is
         finished with the underlying resource.
         '''
         with self.lock:
-            self.readers = max(0, self.readers - 1)        # readers should never go below 0
-            if not self.readers and self.queue:            # if there are no active readers
-                self.queue[0].notify_all()                 # then notify any waiting writers
+            self.readers = max(0, self.readers - 1)  # readers should never go below 0
+            if not self.readers and self.queue:  # if there are no active readers
+                self.queue[0].notify_all()  # then notify any waiting writers
 
     def release_writer(self):
         ''' Notifies the lock that an existing writer is
         finished with the underlying resource.
         '''
         with self.lock:
-            self.writer = False                            # give up current writing handle
-            if self.queue:                                 # if someone is waiting in the queue
-                self.queue[0].notify_all()                 # wake them up first
-            else: self.read_condition.notify_all()         # otherwise wake up all possible readers
+            self.writer = False  # give up current writing handle
+            if self.queue:  # if someone is waiting in the queue
+                self.queue[0].notify_all()  # wake them up first
+            else:
+                self.read_condition.notify_all()  # otherwise wake up all possible readers
 
     @contextmanager
     def get_reader_lock(self):
@@ -79,7 +80,8 @@ class ReadWriteLock(object):
         try:
             self.acquire_reader()
             yield self
-        finally: self.release_reader()
+        finally:
+            self.release_reader()
 
     @contextmanager
     def get_writer_lock(self):
@@ -92,9 +94,10 @@ class ReadWriteLock(object):
         try:
             self.acquire_writer()
             yield self
-        finally: self.release_writer()
-        
-        
+        finally:
+            self.release_writer()
+
+
 class ThreadSafeDataBlock(object):
     ''' This is a simple decorator for a data block. This allows
     a user to inject an existing data block which can then be
@@ -105,14 +108,13 @@ class ThreadSafeDataBlock(object):
     contention (writes can occur to slave 0x01 while reads can
     occur to slave 0x02).
     '''
-
     def __init__(self, block):
         ''' Initialize a new thread safe decorator
 
         :param block: The block to decorate
         '''
         self.rwlock = ReadWriteLock()
-        self.block  = block
+        self.block = block
 
     def validate(self, address, count=1):
         ''' Checks to see if the request is in range
@@ -133,7 +135,7 @@ class ThreadSafeDataBlock(object):
         '''
         with self.rwlock.get_reader_lock():
             return self.block.getValues(address, count)
- 
+
     def setValues(self, address, values):
         ''' Sets the requested values of the datastore
 
@@ -144,7 +146,7 @@ class ThreadSafeDataBlock(object):
             if isinstance(values, dict):
                 for add, val in values.iteritems():
                     # adding 1 in address because server register start from index 1 not 0
-                    self.block.setValues(add+1, val)
+                    self.block.setValues(add + 1, val)
             else:
                 return self.block.setValues(address, values)
 
@@ -159,22 +161,21 @@ class CallbackDataBlock(ModbusSequentialDataBlock):
         super(CallbackDataBlock, self).__init__(*args, **kwargs)
         self.sync_bits = sync_bits
         self.queue = queue
-        self.lock = False   # lock=True when sync script is running
+        self.lock = False  # lock=True when sync script is running
         self.set_memory = super(CallbackDataBlock, self).setValues
-        
+
     def setValues(self, address, value):
-        list_index= address-1
+        list_index = address - 1
         if value > 0:
             if address in self.sync_bits:
-                if not self.lock:   # if no other synchronous functions are running
+                if not self.lock:  # if no other synchronous functions are running
                     func = self.sync_bits[list_index]
                     self.lock = True
                     ret = func()
                     self.set_memory(address, ret)
                     self.lock = False
-                else:   # server is busy so set value to let client know request is not executed
+                else:  # server is busy so set value to let client know request is not executed
                     self.set_memory(address, 0)
             else:
                 self.queue.put(list_index)
                 self.set_memory(address, value)
-      

@@ -10,8 +10,9 @@ from traitlets.config.configurable import Configurable
 from Host.Pipeline.EthaneBlocks import EthaneClassifier, VehicleExhaustClassifier
 from Host.Pipeline.GroupSources import CompositeVerdict, SourceAggregator
 
-DTR = pi/180.0
+DTR = pi / 180.0
 EARTH_RADIUS = 6371000
+
 
 class EthaneAggregation(Configurable):
     amplitude_key = Unicode("AMPLITUDE")
@@ -56,7 +57,7 @@ class EthaneAggregation(Configurable):
         lng_array = asarray(lng_array)
         # Get median latitude for estimating distance scale via spherical earth approximation
         med_lat = median(lat_array)
-        mpd_lat = DTR * EARTH_RADIUS            # Meters per degree of latitude
+        mpd_lat = DTR * EARTH_RADIUS  # Meters per degree of latitude
         mpd_lng = mpd_lat * cos(DTR * med_lat)  # Meters per degree of longitude
 
         # Order by longitude to find nearest neighbors
@@ -92,7 +93,7 @@ class EthaneAggregation(Configurable):
                 assert lng - delta_lng <= lng_array[j] < lng + delta_lng
                 dx = mpd_lng * (lng - lng_array[j])
                 dy = mpd_lat * (lat - lat_array[j])
-                if 0 < dx * dx + dy * dy <= self.exclusion_radius ** 2:
+                if 0 < dx * dx + dy * dy <= self.exclusion_radius**2:
                     # An indication "j" in the exclusion radius around indication "i" is added to the group
                     # belonging to indication i, and is no longer a candidate for being a representative.
                     # Note that sources which are classified as vehicle exhaust are excluded from joining any groups
@@ -107,21 +108,17 @@ class EthaneAggregation(Configurable):
             for j in sorted_indications[i]["GROUP_RANKS"]:
                 ethane_ratios.append(sorted_indications[j][self.ethane_ratio_key])
                 ethane_ratio_sdevs.append(sorted_indications[j][self.ethane_ratio_sdev_key])
-            self.source_aggregator = SourceAggregator(
-                measurements=asarray(ethane_ratios),
-                uncertainties=asarray(ethane_ratio_sdevs),
-                max_sources=4,
-                prior_prob_factor_per_source=0.2,
-                source_range=0.5
-            )
+            self.source_aggregator = SourceAggregator(measurements=asarray(ethane_ratios),
+                                                      uncertainties=asarray(ethane_ratio_sdevs),
+                                                      max_sources=4,
+                                                      prior_prob_factor_per_source=0.2,
+                                                      source_range=0.5)
             hypotheses = self.source_aggregator.aggregate()
             assignment_result = self.source_aggregator.get_assignment(hypotheses[0])
             self.composite_verdict = CompositeVerdict()
             for group in assignment_result["groups"]:
-                verdict, confidence = self.ethane_classifier.verdict(
-                    ethane_ratio=group["mean"],
-                    ethane_ratio_sdev=group["uncertainty"]
-                )
+                verdict, confidence = self.ethane_classifier.verdict(ethane_ratio=group["mean"],
+                                                                     ethane_ratio_sdev=group["uncertainty"])
                 self.composite_verdict.add_result(verdict, group["mean"], group["uncertainty"], confidence)
 
             # Store the aggregated result
@@ -131,6 +128,7 @@ class EthaneAggregation(Configurable):
             sorted_indications[i][self.agg_disposition_key] = disposition
             sorted_indications[i][self.agg_confidence_key] = confidence
         return sorted_indications
+
 
 class EthaneAggregationApp(Application):
     aliases = Dict(dict(config='EthaneAggregationApp.config_file'))
@@ -180,8 +178,8 @@ class EthaneAggregationApp(Application):
         with file('aggregation_output.json', "wb") as jp:
             json.dump(sorted_indications, jp, indent=2, sort_keys=True)
 
+
 if __name__ == "__main__":
     app = EthaneAggregationApp()
     app.initialize()
     app.start()
-

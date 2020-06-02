@@ -64,7 +64,6 @@ class SingleAlarmMonitor:
         # bin or the next one. Set to -1 if t_0 hasn't been set.
         self.binStartTime = -1
 
-
         # List that holds the alarm status.  Each element
         # holds a list that can have one or more states.
         # Valid states are LowRed, LowYellow, Green, HighYellow, HighRed.
@@ -88,7 +87,7 @@ class SingleAlarmMonitor:
         # This is a short accumulator collecting the (approximately) 1Hz data for about
         # ten seconds.  The specific amount to accumulate is set in the ini file with
         # the key "binInterval".
-        self.alarmStateAccumulator = [] # collect alarm states for the current bin
+        self.alarmStateAccumulator = []  # collect alarm states for the current bin
 
         # Accumulate the worst alarm from the alarmStateAccumulator (10s summary) and store
         # 5min worth of results here.  Each datum is about 10s apart.  Once 5 minutes is accumulated,
@@ -96,18 +95,10 @@ class SingleAlarmMonitor:
         # 5min history array. Each time the data is counted and put into the 5min history array,
         # clear the 5min accumulator.
         # Do the same for 1hr intervals.
-        self.fiveMinAccumulator = { "TIME":[], "ALARM_STATE":[] }
-        self.sixtyMinAccumulator = { "TIME":[], "ALARM_STATE":[] }
-        self.fiveMinHistory = {
-                "TIME":[],
-                "ALARM_COUNT":[],
-                "LED_COLOR":[]
-                }
-        self.sixtyMinHistory = {
-                "TIME":[],
-                "ALARM_COUNT":[],
-                "LED_COLOR":[]
-                }
+        self.fiveMinAccumulator = {"TIME": [], "ALARM_STATE": []}
+        self.sixtyMinAccumulator = {"TIME": [], "ALARM_STATE": []}
+        self.fiveMinHistory = {"TIME": [], "ALARM_COUNT": [], "LED_COLOR": []}
+        self.sixtyMinHistory = {"TIME": [], "ALARM_COUNT": [], "LED_COLOR": []}
 
         # Thresholds for each data input comparison
         #
@@ -131,8 +122,8 @@ class SingleAlarmMonitor:
         # the total number of occurances of red AND yellow alarms in the bin
         # count window.
         #
-        self.shortBinCountWindow = 0 # will be 5 minutes
-        self.longBinCountWindow = 0 # will be 60 minutes
+        self.shortBinCountWindow = 0  # will be 5 minutes
+        self.longBinCountWindow = 0  # will be 60 minutes
         self.yellowTotalCountThreshold = 0
         self.redTotalCountThreshold = 0
         self.shortPublicAlarm = self.NONE
@@ -164,14 +155,13 @@ class SingleAlarmMonitor:
         if self.dataSourceKey is None:
             raise AttributeError("dataSourceKey not defined in SingleAlarmMonitor.")
 
-
     #-----------------------------------------------------------------------------------
     def setTestState(self):
         """
         Set a basic test state so we don't need to read an ini.
         This test assumes the input data spans 0 - 10.
         """
-        self.binInterval = 10.0 # 10 seconds
+        self.binInterval = 10.0  # 10 seconds
         self.lowRedThreshold = 1.0
         self.lowYellowThreshold = 2.0
         self.highYellowThreshold = 8.0
@@ -182,7 +172,7 @@ class SingleAlarmMonitor:
         self.yellowTotalCountThreshold = 3
         self.redTotalCountThreshold = 3
 
-    def setData(self, timestamp, inputData = None):
+    def setData(self, timestamp, inputData=None):
         """
         Store the latest data and timestamp for one monitor.
         """
@@ -222,7 +212,7 @@ class SingleAlarmMonitor:
         # If there is no accumulator because this is the first time through, make
         # a new one.
         delta = timestamp - self.binStartTime
-        if self.binStartTime < 0 or  timestamp - self.binStartTime >= self.binInterval:
+        if self.binStartTime < 0 or timestamp - self.binStartTime >= self.binInterval:
             if self.binStartTime >= 0:
                 (fiveMinProcessed, sixtyMinProcessed) = self.processAccumulator()
             self.binStartTime = timestamp
@@ -308,7 +298,7 @@ class SingleAlarmMonitor:
         sixtyMinProcessed = False
 
         for outputInterval in ["FiveMin", "SixtyMin"]:
-        #for outputInterval in ["SixtyMin"]:
+            #for outputInterval in ["SixtyMin"]:
             if outputInterval == "FiveMin":
                 accumulator = self.fiveMinAccumulator
                 history = self.fiveMinHistory
@@ -351,7 +341,6 @@ class SingleAlarmMonitor:
                 else:
                     alarmCount = rc + yc
                     alarmColor = self.GREEN
-
 
                 history["TIME"].append(time)
                 history["ALARM_COUNT"].append(alarmCount)
@@ -601,6 +590,7 @@ class AlarmSystemV3:
             print("AlarmSystemV3::getAllMonitorDiagnostics unhandled exception ", e)
         return
 
+
 #-----------------------------------------------------------------------------------
 def main():
     #pdb.set_trace()
@@ -626,11 +616,12 @@ def main():
     for i in xrange(3601):
         #dataDict["HCl"] = 4.0
         dataDict["NH3"] = 6.0
-        if i%20 == 0:
-            dataDict["NH3"] = 5.0 + 9.5 #+ random.gauss(0, 2.5)
+        if i % 20 == 0:
+            dataDict["NH3"] = 5.0 + 9.5  #+ random.gauss(0, 2.5)
         alarmManager.updateAllMonitors(i, dataDict)
 
     #alarmManager.getAllMonitorDiagnostics()
+
 
 if __name__ == '__main__':
     main()

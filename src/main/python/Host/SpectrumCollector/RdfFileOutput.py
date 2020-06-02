@@ -20,7 +20,9 @@ from Host.Common import CmdFIFO
 APP_NAME = "RdfFileOutput"
 
 SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
-                                     APP_NAME, IsDontCareConnection = False)
+                                               APP_NAME,
+                                               IsDontCareConnection=False)
+
 
 def work(parentPid, queue):
     """Function run within a separate process to save spectrum files and submit them for archiving
@@ -54,9 +56,14 @@ def work(parentPid, queue):
                     setattr(hdf5Handle.root._v_attrs, a, attrs[a])
             # Lookup table giving pyTables column generation function keyed
             # by the numpy dtype.name
-            colByName = dict(float32=Float32Col, float64=Float64Col,
-                             int16=Int16Col, int32=Int32Col, int64=Int64Col,
-                             uint16=UInt16Col, uint32=UInt32Col, uint64=UInt64Col)
+            colByName = dict(float32=Float32Col,
+                             float64=Float64Col,
+                             int16=Int16Col,
+                             int32=Int32Col,
+                             int64=Int64Col,
+                             uint16=UInt16Col,
+                             uint32=UInt32Col,
+                             uint64=UInt64Col)
             # We make HDF5 tables and define the columns needed in these tables
             tableDict = {}
             for spectrum in spectraInScheme:
@@ -102,14 +109,18 @@ def work(parentPid, queue):
                 fillRdfTables(fileName, spectraInScheme, attrs)
                 SpectrumCollector.archiveSpectrumFile(fileName, auxSpectrumFile)
         except Queue.Empty:
-            if not psutil.pid_exists(parentPid): break   # To ensure process terminates if parent dies
+            if not psutil.pid_exists(parentPid): break  # To ensure process terminates if parent dies
+
 
 class WriterProcess(object):
     """Encapsulates a writer process
     """
     def __init__(self):
         self.cmdQueue = multiprocessing.Queue()
-        self.processHandle = multiprocessing.Process(target=work, args=(os.getpid(), self.cmdQueue,))
+        self.processHandle = multiprocessing.Process(target=work, args=(
+            os.getpid(),
+            self.cmdQueue,
+        ))
         self.numberSubmitted = 0
 
     def start(self):
@@ -126,8 +137,11 @@ class WriterProcess(object):
             attrs: Attributes to be written as metadata in the HDF5 file
             auxSpectrumFile: If not None, the spectrum file is also copied to this location
         """
-        req = dict(cmd='writeFile', fileName=fileName, spectraInScheme=spectraInScheme,
-                   attrs=attrs, auxSpectrumFile=auxSpectrumFile)
+        req = dict(cmd='writeFile',
+                   fileName=fileName,
+                   spectraInScheme=spectraInScheme,
+                   attrs=attrs,
+                   auxSpectrumFile=auxSpectrumFile)
         self.numberSubmitted += 1
         self.cmdQueue.put(req)
 
@@ -135,6 +149,7 @@ class WriterProcess(object):
         """Request that the process terminates by enqueueing stop command
         """
         self.cmdQueue.put(dict(cmd='stop'))
+
 
 class WriterManager(object):
     """Manages a collection of writer processes, killing each after it has done maxJobs jobs"""
@@ -165,7 +180,9 @@ class WriterManager(object):
         finally:
             self.lock.release()
 
+
 writerManager = WriterManager()
+
 
 def writeSpectrumFile(fileName, spectraInScheme, attrs, auxSpectrumFile):
     """Externally visible entry point for this module"""

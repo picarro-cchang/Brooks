@@ -60,14 +60,13 @@ Notes:
 Copyright (c) 2010 Picarro, Inc. All rights reserved
 """
 
-
 import sys
 import os
 import threading
 import time
 from glob import glob
 
-from Host.Common import SharedTypes #to get the right TCP port to use
+from Host.Common import SharedTypes  #to get the right TCP port to use
 from Host.Common import CmdFIFO
 from Host.Common import Broadcaster
 from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
@@ -93,14 +92,14 @@ if sys.platform == 'win32':
 else:
     TimeStamp = time.time
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
 CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_ARCHIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = True)
+                                           APP_NAME,
+                                           IsDontCareConnection=True)
 
 
 class EventLogger(object):
@@ -109,14 +108,15 @@ class EventLogger(object):
     class ConfigurationOptions(object):
         """Container class/structure for EventManager options."""
         def __init__(self):
-            self.LogToFile = True             # Whether or not to write logs to a file
-            self.LogFileDir = ""              # Path to store the event log to on disk
-            self.LogFileLength = 0            # The max number of events to store in a log file
-            self.ArchiveGroupName = ""        # Librarian archive name to send to when LogFileLength is reached
-            self.MaxResidentEvents = 0        # How many events to accumulate before truncating to MinResidentEvents
-            self.MinResidentEvents = 0        # How many events to truncate to when Max is reached
-            self.BroadcastEvents = False      # Whether events should be broadcasted
-            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+            self.LogToFile = True  # Whether or not to write logs to a file
+            self.LogFileDir = ""  # Path to store the event log to on disk
+            self.LogFileLength = 0  # The max number of events to store in a log file
+            self.ArchiveGroupName = ""  # Librarian archive name to send to when LogFileLength is reached
+            self.MaxResidentEvents = 0  # How many events to accumulate before truncating to MinResidentEvents
+            self.MinResidentEvents = 0  # How many events to truncate to when Max is reached
+            self.BroadcastEvents = False  # Whether events should be broadcasted
+            self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                         APP_NAME,
                                                          IsDontCareConnection=False)
 
         def Load(self, IniPath):
@@ -134,33 +134,33 @@ class EventLogger(object):
             self.MaxResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MaxResidentEvents")
             self.MinResidentEvents = cp.getint(_MAIN_CONFIG_SECTION, "MinResidentEvents")
             self.BroadcastEvents = cp.getboolean(_MAIN_CONFIG_SECTION, "BroadcastEvents")
-            self.TimeStandard = cp.get(_MAIN_CONFIG_SECTION,"TimeStandard","gmt")
+            self.TimeStandard = cp.get(_MAIN_CONFIG_SECTION, "TimeStandard", "gmt")
 
     def __init__(self, ConfigPath):
         self.Config = EventLogger.ConfigurationOptions()
         self.ConfigPath = ConfigPath
 
-        self.EventList = [] #the list of all recorded events
-        self.EventSourceCounter = {} #a dictionary holding the event count for each source
-        self.EventSourceList = [] #the list of unique sources that have raised events
+        self.EventList = []  #the list of all recorded events
+        self.EventSourceCounter = {}  #a dictionary holding the event count for each source
+        self.EventSourceList = []  #the list of unique sources that have raised events
 
         self.RegisteredEventTypes = {}
         self.LoggerStopped = False
 
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_LOGGER),
-                                                ServerName = "EventManager",
-                                                ServerDescription = "General event logger for all CRDS Host software.",
-                                                ServerVersion = self.Version,
-                                                threaded = True)
+                                               ServerName="EventManager",
+                                               ServerDescription="General event logger for all CRDS Host software.",
+                                               ServerVersion=self.Version,
+                                               threaded=True)
         cmdMode = CmdFIFO.CMD_TYPE_VerifyOnly
-        self.RpcServer.register_function(self.RPC_LogEvent, DefaultMode = cmdMode, NameSlice = 4)
+        self.RpcServer.register_function(self.RPC_LogEvent, DefaultMode=cmdMode, NameSlice=4)
         self.RpcServer.register_function(self.RPC_LogEvents, DefaultMode=cmdMode, NameSlice=4)
-        self.RpcServer.register_function(self.RPC_LogEventCode, DefaultMode = cmdMode, NameSlice = 4)
-        self.RpcServer.register_function(self.RPC_Debug_LogOne, DefaultMode = cmdMode, NameSlice = 4)
-        self.RpcServer.register_function(self.RPC_Debug_LogMany, DefaultMode = cmdMode, NameSlice = 4)
-        self.RpcServer.register_function(self.RPC_ShowEventViewer, DefaultMode = CmdFIFO.CMD_TYPE_Blocking, NameSlice = 4)
-        self.RpcServer.register_function(self.RPC_LogMsg, DefaultMode = cmdMode, NameSlice = 4)
-        self.RpcServer.register_function(self.RPC_GetLogInfo, DefaultMode = CmdFIFO.CMD_TYPE_Blocking, NameSlice = 4)
+        self.RpcServer.register_function(self.RPC_LogEventCode, DefaultMode=cmdMode, NameSlice=4)
+        self.RpcServer.register_function(self.RPC_Debug_LogOne, DefaultMode=cmdMode, NameSlice=4)
+        self.RpcServer.register_function(self.RPC_Debug_LogMany, DefaultMode=cmdMode, NameSlice=4)
+        self.RpcServer.register_function(self.RPC_ShowEventViewer, DefaultMode=CmdFIFO.CMD_TYPE_Blocking, NameSlice=4)
+        self.RpcServer.register_function(self.RPC_LogMsg, DefaultMode=cmdMode, NameSlice=4)
+        self.RpcServer.register_function(self.RPC_GetLogInfo, DefaultMode=CmdFIFO.CMD_TYPE_Blocking, NameSlice=4)
         #self.RpcServer.register_function(self.RPC_CloseEventViewer, DefaultMode = CmdFIFO.CMD_TYPE_Blocking, NameSlice = 4)
 
         self.EventBroadcaster = Broadcaster.Broadcaster(SharedTypes.BROADCAST_PORT_EVENTLOG)
@@ -170,7 +170,6 @@ class EventLogger(object):
         self.ViewerUpdateFunc = None
 
         self._LogFile = None
-
 
     def _ArchiveLurkingEventLogs(self):
         """Queues up a request to archive all lurking event logs.
@@ -185,20 +184,24 @@ class EventLogger(object):
         #   - if shutting down EventManager sooner than this, lurkers should ideally be archived
         #     before the current log, but out of order archiving is not a huge deal, esp when
         #     lurkers should only exist in odd circumstances
-        if len(lurkers)>0:
+        if len(lurkers) > 0:
             if __debug__: print "Lurking files found:\n%s" % "\n".join(lurkers)
             lurkers.sort()
+
             def _DoFileArchive():
                 for fpath in lurkers:
                     if __debug__: print "Archiving file %s" % fpath
                     CRDS_Archiver.ArchiveFile(self.Config.ArchiveGroupName, fpath, True)
                     time.sleep(5)
-            threading.Timer(5*60, _DoFileArchive).start()
+
+            threading.Timer(5 * 60, _DoFileArchive).start()
 
     def Launch(self):
         self.Config.Load(self.ConfigPath)
-        try: os.makedirs(self.Config.LogFileDir)
-        except Exception: pass
+        try:
+            os.makedirs(self.Config.LogFileDir)
+        except Exception:
+            pass
 
         #Archive any old event log files lurking around...
         self._ArchiveLurkingEventLogs()
@@ -208,7 +211,13 @@ class EventLogger(object):
         if self.Viewer:
             self.Viewer.ShutDown()
 
-    def PreRegisterEvent(self, Desc, Level = 1, Code = DEFAULT_EVENT_CODE, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY, Verbose = "", ReplaceOldEvent = False):
+    def PreRegisterEvent(self,
+                         Desc,
+                         Level=1,
+                         Code=DEFAULT_EVENT_CODE,
+                         AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY,
+                         Verbose="",
+                         ReplaceOldEvent=False):
         """Pre-registers event descriptions for future use.
 
         Events can be referenced in the future simply by the event code.
@@ -222,13 +231,22 @@ class EventLogger(object):
             raise Exception("Pre-registered events cannot have the default event code (%s) as the event code." % DEFAULT_EVENT_CODE)
         elif str(Code) in self.RegisteredEventTypes:
             if not ReplaceOldEvent:
-                raise Exception("An event has already been pre-registered with code %s: '%s'" % (Code, self.RegisteredEventTypes[str(Code)]))
+                raise Exception("An event has already been pre-registered with code %s: '%s'" %
+                                (Code, self.RegisteredEventTypes[str(Code)]))
 
-        theEvent = EventInfo(Description = Desc, Level = Level, Code=Code, AccessLevel=AccessLevel, VerboseDesc=Verbose)
+        theEvent = EventInfo(Description=Desc, Level=Level, Code=Code, AccessLevel=AccessLevel, VerboseDesc=Verbose)
         #add it to the registered event dictionary...
         self.RegisteredEventTypes[str(Code)] = theEvent
 
-    def _CreateEventLog(self, Desc, Data = "", Level = 1, Code = -1, AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY, Verbose = "", SourceTime = 0, SourceNameOverride = None):
+    def _CreateEventLog(self,
+                        Desc,
+                        Data="",
+                        Level=1,
+                        Code=-1,
+                        AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY,
+                        Verbose="",
+                        SourceTime=0,
+                        SourceNameOverride=None):
         #Magically get the source name from the CmdFIFO server...
         source = SourceNameOverride or self.RpcServer.CurrentCmd_ClientName
 
@@ -238,14 +256,13 @@ class EventLogger(object):
         sourceTime = SourceTime or self.RpcServer.CurrentCmd_RxTime
         #print "s=", sourceTime
         thisEvent = EventLog(source,
-                             Description = Desc,
-                             Data = Data,
-                             Level = Level,
-                             Code = Code,
-                             AccessLevel = AccessLevel,
-                             VerboseDescription = Verbose,
-                             EventTime = sourceTime
-                             )
+                             Description=Desc,
+                             Data=Data,
+                             Level=Level,
+                             Code=Code,
+                             AccessLevel=AccessLevel,
+                             VerboseDescription=Verbose,
+                             EventTime=sourceTime)
         return thisEvent
 
     def _AddEventLog(self, TheEvent):
@@ -336,8 +353,7 @@ class EventLogger(object):
             eventLog.Index = EventLog.InstanceCounter
             self._AddEventLog(eventLog)
 
-
-    def RPC_LogEventCode(self, EventCode, Data = "", SourceTime = 0):
+    def RPC_LogEventCode(self, EventCode, Data="", SourceTime=0):
         """Log an event that has been pre-defined.
 
         The event is referenced with the unique event code.
@@ -349,17 +365,17 @@ class EventLogger(object):
             thisEvent = self.RegisteredEventTypes[str(EventCode)]
         except KeyError:
             raise Exception("No event has been pre-registered with code '%s'" % EventCode)
-        self._CreateEventLog(thisEvent, Data = Data, SourceTime = SourceTime)
+        self._CreateEventLog(thisEvent, Data=Data, SourceTime=SourceTime)
         self._AddEventLog(thisEvent)
 
     def RPC_Debug_LogOne(self):
         """A quick debug RPC call that needs no args so it is fast with the test client.
         """
-        thisEvent = self._CreateEventLog("Bogus debug event", Data = "RPC_Debug_LogOne", Verbose = "This is a single event")
+        thisEvent = self._CreateEventLog("Bogus debug event", Data="RPC_Debug_LogOne", Verbose="This is a single event")
         self._AddEventLog(thisEvent)
-        return "Debug entry finished!" #just testing something here
+        return "Debug entry finished!"  #just testing something here
 
-    def RPC_Debug_LogMany(self, Count, Delay_s = 0):
+    def RPC_Debug_LogMany(self, Count, Delay_s=0):
         """A quick way to flood the logger with messages.
 
         Delay_s is the delay between successive messages and is 0 by default.
@@ -368,7 +384,7 @@ class EventLogger(object):
         log entries with this call.  All will be successive.
         """
         for i in range(Count):
-            thisEvent = self._CreateEventLog("Log %s of %s generated with Debug_LogMany." % (i+1, Count))
+            thisEvent = self._CreateEventLog("Log %s of %s generated with Debug_LogMany." % (i + 1, Count))
             self._AddEventLog(thisEvent)
             time.sleep(Delay_s)
 
@@ -386,7 +402,7 @@ class EventLogger(object):
             self.RPC_LogEvent("Event viewer launched")
             return "OK"
 
-    def RPC_CloseEventViewer(self, ConfirmShutDown = False):
+    def RPC_CloseEventViewer(self, ConfirmShutDown=False):
         """NOT CURRENTLY WORKING WELL SO NOT INCLUDED!
 
         IT WORKS, EXCEPT YOU NEED TO ROLL THE MOUSE OVER THE WINDOW FOR IT TO
@@ -414,14 +430,14 @@ class EventLogger(object):
                 if shutdownComplete:
                     ret = "Viewer confirmed to be shut down"
                 else:
-                    ret = "ERR: Waited %s seconds and Viewer did not shut down." % (timeout,)
+                    ret = "ERR: Waited %s seconds and Viewer did not shut down." % (timeout, )
             else:
                 ret = "OK"
         #Make sure it doesn't start up again...
         self.ShowViewer = False
         return ret
 
-    def RPC_LogMsg(self, source = "", msg = ""):
+    def RPC_LogMsg(self, source="", msg=""):
         """
         THIS CALL IS DEPRECATED.  Please use LogEvent instead.
 
@@ -434,7 +450,7 @@ class EventLogger(object):
         """Return basic info on the stored event list."""
         logLength = len(self.EventList)
         maxIndex = self.EventList[-1].Index
-        return dict(Length = logLength, MaxIndex = maxIndex)
+        return dict(Length=logLength, MaxIndex=maxIndex)
 
 HELP_STRING = \
 """ EventManager.py [-v|--viewer] [-c<FILENAME>] [-h|--help]
@@ -445,8 +461,10 @@ Where the options can be a combination of the following:
 -c                   Specify a config file.  Default = "./EventManager.ini"
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -461,11 +479,11 @@ def HandleCommandSwitches():
 
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
 
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
 
     #Start with option defaults...
     showViewer = False
@@ -484,14 +502,17 @@ def HandleCommandSwitches():
 
     return (showViewer, configFile)
 
+
 def LaunchViewerGUI(EL):
     import Host.EventManager.EventManagerGUI as EventManagerGUI
-    logViewer = EventManagerGUI.LogViewer(EL.EventList, EventSourceCounter = EL.EventSourceCounter, EventSourceList = EL.EventSourceList)
+    logViewer = EventManagerGUI.LogViewer(EL.EventList,
+                                          EventSourceCounter=EL.EventSourceCounter,
+                                          EventSourceList=EL.EventSourceList)
     #Now link the EventLogger to the viewer...
     EL.Viewer = logViewer
     EL.ViewerUpdateFunc = logViewer.UpdateEventData
     #Launch the GUI app...
-    logViewer.Launch() #This call blocks until GUI exit
+    logViewer.Launch()  #This call blocks until GUI exit
     #Make sure we don't start it up again if we exited the GUI with the X
     EL.ShowViewer = False
     EL.Viewer = None
@@ -519,7 +540,7 @@ def main():
 
             #create and kick off the event logging engine...
             EL = EventLogger(configFile)
-            t = threading.Thread(target = EL.Launch)
+            t = threading.Thread(target=EL.Launch)
             t.setDaemon(True)
             t.start()
 
@@ -545,6 +566,7 @@ def main():
                 Log("Restart request to supervisor sent", Level=0)
             else:
                 Log("Restart request to supervisor not sent", Level=2)
+
 
 # Viewer started by:
 #   1. command line

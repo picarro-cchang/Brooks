@@ -35,15 +35,14 @@ from matplotlib.backends.backend_wxagg import Toolbar, FigureCanvasWxAgg
 from matplotlib.figure import Figure
 from wxPython.wx import *
 
-
 TIMER_ID = wxNewId()
 
-class PlotFigure(wxFrame):
 
+class PlotFigure(wxFrame):
     def __init__(self):
         wxFrame.__init__(self, None, -1, "Test embedded wxFigure")
 
-        self.fig = Figure((5,4), 75)
+        self.fig = Figure((5, 4), 75)
         self.canvas = FigureCanvasWxAgg(self, -1, self.fig)
         self.toolbar = Toolbar(self.canvas)
         self.toolbar.Realize()
@@ -59,7 +58,7 @@ class PlotFigure(wxFrame):
         # Now put all into a sizer
         sizer = wxBoxSizer(wxVERTICAL)
         # This way of adding to sizer allows resizing
-        sizer.Add(self.canvas, 1, wxLEFT|wxTOP|wxGROW)
+        sizer.Add(self.canvas, 1, wxLEFT | wxTOP | wxGROW)
         # Best to allow the toolbar to resize!
         sizer.Add(self.toolbar, 0, wxGROW)
         self.SetSizer(sizer)
@@ -70,15 +69,13 @@ class PlotFigure(wxFrame):
         # jdh you can add a subplot directly from the fig rather than
         # the fig manager
         a = self.fig.add_subplot(111)
-        self.x = numerix.arange(120.0)*2*numerix.pi/120.0
-        self.x.resize((100,120))
-        self.y = numerix.arange(100.0)*2*numerix.pi/100.0
-        self.y.resize((120,100))
+        self.x = numerix.arange(120.0) * 2 * numerix.pi / 120.0
+        self.x.resize((100, 120))
+        self.y = numerix.arange(100.0) * 2 * numerix.pi / 100.0
+        self.y.resize((120, 100))
         self.y = numerix.transpose(self.y)
         z = numerix.sin(self.x) + numerix.cos(self.y)
-        self.im = a.imshow( z, cmap=cm.jet)#, interpolation='nearest')
-
-
+        self.im = a.imshow(z, cmap=cm.jet)  #, interpolation='nearest')
 
     def GetToolBar(self):
         # You will need to override GetToolBar if you are using an
@@ -86,8 +83,8 @@ class PlotFigure(wxFrame):
         return self.toolbar
 
     def onTimer(self, evt):
-        self.x += numerix.pi/15
-        self.y += numerix.pi/20
+        self.x += numerix.pi / 15
+        self.y += numerix.pi / 20
         z = numerix.sin(self.x) + numerix.cos(self.y)
         self.im.set_array(z)
         self.canvas.draw()
@@ -96,6 +93,7 @@ class PlotFigure(wxFrame):
     def onEraseBackground(self, evt):
         # this is supposed to prevent redraw flicker on some X servers...
         pass
+
 
 if __name__ == '__main__':
     app = wxPySimpleApp()

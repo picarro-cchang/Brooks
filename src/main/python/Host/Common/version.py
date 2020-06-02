@@ -16,6 +16,7 @@ if os.name == 'posix' and sys.version_info[0] < 3:
 else:
     import subprocess
 
+
 def versionString():
     """
     We purposely don't cache the non-official version since it could
@@ -26,11 +27,10 @@ def versionString():
     ver = ""
 
     if os.name == 'posix':
-        ver = subprocess.check_output(['/usr/bin/git','log','-1','--pretty=format:%H'])
+        ver = subprocess.check_output(['/usr/bin/git', 'log', '-1', '--pretty=format:%H'])
         ver = "Internal (%s)" % ver
     else:
-        p = subprocess.Popen(['git', 'log', '-1',
-                            '--pretty=format:%H'], stdout=subprocess.PIPE)
+        p = subprocess.Popen(['git', 'log', '-1', '--pretty=format:%H'], stdout=subprocess.PIPE)
         ver = "Internal (%s)" % p.communicate()[0]
 
     return ver

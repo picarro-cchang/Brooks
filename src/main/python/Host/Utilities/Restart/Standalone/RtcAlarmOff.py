@@ -18,10 +18,10 @@ from Host.Utilities.Restart.Standalone.CMOS import CMOS
 if __name__ == "__main__":
     cmos = CMOS()
     cmos.setAlarmEnable(False)
-    aReg = ConnectRegistry(None,HKEY_LOCAL_MACHINE)
+    aReg = ConnectRegistry(None, HKEY_LOCAL_MACHINE)
     aKey = OpenKey(aReg, r"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce", 0, KEY_WRITE)
     try:
-        SetValueEx(aKey,"MyNewKey",0, REG_SZ, r"c:\picarro\G2000\HostExe\restart3.bat")
+        SetValueEx(aKey, "MyNewKey", 0, REG_SZ, r"c:\picarro\G2000\HostExe\restart3.bat")
     except EnvironmentError:
         print "Encountered problems writing into the Registry..."
     CloseKey(aKey)

@@ -18,6 +18,7 @@ from Host.Common.SharedTypes import ctypesToDict
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
 
+
 class Simulator(object):
     # Base class for simulators that are stepped by the scheduler. The step
     #  method of the simulator is run with lowest priority to compute all the
@@ -38,7 +39,7 @@ class LaserDacModel(object):
     # Thus for coarse = 36000 and fine = 32768, we have a current of 153.193 mA
     #  1mA of current change results from changing the coarse value by 277.78 digU
     #  or the fine value by 1388,89 digU
-    def __init__(self, coarse_sens = 0.0036, fine_sens = 0.00072, offset = 0):
+    def __init__(self, coarse_sens=0.0036, fine_sens=0.00072, offset=0):
         self.coarse_sens = float(coarse_sens)
         self.fine_sens = float(fine_sens)
         self.offset = float(offset)
@@ -61,8 +62,13 @@ class LaserOpticalModel(object):
     # The nominal frequency of the laser is attained at a laser current of 150mA
     #  and a laser temperature of 25 degC
     def __init__(self,
-                 nominal_wn = 6237.0, wn_temp_sens = -0.45808, wn_current_sens = -0.035344,
-                 thresh0 = 0.8, char_temp=90., eff=0.17, eff_temp_sens=-7e-4):
+                 nominal_wn=6237.0,
+                 wn_temp_sens=-0.45808,
+                 wn_current_sens=-0.035344,
+                 thresh0=0.8,
+                 char_temp=90.,
+                 eff=0.17,
+                 eff_temp_sens=-7e-4):
         self.nominal_wn = float(nominal_wn)
         self.wn_temp_sens = float(wn_temp_sens)
         self.wn_current_sens = float(wn_current_sens)
@@ -70,7 +76,6 @@ class LaserOpticalModel(object):
         self.char_temp = float(char_temp)
         self.eff = float(eff)
         self.eff_temp_sens = float(eff_temp_sens)
-
 
     def calcWavenumber(self, temp, current):
         """The wavenumber is given by a bilinear model. nominal_wn is the wavenumber produced
@@ -88,17 +93,26 @@ class LaserOpticalModel(object):
 
 
 class LaserThermalModel(object):
-    def __init__(self, num=None, den=None, offset=-40000,
-                 thermA=0.00112789997365, thermB=0.000234289997024, thermC=8.72979981636e-08):
+    def __init__(self,
+                 num=None,
+                 den=None,
+                 offset=-40000,
+                 thermA=0.00112789997365,
+                 thermB=0.000234289997024,
+                 thermC=8.72979981636e-08):
         """Represent the thermal characteristics of a laser as a ratio of z transforms
         and the thermistor by its Steinhart Hart coefficients"""
         if num is None:
-            num = [0.00000000e+00, -2.98418514e-05, -1.01071361e-04, 6.39149028e-05,
-                   5.23341031e-05, 2.66718772e-05, -1.01386506e-05, -9.73607948e-06]
+            num = [
+                0.00000000e+00, -2.98418514e-05, -1.01071361e-04, 6.39149028e-05, 5.23341031e-05, 2.66718772e-05, -1.01386506e-05,
+                -9.73607948e-06
+            ]
         self.num = num
         if den is None:
-            den = [1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01,
-                   2.99996581e-01, 2.93872141e-02, -7.45088401e-02, -1.42310788e-04]
+            den = [
+                1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01, 2.99996581e-01, 2.93872141e-02, -7.45088401e-02,
+                -1.42310788e-04
+            ]
         self.den = den
         self.offset = float(offset)
         assert len(num) == len(den)
@@ -113,7 +127,7 @@ class LaserThermalModel(object):
         """Initialize the state to the steady-state associated with no TEC current"""
         degree = len(self.num) - 1
         ss_in = 32768
-        ss_out = (ss_in + self.offset) * sum(self.num[0:degree + 1])/sum(self.den[0:degree + 1])
+        ss_out = (ss_in + self.offset) * sum(self.num[0:degree + 1]) / sum(self.den[0:degree + 1])
         for i in reversed(xrange(degree)):
             self.state[i] = (ss_in + self.offset) * self.num[i + 1] - ss_out * self.den[i + 1]
             if i < degree - 1:
@@ -125,16 +139,17 @@ class LaserThermalModel(object):
         assert divisor != 0.0
         temp = self.state[0] + (self.num[0] / divisor) * (tec + self.offset)
         for i in xrange(degree - 1):
-            self.state[i] = self.state[i+1] + (self.num[i+1] * (tec + self.offset) - self.den[i+1]*temp) / divisor
-        self.state[degree - 1] = (self.num[degree] * (tec + self.offset) - self.den[degree]*temp) / divisor
+            self.state[i] = self.state[i + 1] + (self.num[i + 1] * (tec + self.offset) - self.den[i + 1] * temp) / divisor
+        self.state[degree - 1] = (self.num[degree] * (tec + self.offset) - self.den[degree] * temp) / divisor
         return temp
 
     def tempToResistance(self, temp):
         def cubeRoot(x):
-            return x ** (1.0/3.0)
-        y = (self.thermA-1.0/(temp + 273.15))/self.thermC
-        x = math.sqrt((self.thermB/(3.0*self.thermC))**3 + (y/2.0)**2)
-        return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
+            return x**(1.0 / 3.0)
+
+        y = (self.thermA - 1.0 / (temp + 273.15)) / self.thermC
+        x = math.sqrt((self.thermB / (3.0 * self.thermC))**3 + (y / 2.0)**2)
+        return math.exp(cubeRoot(x - 0.5 * y) - cubeRoot(x + 0.5 * y))
 
 
 class WlmModel(object):
@@ -144,10 +159,25 @@ class WlmModel(object):
     # ref1 = Iref1 * (1 - rho)/ (1 + rho * cos(theta)) + ref1_offset
     # eta2 = rho * Ieta2 * (1 + sin(theta + epsilon)) / (1 + rho * sin(theta + epsilon)) + eta2_offset
     # ref2 = Iref2 * (1 - rho)/ (1 + rho * sin(theta + epsilon)) + ref2_offset
-    def __init__(self, rho=0.2, Ieta1fac=3000, Ieta2fac=3000, Iref1fac=1500, Iref2fac=1500,
-                 eta1_offset=6000, eta2_offset=6000, ref1_offset=6000, ref2_offset=6000, epsilon=0,
-                 fsr=1.66782, cal_temp=45, temp_sensitivity=-0.19, cal_pressure=760,
-                 pressureC0=0.0, pressureC1=0.0, pressureC2=0.0, pressureC3=0.0):
+    def __init__(self,
+                 rho=0.2,
+                 Ieta1fac=3000,
+                 Ieta2fac=3000,
+                 Iref1fac=1500,
+                 Iref2fac=1500,
+                 eta1_offset=6000,
+                 eta2_offset=6000,
+                 ref1_offset=6000,
+                 ref2_offset=6000,
+                 epsilon=0,
+                 fsr=1.66782,
+                 cal_temp=45,
+                 temp_sensitivity=-0.19,
+                 cal_pressure=760,
+                 pressureC0=0.0,
+                 pressureC1=0.0,
+                 pressureC2=0.0,
+                 pressureC3=0.0):
         self.rho = float(rho)
         self.Ieta1fac = float(Ieta1fac)
         self.Ieta2fac = float(Ieta2fac)
@@ -170,8 +200,7 @@ class WlmModel(object):
     def getWlmAngle(self, wavenumber, etalonTemp, ambientPressure):
         dP = ambientPressure - self.cal_pressure
         # Calculate the wavelength monitor angle corrected by the etalon temperature and ambient pressure
-        return (2 * math.pi * wavenumber / self.fsr -
-                self.temp_sensitivity * (etalonTemp - self.cal_temp) -
+        return (2 * math.pi * wavenumber / self.fsr - self.temp_sensitivity * (etalonTemp - self.cal_temp) -
                 (self.pressureC0 + dP * (self.pressureC1 + dP * (self.pressureC2 + dP * self.pressureC3))))
 
     def calcOutputs(self, wavenumber, power, etalonTemp, ambientPressure):
@@ -197,7 +226,8 @@ class InjectionSimulator(Simulator):
     ref2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_REF2)
     ratio1 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO1)
     ratio2 = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_RATIO2)
-    laserIndex = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B, interface.INJECT_CONTROL_LASER_SELECT_W)
+    laserIndex = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B,
+                           interface.INJECT_CONTROL_LASER_SELECT_W)
     etalonTemp = prop_das(interface.ETALON_TEMPERATURE_REGISTER)
     ambientPressure = prop_das(interface.AMBIENT_PRESSURE_REGISTER)
 
@@ -218,9 +248,11 @@ class InjectionSimulator(Simulator):
 
     def step(self):
         laserNum = self.laserIndex + 1
-        laserSimulator = [self.sim.laser1Simulator, self.sim.laser2Simulator, self.sim.laser3Simulator, self.sim.laser4Simulator][laserNum - 1]
+        laserSimulator = [self.sim.laser1Simulator, self.sim.laser2Simulator, self.sim.laser3Simulator,
+                          self.sim.laser4Simulator][laserNum - 1]
         wavenumber, power = laserSimulator.getLaserOutput()
-        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(wavenumber, power, self.etalonTemp, self.ambientPressure)
+        self.nextEta1, self.nextRef1, self.nextEta2, self.nextRef2 = self.wlmModel.calcOutputs(
+            wavenumber, power, self.etalonTemp, self.ambientPressure)
         self.nextRatio1 = 32768 * float(self.nextEta1 - self.eta1Offset) / (self.nextRef1 - self.ref1Offset)
         self.nextRatio2 = 32768 * float(self.nextEta2 - self.eta2Offset) / (self.nextRef2 - self.ref2Offset)
 
@@ -323,8 +355,10 @@ class Laser1Simulator(LaserSimulator):
     currentMonitor = prop_das(interface.LASER1_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_FINE_CURRENT)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER1_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER1_ENABLE_W)
     laserNum = 1
 
 
@@ -335,8 +369,10 @@ class Laser2Simulator(LaserSimulator):
     currentMonitor = prop_das(interface.LASER2_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER2_FINE_CURRENT)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER2_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER2_ENABLE_W)
     laserNum = 2
 
 
@@ -347,8 +383,10 @@ class Laser3Simulator(LaserSimulator):
     currentMonitor = prop_das(interface.LASER3_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER3_FINE_CURRENT)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER3_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER3_ENABLE_W)
     laserNum = 3
 
 
@@ -359,8 +397,10 @@ class Laser4Simulator(LaserSimulator):
     currentMonitor = prop_das(interface.LASER4_CURRENT_MONITOR_REGISTER)
     fpgaCoarse = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT)
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER4_FINE_CURRENT)
-    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
-    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
+    currentEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_B,
+                              interface.INJECT_CONTROL_LASER4_CURRENT_ENABLE_W)
+    laserEnable = prop_fpga(interface.FPGA_INJECT, interface.INJECT_CONTROL, interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_B,
+                            interface.INJECT_CONTROL_MANUAL_LASER4_ENABLE_W)
     laserNum = 4
 
 
@@ -371,8 +411,7 @@ class PressureSimulator(Simulator):
     inlet = prop_das(interface.VALVE_CNTRL_INLET_VALVE_REGISTER)
     outlet = prop_das(interface.VALVE_CNTRL_OUTLET_VALVE_REGISTER)
 
-    def __init__(self, sim, inletMaxConductance=0.3, outletMaxConductance=2.0,
-                 adcScale=6.92300018272e-05, adcOffset=0.0):
+    def __init__(self, sim, inletMaxConductance=0.3, outletMaxConductance=2.0, adcScale=6.92300018272e-05, adcOffset=0.0):
         self.sim = sim
         self.das_registers = sim.das_registers
         self.fpga_registers = sim.fpga_registers
@@ -387,7 +426,7 @@ class PressureSimulator(Simulator):
         self.adcOffset = float(adcOffset)
 
     def valveModel(self, value, maxConductance, center=32768, range=4096):
-        return 0.5*maxConductance*(1.0 + math.tanh(float((value - center) / range)))
+        return 0.5 * maxConductance * (1.0 + math.tanh(float((value - center) / range)))
 
     def step(self):
         inConductance = self.valveModel(self.inlet, self.inletMaxConductance)
@@ -395,11 +434,11 @@ class PressureSimulator(Simulator):
         inFlow = (self.inletPressure - self.cavityPressure) * inConductance
         outFlow = (self.cavityPressure - self.outletPressure) * outConductance
         self.nextFlow = inFlow
-        self.nextPressure = self.cavityPressure + (inFlow - outFlow)*self.dt
+        self.nextPressure = self.cavityPressure + (inFlow - outFlow) * self.dt
 
     def update(self):
         self.flow = self.nextFlow
-        self.cavityPressureAdc = (self.nextPressure - self.adcOffset)/self.adcScale
+        self.cavityPressureAdc = (self.nextPressure - self.adcOffset) / self.adcScale
 
 
 class TunerSimulator(Simulator):
@@ -423,11 +462,15 @@ class TunerSimulator(Simulator):
     sweepHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_SWEEP_HIGH)
     windowLow = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_LOW)
     windowHigh = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_WINDOW_HIGH)
-    rampDitherMode = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_CONTROL, interface.RDMAN_CONTROL_RAMP_DITHER_B, interface.RDMAN_CONTROL_RAMP_DITHER_W)
+    rampDitherMode = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_CONTROL, interface.RDMAN_CONTROL_RAMP_DITHER_B,
+                               interface.RDMAN_CONTROL_RAMP_DITHER_W)
     rdTimeout = prop_fpga(interface.FPGA_RDMAN, interface.RDMAN_TIMEOUT_DURATION)
 
-    laserLockerTuningOffsetSelect = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_CS, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_B, interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_W)
-    directTune = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_OPTIONS, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_B, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_W)
+    laserLockerTuningOffsetSelect = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_CS,
+                                              interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_B,
+                                              interface.LASERLOCKER_CS_TUNING_OFFSET_SEL_W)
+    directTune = prop_fpga(interface.FPGA_LASERLOCKER, interface.LASERLOCKER_OPTIONS, interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_B,
+                           interface.LASERLOCKER_OPTIONS_DIRECT_TUNE_W)
     tunePzt = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_CS, interface.TWGEN_CS_TUNE_PZT_B, interface.TWGEN_CS_TUNE_PZT_W)
     fpgaPztOffset = prop_fpga(interface.FPGA_TWGEN, interface.TWGEN_PZT_OFFSET)
 
@@ -586,10 +629,12 @@ class TunerSimulator(Simulator):
                     return nextUp, "up", ts + self.timeRequired(nextUp - value, self.slopeUp)
                 hitHighMs = self.timeRequired(self.sweepHigh - value, self.slopeUp)
                 if "down" in allowedSlopes:
-                    return allowedValues[-1], "down", ts + hitHighMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+                    return allowedValues[-1], "down", ts + hitHighMs + self.timeRequired(self.sweepHigh - allowedValues[-1],
+                                                                                         self.slopeDown)
                 elif "up" in allowedSlopes:
                     sweepDownMs = self.timeRequired(sweep, self.slopeDown)
-                    return allowedValues[0], "up", ts + hitHighMs + sweepDownMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
+                    return allowedValues[0], "up", ts + hitHighMs + sweepDownMs + self.timeRequired(
+                        allowedValues[0] - self.sweepLow, self.slopeUp)
             elif slope == "down":
                 if "down" in allowedSlopes and nextDown is not None:
                     return nextDown, "down", ts + self.timeRequired(value - nextDown, self.slopeDown)
@@ -598,7 +643,8 @@ class TunerSimulator(Simulator):
                     return allowedValues[0], "up", ts + hitLowMs + self.timeRequired(allowedValues[0] - self.sweepLow, self.slopeUp)
                 elif "down" in allowedSlopes:
                     sweepUpMs = self.timeRequired(sweep, self.slopeUp)
-                    return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(self.sweepHigh - allowedValues[-1], self.slopeDown)
+                    return allowedValues[-1], "down", ts + hitLowMs + sweepUpMs + self.timeRequired(
+                        self.sweepHigh - allowedValues[-1], self.slopeDown)
         return None
 
 
@@ -618,14 +664,14 @@ class WarmBoxThermalSimulator(Simulator):
 
     def tempToResistance(self, temp):
         def cubeRoot(x):
-            return x ** (1.0/3.0)
-        y = (self.thermA-1.0/(temp + 273.15))/self.thermC
-        x = math.sqrt((self.thermB/(3.0*self.thermC))**3 + (y/2.0)**2)
-        return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
+            return x**(1.0 / 3.0)
+
+        y = (self.thermA - 1.0 / (temp + 273.15)) / self.thermC
+        x = math.sqrt((self.thermB / (3.0 * self.thermC))**3 + (y / 2.0)**2)
+        return math.exp(cubeRoot(x - 0.5 * y) - cubeRoot(x + 0.5 * y))
 
     def step(self):
         self.nextEtalonResistance = self.tempToResistance(self.warmBoxTemperature)
 
     def update(self):
         self.etalonResistance = self.nextEtalonResistance
-

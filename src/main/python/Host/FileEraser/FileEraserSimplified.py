@@ -1,7 +1,6 @@
 #!/home/picarro/miniconda2/bin/python
 # -*- coding: utf-8 -*-
 # The above let's us put special characters in the comments.
-
 """
 This is a simplied version of the FileEraser that complements the refactored
 Archiver.   Its purpose is to delete old data in the Archive directory
@@ -121,6 +120,7 @@ LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
+
 class FileEraserSimplified(object):
     def __init__(self, config):
         # Set defaults
@@ -136,10 +136,10 @@ class FileEraserSimplified(object):
 
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FILE_ERASER),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = "",
-                                                ServerVersion = 1.0,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription="",
+                                               ServerVersion=1.0,
+                                               threaded=True)
 
     def keepErasingOldFiles(self):
         """
@@ -173,7 +173,7 @@ class FileEraserSimplified(object):
         noRDF = []
         RDF = []
         noRDF_deletion_count = 0
-        RDF_deletion_count  = 0
+        RDF_deletion_count = 0
         noRDF, RDF = self.generateDirectoryList()
         while len(noRDF) > self.days_of_dat_files_to_keep:
             noRDF_deletion_count += 1
@@ -187,7 +187,7 @@ class FileEraserSimplified(object):
         return
 
     def runApp(self):
-        rpcThread = threading.Thread(target = self.keepErasingOldFiles)
+        rpcThread = threading.Thread(target=self.keepErasingOldFiles)
         rpcThread.setDaemon(True)
         rpcThread.start()
         self.RpcServer.serve_forever()
@@ -215,6 +215,7 @@ def HandleCommandSwitches():
         config["rdf_days"] = int(options["--rdf_days"])
     return (config)
 
+
 def main():
     my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
@@ -222,7 +223,7 @@ def main():
     else:
         #Get and handle the command line options...
         config = HandleCommandSwitches()
-        Log("%s started." % APP_NAME, config, Level = 1)
+        Log("%s started." % APP_NAME, config, Level=1)
         try:
             fEraser = FileEraserSimplified(config)
             fEraser.runApp()
@@ -231,7 +232,8 @@ def main():
             # if DEBUG: raise
             msg = "Exception trapped outside execution"
             print msg + ": %s %r" % (E, E)
-            Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+            Log(msg, Level=3, Verbose="Exception = %s %r" % (E, E))
+
 
 if __name__ == "__main__":
     main()

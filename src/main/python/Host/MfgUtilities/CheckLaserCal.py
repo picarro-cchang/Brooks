@@ -1,7 +1,6 @@
 #
 #  Copyright (c) 2011-2012 Picarro, Inc. All rights reserved
 #
-
 """
 Checks the laser calibration using the specified .wlm file and
 computes a laser temperature offset whic is applied to the initial WLM
@@ -44,26 +43,20 @@ class CheckLaserCal(object):
         self.opts = opts
 
         if self.opts.aLaserNum <= 0 or self.opts.aLaserNum > MAX_LASERS:
-            raise ValueError("Laser number must be in range 1..%d." %
-                             MAX_LASERS)
+            raise ValueError("Laser number must be in range 1..%d." % MAX_LASERS)
 
         if not os.path.exists(opts.wlmFilename):
-            raise ValueError("WLM calibration file %s does not exist." %
-                             opts.wlmFilename)
+            raise ValueError("WLM calibration file %s does not exist." % opts.wlmFilename)
 
         if self.opts.waitTime < 0.0:
-            raise ValueError("Negative wait time %f minutes is invalid." %
-                             self.opts.waitTime)
+            raise ValueError("Negative wait time %f minutes is invalid." % self.opts.waitTime)
 
         if not os.path.exists(self.opts.wbFilename):
-            raise ValueError("WB calibration file '%s' does not exist." %
-                             self.opts.wbFilename)
+            raise ValueError("WB calibration file '%s' does not exist." % self.opts.wbFilename)
 
         self.wlmFile = WlmFile(file(opts.wlmFilename, 'r'))
 
-        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" %
-                                                 SharedTypes.RPC_PORT_DRIVER,
-                                                 "CheckLaserCal")
+        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, "CheckLaserCal")
 
         self.measured = TemperatureScanData()
         self.ref = TemperatureScanData()
@@ -76,9 +69,7 @@ class CheckLaserCal(object):
         self.lastTime = 0
         self.tempTol = 0.01
         self.cachedResult = None
-        self.listener = Listener(self.queue,
-                                 SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-                                 SensorEntryType, self.streamFilter)
+        self.listener = Listener(self.queue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType, self.streamFilter)
 
     def flushQueue(self):
         while True:
@@ -106,17 +97,13 @@ class CheckLaserCal(object):
 
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
-            self.resultDict = {
-                types[self.cachedResult.streamNum][7:]: self.cachedResult.value
-                }
+            self.resultDict = {types[self.cachedResult.streamNum][7:]: self.cachedResult.value}
 
         if result.timestamp != self.lastTime:
-            self.cachedResult = SensorEntryType(result.timestamp,
-                                                result.streamNum, result.value)
+            self.cachedResult = SensorEntryType(result.timestamp, result.streamNum, result.value)
             self.streamFilterState = "RETURNED_RESULT"
             if self.resultDict:
-                return (self.lastTime, self.resultDict.copy(),
-                        self.latestDict.copy())
+                return (self.lastTime, self.resultDict.copy(), self.latestDict.copy())
             else:
                 return
         else:
@@ -152,21 +139,19 @@ class CheckLaserCal(object):
         # z = mx' + c2
         # where y = measured theta, z = reference theta, x = measured
         # laser temperature and x' = laser temperature for reference data.
-        aTa = array([[sum([x ** 2 for x in self.measured.temps]) +
-                      sum([x ** 2 for x in self.ref.temps]),
-                      sum([x for x in self.measured.temps]),
-                      sum([x for x in self.ref.temps])],
-                     [sum([x for x in self.measured.temps]),
-                      len(self.measured.temps), 0],
-                     [sum([x for x in self.ref.temps]), 0,
-                      len(self.measured.temps)]])
+        aTa = array([[
+            sum([x**2 for x in self.measured.temps]) + sum([x**2 for x in self.ref.temps]),
+            sum([x for x in self.measured.temps]),
+            sum([x for x in self.ref.temps])
+        ], [sum([x for x in self.measured.temps]), len(self.measured.temps), 0],
+                     [sum([x for x in self.ref.temps]), 0, len(self.measured.temps)]])
 
-        aTy = array([dot(array(self.measured.temps),
-                          array(unwrap(self.measured.thetas))) +
-                      dot(array(self.ref.temps),
-                          array(unwrap(self.ref.thetas))),
-                     sum(unwrap(self.measured.thetas)),
-                     sum(unwrap(self.ref.thetas))])
+        aTy = array([
+            dot(array(self.measured.temps), array(unwrap(self.measured.thetas))) +
+            dot(array(self.ref.temps), array(unwrap(self.ref.thetas))),
+            sum(unwrap(self.measured.thetas)),
+            sum(unwrap(self.ref.thetas))
+        ])
 
         v = linalg.solve(aTa, aTy)
 
@@ -183,7 +168,6 @@ class CheckLaserCal(object):
         x = (c1 - c2) / (2.0 * pi)
         print "x = %0.3f" % x
 
-
         min0 = c2 - c1 + (ceil(x) * 2.0 * pi)
         min1 = c1 - c2 - (floor(x) * 2.0 * pi)
 
@@ -198,8 +182,7 @@ class CheckLaserCal(object):
         print "Calculated temperature offset: %0.3f C" % deltaT
 
         # Regenerate the W2T/T2W coefficients using the adjusted temperature.
-        self.wlmFile.TLaser = array(
-            [t + deltaT for t in self.wlmFile.TLaser])
+        self.wlmFile.TLaser = array([t + deltaT for t in self.wlmFile.TLaser])
         self.wlmFile.generateWTCoeffs()
 
         print 'New T2W coefficients:'
@@ -237,8 +220,7 @@ class CheckLaserCal(object):
 
         # This is just to be consistent. AFAIK nothing uses this
         # value.
-        laserSec['COARSE_CURRENT'] = self.driver.rdDasReg(
-            "LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.opts.aLaserNum)
+        laserSec['COARSE_CURRENT'] = self.driver.rdDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.opts.aLaserNum)
 
         for i, c in enumerate(self.wlmFile.TtoW.coeffs):
             laserSec["T2W_%d" % i] = c
@@ -271,7 +253,6 @@ class CheckLaserCal(object):
         return last["Laser%dTemp" % self.opts.aLaserNum]
 
     class WLMConverter(object):
-
         @staticmethod
         def toTheta(autoCal, r1, r2):
             """
@@ -279,11 +260,9 @@ class CheckLaserCal(object):
             calibration.
             """
 
-            var1 = (autoCal.ratio1Scale * (r2 - autoCal.ratio2Center) -
-                    autoCal.ratio2Scale * (r1 - autoCal.ratio1Center) *
-                    sin(autoCal.wlmPhase))
-            var2 = (autoCal.ratio2Scale * (r1 - autoCal.ratio1Center) *
-                    cos(autoCal.wlmPhase))
+            var1 = (autoCal.ratio1Scale * (r2 - autoCal.ratio2Center) - autoCal.ratio2Scale *
+                    (r1 - autoCal.ratio1Center) * sin(autoCal.wlmPhase))
+            var2 = (autoCal.ratio2Scale * (r1 - autoCal.ratio1Center) * cos(autoCal.wlmPhase))
             return arctan2(var1, var2)
 
     def doTemperatureScan(self):
@@ -297,31 +276,25 @@ class CheckLaserCal(object):
 
         try:
             ctx = self.driver.saveRegValues([
-                "LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" %
-                self.opts.aLaserNum,
-                "LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.opts.aLaserNum,
-                ("FPGA_INJECT", "INJECT_CONTROL")])
+                "LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.opts.aLaserNum,
+                "LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.opts.aLaserNum, ("FPGA_INJECT", "INJECT_CONTROL")
+            ])
 
             if self.opts.waitTime > 0:
                 print "Waiting %0.1f minutes..." % self.opts.waitTime
                 time.sleep(60.0 * self.opts.waitTime)
 
             self.driver.selectActualLaser(self.opts.aLaserNum)
-            self.driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" %
-                            self.opts.aLaserNum, 32768)
-            self.driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" %
-                            self.opts.aLaserNum, TEMP_CNTRL_EnabledState)
+            self.driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.opts.aLaserNum, 32768)
+            self.driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % self.opts.aLaserNum, TEMP_CNTRL_EnabledState)
 
-            print "Starting scan (%0.3f - %0.3f C)" % (self.wlmFile.TLaser[0],
-                                                       self.wlmFile.TLaser[-1])
+            print "Starting scan (%0.3f - %0.3f C)" % (self.wlmFile.TLaser[0], self.wlmFile.TLaser[-1])
 
             for i in range(len(self.wlmFile.TLaser)):
                 laserTargetTemp = self.wlmFile.TLaser[i]
                 print "Laser target = %0.3f C" % laserTargetTemp
 
-                self.driver.wrDasReg("LASER%d_TEMP_CNTRL_USER_SETPOINT"
-                                     "_REGISTER" % self.opts.aLaserNum,
-                                     laserTargetTemp)
+                self.driver.wrDasReg("LASER%d_TEMP_CNTRL_USER_SETPOINT" "_REGISTER" % self.opts.aLaserNum, laserTargetTemp)
 
                 self.flushQueue()
 
@@ -350,8 +323,7 @@ class CheckLaserCal(object):
                         t, current, last = self.queue.get(False)
                         ratio1Avg.addValue(current.get("Ratio1"))
                         ratio2Avg.addValue(current.get("Ratio2"))
-                        laserTempAvg.addValue(current.get("Laser%dTemp" %
-                                                          self.opts.aLaserNum))
+                        laserTempAvg.addValue(current.get("Laser%dTemp" % self.opts.aLaserNum))
 
                     except Empty:
                         if t - startTime < 1000:
@@ -380,11 +352,9 @@ class CheckLaserCal(object):
                 self.ref.addR2(ratio2Ref)
 
                 theta = self.WLMConverter.toTheta(autoCal, ratio1, ratio2)
-                thetaRef = self.WLMConverter.toTheta(autoCal, ratio1Ref,
-                                                  ratio2Ref)
+                thetaRef = self.WLMConverter.toTheta(autoCal, ratio1Ref, ratio2Ref)
 
-                print "Theta = %0.3f rad, Theta ref = %0.3f rad" % (theta,
-                                                                    thetaRef)
+                print "Theta = %0.3f rad, Theta ref = %0.3f rad" % (theta, thetaRef)
 
                 self.measured.addTemperature(laserTemp)
                 self.measured.addTheta(theta)
@@ -408,20 +378,23 @@ created.)
 """
 
     parser = OptionParser(usage=usage)
-    parser.add_option('-a', '--laser', type='int', dest='aLaserNum',
-                      help='Actual laser number to scan (starting at 1)')
-    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE',
-                      help='Update WBFILE with new W2T/T2W calibration')
-    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE',
-                      help='Read WLM calibration from WLMFILE')
-    parser.add_option('-w', '--wait', dest='waitTime', metavar='TIME',
-                      type='float', default=0.0,
-                      help='(optional) Time to wait before starting in ' +
-                          'minutes')
-    parser.add_option('-t', '--tolerance', dest='ratioTol', metavar='TOL',
-                      type='float', default=0.1,
-                      help='(optional) Allowed tolerance when verifying ' +
-                      'that current WLM ratios are within the original ' +
+    parser.add_option('-a', '--laser', type='int', dest='aLaserNum', help='Actual laser number to scan (starting at 1)')
+    parser.add_option('-c', '--cal', dest='wbFilename', metavar='WBFILE', help='Update WBFILE with new W2T/T2W calibration')
+    parser.add_option('-f', '--file', dest='wlmFilename', metavar='WLMFILE', help='Read WLM calibration from WLMFILE')
+    parser.add_option('-w',
+                      '--wait',
+                      dest='waitTime',
+                      metavar='TIME',
+                      type='float',
+                      default=0.0,
+                      help='(optional) Time to wait before starting in ' + 'minutes')
+    parser.add_option('-t',
+                      '--tolerance',
+                      dest='ratioTol',
+                      metavar='TOL',
+                      type='float',
+                      default=0.1,
+                      help='(optional) Allowed tolerance when verifying ' + 'that current WLM ratios are within the original ' +
                       'ratios.')
 
     options, _ = parser.parse_args()

@@ -1,5 +1,6 @@
 from Host.Utilities.ExtLaserControl.LaserControlPanelGui import LaserControlPanelGui
 
+
 class LaserControlPanel(LaserControlPanelGui):
     def __init__(self, *args, **kwargs):
         super(LaserControlPanel, self).__init__(*args, **kwargs)
@@ -47,4 +48,3 @@ class LaserControlPanel(LaserControlPanelGui):
     def onUpdateWaveformCheck(self, event):  # wxGlade: LaserControlPanelGui.<event_handler>
         self.view_model.set_model_parameter("update_waveform", event.GetEventObject().GetValue())
         event.Skip()
-

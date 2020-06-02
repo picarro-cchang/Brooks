@@ -29,11 +29,7 @@ _DEFAULT_CONFIG_NAME = "Archiver.ini"
 _MAIN_CONFIG_SECTION = "MainConfig"
 
 EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy(
-    "http://localhost:%d" %
-    RPC_PORT_DRIVER,
-    APP_NAME,
-    IsDontCareConnection=False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
 
 def makeStoragePathName(struct_time, level=3):
@@ -45,12 +41,11 @@ def makeStoragePathName(struct_time, level=3):
     level = 3: include monthday
     """
     if level < 1 or level > 3:
-        raise ValueError(
-            "Invalid level in makeStoragePathName (valid value: 0...6)")
+        raise ValueError("Invalid level in makeStoragePathName (valid value: 0...6)")
     else:
-        pathList = ["%04d" % (struct_time[0],)]
+        pathList = ["%04d" % (struct_time[0], )]
         for i in range(1, level):
-            pathList.append("%02d" % (struct_time[i],))
+            pathList.append("%02d" % (struct_time[i], ))
         return "-".join(pathList)
 
 
@@ -60,7 +55,6 @@ class LiveArchive(object):
     copies any changes to a user-accessible file opened for shared reading and
     exclusive writing. Runs in a separate thread.
     """
-
     def __init__(self, srcPathName, destPathName, archiveGroup):
         self.srcPathName = srcPathName
         self.destPathName = destPathName
@@ -72,8 +66,7 @@ class LiveArchive(object):
     def startUpdate(self):
         self.destFp = file(self.destPathName, "w")
         if not self.destFp:
-            Log('Cannot open live archive file %s' %
-                self.destPathName, Level=2)
+            Log('Cannot open live archive file %s' % self.destPathName, Level=2)
             return False
 
         self.updating = True
@@ -102,8 +95,7 @@ class LiveArchive(object):
             self.srcFp.close()
         self.updateThread.join(15.0)
         if self.updateThread.isAlive():
-            Log('Live archive %s cannot be closed' %
-                self.destPathName, Level=3)
+            Log('Live archive %s cannot be closed' % self.destPathName, Level=3)
 
 
 class ArchiveGroup(object):
@@ -122,7 +114,6 @@ class ArchiveGroup(object):
     "serverThread". Commands to be executed are passed via a queue called
     cmdQueue. This allows the archiver to handle supervisor pings even if it has
     to do lengthy operations on the disk."""
-
     def __init__(self, groupName, archiver):
         assert isinstance(archiver, Archiver)
         self.name = groupName
@@ -151,17 +142,16 @@ class ArchiveGroup(object):
         self.maketimetuple = time.gmtime
         self.quantum = archiver.config.getint(groupName, 'Quantum', 3)
         self.compress = archiver.config.getboolean(groupName, "Compress", False)
-        self.aggregationCount = archiver.config.getint( groupName, "AggregationCount", 0)
+        self.aggregationCount = archiver.config.getint(groupName, "AggregationCount", 0)
         self.aggregation = 0
         self.cmdQueue = Queue.Queue(0)  # Queue for commands
         self.serverThread = threading.Thread(target=self.server)
         self.fileCount = -1
 
         # Create temporary filename for compression and aggregation
-        self.tempFileName = os.path.join(
-            archiver.storageRoot, groupName + ".zip")
+        self.tempFileName = os.path.join(archiver.storageRoot, groupName + ".zip")
         if os.path.exists(self.tempFileName):
-            self.cmdQueue.put(("archiveFile", (self.tempFileName,)))
+            self.cmdQueue.put(("archiveFile", (self.tempFileName, )))
         # Dictionary of live archives by source file name
         self.liveArchiveDict = {}
         self.serverThread.setDaemon(True)
@@ -185,12 +175,10 @@ class ArchiveGroup(object):
                 startTime = time.time()
                 cmdDict[cmd](*args)
                 if cmd != "archiveData":
-                    Log("Archiver command %s took %s seconds" %
-                        (cmd, time.time() - startTime))
+                    Log("Archiver command %s took %s seconds" % (cmd, time.time() - startTime))
                 time.sleep(1)
             except Exception as exc:
-                Log("Exception in ArchiveGroup server", dict(
-                    GroupName=self.name), Verbose="Exception = %s %r" % (exc, exc))
+                Log("Exception in ArchiveGroup server", dict(GroupName=self.name), Verbose="Exception = %s %r" % (exc, exc))
 
     def zipSource(self, source, targetPath):
         """
@@ -199,7 +187,7 @@ class ArchiveGroup(object):
         """
         writeMode = "w"
         if self.aggregationCount > 0 and os.path.exists(targetPath):
-                writeMode = "a"
+            writeMode = "a"
 
         if self.compress:
             compressMode = zipfile.ZIP_DEFLATED
@@ -214,8 +202,7 @@ class ArchiveGroup(object):
         #
         numFilesInTheZipFile = len(zf.namelist())
         if numFilesInTheZipFile > self.aggregationCount:
-            Log('Live archive %s is full. Move operation has failed.' %
-                targetPath, Level=3)
+            Log('Live archive %s is full. Move operation has failed.' % targetPath, Level=3)
             zf.close()
             del zf
             return
@@ -261,10 +248,8 @@ class ArchiveGroup(object):
             # as there is not a Directory entry in Archiver.ini
             if "RDF" in self.groupRoot:
                 pathName += "-RDF"
-            pathName = os.path.join(
-                os.path.split(
-                    self.groupRoot)[0], pathName, os.path.basename(
-                    self.groupRoot))  # date before file type name
+            pathName = os.path.join(os.path.split(self.groupRoot)[0], pathName,
+                                    os.path.basename(self.groupRoot))  # date before file type name
         # Directory key is present in Archiver.ini
         # We will check if an Integration tool is requesting a directory
         # directory. If so, we need to have change the folder structure
@@ -275,10 +260,8 @@ class ArchiveGroup(object):
                 pathName = os.path.join(self.groupRoot, pathName)
             else:
                 # Not an Ops/Integration tool YYYY-MM-DD/{file_type}
-                pathName = os.path.join(
-                    os.path.split(
-                        self.groupRoot)[0], pathName, os.path.basename(
-                        self.groupRoot))  # date before file type name
+                pathName = os.path.join(os.path.split(self.groupRoot)[0], pathName,
+                                        os.path.basename(self.groupRoot))  # date before file type name
         return now, timeTuple, pathName
 
     def startLiveArchive(self, source, timestamp=None, copier=False):
@@ -323,7 +306,8 @@ class ArchiveGroup(object):
                 except Exception as e:
                     # some problem working with the zip file, we should kill it
                     # and start fresh...
-                    Log("Exception raised when adding to zip file. \
+                    Log(
+                        "Exception raised when adding to zip file. \
                     File skipped and a new zip will be started on the next archive.",
                         dict(AggregateFile=self.tempFileName,
                              StoredGroup=self.name,
@@ -345,24 +329,17 @@ class ArchiveGroup(object):
                 if self.aggregation < self.aggregationCount:
                     return
             self.aggregation = 0
-            status = self.archiveFile(
-                fileToArchive,
-                sourceFileName,
-                removeOriginal,
-                timestamp)
+            status = self.archiveFile(fileToArchive, sourceFileName, removeOriginal, timestamp)
             # If archiving fails, do not remove original
             removeOriginal = removeOriginal and status
         finally:
             if removeOriginal and sourceIsPath and os.path.exists(source):
                 os.remove(source)
 
-    def archiveFile(self, fileToArchive, sourceFileName=None,
-                    removeOriginal=True, timestamp=None):
+    def archiveFile(self, fileToArchive, sourceFileName=None, removeOriginal=True, timestamp=None):
         # Once we get here, we have something to be archived
         if not os.path.exists(fileToArchive):
-            raise ValueError(
-                "Cannot archive non-existent file: %s" %
-                (fileToArchive,))
+            raise ValueError("Cannot archive non-existent file: %s" % (fileToArchive, ))
 
         now, timeTuple, pathName = self.set_path_name(timestamp)
 
@@ -377,8 +354,7 @@ class ArchiveGroup(object):
                 targetName = os.path.split(sourceFileName)[-1]
                 renameFlag = removeOriginal
         else:
-            targetName = time.strftime(
-                self.name + "_%Y%m%d_%H%M%S.zip", timeTuple)
+            targetName = time.strftime(self.name + "_%Y%m%d_%H%M%S.zip", timeTuple)
 
         # Returns True if archiving succeeded
         status = False
@@ -411,25 +387,22 @@ class Archiver(object):
     The archiver manages storage of data and files, placing them in FIFO
     order into storage groups whose sizes may be specified.
     """
-
     def __init__(self, configFile):
         self.configFile = configFile
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy(
-            "http://localhost:%d" %
-            RPC_PORT_SUPERVISOR,
-            APP_NAME,
-            IsDontCareConnection=False)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
+                                                     IsDontCareConnection=False)
         if not self.LoadConfig(self.configFile):
             Log("Failed to load config.")
             return
         self.storageRoot = os.path.abspath(self.storageRoot)
         if not os.path.exists(self.storageRoot):
             makeDirs(self.storageRoot)
-            Log("Creating archive directory %s" % (self.storageRoot,))
+            Log("Creating archive directory %s" % (self.storageRoot, ))
         self.storageGroups = {}
         for groupName in self.storageGroupNames:
             self.storageGroups[groupName] = ArchiveGroup(groupName, self)
-            Log("Opening storage group %s" % (groupName,))
+            Log("Opening storage group %s" % (groupName, ))
 
     def startServer(self):
         # Now set up the RPC server...
@@ -438,12 +411,10 @@ class Archiver(object):
                                                ServerDescription="Archiver",
                                                ServerVersion=__version__,
                                                threaded=True)
-        self.rpcServer.register_function(
-            self.RPC_StartLiveArchive, NameSlice=4)
+        self.rpcServer.register_function(self.RPC_StartLiveArchive, NameSlice=4)
         self.rpcServer.register_function(self.RPC_StopLiveArchive, NameSlice=4)
         self.rpcServer.register_function(self.RPC_ArchiveFile, NameSlice=4)
-        self.rpcServer.register_function(
-            self.RPC_GetLiveArchiveFileName, NameSlice=4)
+        self.rpcServer.register_function(self.RPC_GetLiveArchiveFileName, NameSlice=4)
         self.rpcServer.serve_forever()
 
     def LoadConfig(self, filename):
@@ -476,27 +447,23 @@ class Archiver(object):
                 self.isIntegrationMode = False
             self.storageGroupNames.remove(_MAIN_CONFIG_SECTION)
         except BaseException:
-            Log("Load config failed. %s %s" %
-                (sys.exc_info()[0], sys.exc_info()[1]))
+            Log("Load config failed. %s %s" % (sys.exc_info()[0], sys.exc_info()[1]))
             return False
         return True
 
-    def RPC_StartLiveArchive(self, groupName, sourceFile,
-                             timestamp=None, copier=False):
+    def RPC_StartLiveArchive(self, groupName, sourceFile, timestamp=None, copier=False):
         """Create a 'live' archive of the source file in the specified archive group"""
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
-            raise ValueError("Source file %s does not exist" % (sourceFile,))
-        group.cmdQueue.put(
-            ("startLiveArchive", (sourceFile, timestamp, copier)))
-        return "startLiveArchive command queued for group %s" % (groupName,)
+            raise ValueError("Source file %s does not exist" % (sourceFile, ))
+        group.cmdQueue.put(("startLiveArchive", (sourceFile, timestamp, copier)))
+        return "startLiveArchive command queued for group %s" % (groupName, )
 
     def RPC_GetLiveArchiveFileName(self, groupName, sourceFile):
         try:
             group = self.storageGroups[groupName]
-            return (True, os.path.abspath(
-                group.liveArchiveDict[sourceFile].destPathName))
+            return (True, os.path.abspath(group.liveArchiveDict[sourceFile].destPathName))
         except BaseException:
             return (False, sourceFile)
 
@@ -508,10 +475,9 @@ class Archiver(object):
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         group.cmdQueue.put(("stopLiveArchive", (sourceFile, copier)))
-        return "stopLiveArchive command queued for group %s" % (groupName,)
+        return "stopLiveArchive command queued for group %s" % (groupName, )
 
-    def RPC_ArchiveFile(self, groupName, sourceFile,
-                        removeOriginal=True, timestamp=None):
+    def RPC_ArchiveFile(self, groupName, sourceFile, removeOriginal=True, timestamp=None):
         """
         Archive the file SourceFile according to the rules of the storage group
         groupName. If removeOriginal is true, the source file is deleted when
@@ -521,10 +487,9 @@ class Archiver(object):
         sourceFile = os.path.abspath(sourceFile)
         group = self.storageGroups[groupName]
         if not os.path.exists(sourceFile):
-            raise ValueError("Source file %s does not exist" % (sourceFile,))
-        group.cmdQueue.put(
-            ("archiveData", (sourceFile, removeOriginal, timestamp)))
-        return "archiveFile command queued for group %s" % (groupName,)
+            raise ValueError("Source file %s does not exist" % (sourceFile, ))
+        group.cmdQueue.put(("archiveData", (sourceFile, removeOriginal, timestamp)))
+        return "archiveFile command queued for group %s" % (groupName, )
 
 
 def HandleCommandSwitches():

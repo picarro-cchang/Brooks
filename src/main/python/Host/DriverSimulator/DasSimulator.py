@@ -19,8 +19,8 @@ from Host.autogen import interface
 from Host.Common import timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.DriverSimulator.ActionHandler import ActionHandler
-from Host.DriverSimulator.Simulators import (
-    WlmModel, InjectionSimulator, PressureSimulator, TunerSimulator, WarmBoxThermalSimulator)
+from Host.DriverSimulator.Simulators import (WlmModel, InjectionSimulator, PressureSimulator, TunerSimulator,
+                                             WarmBoxThermalSimulator)
 from Host.DriverSimulator.SpectrumControl import SpectrumControl
 from Host.DriverSimulator.ValveControl import ValveControl
 
@@ -80,7 +80,7 @@ class DasSimulator(object):
         self.driver = driver
         self.analyzer_setup = analyzer_setup
         self.das_registers = interface.INTERFACE_NUMBER_OF_REGISTERS * [0]
-        self.fpga_registers = 512*[0]
+        self.fpga_registers = 512 * [0]
         self.dsp_message_queue = deque(maxlen=interface.NUM_MESSAGES)
         self.sensor_queue = deque(maxlen=interface.NUM_SENSOR_ENTRIES)
         self.ringdown_queue = deque(maxlen=interface.NUM_RINGDOWN_ENTRIES)
@@ -124,7 +124,7 @@ class DasSimulator(object):
         self.injectionSimulator = InjectionSimulator(self, **simulator_config)
         simulator_config = {}
         if "PressureSimulator" in self.analyzer_setup:
-            simulator_config = self.analyzer_setup["PressureSimulator"] 
+            simulator_config = self.analyzer_setup["PressureSimulator"]
         self.pressureSimulator = PressureSimulator(self, **simulator_config)
         self.tunerSimulator = TunerSimulator(self)
 
@@ -147,14 +147,14 @@ class DasSimulator(object):
     def getSensorData(self):
         if len(self.sensor_queue) > 0:
             data = interface.SensorEntryType()
-            data.timestamp, data.streamNum, data.value = self.sensor_queue.popleft() 
+            data.timestamp, data.streamNum, data.value = self.sensor_queue.popleft()
             return data
         else:
             return None
 
     def getRingdownData(self):
         if len(self.ringdown_queue) > 0:
-            return self.ringdown_queue.popleft() 
+            return self.ringdown_queue.popleft()
         else:
             return None
 
@@ -206,7 +206,10 @@ class DasSimulator(object):
             elif ri.type == ctypes.c_float:
                 self.das_registers[index] = float(value)
             else:
-                raise ValueError("Type %s of register %s is not known" % (ri.type, regIndexOrName,))
+                raise ValueError("Type %s of register %s is not known" % (
+                    ri.type,
+                    regIndexOrName,
+                ))
         else:
             raise IndexError('Register index not in range')
 
@@ -227,7 +230,7 @@ class DasSimulator(object):
             try:
                 return interface.registerByName[indexOrName.strip().upper()]
             except KeyError:
-                raise ValueError("Unknown register name %s" % (indexOrName,))
+                raise ValueError("Unknown register name %s" % (indexOrName, ))
 
     def _value(self, valueOrName):
         """Convert valueOrName into an value, raising an exception if the name is not found"""
@@ -262,12 +265,12 @@ class Scheduler(object):
         self.doOperation = doOperation
         # The run queue is a minqueue with entries
         # (when, priority, what)
-        self.runqueue = [] 
+        self.runqueue = []
         self.initRunqueue()
 
     def initRunqueue(self):
         for group in self.operationGroups:
-            period_ms = 100*group.period # Originally 100, 25 makes the simulator faster
+            period_ms = 100 * group.period  # Originally 100, 25 makes the simulator faster
             when = int(period_ms * math.ceil(float(self.startTimestamp) / period_ms))
             item = (when, group.priority, group)
             heapq.heappush(self.runqueue, item)
@@ -280,7 +283,7 @@ class Scheduler(object):
                 return
             heapq.heappop(self.runqueue)
             # Enqueue next time this is to be performed
-            period_ms = 100*group.period # Originally 100, 25 makes the simulator faster
+            period_ms = 100 * group.period  # Originally 100, 25 makes the simulator faster
             item = (when + period_ms, group.priority, group)
             heapq.heappush(self.runqueue, item)
             # Carry out the actions in the list

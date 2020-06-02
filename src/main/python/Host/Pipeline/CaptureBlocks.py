@@ -8,59 +8,70 @@ import sys
 from traitlets import (Bool, Dict, Enum, Float, HasTraits, Instance, Integer, List, Unicode)
 import cPickle
 
+
 def checkPeakDectectorHolding(value):
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and ivalue == 10)
+    return bool(abs(value - ivalue) <= 1.0e-4 and ivalue == 10)
+
 
 def checkPeakDectectorCancelling(value):
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and ivalue == 5)
+    return bool(abs(value - ivalue) <= 1.0e-4 and ivalue == 5)
+
 
 def checkPeakDectectorSurveying(value):
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and ivalue == 0)
+    return bool(abs(value - ivalue) <= 1.0e-4 and ivalue == 0)
+
 
 def checkPeakDetectorTriggered(value):
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and ivalue == 3)
+    return bool(abs(value - ivalue) <= 1.0e-4 and ivalue == 3)
+
 
 def checkValveCancelling(value):
     mask = 0x10
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+    return bool(abs(value - ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+
 
 def checkValveCollecting(value):
     mask = 0x1
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+    return bool(abs(value - ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+
 
 def checkValveReferenceGasInjection(value):
     mask = 0x8
     ivalue = int(value)
-    return bool(abs(value-ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+    return bool(abs(value - ivalue) <= 1.0e-4 and (ivalue & mask) != 0)
+
 
 def checkValveSurveying(value):
     # Need to mask off valve 6 which is used for EQ
-    return bool((abs(value) <= 1.0e-4) or (abs(value-32) <= 1.0e-4))
+    return bool((abs(value) <= 1.0e-4) or (abs(value - 32) <= 1.0e-4))
 
-def linfit(x,y,sigma):
+
+def linfit(x, y, sigma):
     # Calculate the linear fit of (x,y) to a line, where sigma are the errors in the y values
-    S = sum(1/sigma**2)
-    Sx = sum(x/sigma**2)
-    Sy = sum(y/sigma**2)
-    t = (x-Sx/S)/sigma
+    S = sum(1 / sigma**2)
+    Sx = sum(x / sigma**2)
+    Sy = sum(y / sigma**2)
+    t = (x - Sx / S) / sigma
     Stt = sum(t**2)
-    b = sum(t*y/sigma)/Stt
-    a = (Sy-Sx*b)/S
-    sa2 = (1+Sx**2/(S*Stt))/S
-    sb2 = 1/Stt
+    b = sum(t * y / sigma) / Stt
+    a = (Sy - Sx * b) / S
+    sa2 = (1 + Sx**2 / (S * Stt)) / S
+    sb2 = 1 / Stt
     return a, b, np.sqrt(sa2), np.sqrt(sb2)
 
-class IsotopicIdentity(HasTraits): # Fetch from database
+
+class IsotopicIdentity(HasTraits):  # Fetch from database
     noLowerBound = Float(-45.0)
     yesLowerBound = Float(-38.0)
     yesUpperBound = Float(-25.0)
     noUpperBound = Float(-10.0)
+
 
 class CaptureAnalyzerBlock(TransformManyBlock):
     baseBuffer = List()
@@ -96,9 +107,9 @@ class CaptureAnalyzerBlock(TransformManyBlock):
     peakBuffer = List()
     peakSkipPoints = Integer(15)
     referenceGas = Bool(False)
-    referenceGasEthaneRatioValue = Float(0.030) # Look up in table
+    referenceGasEthaneRatioValue = Float(0.030)  # Look up in table
     referenceGasEthaneRatioValueTolerance = Float(0.010)
-    referenceGasIsotopicValue = Float(-35.0) # Look up in table
+    referenceGasIsotopicValue = Float(-35.0)  # Look up in table
     referenceGasIsotopicValueTolerance = Float(2.5)
     sigmaUncertainty = 11.0
     transportDurationSeconds = Float(5.0)
@@ -141,8 +152,8 @@ class CaptureAnalyzerBlock(TransformManyBlock):
             if self.referenceGas:
                 rangeMin = delta - uncertainty
                 rangeMax = delta + uncertainty
-                if (rangeMin < self.referenceGasIsotopicValue - self.referenceGasIsotopicValueTolerance or
-                    rangeMax > self.referenceGasIsotopicValue + self.referenceGasIsotopicValueTolerance):
+                if (rangeMin < self.referenceGasIsotopicValue - self.referenceGasIsotopicValueTolerance
+                        or rangeMax > self.referenceGasIsotopicValue + self.referenceGasIsotopicValueTolerance):
                     return 'ISOTOPIC_REFERENCE_FAIL'
                 else:
                     return 'ISOTOPIC_REFERENCE_PASS'
@@ -152,11 +163,9 @@ class CaptureAnalyzerBlock(TransformManyBlock):
                 if rangeMin <= self.deltaNegativeThreshold or rangeMax >= self.deltaPositiveThreshold:
                     return 'DELTA_OUT_OF_RANGE'
                 else:
-                    if (rangeMin >= self.isotopicIdentity.yesLowerBound and
-                        rangeMax < self.isotopicIdentity.yesUpperBound):
+                    if (rangeMin >= self.isotopicIdentity.yesLowerBound and rangeMax < self.isotopicIdentity.yesUpperBound):
                         return 'NATURAL_GAS'
-                    elif (rangeMin >= self.isotopicIdentity.noUpperBound or
-                          rangeMax < self.isotopicIdentity.noLowerBound):
+                    elif (rangeMin >= self.isotopicIdentity.noUpperBound or rangeMax < self.isotopicIdentity.noLowerBound):
                         return 'NOT_NATURAL_GAS'
                     else:
                         return 'POSSIBLE_NATURAL_GAS'
@@ -172,8 +181,8 @@ class CaptureAnalyzerBlock(TransformManyBlock):
             if self.referenceGas:
                 rangeMin = ethane_ratio - ethane_ratio_sdev
                 rangeMax = ethane_ratio + ethane_ratio_sdev
-                if (rangeMin < self.referenceGasEthaneRatioValue - self.referenceGasEthaneRatioValueTolerance or
-                    rangeMax > self.referenceGasEthaneRatioValue + self.referenceGasEthaneRatioValueTolerance):
+                if (rangeMin < self.referenceGasEthaneRatioValue - self.referenceGasEthaneRatioValueTolerance
+                        or rangeMax > self.referenceGasEthaneRatioValue + self.referenceGasEthaneRatioValueTolerance):
                     return 'ETHANE_REFERENCE_FAIL', float('nan')
                 else:
                     return 'ETHANE_REFERENCE_PASS', float('nan')
@@ -198,6 +207,7 @@ class CaptureAnalyzerBlock(TransformManyBlock):
             oldDat = self.delayBuffer.pop(0)
             isCollecting = checkValveCollecting(oldDat['ValveMask'])
 
+
 #        if checkValveSurveying(newDat['ValveMask']):
         if checkPeakDectectorSurveying(newDat['PeakDetectorState']):
             self.isHandlingCancellation = False
@@ -211,23 +221,22 @@ class CaptureAnalyzerBlock(TransformManyBlock):
             yield result
 
     def acquisitionActive(self, newDat, isCollecting, isTriggered, isHolding):
-#        if checkValveCancelling(newDat['ValveMask']):
+        #        if checkValveCancelling(newDat['ValveMask']):
         if checkPeakDectectorCancelling(newDat['PeakDetectorState']):
             self.isHandlingCancellation = True
             self.isCancelled = True  # For benefit of getDispositionAndConfidence()
             disposition, confidence = self.getDispositionAndConfidence()
-            result = dict(
-                delta=float('nan'),
-                uncertainty=float('nan'),
-                ethane_ratio=float('nan'),
-                ethane_ratio_sdev=float('nan'),
-                replayMax=float('nan'),
-                replayLMin=float('nan'),
-                replayRMin=float('nan'),
-                disposition=disposition,
-                confidence=confidence,
-                referenceGas=self.referenceGas,
-                data=newDat)
+            result = dict(delta=float('nan'),
+                          uncertainty=float('nan'),
+                          ethane_ratio=float('nan'),
+                          ethane_ratio_sdev=float('nan'),
+                          replayMax=float('nan'),
+                          replayLMin=float('nan'),
+                          replayRMin=float('nan'),
+                          disposition=disposition,
+                          confidence=confidence,
+                          referenceGas=self.referenceGas,
+                          data=newDat)
             self.isCancelled = False
             self.lastPeak = None
             self.lastAnalysis = None
@@ -282,7 +291,7 @@ class CaptureAnalyzerBlock(TransformManyBlock):
                 elif isHolding:
                     self.peakBuffer.append(newDat)
 
-            if (not self.lastCollecting) and len(self.measBuffer)>0:
+            if (not self.lastCollecting) and len(self.measBuffer) > 0:
                 # We have just transitioned from real-time acquisition to replay of the tape recorder
                 # This is the time T2. We need to find the peak in measBuff to associate with the
                 #  upcoming capture analysis
@@ -310,31 +319,30 @@ class CaptureAnalyzerBlock(TransformManyBlock):
                 methane_sdev *= sdev_factor
                 ethane_ratio_sdev *= sdev_factor
                 if self.lastPeak is not None:
-                    self.lastAnalysis = dict(
-                        delta=None,
-                        uncertainty=None,
-                        ethane_ratio=ethane_ratio,
-                        ethane_ratio_sdev=ethane_ratio_sdev,
-                        replayMax=np.mean(peakCH4),
-                        replayLMin=np.mean(baseCH4),
-                        replayRMin=np.mean(peakC2H6) - np.mean(baseC2H6),
-                        disposition='UNKNOWN',
-                        confidence=float('nan'),
-                        referenceGas=self.referenceGas,
-                        data=self.lastPeak)
+                    self.lastAnalysis = dict(delta=None,
+                                             uncertainty=None,
+                                             ethane_ratio=ethane_ratio,
+                                             ethane_ratio_sdev=ethane_ratio_sdev,
+                                             replayMax=np.mean(peakCH4),
+                                             replayLMin=np.mean(baseCH4),
+                                             replayRMin=np.mean(peakC2H6) - np.mean(baseC2H6),
+                                             disposition='UNKNOWN',
+                                             confidence=float('nan'),
+                                             referenceGas=self.referenceGas,
+                                             data=self.lastPeak)
                     self.lastPeak = None
         self.baseBuffer = []
         self.peakBuffer = []
 
-
     def doKeelingAnalysis(self):
         if len(self.keelingBuffer) > self.minKeelingSamples + self.keelingSamplesToSkip:
             self.hasTooFewPoints = False
-            selectedSamples = self.keelingBuffer[self.keelingSamplesToSkip:-(self.doneAnalysisThreshold+self.keelingEndpointOffset)]
+            selectedSamples = self.keelingBuffer[self.keelingSamplesToSkip:-(self.doneAnalysisThreshold +
+                                                                             self.keelingEndpointOffset)]
             ch4 = np.asarray([dat["CH4"] for dat in selectedSamples])
             delta = np.asarray([dat["HP_Delta_iCH4_Raw"] for dat in selectedSamples])
-            if len(ch4)>0 and len(delta)>0:
-                inverseCH4 = 1.0/np.maximum(ch4,0.001)
+            if len(ch4) > 0 and len(delta) > 0:
+                inverseCH4 = 1.0 / np.maximum(ch4, 0.001)
                 sigmas = inverseCH4 * self.sigmaUncertainty
                 replayMax = max(ch4)
                 idxMax = np.argmax(ch4)
@@ -348,21 +356,20 @@ class CaptureAnalyzerBlock(TransformManyBlock):
                     replayLMin = min(ch4[:idxMax])
                     replayRMin = min(ch4[idxMax:])
 
-                a,b,sigmaA,sigmaB = linfit(inverseCH4, delta, sigmas)
+                a, b, sigmaA, sigmaB = linfit(inverseCH4, delta, sigmas)
 
                 if self.lastPeak is not None:
-                    self.lastAnalysis = dict(
-                        delta=a,
-                        uncertainty=sigmaA,
-                        ethane_ratio=float('nan'),
-                        ethane_ratio_sdev=float('nan'),
-                        replayMax=replayMax,
-                        replayLMin=replayLMin,
-                        replayRMin=replayRMin,
-                        disposition='UNKNOWN',
-                        confidence=float('nan'),
-                        referenceGas=self.referenceGas,
-                        data=self.lastPeak)
+                    self.lastAnalysis = dict(delta=a,
+                                             uncertainty=sigmaA,
+                                             ethane_ratio=float('nan'),
+                                             ethane_ratio_sdev=float('nan'),
+                                             replayMax=replayMax,
+                                             replayLMin=replayLMin,
+                                             replayRMin=replayRMin,
+                                             disposition='UNKNOWN',
+                                             confidence=float('nan'),
+                                             referenceGas=self.referenceGas,
+                                             data=self.lastPeak)
                     self.lastPeak = None
             else:
                 self.setTooFewPoints()
@@ -373,16 +380,15 @@ class CaptureAnalyzerBlock(TransformManyBlock):
     def setTooFewPoints(self):
         self.hasTooFewPoints = True
         if self.lastPeak is not None:
-            self.lastAnalysis = dict(
-                delta=float('nan'),
-                uncertainty=float('nan'),
-                ethane_ratio=float('nan'),
-                ethane_ratio_sdev=float('nan'),
-                replayMax=float('nan'),
-                replayLMin=float('nan'),
-                replayRMin=float('nan'),
-                disposition='UNKNOWN',
-                confidence=float('nan'),
-                referenceGas=self.referenceGas,
-                data=self.lastPeak)
+            self.lastAnalysis = dict(delta=float('nan'),
+                                     uncertainty=float('nan'),
+                                     ethane_ratio=float('nan'),
+                                     ethane_ratio_sdev=float('nan'),
+                                     replayMax=float('nan'),
+                                     replayLMin=float('nan'),
+                                     replayRMin=float('nan'),
+                                     disposition='UNKNOWN',
+                                     confidence=float('nan'),
+                                     referenceGas=self.referenceGas,
+                                     data=self.lastPeak)
             self.lastPeak = None

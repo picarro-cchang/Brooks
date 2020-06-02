@@ -34,8 +34,8 @@ EMIF_CE3 = 0x01800014
 EMIF_SDRAMCTL = 0x01800018
 EMIF_SDRAMTIM = 0x0180001C
 EMIF_SDRAMEXT = 0x01800020
-EMIF_CCFG = 0x01840000     # Cache configuration register
-CHIP_DEVCFG = 0x019C0200     # Chip configuration register
+EMIF_CCFG = 0x01840000  # Cache configuration register
+CHIP_DEVCFG = 0x019C0200  # Chip configuration register
 
 PLL_BASE_ADDR = 0x01b7c000
 PLL_PID = (PLL_BASE_ADDR + 0x000)
@@ -55,13 +55,11 @@ DIV_ENABLE = 0x00008000
 
 
 class DspAccessor(object):
-
     """Access the TI DSP via the HPI using the Cypress USB Controller.
 
     Args:
       deviceUsb: Instance of an AnalyzerUsb object
     """
-
     def __init__(self, deviceUsb):
         self.deviceUsb = deviceUsb
 
@@ -72,9 +70,9 @@ class DspAccessor(object):
             """Low-level routine to be wrapped by claimInterfaceWrapper
             """
             gpiftrig = c_ubyte()
-            self.deviceUsb.controlInTransaction(
-                gpiftrig, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTRIG)
+            self.deviceUsb.controlInTransaction(gpiftrig, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTRIG)
             return gpiftrig.value
+
         return self.deviceUsb.claimInterfaceWrapper(_getGpifTrig)
 
     def getGpifTc(self):
@@ -84,9 +82,9 @@ class DspAccessor(object):
             """Low-level routine to be wrapped by claimInterfaceWrapper
             """
             transCount = c_uint()
-            self.deviceUsb.controlInTransaction(
-                transCount, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTC)
+            self.deviceUsb.controlInTransaction(transCount, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_GPIFTC)
             return transCount.value
+
         return self.deviceUsb.claimInterfaceWrapper(_getGpifTc)
 
     def hpicRead(self):
@@ -100,6 +98,7 @@ class DspAccessor(object):
             data = c_uint(0)
             self.deviceUsb.controlInTransaction(data, usbdefs.VENDOR_READ_HPIC)
             return data.value
+
         return self.deviceUsb.claimInterfaceWrapper(_hpicRead)
 
     def hpicWrite(self, word):
@@ -112,6 +111,7 @@ class DspAccessor(object):
             """
             data = c_uint(word)
             self.deviceUsb.controlOutTransaction(data, usbdefs.VENDOR_WRITE_HPIC)
+
         self.deviceUsb.claimInterfaceWrapper(_hpicWrite)
 
     def hpiaRead(self):
@@ -125,6 +125,7 @@ class DspAccessor(object):
             data = c_uint(0)
             self.deviceUsb.controlInTransaction(data, usbdefs.VENDOR_READ_HPIA)
             return data.value
+
         return self.deviceUsb.claimInterfaceWrapper(_hpiaRead)
 
     def hpiaWrite(self, word):
@@ -137,6 +138,7 @@ class DspAccessor(object):
             """
             data = c_uint(word)
             self.deviceUsb.controlOutTransaction(data, usbdefs.VENDOR_WRITE_HPIA)
+
         self.deviceUsb.claimInterfaceWrapper(_hpiaWrite)
 
     def hpidWrite(self, data):
@@ -155,8 +157,9 @@ class DspAccessor(object):
             """Low-level routine to be wrapped by claimInterfaceWrapper
             """
             self.deviceUsb.handle.bulkWrite(DEFAULT_OUT_ENDPOINT, buffer(data)[:], self.deviceUsb.timeout)
+
         if 0 != dataLength & 0x3 or 0 == dataLength or 512 < dataLength:
-            raise UsbPacketLengthError("Invalid data length %d in hpidWrite" % (dataLength,))
+            raise UsbPacketLengthError("Invalid data length %d in hpidWrite" % (dataLength, ))
         self.deviceUsb.claimInterfaceWrapper(_hpidWrite)
 
     def hpiWrite(self, address, data):
@@ -197,7 +200,7 @@ class DspAccessor(object):
         """
         nBytes = sizeof(result)
         if 0 != nBytes & 0x3 or 0 >= nBytes or 512 < nBytes:
-            raise UsbPacketLengthError("Invalid data length %d in hpidRead" % (nBytes,))
+            raise UsbPacketLengthError("Invalid data length %d in hpidRead" % (nBytes, ))
 
         def _hpidRead():
             """Low-level routine to be wrapped by claimInterfaceWrapper
@@ -242,10 +245,10 @@ class DspAccessor(object):
             """Low-level routine to be wrapped by claimInterfaceWrapper
             """
             result = c_ubyte(0x0)
-            self.deviceUsb.controlInTransaction(
-                result, usbdefs.VENDOR_RESET_HPID_IN_FIFO)
+            self.deviceUsb.controlInTransaction(result, usbdefs.VENDOR_RESET_HPID_IN_FIFO)
             if result.value != 1:
                 raise ValueError("Invalid response in resetHpidInFifo")
+
         self.deviceUsb.claimInterfaceWrapper(_resetHpidInFifo)
 
     def initEmif(self):
@@ -261,15 +264,15 @@ class DspAccessor(object):
             self.hpiWrite(addr, c_int(value))
 
         self.hpicWrite(0x00010001)
-        writeMem(EMIF_GCTL, 0x00000060)     # Disable CLKOUT2 signal
-        writeMem(EMIF_CE0, 0xffffbf33)      # CE0 SDRAM
-        writeMem(EMIF_CE1, 0x02208802)      # CE1 Flash 8-bit
-        writeMem(EMIF_CE2, 0x22a28a22)      # CE2 Daughtercard 32-bit async
-        writeMem(EMIF_CE3, 0x22a28a22)      # CE3 Daughtercard 32-bit async
+        writeMem(EMIF_GCTL, 0x00000060)  # Disable CLKOUT2 signal
+        writeMem(EMIF_CE0, 0xffffbf33)  # CE0 SDRAM
+        writeMem(EMIF_CE1, 0x02208802)  # CE1 Flash 8-bit
+        writeMem(EMIF_CE2, 0x22a28a22)  # CE2 Daughtercard 32-bit async
+        writeMem(EMIF_CE3, 0x22a28a22)  # CE3 Daughtercard 32-bit async
         writeMem(EMIF_SDRAMCTL, 0x57115000)  # SDRAM control (16 Mb)
         writeMem(EMIF_SDRAMTIM, 0x00000578)  # SDRAM timing (refresh)
         writeMem(EMIF_SDRAMEXT, 0x000a8529)  # SDRAM Extension register
-        writeMem(CHIP_DEVCFG, 0x13)          # Chip configuration register
+        writeMem(CHIP_DEVCFG, 0x13)  # Chip configuration register
 
     def initPll(self):
         """Initialize the DSP phase-locked loop
@@ -307,7 +310,7 @@ class DspAccessor(object):
 
         writeMem(PLL_DIV0, DIV_ENABLE + 0)
         writeMem(PLL_MULT, 9)
-        writeMem(PLL_OSCDIV1,0) # Disable 10MHz CLKOUT3
+        writeMem(PLL_OSCDIV1, 0)  # Disable 10MHz CLKOUT3
 
         # Program in reverse order.
         # DSP requires that pheripheral clocks be less then
@@ -330,8 +333,7 @@ class DspAccessor(object):
             regions = hexFile.process()
         for region in regions:
             # region.data contains the data as a list of bytes.
-            self.hpiWrite(
-                region.address, create_string_buffer("".join(region.data), len(region.data)))
+            self.hpiWrite(region.address, create_string_buffer("".join(region.data), len(region.data)))
 
     def program(self, fileName):
         """Initialize DSP and external memory interface, then send DSP program.

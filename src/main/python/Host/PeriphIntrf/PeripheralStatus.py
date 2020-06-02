@@ -1,6 +1,8 @@
 """
 Copyright 2014 Picarro Inc.
 """
+
+
 class PeripheralStatus(object):
 
     WIND_ANOMALY = 0x0001
@@ -19,4 +21,3 @@ class PeripheralStatus(object):
     GPS_NOT_UPDATING = 0x20000
     GPS_MODERATE_UNCERTAINTY = 0x40000
     GPS_LARGE_UNCERTAINTY = 0x80000
-

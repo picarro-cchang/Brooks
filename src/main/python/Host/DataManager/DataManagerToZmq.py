@@ -15,8 +15,10 @@ class DataManagerRebroadcaster(object):
         self.broadcastSock = self.context.socket(zmq.PUB)
         self.broadcastSock.bind("tcp://0.0.0.0:%d" % BROADCAST_PORT_DATA_MANAGER_ZMQ)
         self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue, SharedTypes.BROADCAST_PORT_DATA_MANAGER,
-                                          StringPickler.ArbitraryObject, retry=True)
+        self.listener = Listener.Listener(self.queue,
+                                          SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                          StringPickler.ArbitraryObject,
+                                          retry=True)
 
     def run(self):
         try:
@@ -31,6 +33,7 @@ class DataManagerRebroadcaster(object):
             self.broadcastSock.close()
             self.context.term()
             self.listener.stop()
+
 
 if __name__ == "__main__":
     dmr = DataManagerRebroadcaster()

@@ -21,69 +21,77 @@ import time
 from numpy import *
 from ctypes import *
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="MakeWlmFile1")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+
 class RDFreqConvProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_FREQ_CONVERTER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_FREQ_CONVERTER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="MakeWlmFile1")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 RDFreqConv = RDFreqConvProxy().rpc
 
+
 class CsvData(object):
     "Class for writing to a comma separated value file"
+
     def __init__(self):
         self.parameters = {}
         self.columnTitles = []
         self.columnUnits = []
 
-    def protectComma(self,s):
+    def protectComma(self, s):
         if s.find(",") < 0: return s
         else: return '"%s"' % s
 
-    def writeOut(self,fp):
+    def writeOut(self, fp):
         keys = self.parameters.keys()
         keys.sort()
         for key in keys:
-            print >> fp, "# %s,%s" % tuple([self.protectComma(s) for s in [key,self.parameters[key]]])
+            print >> fp, "# %s,%s" % tuple([self.protectComma(s) for s in [key, self.parameters[key]]])
         print
-        print >> fp, "# Units,,%s"  % (",".join([self.protectComma(s) for s in self.columnUnits]),)
-        print >> fp, "# Titles,,%s" % (",".join([self.protectComma(s) for s in self.columnTitles]),)
+        print >> fp, "# Units,,%s" % (",".join([self.protectComma(s) for s in self.columnUnits]), )
+        print >> fp, "# Titles,,%s" % (",".join([self.protectComma(s) for s in self.columnTitles]), )
+
 
 class StreamData(object):
     pass
 
+
 class ThresholdStats(object):
-    def __init__(self,instrName,thMin,thMax,thIncr,schemeName):
+    def __init__(self, instrName, thMin, thMax, thIncr, schemeName):
         # Remove the .flag file to indicate routine has not finished yet
-        [basename,ext] = os.path.splitext(sys.argv[0])
+        [basename, ext] = os.path.splitext(sys.argv[0])
         self.flagname = basename + ".flag"
         try:
             os.remove(self.flagname)
         except:
             pass
-        self.startTime = time.strftime("%Y%m%d_%H%M%S",time.localtime())
+        self.startTime = time.strftime("%Y%m%d_%H%M%S", time.localtime())
         self.schemeName = schemeName
         try:
             schemeType = os.path.basename(schemeName).split('.')[0]
@@ -93,7 +101,7 @@ class ThresholdStats(object):
                 self.csvName = "ThresholdStats_%s.csv" % self.startTime
         except:
             self.csvName = "ThresholdStats_%s.csv" % self.startTime
-        self.csvFp = open(self.csvName,"w")
+        self.csvFp = open(self.csvName, "w")
         self.instrName = instrName
         self.thMin = thMin
         self.thMax = thMax
@@ -101,7 +109,7 @@ class ThresholdStats(object):
         # Set up a listener for the streaming data
         self.queue = Queue.Queue(0)
 
-    def collectStats(self,nRingdowns=100,tMax=10):
+    def collectStats(self, nRingdowns=100, tMax=10):
         """ Determine the rate by timing nRingdowns ringdowns or measuring the ringdowns in tMax, whichever
         takes less time """
         MIN_LOSS = 0.1
@@ -113,38 +121,40 @@ class ThresholdStats(object):
         offset = None
         self.nRingdowns = nRingdowns
         while not self.queue.empty():
-            self.queue.get()    # Flush the queue to start
+            self.queue.get()  # Flush the queue to start
         tBegin = time.time()
         try:
             e = self.queue.get(timeout=tMax)
         except Queue.Empty:
             print "No ringdowns - check if scheme is running"
-            return (0,0,0,0)
-        tStart = 0.001*e.timestamp
+            return (0, 0, 0, 0)
+        tStart = 0.001 * e.timestamp
         t = tStart + tMax
         nRd = 0
         while True:
             try:
-                e = self.queue.get(time.time()-tBegin-tMax)
-                t = 0.001*e.timestamp
+                e = self.queue.get(time.time() - tBegin - tMax)
+                t = 0.001 * e.timestamp
                 loss = float(e.uncorrectedAbsorbance)
                 waveNumber = e.waveNumber
-                if offset==None: offset = waveNumber
+                if offset == None: offset = waveNumber
                 fitStatus = e.status
                 if 0 == (fitStatus & RINGDOWN_STATUS_RingdownTimeout):
                     self.sumWavenumber += waveNumber
-                    self.sumSqWavenumber += (waveNumber-offset)**2
+                    self.sumSqWavenumber += (waveNumber - offset)**2
                     self.sumLoss += loss
                     self.sumSquareLoss += loss**2
                     nRd += 1
-                if t >= tStart+tMax or nRd >= self.nRingdowns:
-                    waveNumberMean = self.sumWavenumber/nRd
-                    waveNumberSdev = sqrt((self.sumSqWavenumber/nRd) - (waveNumberMean-offset)**2)
-                    return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,waveNumberMean,waveNumberSdev)
+                if t >= tStart + tMax or nRd >= self.nRingdowns:
+                    waveNumberMean = self.sumWavenumber / nRd
+                    waveNumberSdev = sqrt((self.sumSqWavenumber / nRd) - (waveNumberMean - offset)**2)
+                    return (nRd / (t - tStart), self.sumLoss / nRd, self.sumSquareLoss / nRd - (self.sumLoss / nRd)**2,
+                            waveNumberMean, waveNumberSdev)
             except Queue.Empty:
-                waveNumberMean = self.sumWavenumber/nRd
-                waveNumberSdev = sqrt((self.sumSqWavenumber/nRd) - (waveNumberMean-offset)**2)
-                return (nRd/(t-tStart),self.sumLoss/nRd,self.sumSquareLoss/nRd-(self.sumLoss/nRd)**2,waveNumberMean,waveNumberSdev)
+                waveNumberMean = self.sumWavenumber / nRd
+                waveNumberSdev = sqrt((self.sumSqWavenumber / nRd) - (waveNumberMean - offset)**2)
+                return (nRd / (t - tStart), self.sumLoss / nRd, self.sumSquareLoss / nRd - (self.sumLoss / nRd)**2, waveNumberMean,
+                        waveNumberSdev)
             except ZeroDivisionError as ze:
                 # We are not getting any ringdowns,
                 # Let's break the loop and move onto the next
@@ -155,61 +165,62 @@ class ThresholdStats(object):
     def flushQueue(self):
         # Flush the queue
         try:
-            while True: t,d = self.queue.get(False)
+            while True:
+                t, d = self.queue.get(False)
         except:
             pass
 
-    def setTuner(self,threshold):
-        Driver.wrDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER",threshold)
-        Driver.wrFPGA("FPGA_RDMAN","RDMAN_THRESHOLD",int(threshold))
+    def setTuner(self, threshold):
+        Driver.wrDasReg("SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER", threshold)
+        Driver.wrFPGA("FPGA_RDMAN", "RDMAN_THRESHOLD", int(threshold))
 
     def done(self):
         # Create the .flag file to indicate completion
-        of = file(self.flagname,"w")
-        print >>of, "%s" % " ".join(sys.argv)
-        print >>of, time.strftime("Completed at %H:%M:%S on %Y-%m-%d",time.localtime())
+        of = file(self.flagname, "w")
+        print >> of, "%s" % " ".join(sys.argv)
+        print >> of, time.strftime("Completed at %H:%M:%S on %Y-%m-%d", time.localtime())
         of.close()
 
     def run(self):
         regVault = Driver.saveRegValues(["SPECT_CNTRL_DEFAULT_THRESHOLD_REGISTER"])
-        self.listener = Listener.Listener(self.queue,SharedTypes.BROADCAST_PORT_RD_RECALC,ProcessedRingdownEntryType)
+        self.listener = Listener.Listener(self.queue, SharedTypes.BROADCAST_PORT_RD_RECALC, ProcessedRingdownEntryType)
         # Stop spectrum collection
         if self.schemeName:
-            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_IdleState")
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER", "SPECT_CNTRL_IdleState")
             time.sleep(1)
             scheme = SchemeProcessor.Scheme(self.schemeName)
-            RDFreqConv.wrFreqScheme(1,scheme)
+            RDFreqConv.wrFreqScheme(1, scheme)
             RDFreqConv.convertScheme(1)
             RDFreqConv.uploadSchemeToDAS(1)
             time.sleep(1)
-            Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER",1)
-            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER","SPECT_CNTRL_SchemeMultipleMode")
-            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER","SPECT_CNTRL_StartingState")
-            print>>sys.stderr, "Loaded scheme file: %s" % (self.schemeName,)
-            print "Loaded scheme file: %s" % (self.schemeName,)
-        self.thresh_list = arange(self.thMin,self.thMax+1,self.thIncr)
-        self.rd_rates = zeros(len(self.thresh_list),float_)
-        self.shot_to_shot = zeros(len(self.thresh_list),float_)
-        self.mean_loss = zeros(len(self.thresh_list),float_)
-        self.std_loss = zeros(len(self.thresh_list),float_)
-        self.mean_wavenumber = zeros(len(self.thresh_list),float_)
-        self.std_frequency = zeros(len(self.thresh_list),float_)
-        self.sensitivity = zeros(len(self.thresh_list),float_)
+            Driver.wrDasReg("SPECT_CNTRL_NEXT_SCHEME_REGISTER", 1)
+            Driver.wrDasReg("SPECT_CNTRL_MODE_REGISTER", "SPECT_CNTRL_SchemeMultipleMode")
+            Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER", "SPECT_CNTRL_StartingState")
+            print >> sys.stderr, "Loaded scheme file: %s" % (self.schemeName, )
+            print "Loaded scheme file: %s" % (self.schemeName, )
+        self.thresh_list = arange(self.thMin, self.thMax + 1, self.thIncr)
+        self.rd_rates = zeros(len(self.thresh_list), float_)
+        self.shot_to_shot = zeros(len(self.thresh_list), float_)
+        self.mean_loss = zeros(len(self.thresh_list), float_)
+        self.std_loss = zeros(len(self.thresh_list), float_)
+        self.mean_wavenumber = zeros(len(self.thresh_list), float_)
+        self.std_frequency = zeros(len(self.thresh_list), float_)
+        self.sensitivity = zeros(len(self.thresh_list), float_)
         try:
             for l in range(len(self.thresh_list)):
                 thresh = float(self.thresh_list[l])
                 self.setTuner(thresh)
                 time.sleep(1)
-                if self.collectStats(1000,20) is not None: # We have ringdown data
-                    rate,meanLoss,varLoss,meanWavenumber,sdevWavenumber = self.collectStats(1000,20)
+                if self.collectStats(1000, 20) is not None:  # We have ringdown data
+                    rate, meanLoss, varLoss, meanWavenumber, sdevWavenumber = self.collectStats(1000, 20)
                     shot2shot = 0
-                    stdLoss = 1000.0*sqrt(varLoss)
-                    if meanLoss != 0: shot2shot = 100*stdLoss/(1000.0*meanLoss)
-                    sensitivity = stdLoss/sqrt(rate) if rate != 0 else 0.0
-                    sdevFrequency = 30000.0*sdevWavenumber
+                    stdLoss = 1000.0 * sqrt(varLoss)
+                    if meanLoss != 0: shot2shot = 100 * stdLoss / (1000.0 * meanLoss)
+                    sensitivity = stdLoss / sqrt(rate) if rate != 0 else 0.0
+                    sdevFrequency = 30000.0 * sdevWavenumber
                     msg = "\nThreshold: %6.0f Ringdown rate: %6.2f Shot-to-shot: %6.3f Mean loss: %6.3f Mean wavenumber: %10.4f Sdev freq (MHz): %10.4f StdDev loss: %10.4f Sensitivity: %10.5f" % \
                         (thresh,rate,shot2shot,meanLoss,meanWavenumber,sdevFrequency,stdLoss,sensitivity)
-                    print>>sys.stderr, msg
+                    print >> sys.stderr, msg
                     print msg
                     self.rd_rates[l] = rate
                     self.shot_to_shot[l] = shot2shot
@@ -222,34 +233,32 @@ class ThresholdStats(object):
             self.listener.stop()
             Driver.restoreRegValues(regVault)
 
-        regs = ["TUNER_SWEEP_RAMP_HIGH_REGISTER",
-                "TUNER_SWEEP_RAMP_LOW_REGISTER",
-                "TUNER_WINDOW_RAMP_HIGH_REGISTER",
-                "TUNER_WINDOW_RAMP_LOW_REGISTER",
-                "TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER",
-                "TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",
-                "TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER",
-                "TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",
-                "TUNER_DITHER_MEDIAN_COUNT_REGISTER",
-                ("FPGA_TWGEN","TWGEN_SLOPE_DOWN"),
-                ("FPGA_TWGEN","TWGEN_SLOPE_UP")]
+        regs = [
+            "TUNER_SWEEP_RAMP_HIGH_REGISTER", "TUNER_SWEEP_RAMP_LOW_REGISTER", "TUNER_WINDOW_RAMP_HIGH_REGISTER",
+            "TUNER_WINDOW_RAMP_LOW_REGISTER", "TUNER_SWEEP_DITHER_HIGH_OFFSET_REGISTER", "TUNER_SWEEP_DITHER_LOW_OFFSET_REGISTER",
+            "TUNER_WINDOW_DITHER_HIGH_OFFSET_REGISTER", "TUNER_WINDOW_DITHER_LOW_OFFSET_REGISTER",
+            "TUNER_DITHER_MEDIAN_COUNT_REGISTER", ("FPGA_TWGEN", "TWGEN_SLOPE_DOWN"), ("FPGA_TWGEN", "TWGEN_SLOPE_UP")
+        ]
 
         # Write data out
 
         csvOut = CsvData()
-        csvOut.parameters = {"DateTime":self.startTime,
-                             "Description":"%s" % ("Variation of ringdown statistics with threshold",),
-                             "InstrumentName":self.instrName,
-                             "SchemeFile":"%s" % (self.schemeName,)
-                            }
+        csvOut.parameters = {
+            "DateTime": self.startTime,
+            "Description": "%s" % ("Variation of ringdown statistics with threshold", ),
+            "InstrumentName": self.instrName,
+            "SchemeFile": "%s" % (self.schemeName, )
+        }
         for r in regs:
-            if isinstance(r,str):
+            if isinstance(r, str):
                 csvOut.parameters[r] = "%s" % Driver.rdDasReg(r)
             else:
-                csvOut.parameters[r[1]] = "%s" % Driver.rdFPGA(r[0],r[1])
+                csvOut.parameters[r[1]] = "%s" % Driver.rdFPGA(r[0], r[1])
 
-        csvOut.columnTitles = ["Threshold", "Rate", "Shot-to-shot", "Mean loss", "Mean wavenumber", "StdDev freq", "StdDev loss", "Sensitivity"]
-        csvOut.columnUnits  = ["digU", "rd/s", "%", "ppm/cm", "cm^-1", "MHz", "ppb/cm", "ppb/cm/sqrt(Hz)" ]
+        csvOut.columnTitles = [
+            "Threshold", "Rate", "Shot-to-shot", "Mean loss", "Mean wavenumber", "StdDev freq", "StdDev loss", "Sensitivity"
+        ]
+        csvOut.columnUnits = ["digU", "rd/s", "%", "ppm/cm", "cm^-1", "MHz", "ppb/cm", "ppb/cm/sqrt(Hz)"]
         csvOut.writeOut(self.csvFp)
 
         for l in range(len(self.thresh_list)):
@@ -261,8 +270,10 @@ class ThresholdStats(object):
             stdFrequency = self.std_frequency[l]
             stdLoss = self.std_loss[l]
             sensitivity = self.sensitivity[l]
-            print >> self.csvFp,",,%.0f,%.2f,%.4f,%.4f,%.4f,%.2f,%.4f,%.5f" % (thresh,rate,shot2shot,meanLoss,meanWavenumber,stdFrequency,stdLoss,sensitivity)
+            print >> self.csvFp, ",,%.0f,%.2f,%.4f,%.4f,%.4f,%.2f,%.4f,%.5f" % (thresh, rate, shot2shot, meanLoss, meanWavenumber,
+                                                                                stdFrequency, stdLoss, sensitivity)
         self.csvFp.close()
+
 
 if __name__ == "__main__":
     pname = sys.argv[0]
@@ -271,14 +282,14 @@ if __name__ == "__main__":
     thMin = 2000
     thMax = 16380
     thIncr = 500
-    if len(sys.argv)>1: instrName = sys.argv[1]
-    if len(sys.argv)>2: thMin = int(sys.argv[2])
-    if len(sys.argv)>3: thMax = int(sys.argv[3])
-    if len(sys.argv)>4: thIncr = int(sys.argv[4])
+    if len(sys.argv) > 1: instrName = sys.argv[1]
+    if len(sys.argv) > 2: thMin = int(sys.argv[2])
+    if len(sys.argv) > 3: thMax = int(sys.argv[3])
+    if len(sys.argv) > 4: thIncr = int(sys.argv[4])
     schemeName = None
-    if len(sys.argv)>5: schemeName= sys.argv[5].strip()
+    if len(sys.argv) > 5: schemeName = sys.argv[5].strip()
     if instrName == None:
         instrName = raw_input("Name of instrument? ")
-    tst = ThresholdStats(instrName,thMin,thMax,thIncr,schemeName)
+    tst = ThresholdStats(instrName, thMin, thMax, thIncr, schemeName)
     tst.run()
     tst.done()

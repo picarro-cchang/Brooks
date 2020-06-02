@@ -29,13 +29,14 @@ from Host.Common import CmdFIFO, SharedTypes, StringPickler, timestamp
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.SchemeProcessor import Scheme
 
+
 class DummyDriver(object):
     """Simulates Driver RPC handler"""
     def __init__(self):
         self.server = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_DRIVER),
-                                            ServerName = "DummyDriver",
-                                            ServerDescription = "Dummy Driver (testReplayRdf)",
-                                            threaded = True)
+                                            ServerName="DummyDriver",
+                                            ServerDescription="Dummy Driver (testReplayRdf)",
+                                            threaded=True)
         self._register_rpc_functions()
         self.rpcThread = None
 
@@ -58,7 +59,7 @@ class DummyDriver(object):
     def _register_rpc_functions(self):
         """Registers the functions accessible by XML-RPC
         """
-        self._register_rpc_functions_for_object( self )
+        self._register_rpc_functions_for_object(self)
 
     def _startServer(self):
         """Start RPC server in a separate thread of execution"""
@@ -99,6 +100,7 @@ class DummyDriver(object):
         argList.extend([("%s=%r" % (key, kwargs[key])) for key in kwargs])
         # print "Driver.wrFpga(%s) called" % ",".join(argList)
 
+
 class RdfReplay(object):
     """Object to allow user to broadcast contents of a collection of ringdown files.
 
@@ -121,12 +123,13 @@ class RdfReplay(object):
         self.schemeIndex = 0
 
     def startRdFreqConv(self):
-        self.rdFreqConv = subprocess.Popen(["python.exe", self.rdFreqConvSrc, "-c",
-                                            self.rdFreqConvIni], stderr=file("NUL", "w"))
+        self.rdFreqConv = subprocess.Popen(["python.exe", self.rdFreqConvSrc, "-c", self.rdFreqConvIni], stderr=file("NUL", "w"))
         self.rdFreqConvRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_FREQ_CONVERTER,
-                                    "testReplayRdf", IsDontCareConnection = False)
+                                                        "testReplayRdf",
+                                                        IsDontCareConnection=False)
         self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-                                    "testReplayRdf", IsDontCareConnection = False)
+                                                    "testReplayRdf",
+                                                    IsDontCareConnection=False)
         self.rdFreqConvRpc.loadWarmBoxCal()
         self.rdFreqConvRpc.loadHotBoxCal()
 
@@ -203,7 +206,7 @@ class RdfReplay(object):
         try:
             while True:
                 response = raw_input("%d files left to send. <Enter> to send one file or specify number to send: " %
-                                     (totFiles - startPos,))
+                                     (totFiles - startPos, ))
                 try:
                     nFiles = int(response)
                 except ValueError:
@@ -227,6 +230,7 @@ class RdfReplay(object):
         finally:
             self.stopRdFreqConv()
 
+
 if __name__ == "__main__":
     dirName = r"C:\temp\WBCAL\CFKADS2130\RDF"
     fileNames = []
@@ -237,10 +241,9 @@ if __name__ == "__main__":
             if line.startswith("#"):
                 continue
             fileNames.append(os.path.join(dirName, line))
-    rdFreqConv = dict(source = r"c:\Users\stan\Dropbox\GitHub\host\Host\RDFrequencyConverter\RDFrequencyConverter.py",
-                      config = r"c:\temp\WBCAL\CFKADS2130\RDFrequencyConverter.ini")
-    schemeFiles = [r"c:\temp\WBCAL\CFKADS2130\_Beta_CFKADS_nocal_v2.sch",
-                   r"c:\temp\WBCAL\CFKADS2130\_Beta_CFKADS_cal_v2.sch"]
+    rdFreqConv = dict(source=r"c:\Users\stan\Dropbox\GitHub\host\Host\RDFrequencyConverter\RDFrequencyConverter.py",
+                      config=r"c:\temp\WBCAL\CFKADS2130\RDFrequencyConverter.ini")
+    schemeFiles = [r"c:\temp\WBCAL\CFKADS2130\_Beta_CFKADS_nocal_v2.sch", r"c:\temp\WBCAL\CFKADS2130\_Beta_CFKADS_cal_v2.sch"]
     #schemeFiles = [r"c:\temp\CorruptingRDFS\_Beta_CFKADS_cal_v2.sch"]
 
     dd = DummyDriver()
@@ -248,7 +251,6 @@ if __name__ == "__main__":
     rr = RdfReplay(fileNames, rdFreqConv)
     rr.setSchemeFiles(schemeFiles)
     rr.run()
-
 """
 Notes:
 We need to broadcast interface.RingdownEntryType objects to the BROADCAST_PORT_RD_RESULTS

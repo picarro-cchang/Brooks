@@ -1,6 +1,7 @@
 from struct import pack, unpack
 from enum import Enum
 
+
 class Errors(Enum):
     NO_ERROR = 0
     ERROR_HANDLER_ERROR = 1
@@ -17,13 +18,11 @@ class Errors(Enum):
 
 
 class ErrorHandler(object):
-
     def __init__(self, server, errorkey):
         self.server = server
-        self.errorkey=errorkey
+        self.errorkey = errorkey
         self.variableParam = server.variable_params[errorkey]
         self.MAX_ERROR_VALUE = 2**self.variableParam['bit'] - 1
-
 
     def set_error(self, error):
         try:
@@ -43,5 +42,5 @@ class ErrorHandler(object):
     def __Pack_Write_Error(self, value):
         str = pack(self.variableParam['format'], value)
         value_to_write = list(unpack('%s%dH' % (self.server.endian, self.variableParam['size']), str))
-        self.server.context[self.server.slaveid].setValues(self.variableParam['register'],
-                                                           self.variableParam['address'], value_to_write)
+        self.server.context[self.server.slaveid].setValues(self.variableParam['register'], self.variableParam['address'],
+                                                           value_to_write)

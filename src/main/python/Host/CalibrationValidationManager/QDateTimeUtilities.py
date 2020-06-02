@@ -2,9 +2,8 @@
 #
 from PyQt4 import QtCore
 
-def get_nseconds_of_latest_data(timestamps = [],
-                                data = [],
-                                nseconds = 1):
+
+def get_nseconds_of_latest_data(timestamps=[], data=[], nseconds=1):
     """
     Given a list of unix timestamps, and an associated list of data,
     return the most recent times and data spanning at least n seconds.
@@ -21,7 +20,7 @@ def get_nseconds_of_latest_data(timestamps = [],
 
     i = 0
     newest_timestamp = QtCore.QDateTime.fromTime_t(int(timestamps[-1]))
-    for i in xrange(1, len(timestamps)-1):
+    for i in xrange(1, len(timestamps) - 1):
         past = QtCore.QDateTime.fromTime_t(int(timestamps[-i]))
         if past.secsTo(newest_timestamp) >= nseconds:
             time_span_in_data = True

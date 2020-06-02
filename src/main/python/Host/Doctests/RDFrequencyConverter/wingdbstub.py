@@ -46,7 +46,6 @@ import sys
 import os
 import imp
 
-
 #------------------------------------------------------------------------
 # Default configuration values:  Note that the named environment
 # variables, if set, will override these settings.
@@ -116,133 +115,141 @@ kExitOnFailure = 0
 WINGHOME = r"C:\Program Files (x86)\Wing IDE 3.2"
 
 if sys.hexversion >= 0x03000000:
-  def has_key(o, key):
-    return key in o
+
+    def has_key(o, key):
+        return key in o
 else:
-  def has_key(o, key):
-    return o.has_key(key)
+
+    def has_key(o, key):
+        return o.has_key(key)
+
 
 # Check environment:  Must have WINGHOME defined if still == None
 if WINGHOME == None:
-  if has_key(os.environ, 'WINGHOME'):
-    WINGHOME=os.environ['WINGHOME']
-  else:
-    sys.stdout.write("*******************************************************************\n")
-    sys.stdout.write("Error: Could not find Wing installation!  You must set WINGHOME or edit\n")
-    sys.stdout.write("wingdbstub.py where indicated to point it to the location where\n")
-    sys.stdout.write("Wing IDE is installed.\n")
-    sys.exit(1)
+    if has_key(os.environ, 'WINGHOME'):
+        WINGHOME = os.environ['WINGHOME']
+    else:
+        sys.stdout.write("*******************************************************************\n")
+        sys.stdout.write("Error: Could not find Wing installation!  You must set WINGHOME or edit\n")
+        sys.stdout.write("wingdbstub.py where indicated to point it to the location where\n")
+        sys.stdout.write("Wing IDE is installed.\n")
+        sys.exit(1)
 
 # The user settings dir where per-user settings & patches are located.  Will be
 # set from environment if left as None
 kUserSettingsDir = None
 if kUserSettingsDir is None:
-  kUserSettingsDir = os.environ.get('WINGDB_USERSETTINGS')
+    kUserSettingsDir = os.environ.get('WINGDB_USERSETTINGS')
 
 #------------------------------------------------------------------------
 # Sanity check:  Debugging in optimized mode makes no sense
 if __debug__ == 0:
-  sys.stdout.write("*******************************************************************\n")
-  sys.stdout.write("Error: Cannot run a debug process with optimized python because\n")
-  sys.stdout.write("Error: this omits necessary debug information from byte code.\n")
-  sys.stdout.write("Error: You must omit the -O or -OO command line option, or undefine\n")
-  sys.stdout.write("Error: environment variable PYTHONOPTIMIZE before launching python.\n")
-  sys.exit(2)
+    sys.stdout.write("*******************************************************************\n")
+    sys.stdout.write("Error: Cannot run a debug process with optimized python because\n")
+    sys.stdout.write("Error: this omits necessary debug information from byte code.\n")
+    sys.stdout.write("Error: You must omit the -O or -OO command line option, or undefine\n")
+    sys.stdout.write("Error: environment variable PYTHONOPTIMIZE before launching python.\n")
+    sys.exit(2)
+
 
 def _ImportWingdb(winghome, user_settings=None):
-  """ Find & import wingdb module. """
+    """ Find & import wingdb module. """
 
-  try:
-    exec_dict = {}
-    execfile(os.path.join(winghome, 'bin', '_patchsupport.py'), exec_dict)
-    find_matching = exec_dict['FindMatching']
-    dir_list = find_matching('bin', winghome, user_settings)
-  except Exception:
-    dir_list = []
-  dir_list.extend([os.path.join(WINGHOME, 'bin'), os.path.join(WINGHOME, 'src')])
-  for path in dir_list:
     try:
-      f, p, d = imp.find_module('wingdb', [path])
-      try:
-        return imp.load_module('wingdb', f, p, d)
-      finally:
-        if f is not None:
-          f.close()
-      break
-    except ImportError:
-      pass
+        exec_dict = {}
+        execfile(os.path.join(winghome, 'bin', '_patchsupport.py'), exec_dict)
+        find_matching = exec_dict['FindMatching']
+        dir_list = find_matching('bin', winghome, user_settings)
+    except Exception:
+        dir_list = []
+    dir_list.extend([os.path.join(WINGHOME, 'bin'), os.path.join(WINGHOME, 'src')])
+    for path in dir_list:
+        try:
+            f, p, d = imp.find_module('wingdb', [path])
+            try:
+                return imp.load_module('wingdb', f, p, d)
+            finally:
+                if f is not None:
+                    f.close()
+            break
+        except ImportError:
+            pass
+
 
 #------------------------------------------------------------------------
 # Start debugging if not disabled and this module has never been imported
 # before
 if not has_key(os.environ, 'WINGDB_ACTIVE'):
-  debugger = None
+    debugger = None
 if not kWingDebugDisabled and not has_key(os.environ, 'WINGDB_DISABLED') and \
    not has_key(os.environ, 'WINGDB_ACTIVE'):
 
-  exit_on_fail = 0
+    exit_on_fail = 0
 
-  try:
-    # Obtain exit if fails value
-    exit_on_fail = os.environ.get('WINGDB_EXITONFAILURE', kExitOnFailure)
+    try:
+        # Obtain exit if fails value
+        exit_on_fail = os.environ.get('WINGDB_EXITONFAILURE', kExitOnFailure)
 
-    # Obtain configuration for log file to use, if any
-    logfile = os.environ.get('WINGDB_LOGFILE', kLogFile)
-    if logfile == '-' or logfile == None or len(logfile.strip()) == 0:
-      logfile = None
+        # Obtain configuration for log file to use, if any
+        logfile = os.environ.get('WINGDB_LOGFILE', kLogFile)
+        if logfile == '-' or logfile == None or len(logfile.strip()) == 0:
+            logfile = None
 
-    very_verbose_log = os.environ.get('WINGDB_LOGVERYVERBOSE', kLogVeryVerbose)
-    if type(very_verbose_log) == type('') and very_verbose_log.strip() == '':
-      very_verbose_log = 0
+        very_verbose_log = os.environ.get('WINGDB_LOGVERYVERBOSE', kLogVeryVerbose)
+        if type(very_verbose_log) == type('') and very_verbose_log.strip() == '':
+            very_verbose_log = 0
 
-    # Determine remote host/port where the IDE is running
-    hostport = os.environ.get('WINGDB_HOSTPORT', kWingHostPort)
-    colonpos = hostport.find(':')
-    host = hostport[:colonpos]
-    port = int(hostport[colonpos+1:])
+        # Determine remote host/port where the IDE is running
+        hostport = os.environ.get('WINGDB_HOSTPORT', kWingHostPort)
+        colonpos = hostport.find(':')
+        host = hostport[:colonpos]
+        port = int(hostport[colonpos + 1:])
 
-    # Determine port to listen on locally for attach requests
-    attachport = int(os.environ.get('WINGDB_ATTACHPORT', kAttachPort))
+        # Determine port to listen on locally for attach requests
+        attachport = int(os.environ.get('WINGDB_ATTACHPORT', kAttachPort))
 
-    # Check if running embedded script
-    embedded = int(os.environ.get('WINGDB_EMBEDDED', kEmbedded))
+        # Check if running embedded script
+        embedded = int(os.environ.get('WINGDB_EMBEDDED', kEmbedded))
 
-    # Obtain debug password file search path
-    if has_key(os.environ, 'WINGDB_PWFILEPATH'):
-      pwfile_path = os.environ['WINGDB_PWFILEPATH'].split(os.pathsep)
-    else:
-      pwfile_path = kPWFilePath
+        # Obtain debug password file search path
+        if has_key(os.environ, 'WINGDB_PWFILEPATH'):
+            pwfile_path = os.environ['WINGDB_PWFILEPATH'].split(os.pathsep)
+        else:
+            pwfile_path = kPWFilePath
 
-    # Obtain debug password file name
-    if has_key(os.environ, 'WINGDB_PWFILENAME'):
-      pwfile_name = os.environ['WINGDB_PWFILENAME']
-    else:
-      pwfile_name = kPWFileName
+        # Obtain debug password file name
+        if has_key(os.environ, 'WINGDB_PWFILENAME'):
+            pwfile_name = os.environ['WINGDB_PWFILENAME']
+        else:
+            pwfile_name = kPWFileName
 
-    # Load wingdb.py
-    wingdb = _ImportWingdb(WINGHOME, kUserSettingsDir)
-    if wingdb == None:
-      sys.stdout.write("*******************************************************************\n")
-      sys.stdout.write("Error: Cannot find wingdb.py in $(WINGHOME)/bin or $(WINGHOME)/src\n")
-      sys.stdout.write("Error: Please check the WINGHOME definition in wingdbstub.py\n")
-      sys.exit(2)
+        # Load wingdb.py
+        wingdb = _ImportWingdb(WINGHOME, kUserSettingsDir)
+        if wingdb == None:
+            sys.stdout.write("*******************************************************************\n")
+            sys.stdout.write("Error: Cannot find wingdb.py in $(WINGHOME)/bin or $(WINGHOME)/src\n")
+            sys.stdout.write("Error: Please check the WINGHOME definition in wingdbstub.py\n")
+            sys.exit(2)
 
-    # Find the netserver module and create an error stream
-    netserver = wingdb.FindNetServerModule(WINGHOME, kUserSettingsDir)
-    err = wingdb.CreateErrStream(netserver, logfile, very_verbose_log)
+        # Find the netserver module and create an error stream
+        netserver = wingdb.FindNetServerModule(WINGHOME, kUserSettingsDir)
+        err = wingdb.CreateErrStream(netserver, logfile, very_verbose_log)
 
-    # Start debugging
-    debugger = netserver.CNetworkServer(host, port, attachport, err,
-                                        pwfile_path=pwfile_path,
-                                        pwfile_name=pwfile_name,
-                                        autoquit=not embedded)
-    debugger.StartDebug(stophere=0)
-    os.environ['WINGDB_ACTIVE'] = "1"
-    if debugger.ChannelClosed():
-      raise ValueError('Not connected')
+        # Start debugging
+        debugger = netserver.CNetworkServer(host,
+                                            port,
+                                            attachport,
+                                            err,
+                                            pwfile_path=pwfile_path,
+                                            pwfile_name=pwfile_name,
+                                            autoquit=not embedded)
+        debugger.StartDebug(stophere=0)
+        os.environ['WINGDB_ACTIVE'] = "1"
+        if debugger.ChannelClosed():
+            raise ValueError('Not connected')
 
-  except:
-    if exit_on_fail:
-      raise
-    else:
-      pass
+    except:
+        if exit_on_fail:
+            raise
+        else:
+            pass

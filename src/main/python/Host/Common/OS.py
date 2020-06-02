@@ -1,5 +1,4 @@
 # Copyright 2012 Picarro Inc.
-
 """
 Enhanced version of routines found in standard os module.
 """

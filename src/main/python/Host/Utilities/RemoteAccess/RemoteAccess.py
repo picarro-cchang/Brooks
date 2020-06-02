@@ -41,21 +41,24 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                             APP_NAME,
-                                             IsDontCareConnection = False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
-def getRequiredOption(configParser,section,option):
+
+def getRequiredOption(configParser, section, option):
     """Get a key from a configParser object, complaining if it does not exist"""
     try:
-        return configParser.get(section,option)
+        return configParser.get(section, option)
     except KeyError:
-        logging.error("No option %s in %s section." % (option,section,))
+        logging.error("No option %s in %s section." % (
+            option,
+            section,
+        ))
         sys.exit()
 
-__all__=('sntp_time',)
-_TIME1970 = 2208988800L      # Thanks to F.Lundh
-_data = '\x1b' + 47*'\0'
+
+__all__ = ('sntp_time', )
+_TIME1970 = 2208988800L  # Thanks to F.Lundh
+_data = '\x1b' + 47 * '\0'
 
 #typedef struct _SYSTEMTIME {  // st
 #    WORD wYear;
@@ -77,61 +80,76 @@ _data = '\x1b' + 47*'\0'
 from ctypes import windll, Structure, c_ushort, byref, c_ulong, c_long
 kernel32_GetSystemTime = windll.kernel32.GetSystemTime
 kernel32_SetSystemTime = windll.kernel32.SetSystemTime
-kernel32_SystemTimeToFileTime=windll.kernel32.SystemTimeToFileTime
-kernel32_FileTimeToSystemTime=windll.kernel32.FileTimeToSystemTime
-class SYSTEMTIME(Structure):
-    _fields_ =  (
-                ('wYear', c_ushort),
-                ('wMonth', c_ushort),
-                ('wDayOfWeek', c_ushort),
-                ('wDay', c_ushort),
-                ('wHour', c_ushort),
+kernel32_SystemTimeToFileTime = windll.kernel32.SystemTimeToFileTime
+kernel32_FileTimeToSystemTime = windll.kernel32.FileTimeToSystemTime
 
-                ('wMinute', c_ushort),
-                ('wSecond', c_ushort),
-                ('wMilliseconds', c_ushort),
-                )
+
+class SYSTEMTIME(Structure):
+    _fields_ = (
+        ('wYear', c_ushort),
+        ('wMonth', c_ushort),
+        ('wDayOfWeek', c_ushort),
+        ('wDay', c_ushort),
+        ('wHour', c_ushort),
+        ('wMinute', c_ushort),
+        ('wSecond', c_ushort),
+        ('wMilliseconds', c_ushort),
+    )
+
     def __str__(self):
-        return '%4d%02d%02d%02d%02d%02d.%03d' % (self.wYear,self.wMonth,self.wDay,self.wHour,self.wMinute,self.wSecond,self.wMilliseconds)
+        return '%4d%02d%02d%02d%02d%02d.%03d' % (self.wYear, self.wMonth, self.wDay, self.wHour, self.wMinute, self.wSecond,
+                                                 self.wMilliseconds)
+
+
 class LONG_INTEGER(Structure):
-    _fields_ =  (
-            ('low', c_ulong),
-            ('high', c_long),
-            )
+    _fields_ = (
+        ('low', c_ulong),
+        ('high', c_long),
+    )
+
 
 def GetSystemTime():
-    st = SYSTEMTIME(0,0,0,0,0,0,0,0)
+    st = SYSTEMTIME(0, 0, 0, 0, 0, 0, 0, 0)
     kernel32_GetSystemTime(byref(st))
     return st
+
 
 def SetSystemTime(st):
     return kernel32_SetSystemTime(byref(st))
 
+
 def GetSystemFileTime():
-    ft = LONG_INTEGER(0,0)
+    ft = LONG_INTEGER(0, 0)
     st = GetSystemTime()
-    if kernel32_SystemTimeToFileTime(byref(st),byref(ft)):
-        return (long(ft.high)<<32)|ft.low
+    if kernel32_SystemTimeToFileTime(byref(st), byref(ft)):
+        return (long(ft.high) << 32) | ft.low
     return None
 
+
 def SetSystemFileTime(ft):
-    st = SYSTEMTIME(0,0,0,0,0,0,0,0)
-    ft = LONG_INTEGER(ft&0xFFFFFFFFL,ft>>32)
-    r = kernel32_FileTimeToSystemTime(byref(ft),byref(st))
+    st = SYSTEMTIME(0, 0, 0, 0, 0, 0, 0, 0)
+    ft = LONG_INTEGER(ft & 0xFFFFFFFFL, ft >> 32)
+    r = kernel32_FileTimeToSystemTime(byref(ft), byref(st))
     if r: SetSystemTime(st)
     return r
 
+
 def _L2U32(L):
-    return unpack('=l',pack('=L',L))[0]
+    return unpack('=l', pack('=L', L))[0]
+
 
 _UTIME1970 = _L2U32(_TIME1970)
+
+
 def _time2ntp(t):
     s = int(t)
-    return pack('!II',s+_UTIME1970,_L2U32((t-s)*0x100000000L))
+    return pack('!II', s + _UTIME1970, _L2U32((t - s) * 0x100000000L))
+
 
 def _ntp2time(arg):
     s, f = arg
-    return s-_TIME1970+float((f>>4)&0xfffffff)/0x10000000
+    return s - _TIME1970 + float((f >> 4) & 0xfffffff) / 0x10000000
+
 
 def sntp_time(server):
     try:
@@ -141,7 +159,7 @@ def sntp_time(server):
         #receive timestamp   8:10
         #transmit timestamp 10:12
         t1 = time()
-        s.sendto(_data, (server,123))
+        s.sendto(_data, (server, 123))
         data, address = s.recvfrom(1024)
         data = unpack('!12I', data)
         t4 = time()
@@ -151,7 +169,8 @@ def sntp_time(server):
         offset = ((t2 - t1) + (t3 - t4)) / 2.
         return address[0], delay, offset
     except:
-        return 3*(None,)
+        return 3 * (None, )
+
 
 class RemoteAccess(object):
     def __init__(self, configFile):
@@ -160,18 +179,18 @@ class RemoteAccess(object):
         try:
             self.config = CustomConfigObj(self.configFilename)
         except IOError:
-            logging.error("Cannot open initialization file %s." % (self.configFilename,))
+            logging.error("Cannot open initialization file %s." % (self.configFilename, ))
             sys.exit()
         self.basePath = os.path.split(configFile)[0]
         self.useDialUp = self.config.has_section('DIALUP')
         self.sendEmail = self.config.has_section('EMAIL')
         self.syncClock = self.config.has_section('NTP')
-        logFilepath = getRequiredOption(self.config,'LOGGING','Logfile')
+        logFilepath = getRequiredOption(self.config, 'LOGGING', 'Logfile')
         logDir = os.path.dirname(logFilepath)
         if not os.path.isdir(logDir):
             os.mkdir(logDir)
-        handler = logging.handlers.RotatingFileHandler(logFilepath,maxBytes=65536,backupCount=10)
-        handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s',datefmt='%Y%m%d %H:%M:%S'))
+        handler = logging.handlers.RotatingFileHandler(logFilepath, maxBytes=65536, backupCount=10)
+        handler.setFormatter(logging.Formatter(fmt='%(asctime)s %(message)s', datefmt='%Y%m%d %H:%M:%S'))
         logging.getLogger('').addHandler(handler)
 
         # Plug analyzer name in "from address" and "subject" of emails
@@ -200,23 +219,23 @@ class RemoteAccess(object):
     def dialConnection(self):
         if not self.useDialUp: return
         cmd = ["rasdial"]
-        cmd.append('"' + getRequiredOption(self.config,'DIALUP','ConnectionName') + '"')
-        cmd.append(getRequiredOption(self.config,'DIALUP','UserName'))
-        cmd.append(getRequiredOption(self.config,'DIALUP','PassWord'))
-        cmd.append("/phone:" + getRequiredOption(self.config,'DIALUP','Number'))
+        cmd.append('"' + getRequiredOption(self.config, 'DIALUP', 'ConnectionName') + '"')
+        cmd.append(getRequiredOption(self.config, 'DIALUP', 'UserName'))
+        cmd.append(getRequiredOption(self.config, 'DIALUP', 'PassWord'))
+        cmd.append("/phone:" + getRequiredOption(self.config, 'DIALUP', 'Number'))
         errorNumber = os.system(" ".join(cmd))
         if errorNumber != 0:
-            logging.error("Unable to establish dial-up connection, error number %d" % (errorNumber,))
+            logging.error("Unable to establish dial-up connection, error number %d" % (errorNumber, ))
         else:
             logging.info("Established dial-up connection")
 
     def closeConnection(self):
         if not self.useDialUp: return
         cmd = ["rasdial"]
-        cmd.append('"' + getRequiredOption(self.config,'DIALUP','ConnectionName') + '" /d')
+        cmd.append('"' + getRequiredOption(self.config, 'DIALUP', 'ConnectionName') + '" /d')
         errorNumber = os.system(" ".join(cmd))
         if errorNumber != 0:
-            logging.error("Unable to close dial-up connection, error number %d" % (errorNumber,))
+            logging.error("Unable to close dial-up connection, error number %d" % (errorNumber, ))
         else:
             logging.info("Dial-up connection closed")
 
@@ -229,9 +248,9 @@ class RemoteAccess(object):
             if option[:6].upper() == "SERVER":
                 try:
                     index = int(option[6:])
-                    servers.append(self.config.get('NTP',option))
+                    servers.append(self.config.get('NTP', option))
                 except ValueError:
-                    logging.warning("Unrecognized option %s ignored" % (option,))
+                    logging.warning("Unrecognized option %s ignored" % (option, ))
         t0 = time()
         mu = 0
         ss = 0
@@ -244,25 +263,25 @@ class RemoteAccess(object):
                 data.append((server, address, delay, offset))
         # Find statistics of offsets
         for (server, address, delay, offset) in data:
-            logging.info('%s: delay=%.3f offset=%.3f' % (server,delay,offset))
+            logging.info('%s: delay=%.3f offset=%.3f' % (server, delay, offset))
             mu += offset
-            ss += offset*offset
+            ss += offset * offset
         if n:
-            mu = mu/n
-            ss = (ss/n - mu*mu)**0.5
+            mu = mu / n
+            ss = (ss / n - mu * mu)**0.5
             # Find median
             med = sorted([offset for (server, address, delay, offset) in data])
             if n & 1:
-                med = med[(n-1)//2]
+                med = med[(n - 1) // 2]
             else:
-                med = 0.5*(med[n//2-1] + med[n//2])
-            logging.info("Median clock offset = %.3f s (Mean = %.3f s, Sdev = %.3f s)" % (med,mu,ss))
+                med = 0.5 * (med[n // 2 - 1] + med[n // 2])
+            logging.info("Median clock offset = %.3f s (Mean = %.3f s, Sdev = %.3f s)" % (med, mu, ss))
             try:
-                updateClock = self.config.getboolean('NTP','UpdateClock')
+                updateClock = self.config.getboolean('NTP', 'UpdateClock')
             except:
                 updateClock = True
             if updateClock:
-                r = SetSystemFileTime(GetSystemFileTime()+long(med*10000000L))   #100 nanosecond units (since 16010101)
+                r = SetSystemFileTime(GetSystemFileTime() + long(med * 10000000L))  #100 nanosecond units (since 16010101)
                 logging.info("Clock adjustment %s" % (r and 'carried out' or 'failed'))
             else:
                 logging.info("Clock adjustment has been disabled in INI file")
@@ -271,16 +290,16 @@ class RemoteAccess(object):
 
     def sendMail(self):
         if not self.sendEmail: return
-        smtpHostname = getRequiredOption(self.config,'EMAIL','Server')
+        smtpHostname = getRequiredOption(self.config, 'EMAIL', 'Server')
         toAddrList = []
         for option in self.config.list_options('EMAIL'):
             if option[:2].upper() == "TO":
                 try:
                     index = int(option[2:])
-                    toAddrList.append(self.config.get('EMAIL',option))
+                    toAddrList.append(self.config.get('EMAIL', option))
                 except ValueError:
-                    logging.warning("Unrecognized option %s ignored" % (option,))
-        dir = os.path.join(self.basePath, getRequiredOption(self.config,'EMAIL','Directory'))
+                    logging.warning("Unrecognized option %s ignored" % (option, ))
+        dir = os.path.join(self.basePath, getRequiredOption(self.config, 'EMAIL', 'Directory'))
 
         fnameList = []
         for filename in os.listdir(dir):
@@ -297,22 +316,25 @@ class RemoteAccess(object):
             if self.subject != "":
                 subject = self.subject + " No files to send"
             else:
-                subject = "No files in directory %s" % (os.path.abspath(dir),)
-            logging.info("E-mailing with no files in directory %s" % (os.path.abspath(dir),))
-            self.sendMessage(smtpHostname,toAddrList,subject)
+                subject = "No files in directory %s" % (os.path.abspath(dir), )
+            logging.info("E-mailing with no files in directory %s" % (os.path.abspath(dir), ))
+            self.sendMessage(smtpHostname, toAddrList, subject)
         else:
             for i in range(len(fnameList)):
                 filename = fnameList[i]
                 path = os.path.join(dir, filename)
                 # Send a separate e-mail message for each file in the directory
                 if self.subject != "":
-                    subject = self.subject + " (File %d of %d)" % (i+1,len(fnameList),)
+                    subject = self.subject + " (File %d of %d)" % (
+                        i + 1,
+                        len(fnameList),
+                    )
                 else:
-                    subject = "File %s in directory %s (File %d of %d)" % (filename,os.path.abspath(dir),i+1,len(fnameList))
-                logging.info("E-mailing file %s in directory %s" % (filename,os.path.abspath(dir)))
-                self.sendMessage(smtpHostname,toAddrList,subject,path)
+                    subject = "File %s in directory %s (File %d of %d)" % (filename, os.path.abspath(dir), i + 1, len(fnameList))
+                logging.info("E-mailing file %s in directory %s" % (filename, os.path.abspath(dir)))
+                self.sendMessage(smtpHostname, toAddrList, subject, path)
 
-    def sendMessage(self,smtpHostname,toAddrList,subject,path=None):
+    def sendMessage(self, smtpHostname, toAddrList, subject, path=None):
         # Create the enclosing (outer) message
         outer = MIMEMultipart()
         outer['Subject'] = subject
@@ -322,7 +344,7 @@ class RemoteAccess(object):
         # To guarantee the message ends with a newline
         outer.epilogue = ''
         if path is not None:
-            dir,filename = os.path.split(path)
+            dir, filename = os.path.split(path)
             # Guess the content type based on the file's extension.  Encoding
             # will be ignored, although we should check for simple things like
             # gzip'd or compressed files.
@@ -352,14 +374,14 @@ class RemoteAccess(object):
                 fp.close()
                 # Encode the payload using Base64
                 Encoders.encode_base64(msg)
-            logging.info("Attaching file: %s" % (filename,))
+            logging.info("Attaching file: %s" % (filename, ))
             # Set the filename parameter
             msg.add_header('Content-Disposition', 'attachment', filename=filename)
             outer.attach(msg)
         try:
             self.mailServer = smtplib.SMTP(smtpHostname)
             try:
-                useSSL = self.config.getboolean('EMAIL','UseSSL')
+                useSSL = self.config.getboolean('EMAIL', 'UseSSL')
             except:
                 useSSL = False
             if useSSL:
@@ -368,12 +390,13 @@ class RemoteAccess(object):
                 self.mailServer.ehlo()
             # self.mailServer.set_debuglevel(True)
             try:
-                authenticationNeeded = self.config.getboolean('EMAIL','UseAuthentication')
+                authenticationNeeded = self.config.getboolean('EMAIL', 'UseAuthentication')
             except:
                 authenticationNeeded = False
             if authenticationNeeded:
-                self.mailServer.login(getRequiredOption(self.config,'EMAIL','UserName'),getRequiredOption(self.config,'EMAIL','PassWord'))
-            failedReceipients = self.mailServer.sendmail(self.fromAddr,toAddrList,outer.as_string())
+                self.mailServer.login(getRequiredOption(self.config, 'EMAIL', 'UserName'),
+                                      getRequiredOption(self.config, 'EMAIL', 'PassWord'))
+            failedReceipients = self.mailServer.sendmail(self.fromAddr, toAddrList, outer.as_string())
             self.mailServer.quit()
             successList = toAddrList[:]
             failedList = []
@@ -382,15 +405,16 @@ class RemoteAccess(object):
                 successList.remove(key)
             logging.info("Sent e-mail to: %s" % ", ".join(successList))
             for key in sorted(failedList):
-                logging.info("Error sending to %s: %s" % (key,failedReceipients[key]))
+                logging.info("Error sending to %s: %s" % (key, failedReceipients[key]))
             if path is not None:
                 # Delete the files which have been e-mailed
                 try:
                     os.remove(path)
                 except:
-                    logging.info("Could not delete file %s" % (path,))
+                    logging.info("Could not delete file %s" % (path, ))
         except smtplib.SMTPException, msg:
-            logging.error("Error while sending e-mail: %s" % (msg,))
+            logging.error("Error while sending e-mail: %s" % (msg, ))
+
 
 if __name__ == "__main__":
     usage = "Usage: RemoteAccess.py <.ini file>"

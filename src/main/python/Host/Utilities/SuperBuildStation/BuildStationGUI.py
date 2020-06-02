@@ -20,7 +20,6 @@ from Host.Utilities.SuperBuildStation.ModeViewer import ModePanel
 # end wxGlade
 
 
-
 class BuildStationGUI(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: BuildStationGUI.__init__
@@ -31,9 +30,9 @@ class BuildStationGUI(wx.Frame):
         self.label_serial_number = wx.StaticText(self.panel_control, -1, "Serial number")
         self.text_ctrl_serial_number = wx.TextCtrl(self.panel_control, -1, "123456", style=wx.TE_PROCESS_ENTER)
         self.label_laser = wx.StaticText(self.panel_control, -1, "Laser")
-        self.combo_box_laser = wx.ComboBox(self.panel_control, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.combo_box_laser = wx.ComboBox(self.panel_control, -1, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.label_action = wx.StaticText(self.panel_control, -1, "Action")
-        self.combo_box_action = wx.ComboBox(self.panel_control, -1, choices=[], style=wx.CB_DROPDOWN|wx.CB_READONLY)
+        self.combo_box_action = wx.ComboBox(self.panel_control, -1, choices=[], style=wx.CB_DROPDOWN | wx.CB_READONLY)
         self.panel_ringdown_inputs = wx.Panel(self.panel_4, -1)
         self.label_graph_points = wx.StaticText(self.panel_ringdown_inputs, -1, "Graph Points")
         self.text_ctrl_graph_points = wx.TextCtrl(self.panel_ringdown_inputs, -1, "2000", style=wx.TE_PROCESS_ENTER)
@@ -167,89 +166,89 @@ class BuildStationGUI(wx.Frame):
         grid_sizer_1 = wx.FlexGridSizer(6, 2, 10, 10)
         sizer_6_copy = wx.BoxSizer(wx.VERTICAL)
         grid_sizer_control = wx.FlexGridSizer(6, 2, 10, 10)
-        grid_sizer_control.Add(self.label_serial_number, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_control.Add(self.text_ctrl_serial_number, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_control.Add(self.label_laser, 0, wx.LEFT|wx.RIGHT, 10)
+        grid_sizer_control.Add(self.label_serial_number, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_control.Add(self.text_ctrl_serial_number, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_control.Add(self.label_laser, 0, wx.LEFT | wx.RIGHT, 10)
         grid_sizer_control.Add(self.combo_box_laser, 0, wx.RIGHT, 10)
-        grid_sizer_control.Add(self.label_action, 0, wx.LEFT|wx.RIGHT, 10)
+        grid_sizer_control.Add(self.label_action, 0, wx.LEFT | wx.RIGHT, 10)
         grid_sizer_control.Add(self.combo_box_action, 0, wx.RIGHT, 10)
         grid_sizer_control.AddGrowableCol(0)
         grid_sizer_control.AddGrowableCol(1)
-        sizer_6_copy.Add(grid_sizer_control, 0, wx.TOP|wx.BOTTOM|wx.EXPAND, 20)
+        sizer_6_copy.Add(grid_sizer_control, 0, wx.TOP | wx.BOTTOM | wx.EXPAND, 20)
         self.panel_control.SetSizer(sizer_6_copy)
         sizer_5.Add(self.panel_control, 0, wx.EXPAND, 0)
-        grid_sizer_1.Add(self.label_graph_points, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1.Add(self.text_ctrl_graph_points, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_1.Add(self.label_rd_threshold, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1.Add(self.text_ctrl_rd_threshold, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_1.Add(self.label_dither_enable, 0, wx.LEFT|wx.RIGHT, 10)
+        grid_sizer_1.Add(self.label_graph_points, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1.Add(self.text_ctrl_graph_points, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_1.Add(self.label_rd_threshold, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1.Add(self.text_ctrl_rd_threshold, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_1.Add(self.label_dither_enable, 0, wx.LEFT | wx.RIGHT, 10)
         grid_sizer_1.Add(self.checkbox_dither_enable, 0, 0, 0)
         grid_sizer_1.AddGrowableCol(0)
         grid_sizer_1.AddGrowableCol(1)
-        sizer_6.Add(grid_sizer_1, 0, wx.TOP|wx.EXPAND, 20)
+        sizer_6.Add(grid_sizer_1, 0, wx.TOP | wx.EXPAND, 20)
         sizer_6.Add(sizer_8_copy, 0, wx.EXPAND, 0)
         self.panel_ringdown_inputs.SetSizer(sizer_6)
         sizer_5.Add(self.panel_ringdown_inputs, 1, wx.EXPAND, 0)
-        grid_sizer_1_copy_2.Add(self.label_rejection_window, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy_2.Add(self.text_ctrl_rejection_window, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_1_copy_2.Add(self.label_rejection_scale, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy_2.Add(self.text_ctrl_rejection_scale, 0, wx.RIGHT|wx.EXPAND, 40)
+        grid_sizer_1_copy_2.Add(self.label_rejection_window, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy_2.Add(self.text_ctrl_rejection_window, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_1_copy_2.Add(self.label_rejection_scale, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy_2.Add(self.text_ctrl_rejection_scale, 0, wx.RIGHT | wx.EXPAND, 40)
         grid_sizer_1_copy_2.AddGrowableCol(0)
         grid_sizer_1_copy_2.AddGrowableCol(1)
-        sizer_6_copy_2.Add(grid_sizer_1_copy_2, 0, wx.TOP|wx.EXPAND, 20)
+        sizer_6_copy_2.Add(grid_sizer_1_copy_2, 0, wx.TOP | wx.EXPAND, 20)
         sizer_6_copy_2.Add(sizer_8_copy_copy_1, 0, wx.EXPAND, 0)
         self.panel_ripple_inputs.SetSizer(sizer_6_copy_2)
         sizer_5.Add(self.panel_ripple_inputs, 1, wx.EXPAND, 0)
-        grid_sizer_1_copy_1.Add(self.label_laser_temperature, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy_1.Add(self.text_ctrl_laser_temperature, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_1_copy_1.Add(self.label_laser_current, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy_1.Add(self.text_ctrl_laser_current, 0, wx.RIGHT|wx.EXPAND, 40)
-        grid_sizer_1_copy_1.Add(self.label_num_average, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy_1.Add(self.text_ctrl_num_average, 0, wx.RIGHT|wx.EXPAND, 40)
+        grid_sizer_1_copy_1.Add(self.label_laser_temperature, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy_1.Add(self.text_ctrl_laser_temperature, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_1_copy_1.Add(self.label_laser_current, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy_1.Add(self.text_ctrl_laser_current, 0, wx.RIGHT | wx.EXPAND, 40)
+        grid_sizer_1_copy_1.Add(self.label_num_average, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy_1.Add(self.text_ctrl_num_average, 0, wx.RIGHT | wx.EXPAND, 40)
         grid_sizer_1_copy_1.AddGrowableCol(0)
         grid_sizer_1_copy_1.AddGrowableCol(1)
-        sizer_6_copy_1.Add(grid_sizer_1_copy_1, 0, wx.TOP|wx.EXPAND, 20)
+        sizer_6_copy_1.Add(grid_sizer_1_copy_1, 0, wx.TOP | wx.EXPAND, 20)
         sizer_6_copy_1.Add(sizer_8_copy_copy, 0, wx.EXPAND, 0)
         self.panel_modeview_inputs.SetSizer(sizer_6_copy_1)
         sizer_5.Add(self.panel_modeview_inputs, 1, wx.EXPAND, 0)
-        grid_sizer_1_copy.Add(self.label_rd_time, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy.Add(self.text_ctrl_rd_time, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_1_copy.Add(self.label_rd_rate, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy.Add(self.text_ctrl_rd_rate, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_1_copy.Add(self.label_s2s, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy.Add(self.text_ctrl_s2s, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_1_copy.Add(self.label_cavity_pressure, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_1_copy.Add(self.text_ctrl_cavity_pressure, 0, wx.RIGHT|wx.EXPAND, 10)
+        grid_sizer_1_copy.Add(self.label_rd_time, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy.Add(self.text_ctrl_rd_time, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_1_copy.Add(self.label_rd_rate, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy.Add(self.text_ctrl_rd_rate, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_1_copy.Add(self.label_s2s, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy.Add(self.text_ctrl_s2s, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_1_copy.Add(self.label_cavity_pressure, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_1_copy.Add(self.text_ctrl_cavity_pressure, 0, wx.RIGHT | wx.EXPAND, 10)
         grid_sizer_1_copy.AddGrowableCol(0)
         grid_sizer_1_copy.AddGrowableCol(1)
         sizer_7.Add(grid_sizer_1_copy, 1, wx.EXPAND, 0)
         self.panel_ringdown_outputs.SetSizer(sizer_7)
         sizer_5.Add(self.panel_ringdown_outputs, 1, wx.EXPAND, 0)
-        sizer_8.Add(self.button_pause, 0, wx.ALL|wx.EXPAND, 10)
-        sizer_8.Add(self.button_save, 0, wx.ALL|wx.EXPAND, 10)
-        sizer_8.Add(self.button_clear, 0, wx.ALL|wx.EXPAND, 10)
-        sizer_8.Add(self.button_exit, 0, wx.ALL|wx.EXPAND, 10)
+        sizer_8.Add(self.button_pause, 0, wx.ALL | wx.EXPAND, 10)
+        sizer_8.Add(self.button_save, 0, wx.ALL | wx.EXPAND, 10)
+        sizer_8.Add(self.button_clear, 0, wx.ALL | wx.EXPAND, 10)
+        sizer_8.Add(self.button_exit, 0, wx.ALL | wx.EXPAND, 10)
         self.panel_buttons.SetSizer(sizer_8)
         sizer_5.Add(self.panel_buttons, 0, wx.EXPAND, 0)
         self.panel_4.SetSizer(sizer_5)
         sizer_2.Add(self.panel_4, 0, wx.EXPAND, 10)
         sizer_graph1.Add(self.graph_panel_1, 1, wx.EXPAND, 0)
-        grid_sizer_graph_panel_1.Add(self.label_autoscale1, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
+        grid_sizer_graph_panel_1.Add(self.label_autoscale1, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
         grid_sizer_graph_panel_1.Add(self.checkbox_autoscale_1, 0, wx.TOP, 10)
-        grid_sizer_graph_panel_1.Add(self.label_min_1, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_1.Add(self.text_ctrl_min_1, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_graph_panel_1.Add(self.label_max_1, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_1.Add(self.text_ctrl_max_1, 0, wx.RIGHT|wx.EXPAND, 10)
+        grid_sizer_graph_panel_1.Add(self.label_min_1, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_1.Add(self.text_ctrl_min_1, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_graph_panel_1.Add(self.label_max_1, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_1.Add(self.text_ctrl_max_1, 0, wx.RIGHT | wx.EXPAND, 10)
         self.panel_2.SetSizer(grid_sizer_graph_panel_1)
         sizer_graph1.Add(self.panel_2, 0, wx.EXPAND, 0)
         sizer_for_graphs.Add(sizer_graph1, 1, wx.EXPAND, 0)
         sizer_graph2.Add(self.graph_panel_2, 1, wx.EXPAND, 0)
-        grid_sizer_graph_panel_2.Add(self.label_autoscale2, 0, wx.LEFT|wx.RIGHT|wx.TOP, 10)
+        grid_sizer_graph_panel_2.Add(self.label_autoscale2, 0, wx.LEFT | wx.RIGHT | wx.TOP, 10)
         grid_sizer_graph_panel_2.Add(self.checkbox_autoscale_2, 0, wx.TOP, 10)
-        grid_sizer_graph_panel_2.Add(self.label_min_2, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_2.Add(self.text_ctrl_min_2, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_graph_panel_2.Add(self.label_max_2, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_2.Add(self.text_ctrl_max_2, 0, wx.RIGHT|wx.EXPAND, 10)
+        grid_sizer_graph_panel_2.Add(self.label_min_2, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_2.Add(self.text_ctrl_min_2, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_graph_panel_2.Add(self.label_max_2, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_2.Add(self.text_ctrl_max_2, 0, wx.RIGHT | wx.EXPAND, 10)
         self.panel_3.SetSizer(grid_sizer_graph_panel_2)
         sizer_graph2.Add(self.panel_3, 0, wx.EXPAND, 0)
         sizer_for_graphs.Add(sizer_graph2, 1, wx.EXPAND, 0)
@@ -273,92 +272,92 @@ class BuildStationGUI(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def onSerialNumberEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onSerialNumberEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onSerialNumberEnter' not implemented!"
         event.Skip()
 
-    def onLaserSelect(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onLaserSelect(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onLaserSelect' not implemented!"
         event.Skip()
 
-    def onActionSelect(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onActionSelect(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onActionSelect' not implemented!"
         event.Skip()
 
-    def onGraphPointsEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onGraphPointsEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onGraphPointsEnter' not implemented!"
         event.Skip()
 
-    def onRdThresholdEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onRdThresholdEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onRdThresholdEnter' not implemented!"
         event.Skip()
 
-    def onDitherEnable(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onDitherEnable(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onDitherEnable' not implemented!"
         event.Skip()
 
-    def onRejectionWindowEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onRejectionWindowEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onRejectionWindowEnter' not implemented!"
         event.Skip()
 
-    def onRejectionScaleEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onRejectionScaleEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onRejectionScaleEnter' not implemented!"
         event.Skip()
 
-    def onLaserTemperatureEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onLaserTemperatureEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onLaserTemperatureEnter' not implemented!"
         event.Skip()
 
-    def onLaserCurrentEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onLaserCurrentEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onLaserCurrentEnter' not implemented!"
         event.Skip()
 
-    def onNumAverageEnter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onNumAverageEnter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onNumAverageEnter' not implemented!"
         event.Skip()
 
-    def onPause(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onPause(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onPause' not implemented!"
         event.Skip()
 
-    def onSave(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onSave(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onSave' not implemented!"
         event.Skip()
 
-    def onClear(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onClear(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onQuit(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onQuit(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onQuit' not implemented!"
         event.Skip()
 
-    def onAutoscale1(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onAutoscale1(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onAutoscale1' not implemented!"
         event.Skip()
 
-    def onMin1Enter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onMin1Enter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onMin1Enter' not implemented!"
         event.Skip()
 
-    def onMax1Enter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onMax1Enter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onMax1Enter' not implemented!"
         event.Skip()
 
-    def onAutoscale2(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onAutoscale2(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onAutoscale2' not implemented!"
         event.Skip()
 
-    def onMin2Enter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onMin2Enter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onMin2Enter' not implemented!"
         event.Skip()
 
-    def onMax2Enter(self, event): # wxGlade: BuildStationGUI.<event_handler>
+    def onMax2Enter(self, event):  # wxGlade: BuildStationGUI.<event_handler>
         print "Event handler `onMax2Enter' not implemented!"
         event.Skip()
 
-# end of class BuildStationGUI
 
+# end of class BuildStationGUI
 
 if __name__ == "__main__":
     BuildStationSoftware = wx.PySimpleApp(0)

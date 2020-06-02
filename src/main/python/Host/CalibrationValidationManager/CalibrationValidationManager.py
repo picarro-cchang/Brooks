@@ -14,6 +14,7 @@ from QTaskEditorWidget import QTaskEditorWidget
 from Host.CalibrationValidationManager.TaskManager import TaskManager
 from Host.Common.SingleInstance import SingleInstance
 
+
 class Window(QtGui.QMainWindow):
     def __init__(self, iniFile, debug_mode=False):
         super(Window, self).__init__()
@@ -88,7 +89,7 @@ class Window(QtGui.QMainWindow):
         hb.addWidget(self.autologoutLabel)
         hb.addStretch(1)
         hb.addWidget(self.closeBtn)
-        hb.addSpacing(10)   # Fudge to line up button with widgets above
+        hb.addSpacing(10)  # Fudge to line up button with widgets above
 
         self.plotWidget = QPlotWidget(self)
         self.text_edit = QtGui.QTextEdit(QtCore.QString("In _init_gui"))
@@ -182,16 +183,17 @@ class Window(QtGui.QMainWindow):
         :return:
         """
         self.taskWizardWidget.setText(QtCore.QString(description))
-        self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec)*100/set_time_sec, busy)
+        self.taskWizardWidget.setProgressBar((set_time_sec - countdown_sec) * 100 / set_time_sec, busy)
         return
 
     def update_autologout_timer(self, countdown_sec, set_time_sec, description, busy):
-        minutes = countdown_sec/60
-        seconds = countdown_sec%60
+        minutes = countdown_sec / 60
+        seconds = countdown_sec % 60
         if countdown_sec > 30:
             self.autologoutLabel.setText("Automatic Logout in {0:02d}:{1:02d} minutes.".format(minutes, seconds))
         else:
-            self.autologoutLabel.setText("<font color=yellow>Automatic Logout in {0:02d}:{1:02d} minutes!</font>".format(minutes, seconds))
+            self.autologoutLabel.setText("<font color=yellow>Automatic Logout in {0:02d}:{1:02d} minutes!</font>".format(
+                minutes, seconds))
         return
 
     def logout_and_shutdown(self):
@@ -224,10 +226,10 @@ class Window(QtGui.QMainWindow):
             if "Data_Source_Units" in self.tm.co["TASKS"]:
                 units = self.tm.co["TASKS"]["Data_Source_Units"]
                 if units == "PPB":
-                    scale = 1/1000.0
+                    scale = 1 / 1000.0
                 if units == "Percent":
                     scale = 10000
-                data = [i*scale for i in data]
+                data = [i * scale for i in data]
 
             d = collections.OrderedDict()
             if data:
@@ -281,6 +283,7 @@ def HandleCommandSwitches():
 
     return (configFile, debug_mode)
 
+
 def main():
     # Save the pid file in the /tmp/ directory so Supervisor doesn't try to
     # restart the app during its MonitorApps loop
@@ -294,6 +297,7 @@ def main():
         sys.exit(app.exec_())
     else:
         print "Instance of Calibration Validation Tool already running."
+
 
 if __name__ == "__main__":
     main()

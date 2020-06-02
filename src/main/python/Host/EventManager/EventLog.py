@@ -1,9 +1,9 @@
-
 from Host.EventManager.EventInfo import EventInfo
-from Host.Common import SharedTypes #to get the right TCP port to use
+from Host.Common import SharedTypes  #to get the right TCP port to use
 import time
 
 DEFAULT_EVENT_CODE = 0
+
 
 class EventLog(object):
     """Adds additional info required to record an occurrence of a single event.
@@ -44,34 +44,41 @@ class EventLog(object):
     EventInfo a member makse this easy.
     """
 
-    InstanceCounter = 0 #for counting an index for all instances
-    def __init__(self, Source,
-                 Description = None,
-                 Data = "",
-                 Level = 1,
-                 Code = DEFAULT_EVENT_CODE,
-                 AccessLevel = SharedTypes.ACCESS_PICARRO_ONLY,
-                 VerboseDescription = "",
-                 EventTime = 0):
+    InstanceCounter = 0  #for counting an index for all instances
+
+    def __init__(self,
+                 Source,
+                 Description=None,
+                 Data="",
+                 Level=1,
+                 Code=DEFAULT_EVENT_CODE,
+                 AccessLevel=SharedTypes.ACCESS_PICARRO_ONLY,
+                 VerboseDescription="",
+                 EventTime=0):
         EventLog.InstanceCounter += 1
         self.Index = self.InstanceCounter
         self.Data = Data
         self.Source = Source
-        self.LogTime = time.time() #time at which the logger received the event
+        self.LogTime = time.time()  #time at which the logger received the event
         #self.Time = SourceTime or time.time()
-        self.EventTime = EventTime or self.LogTime #best guess at the event time
+        self.EventTime = EventTime or self.LogTime  #best guess at the event time
         self._LogLag = self.LogTime - self.EventTime
 
         if isinstance(Description, EventInfo):
             self.Event = Description
         else:
             #Should be a string, but if not we're going to interpret it as a string...
-            self.Event = EventInfo(str(Description), Level = Level, Data = Data, Code = Code, AccessLevel = AccessLevel, VerboseDesc = VerboseDescription)
+            self.Event = EventInfo(str(Description),
+                                   Level=Level,
+                                   Data=Data,
+                                   Code=Code,
+                                   AccessLevel=AccessLevel,
+                                   VerboseDesc=VerboseDescription)
 
-        assert isinstance(self.Event, EventInfo) #for Wing
+        assert isinstance(self.Event, EventInfo)  #for Wing
 
     def __str__(self):
-        timeStr = time.strftime("%Y-%m-%d %H:%M:%S",time.localtime(self.EventTime))
+        timeStr = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(self.EventTime))
         ret = "%4s | %s | %-10s | %s" % (self.Index, timeStr, self.Source, self.Event)
         if self.Data:
             ret += ": %s" % (self.Data)

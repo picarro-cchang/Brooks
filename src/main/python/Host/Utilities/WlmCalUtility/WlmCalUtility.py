@@ -45,12 +45,11 @@ from Host.Common.GraphPanel import Series
 from Host.Common.EventManagerProxy import EventManagerProxy_Init
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
-
 
 APP_NAME = "WlmCalUtility"
 _DEFAULT_CONFIG_NAME = "WlmCalUtility.ini"
@@ -61,11 +60,9 @@ APPVERSION = "1.1.0-2"
 
 EventManagerProxy_Init(APP_NAME)
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-                                    APP_NAME, IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
-
-g_logMsgLevel = 0   # should be 0 for check-in
+g_logMsgLevel = 0  # should be 0 for check-in
 
 
 def LogErrmsg(str):
@@ -96,14 +93,17 @@ class Model(object):
 
         for propName, fieldName in zip(self.__class__.propNames, self.__class__.fieldNames):
             object.__setattr__(self, fieldName, None)
+
             def setter(self, value, f=fieldName, p=propName):
                 object.__setattr__(self, f, value)
                 listeners = object.__getattribute__(self, "listeners")
                 if p in listeners:
                     for listener in listeners[p]:
                         listener(value)
+
             def getter(self, f=fieldName):
                 return object.__getattribute__(self, f)
+
             setattr(self.__class__, propName, property(getter, setter))
 
     def __dir__(self):
@@ -143,11 +143,11 @@ class Model(object):
 
 
 class WlmCalModel(Model):
-    propNames = [ "etalon_1", "etalon_1_dark", "reference_1", "reference_1_dark",
-                   "etalon_2", "etalon_2_dark", "reference_2", "reference_2_dark",
-                   "ratio_1", "ratio_2", "center_1", "center_2",
-                   "scale_1", "scale_2", "norm_scale_1", "norm_scale_2",
-                   "phase_deg", "phase_rad" ]
+    propNames = [
+        "etalon_1", "etalon_1_dark", "reference_1", "reference_1_dark", "etalon_2", "etalon_2_dark", "reference_2",
+        "reference_2_dark", "ratio_1", "ratio_2", "center_1", "center_2", "scale_1", "scale_2", "norm_scale_1", "norm_scale_2",
+        "phase_deg", "phase_rad"
+    ]
     pass
 
 
@@ -162,7 +162,7 @@ class SensorListener(object):
         self.sensorList = ["Laser1Temp", "Laser2Temp", "Laser3Temp", "Laser4Temp", "Etalon1", "Reference1", "Etalon2", "Reference2"]
         self.streams = [getattr(interface, "STREAM_" + s) for s in self.sensorList]
         self.sensorByStream = {}
-        for st,s in zip(self.streams, self.sensorList):
+        for st, s in zip(self.streams, self.sensorList):
             self.sensorByStream[st] = s
 
         # folder must exist or open will fail
@@ -190,24 +190,25 @@ class SensorListener(object):
                 LogErrMsg("Failed opening debug file '%s', debug disabled" % self.debugFilename)
                 self.debug = False
 
-    def streamFilter(self,result):
-        while len(self.deque) >= 100: self.deque.popleft()
+    def streamFilter(self, result):
+        while len(self.deque) >= 100:
+            self.deque.popleft()
         self.deque.append((result.timestamp, result.streamNum, result.value))
         # This filter is designed to enqueue requested sensor entries which all have the same timestamp.
-        if abs(self.doc.get("timestamp",0) - result.timestamp) > 1:
+        if abs(self.doc.get("timestamp", 0) - result.timestamp) > 1:
             if len(self.doc) > 1:
                 rDoc = self.doc.copy()
-                self.doc = { "timestamp": result.timestamp }
+                self.doc = {"timestamp": result.timestamp}
 
                 if result.streamNum in self.sensorByStream:
                     self.doc[self.sensorByStream[result.streamNum]] = result.value
 
                 if "Etalon1" not in rDoc:
                     for i in range(len(self.deque)):
-                        d = self.deque[-i-1]
+                        d = self.deque[-i - 1]
 
                         if self.debug is True:
-                            print >> self.fp, "%3d %15s %4s %15s" % (-i-1, d[0], d[1], d[2])
+                            print >> self.fp, "%3d %15s %4s %15s" % (-i - 1, d[0], d[1], d[2])
 
                     if self.debug is True:
                         print >> self.fp
@@ -215,11 +216,11 @@ class SensorListener(object):
                 return rDoc
 
             else:
-                self.doc = { "timestamp": result.timestamp }
+                self.doc = {"timestamp": result.timestamp}
                 if result.streamNum in self.sensorByStream:
                     self.doc[self.sensorByStream[result.streamNum]] = result.value
         else:
-            self.doc[ "timestamp" ] = result.timestamp
+            self.doc["timestamp"] = result.timestamp
             if result.streamNum in self.sensorByStream:
                 self.doc[self.sensorByStream[result.streamNum]] = result.value
 
@@ -240,15 +241,10 @@ class WlmCalUtility(WlmCalUtilityGui):
         self.reference2Deque = deque()
         self.ratio1Waveform = Series(self.maxDequeLength)
         self.ratio2Waveform = Series(self.maxDequeLength)
-        self.polarWaveform  = Series(self.maxDequeLength)
+        self.polarWaveform = Series(self.maxDequeLength)
         self.ellipse = Series(self.ellipsePoints)
         self.graph_ratios.RemoveAllSeries()
-        self.graph_ratios.AddSeriesAsPoints(self.polarWaveform,
-                                            colour='blue',
-                                            fillcolour='blue',
-                                            marker='square',
-                                            size=1,
-                                            width=1)
+        self.graph_ratios.AddSeriesAsPoints(self.polarWaveform, colour='blue', fillcolour='blue', marker='square', size=1, width=1)
         self.graph_ratios.AddSeriesAsLine(self.ellipse, colour="red", width=2)
 
         self.saveData = False
@@ -258,53 +254,42 @@ class WlmCalUtility(WlmCalUtilityGui):
             self.analyzerName = None
 
         self.configFile = configFile
-        self.config = CustomConfigObj(configFile, list_values = True)
+        self.config = CustomConfigObj(configFile, list_values=True)
 
         self.fileTime = self.config.get("Files", "file_time", "gmt").lower()
         self.saveImage = self.config.getboolean("Files", "save_image", False)
         self.saveImageType = self.config.get("Files", "save_image_type", "png")
 
         self.model = WlmCalModel()
-        self.displayNames = [
-            ("etalon_1", "%.1f"),
-            ("etalon_1_dark", "%.1f"),
-            ("reference_1", "%.1f"),
-            ("reference_1_dark", "%.1f"),
-            ("etalon_2", "%.1f"),
-            ("etalon_2_dark", "%.1f"),
-            ("reference_2", "%.1f"),
-            ("reference_2_dark", "%.1f"),
-            ("ratio_1", "%.3f"),
-            ("ratio_2", "%.3f"),
-            ("center_1", "%.3f"),
-            ("center_2", "%.3f"),
-            ("scale_1", "%.3f"),
-            ("scale_2", "%.3f"),
-            ("norm_scale_1", "%.3f"),
-            ("norm_scale_2", "%.3f"),
-            ("phase_deg", "%.1f"),
-            ("phase_rad", "%.3f")]
+        self.displayNames = [("etalon_1", "%.1f"), ("etalon_1_dark", "%.1f"), ("reference_1", "%.1f"), ("reference_1_dark", "%.1f"),
+                             ("etalon_2", "%.1f"), ("etalon_2_dark", "%.1f"), ("reference_2", "%.1f"), ("reference_2_dark", "%.1f"),
+                             ("ratio_1", "%.3f"), ("ratio_2", "%.3f"), ("center_1", "%.3f"), ("center_2", "%.3f"),
+                             ("scale_1", "%.3f"), ("scale_2", "%.3f"), ("norm_scale_1", "%.3f"), ("norm_scale_2", "%.3f"),
+                             ("phase_deg", "%.1f"), ("phase_rad", "%.3f")]
 
         # Make each edit box a listener to the corresponding model property
         # Save them so they can be unregistered at app shutdown
         self.registered_listeners = {}
 
         for (name, fmt) in self.displayNames:
-            def setTextCtrl(value, ctrlName="text_ctrl_"+name, fmt=fmt):
+
+            def setTextCtrl(value, ctrlName="text_ctrl_" + name, fmt=fmt):
                 getattr(self, ctrlName).SetValue(fmt % value)
+
             self.model.register_listener(name, setTextCtrl)
             self.registered_listeners[name] = setTextCtrl
 
-        self.editableNames = [ "etalon_1_dark", "reference_1_dark",
-                               "etalon_2_dark", "reference_2_dark" ]
+        self.editableNames = ["etalon_1_dark", "reference_1_dark", "etalon_2_dark", "reference_2_dark"]
 
         # Bind the events for text entry and loss of focus to change the model
         for name in self.editableNames:
             ctrlName = "text_ctrl_" + name
-            def getTextCtrlValue(evt, varName = name):
+
+            def getTextCtrlValue(evt, varName=name):
                 c = evt.GetEventObject()
                 setattr(self.model, varName, float(c.GetValue()))
                 if evt: evt.Skip()
+
             getattr(self, ctrlName).Bind(wx.EVT_TEXT_ENTER, getTextCtrlValue)
             getattr(self, ctrlName).Bind(wx.EVT_KILL_FOCUS, getTextCtrlValue)
         self.model.etalon_1_dark = 0
@@ -318,13 +303,13 @@ class WlmCalUtility(WlmCalUtilityGui):
 
         bg = wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE)
         self.graph_ratios.SetGraphProperties(xlabel='Ratio 1',
-                                             timeAxes=(False,False),
+                                             timeAxes=(False, False),
                                              ylabel='Ratio 2',
                                              grid=True,
                                              frameColour=bg,
                                              backgroundColour=bg,
-                                             XSpec=(0,2),
-                                             YSpec=(0,2))
+                                             XSpec=(0, 2),
+                                             YSpec=(0, 2))
 
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.onTimer, self.timer)
@@ -410,8 +395,8 @@ class WlmCalUtility(WlmCalUtilityGui):
         r2 = []
 
         for i in range(n):
-            ratio1 = (self.etalon1Deque[i] - self.model.etalon_1_dark)/(self.reference1Deque[i] - self.model.reference_1_dark)
-            ratio2 = (self.etalon2Deque[i] - self.model.etalon_2_dark)/(self.reference2Deque[i] - self.model.reference_2_dark)
+            ratio1 = (self.etalon1Deque[i] - self.model.etalon_1_dark) / (self.reference1Deque[i] - self.model.reference_1_dark)
+            ratio2 = (self.etalon2Deque[i] - self.model.etalon_2_dark) / (self.reference2Deque[i] - self.model.reference_2_dark)
             r1.append(ratio1)
             r2.append(ratio2)
             self.polarWaveform.Add(ratio1, ratio2)
@@ -439,17 +424,16 @@ class WlmCalUtility(WlmCalUtilityGui):
 
         if self.model.scale_1 < self.model.scale_2:
             self.model.norm_scale_2 = self.model.scale_2 * float64(1.05) / self.model.scale_1
-            self.model.norm_scale_1  = float64(1.05)
+            self.model.norm_scale_1 = float64(1.05)
         else:
             self.model.norm_scale_1 = self.model.scale_1 * float64(1.05) / self.model.scale_2
-            self.model.norm_scale_2  = float64(1.05)
+            self.model.norm_scale_2 = float64(1.05)
 
         self.model.phase_deg = phi * 180 / pi
         self.model.phase_rad = phi
-        t = linspace(0.0, 2.0*pi, self.ellipsePoints)
-        for x,y in zip(self.model.center_1 + self.model.scale_1 * cos(t),
-                       self.model.center_2 + self.model.scale_2 * sin(t + phi)):
-            self.ellipse.Add(x,y)
+        t = linspace(0.0, 2.0 * pi, self.ellipsePoints)
+        for x, y in zip(self.model.center_1 + self.model.scale_1 * cos(t), self.model.center_2 + self.model.scale_2 * sin(t + phi)):
+            self.ellipse.Add(x, y)
         self.graph_ratios.Update()
 
         if self.saveData:
@@ -494,15 +478,12 @@ class WlmCalUtility(WlmCalUtilityGui):
                 baseName = self.analyzerName
 
         if fileType == "log":
-            fileName = os.path.join(dirName,
-                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.txt", self.lastFileTime)))
+            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.txt", self.lastFileTime)))
         elif fileType == "image":
-            fileName = os.path.join(dirName,
-                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.", self.lastFileTime)))
+            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.", self.lastFileTime)))
             fileName = fileName + self.saveImageType
         else:
-            fileName = os.path.join(dirName,
-                                    "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv", self.lastFileTime)))
+            fileName = os.path.join(dirName, "%s_%s" % (baseName, time.strftime("%Y%m%d_%H%M%S.csv", self.lastFileTime)))
 
         fileName = os.path.normpath(fileName)
         return fileName
@@ -599,23 +580,46 @@ Picarro wavelength monitor calibration tool.
 
     parser = OptionParser(usage=usage)
 
-    parser.add_option('-v', '--version', dest='version', action='store_true',
-                      default=None, help=('report version number for this application'))
+    parser.add_option('-v',
+                      '--version',
+                      dest='version',
+                      action='store_true',
+                      default=None,
+                      help=('report version number for this application'))
 
-    parser.add_option('-r', '--redirect', dest='redirect', action='store_true',
-                      default=False, help=('redirect output to a separate console window, '
-                                           'useful for debugging'))
+    parser.add_option('-r',
+                      '--redirect',
+                      dest='redirect',
+                      action='store_true',
+                      default=False,
+                      help=('redirect output to a separate console window, '
+                            'useful for debugging'))
 
-    parser.add_option('-c', '--configFile', dest='configFile', action='store', type='string',
-                      default=None, help=('configuration filename'))
+    parser.add_option('-c',
+                      '--configFile',
+                      dest='configFile',
+                      action='store',
+                      type='string',
+                      default=None,
+                      help=('configuration filename'))
 
-    parser.add_option('-o', '--outfile', dest='outputFile', action='store', type='string',
-                      default=None, help=('output filename for console output, '
-                                          'useful for debugging'))
+    parser.add_option('-o',
+                      '--outfile',
+                      dest='outputFile',
+                      action='store',
+                      type='string',
+                      default=None,
+                      help=('output filename for console output, '
+                            'useful for debugging'))
 
-    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
-                      default=g_logMsgLevel, help=('set message logging level, '
-                                                   '0=highest  5=lowest (noisy)'))
+    parser.add_option('-l',
+                      '--loglevel',
+                      dest='loglevel',
+                      action='store',
+                      type='int',
+                      default=g_logMsgLevel,
+                      help=('set message logging level, '
+                            '0=highest  5=lowest (noisy)'))
 
     options, _ = parser.parse_args()
 

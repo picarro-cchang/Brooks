@@ -37,8 +37,8 @@ if __name__ == "__main__":
         engineName = raw_input("Engine name? ")
     else:
         engineName = sys.argv[1]
-    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname,)
-    tp = TestParameters(engineName,bname[4:10])
+    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname, )
+    tp = TestParameters(engineName, bname[4:10])
     tst = TestSOACurrent(tp)
     tst.run()
     tp.appendReport()

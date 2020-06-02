@@ -20,19 +20,26 @@
 import Host.Common.StringPickler as StringPickler
 from Host.Common.timestamp import unixTimeToTimestamp
 
-class IncompatibleMeasDataPickleVer(Exception): pass
-class InvalidMeasDataPickle(Exception): pass
+
+class IncompatibleMeasDataPickleVer(Exception):
+    pass
+
+
+class InvalidMeasDataPickle(Exception):
+    pass
+
 
 class MeasData(object):
     ver = 3  # Version of the MeasData data structure
-    def __init__(self, DataSource = "", DataTimeStamp_s = -1, Data = {}, MeasGood = True, Mode = ""):
-        self.Source = DataSource            # A string (eg: script name)
-        self.Time = DataTimeStamp_s         # Time in seconds since epoch (internal HostCore time standard)
-                                            #   - epoch is the unix one... the start of 1970 (Midnight Dec 31 1969)
+
+    def __init__(self, DataSource="", DataTimeStamp_s=-1, Data={}, MeasGood=True, Mode=""):
+        self.Source = DataSource  # A string (eg: script name)
+        self.Time = DataTimeStamp_s  # Time in seconds since epoch (internal HostCore time standard)
+        #   - epoch is the unix one... the start of 1970 (Midnight Dec 31 1969)
         self.MeasGood = MeasGood
-        self.Mode = Mode                    # Current data manager mode (measurement mode or warming mode)
-        self.Data = {}                      # Keys = data names, Values = data values
-                                            #  - may have values as two-tuples with (value, timestamp) later.
+        self.Mode = Mode  # Current data manager mode (measurement mode or warming mode)
+        self.Data = {}  # Keys = data names, Values = data values
+        #  - may have values as two-tuples with (value, timestamp) later.
         if Data:
             for key in Data:
                 try:
@@ -74,8 +81,10 @@ class MeasData(object):
             raise InvalidMeasDataPickle
 
     def __str__(self):
-        ret = "Source = %10s; Time = %10.3f; Good = %s; Mode = %s; Data = %r" % (self.Source, self.Time, self.MeasGood, self.Mode, self.Data)
+        ret = "Source = %10s; Time = %10.3f; Good = %s; Mode = %s; Data = %r" % (self.Source, self.Time, self.MeasGood, self.Mode,
+                                                                                 self.Data)
         return ret
+
 
 if __name__ == "__main__":
     import Host.Common.Broadcaster as Broadcaster
@@ -85,13 +94,11 @@ if __name__ == "__main__":
 
     print "Executing test code for MeasData.py"
     #bc = Broadcaster.Broadcaster(SharedTypes.BROADCAST_PORT_DATA_MANAGER, "Test")
-    bc = Broadcaster.Broadcaster(50001, "Test") #50001 so I can use Test-ArbListen
+    bc = Broadcaster.Broadcaster(50001, "Test")  #50001 so I can use Test-ArbListen
 
     sourceOptions = ["Source_A", "Source_B", "Source_C"]
 
-    bogusSourceDef = dict(Source_A = dict(a=0,b=0,c=0),
-                          Source_B = dict(x=0,y=0,z=0),
-                          Source_C = dict(single_val=0))
+    bogusSourceDef = dict(Source_A=dict(a=0, b=0, c=0), Source_B=dict(x=0, y=0, z=0), Source_C=dict(single_val=0))
     while 1:
         testSource = random.choice(bogusSourceDef.keys())
         testData = MeasData(testSource, time.time())

@@ -47,10 +47,11 @@ from Host.Common.timestamp import getTimestamp, timestampToUtcDatetime
 
 EventManagerProxy_Init(APP_NAME)
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
+
 
 class AnalyzerStatus(object):
     # Determine the analyzer status based upon which subsystems are reporting. At the lowest
@@ -59,40 +60,45 @@ class AnalyzerStatus(object):
     HOST_ONLY = 1
     SENSORS_ACTIVE = 2
     DATA_ACTIVE = 3
+
     def __init__(self):
         self.level = AnalyzerStatus.HOST_ONLY
         self.sensorsWithoutData = 0
         self.heartBeatWithoutSensors = 0
-    def receivedData(self,data):
+
+    def receivedData(self, data):
         self.sensorsWithoutData = 0
         self.heartBeatWithoutSensors = 0
         self.level = AnalyzerStatus.DATA_ACTIVE
         print data
-    def receivedSensors(self,sensors):
+
+    def receivedSensors(self, sensors):
         print sensors
         self.sensorsWithoutData += 1
         self.heartBeatWithoutSensors = 0
-        if (self.level>AnalyzerStatus.SENSORS_ACTIVE) and (self.sensorsWithoutData<2):
+        if (self.level > AnalyzerStatus.SENSORS_ACTIVE) and (self.sensorsWithoutData < 2):
             return
         self.level = AnalyzerStatus.SENSORS_ACTIVE
+
     def receivedHeartbeat(self):
         self.heartBeatWithoutSensors += 1
-        if (self.level>AnalyzerStatus.HOST_ONLY) and (self.heartBeatWithoutSensors<6):
+        if (self.level > AnalyzerStatus.HOST_ONLY) and (self.heartBeatWithoutSensors < 6):
             return
         self.level = AnalyzerStatus.HOST_ONLY
+
     def getLevel(self):
         return self.level
 
+
 class AnalyzerControl(Singleton):
     initialized = False
-    def __init__(self,config=None):
+
+    def __init__(self, config=None):
         if not self.initialized:
             self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                                        APP_NAME,
-                                                        IsDontCareConnection = False)
-            self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                                        APP_NAME,
-                                                        IsDontCareConnection = False)
+                                                         APP_NAME,
+                                                         IsDontCareConnection=False)
+            self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
             if config is not None:
                 # Set up directory paths
                 try:
@@ -110,8 +116,7 @@ class AnalyzerControl(Singleton):
                 except:
                     hostDir = "Host"
                 self.supervisorHostDir = os.path.join(apacheDir, hostDir)
-                self.startupSupervisorIni = os.path.join(self.supervisorIniDir,
-                                            config["Main"]["StartupSupervisorIni"].strip())
+                self.startupSupervisorIni = os.path.join(self.supervisorIniDir, config["Main"]["StartupSupervisorIni"].strip())
                 self.supervisorIni = self.startupSupervisorIni
             else:
                 raise ValueError("Missing configuration file when initializing AnalyzerControl")
@@ -137,7 +142,7 @@ class AnalyzerControl(Singleton):
         except:
             time.sleep(2.0)
         # Close down sample handling
-        self.driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
+        self.driver.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_DisabledState")
         return "OK"
 
     def stop(self):
@@ -191,20 +196,23 @@ class AnalyzerControl(Singleton):
         dwCreationFlags = win32process.CREATE_NEW_CONSOLE
 
         if self.launchType == "exe":
-            subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
+            subprocess.Popen(["supervisor.exe", "-c", self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
         else:
-            subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info, creationflags=dwCreationFlags)
+            subprocess.Popen(["python.exe", "Supervisor.py", "-c", self.supervisorIni],
+                             startupinfo=info,
+                             creationflags=dwCreationFlags)
 
         # Launch HostStartup
         if self.launchType == "exe":
             info = subprocess.STARTUPINFO()
-            subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+            subprocess.Popen(["HostStartup.exe", "-c", self.supervisorIni], startupinfo=info)
         return 'OK'
+
 
 class TcpServer(asyncore.dispatcher):
     """Receives connections and establishes handlers for each client.
     """
-    def __init__(self, address,target):
+    def __init__(self, address, target):
         asyncore.dispatcher.__init__(self)
         self.handler = None
         self.target = target
@@ -214,19 +222,22 @@ class TcpServer(asyncore.dispatcher):
         self.address = self.socket.getsockname()
         self.listen(1)
         return
+
     def handle_accept(self):
         # Called when a client connects to our socket
         client_info = self.accept()
         if self.handler is None or self.handler.closed:
-            self.handler = TcpHandler(client_info[0],self.target)
+            self.handler = TcpHandler(client_info[0], self.target)
         else:
             GoAwayHandler(sock=client_info[0])
+
     def handle_close(self):
         self.close()
         return
 
+
 class UdpServer(asynchat.async_chat):
-    def __init__(self,address,target):
+    def __init__(self, address, target):
         asynchat.async_chat.__init__(self)
         self.target = target
         self.create_socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -234,79 +245,94 @@ class UdpServer(asynchat.async_chat):
         self.bind(address)
         self.set_terminator('\n')
         self.buffer = []
-    def collect_incoming_data(self,data):
+
+    def collect_incoming_data(self, data):
         self.buffer.append(data)
+
     def found_terminator(self):
         print "UDP: %s" % "".join(self.buffer)
         self.buffer = []
+
     def handle_connect(self):
         pass
+
     def handle_close(self):
         self.close()
         return
 
+
 class GoAwayHandler(asynchat.async_chat):
     """Tell client to go away and close the connection"""
-    def __init__(self,sock):
-        asynchat.async_chat.__init__(self,sock)
+    def __init__(self, sock):
+        asynchat.async_chat.__init__(self, sock)
         self.set_terminator('\n')
         self.push("Server busy with existing TCP connection\r\n")
         self.close_when_done()
-    def collect_incoming_data(self,data):
+
+    def collect_incoming_data(self, data):
         return
+
     def found_terminator(self):
         return
+
     def handle_close(self):
         self.close()
         return
+
 
 class TcpHandler(asynchat.async_chat):
     """Handles processing data from a single client.
     """
-    def __init__(self,sock,target):
-        asynchat.async_chat.__init__(self,sock)
+    def __init__(self, sock, target):
+        asynchat.async_chat.__init__(self, sock)
         self.set_terminator('\n')
         self.push("Connected to Picarro TCP server\r\n")
         self.closed = False
         self.buffer = []
-        self.actions = dict(STANDBY  = target.standby,
-                            STOP     = target.stop,
-                            RESTART  = target.restart,
-                            REBOOT   = target.reboot,
-                            SHUTDOWN = target.shutdown)
-    def collect_incoming_data(self,data):
+        self.actions = dict(STANDBY=target.standby,
+                            STOP=target.stop,
+                            RESTART=target.restart,
+                            REBOOT=target.reboot,
+                            SHUTDOWN=target.shutdown)
+
+    def collect_incoming_data(self, data):
         self.buffer.append(data)
+
     def found_terminator(self):
         cmd = "".join(self.buffer).strip().upper()
         print "TCP: %s" % cmd
         # Carry out the action
         try:
             response = self.actions[cmd]()
-            self.push("%s: %s\r\n" % (cmd,response))
+            self.push("%s: %s\r\n" % (cmd, response))
         except KeyError:
             self.push("Unknown command: %s\r\n" % cmd)
         except:
-            self.push(traceback.format_exc().replace("\n","\r\n"))
+            self.push(traceback.format_exc().replace("\n", "\r\n"))
         self.buffer = []
 
     def handle_close(self):
         self.closed = True
         self.close()
 
-def format(fmtList,v):
-    for t,f in fmtList:
-        if isinstance(v,t):
+
+def format(fmtList, v):
+    for t, f in fmtList:
+        if isinstance(v, t):
             try:
-                return f % (v,)
+                return f % (v, )
             except TypeError:
                 return f
-    return '%s' % (v,)
+    return '%s' % (v, )
+
 
 MAX_SENSORS = 14
 MAX_DATA = 14
 
+
 class GlobalHawk(Singleton):
     initialized = False
+
     def __init__(self, configPath=None):
         if not self.initialized:
             if configPath != None:
@@ -315,20 +341,20 @@ class GlobalHawk(Singleton):
                 basePath = os.path.split(configPath)[0]
                 self.statusHost, self.statusPort = self.config['Addresses']['Status'].split(':')
                 self.statusPort = int(self.statusPort)
-                self.statusSocket = socket.socket(socket.AF_INET,socket.SOCK_DGRAM)
+                self.statusSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 self.id = self.config['InstrumentName']['Id']
                 self.sensorQueue = Queue(512)
                 self.sensorListener = Listener.Listener(self.sensorQueue,
                                                         BROADCAST_PORT_SENSORSTREAM,
                                                         interface.SensorEntryType,
-                                                        retry = True,
-                                                        name = "GlobalHawk listener")
+                                                        retry=True,
+                                                        name="GlobalHawk listener")
                 self.dmQueue = Queue(512)
                 self.dmListener = Listener.Listener(self.dmQueue,
                                                     BROADCAST_PORT_DATA_MANAGER,
                                                     ArbitraryObject,
-                                                    retry = True,
-                                                    name = "GlobalHawk listener")
+                                                    retry=True,
+                                                    name="GlobalHawk listener")
                 self.tcpHost, self.tcpPort = self.config['Addresses']['TCPcontrol'].split(':')
                 self.tcpPort = int(self.tcpPort)
                 self.udpHost, self.udpPort = self.config['Addresses']['UDPcontrol'].split(':')
@@ -336,38 +362,38 @@ class GlobalHawk(Singleton):
                 self.sensorPeriod = int(self.config['SensorReport']['Period'])
                 self.heartBeatPeriod = 1000
                 # Read list of sensor streams
-                self.streamIndices = MAX_SENSORS*[None]
+                self.streamIndices = MAX_SENSORS * [None]
                 nmax = 0
                 for k in self.config['SensorReport']:
                     if k.lower().startswith('sensor'):
                         num = int(k[6:])
-                        if num>MAX_SENSORS or num<=0:
+                        if num > MAX_SENSORS or num <= 0:
                             print "Invalid SENSOR number:", num
                         else:
-                            nmax = max(nmax,num)
-                            self.streamIndices[num-1] = getattr(interface,"STREAM_%s" % self.config['SensorReport'][k])
+                            nmax = max(nmax, num)
+                            self.streamIndices[num - 1] = getattr(interface, "STREAM_%s" % self.config['SensorReport'][k])
                 self.streamIndices = self.streamIndices[:nmax]
-                self.currentSensors = len(self.streamIndices)*[None]
+                self.currentSensors = len(self.streamIndices) * [None]
                 # Read list of data streams
                 self.dataSource = self.config['DataReport']['Source']
-                self.dataNames = MAX_DATA*[None]
+                self.dataNames = MAX_DATA * [None]
                 nmax = 0
                 for k in self.config['DataReport']:
                     if k.lower().startswith('data'):
                         num = int(k[4:])
-                        if num>MAX_DATA or num<=0:
+                        if num > MAX_DATA or num <= 0:
                             print "Invalid DATA number:", num
                         else:
-                            nmax = max(nmax,num)
-                            self.dataNames[num-1] = self.config['DataReport'][k]
+                            nmax = max(nmax, num)
+                            self.dataNames[num - 1] = self.config['DataReport'][k]
                 self.dataNames = self.dataNames[:nmax]
             else:
                 raise ValueError("Configuration file must be specified to initialize GlobalHawk network interface")
             self.initialized = True
-        Log('GlobalHawk initialized',Data=dict(statusIP='%s:%d'%(self.statusHost,self.statusPort)))
+        Log('GlobalHawk initialized', Data=dict(statusIP='%s:%d' % (self.statusHost, self.statusPort)))
 
-    def sendPacket(self,data):
-        self.statusSocket.sendto(data,(self.statusHost,self.statusPort))
+    def sendPacket(self, data):
+        self.statusSocket.sendto(data, (self.statusHost, self.statusPort))
 
     # Get data from sensor queue until some timestamp (from any stream) exceeds reportTime.
     # If the queue becomes empty before this happens, return None
@@ -375,15 +401,15 @@ class GlobalHawk(Singleton):
     #  list of the same length as streamIndices. This is a COPY of currentSensors so we can
     #  safely update currentSensors
 
-    def getSensorData(self,reportTime):
+    def getSensorData(self, reportTime):
         # Get all the data in the sensor queue up to reportTime and return all the current sensor
         #  values at that time. If the data in the sensor queue are all before reportTime, return None
         d = None
         try:
             while not self.sensorQueue.empty():
                 d = self.sensorQueue.get()
-                if d.timestamp>reportTime:
-                    return self.currentSensors[:]   # Make a copy, since currentSensors is dynamically updated
+                if d.timestamp > reportTime:
+                    return self.currentSensors[:]  # Make a copy, since currentSensors is dynamically updated
                 if d.streamNum in self.streamIndices:
                     self.currentSensors[self.streamIndices.index(d.streamNum)] = d.value
             return None
@@ -395,20 +421,20 @@ class GlobalHawk(Singleton):
     def run(self):
         try:
             self.analyzerControl = AnalyzerControl(self.config)
-            tcpServer = TcpServer((self.tcpHost,self.tcpPort),self.analyzerControl)
-            udpServer = UdpServer((self.udpHost,self.udpPort),self.analyzerControl)
+            tcpServer = TcpServer((self.tcpHost, self.tcpPort), self.analyzerControl)
+            udpServer = UdpServer((self.udpHost, self.udpPort), self.analyzerControl)
             self.analyzerStatus = AnalyzerStatus()
             count = 0
             # TODO: For actual code, set up startTs from actual time, rather than from timestamp in the file
             startTs = getTimestamp()
             #d = self.sensorQueue.get()
             #startTs = d.timestamp
-            nextReport = self.sensorPeriod*((startTs + self.sensorPeriod)//self.sensorPeriod)
-            nextHeartbeat = self.heartBeatPeriod*((startTs + self.heartBeatPeriod)//self.heartBeatPeriod)
-            formatList = [(int,'%d'),(float,'%.5f'),(types.NoneType,'')]
+            nextReport = self.sensorPeriod * ((startTs + self.sensorPeriod) // self.sensorPeriod)
+            nextHeartbeat = self.heartBeatPeriod * ((startTs + self.heartBeatPeriod) // self.heartBeatPeriod)
+            formatList = [(int, '%d'), (float, '%.5f'), (types.NoneType, '')]
 
             while True:
-                asyncore.loop(timeout=0.1,count=1)
+                asyncore.loop(timeout=0.1, count=1)
                 fields = [self.id]
                 # Get available data manager queue data
                 if not self.dmQueue.empty():
@@ -416,10 +442,10 @@ class GlobalHawk(Singleton):
                     ts, mode, source = d['data']['timestamp'], d['mode'], d['source']
                     if source == self.dataSource:
                         self.analyzerStatus.receivedData(d['data'])
-                        tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000,)
+                        tsAsString = timestampToUtcDatetime(ts).strftime('%Y%m%dT%H%M%S') + '.%03d' % (ts % 1000, )
                         fields.append(tsAsString)
                         fields.append('DATA')
-                        fields += [format(formatList,d['data'].get(v,None)) for v in self.dataNames]
+                        fields += [format(formatList, d['data'].get(v, None)) for v in self.dataNames]
                         data = ','.join(fields)
                         self.sendPacket('%s\r\n' % data)
                 # Get available sensor data
@@ -428,23 +454,24 @@ class GlobalHawk(Singleton):
                     self.analyzerStatus.receivedSensors(sensors)
                     # We have sensor data that was current as of nextReport
                     fields = [self.id]
-                    tsAsString = timestampToUtcDatetime(nextReport).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextReport % 1000,)
+                    tsAsString = timestampToUtcDatetime(nextReport).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextReport % 1000, )
                     fields.append(tsAsString)
                     fields.append('SENSORS')
-                    fields += [format(formatList,v) for v in sensors]
+                    fields += [format(formatList, v) for v in sensors]
                     data = ','.join(fields)
                     self.sendPacket('%s\r\n' % data)
                     nextReport += self.sensorPeriod
                 ts = getTimestamp()
-                if ts>nextHeartbeat:
+                if ts > nextHeartbeat:
                     self.analyzerStatus.receivedHeartbeat()
                     if self.analyzerStatus.getLevel() == AnalyzerStatus.HOST_ONLY:
-                        tsAsString = timestampToUtcDatetime(nextHeartbeat).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextHeartbeat % 1000,)
+                        tsAsString = timestampToUtcDatetime(nextHeartbeat).strftime('%Y%m%dT%H%M%S') + '.%03d' % (nextHeartbeat %
+                                                                                                                  1000, )
                         fields.append(tsAsString)
                         fields.append('HEARTBEAT')
                         data = ','.join(fields)
                         self.sendPacket('%s\r\n' % data)
-                        nextReport = self.sensorPeriod*(ts//self.sensorPeriod)
+                        nextReport = self.sensorPeriod * (ts // self.sensorPeriod)
                     nextHeartbeat += self.heartBeatPeriod
         finally:
             tcpServer.close()
@@ -460,8 +487,10 @@ settings in the configuration file:
 -c                   specify a config file:  default = "./GlobalHawk.ini"
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -473,10 +502,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in options or "--help" in options:
@@ -486,9 +515,10 @@ def handleCommandSwitches():
         configFile = options["-c"]
     return configFile, options
 
+
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()
     app = GlobalHawk(configFile)
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
     app.run()
     Log("Exiting program")

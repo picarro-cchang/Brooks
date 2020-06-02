@@ -52,105 +52,115 @@ LOG_DIR = os.environ["PICARRO_LOG_DIR"]
 
 EventManagerProxy_Init(APP_NAME)
 
-HEADER_SECTION               = 'HEADER'
-PULSE_ANALYZER_SECTION       = 'PULSE_ANALYZER'
-COMMAND_LIST_SECTION         = 'COMMAND_LIST'
-ERROR_LIST_SECTION           = 'ERROR_LIST'
-ERROR_MAP_SECTION            = 'INSTR_ERROR_MAP'
-DEFAULT_INI_FILE             = "CommandInterface.ini"
-ARG_DELIMITER                = ' '
+HEADER_SECTION = 'HEADER'
+PULSE_ANALYZER_SECTION = 'PULSE_ANALYZER'
+COMMAND_LIST_SECTION = 'COMMAND_LIST'
+ERROR_LIST_SECTION = 'ERROR_LIST'
+ERROR_MAP_SECTION = 'INSTR_ERROR_MAP'
+DEFAULT_INI_FILE = "CommandInterface.ini"
+ARG_DELIMITER = ' '
 
-MAX_COMMAND_QUEUE_SIZE       = 512
-MAX_SCANTIME_QUEUE_SIZE      = 10
+MAX_COMMAND_QUEUE_SIZE = 512
+MAX_SCANTIME_QUEUE_SIZE = 10
 
-CR_CHAR         = '\r'
-LF_CHAR         = '\n'
-NULL_CHAR       = '\0'
-SPACE_CHAR      = ' '
-BACKSPACE_CHAR  = '\b'
-TAB_CHAR        = '\t'
-SPACE_CHAR      = ' '
-ESC_CHAR        = 0x1b
+CR_CHAR = '\r'
+LF_CHAR = '\n'
+NULL_CHAR = '\0'
+SPACE_CHAR = ' '
+BACKSPACE_CHAR = '\b'
+TAB_CHAR = '\t'
+SPACE_CHAR = ' '
+ESC_CHAR = 0x1b
 
 PULSE_ANALYZER_STATUS_TABLE = {"waiting": "0", "armed": "1", "triggered": "2"}
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 if os.path.split(AppPath)[0] not in sys.path: sys.path.append(os.path.split(AppPath)[0])
 sys.path.append("CommandInterface")
 
+
 class CommandInterface(object):
     interfaceClass = dict(SerialInterface=SerialInterface, SocketInterface=SocketInterface)
+
     def __init__(self):
         """ Initializes Interface """
-        self.commandList   = []
-        self.interface     = None
-        self.terminate     = False
-        self.pause         = False
+        self.commandList = []
+        self.interface = None
+        self.terminate = False
+        self.pause = False
         self.commandbuffer = ""
-        self.echo          = False
-        self.debug         = True
+        self.echo = False
+        self.debug = True
 
         # Create RPC channels
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
-        self._DriverRpc  = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = "CommandInterface")
-        self._InstMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName = "CommandInterface")
-        self._DataMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = "CommandInterface")
-        self._ValveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = "CommandInterface")
-        self._MeasSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, ClientName = "CommandInterface")
-        self._EIFRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_EIF_HANDLER, ClientName = "CommandInterface")
-        self._DataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName = "CommandInterface")
+        self._DriverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName="CommandInterface")
+        self._InstMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_INSTR_MANAGER, ClientName="CommandInterface")
+        self._DataMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName="CommandInterface")
+        self._ValveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER,
+                                                       ClientName="CommandInterface")
+        self._MeasSystemRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
+                                                         ClientName="CommandInterface")
+        self._EIFRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_EIF_HANDLER, ClientName="CommandInterface")
+        self._DataLoggerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, ClientName="CommandInterface")
         self.cmdThread = None
 
         # Create measurement system related variables
-        self.measListener  = Listener.Listener(None, BROADCAST_PORT_DATA_MANAGER,
-          ArbitraryObject, self.MeasFilter, retry = True, name="Command Interface", logFunc = Log)
-        self._measData  = MeasData.MeasData()
-        self._measLockDict  = {}
+        self.measListener = Listener.Listener(None,
+                                              BROADCAST_PORT_DATA_MANAGER,
+                                              ArbitraryObject,
+                                              self.MeasFilter,
+                                              retry=True,
+                                              name="Command Interface",
+                                              logFunc=Log)
+        self._measData = MeasData.MeasData()
+        self._measLockDict = {}
         self._measQueueDict = {}
         self.meas_source = None
         self.meas_label_list = []
         self._cdata = []
         self._ctime = 0
         self._lastctime = None
-        self._scantimeLock  = threading.Lock()
+        self._scantimeLock = threading.Lock()
         self._scantimeQueue = []
 
-    def LoadConfig(self, filename ):
+    def LoadConfig(self, filename):
         """ Loads configuration file """
         self.config = CustomConfigObj(filename)
 
         # Get variables from config
         try:
             self.commandList = dict(self.config.list_items(COMMAND_LIST_SECTION))
-            self.errorList   = dict(self.config.list_items(ERROR_LIST_SECTION))
-            self.errorMap    = dict(self.config.list_items(ERROR_MAP_SECTION))
-            self.interfaceName    = self.config.get(HEADER_SECTION,'interface')
+            self.errorList = dict(self.config.list_items(ERROR_LIST_SECTION))
+            self.errorMap = dict(self.config.list_items(ERROR_MAP_SECTION))
+            self.interfaceName = self.config.get(HEADER_SECTION, 'interface')
             if self.interfaceName.upper() == "OFF":
                 msg = "Command Interface disabled"
                 print msg
-                Log(msg, Level = 2)
+                Log(msg, Level=2)
                 return False
-            interfaceConfig  = dict(self.config.list_items(self.interfaceName.upper()))
+            interfaceConfig = dict(self.config.list_items(self.interfaceName.upper()))
             for i in interfaceConfig:
                 try:
-                    interfaceConfig[i]=eval(interfaceConfig[i])
+                    interfaceConfig[i] = eval(interfaceConfig[i])
                 except:
-                    interfaceConfig[i]=interfaceConfig[i]
-            self.echo     = self.config.get(HEADER_SECTION,'echo')
-            self.appendLf = eval(self.config.get(HEADER_SECTION,'appendLf'))
-            self.appendCr = eval(self.config.get(HEADER_SECTION,'appendCr'))
-            self.meas_source =  self.config.get(HEADER_SECTION,'meas_source')
-            if self.config.get(HEADER_SECTION,"timeStandard","gmt").lower() == "local":
+                    interfaceConfig[i] = interfaceConfig[i]
+            self.echo = self.config.get(HEADER_SECTION, 'echo')
+            self.appendLf = eval(self.config.get(HEADER_SECTION, 'appendLf'))
+            self.appendCr = eval(self.config.get(HEADER_SECTION, 'appendCr'))
+            self.meas_source = self.config.get(HEADER_SECTION, 'meas_source')
+            if self.config.get(HEADER_SECTION, "timeStandard", "gmt").lower() == "local":
                 self.maketimetuple = datetime.datetime.fromtimestamp
             else:
                 self.maketimetuple = datetime.datetime.utcfromtimestamp
 
-            for label in self.config.get(HEADER_SECTION,'meas_label').split(","):
+            for label in self.config.get(HEADER_SECTION, 'meas_label').split(","):
                 label = label.strip()
                 self.meas_label_list.append(label)
                 self._measQueueDict[label] = []
@@ -158,7 +168,7 @@ class CommandInterface(object):
         except:
             msg = "Unable to load config. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
             print msg
-            Log(msg, Level = 3)
+            Log(msg, Level=3)
             return False
 
         # Get flux switcher config if available
@@ -171,8 +181,8 @@ class CommandInterface(object):
 
         # Create error constants from config
         for name in self.errorList:
-            args = tuple(self.errorList[name].split(',',1))
-            setattr(__builtin__, name.upper(), "%s    %s" % args )
+            args = tuple(self.errorList[name].split(',', 1))
+            setattr(__builtin__, name.upper(), "%s    %s" % args)
         #pprint.pprint(self.__dict__)
         #print(__builtin__.name)
         pprint.pprint(__builtin__.__dict__)
@@ -186,12 +196,12 @@ class CommandInterface(object):
 
         # Load interface definitions
         try:
-            self.interface   = CommandInterface.interfaceClass[self.interfaceName]()
-            self.interface.config( **interfaceConfig )
+            self.interface = CommandInterface.interfaceClass[self.interfaceName]()
+            self.interface.config(**interfaceConfig)
         except:
             msg = "Unable to configure interface. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
             print msg
-            Log(msg, Level = 3)
+            Log(msg, Level=3)
             self.interface = None
             return False
         return True
@@ -200,14 +210,14 @@ class CommandInterface(object):
         """ Starts interface """
         if self.interface == None:
             if self.interfaceName.upper() != "OFF":
-                Log("Failed to start command interface.", Level = 3)
+                Log("Failed to start command interface.", Level=3)
             return
         try:
             self.interface.open()
         except:
             msg = "Unable to open port for specified interface. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
             print msg
-            Log(msg, Level = 3)
+            Log(msg, Level=3)
             return
         self.terminate = False
         self.pause = False
@@ -220,7 +230,7 @@ class CommandInterface(object):
         if createNewCmdThread:
             print "Command Interface ready."
             Log("Command Interface ready.")
-            self.cmdThread = threading.Thread(target = self.Run)
+            self.cmdThread = threading.Thread(target=self.Run)
             self.cmdThread.setDaemon(True)
             self.cmdThread.start()
 
@@ -236,7 +246,7 @@ class CommandInterface(object):
         if self.interface == None:
             return
         self.interface.close()
-        self.terminate = True # This will kill self.cmdThread
+        self.terminate = True  # This will kill self.cmdThread
         print "Stopping interface"
         Log("Stopping interface")
 
@@ -253,32 +263,34 @@ class CommandInterface(object):
     def RpcServerInit(self):
         """ Starts up rpc server """
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_COMMAND_HANDLER),
-          ServerName = APP_NAME, ServerDescription = APP_DESCRIPTION,
-          ServerVersion = __version__, threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=__version__,
+                                               threaded=True)
         for s in dir(self):
             attr = self.__getattribute__(s)
             if callable(attr) and (s.startswith("RPC_")) and (not isclass(attr)):
-                self.RpcServer.register_function(attr, NameSlice = 4 )
+                self.RpcServer.register_function(attr, NameSlice=4)
 
     def Read(self):
         """ waits for a complete input line and returns command to caller """
-        self.commandbuffer=""
-        while self.terminate==False:
+        self.commandbuffer = ""
+        while self.terminate == False:
             try:
                 s = self.interface.read()
                 if s[0] == CR_CHAR:
                     if self.echo == True:
-                        self.interface.write( CR_CHAR + LF_CHAR )
+                        self.interface.write(CR_CHAR + LF_CHAR)
                     return self.commandbuffer
                 elif s[0] == BACKSPACE_CHAR:
                     if self.echo == True:
-                        self.interface.write( BACKSPACE_CHAR + SPACE_CHAR + BACKSPACE_CHAR )
+                        self.interface.write(BACKSPACE_CHAR + SPACE_CHAR + BACKSPACE_CHAR)
                     if len(self.commandbuffer):
                         self.commandbuffer = self.commandbuffer[:-1]
                 else:
                     self.commandbuffer += s
                     if self.echo == True:
-                        self.interface.write( s )
+                        self.interface.write(s)
             except:
                 #msg = "Unable to read command. EXCEPTION: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
                 #print msg
@@ -287,13 +299,13 @@ class CommandInterface(object):
 
     def Run(self):
         """ Executes command """
-        while ( self.terminate == False ):
+        while (self.terminate == False):
             if self.pause == True:
                 time.sleep(1)
 
             try:
                 cmdline = self.Read().strip(LF_CHAR)
-                if len(cmdline)==0:
+                if len(cmdline) == 0:
                     time.sleep(0.2)
                     continue
             except:
@@ -302,52 +314,52 @@ class CommandInterface(object):
                 continue
 
             cmdargs = cmdline.split(ARG_DELIMITER)
-            cmd  = cmdargs[0].upper()
+            cmd = cmdargs[0].upper()
             args = cmdargs[1:]
 
             # Get command object
             try:
-                func = getattr(self,cmd)
+                func = getattr(self, cmd)
             except:
-                if self.debug==True: print "unknown command: (%r)" % cmd
-                self.PrintError( ERROR_COMMAND_NOT_RECOGNIZED )
+                if self.debug == True: print "unknown command: (%r)" % cmd
+                self.PrintError(ERROR_COMMAND_NOT_RECOGNIZED)
                 continue
 
             # Check against enable list
             if eval(self.commandList[cmd.lower()]) != 1:
-                if self.debug==True: print "command disabled: (%r)" % cmd
-                self.PrintError( ERROR_COMMAND_NOT_RECOGNIZED )
+                if self.debug == True: print "command disabled: (%r)" % cmd
+                self.PrintError(ERROR_COMMAND_NOT_RECOGNIZED)
                 continue
 
             # Check parameters.
             try:
-                cmddef  = dict(self.config.list_items(cmd))
+                cmddef = dict(self.config.list_items(cmd))
 
                 if len(args) != eval(cmddef['numparameters']):
-                    self.PrintError( ERROR_COMMAND_PARAMETERS )
+                    self.PrintError(ERROR_COMMAND_PARAMETERS)
                     continue
 
                 matchFlag = True
                 pdict = {}
-                for i in range( eval(cmddef['numparameters']) ):
-                    p = cmddef[ 'parameter'+str(i) ]
+                for i in range(eval(cmddef['numparameters'])):
+                    p = cmddef['parameter' + str(i)]
                     # Example:
                     # NumParameters=1
                     # Parameter0=Period,0|(\d+(.\d)?),Value between 0.1-1000s
-                    pname,preg,phelp = p.split(",")
+                    pname, preg, phelp = p.split(",")
                     result = re.match(preg, args[i])
                     if result == None or len(args[i]) != result.end():
-                        self.PrintError( ERROR_COMMAND_PARAMETERS )
-                        self.Print("Parameter %d: expecting: %s" % (i+1,phelp))
+                        self.PrintError(ERROR_COMMAND_PARAMETERS)
+                        self.Print("Parameter %d: expecting: %s" % (i + 1, phelp))
                         matchFlag = False
                         break
-                    pdict[pname]=eval(args[i])
-                if matchFlag==False:
+                    pdict[pname] = eval(args[i])
+                if matchFlag == False:
                     continue
 
             except:
                 print "Exception %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-                self.PrintError( ERROR_COMMAND_PARAMETERS )
+                self.PrintError(ERROR_COMMAND_PARAMETERS)
                 continue
 
             # some commands support specifying number of decimal places in output
@@ -359,8 +371,8 @@ class CommandInterface(object):
                 status = self._InstMgrRpc.INSTMGR_GetStatusRpc()
             except:
                 print "Exception %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-                self.PrintError( ERROR_COMMUNICATION_FAILED )
-                status=0
+                self.PrintError(ERROR_COMMUNICATION_FAILED)
+                status = 0
 
                 # Note: To hack this to work with BroadcastToDataLogger must
                 #       force status=2 and comment out the continue
@@ -371,9 +383,9 @@ class CommandInterface(object):
             errorFlag = False
             try:
                 for i in range(eval(cmddef['numbits'])):
-                    whichbit = eval(cmddef[ 'whichbit' + str(i) ])
-                    state    = cmddef[ 'state' + str(i) ]
-                    code     = eval(cmddef[ 'errorcode' + str(i) ])
+                    whichbit = eval(cmddef['whichbit' + str(i)])
+                    state = cmddef['state' + str(i)]
+                    code = eval(cmddef['errorcode' + str(i)])
                     if state == "TRUE":
                         state = 1
                     else:
@@ -381,34 +393,34 @@ class CommandInterface(object):
                     mask = 1 << whichbit
                     #print hex(status),hex(mask),hex(state),whichbit
                     if (status & mask) == state:
-                        self.PrintError( code )
+                        self.PrintError(code)
                         errorFlag = True
                         break
             except:
                 print "Exception %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-                self.PrintError( ERROR_COMMAND_FAILED )
+                self.PrintError(ERROR_COMMAND_FAILED)
                 continue
 
             if errorFlag: continue
 
             # Execute command
-            if self.debug: print ("%s:%r" % (func.__name__,pdict))
+            if self.debug: print("%s:%r" % (func.__name__, pdict))
 
             try:
                 func(**pdict)
             except:
                 print "Exception %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
-                self.PrintError( ERROR_COMMAND_FAILED )
-            if self.debug: print ("%s: done." % (func.__name__))
+                self.PrintError(ERROR_COMMAND_FAILED)
+            if self.debug: print("%s: done." % (func.__name__))
 
     def runRpcServer(self):
         self.RpcServerInit()
         self.RpcServer.serve_forever()
 
-    def MeasFilter( self, dataDict ):
+    def MeasFilter(self, dataDict):
         """Filter for data broadcasts"""
         try:
-            self._measData.ImportPickleDict( dataDict )
+            self._measData.ImportPickleDict(dataDict)
             if self.meas_source == self._measData.Source:
                 self._ctime = self._measData.Time
                 self._ctimeString = _TimeToString(self.maketimetuple(self._ctime))
@@ -424,7 +436,7 @@ class CommandInterface(object):
         except:
             msg = "MeasFilter: %s %s" % (sys.exc_info()[0], sys.exc_info()[1])
             print msg
-            Log(msg, Level = 3)
+            Log(msg, Level=3)
 
     def addToMeasQueue(self, label, timeDataTuple):
         self._measLockDict[label].acquire()
@@ -455,13 +467,13 @@ class CommandInterface(object):
         # default to 3 decimal places
         fmtStr = "%%.%df;" % int(numdecplaces)
         format = (fmtStr * len(self._cdata))[:-1]
-        self.Print( format % tuple(self._cdata) )
+        self.Print(format % tuple(self._cdata))
 
     def _MEAS_GETCONCEX(self, numdecplaces=3):
         # default to 3 decimal places
         fmtStr = "%%.%df;" % int(numdecplaces)
         format = "%s;" + (fmtStr * len(self._cdata))[:-1]
-        self.Print( format % tuple([self._ctimeString]+self._cdata) )
+        self.Print(format % tuple([self._ctimeString] + self._cdata))
 
     def _MEAS_GETBUFFER(self):
         for label in self.meas_label_list:
@@ -484,30 +496,30 @@ class CommandInterface(object):
             self._measLockDict[label].acquire()
 
             try:
-                mtime,mdata = self._measQueueDict[label].pop(0)
+                mtime, mdata = self._measQueueDict[label].pop(0)
                 if idx == 0:
                     fmtStr2 = "%%s;%s" % fmtStr
-                    retString += (fmtStr2 % ( mtime, mdata))
+                    retString += (fmtStr2 % (mtime, mdata))
                 else:
-                    retString += (fmtStr % ( mdata ))
+                    retString += (fmtStr % (mdata))
             except:
-                self.PrintError( ERROR_MEAS_BUFFER_EMPTY )
+                self.PrintError(ERROR_MEAS_BUFFER_EMPTY)
 
             self._measLockDict[label].release()
 
         if retString != "":
-            self.Print( retString )
+            self.Print(retString)
 
     def _MEAS_CLEARBUFFER(self):
         for label in self.meas_label_list:
             self._measLockDict[label].acquire()
-            self._measQueueDict[label]=[]
+            self._measQueueDict[label] = []
             self._measLockDict[label].release()
         self.Print("OK")
 
     def _MEAS_GETSCANTIME(self, numdecplaces=3):
         fmtStr = "%%.%df;" % int(numdecplaces)
-        self.Print ( fmtStr % self.getAveScantime() )
+        self.Print(fmtStr % self.getAveScantime())
 
     def _MEAS_ENABLE(self):
         self._InstMgrRpc.INSTMGR_StartMeasureRpc()
@@ -531,34 +543,34 @@ class CommandInterface(object):
 
     # Data Logger functions
     def _DATALOGGER_RESTART(self):
-        stat,userLogs = self._DataLoggerRpc.DATALOGGER_getUserLogsRpc()
+        stat, userLogs = self._DataLoggerRpc.DATALOGGER_getUserLogsRpc()
         for i in userLogs:
-            self._DataLoggerRpc.DATALOGGER_startLogRpc(i,True)
+            self._DataLoggerRpc.DATALOGGER_startLogRpc(i, True)
         self.Print("OK")
 
     # Instrument Manager functions
     def _INSTR_PARK(self):
-        self._InstMgrRpc.INSTMGR_ShutdownRpc( INSTMGR_SHUTDOWN_PREP_SHIPMENT )
+        self._InstMgrRpc.INSTMGR_ShutdownRpc(INSTMGR_SHUTDOWN_PREP_SHIPMENT)
         self.Print("OK")
 
     def _INSTR_SHUTDOWN(self):
-        self._InstMgrRpc.INSTMGR_ShutdownRpc( INSTMGR_SHUTDOWN_HOST_AND_DAS )
+        self._InstMgrRpc.INSTMGR_ShutdownRpc(INSTMGR_SHUTDOWN_HOST_AND_DAS)
         self.Print("OK")
 
     def _INSTR_GETERROR(self):
         num = MAX_ERROR_LIST_NUM
         errorlist = self._InstMgrRpc.INSTMGR_GetErrorRpc(MAX_ERROR_LIST_NUM)
         if len(errorlist) == 0:
-            self.Print( "EMPTY" )
+            self.Print("EMPTY")
             return
 
-        for errortime,errorcode,errorname in errorlist:
+        for errortime, errorcode, errorname in errorlist:
             try:
-                print "%r %r %r\n" % (errortime,errorcode,errorname)
-                code = eval( self.errorMap[errorname.lower()].upper() )
-                self.PrintError( code )
+                print "%r %r %r\n" % (errortime, errorcode, errorname)
+                code = eval(self.errorMap[errorname.lower()].upper())
+                self.PrintError(code)
             except:
-                print "Unknown system error %s. %s %s" % (errorname,sys.exc_info()[0], sys.exc_info()[1])
+                print "Unknown system error %s. %s %s" % (errorname, sys.exc_info()[0], sys.exc_info()[1])
         self._InstMgrRpc.INSTMGR_ClearErrorRpc(num)
 
     def _INSTR_CLEARERRORS(self):
@@ -571,8 +583,8 @@ class CommandInterface(object):
         self.Print(str(status))
 
     def _INSTR_GETTIME(self):
-        msg = "%s" % ( _TimeToString(datetime.datetime.now()) )
-        self.Print( msg )
+        msg = "%s" % (_TimeToString(datetime.datetime.now()))
+        self.Print(msg)
 
     def _FLOW_DISABLEPUMP(self):
         self._InstMgrRpc.INSTMGR_disablePumpRpc()
@@ -608,29 +620,29 @@ class CommandInterface(object):
         else:
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
 
-    def _EIF_ANALOGOUT_CONFIGURE(self, channel, calSlope, calOffset, minOutput, maxOutput, bootmode, bootvalue, invalidvalue ):
-        isOK = self._EIFRpc.AO_Configure( int(channel), float(calSlope), float(calOffset), float(minOutput),
-                                          float(maxOutput), int(bootmode), float(bootvalue), float(invalidvalue) )
+    def _EIF_ANALOGOUT_CONFIGURE(self, channel, calSlope, calOffset, minOutput, maxOutput, bootmode, bootvalue, invalidvalue):
+        isOK = self._EIFRpc.AO_Configure(int(channel), float(calSlope), float(calOffset), float(minOutput), float(maxOutput),
+                                         int(bootmode), float(bootvalue), float(invalidvalue))
         if isOK:
             self.Print("OK")
         else:
             self.PrintError(ERROR_EIF_INVALID_CHANNEL)
 
     def _EIF_ANALOGOUT_GETINFO(self, channel):
-        self.Print(self._EIFRpc.AO_GetInfo( int(channel), getStr=True ))
+        self.Print(self._EIFRpc.AO_GetInfo(int(channel), getStr=True))
 
     ##########################
     # Pulse Analyzer functions
     ##########################
     def _PULSE_GETBUFFERFIRST(self, numdecplaces=3):
-         # default is 3 decimal places
+        # default is 3 decimal places
         try:
             self._DataMgrRpc.PulseAnalyzer_GetBufferFirst()
         except PulseAnalyzerBufferEmptyError:
-            self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
+            self.PrintError(ERROR_PULSE_BUFFER_EMPTY)
             return
         except PulseAnalyzerNoneError:
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
+            self.PrintError(ERROR_PULSE_ANALYZER_NOT_RUNNING)
             return
 
         timeString = _TimeToString(self.maketimetuple(dataRecord[0]))
@@ -639,16 +651,16 @@ class CommandInterface(object):
 
         for data in dataRecord[1:]:
             retString += fmtStr % (float(data))
-        self.Print( retString )
+        self.Print(retString)
 
     def _PULSE_GETBUFFER(self, numdecplaces=3):
         try:
             self._DataMgrRpc.PulseAnalyzer_GetBuffer()
         except PulseAnalyzerBufferEmptyError:
-            self.PrintError( ERROR_PULSE_BUFFER_EMPTY )
+            self.PrintError(ERROR_PULSE_BUFFER_EMPTY)
             return
         except PulseAnalyzerNoneError:
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
+            self.PrintError(ERROR_PULSE_ANALYZER_NOT_RUNNING)
             return
 
         fmtStr = "%%.%df;" % int(numdecplaces)
@@ -660,13 +672,13 @@ class CommandInterface(object):
             retString = "%s;" % timeString
             for data in dataRecord[1:]:
                 retString += fmtStr % (float(data))
-            self.Print( retString )
+            self.Print(retString)
 
     def _PULSE_CLEARBUFFER(self):
         try:
             self._DataMgrRpc.PulseAnalyzer_ClearBuffer()
         except PulseAnalyzerNoneError:
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
+            self.PrintError(ERROR_PULSE_ANALYZER_NOT_RUNNING)
             return
 
         self.Print("OK")
@@ -675,11 +687,11 @@ class CommandInterface(object):
         try:
             self._DataMgrRpc.PulseAnalyzer_GetStatus()
         except PulseAnalyzerNoneError:
-            self.PrintError( ERROR_PULSE_ANALYZER_NOT_RUNNING )
+            self.PrintError(ERROR_PULSE_ANALYZER_NOT_RUNNING)
             return
 
         retString = PULSE_ANALYZER_STATUS_TABLE[status]
-        self.Print( retString )
+        self.Print(retString)
 
     ###########################
     # Valve Sequencer functions
@@ -712,22 +724,24 @@ class CommandInterface(object):
     def Print(self, msg, debug=True):
         if self.interface != None:
             try:
-                self.interface.write( msg + self.append )
+                self.interface.write(msg + self.append)
                 if debug: print msg + self.append
             except:
                 print "Failed to write to interface"
 
-    def PrintError( self, code ):
-        msg = ("ERR:%s\t%s"+ self.append) % ( code, _TimeToString(datetime.datetime.now()))
+    def PrintError(self, code):
+        msg = ("ERR:%s\t%s" + self.append) % (code, _TimeToString(datetime.datetime.now()))
         if self.interface != None:
             try:
-                self.interface.write( msg )
+                self.interface.write(msg)
                 print msg
             except:
                 print "Failed to write error message to interface"
 
-def _TimeToString( t ):
-    return t.strftime("%Y-%m-%d %H:%M:%S") + (".%03d" % (t.microsecond/1000,))
+
+def _TimeToString(t):
+    return t.strftime("%Y-%m-%d %H:%M:%S") + (".%03d" % (t.microsecond / 1000, ))
+
 
 def HandleCommandSwitches():
     shortOpts = ''
@@ -750,6 +764,7 @@ def HandleCommandSwitches():
 
     return (configFile)
 
+
 def main():
     my_instance = SingleInstance(APP_NAME)
     if my_instance.alreadyrunning():
@@ -760,7 +775,7 @@ def main():
         app = CommandInterface()
         Log("%s started." % APP_NAME, Level=1)
         try:
-            app.LoadConfig( configFile )
+            app.LoadConfig(configFile)
             app.RPC_Start()
             app.runRpcServer()
             app.RPC_Stop()

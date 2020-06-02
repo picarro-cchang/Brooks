@@ -4,6 +4,7 @@
 
 import wx
 
+
 class InitialParamDialogGui(wx.Dialog):
     def __init__(self, paramTupleList, *args, **kwds):
         kwds["style"] = wx.DEFAULT_DIALOG_STYLE
@@ -11,7 +12,7 @@ class InitialParamDialogGui(wx.Dialog):
         self.panel_1 = wx.Panel(self, -1)
         self.panel_2 = wx.Panel(self, -1)
         self.nameList = []
-        self.labelList =[]
+        self.labelList = []
         self.textCtrlList = []
         self.numParams = len(paramTupleList)
         for name, label, default in paramTupleList:
@@ -33,11 +34,11 @@ class InitialParamDialogGui(wx.Dialog):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         grid_sizer_1 = wx.FlexGridSizer(self.numParams, 2, 10, 10)
-        grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT|wx.RIGHT|wx.TOP|wx.ALIGN_CENTER_VERTICAL, 10)
-        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT|wx.RIGHT|wx.TOP|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
-        for idx in range(1,self.numParams):
-            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT|wx.RIGHT|wx.ALIGN_CENTER_VERTICAL, 10)
-            grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT|wx.RIGHT|wx.EXPAND|wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.labelList[0], 0, wx.LEFT | wx.RIGHT | wx.TOP | wx.ALIGN_CENTER_VERTICAL, 10)
+        grid_sizer_1.Add(self.textCtrlList[0], 1, wx.LEFT | wx.RIGHT | wx.TOP | wx.EXPAND | wx.ALIGN_CENTER_VERTICAL, 10)
+        for idx in range(1, self.numParams):
+            grid_sizer_1.Add(self.labelList[idx], 0, wx.LEFT | wx.RIGHT | wx.ALIGN_CENTER_VERTICAL, 10)
+            grid_sizer_1.Add(self.textCtrlList[idx], 1, wx.LEFT | wx.RIGHT | wx.EXPAND | wx.ALIGN_CENTER_VERTICAL, 10)
         self.panel_2.SetSizer(grid_sizer_1)
         grid_sizer_1.AddGrowableCol(1)
         sizer_1.Add(self.panel_2, 1, wx.EXPAND, 0)
@@ -52,10 +53,12 @@ class InitialParamDialogGui(wx.Dialog):
         sizer_1.Fit(self)
         self.Layout()
 
+
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()
-    paramTupleList = [("mesaTime", "Measurement Time (seconds)", "28800"), ("numSamples", "Number of Calibration Samples", "12"), ("inTimeout", "Input Timeout (seconds)", "300")]
+    paramTupleList = [("mesaTime", "Measurement Time (seconds)", "28800"), ("numSamples", "Number of Calibration Samples", "12"),
+                      ("inTimeout", "Input Timeout (seconds)", "300")]
     dlg = InitialParamDialogGui(paramTupleList, None, -1, "")
     app.SetTopWindow(dlg)
     getParamVals = (dlg.ShowModal() == wx.ID_OK)

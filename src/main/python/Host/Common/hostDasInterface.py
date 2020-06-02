@@ -31,6 +31,7 @@ from Host.Common.SharedTypes import UsbConnectionError
 
 EventManagerProxy_Init(APP_NAME)
 
+
 class DasInterface(Singleton):
     initialized = False
 
@@ -52,21 +53,21 @@ class DasInterface(Singleton):
         elif stateDbFile is not None:
             raise ValueError("DasInterface has already been initialized")
 
-    def loadUsbIfCode(self,usbCodeFilename):
+    def loadUsbIfCode(self, usbCodeFilename):
         """Downloads file to USB Cypress FX2 chip,
         if not already downloaded"""
-        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
-        try: # connecting to a programmed Picarro instrument
+        analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID, usbdefs.INSTRUMENT_PID)
+        try:  # connecting to a programmed Picarro instrument
             analyzerUsb.connect()
             analyzerUsb.disconnect()
             return
         except UsbConnectionError:
             try:  # connecting to an unprogrammed Picarro instrument. This will be useful when we get our own VID.
-                analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID,usbdefs.INITIAL_PID)
+                analyzerUsb = AnalyzerUsb(usbdefs.INITIAL_VID, usbdefs.INITIAL_PID)
                 analyzerUsb.connect(claim=False)
             except UsbConnectionError:
-                try: # connecting to a blank Cypress FX2
-                    analyzerUsb = AnalyzerUsb(usbdefs.CYPRESS_FX2_VID,usbdefs.CYPRESS_FX2_PID)
+                try:  # connecting to a blank Cypress FX2
+                    analyzerUsb = AnalyzerUsb(usbdefs.CYPRESS_FX2_VID, usbdefs.CYPRESS_FX2_PID)
                     analyzerUsb.connect(claim=False)
                 except UsbConnectionError:
                     raise RuntimeError("Cannot connect to USB")
@@ -75,8 +76,7 @@ class DasInterface(Singleton):
         analyzerUsb.disconnect()
         # Wait for renumeration
         while True:
-            analyzerUsb = AnalyzerUsb(
-                usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
+            analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID, usbdefs.INSTRUMENT_PID)
             try:
                 analyzerUsb.connect()
                 break
@@ -88,8 +88,7 @@ class DasInterface(Singleton):
         """Connect to USB interface on logic board.
         """
         self.loadUsbIfCode(self.usbFile)
-        self.analyzerUsb = AnalyzerUsb(
-                usbdefs.INSTRUMENT_VID,usbdefs.INSTRUMENT_PID)
+        self.analyzerUsb = AnalyzerUsb(usbdefs.INSTRUMENT_VID, usbdefs.INSTRUMENT_PID)
         self.analyzerUsb.connect()
         return self.analyzerUsb.getUsbSpeed()
 
@@ -104,7 +103,7 @@ class DasInterface(Singleton):
         fpgaProgrammer.program(self.fpgaFile)
         self.analyzerUsb.setDspControl(0)
         time.sleep(0.5)
-        self.hostToDspSender = HostToDspSender(self.analyzerUsb,5.0)
+        self.hostToDspSender = HostToDspSender(self.analyzerUsb, 5.0)
         self.hostToDspSender.program(self.dspFile)
 
     def getMessage(self):
@@ -142,12 +141,11 @@ class DasInterface(Singleton):
                     self.sensorIndex = 0
             else:
                 break
-        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
+        return {'block': block, 'validEntries': validEntries} if validEntries > 0 else None
 
     def getRingdownData(self):
         """Retrieves ringdown data from the analyzer or None if nothing is available"""
-        data = self.hostToDspSender.rdRingdownData(
-              self.ringdownIndex)
+        data = self.hostToDspSender.rdRingdownData(self.ringdownIndex)
         if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
             self.lastRingdownTime = data.timestamp
             self.ringdownIndex += 1
@@ -159,8 +157,7 @@ class DasInterface(Singleton):
         """Retrieves a block of ringdown data from the analyzer. If there are valid entries in the block,
         the number is computed and returned together with the block itself. If there are no valid entries,
         return None."""
-        block = self.hostToDspSender.rdRingdownDataBlock(
-              self.ringdownIndex)
+        block = self.hostToDspSender.rdRingdownDataBlock(self.ringdownIndex)
         validEntries = 0
         for data in block:
             if data.timestamp != 0 and data.timestamp >= self.lastRingdownTime:
@@ -171,54 +168,49 @@ class DasInterface(Singleton):
                     self.ringdownIndex = 0
             else:
                 break
-        return { 'block': block, 'validEntries': validEntries } if validEntries > 0 else None
+        return {'block': block, 'validEntries': validEntries} if validEntries > 0 else None
 
-    def uploadSchedule(self,operationGroups):
+    def uploadSchedule(self, operationGroups):
         """Upload all operation groups to the scheduler in the instrument.
         """
         def shorts2int(lsw, msw):
             """Convert two shorts into an int.
             """
             return int(((msw << 16) | lsw) & 0xFFFFFFFF)
+
         groupTable = []
         operationTable = []
         operandTable = []
         for group in operationGroups:
             operationAddress = len(operationTable)
             priority_and_period = (group.priority << 12) + group.period
-            groupTable.append(
-                shorts2int(priority_and_period,operationAddress))
+            groupTable.append(shorts2int(priority_and_period, operationAddress))
             for operation in group.operationList:
                 operandAddress = len(operandTable)
-                operationTable.append(
-                    (shorts2int(operation.opcode, len(operation.operandList)),
-                                     shorts2int(operandAddress, operation.env))
-                )
+                operationTable.append((shorts2int(operation.opcode,
+                                                  len(operation.operandList)), shorts2int(operandAddress, operation.env)))
                 for opr in operation.operandList:
                     operandTable.append(int(opr))
             if group.operationList:
-                operationTable.append((0,0))
+                operationTable.append((0, 0))
         if operationGroups:
             groupTable.append(0)
 
-        table_dict = dict(groupTableLen=len(groupTable), groupTableSize=interface.GROUP_TABLE_SIZE,
-            operationTableLen=len(operationTable), operationTableSize=interface.NUM_OPERATIONS,
-            operandTableLen=len(operandTable), operandTableSize=interface.OPERAND_TABLE_SIZE)
+        table_dict = dict(groupTableLen=len(groupTable),
+                          groupTableSize=interface.GROUP_TABLE_SIZE,
+                          operationTableLen=len(operationTable),
+                          operationTableSize=interface.NUM_OPERATIONS,
+                          operandTableLen=len(operandTable),
+                          operandTableSize=interface.OPERAND_TABLE_SIZE)
 
         Log("Scheduler utilization", Data=table_dict, Verbose="%s" % table_dict)
 
         if len(groupTable) > interface.GROUP_TABLE_SIZE:
-            raise ValueError(
-                "%d operation groups needed, only %d available" %
-                (len(groupTable),interface.GROUP_TABLE_SIZE))
+            raise ValueError("%d operation groups needed, only %d available" % (len(groupTable), interface.GROUP_TABLE_SIZE))
         if len(operationTable) > interface.NUM_OPERATIONS:
-            raise ValueError(
-                "%d operations needed, only %d available" %
-                (len(operationTable),interface.NUM_OPERATIONS))
+            raise ValueError("%d operations needed, only %d available" % (len(operationTable), interface.NUM_OPERATIONS))
         if len(operandTable) > interface.OPERAND_TABLE_SIZE:
-            raise ValueError(
-                "%d operands needed, only %d available" %
-                (len(operandTable),interface.OPERAND_TABLE_SIZE))
+            raise ValueError("%d operands needed, only %d available" % (len(operandTable), interface.OPERAND_TABLE_SIZE))
         self.hostToDspSender.wrBlock(interface.GROUP_OFFSET, *groupTable)
         # Flatten the tuples in the operation table to send it to the
         #  analyzer
@@ -231,14 +223,9 @@ class DasInterface(Singleton):
     def getSchedule(self):
         """Returns the group, operation and operand tables, mainly for
         diagnostic purposes"""
-        return dict(
-            groupTable=self.hostToDspSender.rdBlock(
-                interface.GROUP_OFFSET,interface.GROUP_TABLE_SIZE),
-            operationTable=self.hostToDspSender.rdBlock(
-                interface.OPERATION_OFFSET,
-                interface.OPERATION_TABLE_SIZE),
-            operandTable=self.hostToDspSender.rdBlock(
-                interface.OPERAND_OFFSET,interface.OPERAND_TABLE_SIZE))
+        return dict(groupTable=self.hostToDspSender.rdBlock(interface.GROUP_OFFSET, interface.GROUP_TABLE_SIZE),
+                    operationTable=self.hostToDspSender.rdBlock(interface.OPERATION_OFFSET, interface.OPERATION_TABLE_SIZE),
+                    operandTable=self.hostToDspSender.rdBlock(interface.OPERAND_OFFSET, interface.OPERAND_TABLE_SIZE))
 
     def pingWatchdog(self):
         return

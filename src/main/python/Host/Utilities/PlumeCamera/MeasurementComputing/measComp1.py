@@ -11,25 +11,25 @@ if __name__ == "__main__":
     Gain = BIP10VOLTS
     mc = MeasComp()
     ADRes = c_int(0)
-    mc.cbGetConfig(BOARDINFO,BoardNum,0,BIADRES,ADRes)
+    mc.cbGetConfig(BOARDINFO, BoardNum, 0, BIADRES, ADRes)
     print "ADRes: ", ADRes.value
     boardType = c_int(0)
-    mc.cbGetConfig(BOARDINFO,BoardNum,0,BIBOARDTYPE,boardType)
+    mc.cbGetConfig(BOARDINFO, BoardNum, 0, BIBOARDTYPE, boardType)
     print "Board Type: ", boardType.value
 
     MemHandle = mc.cbWinBufAlloc(Count)
     if MemHandle == 0: raise ValueError("Out of memory")
-    ADData = (c_ushort*Count).from_address(MemHandle)
+    ADData = (c_ushort * Count).from_address(MemHandle)
 
     Gain = BIP5VOLTS
     Options = CONTINUOUS + CONVERTDATA + BACKGROUND
 
     nChan = 4
     LowChan = 0
-    HighChan = nChan-1
+    HighChan = nChan - 1
     Rate = c_int(10000)
     try:
-        ULStat = mc.cbAInScan(BoardNum,LowChan,HighChan,Count,byref(Rate), Gain, MemHandle, Options)
+        ULStat = mc.cbAInScan(BoardNum, LowChan, HighChan, Count, byref(Rate), Gain, MemHandle, Options)
         Status = c_short(RUNNING)
         CurCount = c_ulong(0)
         CurIndex = c_ulong(0)
@@ -41,11 +41,11 @@ if __name__ == "__main__":
         while Status.value == RUNNING and totLen < 50000:
             time.sleep(0.2)
             print getTimestamp()
-            ULStat = mc.cbGetStatus(BoardNum,byref(Status), byref(CurCount), byref(CurIndex), AIFUNCTION)
+            ULStat = mc.cbGetStatus(BoardNum, byref(Status), byref(CurCount), byref(CurIndex), AIFUNCTION)
             # print CurCount.value, CurIndex.value, Status.value
             print CurCount.value, getTimestamp()
-            curCount = nChan*(CurCount.value // nChan)
-            curIndex = nChan*(CurIndex.value // nChan)
+            curCount = nChan * (CurCount.value // nChan)
+            curIndex = nChan * (CurIndex.value // nChan)
             if curCount - lastCount >= Count:
                 raise RuntimeError("ADC buffer overrun!")
                 sys.exit()
@@ -53,17 +53,17 @@ if __name__ == "__main__":
             if lastIndex < curIndex:
                 x = np.asarray(ADData[lastIndex:curIndex])
             else:
-                x = np.concatenate((np.asarray(ADData[lastIndex:]),np.asarray(ADData[:curIndex])))
+                x = np.concatenate((np.asarray(ADData[lastIndex:]), np.asarray(ADData[:curIndex])))
             data.append(x)
             npts = len(x)
             totLen += npts
             lastIndex = (lastIndex + npts) % Count
             lastCount = (lastCount + npts)
     finally:
-        ULStat = mc.cbStopBackground(BoardNum,AIFUNCTION)
+        ULStat = mc.cbStopBackground(BoardNum, AIFUNCTION)
     mc.cbWinBufFree(MemHandle)
 data = np.concatenate(data)
-base = np.arange(len(data)/nChan)
+base = np.arange(len(data) / nChan)
 for c in range(nChan):
-    pl.plot(base,data[c::nChan])
+    pl.plot(base, data[c::nChan])
 pl.show()

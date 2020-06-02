@@ -13,13 +13,12 @@ import math
 
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.DriverSimulator.LaserCurrentControl import (
-    Laser1CurrentControl, Laser2CurrentControl, Laser3CurrentControl, Laser4CurrentControl)
-from Host.DriverSimulator.Simulators import (
-    Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, 
-    LaserOpticalModel, LaserThermalModel, LaserDacModel)
-from Host.DriverSimulator.TempControl import (
-    CavityTempControl, Laser1TempControl, Laser2TempControl, Laser3TempControl, Laser4TempControl, WarmBoxTempControl)
+from Host.DriverSimulator.LaserCurrentControl import (Laser1CurrentControl, Laser2CurrentControl, Laser3CurrentControl,
+                                                      Laser4CurrentControl)
+from Host.DriverSimulator.Simulators import (Laser1Simulator, Laser2Simulator, Laser3Simulator, Laser4Simulator, LaserOpticalModel,
+                                             LaserThermalModel, LaserDacModel)
+from Host.DriverSimulator.TempControl import (CavityTempControl, Laser1TempControl, Laser2TempControl, Laser3TempControl,
+                                              Laser4TempControl, WarmBoxTempControl)
 
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
@@ -51,7 +50,7 @@ class ActionHandler(object):
             interface.ACTION_TEMP_CNTRL_CAVITY_INIT: self.tempCntrlCavityInit,
             interface.ACTION_TEMP_CNTRL_CAVITY_STEP: self.tempCntrlCavityStep,
             interface.ACTION_TEMP_CNTRL_WARM_BOX_INIT: self.tempCntrlWarmBoxInit,
-            interface.ACTION_TEMP_CNTRL_WARM_BOX_STEP: self.tempCntrlWarmBoxStep,            
+            interface.ACTION_TEMP_CNTRL_WARM_BOX_STEP: self.tempCntrlWarmBoxStep,
             interface.ACTION_FILTER: self.filter,
             interface.ACTION_FLOAT_REGISTER_TO_FPGA: self.floatRegisterToFpga,
             interface.ACTION_FPGA_TO_FLOAT_REGISTER: self.fpgaToFloatRegister,
@@ -146,8 +145,8 @@ class ActionHandler(object):
             return interface.ERROR_BAD_FILTER_COEFF
         y = filtEnv.state[0] + (filtEnv.num[0] / div) * (x + filtEnv.offset)
         for i in range(MAX_ORDER - 1):
-            filtEnv.state[i] = filtEnv.state[i+1] + (filtEnv.num[i+1] * (x + filtEnv.offset) - filtEnv.den[i+1]*y) / div
-        filtEnv.state[MAX_ORDER - 1] = (filtEnv.num[MAX_ORDER] * (x + filtEnv.offset)  - filtEnv.den[MAX_ORDER]*y) / div
+            filtEnv.state[i] = filtEnv.state[i + 1] + (filtEnv.num[i + 1] * (x + filtEnv.offset) - filtEnv.den[i + 1] * y) / div
+        filtEnv.state[MAX_ORDER - 1] = (filtEnv.num[MAX_ORDER] * (x + filtEnv.offset) - filtEnv.den[MAX_ORDER] * y) / div
         self.sim.wrDasReg(params[1], y)
         return interface.STATUS_OK
 
@@ -206,7 +205,7 @@ class ActionHandler(object):
         constC = self.sim.rdDasReg(params[3])
         if 1.0 < resistance < 5.0e6:
             lnR = math.log(resistance)
-            result = 1/(constA + (constB * lnR) + (constC * lnR ** 3)) - 273.15
+            result = 1 / (constA + (constB * lnR) + (constC * lnR**3)) - 273.15
             self.sim.wrDasReg(params[4], result)
         else:
             self.sim.dsp_message_queue.append((when, interface.LOG_LEVEL_CRITICAL, "Bad resistance in resistanceToTemperature"))
@@ -228,14 +227,18 @@ class ActionHandler(object):
             return interface.ERROR_BAD_NUM_PARAMS
         dac = 0
         if params[0] == 1:
-            dac = 10*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT) + 2*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER1_FINE_CURRENT)
+            dac = 10 * self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER1_COARSE_CURRENT) + 2 * self.sim.rdFPGA(
+                interface.FPGA_INJECT, interface.INJECT_LASER1_FINE_CURRENT)
         elif params[0] == 2:
-            dac = 10*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT) + 2*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER2_FINE_CURRENT)
+            dac = 10 * self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER2_COARSE_CURRENT) + 2 * self.sim.rdFPGA(
+                interface.FPGA_INJECT, interface.INJECT_LASER2_FINE_CURRENT)
         elif params[0] == 3:
-            dac = 10*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT) + 2*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER3_FINE_CURRENT)
+            dac = 10 * self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER3_COARSE_CURRENT) + 2 * self.sim.rdFPGA(
+                interface.FPGA_INJECT, interface.INJECT_LASER3_FINE_CURRENT)
         elif params[0] == 4:
-            dac = 10*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT) + 2*self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER4_FINE_CURRENT)
-        current = 0.00036*dac
+            dac = 10 * self.sim.rdFPGA(interface.FPGA_INJECT, interface.INJECT_LASER4_COARSE_CURRENT) + 2 * self.sim.rdFPGA(
+                interface.FPGA_INJECT, interface.INJECT_LASER4_FINE_CURRENT)
+        current = 0.00036 * dac
         self.sim.wrDasReg(params[1], current)
         return interface.STATUS_OK
 
@@ -256,7 +259,7 @@ class ActionHandler(object):
             simulator.step()
         self.sim.injectionSimulator.step()
         self.sim.pressureSimulator.step()
-        self.sim.warmBoxThermalSimulator.step()        
+        self.sim.warmBoxThermalSimulator.step()
         # The following collects ringdowns in virtual time and is called at the
         #  of end of a timeslice
         self.sim.spectrumControl.collectSpectrum(when)
@@ -290,12 +293,12 @@ class ActionHandler(object):
 
     def getLaserModels(self, laserName):
         models = {}
-        if (laserName+"OpticalModel") in self.setup:
-            models["opticalModel"] = LaserOpticalModel(**self.setup[laserName+"OpticalModel"])
-        if (laserName+"ThermalModel") in self.setup:
-            models["thermalModel"] = LaserOpticalModel(**self.setup[laserName+"ThermalModel"])
-        if (laserName+"DacModel") in self.setup:
-            models["dacModel"] = LaserOpticalModel(**self.setup[laserName+"DacModel"])
+        if (laserName + "OpticalModel") in self.setup:
+            models["opticalModel"] = LaserOpticalModel(**self.setup[laserName + "OpticalModel"])
+        if (laserName + "ThermalModel") in self.setup:
+            models["thermalModel"] = LaserOpticalModel(**self.setup[laserName + "ThermalModel"])
+        if (laserName + "DacModel") in self.setup:
+            models["dacModel"] = LaserOpticalModel(**self.setup[laserName + "DacModel"])
         return models
 
     def tempCntrlCavityInit(self, params, env, when, command):
@@ -388,17 +391,11 @@ class ActionHandler(object):
         # In the simulator, this action has been hijacked to also compute the
         #  wavelength monitor outputs and the ratios based on the temperature
         #  and current of the selected laser
-        laserNum = self.sim.readBitsFPGA(
-            interface.FPGA_INJECT + interface.INJECT_CONTROL,
-            interface.INJECT_CONTROL_LASER_SELECT_B,
-            interface.INJECT_CONTROL_LASER_SELECT_W) + 1
+        laserNum = self.sim.readBitsFPGA(interface.FPGA_INJECT + interface.INJECT_CONTROL, interface.INJECT_CONTROL_LASER_SELECT_B,
+                                         interface.INJECT_CONTROL_LASER_SELECT_W) + 1
         laserTemp = self.sim.rdDasReg("LASER%d_TEMPERATURE_REGISTER" % laserNum)
-        laserCurrent = 0.00036 * (10 * self.sim.rdFPGA(
-            "FPGA_INJECT",
-            "INJECT_LASER%d_COARSE_CURRENT" % laserNum) +
-            2 * self.sim.rdFPGA(
-            "FPGA_INJECT",
-            "INJECT_LASER%d_FINE_CURRENT" % laserNum))
+        laserCurrent = 0.00036 * (10 * self.sim.rdFPGA("FPGA_INJECT", "INJECT_LASER%d_COARSE_CURRENT" % laserNum) +
+                                  2 * self.sim.rdFPGA("FPGA_INJECT", "INJECT_LASER%d_FINE_CURRENT" % laserNum))
         return interface.STATUS_OK
 
     def valveCntrlInit(self, params, env, when, command):
@@ -413,6 +410,6 @@ class ActionHandler(object):
 
     def writeBlock(self, params, env, when, command):
         offset = params[0]
-        for i in range(len(params)-1):
+        for i in range(len(params) - 1):
             self.sim.sharedMem[offset + i] = params[i + 1]
         return interface.STATUS_OK

@@ -1,8 +1,8 @@
 from numpy import *
 
-fp = file("sample2.sch","w")
-wList = linspace(6056.5,6057.5,1001)
-wList = concatenate((wList,wList[::-1]))
+fp = file("sample2.sch", "w")
+wList = linspace(6056.5, 6057.5, 1001)
+wList = concatenate((wList, wList[::-1]))
 dwell = 3
 subschemeId = 26
 laserNum = 1

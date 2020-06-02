@@ -19,9 +19,10 @@ import threading
 import time
 import traceback
 
+
 class TextListener(threading.Thread):
     """ Listener object which allows access to line-oriented text broadcasts via INET sockets """
-    def __init__(self, queue, port, streamFilter=None, notify=None, retry=False, name = "Listener", logFunc = None):
+    def __init__(self, queue, port, streamFilter=None, notify=None, retry=False, name="Listener", logFunc=None):
         """ Create a listener running in a new daemonic thread which subscribes to broadcasts at
     the specified "port".  The broadcast consists of lines ending with "\n".
 
@@ -51,7 +52,7 @@ class TextListener(threading.Thread):
     listener will wait until the broadcaster restarts.
      """
 
-        threading.Thread.__init__(self,name=name)
+        threading.Thread.__init__(self, name=name)
         self._stopevent = threading.Event()
         self.data = ""
         self.queue = queue
@@ -63,17 +64,17 @@ class TextListener(threading.Thread):
         self.retry = retry
 
         self.zmqContext = zmq.Context()
-        self.socket = None    
+        self.socket = None
         self.setDaemon(True)
         self.start()
 
-    def safeLog(self,msg,*args,**kwargs):
+    def safeLog(self, msg, *args, **kwargs):
         try:
-            if self.logFunc != None: self.logFunc(msg,*args,**kwargs)
+            if self.logFunc != None: self.logFunc(msg, *args, **kwargs)
         except:
             pass
 
-    def stop(self,timeout=None):
+    def stop(self, timeout=None):
         """ Used to stop the main loop.
         This blocks until the thread completes execution of its .run() implementation.
         """
@@ -83,8 +84,8 @@ class TextListener(threading.Thread):
             self.socket = None
         self.zmqContext.term()
         self.zmqContext = None
-        threading.Thread.join(self,timeout)
-        
+        threading.Thread.join(self, timeout)
+
     def run(self):
         poller = None
         while not self._stopevent.isSet():
@@ -93,15 +94,15 @@ class TextListener(threading.Thread):
                     try:
                         poller = zmq.Poller()
                         self.socket = self.zmqContext.socket(zmq.SUB)
-                        self.socket.connect ("tcp://localhost:%s" % self.port)
+                        self.socket.connect("tcp://localhost:%s" % self.port)
                         self.socket.setsockopt(zmq.SUBSCRIBE, "")
                         poller.register(self.socket, zmq.POLLIN)
-                        self.safeLog("Connection made by %s to port %d." % (self.name,self.port))
+                        self.safeLog("Connection made by %s to port %d." % (self.name, self.port))
                     except Exception:
                         self.socket = None
                         if self.notify is not None:
                             msg = "Attempt to connect port %d by %s failed." % (self.port, self.name)
-                            self.safeLog(msg,Level=2)
+                            self.safeLog(msg, Level=2)
                             self.notify(msg)
                         time.sleep(1.0)
                         if self.retry: continue
@@ -111,8 +112,8 @@ class TextListener(threading.Thread):
                     socks = dict(poller.poll(timeout=1000))
                     if socks.get(self.socket) == zmq.POLLIN:
                         self.data += self.socket.recv()
-                except Exception,e: # Error accessing or reading from socket
-                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port,self.name,e),Level=3)
+                except Exception, e:  # Error accessing or reading from socket
+                    self.safeLog("Error accessing or reading from port %d by %s. Error: %s." % (self.port, self.name, e), Level=3)
                     if self.socket != None:
                         self.socket.close()
                         self.socket = None
@@ -126,10 +127,12 @@ class TextListener(threading.Thread):
                         e = result
                     if e is not None and self.queue is not None:
                         self.queue.put(e)
-                    self.data = self.data[nlPos+1:]
+                    self.data = self.data[nlPos + 1:]
                     nlPos = self.data.find("\n")
-            except Exception,e:
-                self.safeLog("Communication from %s to port %d disconnected." % (self.name,self.port),Verbose=traceback.format_exc(),Level=2)
+            except Exception, e:
+                self.safeLog("Communication from %s to port %d disconnected." % (self.name, self.port),
+                             Verbose=traceback.format_exc(),
+                             Level=2)
                 if self.socket != None:
                     self.socket.close()
                     self.socket = None
@@ -140,18 +143,21 @@ class TextListener(threading.Thread):
                     if self.notify is not None:
                         self.notify(e)
                         return
-                    else: raise
+                    else:
+                        raise
+
 
 if __name__ == "__main__":
+
     def myNotify(e):
-        print "Notification: %s" % (e,)
+        print "Notification: %s" % (e, )
 
     def myLogger(s):
-        print "Log: %s" % (s,)
+        print "Log: %s" % (s, )
 
     queue = Queue.Queue(0)
     port = 8881
-    listener = TextListener(queue,port,retry=True,notify=myNotify,name="Test Listener",logFunc=myLogger)
+    listener = TextListener(queue, port, retry=True, notify=myNotify, name="Test Listener", logFunc=myLogger)
 
     while listener.isAlive():
         try:
@@ -161,4 +167,3 @@ if __name__ == "__main__":
             continue
 
     print "Listener terminated"
-                    

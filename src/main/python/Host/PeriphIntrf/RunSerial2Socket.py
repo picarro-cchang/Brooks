@@ -9,7 +9,7 @@ from Host.Common.SharedTypes import TCP_PORT_PERIPH_INTRF
 from Host.Common.SingleInstance import SingleInstance
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -20,6 +20,7 @@ DEFAULT_CONFIG_NAME = "serial2socket.ini"
 # Win32 CreateProcess flag
 DETACHED_PROCESS = 8
 
+
 class RunSerial2Socket(object):
     def __init__(self, configFile):
         self.appCo = CustomConfigObj(configFile, ignore_option_case=False)
@@ -27,7 +28,7 @@ class RunSerial2Socket(object):
         exeFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "EXE")))
         instrConfigFile = os.path.abspath(os.path.join(iniAbsBasePath, self.appCo.get("SETUP", "INSTRCONFIG")))
         self.numPorts = len([s for s in self.appCo.list_sections() if s.startswith("PORT")])
-        
+
         # Create the instrument config file to run serial2socket.exe
         self.autoSearch = self.appCo.getboolean("SETUP", "AUTOSEARCH", False)
         instrConfigDir = os.path.dirname(instrConfigFile)
@@ -42,11 +43,11 @@ class RunSerial2Socket(object):
             self.instrCo.add_section("PORTS")
         self.instrCo.write()
         self.updateIni(self.findPorts())
-        
+
         # Launch the EXE program
         #affmask = self.appCo.getint("SETUP", "AFFINITYMASK", 1)
         subprocess.Popen([exeFile, str(TCP_PORT_PERIPH_INTRF), instrConfigFile], creationflags=DETACHED_PROCESS, close_fds=True)
-        
+
     def _getCleanPortList(self, pList):
         retList = []
         for i in range(len(pList)):
@@ -56,11 +57,11 @@ class RunSerial2Socket(object):
             except:
                 try:
                     # "COMxx"
-                    retList.append(int(pList[i].upper().replace("COM",""))-1)
+                    retList.append(int(pList[i].upper().replace("COM", "")) - 1)
                 except:
                     pass
         return retList
-        
+
     def findPorts(self):
         # Compile the assigned and skipped COM port list
         try:
@@ -82,14 +83,14 @@ class RunSerial2Socket(object):
         skipList = self._getCleanPortList(pList)
 
         print "Assigned List: %s; Skipped List: %s" % (assignList, skipList)
-        
+
         if self.numPorts <= len(assignList):
             portList = assignList[:self.numPorts]
         else:
             portList = assignList[:]
             if self.autoSearch:
                 for p in range(100):
-                    if p not in (skipList+assignList):
+                    if p not in (skipList + assignList):
                         try:
                             ser = serial.Serial(p)
                             portList.append(p)
@@ -107,7 +108,7 @@ class RunSerial2Socket(object):
             return
         for i in range(len(portList)):
             p = portList[i]
-            self.instrCo.set("PORTS", "PORT%d" % i, r"\\.\COM%d" % (p+1))
+            self.instrCo.set("PORTS", "PORT%d" % i, r"\\.\COM%d" % (p + 1))
             section = "PORT%d" % i
             if not self.instrCo.has_section(section):
                 self.instrCo.add_section(section)
@@ -115,7 +116,7 @@ class RunSerial2Socket(object):
                 if option.upper() in ["BAUD", "STOPBITS", "PARITY", "HANDSHAKE", "BLOCKSIZE", "DELIM"]:
                     self.instrCo.set(section, option, self.appCo.get(section, option))
         self.instrCo.write()
-            
+
 HELP_STRING = \
 """
 
@@ -127,9 +128,11 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
-    
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -154,9 +157,10 @@ def HandleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-  
+
     return configFile
-    
+
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     app = SingleInstance("RunSerial2Socket")

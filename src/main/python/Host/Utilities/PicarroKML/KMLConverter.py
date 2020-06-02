@@ -19,7 +19,7 @@ from KMLConverterFrame import KMLConverterFrame
 #from Host.Utilities.PicarroKML.CustomConfigObj import CustomConfigObj
 from CustomConfigObj import CustomConfigObj
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -84,8 +84,9 @@ KML_CLOSE_TEMPLATE = """
 </kml>
 """
 
+
 class ConvertKML(object):
-    def __init__(self, datafile, textCtrlMsg, outputDir = ""):
+    def __init__(self, datafile, textCtrlMsg, outputDir=""):
         self.datafile = datafile
         self.textCtrlMsg = textCtrlMsg
         if outputDir:
@@ -116,31 +117,36 @@ class ConvertKML(object):
         numConcs = len(concList)
         timestamp = self._getTime(1)
         if os.path.isdir(self.outputDir):
-            kmlFilename = os.path.join(self.outputDir, os.path.split(self.datafile)[1].replace(".dat", "_PostProcessed_%s.kml" % (timestamp,)))
+            kmlFilename = os.path.join(self.outputDir,
+                                       os.path.split(self.datafile)[1].replace(".dat", "_PostProcessed_%s.kml" % (timestamp, )))
         else:
-            kmlFilename = os.path.split(self.datafile)[1].replace(".dat", "_PostProcessed_%s.kml" % (timestamp,))
+            kmlFilename = os.path.split(self.datafile)[1].replace(".dat", "_PostProcessed_%s.kml" % (timestamp, ))
 
         stackList = []
         for i in range(numConcs):
             kmlBlock = []
             for l in range(len(self.data)):
-                if shiftConcSamples <= 0 and l >= -1*shiftConcSamples:
+                if shiftConcSamples <= 0 and l >= -1 * shiftConcSamples:
                     # Current Conc with older GPS
                     try:
-                        kmlLine = '%s,%s,%f\n' % (self.data[l+shiftConcSamples][gpsIdxList[1]],self.data[l+shiftConcSamples][gpsIdxList[0]],(float(self.data[l][concIdxList[i]]) - baselineList[i]) * multiplierList[i])
+                        kmlLine = '%s,%s,%f\n' % (self.data[l + shiftConcSamples][gpsIdxList[1]],
+                                                  self.data[l + shiftConcSamples][gpsIdxList[0]],
+                                                  (float(self.data[l][concIdxList[i]]) - baselineList[i]) * multiplierList[i])
                         kmlBlock.append(kmlLine)
                     except:
                         pass
                 elif shiftConcSamples > 0 and l >= shiftConcSamples:
                     # Current GPS with older Conc
                     try:
-                        kmlLine = '%s,%s,%f\n' % (self.data[l][gpsIdxList[1]],self.data[l][gpsIdxList[0]],(float(self.data[l-shiftConcSamples][concIdxList[i]]) - baselineList[i]) * multiplierList[i])
+                        kmlLine = '%s,%s,%f\n' % (self.data[l][gpsIdxList[1]], self.data[l][gpsIdxList[0]],
+                                                  (float(self.data[l - shiftConcSamples][concIdxList[i]]) - baselineList[i]) *
+                                                  multiplierList[i])
                         kmlBlock.append(kmlLine)
                     except:
                         pass
             stackList.append("".join(kmlBlock))
 
-        out = open(kmlFilename,'w')
+        out = open(kmlFilename, 'w')
         out.flush()
         MAXPOLY = 1000
 
@@ -153,18 +159,19 @@ class ConvertKML(object):
             # stackList[i] has all the concentration data for the i'th species. We need to break it into chunks not exceeding MAXPOLY
             #  so as not to overflow Google Earth's rendering abilities
             kmlBlock = stackList[i].split("\n")
-            nBlocks = int(ceil(float(len(kmlBlock))/MAXPOLY))
+            nBlocks = int(ceil(float(len(kmlBlock)) / MAXPOLY))
             for j in range(nBlocks):
                 if j == 0:
                     out.write(KML_BODY_TEMPLATE % (i, baselineList[i], multiplierList[i], i, colorList[i], colorList[i],
-                                                   concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
+                                                   concList[i], i, "\n".join(kmlBlock[j * MAXPOLY:(j + 1) * MAXPOLY + 1])))
                 else:
-                    out.write(KML_CONTINUATION_TEMPLATE % (concList[i], i, "\n".join(kmlBlock[j*MAXPOLY:(j+1)*MAXPOLY+1])))
+                    out.write(KML_CONTINUATION_TEMPLATE % (concList[i], i, "\n".join(kmlBlock[j * MAXPOLY:(j + 1) * MAXPOLY + 1])))
         # KML_CLOSE_TEMPLATE
         out.write(KML_CLOSE_TEMPLATE)
         out.close()
 
         return kmlFilename
+
 
 class KMLConverter(KMLConverterFrame):
     def __init__(self, configFile, *args, **kwds):
@@ -195,7 +202,9 @@ class KMLConverter(KMLConverterFrame):
         self.Bind(wx.EVT_CLOSE, self.onCloseButton)
 
     def onOutDirMenu(self, event):
-        d = wx.DirDialog(None,"Specify the output directory for the converted KML files", style=wx.DD_DEFAULT_STYLE,
+        d = wx.DirDialog(None,
+                         "Specify the output directory for the converted KML files",
+                         style=wx.DD_DEFAULT_STYLE,
                          defaultPath=self.outputDir)
         if d.ShowModal() == wx.ID_OK:
             self.outputDir = d.GetPath().replace("\\", "/")
@@ -203,7 +212,9 @@ class KMLConverter(KMLConverterFrame):
             self.cp.write()
 
     def onShiftMenu(self, event):
-        d = wx.NumberEntryDialog(None,"Specify the number of shifting samples\n-N => Align current concentrations with GPS N samples ago\n+N => Align current GPS with concentrations N samples ago",
+        d = wx.NumberEntryDialog(
+            None,
+            "Specify the number of shifting samples\n-N => Align current concentrations with GPS N samples ago\n+N => Align current GPS with concentrations N samples ago",
             "Number of shifting samples", "Number of shifting samples", self.shiftConcSamples, -1000, 1000)
         if d.ShowModal() == wx.ID_OK:
             self.shiftConcSamples = d.GetValue()
@@ -212,7 +223,7 @@ class KMLConverter(KMLConverterFrame):
 
     def onOverUrl(self, event):
         if event.MouseEvent.LeftDown():
-            urlString = self.textCtrlMsg.GetRange(event.GetURLStart()+5, event.GetURLEnd())
+            urlString = self.textCtrlMsg.GetRange(event.GetURLStart() + 5, event.GetURLEnd())
             print urlString
             wx.LaunchDefaultBrowser(urlString)
         else:
@@ -222,7 +233,7 @@ class KMLConverter(KMLConverterFrame):
         if not self.converters:
             return
         self.textCtrlMsg.WriteText("Converting...\n")
-        procThread = threading.Thread(target = self.procFiles)
+        procThread = threading.Thread(target=self.procFiles)
         procThread.setDaemon(True)
         procThread.start()
 
@@ -231,15 +242,21 @@ class KMLConverter(KMLConverterFrame):
         self.Destroy()
 
     def onAboutMenu(self, evt):
-        d = wx.MessageDialog(None, "All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.", "About Picarro KML Converter", wx.OK)
+        d = wx.MessageDialog(
+            None,
+            "All rights reserved.\n\nVersion: 1.0.0\n\nThe copyright of this computer program belongs to Picarro Inc.\nAny reproduction or distribution of this program requires permission from Picarro Inc.",
+            "About Picarro KML Converter", wx.OK)
         d.ShowModal()
         d.Destroy()
 
     def onLoadFileMenu(self, evt):
         if not self.defaultPath:
             self.defaultPath = os.getcwd()
-        dlg = wx.FileDialog(self, "Select Data File or Directory...",
-                            self.defaultPath, wildcard = "*.dat", style=wx.OPEN|wx.MULTIPLE)
+        dlg = wx.FileDialog(self,
+                            "Select Data File or Directory...",
+                            self.defaultPath,
+                            wildcard="*.dat",
+                            style=wx.OPEN | wx.MULTIPLE)
         if dlg.ShowModal() == wx.ID_OK:
             self.filenames = dlg.GetPaths()
             dlg.Destroy()
@@ -251,7 +268,7 @@ class KMLConverter(KMLConverterFrame):
         self.converters = []
         self.textCtrlMsg.Clear()
         self.textCtrlMsg.WriteText("Loading...\n")
-        loadThread = threading.Thread(target = self.loadFiles)
+        loadThread = threading.Thread(target=self.loadFiles)
         loadThread.setDaemon(True)
         loadThread.start()
 
@@ -260,7 +277,9 @@ class KMLConverter(KMLConverterFrame):
         outList = []
         for c in self.converters:
             try:
-                outList.append(c.convert(self.concList, self.gpsList, self.colorList, self.baselineList, self.multiplierList, self.shiftConcSamples))
+                outList.append(
+                    c.convert(self.concList, self.gpsList, self.colorList, self.baselineList, self.multiplierList,
+                              self.shiftConcSamples))
             except Exception, err:
                 self.textCtrlMsg.WriteText("Exception! %r\n" % err)
         if outList:
@@ -288,6 +307,7 @@ class KMLConverter(KMLConverterFrame):
             self.procButton.Enable(False)
             self.closeButton.Enable(False)
 
+
 def handleCommandSwitches():
     shortOpts = "c:"
     longOpts = []
@@ -311,7 +331,8 @@ def handleCommandSwitches():
 
     return configFile
 
-if __name__ == "__main__" :
+
+if __name__ == "__main__":
     app = wx.PySimpleApp()
     wx.InitAllImageHandlers()
     configFile = handleCommandSwitches()

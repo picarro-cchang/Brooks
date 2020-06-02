@@ -31,28 +31,32 @@ except ImportError:
         # Internal dev
         from Host.Common import version
 
-
-EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
+EventManagerProxy_Init(APP_NAME, DontCareConnection=False)
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 def makePath(fn):
     def wrapper(self, dir, *args):
         if not os.path.isdir(dir):
             os.makedirs(dir)
         return fn(self, dir, *args)
+
     return wrapper
+
 
 def toAbsPath(fn):
     def wrapper(self, dir, *args):
         dir = os.path.abspath(dir)
         return fn(self, dir, *args)
+
     return wrapper
+
 
 class BzrHelper(object):
     @makePath
@@ -122,21 +126,24 @@ class BzrHelper(object):
         os.system(r'bzr commit -m "%s" --unchanged' % comment)
         Log(comment)
 
+
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.rpcServer = rpcServer
         self.exitFunction = exitFunction
+
     def run(self):
         self.rpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             self.exitFunction()
             Log("RpcServer exited and no longer serving.")
             print "RpcServer exited and no longer serving."
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
             print "Exception raised when calling exit function at exit of RPC server."
+
 
 class ConfigMonitor(object):
     def __init__(self, configFile):
@@ -174,7 +181,7 @@ class ConfigMonitor(object):
             # Check configurations and initialize branches if necessary
             for dir, ignore in self.monitoredDirs:
                 if not self.bzr.isBranch(dir):
-                     # Initialize
+                    # Initialize
                     self.bzr.init(dir, ignore)
                 if self.bzr.st(dir):
                     self.bzr.commit(dir)
@@ -182,10 +189,10 @@ class ConfigMonitor(object):
 
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_CONFIG_MONITOR),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = __version__,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=__version__,
+                                               threaded=True)
         self.rpcServer.register_function(self.monitor)
         self.rpcServer.register_function(self.enable)
         self.rpcServer.register_function(self.disable)
@@ -243,8 +250,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -272,6 +281,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

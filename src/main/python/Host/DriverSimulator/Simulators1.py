@@ -18,6 +18,7 @@ from Host.DriverSimulator.Utilities import prop_das, prop_fpga
 APP_NAME = "DriverSimulator"
 EventManagerProxy_Init(APP_NAME)
 
+
 class Simulator(object):
     # Base class for simulators that are stepped by the scheduler
     def step(self):
@@ -31,7 +32,7 @@ class LaserDacModel(object):
     # Thus for coarse = 36000 and fine = 32768, we have a current of 153.193 mA
     #  1mA of current change results from changing the coarse value by 277.78 digU
     #  or the fine value by 1388,89 digU
-    def __init__(self, coarse_sens = 0.0036, fine_sens = 0.00072, offset = 0):
+    def __init__(self, coarse_sens=0.0036, fine_sens=0.00072, offset=0):
         self.coarse_sens = coarse_sens
         self.fine_sens = fine_sens
         self.offset = offset
@@ -54,8 +55,13 @@ class LaserOpticalModel(object):
     # The nominal frequency of the laser is attained at a laser current of 150mA
     #  and a laser temperature of 25 degC
     def __init__(self,
-                 nominal_wn = 6237.0, wn_temp_sens = -0.45808, wn_current_sens = -0.035344,
-                 thresh0 = 0.8, char_temp=90., eff=0.17, eff_temp_sens=-7e-4):
+                 nominal_wn=6237.0,
+                 wn_temp_sens=-0.45808,
+                 wn_current_sens=-0.035344,
+                 thresh0=0.8,
+                 char_temp=90.,
+                 eff=0.17,
+                 eff_temp_sens=-7e-4):
         self.nominal_wn = nominal_wn
         self.wn_temp_sens = wn_temp_sens
         self.wn_current_sens = wn_current_sens
@@ -80,18 +86,27 @@ class LaserOpticalModel(object):
 
 
 class LaserThermalModel(object):
-    def __init__(self, num=None, den=None, offset=-40000,
-                 thermA=0.00112789997365, thermB=0.000234289997024, thermC=8.72979981636e-08):
+    def __init__(self,
+                 num=None,
+                 den=None,
+                 offset=-40000,
+                 thermA=0.00112789997365,
+                 thermB=0.000234289997024,
+                 thermC=8.72979981636e-08):
         """Represent the thermal characteristics of a laser as a ratio of z transforms
         and the thermistor by its Steinhart Hart coefficients"""
         if num is None:
-            num = [0.00000000e+00, -2.98418514e-05, -1.01071361e-04, 6.39149028e-05,
-                   5.23341031e-05, 2.66718772e-05, -1.01386506e-05, -9.73607948e-06]
+            num = [
+                0.00000000e+00, -2.98418514e-05, -1.01071361e-04, 6.39149028e-05, 5.23341031e-05, 2.66718772e-05, -1.01386506e-05,
+                -9.73607948e-06
+            ]
         self.num = num
         self.thermA = thermA
         if den is None:
-            den = [1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01,
-                   2.99996581e-01, 2.93872141e-02, -7.45088401e-02, -1.42310788e-04]
+            den = [
+                1.00000000e+00, -1.37628382e+00, 2.19598434e-02, 1.01673929e-01, 2.99996581e-01, 2.93872141e-02, -7.45088401e-02,
+                -1.42310788e-04
+            ]
         self.den = den
         self.offset = offset
         assert len(num) == len(den)
@@ -102,7 +117,7 @@ class LaserThermalModel(object):
         """Initialize the state to the steady-state associated with no TEC current"""
         degree = len(self.num) - 1
         ss_in = 32768
-        ss_out = (ss_in + self.offset) * sum(self.num[0:degree + 1])/sum(self.den[0:degree + 1])
+        ss_out = (ss_in + self.offset) * sum(self.num[0:degree + 1]) / sum(self.den[0:degree + 1])
         for i in reversed(xrange(degree)):
             self.state[i] = (ss_in + self.offset) * self.num[i + 1] - ss_out * self.den[i + 1]
             if i < degree - 1:
@@ -114,16 +129,17 @@ class LaserThermalModel(object):
         assert divisor != 0.0
         temp = self.state[0] + (self.num[0] / divisor) * (tec + self.offset)
         for i in xrange(degree - 1):
-            self.state[i] = self.state[i+1] + (self.num[i+1] * (tec + self.offset) - self.den[i+1]*temp) / divisor
-        self.state[degree - 1] = (self.num[degree] * (tec + self.offset) - self.den[degree]*temp) / divisor
+            self.state[i] = self.state[i + 1] + (self.num[i + 1] * (tec + self.offset) - self.den[i + 1] * temp) / divisor
+        self.state[degree - 1] = (self.num[degree] * (tec + self.offset) - self.den[degree] * temp) / divisor
         return temp
 
     def tempToResistance(self, temp):
         def cubeRoot(x):
-            return x ** (1.0/3.0)
-        y = (self.thermA-1.0/(temp + 273.15))/self.thermC
-        x = math.sqrt((self.thermB/(3.0*self.thermC))**3 + (y/2.0)**2)
-        return math.exp(cubeRoot(x - 0.5*y) - cubeRoot(x + 0.5*y))
+            return x**(1.0 / 3.0)
+
+        y = (self.thermA - 1.0 / (temp + 273.15)) / self.thermC
+        x = math.sqrt((self.thermB / (3.0 * self.thermC))**3 + (y / 2.0)**2)
+        return math.exp(cubeRoot(x - 0.5 * y) - cubeRoot(x + 0.5 * y))
 
 
 class LaserSimulator(Simulator):
@@ -132,6 +148,7 @@ class LaserSimulator(Simulator):
     currentMonitor = None
     fpgaCoarse = None
     fpgaFine = None
+
     # This code simulates the behavior of a laser
     def __init__(self, sim, dacModel=None, opticalModel=None, thermalModel=None):
         self.sim = sim
@@ -167,12 +184,9 @@ class Laser1Simulator(LaserSimulator):
     fpgaFine = prop_fpga(interface.FPGA_INJECT, interface.INJECT_LASER1_FINE_CURRENT)
 
 
-
-
-
-
 class InjectionSimulator(object):
     pass
+
 
 class WlmModel(object):
     # This code simulates the behavior of the wavelength monitor. The wavelength monitor

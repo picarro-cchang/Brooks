@@ -12,8 +12,9 @@ from QNonBlockingTimer import QNonBlockingTimer
 from ReferenceGas import ReferenceGas
 from Task import Task
 
+
 class TaskManager(QtCore.QObject):
-    stop_signal = QtCore.pyqtSignal()       # Tell current task to stop, aborts the queue
+    stop_signal = QtCore.pyqtSignal()  # Tell current task to stop, aborts the queue
     ping_task_signal = QtCore.pyqtSignal()
     next_subtask_signal = QtCore.pyqtSignal()
     task_countdown_signal = QtCore.pyqtSignal(int, int, str, bool)
@@ -32,11 +33,11 @@ class TaskManager(QtCore.QObject):
         self.iniFile = iniFile
         self.username = None
         self.fullname = None
-        self.running_task_idx = None    # Running task idx, None if no jobs running
-        self.abort = False              # When true, abort current job then reset
+        self.running_task_idx = None  # Running task idx, None if no jobs running
+        self.abort = False  # When true, abort current job then reset
         self.monitor_data_stream = False
-        self.co = None                  # Handle to the input ini file
-        self.autologout_time = 0        # How long before auto shutdown, set with ini settings
+        self.co = None  # Handle to the input ini file
+        self.autologout_time = 0  # How long before auto shutdown, set with ini settings
         self.ds = DataStoreForQt()
         self.db = db
         self._initAllObjectsAndConnections()
@@ -115,10 +116,10 @@ class TaskManager(QtCore.QObject):
         # Set the time to a minumum of 5 minutes.
         #
         self.autologout_time = int(self.co["TASKS"]["GasDelayBeforeMeasureSeconds"]) + int(self.co["TASKS"]["GasMeasureSeconds"])
-        self.autologout_time *= 10 # should be enough time to do all the work
-        if self.autologout_time%60 != 0:
-            i = self.autologout_time/60
-            self.autologout_time = 60 * (i+1)
+        self.autologout_time *= 10  # should be enough time to do all the work
+        if self.autologout_time % 60 != 0:
+            i = self.autologout_time / 60
+            self.autologout_time = 60 * (i + 1)
         if self.autologout_time < 300:
             self.autologout_time = 300
         return
@@ -141,9 +142,7 @@ class TaskManager(QtCore.QObject):
         self.task_settings_signal.emit(self.co)
         self.start_data_stream()
         self.hostSession = requests.Session()
-        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time,
-                              description="Auto logout",
-                              busy_hint = False)
+        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time, description="Auto logout", busy_hint=False)
         self.autologout_timer.tick_signal.connect(self.autologout_timer_signal)
         self.autologout_timer.finish_signal.connect(self.autologout_timer_finished)
         self.autologout_timer.start()
@@ -206,7 +205,7 @@ class TaskManager(QtCore.QObject):
             self.db.log(logStr)
             self.job_aborted_signal.emit()
         else:
-            if self.running_task_idx < len(self.threads)-1:
+            if self.running_task_idx < len(self.threads) - 1:
                 self.tasks[self.running_task_idx].task_prompt_user_signal.disconnect(self.prompt_user_signal)
                 self.next_subtask_signal.disconnect(self.tasks[self.running_task_idx].task_next_signal)
                 self.running_task_idx += 1
@@ -216,7 +215,7 @@ class TaskManager(QtCore.QObject):
                 self.next_subtask_signal.connect(self.tasks[self.running_task_idx].task_next_signal)
                 self.threads[self.running_task_idx].start()
             else:
-                self.reset_autologout_timer()   # Give the user time to inspect or download their report
+                self.reset_autologout_timer()  # Give the user time to inspect or download their report
                 self.job_complete_signal.emit()
                 self.running_task_idx = None
         return
@@ -230,7 +229,7 @@ class TaskManager(QtCore.QObject):
         Get heartbeat signal from a running thread to update a progress bar
         :return:
         """
-        print("Got heartbeat signal from %s" %task_id)
+        print("Got heartbeat signal from %s" % task_id)
         return
 
     def task_countdown_slot(self, countdown_sec, set_time_sec, description, busy):
@@ -245,9 +244,7 @@ class TaskManager(QtCore.QObject):
         self.autologout_timer.tick_signal.disconnect(self.autologout_timer_signal)
         self.autologout_timer.finish_signal.disconnect(self.autologout_timer_finished)
         # self.autologout_timer.stop()
-        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time,
-                              description="Auto logout",
-                              busy_hint = False)
+        self.autologout_timer = QNonBlockingTimer(set_time_sec=self.autologout_time, description="Auto logout", busy_hint=False)
         self.autologout_timer.tick_signal.connect(self.autologout_timer_signal)
         self.autologout_timer.finish_signal.connect(self.autologout_timer_finished)
         # Here's a little quirk.  If we call self.autologout_timer.start() directly
@@ -275,11 +272,12 @@ class TaskManager(QtCore.QObject):
         """
         self.abort = True
         for task in self.tasks:
-            task.abort_slot()   # Tells any running task to stop
+            task.abort_slot()  # Tells any running task to stop
         return
 
     def record_report_in_history_log_slot(self, filename, obj):
         reportFileName = os.path.basename(str(filename))
-        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"], reportFileName)
+        logStr = "Completed surrogate gas validation with {0}. Report file: {1}".format(self.co["TASKS"]["Data_Key"],
+                                                                                        reportFileName)
         self.db.log(logStr)
         return

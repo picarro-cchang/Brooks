@@ -50,93 +50,85 @@ LOG_DIR = os.environ['PICARRO_LOG_DIR']
 AppPath = os.path.dirname(os.path.abspath(__file__))
 TimeStamp = time.time
 
+
 class EventViewListCtrl(wx.ListCtrl, listmix.ListCtrlAutoWidthMixin):
     """ListCtrl that auto-sizes the right-most column to fit the width.
 
     DataSource must be the EventStore object which contains the event history
     """
-    def __init__(self, parent, id, config, DataSource, pos=wx.DefaultPosition,
-                 size=wx.DefaultSize):
-        wx.ListCtrl.__init__(self, parent, id, pos, size,
-                             style = wx.LC_REPORT
-                             | wx.LC_VIRTUAL
-                             | wx.BORDER_NONE
-                             | wx.LC_SINGLE_SEL
-                         )
+    def __init__(self, parent, id, config, DataSource, pos=wx.DefaultPosition, size=wx.DefaultSize):
+        wx.ListCtrl.__init__(self, parent, id, pos, size, style=wx.LC_REPORT | wx.LC_VIRTUAL | wx.BORDER_NONE | wx.LC_SINGLE_SEL)
         listmix.ListCtrlAutoWidthMixin.__init__(self)
         self.ilEventIcons = wx.ImageList(16, 16)
         self.SetImageList(self.ilEventIcons, wx.IMAGE_LIST_SMALL)
         myIL = self.GetImageList(wx.IMAGE_LIST_SMALL)
-        self.IconIndex_Warning = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png',
-                                                    wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Info = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png',
-                                                 wx.BITMAP_TYPE_ICO))
-        self.IconIndex_Critical = myIL.Add(wx.Bitmap(AppPath + '/dialog-error.png',
-                                                     wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Warning = myIL.Add(wx.Bitmap(AppPath + '/task-attention.png', wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Info = myIL.Add(wx.Bitmap(AppPath + '/dialog-information.png', wx.BITMAP_TYPE_ICO))
+        self.IconIndex_Critical = myIL.Add(wx.Bitmap(AppPath + '/dialog-error.png', wx.BITMAP_TYPE_ICO))
         self._DataSource = DataSource
         self.firstItem = 0
 
         self.columns = []
-        if not config.getboolean("StatusBox","ShowHeader"):
+        if not config.getboolean("StatusBox", "ShowHeader"):
             self.SetSingleStyle(wx.LC_NO_HEADER)
-        self.showIcon = config.getboolean("StatusBox","ShowIcon")
+        self.showIcon = config.getboolean("StatusBox", "ShowIcon")
         if self.showIcon:
             self.columns.append(("", dict(width=24), None))
         else:
-            self.columns.append(("",dict(width=0),None))
-        if config.getboolean("StatusBox","ShowIndex"):
-            self.columns.append(("Index",dict(format=wx.LIST_FORMAT_RIGHT,width=55),0))
-        if config.getboolean("StatusBox","ShowDate"):
-            self.columns.append(("Date",dict(width=80),1))
-        if config.getboolean("StatusBox","ShowTime"):
-            self.columns.append(("Time",dict(width=60),2))
-        if config.getboolean("StatusBox","ShowSource"):
-            self.columns.append(("Source",dict(width=100),3))
-        if config.getboolean("StatusBox","ShowCode"):
-            self.columns.append(("Code",dict(width=50),5))
-        if config.getboolean("StatusBox","ShowDescription"):
-            self.columns.append(("Description",dict(width=250),6))
+            self.columns.append(("", dict(width=0), None))
+        if config.getboolean("StatusBox", "ShowIndex"):
+            self.columns.append(("Index", dict(format=wx.LIST_FORMAT_RIGHT, width=55), 0))
+        if config.getboolean("StatusBox", "ShowDate"):
+            self.columns.append(("Date", dict(width=80), 1))
+        if config.getboolean("StatusBox", "ShowTime"):
+            self.columns.append(("Time", dict(width=60), 2))
+        if config.getboolean("StatusBox", "ShowSource"):
+            self.columns.append(("Source", dict(width=100), 3))
+        if config.getboolean("StatusBox", "ShowCode"):
+            self.columns.append(("Code", dict(width=50), 5))
+        if config.getboolean("StatusBox", "ShowDescription"):
+            self.columns.append(("Description", dict(width=250), 6))
         for i in range(len(self.columns)):
             col = self.columns[i]
-            self.InsertColumn(i, col[0],**col[1])
+            self.InsertColumn(i, col[0], **col[1])
         self.SetItemCount(self._DataSource.getEventCount())
 
-    def OnGetItemText(self,item,col):
-        x = self._DataSource.getEvent(self.firstItem+item)
+    def OnGetItemText(self, item, col):
+        x = self._DataSource.getEvent(self.firstItem + item)
         field = self.columns[col][2]
         if x is None or field is None:
             return ""
         else:
-            return "%s" % (x[field],)
+            return "%s" % (x[field], )
 
-    def OnGetItemAttr(self,item):
+    def OnGetItemAttr(self, item):
         return None
 
     def OnGetItemImage(self, item):
         if not self.showIcon: return None
-        evtLevel = self._DataSource.getEvent(self.firstItem+item)[4]
-        if evtLevel == 0: #debug
+        evtLevel = self._DataSource.getEvent(self.firstItem + item)[4]
+        if evtLevel == 0:  #debug
             return self.IconIndex_Info
         elif evtLevel == 1:
             return -1
         elif evtLevel == 2:
             return self.IconIndex_Warning
-        elif evtLevel == 3: #Major
+        elif evtLevel == 3:  #Major
             return self.IconIndex_Critical
         else:
             return -1
 
     def RefreshList(self):
         lastVisible = self.GetTopItem() >= self.GetItemCount() - self.GetCountPerPage()
-        if self.firstItem+self.GetTopItem()<self._DataSource.getFirstEventIndex():
+        if self.firstItem + self.GetTopItem() < self._DataSource.getFirstEventIndex():
             lastVisible = True
         self.SetItemCount(self._DataSource.getEventCount())
         if lastVisible:
             itemCount = self.GetItemCount()
             if self._DataSource.getEventCount() == self._DataSource.getMaxEvents():
-                self.RefreshItems(0,itemCount-1)            
+                self.RefreshItems(0, itemCount - 1)
             if itemCount > 0:
-                self.EnsureVisible(itemCount-1)
+                self.EnsureVisible(itemCount - 1)
             self.firstItem = self._DataSource.getFirstEventIndex()
 
 
@@ -148,27 +140,27 @@ class InstStatusPanel(wx.Panel):
         wx.Panel.__init__(self, *args, **kwds)
 
         self.warmBoxTempLabel = wx.StaticText(self, -1, "Warm Box Temp (degC)")
-        setItemFont(self.warmBoxTempLabel,font)
+        setItemFont(self.warmBoxTempLabel, font)
         self.warmBoxTempLabel.SetBackgroundColour(wx.RED)
         self.cavityTempLabel = wx.StaticText(self, -1, "Cavity Temperature (degC)")
-        setItemFont(self.cavityTempLabel,font)
+        setItemFont(self.cavityTempLabel, font)
         self.cavityPressureLabel = wx.StaticText(self, -1, "Cavity Pressure (Torr)")
-        setItemFont(self.cavityPressureLabel,font)
+        setItemFont(self.cavityPressureLabel, font)
 
-        self.warmBoxTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.warmBoxTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2)
         self.warmBoxTemp.SetMinSize((55, -1))
         self.warmBoxTemp.SetBackgroundColour('#85B24A')
-        setItemFont(self.warmBoxTemp,font)
+        setItemFont(self.warmBoxTemp, font)
 
-        self.cavityTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.cavityTemp = wx.TextCtrl(self, -1, style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2)
         self.cavityTemp.SetMinSize((55, -1))
         self.cavityTemp.SetBackgroundColour('#85B24A')
-        setItemFont(self.cavityTemp,font)
+        setItemFont(self.cavityTemp, font)
 
-        self.cavityPressure = wx.TextCtrl(self, -1, style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2)
+        self.cavityPressure = wx.TextCtrl(self, -1, style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2)
         self.cavityPressure.SetMinSize((55, -1))
         self.cavityPressure.SetBackgroundColour('#85B24A')
-        setItemFont(self.cavityPressure,font)
+        setItemFont(self.cavityPressure, font)
 
         self.__do_layout()
 
@@ -190,55 +182,60 @@ class InstStatusPanel(wx.Panel):
 
 
 class QuickGui(wx.Frame):
-    def __init__(self, configFile, defaultTitle = ""):
-        wx.Frame.__init__(self,parent=None,id=-1,title='CRDS_Data_Viewer',size=(1200,700),
-                          style=wx.CAPTION|wx.MINIMIZE_BOX|wx.MAXIMIZE_BOX|wx.RESIZE_BORDER|wx.SYSTEM_MENU|wx.TAB_TRAVERSAL)
+    def __init__(self, configFile, defaultTitle=""):
+        wx.Frame.__init__(self,
+                          parent=None,
+                          id=-1,
+                          title='CRDS_Data_Viewer',
+                          size=(1200, 700),
+                          style=wx.CAPTION | wx.MINIMIZE_BOX | wx.MAXIMIZE_BOX | wx.RESIZE_BORDER | wx.SYSTEM_MENU
+                          | wx.TAB_TRAVERSAL)
 
         self.commandQueue = Queue.Queue()
         self.defaultTitle = defaultTitle
 
-        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName = APP_NAME)
-        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName = APP_NAME)
-        self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName = APP_NAME)
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.driverRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName=APP_NAME)
+        self.dataManagerRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, ClientName=APP_NAME)
+        self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SAMPLE_MGR, ClientName=APP_NAME)
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         try:
-            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName = APP_NAME)
+            self.valveSeqRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_VALVE_SEQUENCER, ClientName=APP_NAME)
         except:
             self.valveSeqRpc = None
 
         self.configFile = configFile
         self.config = CustomConfigObj(self.configFile)
-        self.valveSeqOption = self.config.getboolean("ValveSequencer","Enable",True)
-        self.numGraphs = max(1, self.config.getint("Graph","NumGraphs",1))
-        self.colorDatabase = ColorDatabase(self.config,"Colors")
-        self.fontDatabase = FontDatabase(self.config,"Fonts",self.colorDatabase)
-        self.sourceSubstDatabase = SubstDatabase.fromIni(self.config,"SourceFilters","string",["replacement"])
-        self.keySubstDatabase = SubstDatabase.fromIni(self.config,"KeyFilters","string",
-                                                       ["replacement","units","format"],
-                                                       ["\g<0>","","%.3f"])
+        self.valveSeqOption = self.config.getboolean("ValveSequencer", "Enable", True)
+        self.numGraphs = max(1, self.config.getint("Graph", "NumGraphs", 1))
+        self.colorDatabase = ColorDatabase(self.config, "Colors")
+        self.fontDatabase = FontDatabase(self.config, "Fonts", self.colorDatabase)
+        self.sourceSubstDatabase = SubstDatabase.fromIni(self.config, "SourceFilters", "string", ["replacement"])
+        self.keySubstDatabase = SubstDatabase.fromIni(self.config, "KeyFilters", "string", ["replacement", "units", "format"],
+                                                      ["\g<0>", "", "%.3f"])
 
         if "StandardModeKeysSources" in self.config:
             self.sourceStandardModeDatabase = None
             self.keyStandardModeDatabase = None
-            self.standardModeSourcesDict = StringDict.fromIni(self.config,"StandardModeKeysSources","source")
+            self.standardModeSourcesDict = StringDict.fromIni(self.config, "StandardModeKeysSources", "source")
             self.standardModeKeysDict = {}
             for idx in range(len(self.standardModeSourcesDict.getStrings())):
-                self.standardModeKeysDict[idx] = StringDict.fromIni(self.config,"StandardModeKeysSources","key%d"%idx)
+                self.standardModeKeysDict[idx] = StringDict.fromIni(self.config, "StandardModeKeysSources", "key%d" % idx)
         else:
-            self.sourceStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeSources","string")
-            self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config,"StandardModeKeys","string")
+            self.sourceStandardModeDatabase = SubstDatabase.fromIni(self.config, "StandardModeSources", "string")
+            self.keyStandardModeDatabase = SubstDatabase.fromIni(self.config, "StandardModeKeys", "string")
 
-        self.displayFilterSubstDatabase = SubstDatabase.fromIni(self.config,"DisplayFilters","key",["select"],[""])
-        self.defaultSources = StringDict.fromIni(self.config,"Defaults","source")
+        self.displayFilterSubstDatabase = SubstDatabase.fromIni(self.config, "DisplayFilters", "key", ["select"], [""])
+        self.defaultSources = StringDict.fromIni(self.config, "Defaults", "source")
         self.defaultKeys = {}
         for idx in range(self.numGraphs):
-            self.defaultKeys[idx] = StringDict.fromIni(self.config,"Defaults","key%d"%idx)
-        self.dataStore  = DataStoreForGraphPanels(self.config)
+            self.defaultKeys[idx] = StringDict.fromIni(self.config, "Defaults", "key%d" % idx)
+        self.dataStore = DataStoreForGraphPanels(self.config)
         self.eventStore = EventStore(self.config)
         self.alarmInterface = AlarmInterface(self.config, APP_NAME)
         self.alarmInterface.getAlarmData()
-        self.sysAlarmInterface = SysAlarmInterface(self.config.getint("AlarmBox", "ledBlinkTime", 0) )
+        self.sysAlarmInterface = SysAlarmInterface(self.config.getint("AlarmBox", "ledBlinkTime", 0))
         self.dataLoggerInterface = DataLoggerInterface(self.config, APP_NAME)
         self.dataLoggerInterface.getDataLoggerInfo()
         self.instMgrInterface = InstMgrInterface(self.config, APP_NAME)
@@ -247,21 +244,21 @@ class QuickGui(wx.Frame):
         self.numAlarms = self.config.getint("AlarmBox", "NumAlarms", 4)
         self.numAlarmsDisplay = min(5, self.numAlarms)
 
-        self.showGraphZoomed = self.config.getboolean("Graph","ShowGraphZoomed",False)
+        self.showGraphZoomed = self.config.getboolean("Graph", "ShowGraphZoomed", False)
         self.shutdownShippingSource = self.config.get("ShutdownShippingSource", "Source", "Sensors")
         self.hostSession = requests.Session()
         self.lockTime = False
         self.allTimeLocked = False
         self.sourceChoices = []
-        self.keyChoices = [None]*self.numGraphs
-        self.source = [None]*self.numGraphs
-        self.dataKey = [None]*self.numGraphs
+        self.keyChoices = [None] * self.numGraphs
+        self.source = [None] * self.numGraphs
+        self.dataKey = [None] * self.numGraphs
         self.logo = None
         self.fullInterface = False
         self.userLevel = 0
-        self.userLoggedIn = False    
-        self.showStat = False # Show data statistics panels
-        self.showInstStat = True # Show instrument status panels
+        self.userLoggedIn = False
+        self.showStat = False  # Show data statistics panels
+        self.showInstStat = True  # Show instrument status panels
         self.serviceModeOnlyControls = []
         self.statControls = []
         self.cavityTempS = None
@@ -271,8 +268,8 @@ class QuickGui(wx.Frame):
         self.cavityPressureS = None
         self.cavityPressureT = None
         self.defaultLineMarkerColor = self.colorDatabase.getColorFromIni("Graph", "LineColor")
-        self.defaultLineWidth = self.config.getfloat("Graph","LineWidth")
-        self.defaultMarkerSize = self.config.getfloat("Graph","MarkerSize")
+        self.defaultLineWidth = self.config.getfloat("Graph", "LineWidth")
+        self.defaultMarkerSize = self.config.getfloat("Graph", "MarkerSize")
         self.lineMarkerColor = self.defaultLineMarkerColor
         self.restartUserLog = False
         self.externalTools = {}
@@ -304,7 +301,7 @@ class QuickGui(wx.Frame):
             self.cavityPressureS = 140.0
             self.cavityPressureTPer = 0.05
 
-        self.cavityPressureT = self.cavityPressureTPer*self.cavityPressureS
+        self.cavityPressureT = self.cavityPressureTPer * self.cavityPressureS
 
         # Set up instrument status panel source and key
         self.instStatSource = self.config.get("InstStatPanel", "Source", "Sensors")
@@ -322,7 +319,7 @@ class QuickGui(wx.Frame):
                 self.syncPeriphDict = {}
                 periphIntrfConfig = os.path.join(basePath, self.config.get("PeriphIntrf", "periphIntrfConfig"))
                 selectAll = self.config.getboolean("PeriphIntrf", "showAll", False)
-                (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig,selectAll)
+                (self.rawPeriphDict, self.syncPeriphDict) = parsePeriphIntrfConfig(periphIntrfConfig, selectAll)
                 # Add peripheral interface columns (if available) in standard mode
                 if self.rawPeriphDict:
                     self._addStandardKeys(self.rawPeriphDict)
@@ -344,7 +341,7 @@ class QuickGui(wx.Frame):
         self.iHelp = wx.Menu()
 
         #user level setting menu
-        self.menuBar.Append(self.iUserSettings,"Users")
+        self.menuBar.Append(self.iUserSettings, "Users")
         self.idLoginUser = wx.NewId()
 
         self.iGuiMode = wx.MenuItem(self.iUserSettings, self.idLoginUser, "User Login", "", wx.ITEM_NORMAL)
@@ -353,7 +350,7 @@ class QuickGui(wx.Frame):
 
         self.iGuiMode.Enable(True)
 
-        self.menuBar.Append(self.iView,"View")
+        self.menuBar.Append(self.iView, "View")
         self.idLockTime = wx.NewId()
         self.iLockTime = wx.MenuItem(self.iView, self.idLockTime, "Lock time axis when zoomed", "", wx.ITEM_CHECK)
         self.iView.AppendItem(self.iLockTime)
@@ -379,26 +376,24 @@ class QuickGui(wx.Frame):
                         self.externalTools[tools[k]]["user"] = \
                             [self.userLevelMap[t.strip()] for t in tools["toolUser%d" % idx].split(",")]
 
-
-        self.menuBar.Append(self.iTools,"Tools")
+        self.menuBar.Append(self.iTools, "Tools")
         if self.config.getboolean("UserCalibration", "Enable", True):
             self.idUserCal = wx.NewId()
             self.iUserCal = wx.MenuItem(self.iTools, self.idUserCal, "User Calibration", "", wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.iUserCal)
             self.Bind(wx.EVT_MENU, self._OnUserCal, id=self.idUserCal)
 
-        for tool in sorted(self.externalTools, key = lambda k: self.externalTools[k]["tool_number"]):
+        for tool in sorted(self.externalTools, key=lambda k: self.externalTools[k]["tool_number"]):
             self.externalTools[tool]['id'] = wx.NewId()
-            self.externalTools[tool]['menu'] = wx.MenuItem(self.iTools,
-                                                        self.externalTools[tool]['id'], 
-                                                        tool, "", wx.ITEM_NORMAL)
+            self.externalTools[tool]['menu'] = wx.MenuItem(self.iTools, self.externalTools[tool]['id'], tool, "", wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.externalTools[tool]['menu'])
         self.menuBar.EnableTop(1, False)
         self.menuBar.EnableTop(2, False)
         try:
             self.pulseSource = self.config.get("PulseAnalyzer", "Source")
             self.idPulseAnalyzerParam = wx.NewId()
-            self.iPulseAnalyzerParam = wx.MenuItem(self.iTools, self.idPulseAnalyzerParam, "Pulse Analyzer Parameters", "", wx.ITEM_NORMAL)
+            self.iPulseAnalyzerParam = wx.MenuItem(self.iTools, self.idPulseAnalyzerParam, "Pulse Analyzer Parameters", "",
+                                                   wx.ITEM_NORMAL)
             self.iTools.AppendItem(self.iPulseAnalyzerParam)
             self.Bind(wx.EVT_MENU, self.OnPulseAnalyzerParam, id=self.idPulseAnalyzerParam)
         except:
@@ -410,7 +405,7 @@ class QuickGui(wx.Frame):
             self.iTools.AppendItem(self.iValveSeq)
             self.Bind(wx.EVT_MENU, self._OnValveSeq, id=self.idValveSeq)
 
-        self.menuBar.Append(self.iHelp,"Help")
+        self.menuBar.Append(self.iHelp, "Help")
         self.idABOUT = wx.NewId()
         self.iAbout = wx.MenuItem(self.iHelp, self.idABOUT, "About", "", wx.ITEM_NORMAL)
         self.iHelp.AppendItem(self.iAbout)
@@ -421,7 +416,7 @@ class QuickGui(wx.Frame):
         self.Bind(wx.EVT_MENU, self._OnLoginUser, id=self.idLoginUser)
 
         self.Bind(wx.EVT_MENU, self._OnLockTime, id=self.idLockTime)
-        self.iLockTime.Enable(self.numGraphs>1)
+        self.iLockTime.Enable(self.numGraphs > 1)
         self.Bind(wx.EVT_MENU, self._OnStatDisplay, id=self.idStatDisplay)
         self.Bind(wx.EVT_MENU, self._OnInstStatDisplay, id=self.idInstStatDisplay)
 
@@ -466,7 +461,6 @@ class QuickGui(wx.Frame):
         self._OnTimer(evt)
         self.Show(True)
 
-
     def _addStandardKeys(self, sourceKeyDict):
         """Add standard keys on GUI
         souceKeyDict = {"source": ["source1", "source2"], "data": ["data1", "data2", ...]}
@@ -481,17 +475,17 @@ class QuickGui(wx.Frame):
             raise
 
     def _layoutFrame(self):
-        self.mainPanel = wx.Panel(parent=self,id=-1)
-        font,fgColour,bgColour = self.fontDatabase.getFontFromIni('Panel')
+        self.mainPanel = wx.Panel(parent=self, id=-1)
+        font, fgColour, bgColour = self.fontDatabase.getFontFromIni('Panel')
         self.mainPanel.SetBackgroundColour(bgColour)
         self.mainPanel.SetForegroundColour(fgColour)
         # Define the title band
         if self.defaultTitle:
             label = self.defaultTitle
         else:
-            label=getInnerStr(self.config.get('Title','String'))
+            label = getInnerStr(self.config.get('Title', 'String'))
         self.titleLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=label, style=wx.ALIGN_CENTER)
-        setItemFont(self.titleLabel,self.fontDatabase.getFontFromIni('Title'))
+        setItemFont(self.titleLabel, self.fontDatabase.getFontFromIni('Title'))
 
         # Define the footer band
 
@@ -499,66 +493,70 @@ class QuickGui(wx.Frame):
         #copyLabel=getInnerStr(self.config.get('Footer','String'))
         copyLabel = "Copyright Picarro, Inc. 1999-%d" % time.localtime()[0]
         footerLabel = wx.StaticText(parent=self.mainPanel, id=-1, label=copyLabel, style=wx.ALIGN_CENTER)
-        setItemFont(footerLabel,self.fontDatabase.getFontFromIni('Footer'))
+        setItemFont(footerLabel, self.fontDatabase.getFontFromIni('Footer'))
         # Add the time to the right of the footer label
         current_time = self.get_time()
         self.footerTime = wx.StaticText(parent=self.mainPanel, id=-1, label=current_time, style=wx.ALIGN_RIGHT)
 
         # Define the graph panels
         self.graphPanel = []
-        font,fgColour,bgColour = self.fontDatabase.getFontFromIni('Graph')
+        font, fgColour, bgColour = self.fontDatabase.getFontFromIni('Graph')
         for idx in range(self.numGraphs):
-            gp = GraphPanel.GraphPanel(parent=self.mainPanel,id=-1)
-            gp.SetGraphProperties(ylabel='Y',
-                                  timeAxes=((self.config.getfloat("Graph","TimeOffset_hr"),
-                                              self.config.getboolean("Graph","UseUTC")),False),
-                                  grid=self.config.getboolean("Graph","Grid"),
-                                  gridColour=self.colorDatabase.getColorFromIni("Graph", "GridColor"),
-                                  backgroundColour=self.colorDatabase.getColorFromIni("Graph", "PaperColor"),
-                                  font=font,
-                                  fontSizeAxis=font.GetPointSize(),
-                                  frameColour=bgColour,
-                                  foregroundColour=fgColour,
-                                  XTickFormat=self.config.get("Graph","TimeAxisFormat","%H:%M:%S\n%d-%b-%Y"),
-                                  heightAdjustment = self.config.getfloat("Graph","HeightAdjustment",0.0),
-                                  )
+            gp = GraphPanel.GraphPanel(parent=self.mainPanel, id=-1)
+            gp.SetGraphProperties(
+                ylabel='Y',
+                timeAxes=((self.config.getfloat("Graph", "TimeOffset_hr"), self.config.getboolean("Graph", "UseUTC")), False),
+                grid=self.config.getboolean("Graph", "Grid"),
+                gridColour=self.colorDatabase.getColorFromIni("Graph", "GridColor"),
+                backgroundColour=self.colorDatabase.getColorFromIni("Graph", "PaperColor"),
+                font=font,
+                fontSizeAxis=font.GetPointSize(),
+                frameColour=bgColour,
+                foregroundColour=fgColour,
+                XTickFormat=self.config.get("Graph", "TimeAxisFormat", "%H:%M:%S\n%d-%b-%Y"),
+                heightAdjustment=self.config.getfloat("Graph", "HeightAdjustment", 0.0),
+            )
             #gp.Update()
 
             self.graphPanel.append(gp)
 
         # Define a gauge indicating the buffer level
-        self.gauge = wx.Gauge(parent=self.mainPanel,range=100,style=wx.GA_VERTICAL,
-                              size=(10,-1))
+        self.gauge = wx.Gauge(parent=self.mainPanel, range=100, style=wx.GA_VERTICAL, size=(10, -1))
 
-        self.userLogButton = wx.Button(parent=self.mainPanel,id=-1,size=(-1,25),label="Start User Log(s)")
-        setItemFont(self.userLogButton,self.fontDatabase.getFontFromIni('MeasurementButtons'))
+        self.userLogButton = wx.Button(parent=self.mainPanel, id=-1, size=(-1, 25), label="Start User Log(s)")
+        setItemFont(self.userLogButton, self.fontDatabase.getFontFromIni('MeasurementButtons'))
         self.userLogButton.State = False
         self.restartUserLog = False
 
         self.Bind(wx.EVT_BUTTON, self._OnUserLogButton, self.userLogButton)
 
         # Define the status log window
-        logFileBox = wx.StaticBox(parent=self.mainPanel,id=1,label="Saved Data File")
-        eventLogBox = wx.StaticBox(parent=self.mainPanel,id=-1,label="Measurement Status")
-        height = self.config.getint("StatusBox","Height")
+        logFileBox = wx.StaticBox(parent=self.mainPanel, id=1, label="Saved Data File")
+        eventLogBox = wx.StaticBox(parent=self.mainPanel, id=-1, label="Measurement Status")
+        height = self.config.getint("StatusBox", "Height")
         if self.numGraphs > 2:
             height *= 0.8
-        self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,id=-1,config=self.config,
-                                                  DataSource=self.eventStore,size=(-1,height))
-        setItemFont(self.eventViewControl,self.fontDatabase.getFontFromIni('StatusBox'))
-        setItemFont(eventLogBox,self.fontDatabase.getFontFromIni('Panel'))
-        setItemFont(logFileBox,self.fontDatabase.getFontFromIni('Panel'))
+        self.eventViewControl = EventViewListCtrl(parent=self.mainPanel,
+                                                  id=-1,
+                                                  config=self.config,
+                                                  DataSource=self.eventStore,
+                                                  size=(-1, height))
+        setItemFont(self.eventViewControl, self.fontDatabase.getFontFromIni('StatusBox'))
+        setItemFont(eventLogBox, self.fontDatabase.getFontFromIni('Panel'))
+        setItemFont(logFileBox, self.fontDatabase.getFontFromIni('Panel'))
 
-        self.userLogTextCtrl = wx.TextCtrl(parent=self.mainPanel,id=-1,#size=(-1,12),
-                                        style=wx.TE_READONLY|wx.TE_RICH2|wx.TE_MULTILINE,
-                                        value="No log file")
-        setItemFont(self.userLogTextCtrl,self.fontDatabase.getFontFromIni('UserLogBox'))
+        self.userLogTextCtrl = wx.TextCtrl(
+            parent=self.mainPanel,
+            id=-1,  #size=(-1,12),
+            style=wx.TE_READONLY | wx.TE_RICH2 | wx.TE_MULTILINE,
+            value="No log file")
+        setItemFont(self.userLogTextCtrl, self.fontDatabase.getFontFromIni('UserLogBox'))
 
-        eventLogBoxSizer = wx.StaticBoxSizer(eventLogBox,wx.HORIZONTAL)
-        logFileBoxSizer = wx.StaticBoxSizer(logFileBox,wx.VERTICAL)
+        eventLogBoxSizer = wx.StaticBoxSizer(eventLogBox, wx.HORIZONTAL)
+        logFileBoxSizer = wx.StaticBoxSizer(logFileBox, wx.VERTICAL)
         logFileBoxSizer.Add(self.userLogButton, 0, wx.EXPAND)
-        logFileBoxSizer.Add(self.userLogTextCtrl,1, wx.EXPAND|wx.ALL)
-        eventLogBoxSizer.Add(self.eventViewControl,1, wx.EXPAND|wx.ALL)
+        logFileBoxSizer.Add(self.userLogTextCtrl, 1, wx.EXPAND | wx.ALL)
+        eventLogBoxSizer.Add(self.eventViewControl, 1, wx.EXPAND | wx.ALL)
 
         # Hide/Show the status panel that shows the name of the dat file.  21 CFR part 11 compliant
         # systems do not show the output file name on the main screen.
@@ -567,11 +565,11 @@ class QuickGui(wx.Frame):
         statusBoxSizer.Add(logFileBoxSizer, proportion=1, flag=wx.EXPAND | wx.ALL)
         if not self.config.getboolean("UserLogBox", "Enable", True):
             statusBoxSizer.Hide(logFileBoxSizer, recursive=True)
-        statusBoxSizer.Add(eventLogBoxSizer,proportion=1, flag=wx.EXPAND|wx.ALL)
+        statusBoxSizer.Add(eventLogBoxSizer, proportion=1, flag=wx.EXPAND | wx.ALL)
 
         # Define the data selection tools
-        toolPanel = wx.Panel(parent=self.mainPanel,id=-1)
-        font,fgColour,bgColour = self.fontDatabase.getFontFromIni('Graph')
+        toolPanel = wx.Panel(parent=self.mainPanel, id=-1)
+        font, fgColour, bgColour = self.fontDatabase.getFontFromIni('Graph')
         toolPanel.SetBackgroundColour(bgColour)
 
         self.sourceChoice = []
@@ -587,105 +585,117 @@ class QuickGui(wx.Frame):
         choiceSizer = wx.BoxSizer(wx.VERTICAL)
 
         for idx in range(self.numGraphs):
-            sourceLabel = wx.StaticText(parent=toolPanel,id=-1,label="Source %d " % (idx+1))
-            setItemFont(sourceLabel,self.fontDatabase.getFontFromIni('Graph'))
+            sourceLabel = wx.StaticText(parent=toolPanel, id=-1, label="Source %d " % (idx + 1))
+            setItemFont(sourceLabel, self.fontDatabase.getFontFromIni('Graph'))
             newId = wx.NewId()
             self.sourceChoiceIdList.append(newId)
-            sc = wx.ComboBox(parent=toolPanel,id=newId,size=(150,-1),style=wx.CB_READONLY)
-            setItemFont(sc,self.fontDatabase.getFontFromIni('GraphTextBoxes'))
+            sc = wx.ComboBox(parent=toolPanel, id=newId, size=(150, -1), style=wx.CB_READONLY)
+            setItemFont(sc, self.fontDatabase.getFontFromIni('GraphTextBoxes'))
             self.Bind(wx.EVT_COMBOBOX, self._OnSourceChoice, sc)
             self.sourceChoice.append(sc)
 
-            keyLabel = wx.StaticText(parent=toolPanel,id=-1,label="Data Key %d " % (idx+1))
-            setItemFont(keyLabel,self.fontDatabase.getFontFromIni('Graph'))
+            keyLabel = wx.StaticText(parent=toolPanel, id=-1, label="Data Key %d " % (idx + 1))
+            setItemFont(keyLabel, self.fontDatabase.getFontFromIni('Graph'))
             newId = wx.NewId()
             self.keyChoiceIdList.append(newId)
-            kc = wx.ComboBox(parent=toolPanel,id=newId,size=(200,-1),style=wx.CB_READONLY)
-            setItemFont(kc,self.fontDatabase.getFontFromIni('GraphTextBoxes'))
+            kc = wx.ComboBox(parent=toolPanel, id=newId, size=(200, -1), style=wx.CB_READONLY)
+            setItemFont(kc, self.fontDatabase.getFontFromIni('GraphTextBoxes'))
             self.Bind(wx.EVT_COMBOBOX, self._OnKeyChoice, kc)
             self.keyChoice.append(kc)
 
-            precisionLabel = wx.StaticText(parent=toolPanel,id=-1,label="Precision ")
-            setItemFont(precisionLabel,self.fontDatabase.getFontFromIni('Graph'))
+            precisionLabel = wx.StaticText(parent=toolPanel, id=-1, label="Precision ")
+            setItemFont(precisionLabel, self.fontDatabase.getFontFromIni('Graph'))
             newId = wx.NewId()
             self.precisionChoiceIdList.append(newId)
-            pc = wx.ComboBox(parent=toolPanel,id=newId,size=(80,-1),style=wx.CB_READONLY,
-                                       choices=["auto","0","1","2","3","4"],value="auto")
-            setItemFont(pc,self.fontDatabase.getFontFromIni('GraphTextBoxes'))
+            pc = wx.ComboBox(parent=toolPanel,
+                             id=newId,
+                             size=(80, -1),
+                             style=wx.CB_READONLY,
+                             choices=["auto", "0", "1", "2", "3", "4"],
+                             value="auto")
+            setItemFont(pc, self.fontDatabase.getFontFromIni('GraphTextBoxes'))
             self.Bind(wx.EVT_COMBOBOX, self._OnPrecisionChoice, pc)
             self.precisionChoice.append(pc)
 
             if self.showGraphZoomed:
-                zoomedLabel = wx.StaticText(parent=toolPanel,id=-1,label="Zoomed")
-                setItemFont(zoomedLabel,self.fontDatabase.getFontFromIni('Graph'))
-                zoomedStatus = wx.TextCtrl(parent=toolPanel,id=-1,size=(40,-1),
-                                            style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2,value="N")
-                setItemFont(zoomedStatus,self.fontDatabase.getFontFromIni('GraphTextBoxes'))
+                zoomedLabel = wx.StaticText(parent=toolPanel, id=-1, label="Zoomed")
+                setItemFont(zoomedLabel, self.fontDatabase.getFontFromIni('Graph'))
+                zoomedStatus = wx.TextCtrl(parent=toolPanel,
+                                           id=-1,
+                                           size=(40, -1),
+                                           style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2,
+                                           value="N")
+                setItemFont(zoomedStatus, self.fontDatabase.getFontFromIni('GraphTextBoxes'))
                 self.zoomedList.append(zoomedStatus)
 
             newId = wx.NewId()
             self.autoYIdList.append(newId)
-            autoYButton = wx.Button(parent=toolPanel,id=newId,size=(-1,25),label="Auto-scale Y")
-            setItemFont(autoYButton,self.fontDatabase.getFontFromIni('MeasurementButtons'))
+            autoYButton = wx.Button(parent=toolPanel, id=newId, size=(-1, 25), label="Auto-scale Y")
+            setItemFont(autoYButton, self.fontDatabase.getFontFromIni('MeasurementButtons'))
             self.Bind(wx.EVT_BUTTON, self._OnAutoScaleY, autoYButton)
             self.autoY.append(autoYButton)
 
             toolSizer = wx.BoxSizer(wx.HORIZONTAL)
-            toolSizer.Add((10,10),proportion=0)
-            toolSizer.Add(sourceLabel,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add(sc,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add((10,10),proportion=0)
-            toolSizer.Add(keyLabel,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add(kc,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add((10,10),proportion=0)
-            toolSizer.Add(precisionLabel,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add(pc,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add((10,10),proportion=0)
+            toolSizer.Add((10, 10), proportion=0)
+            toolSizer.Add(sourceLabel, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add(sc, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add((10, 10), proportion=0)
+            toolSizer.Add(keyLabel, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add(kc, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add((10, 10), proportion=0)
+            toolSizer.Add(precisionLabel, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add(pc, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add((10, 10), proportion=0)
             if self.showGraphZoomed:
-                toolSizer.Add(zoomedLabel,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-                toolSizer.Add((3,10),proportion=0)
-                toolSizer.Add(zoomedStatus,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-                toolSizer.Add((10,10),proportion=0)
-            toolSizer.Add(autoYButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM)
-            toolSizer.Add((20,10),proportion=0)
-            choiceSizer.Add(toolSizer,proportion=1)
+                toolSizer.Add(zoomedLabel, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+                toolSizer.Add((3, 10), proportion=0)
+                toolSizer.Add(zoomedStatus, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+                toolSizer.Add((10, 10), proportion=0)
+            toolSizer.Add(autoYButton, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM)
+            toolSizer.Add((20, 10), proportion=0)
+            choiceSizer.Add(toolSizer, proportion=1)
 
-        self.clearButton = wx.Button(parent=toolPanel,id=-1,label="Reset buffers")
-        setItemFont(self.clearButton,self.fontDatabase.getFontFromIni('GraphButton'))
+        self.clearButton = wx.Button(parent=toolPanel, id=-1, label="Reset buffers")
+        setItemFont(self.clearButton, self.fontDatabase.getFontFromIni('GraphButton'))
         self.Bind(wx.EVT_BUTTON, self._OnResetBuffers, self.clearButton)
 
         combToolSizer = wx.BoxSizer(wx.HORIZONTAL)
-        combToolSizer.Add(choiceSizer,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
-        combToolSizer.Add(self.clearButton,proportion=0,flag=wx.ALIGN_CENTER_VERTICAL|wx.BOTTOM,border=10)
-        combToolSizer.Add((10,10),proportion=0)
+        combToolSizer.Add(choiceSizer, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM, border=10)
+        combToolSizer.Add(self.clearButton, proportion=0, flag=wx.ALIGN_CENTER_VERTICAL | wx.BOTTOM, border=10)
+        combToolSizer.Add((10, 10), proportion=0)
         toolPanel.SetSizer(combToolSizer)
 
         # Panel for measurement result
-        self.measPanel = wx.Panel(parent=self.mainPanel,id=-1)
-        setItemFont(self.measPanel,self.fontDatabase.getFontFromIni('MeasurementPanel'))
+        self.measPanel = wx.Panel(parent=self.mainPanel, id=-1)
+        setItemFont(self.measPanel, self.fontDatabase.getFontFromIni('MeasurementPanel'))
 
         # Alarm view
-        alarmBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Alarms")
+        alarmBox = wx.StaticBox(parent=self.measPanel, id=-1, label="Alarms")
         # Define the box height automatically instead of using INI file
         #size = self.config.getint("AlarmBox","Width"),self.config.getint("AlarmBox","Height")
 
-        boxWidth = self.config.getint("AlarmBox","Width")
+        boxWidth = self.config.getint("AlarmBox", "Width")
         boxHeight = self.numAlarmsDisplay * 40
 
-        size = boxWidth,boxHeight
+        size = boxWidth, boxHeight
 
-        font,fgColour,bgColour = self.fontDatabase.getFontFromIni('AlarmBox','enabledFont')
-        enabled = wx.ListItemAttr(fgColour,bgColour,font)
-        font,fgColour,bgColour = self.fontDatabase.getFontFromIni('AlarmBox','disabledFont')
-        disabled = wx.ListItemAttr(fgColour,bgColour,font)
+        font, fgColour, bgColour = self.fontDatabase.getFontFromIni('AlarmBox', 'enabledFont')
+        enabled = wx.ListItemAttr(fgColour, bgColour, font)
+        font, fgColour, bgColour = self.fontDatabase.getFontFromIni('AlarmBox', 'disabledFont')
+        disabled = wx.ListItemAttr(fgColour, bgColour, font)
 
-        self.alarmView = AlarmViewListCtrl(parent=self.measPanel,mainForm=self, id=-1,attrib=[disabled,enabled],
-                                           DataStore=self.dataStore, DataSource=self.alarmInterface,
+        self.alarmView = AlarmViewListCtrl(parent=self.measPanel,
+                                           mainForm=self,
+                                           id=-1,
+                                           attrib=[disabled, enabled],
+                                           DataStore=self.dataStore,
+                                           DataSource=self.alarmInterface,
                                            fontDatabase=self.fontDatabase,
-                                           size=size, numAlarms=self.numAlarms,
+                                           size=size,
+                                           numAlarms=self.numAlarms,
                                            sysAlarmInterface=self.sysAlarmInterface)
-        setItemFont(alarmBox,self.fontDatabase.getFontFromIni('AlarmBox'))
-        setItemFont(self.alarmView,self.fontDatabase.getFontFromIni('AlarmBox'))
+        setItemFont(alarmBox, self.fontDatabase.getFontFromIni('AlarmBox'))
+        setItemFont(self.alarmView, self.fontDatabase.getFontFromIni('AlarmBox'))
 
         # numSysAlarms = 1 will hide IPV Connectivity, default is 1 (hide IPV)
         numSysAlarms = min(2, self.config.getint("AlarmBox", "NumSysAlarms", 1))
@@ -700,26 +710,31 @@ class QuickGui(wx.Frame):
         # size = boxWidth,boxHeight
         size = 210, boxHeight
 
-        self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,id=-1,attrib=[disabled,enabled],
-                                           DataSource=self.sysAlarmInterface, fontDatabase=self.fontDatabase,
-                                           size=size, numAlarms=numSysAlarms)
+        self.sysAlarmView = SysAlarmViewListCtrl(parent=self.measPanel,
+                                                 id=-1,
+                                                 attrib=[disabled, enabled],
+                                                 DataSource=self.sysAlarmInterface,
+                                                 fontDatabase=self.fontDatabase,
+                                                 size=size,
+                                                 numAlarms=numSysAlarms)
         self.sysAlarmView.SetMainForm(self)
-        setItemFont(self.sysAlarmView,self.fontDatabase.getFontFromIni('AlarmBox'))
+        setItemFont(self.sysAlarmView, self.fontDatabase.getFontFromIni('AlarmBox'))
 
         # Combine system alarm with concentration alarms
-        alarmBoxSizer = wx.StaticBoxSizer(alarmBox,wx.VERTICAL)
-        alarmBoxSizer.Add(self.sysAlarmView,proportion=0,flag=wx.EXPAND)
-        alarmBoxSizer.Add(self.alarmView,proportion=0,flag=wx.EXPAND)
+        alarmBoxSizer = wx.StaticBoxSizer(alarmBox, wx.VERTICAL)
+        alarmBoxSizer.Add(self.sysAlarmView, proportion=0, flag=wx.EXPAND)
+        alarmBoxSizer.Add(self.alarmView, proportion=0, flag=wx.EXPAND)
 
         # Instrument status panel
-        self.instStatusBox = wx.StaticBox(parent=self.measPanel,id=-1,label="Instrument Status")
-        size = self.config.getint("InstStatPanel","Width", 150),self.config.getint("InstStatPanel","Height", 70)
+        self.instStatusBox = wx.StaticBox(parent=self.measPanel, id=-1, label="Instrument Status")
+        size = self.config.getint("InstStatPanel", "Width", 150), self.config.getint("InstStatPanel", "Height", 70)
         self.instStatusPanel = InstStatusPanel(font=self.fontDatabase.getFontFromIni('InstStatPanel'),
-                                                parent=self.measPanel, id=-1, size=size
-                                                )
-        setItemFont(self.instStatusBox,self.fontDatabase.getFontFromIni('InstStatPanel'))
-        instStatusBoxSizer = wx.StaticBoxSizer(self.instStatusBox,wx.HORIZONTAL)
-        instStatusBoxSizer.Add(self.instStatusPanel,proportion=0,flag=wx.EXPAND|wx.ALL,border=2)
+                                               parent=self.measPanel,
+                                               id=-1,
+                                               size=size)
+        setItemFont(self.instStatusBox, self.fontDatabase.getFontFromIni('InstStatPanel'))
+        instStatusBoxSizer = wx.StaticBoxSizer(self.instStatusBox, wx.HORIZONTAL)
+        instStatusBoxSizer.Add(self.instStatusPanel, proportion=0, flag=wx.EXPAND | wx.ALL, border=2)
 
         # The measurement result consists of a label describing the displayed quantity,
         #  a text control which contains the number, and a label for the units associated
@@ -733,83 +748,94 @@ class QuickGui(wx.Frame):
         self.stdDevTextCtrl = []
         self.slopeTextCtrl = []
         measDisplaySizer = wx.BoxSizer(wx.VERTICAL)
-        self.statsMeanFormat = self.config.get("StatsBox", "MeanFormat", default = "%.4g")
-        self.statsStdvFormat = self.config.get("StatsBox", "StdvFormat", default = "%.4g")
-        self.statsSlopeFormat = self.config.get("StatsBox", "SlopeFormat", default = "%.4g")
+        self.statsMeanFormat = self.config.get("StatsBox", "MeanFormat", default="%.4g")
+        self.statsStdvFormat = self.config.get("StatsBox", "StdvFormat", default="%.4g")
+        self.statsSlopeFormat = self.config.get("StatsBox", "SlopeFormat", default="%.4g")
         for idx in range(self.numGraphs):
             resultSizer = wx.BoxSizer(wx.VERTICAL)
             statsSizer = wx.BoxSizer(wx.HORIZONTAL)
 
-            measLabel = wx.StaticText(parent=self.measPanel,id=-1,style=wx.ALIGN_CENTER,
-                                       label='')
+            measLabel = wx.StaticText(parent=self.measPanel, id=-1, style=wx.ALIGN_CENTER, label='')
 
             # See the comments below in dataKeyUpdateAction() to understand why this code is here.
             #
             #measLabel = wx.lib.fancytext.StaticFancyText(self.measPanel,-1," ",wx.Brush("white", wx.TRANSPARENT))
 
-            setItemFont(measLabel,self.fontDatabase.getFontFromIni('MeasurementLabel'))
+            setItemFont(measLabel, self.fontDatabase.getFontFromIni('MeasurementLabel'))
             self.measLabel.append(measLabel)
 
-            measTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,pos=(50,100),size=(150,-1),
-                                        style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2,
-                                        value="0.00")
-            setItemFont(measTextCtrl,self.fontDatabase.getFontFromIni('MeasurementBox'))
+            measTextCtrl = wx.TextCtrl(parent=self.measPanel,
+                                       id=-1,
+                                       pos=(50, 100),
+                                       size=(150, -1),
+                                       style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2,
+                                       value="0.00")
+            setItemFont(measTextCtrl, self.fontDatabase.getFontFromIni('MeasurementBox'))
             self.measTextCtrl.append(measTextCtrl)
 
-            resultSizer.Add(measLabel,proportion=0,flag=wx.ALIGN_CENTER)
-            resultSizer.Add(measTextCtrl,proportion=1,flag=wx.ALIGN_CENTER)
-            measDisplaySizer.Add(resultSizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
+            resultSizer.Add(measLabel, proportion=0, flag=wx.ALIGN_CENTER)
+            resultSizer.Add(measTextCtrl, proportion=1, flag=wx.ALIGN_CENTER)
+            measDisplaySizer.Add(resultSizer, proportion=0, flag=wx.GROW | wx.LEFT | wx.RIGHT, border=10)
 
             vs = wx.BoxSizer(wx.VERTICAL)
-            st = wx.StaticText(parent=self.measPanel,id=-1,style=wx.ALIGN_CENTER,label='mean')
+            st = wx.StaticText(parent=self.measPanel, id=-1, style=wx.ALIGN_CENTER, label='mean')
             self.statControls.append(st)
-            setItemFont(st,self.fontDatabase.getFontFromIni('StatsLabel'))
-            vs.Add(st,flag=wx.ALIGN_CENTER)
+            setItemFont(st, self.fontDatabase.getFontFromIni('StatsLabel'))
+            vs.Add(st, flag=wx.ALIGN_CENTER)
 
-            meanTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(40,-1),
-                                        style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2,value="0.00")
-            setItemFont(meanTextCtrl,self.fontDatabase.getFontFromIni('StatsBox'))
+            meanTextCtrl = wx.TextCtrl(parent=self.measPanel,
+                                       id=-1,
+                                       size=(40, -1),
+                                       style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2,
+                                       value="0.00")
+            setItemFont(meanTextCtrl, self.fontDatabase.getFontFromIni('StatsBox'))
             self.statControls.append(meanTextCtrl)
             self.meanTextCtrl.append(meanTextCtrl)
 
-            vs.Add(meanTextCtrl,flag=wx.EXPAND)
-            statsSizer.Add(vs,proportion=1)
+            vs.Add(meanTextCtrl, flag=wx.EXPAND)
+            statsSizer.Add(vs, proportion=1)
 
             vs = wx.BoxSizer(wx.VERTICAL)
-            st = wx.StaticText(parent=self.measPanel,id=-1,style=wx.ALIGN_CENTER,label='std dev')
+            st = wx.StaticText(parent=self.measPanel, id=-1, style=wx.ALIGN_CENTER, label='std dev')
             self.statControls.append(st)
-            setItemFont(st,self.fontDatabase.getFontFromIni('StatsLabel'))
-            vs.Add(st,flag=wx.ALIGN_CENTER)
+            setItemFont(st, self.fontDatabase.getFontFromIni('StatsLabel'))
+            vs.Add(st, flag=wx.ALIGN_CENTER)
 
-            stdDevTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(40,-1),
-                                        style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2,value="0.00")
-            setItemFont(stdDevTextCtrl,self.fontDatabase.getFontFromIni('StatsBox'))
+            stdDevTextCtrl = wx.TextCtrl(parent=self.measPanel,
+                                         id=-1,
+                                         size=(40, -1),
+                                         style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2,
+                                         value="0.00")
+            setItemFont(stdDevTextCtrl, self.fontDatabase.getFontFromIni('StatsBox'))
             self.statControls.append(stdDevTextCtrl)
             self.stdDevTextCtrl.append(stdDevTextCtrl)
 
-            vs.Add(stdDevTextCtrl,flag=wx.EXPAND)
-            statsSizer.Add(vs,proportion=1)
+            vs.Add(stdDevTextCtrl, flag=wx.EXPAND)
+            statsSizer.Add(vs, proportion=1)
 
             vs = wx.BoxSizer(wx.VERTICAL)
-            st = wx.StaticText(parent=self.measPanel,id=-1,style=wx.ALIGN_CENTER,label='slope')
+            st = wx.StaticText(parent=self.measPanel, id=-1, style=wx.ALIGN_CENTER, label='slope')
             self.statControls.append(st)
-            setItemFont(st,self.fontDatabase.getFontFromIni('StatsLabel'))
-            vs.Add(st,flag=wx.ALIGN_CENTER)
+            setItemFont(st, self.fontDatabase.getFontFromIni('StatsLabel'))
+            vs.Add(st, flag=wx.ALIGN_CENTER)
 
-            slopeTextCtrl = wx.TextCtrl(parent=self.measPanel,id=-1,size=(40,-1),
-                                        style=wx.TE_READONLY|wx.TE_CENTER|wx.TE_RICH2,value="0.00")
-            setItemFont(slopeTextCtrl,self.fontDatabase.getFontFromIni('StatsBox'))
+            slopeTextCtrl = wx.TextCtrl(parent=self.measPanel,
+                                        id=-1,
+                                        size=(40, -1),
+                                        style=wx.TE_READONLY | wx.TE_CENTER | wx.TE_RICH2,
+                                        value="0.00")
+            setItemFont(slopeTextCtrl, self.fontDatabase.getFontFromIni('StatsBox'))
             self.statControls.append(slopeTextCtrl)
             self.slopeTextCtrl.append(slopeTextCtrl)
 
-            vs.Add(slopeTextCtrl,flag=wx.EXPAND)
-            statsSizer.Add(vs,proportion=1)
+            vs.Add(slopeTextCtrl, flag=wx.EXPAND)
+            statsSizer.Add(vs, proportion=1)
 
-            measDisplaySizer.Add(statsSizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
-            measDisplaySizer.Add((20,10),proportion=0)
+            measDisplaySizer.Add(statsSizer, proportion=0, flag=wx.GROW | wx.LEFT | wx.RIGHT, border=10)
+            measDisplaySizer.Add((20, 10), proportion=0)
 
-        self.shutdownButton = wx.Button(parent=self.measPanel,id=wx.ID_EXIT,size=(75,65))
-        setItemFont(self.shutdownButton,self.fontDatabase.getFontFromIni('MeasurementButtons'))
+        self.shutdownButton = wx.Button(parent=self.measPanel, id=wx.ID_EXIT, size=(75, 65))
+        setItemFont(self.shutdownButton, self.fontDatabase.getFontFromIni('MeasurementButtons'))
         self.Bind(wx.EVT_BUTTON, self._OnShutdownButton, self.shutdownButton)
 
         self.measPanelSizer = wx.BoxSizer(wx.VERTICAL)
@@ -818,55 +844,55 @@ class QuickGui(wx.Frame):
 
         logoSizer = wx.BoxSizer(wx.VERTICAL)
         logoBmp = wx.Bitmap(AppPath + '/logo.png', wx.BITMAP_TYPE_PNG)
-        logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp),proportion=0, flag=wx.TOP,border = 15)
-        self.measPanelSizer.Add(logoSizer,proportion=0,flag=wx.ALIGN_CENTER|wx.BOTTOM,border = 5)
-        self.measPanelSizer.Add((panelWidth,10),proportion=0)
-        self.measPanelSizer.Add(measDisplaySizer,proportion=0,flag=wx.GROW | wx.LEFT | wx.RIGHT,border = 10)
-        self.measPanelSizer.Add(instStatusBoxSizer,proportion=0,flag=wx.ALIGN_CENTER | wx.ALL,border = 5)
-        self.measPanelSizer.Add(alarmBoxSizer,proportion=0,flag=wx.ALIGN_CENTER)
+        logoSizer.Add(wx.StaticBitmap(self.measPanel, -1, logoBmp), proportion=0, flag=wx.TOP, border=15)
+        self.measPanelSizer.Add(logoSizer, proportion=0, flag=wx.ALIGN_CENTER | wx.BOTTOM, border=5)
+        self.measPanelSizer.Add((panelWidth, 10), proportion=0)
+        self.measPanelSizer.Add(measDisplaySizer, proportion=0, flag=wx.GROW | wx.LEFT | wx.RIGHT, border=10)
+        self.measPanelSizer.Add(instStatusBoxSizer, proportion=0, flag=wx.ALIGN_CENTER | wx.ALL, border=5)
+        self.measPanelSizer.Add(alarmBoxSizer, proportion=0, flag=wx.ALIGN_CENTER)
         self.measPanelSizer.AddStretchSpacer()
-        self.measPanelSizer.Add(self.shutdownButton,proportion=0, flag=wx.ALIGN_CENTER|wx.ALIGN_BOTTOM)
+        self.measPanelSizer.Add(self.shutdownButton, proportion=0, flag=wx.ALIGN_CENTER | wx.ALIGN_BOTTOM)
         self.measPanelSizer.AddSpacer(10)
 
         self.measPanel.SetSizer(self.measPanelSizer)
 
         graphBox = wx.StaticBox(parent=self.mainPanel, id=-1)
-        setItemFont(graphBox,self.fontDatabase.getFontFromIni('Panel'))
+        setItemFont(graphBox, self.fontDatabase.getFontFromIni('Panel'))
 
         # Construct the layout using sizers
         graphPanelSizer = wx.BoxSizer(wx.VERTICAL)
         for idx in range(self.numGraphs):
-            graphPanelSizer.Add(self.graphPanel[idx],proportion=1,flag=wx.GROW)
+            graphPanelSizer.Add(self.graphPanel[idx], proportion=1, flag=wx.GROW)
 
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(graphPanelSizer,proportion=1,flag=wx.GROW)
-        sizer.Add(self.gauge,proportion=0,flag=wx.GROW)
+        sizer.Add(graphPanelSizer, proportion=1, flag=wx.GROW)
+        sizer.Add(self.gauge, proportion=0, flag=wx.GROW)
 
-        innerVSizer = wx.StaticBoxSizer(graphBox,wx.VERTICAL)
-        innerVSizer.Add(sizer,proportion=1,flag=wx.GROW|wx.LEFT)
-        innerVSizer.Add(toolPanel,proportion=0,flag=wx.GROW)
+        innerVSizer = wx.StaticBoxSizer(graphBox, wx.VERTICAL)
+        innerVSizer.Add(sizer, proportion=1, flag=wx.GROW | wx.LEFT)
+        innerVSizer.Add(toolPanel, proportion=0, flag=wx.GROW)
 
         vsizer2 = wx.BoxSizer(wx.VERTICAL)
         titleSizer = wx.BoxSizer(wx.VERTICAL)
-        titleSizer.Add(self.titleLabel,proportion=0,flag=wx.ALIGN_CENTER)
-        vsizer2.Add(titleSizer,proportion=0,flag= wx.GROW | wx.ALL,border=10)
-        vsizer2.Add(innerVSizer,proportion=1,flag=wx.GROW)
-        vsizer2.Add(statusBoxSizer,proportion=0, flag=wx.EXPAND)
+        titleSizer.Add(self.titleLabel, proportion=0, flag=wx.ALIGN_CENTER)
+        vsizer2.Add(titleSizer, proportion=0, flag=wx.GROW | wx.ALL, border=10)
+        vsizer2.Add(innerVSizer, proportion=1, flag=wx.GROW)
+        vsizer2.Add(statusBoxSizer, proportion=0, flag=wx.EXPAND)
 
         hsizer1 = wx.BoxSizer(wx.HORIZONTAL)
-        hsizer1.Add(self.measPanel,proportion = 0,flag=wx.GROW | wx.RIGHT,border=10)
-        hsizer1.Add(vsizer2,proportion = 1,flag=wx.GROW)
+        hsizer1.Add(self.measPanel, proportion=0, flag=wx.GROW | wx.RIGHT, border=10)
+        hsizer1.Add(vsizer2, proportion=1, flag=wx.GROW)
         #
         vsizer1 = wx.BoxSizer(wx.VERTICAL)
-        vsizer1.Add(hsizer1,proportion=1,flag=wx.GROW | wx.LEFT | wx.RIGHT,border=10)
+        vsizer1.Add(hsizer1, proportion=1, flag=wx.GROW | wx.LEFT | wx.RIGHT, border=10)
         footerSizer = wx.GridSizer(rows=1, cols=3, hgap=5, vgap=5)
         footerSizer.AddStretchSpacer(0)
-        footerSizer.Add(footerLabel,1,wx.ALIGN_CENTER)
-        footerSizer.Add(self.footerTime,2,wx.ALIGN_RIGHT)
-        vsizer1.Add(footerSizer,proportion=0,flag=wx.GROW | wx.ALL,border=10)
+        footerSizer.Add(footerLabel, 1, wx.ALIGN_CENTER)
+        footerSizer.Add(self.footerTime, 2, wx.ALIGN_RIGHT)
+        vsizer1.Add(footerSizer, proportion=0, flag=wx.GROW | wx.ALL, border=10)
         self.mainPanel.SetSizer(vsizer1)
         box = wx.BoxSizer(wx.HORIZONTAL)
-        box.Add(self.mainPanel,proportion=1,flag=wx.EXPAND)
+        box.Add(self.mainPanel, proportion=1, flag=wx.EXPAND)
         self.SetSizer(box)
         self._modifyInterface()
 
@@ -924,8 +950,8 @@ class QuickGui(wx.Frame):
         # Admin level
         # Enable data view of fit parameters and other "Picarro" only data
         if self.userLevel >= 3:
-           for c in self.serviceModeOnlyControls:
-               c.Show(True)
+            for c in self.serviceModeOnlyControls:
+                c.Show(True)
 
         for tool in self.externalTools:
             if "user" in self.externalTools[tool]:
@@ -938,7 +964,7 @@ class QuickGui(wx.Frame):
         s = self.dataStore.getSources()
         if self.userLevel < 2:
             if self.sourceStandardModeDatabase != None:
-                s = [t for t in s if self.sourceStandardModeDatabase.match(t)>=0]
+                s = [t for t in s if self.sourceStandardModeDatabase.match(t) >= 0]
             else:
                 s = [t for t in s if t in self.standardModeSourcesDict.getStrings().values()]
         return s
@@ -947,7 +973,7 @@ class QuickGui(wx.Frame):
         k = self.dataStore.getKeys(source)
         if self.userLevel < 2:
             if self.keyStandardModeDatabase != None:
-                k = [t for t in k if self.keyStandardModeDatabase.match(t)>=0]
+                k = [t for t in k if self.keyStandardModeDatabase.match(t) >= 0]
             else:
                 for sourceKey in self.standardModeSourcesDict.getStrings():
                     if self.standardModeSourcesDict.getString(sourceKey) == source:
@@ -992,7 +1018,7 @@ class QuickGui(wx.Frame):
                 print "2003 %r" % err
             Log("Quit software from QuickGui by User: %s" % self.currentUser["username"], Level=0)
             self.instMgrInterface.instMgrRpc.INSTMGR_ShutdownRpc(shutdownMode, powerOffAnalyzer)
-            payload = {"username": self.currentUser["username"],"action": "Quit software from QuickGui."}
+            payload = {"username": self.currentUser["username"], "action": "Quit software from QuickGui."}
             self._sendRequest("post", "action", payload, useToken=True)
             self.shutdownButton.Enable(False)
             # lets disable menu bar items also as we are in Quit mode and parking
@@ -1012,10 +1038,10 @@ class QuickGui(wx.Frame):
 
     def _OnResetBuffers(self, evt):
         for s in self.dataStore.getSources():
-            self.dataStore.getDataSequence(s,'time').Clear()
-            self.dataStore.getDataSequence(s,'good').Clear()
+            self.dataStore.getDataSequence(s, 'time').Clear()
+            self.dataStore.getDataSequence(s, 'good').Clear()
             for k in self.dataStore.getKeys(s):
-                self.dataStore.getDataSequence(s,k).Clear()
+                self.dataStore.getDataSequence(s, k).Clear()
         return
 
     def _OnSourceChoice(self, evt=None, obj=None):
@@ -1046,25 +1072,37 @@ class QuickGui(wx.Frame):
         ds = self.dataStore
         self.graphPanel[idx].RemoveAllSeries()
         seriesName = self.source[idx] + ":" + self.dataKey[idx]
-        series = GraphPanel.Series(ds.getTime(self.source[idx]),ds.getDataSequence(self.source[idx],self.dataKey[idx]), seriesName)
+        series = GraphPanel.Series(ds.getTime(self.source[idx]), ds.getDataSequence(self.source[idx], self.dataKey[idx]),
+                                   seriesName)
         selection = self.displayFilterSubstDatabase.applySubstitution(self.dataKey[idx])
         if selection != None:
             selection = selection[0]
             # An empty selection is interpreted as selecting all points
             if selection.strip():
                 try:
-                    selKey,selValue = selection.split(",")
-                    selSequence = ds.getDataSequence(self.source[idx],selKey)
-                    selection = (selSequence,eval(selValue))
+                    selKey, selValue = selection.split(",")
+                    selSequence = ds.getDataSequence(self.source[idx], selKey)
+                    selection = (selSequence, eval(selValue))
                 except:
-                    Log("Bad DisplayFilter selection ignored",
-                    {"selection":selection,"source":self.source[idx],"dataKey":self.dataKey[idx]})
+                    Log("Bad DisplayFilter selection ignored", {
+                        "selection": selection,
+                        "source": self.source[idx],
+                        "dataKey": self.dataKey[idx]
+                    })
                     selection = None
             else:
                 selection = None
 
-        self.graphPanel[idx].AddSeriesAsLine(series,selection,statsFlag=True,width=self.defaultLineWidth, colour=getInnerStr(self.config.get("Graph","LineColor")))
-        self.graphPanel[idx].AddSeriesAsPoints(series,selection,marker=getInnerStr(self.config.get("Graph","Marker")),size=self.defaultMarkerSize,colour=getInnerStr(self.config.get("Graph","MarkerColor")))
+        self.graphPanel[idx].AddSeriesAsLine(series,
+                                             selection,
+                                             statsFlag=True,
+                                             width=self.defaultLineWidth,
+                                             colour=getInnerStr(self.config.get("Graph", "LineColor")))
+        self.graphPanel[idx].AddSeriesAsPoints(series,
+                                               selection,
+                                               marker=getInnerStr(self.config.get("Graph", "Marker")),
+                                               size=self.defaultMarkerSize,
+                                               colour=getInnerStr(self.config.get("Graph", "MarkerColor")))
 
         # When changing data keys, if the panel is currently zoomed, we want to keep the x-axis locked but
         # unlock the y-axis in order to show the data of the new key. To do so, we first un-zoom the panel,
@@ -1112,34 +1150,36 @@ class QuickGui(wx.Frame):
     def _OnPrecisionChoice(self, evt):
         idx = self.precisionChoiceIdList.index(evt.GetEventObject().GetId())
         precision = evt.GetString()
-        def axisLimits(minVal,maxVal):
+
+        def axisLimits(minVal, maxVal):
             incr = 10.0**(-int(precision))
-            range = maxVal-minVal
-            if abs(range)<8.0*incr:
+            range = maxVal - minVal
+            if abs(range) < 8.0 * incr:
                 meanVal = 0.5 * (minVal + maxVal)
-                minVal = meanVal - 3.5*incr
-                maxVal = meanVal + 3.5*incr
-                minVal = incr * numpy.floor(minVal/incr)
-                maxVal = incr * numpy.ceil(maxVal/incr)
+                minVal = meanVal - 3.5 * incr
+                maxVal = meanVal + 3.5 * incr
+                minVal = incr * numpy.floor(minVal / incr)
+                maxVal = incr * numpy.ceil(maxVal / incr)
             else:
                 if range == 0.:
-                    return minVal-0.5, maxVal+0.5
+                    return minVal - 0.5, maxVal + 0.5
                 log = numpy.log10(range)
                 power = numpy.floor(log)
-                fraction = log-power
+                fraction = log - power
                 if fraction <= 0.05:
-                    power = power-1
+                    power = power - 1
                 grid = 10.0**power
                 minVal = minVal - minVal % grid
                 mod = maxVal % grid
                 if mod != 0:
                     maxVal = maxVal - mod + grid
-            return minVal,maxVal
+            return minVal, maxVal
+
         if precision == "auto":
             self.graphPanel[idx].SetGraphProperties(YTickFormat=None)
             self.graphPanel[idx].SetGraphProperties(YSpec="auto")
         else:
-            self.graphPanel[idx].SetGraphProperties(YTickFormat="%."+("%df" % int(precision)))
+            self.graphPanel[idx].SetGraphProperties(YTickFormat="%." + ("%df" % int(precision)))
             self.graphPanel[idx].SetGraphProperties(YSpec=axisLimits)
         return
 
@@ -1157,7 +1197,7 @@ class QuickGui(wx.Frame):
             self.dataLoggerInterface.startUserLogs(userLogs, self.restartUserLog)
         else:
             self.dataLoggerInterface.stopUserLogs(userLogs)
-        wx.FutureCall(5000,self.userLogButton.Enable)
+        wx.FutureCall(5000, self.userLogButton.Enable)
         return
 
     def _OnTimer(self, evt):
@@ -1179,7 +1219,7 @@ class QuickGui(wx.Frame):
             # The renamed source is the 0'th element of the list of substituted strings
             renamedSources = [self.sourceSubstDatabase.applySubstitution(source)[0] for source in sources]
             # Sort the sources into alphabetical order for the combo box
-            decoratedSources = zip(renamedSources,sources)
+            decoratedSources = zip(renamedSources, sources)
             # Make sure Sensors is always the last in the list
             sensorTuple = ("Sensors", "Sensors")
             if sensorTuple in decoratedSources:
@@ -1191,16 +1231,16 @@ class QuickGui(wx.Frame):
                 decoratedSources.sort()
 
             for idx in range(self.numGraphs):
-                self.sourceChoice[idx].SetItems([rS for rS,s in decoratedSources])
+                self.sourceChoice[idx].SetItems([rS for rS, s in decoratedSources])
                 for i in range(len(sources)):
                     s = decoratedSources[i][1]
-                    self.sourceChoice[idx].SetClientData(i,s)
+                    self.sourceChoice[idx].SetClientData(i, s)
                 foundDef = False
                 for j in self.defaultSources.getStrings():
                     d = self.defaultSources.getString(j)
                     for i in range(len(sources)):
                         s = decoratedSources[i][1]
-                        if s.lower() == d.lower(): # We have found the default source
+                        if s.lower() == d.lower():  # We have found the default source
                             defaultSourceIndex = j
                             self.source[idx] = s
                             self.sourceChoice[idx].SetSelection(i)
@@ -1214,19 +1254,19 @@ class QuickGui(wx.Frame):
                 s = self.source[idx]
                 for j in self.defaultSources.getStrings():
                     d = self.defaultSources.getString(j)
-                    if s.lower() == d.lower(): # We have found the source in the default list
+                    if s.lower() == d.lower():  # We have found the source in the default list
                         defaultSourceIndex = j
                 keyChoices = self._getKeysbyMode(self.source[idx])
                 if self.keyChoices[idx] != keyChoices:
                     # The renamed key is the 0'th element of the list of substituted strings
                     renamedKeys = [self.keySubstDatabase.applySubstitution(key)[0] for key in keyChoices]
                     # Sort the renamed keys into alphabetical order for the combo box
-                    decoratedKeys = zip(renamedKeys,keyChoices)
+                    decoratedKeys = zip(renamedKeys, keyChoices)
                     decoratedKeys.sort()
-                    self.keyChoice[idx].SetItems([rK for rK,k in decoratedKeys])
+                    self.keyChoice[idx].SetItems([rK for rK, k in decoratedKeys])
                     for i in range(len(keyChoices)):
                         k = decoratedKeys[i][1]
-                        self.keyChoice[idx].SetClientData(i,k)
+                        self.keyChoice[idx].SetClientData(i, k)
                         if defaultSourceIndex != None:
                             try:
                                 if k.lower() == self.defaultKeys[idx].getString(defaultSourceIndex).lower():
@@ -1274,7 +1314,7 @@ class QuickGui(wx.Frame):
                 else:
                     self.zoomedList[idx].SetValue("Y")
 
-            if len(self.graphPanel[idx].stats)>0:
+            if len(self.graphPanel[idx].stats) > 0:
                 self.meanTextCtrl[idx].SetValue(self.statsMeanFormat % self.graphPanel[idx].stats[0][0])
                 self.stdDevTextCtrl[idx].SetValue(self.statsStdvFormat % self.graphPanel[idx].stats[0][1])
                 self.slopeTextCtrl[idx].SetValue(self.statsSlopeFormat % self.graphPanel[idx].stats[0][2])
@@ -1282,11 +1322,11 @@ class QuickGui(wx.Frame):
             if self.dataStore != None and self.source[idx] != None and self.dataKey[idx] != None \
                 and self.dataStore.getDataSequence(self.source[idx],self.dataKey[idx]) is not None:
                 timeSeq = self.dataStore.getTime(self.source[idx])
-                v = self.dataStore.getDataSequence(self.source[idx],self.dataKey[idx]).GetLatest()
+                v = self.dataStore.getDataSequence(self.source[idx], self.dataKey[idx]).GetLatest()
                 format = self.keySubstDatabase.applySubstitution(self.dataKey[idx])[2]
-                self.measTextCtrl[idx].SetValue(format % (v,))
+                self.measTextCtrl[idx].SetValue(format % (v, ))
                 level, size = timeSeq.GetLevelAndSize()
-                gaugeValue.append(100*level//size)
+                gaugeValue.append(100 * level // size)
 
         if len(gaugeValue) > 0:
             self.gauge.SetValue(max(gaugeValue))
@@ -1295,11 +1335,11 @@ class QuickGui(wx.Frame):
         if self.dataLoggerInterface.userLogDict:
             logFiles = []
             for i in self.dataLoggerInterface.userLogDict:
-                en,live,fname = self.dataLoggerInterface.userLogDict[i]
+                en, live, fname = self.dataLoggerInterface.userLogDict[i]
                 userLogEnabled = userLogEnabled or en
                 if en and len(fname) > 0:
                     #logFiles.append("%s" % (os.path.split(fname)[-1],))
-                    logFiles.append("[%s]%s" % (i," - Live" if live else ""))
+                    logFiles.append("[%s]%s" % (i, " - Live" if live else ""))
                     logFiles.append("%s" % fname)
             if len(logFiles) > 0 and userLogEnabled:
                 logFiles = "\n".join(logFiles)
@@ -1325,12 +1365,12 @@ class QuickGui(wx.Frame):
         # Update instrument status
         if self.showInstStat:
             try:
-                cavityTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityTempKey).GetLatest()
+                cavityTemp = self.dataStore.getDataSequence(self.instStatSource, self.instStatCavityTempKey).GetLatest()
                 if cavityTemp != 0.0:
                     self.instStatusPanel.cavityTemp.SetValue("%.3f" % cavityTemp)
                     # Change display color (yellow or green)
                     if self.cavityTempS != None and self.cavityTempT != None:
-                        cavityTempDev = cavityTemp-self.cavityTempS
+                        cavityTempDev = cavityTemp - self.cavityTempS
                         if abs(cavityTempDev) > self.cavityTempT:
                             self.instStatusPanel.cavityTemp.SetBackgroundColour('yellow')
                         else:
@@ -1339,12 +1379,12 @@ class QuickGui(wx.Frame):
                 pass
 
             try:
-                warmBoxTemp = self.dataStore.getDataSequence(self.instStatSource,self.instStatWarmBoxTempKey).GetLatest()
+                warmBoxTemp = self.dataStore.getDataSequence(self.instStatSource, self.instStatWarmBoxTempKey).GetLatest()
                 if warmBoxTemp != 0.0:
                     self.instStatusPanel.warmBoxTemp.SetValue("%.3f" % warmBoxTemp)
                     # Change display color (yellow or green)
                     if self.warmBoxTempS != None and self.warmBoxTempT != None:
-                        warmBoxTempDev = warmBoxTemp-self.warmBoxTempS
+                        warmBoxTempDev = warmBoxTemp - self.warmBoxTempS
                         if abs(warmBoxTempDev) > self.warmBoxTempT:
                             self.instStatusPanel.warmBoxTemp.SetBackgroundColour('yellow')
                         else:
@@ -1353,12 +1393,12 @@ class QuickGui(wx.Frame):
                 pass
 
             try:
-                cavityPressure = self.dataStore.getDataSequence(self.instStatSource,self.instStatCavityPressureKey).GetLatest()
+                cavityPressure = self.dataStore.getDataSequence(self.instStatSource, self.instStatCavityPressureKey).GetLatest()
                 if cavityPressure != 0.0:
                     self.instStatusPanel.cavityPressure.SetValue("%.3f" % cavityPressure)
                     # Change display color (yellow or green)
                     if self.cavityPressureS != None and self.cavityPressureT != None:
-                        cavityPressureDev = cavityPressure-self.cavityPressureS
+                        cavityPressureDev = cavityPressure - self.cavityPressureS
                         if abs(cavityPressureDev) > self.cavityPressureT:
                             self.instStatusPanel.cavityPressure.SetBackgroundColour('yellow')
                         else:
@@ -1379,7 +1419,7 @@ class QuickGui(wx.Frame):
         self._OnTimer(evt)
         return
 
-    def _OnStatDisplay(self, evt = None, showNow = None):
+    def _OnStatDisplay(self, evt=None, showNow=None):
         """
         Control the hide/show state of the data statistics panels.
         If showNow = True, show all now.
@@ -1394,7 +1434,7 @@ class QuickGui(wx.Frame):
             if showNow == False:
                 showStats = False
             elif showNow == True:
-                showStats = True;
+                showStats = True
             elif self.statControls[0].IsShown():
                 showStats = False
             elif not self.statControls[0].IsShown():
@@ -1407,7 +1447,7 @@ class QuickGui(wx.Frame):
             self.Refresh()
         return
 
-    def _OnInstStatDisplay(self, evt = None, showNow = None):
+    def _OnInstStatDisplay(self, evt=None, showNow=None):
         """
         Control the hide/show state of the instrument status panels.
         If showNow = True, show all now.
@@ -1421,7 +1461,7 @@ class QuickGui(wx.Frame):
         if showNow == False:
             showStats = False
         elif showNow == True:
-            showStats = True;
+            showStats = True
         elif self.instStatusBox.IsShown():
             showStats = False
         elif not self.instStatusBox.IsShown():
@@ -1437,22 +1477,18 @@ class QuickGui(wx.Frame):
     def _OnUserCal(self, evt):
         concList = self.dataManagerRpc.Cal_GetMeasNames()
         if len(concList) == 0:
-            d = Dialog.OKDialog(self,
-                                "User calibration not allowed, action cancelled.",
-                                None,
-                                -1,
-                                "User Calibration Disabled",
-                                self.fontDatabase
-                                )
+            d = Dialog.OKDialog(self, "User calibration not allowed, action cancelled.", None, -1, "User Calibration Disabled",
+                                self.fontDatabase)
             d.ShowModal()
             d.Destroy()
             return
 
         # Use password to protect user cal function
-        d = wx.TextEntryDialog(self, 'User Calibration Password: ','Authorization required', '', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
-        setItemFont(d,self.fontDatabase.getFontFromIni("Dialogs"))
+        d = wx.TextEntryDialog(self, 'User Calibration Password: ', 'Authorization required', '',
+                               wx.OK | wx.CANCEL | wx.TE_PASSWORD)
+        setItemFont(d, self.fontDatabase.getFontFromIni("Dialogs"))
         try:
-            password = getInnerStr(self.config.get("Authorization","UserCalPassword"))
+            password = getInnerStr(self.config.get("Authorization", "UserCalPassword"))
         except:
             password = "picarro"
         okClicked = d.ShowModal() == wx.ID_OK
@@ -1460,13 +1496,7 @@ class QuickGui(wx.Frame):
         if not okClicked:
             return
         elif d.GetValue() != password:
-            d = Dialog.OKDialog(self,
-                                "Password incorrect, action cancelled.",
-                                None,
-                                -1,
-                                "Incorrect Password",
-                                self.fontDatabase
-                                )
+            d = Dialog.OKDialog(self, "Password incorrect, action cancelled.", None, -1, "Incorrect Password", self.fontDatabase)
             d.ShowModal()
             d.Destroy()
             return
@@ -1475,17 +1505,19 @@ class QuickGui(wx.Frame):
         concList.sort()
         for conc in concList:
             concCal = self.dataManagerRpc.Cal_GetUserCal(conc)
-            userCalList.append((conc+"Slope", "%s slope" % conc, str(concCal[0])))
-            userCalList.append((conc+"Offset", "%s offset" % conc, str(concCal[1])))
+            userCalList.append((conc + "Slope", "%s slope" % conc, str(concCal[0])))
+            userCalList.append((conc + "Offset", "%s offset" % conc, str(concCal[1])))
         self.dlg = UserCalGui(userCalList, None, -1, "")
         self._BindAllWidgetsMotion(self.dlg)
         getUserCals = (self.dlg.ShowModal() == wx.ID_OK)
         if getUserCals:
 
-            numConcs = len(userCalList)/2
+            numConcs = len(userCalList) / 2
             for idx in range(numConcs):
-                if self.dlg.textCtrlList[2*idx].GetValue() != userCalList[2*idx][2] or self.dlg.textCtrlList[2*idx+1].GetValue() != userCalList[2*idx+1][2]:
-                    newCal = (float(self.dlg.textCtrlList[2*idx].GetValue()), float(self.dlg.textCtrlList[2*idx+1].GetValue()))
+                if self.dlg.textCtrlList[2 * idx].GetValue() != userCalList[2 * idx][2] or self.dlg.textCtrlList[
+                        2 * idx + 1].GetValue() != userCalList[2 * idx + 1][2]:
+                    newCal = (float(self.dlg.textCtrlList[2 * idx].GetValue()),
+                              float(self.dlg.textCtrlList[2 * idx + 1].GetValue()))
                     self.dataManagerRpc.Cal_SetSlopeAndOffset(concList[idx], newCal[0], newCal[1])
 
         self.dlg.Destroy()
@@ -1514,7 +1546,8 @@ class QuickGui(wx.Frame):
                 errMsg += " (valve sequencer may be terminated already)"
 
     def _OnAbout(self, e):
-        v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-%d, Picarro Inc.\n\n" % time.localtime()[0]
+        v = "Web site : www.picarro.com\nTechnical support : 408-962-3900\nE-mail : techsupport@picarro.com\n\n(c) 2005-%d, Picarro Inc.\n\n" % time.localtime(
+        )[0]
         try:
             dV = self.driverRpc.allVersions()
             boldText = "SOFTWARE RELEASE VERSION : %s\n" % dV["host release"]
@@ -1523,7 +1556,7 @@ class QuickGui(wx.Frame):
             v += "Version strings:\n"
             for k in klist:
                 if k != "host release":
-                    v += "%s : %s\n" % (k,dV[k])
+                    v += "%s : %s\n" % (k, dV[k])
         except:
             v += "Software version information unavailable"
 
@@ -1536,10 +1569,10 @@ class QuickGui(wx.Frame):
         except:
             aboutTitle = "Picarro CRDS"
 
-        d = Dialog.OKDialog(self,v,None,-1,aboutTitle, boldText=boldText,fontDatabase=self.fontDatabase)
+        d = Dialog.OKDialog(self, v, None, -1, aboutTitle, boldText=boldText, fontDatabase=self.fontDatabase)
         if biggerSize:
             currSize = d.GetSize()
-            d.SetSize((currSize[0]+40, currSize[1]))
+            d.SetSize((currSize[0] + 40, currSize[1]))
         d.ShowModal()
         d.Destroy()
 
@@ -1564,7 +1597,7 @@ class QuickGui(wx.Frame):
         lifetime = int(returnDict["user_session_lifetime"])
         self.sessionLifeTime = lifetime * 60 if lifetime >= 0 else float('inf')
 
-    def _OnLoginUser(self,e):
+    def _OnLoginUser(self, e):
         # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests
         # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
         # and the GUI mode changes to the default.
@@ -1585,11 +1618,7 @@ class QuickGui(wx.Frame):
                     if user == "picarro_admin" and pwd == "Extreme_Science!":
                         returnDict = {"roles": ["SuperUser"], "username": "picarro_admin"}
                     else:
-                        payload = {
-                            'username': user,
-                            'password': pwd,
-                            'command': 'log_in_user',
-                            'requester': 'QuickGui'}
+                        payload = {'username': user, 'password': pwd, 'command': 'log_in_user', 'requester': 'QuickGui'}
                         returnDict = self._sendRequest("post", "account", payload)
                     if "error" in returnDict:
                         msg = returnDict["error"]
@@ -1602,7 +1631,7 @@ class QuickGui(wx.Frame):
                     elif "roles" in returnDict:
                         self.userLevel = self.userLevelMap[returnDict["roles"][0]]
                         self.currentUser = returnDict
-                        d = Dialog.OKDialog(self,"\t%s logged in." % (returnDict["roles"][0]),None,-1,"",self.fontDatabase)
+                        d = Dialog.OKDialog(self, "\t%s logged in." % (returnDict["roles"][0]), None, -1, "", self.fontDatabase)
                         #update GUI
                         self._modifyInterface()
                         self.measPanelSizer.Layout()
@@ -1615,13 +1644,12 @@ class QuickGui(wx.Frame):
                         if self.userLevel < 4:
                             self._getSystemVariables()
                             #Inactive session timeout timer
-                            self.sessionTimer.Start(5000) # 5 seconds interval
+                            self.sessionTimer.Start(5000)  # 5 seconds interval
                             d.ShowModal()
                             d.Destroy()
                         break
         else:
-            self._sendRequest("post", "account",
-                              {"command": "log_out_user", 'requester': "QuickGui", 'Logout_InActivity': False})
+            self._sendRequest("post", "account", {"command": "log_out_user", 'requester': "QuickGui", 'Logout_InActivity': False})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()
@@ -1635,16 +1663,16 @@ class QuickGui(wx.Frame):
             self.sessionTimer.Stop()
 
     def ___OnLoginUser(self, e):
-        # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests 
+        # Set the GUI mode based on the userlevels. When change to higher levels Technician/Expert, it sends the authentication requests
         # to the flask_security server. If Technician/Expert mode stays inactive for a period of time (default 30 secs), it will automatically log out
-        # and the GUI mode changes to the default.  
+        # and the GUI mode changes to the default.
         # d = wx.TextEntryDialog(self, 'Service Technician Log In: ','Authorization required', 'Email:', wx.OK | wx.CANCEL | wx.TE_PASSWORD)
         # toggle login/logout
         if not self.userLoggedIn:
             user, msg = "", ""
             while True:
                 d = Dialog.LoginDialog(self, title="Authorization required", user=user, msg=msg)
-                setItemFont(d,self.fontDatabase.getFontFromIni("Dialogs"))
+                setItemFont(d, self.fontDatabase.getFontFromIni("Dialogs"))
                 okClicked = d.ShowModal() == wx.ID_OK
                 user, pwd = d.getInput()
                 d.Destroy()
@@ -1654,11 +1682,7 @@ class QuickGui(wx.Frame):
                     if user == "picarro_admin" and pwd == "Extreme_Science!":
                         returnDict = {"roles": ["SuperUser"], "username": "picarro_admin"}
                     else:
-                        payload = {
-                            'username': user, 
-                            'password': pwd, 
-                            'command': 'log_in_user',
-                            'requester': 'QuickGui'}
+                        payload = {'username': user, 'password': pwd, 'command': 'log_in_user', 'requester': 'QuickGui'}
                         returnDict = self._sendRequest("post", "account", payload)
                     if "error" in returnDict:
                         msg = returnDict["error"]
@@ -1671,13 +1695,13 @@ class QuickGui(wx.Frame):
                             self.userLevel = 4
                         elif 'Admin' in returnDict["roles"]:
                             self.userLevel = 3
-                            d = Dialog.OKDialog(self,"\tAdmin logged in.",None,-1,"",self.fontDatabase)
+                            d = Dialog.OKDialog(self, "\tAdmin logged in.", None, -1, "", self.fontDatabase)
                         elif 'Technician' in returnDict["roles"]:
                             self.userLevel = 2
-                            d = Dialog.OKDialog(self,"\tTechnician logged in.",None,-1,"",self.fontDatabase)
+                            d = Dialog.OKDialog(self, "\tTechnician logged in.", None, -1, "", self.fontDatabase)
                         else:
                             self.userLevel = 1
-                            d = Dialog.OKDialog(self,"\tOperator logged in.",None,-1,"",self.fontDatabase)
+                            d = Dialog.OKDialog(self, "\tOperator logged in.", None, -1, "", self.fontDatabase)
                         #update GUI
                         self._modifyInterface()
                         self.measPanelSizer.Layout()
@@ -1686,15 +1710,15 @@ class QuickGui(wx.Frame):
                         #self.menuBar.EnableTop(2, True)
                         self.userLoggedIn = True
                         self.iGuiMode.SetItemLabel("User Logout")
-                        #Recursively bind all the widgets with mouse motion event 
+                        #Recursively bind all the widgets with mouse motion event
                         self._BindAllWidgetsMotion(self.mainPanel)
                         if self.userLevel < 4:
                             self._getSystemVariables()
                             #Inactive session timeout timer
-                            self.sessionTimer.Start(5000) # 5 seconds interval
+                            self.sessionTimer.Start(5000)  # 5 seconds interval
                             d.ShowModal()
                             d.Destroy()
-                        break                    
+                        break
         else:
             self.userLevel = 0
             self._modifyInterface()
@@ -1727,8 +1751,9 @@ class QuickGui(wx.Frame):
                     "username": username,
                     "new_password": pwd,
                     'command': 'change_password',
-                    'requester': 'QuickGui'}
-                
+                    'requester': 'QuickGui'
+                }
+
                 returnDict = self._sendRequest("post", "account", payload)
                 if "error" in returnDict:
                     msg = returnDict["error"]
@@ -1745,8 +1770,7 @@ class QuickGui(wx.Frame):
         # count the session_time, logout and change GUI mode to the default
         # automatically after session_time exceed the INACTIVE_SESSION_TIMEOUT
         if self.session_time >= self.sessionLifeTime:
-            self._sendRequest("post", "account",
-                              {"command": "log_out_user", 'requester': "QuickGui", 'Logout_InActivity': True})
+            self._sendRequest("post", "account", {"command": "log_out_user", 'requester': "QuickGui", 'Logout_InActivity': True})
             self.userLevel = 0
             self._modifyInterface()
             self.measPanelSizer.Layout()
@@ -1773,7 +1797,7 @@ class QuickGui(wx.Frame):
             self._BindAllWidgetsMotion(child)
         node.Bind(wx.EVT_MOTION, self._SessionRefresher)
         return
-        
+
     def _UnbindAllWidgetsMotion(self, node):
         for child in node.GetChildren():
             self._UnbindAllWidgetsMotion(child)
@@ -1804,7 +1828,7 @@ def HandleCommandSwitches():
     import getopt
 
     shortOpts = 'h'
-    longOpts = ["help","test","ini="]
+    longOpts = ["help", "test", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:

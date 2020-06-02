@@ -1,4 +1,3 @@
-
 import Queue
 import time
 import collections
@@ -6,7 +5,6 @@ from PyQt4 import QtCore
 from Host.Common import Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_DATA_MANAGER
 from Host.Common import GraphPanel
-
 """
 DataStoreForGraphPanels
 DataStoreForGraphPanels is a class to collect data broadcasted by the DataManager.
@@ -17,29 +15,28 @@ display time series data with the wxPython based GraphPanel.
 Call getQueuedData() periodically to load sequences with data.
 getDataSequence() returns a sequence for plotting.
 """
+
+
 class DataStoreForGraphPanels(object):
     """
     Holds the data queried by AlarmViewListCtrl to update the alarm LEDs and names.
     """
-    def __init__(self,config = None):
-        self.INDEX = 0 # RSF
+    def __init__(self, config=None):
+        self.INDEX = 0  # RSF
         self.config = None
         self.seqPoints = 500
         if config:
             self.config = config
             self.loadConfig()
         self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue,
-                                          BROADCAST_PORT_DATA_MANAGER,
-                                          StringPickler.ArbitraryObject,
-                                          retry = True)
+        self.listener = Listener.Listener(self.queue, BROADCAST_PORT_DATA_MANAGER, StringPickler.ArbitraryObject, retry=True)
         self.sourceDict = {}
         self.oldData = {}
         self.alarmStatus = 0
         self.mode = ""
 
     def loadConfig(self):
-        self.seqPoints = self.config.getint('DataManagerStream','Points')
+        self.seqPoints = self.config.getint('DataManagerStream', 'Points')
 
     def getQueuedData(self):
         """
@@ -114,7 +111,7 @@ class DataStoreForGraphPanels(object):
                 cptrs = d['time'].GetPointers()
                 for k in d:
                     try:
-                        if k in ('time','good'):
+                        if k in ('time', 'good'):
                             d[k].Add(obj[k])
                         else:
                             d[k].Add(obj['data'][k])
@@ -136,17 +133,18 @@ class DataStoreForGraphPanels(object):
     def getSources(self):
         return sorted(self.sourceDict.keys())
 
-    def getTime(self,source):
+    def getTime(self, source):
         return self.sourceDict[source]['time']
 
-    def getKeys(self,source):
+    def getKeys(self, source):
         return self.sourceDict[source].keys()
 
-    def getDataSequence(self,source,key):
+    def getDataSequence(self, source, key):
         try:
             return self.sourceDict[source][key]
         except:
             return None
+
 
 # DataStoreForQt is like DataStoreForGraphPanels but it eliminates the ties with wxPython and also simplifies how
 # data is stored and retrieved by using Python Deques (double ended queues).
@@ -205,22 +203,19 @@ class DataStoreForGraphPanels(object):
 
 
 class DataStoreForQt(QtCore.QObject):
-    def __init__(self, config = None):
+    def __init__(self, config=None):
         super(DataStoreForQt, self).__init__()
-        self.INDEX = 0 # RSF
+        self.INDEX = 0  # RSF
         self.config = None
         self.length = 1000
         if config:
             self.config = config
             self.loadConfig()
         self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue,
-                                          BROADCAST_PORT_DATA_MANAGER,
-                                          StringPickler.ArbitraryObject,
-                                          retry = True)
+        self.listener = Listener.Listener(self.queue, BROADCAST_PORT_DATA_MANAGER, StringPickler.ArbitraryObject, retry=True)
         self.sourceDict = {}
         self.oldData = {}
-        self.offsets = {}   # For simulations
+        self.offsets = {}  # For simulations
         self.alarmStatus = 0
         return
 
@@ -278,7 +273,7 @@ class DataStoreForQt(QtCore.QObject):
                     i += 1
                     update = False
             except Exception as e:
-                print("Unhandled exception in DataStore.py: %s" %e)
+                print("Unhandled exception in DataStore.py: %s" % e)
         return i
 
     def getList(self, source, key):
@@ -297,7 +292,3 @@ class DataStoreForQt(QtCore.QObject):
     def setOffset(self, key, offset):
         self.offsets[key] = offset
         return
-
-
-
-

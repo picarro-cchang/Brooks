@@ -10,7 +10,7 @@ It serves for 2 purposes:
 # some code and ini files won't load if their location is defined
 # with a relative path.
 
-# FYI the original code was written with everything in 
+# FYI the original code was written with everything in
 # Host/Utilities/Modbus and only worked if the code was started
 # with a shell in this directory.  It wouldn't work if started by
 # the Supervisor because relative paths would break as this code's
@@ -64,6 +64,7 @@ EventManagerProxy_Init(APP_NAME)
 
 import socket
 
+
 def get_ip_address():
     '''
     Method use to get eth0 ip address and run modbus server using ip address for Modbus over TCPIP
@@ -72,7 +73,8 @@ def get_ip_address():
     '''
     return "0.0.0.0"
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -82,7 +84,8 @@ DISCRETE_INPUT = 2
 HOLDING_REGISTER = 3
 INPUT_REGISTER = 4
 
-def StartServer(rtu = True, context=None, framer=None, identity=None, **kwargs):
+
+def StartServer(rtu=True, context=None, framer=None, identity=None, **kwargs):
     ''' 
     This is a bug in pyModbus 1.2.0 that only allows framer=ModbusAsciiFramer
     The bug is fixed in pymodbus 1.3.0. The solution here will work for both versions.
@@ -91,7 +94,8 @@ def StartServer(rtu = True, context=None, framer=None, identity=None, **kwargs):
         server = ModbusSerialServer(context, framer, identity, **kwargs)
     else:
         server = ModbusTcpServer(context, framer, identity, **kwargs)
-    server.serve_forever() 
+    server.serve_forever()
+
 
 class ModbusServer(object):
     def __init__(self, configFile, simulation, debug):
@@ -104,7 +108,8 @@ class ModbusServer(object):
             logging.basicConfig()
             log = logging.getLogger()
             log.setLevel(logging.DEBUG)
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         self.slaveid = self.config.getint("SerialPortSetup", "SlaveId", 1)
         self.rtu = self.config.getboolean("Main", "rtu", False)
@@ -115,47 +120,47 @@ class ModbusServer(object):
         self.command_queue = Queue()
         sync_bits = {}
         r = self.register_variables
-        for v in r[COIL-1]['variables']:
+        for v in r[COIL - 1]['variables']:
             if self.variable_params[v]['sync'] and ("function" in self.variable_params[v]):
                 sync_bits[self.variable_params[v]['address']] = self.variable_params[v]['function']
         store = ModbusSlaveContext(
             # PyModbus add one buffer index for each register address so adding 1 for each register size
             # if we dont add 1 more space we will get address error when reading last register value
             # read-only status and alarm bits
-            di = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[DISCRETE_INPUT-1]['size']))),
+            di=ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0] * (1 + r[DISCRETE_INPUT - 1]['size']))),
             # remote control bits
-            co = ThreadSafeDataBlock(CallbackDataBlock(self.command_queue, sync_bits, 0x00, [0]*(1+r[COIL-1]['size']))),
+            co=ThreadSafeDataBlock(CallbackDataBlock(self.command_queue, sync_bits, 0x00, [0] * (1 + r[COIL - 1]['size']))),
             # remote control parameters
-            hr = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[HOLDING_REGISTER-1]['size']))),
+            hr=ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0] * (1 + r[HOLDING_REGISTER - 1]['size']))),
             # read-only output variables
-            ir = ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0]*(1+r[INPUT_REGISTER-1]['size'])))
-        )
-        self.context = ModbusServerContext(slaves={self.slaveid:store}, single=False)
+            ir=ThreadSafeDataBlock(ModbusSequentialDataBlock(0x00, [0] * (1 + r[INPUT_REGISTER - 1]['size']))))
+        self.context = ModbusServerContext(slaves={self.slaveid: store}, single=False)
 
         identity = ModbusDeviceIdentification()
-        identity.VendorName  = 'Picarro'
+        identity.VendorName = 'Picarro'
         identity.ProductCode = 'I2000'
-        identity.VendorUrl   = 'http://www.picarro.com'
+        identity.VendorUrl = 'http://www.picarro.com'
         identity.ProductName = 'Picarro Modbus Server'
-        identity.ModelName   = 'Picarro Modbus Server'
+        identity.ModelName = 'Picarro Modbus Server'
         identity.MajorMinorRevision = '1.0'
         if self.rtu:
             framer = ModbusRtuFramer
         else:
             framer = ModbusSocketFramer
         self.serverConfig = {
-            "rtu" : self.rtu,
+            "rtu": self.rtu,
             "context": self.context,
             "framer": framer,
             "identity": identity,
-            "address" : (get_ip_address(), self.config.getint("Main", "TCPPort", 50500)),
+            "address": (get_ip_address(), self.config.getint("Main", "TCPPort", 50500)),
             "port": self.config.get("SerialPortSetup", "Port").strip(),
             "baudrate": self.config.getint("SerialPortSetup", "BaudRate", 19200),
             "timeout": self.config.getfloat("SerialPortSetup", "TimeOut", 1.0),
             "bytesize": self.config.getint("SerialPortSetup", "ByteSize", BYTE_SIZE),
             "parity": self.config.get("SerialPortSetup", "Parity", "N"),
             "stopbits": self.config.getint("SerialPortSetup", "StopBits", 1),
-            "ignore_missing_slaves": True}
+            "ignore_missing_slaves": True
+        }
         if simulation:
             self.get_simulation_params()
             self.data_thread = threading.Thread(target=self.simulate_data)
@@ -164,24 +169,24 @@ class ModbusServer(object):
         else:
             self.source = self.config.get("Main", "Source")
             self.data_thread = Listener.Listener(self.data_queue,
-                                    SharedTypes.BROADCAST_PORT_DATA_MANAGER,
-                                    StringPickler.ArbitraryObject,
-                                    self._streamFilter,
-                                    retry = True,
-                                    name = APP_NAME)
+                                                 SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                                 StringPickler.ArbitraryObject,
+                                                 self._streamFilter,
+                                                 retry=True,
+                                                 name=APP_NAME)
             self.InstMgrStatusListener = Listener.Listener(None,
-                                        SharedTypes.STATUS_PORT_INST_MANAGER,
-                                        AppStatus.STREAM_Status,
-                                        self._InstMgrStatusFilter,
-                                        retry = True,
-                                        name = APP_NAME)
+                                                           SharedTypes.STATUS_PORT_INST_MANAGER,
+                                                           AppStatus.STREAM_Status,
+                                                           self._InstMgrStatusFilter,
+                                                           retry=True,
+                                                           name=APP_NAME)
         # writer thread gets data from queue and write to memory
         self.writer_thread = threading.Thread(target=self.data_writer)
         self.writer_thread.daemon = True
         # control thread gets command from queue and execute
         self.control_thread = threading.Thread(target=self.controller)
         self.control_thread.daemon = True
-    
+
     def get_register_info(self):
         self.register_variables = [{}, {}, {}, {}]
         self.variable_params = {}
@@ -189,12 +194,13 @@ class ModbusServer(object):
         file_path = os.path.dirname(os.path.abspath(__file__))
         script_name = self.config.get("Main", "Script", "")
         script_path = file_path + "/" + script_name
-        userdata_file_path = file_path + "/" + self.config.get("Main", "UserDataFilePath", "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
+        userdata_file_path = file_path + "/" + self.config.get("Main", "UserDataFilePath",
+                                                               "../../../InstrConfig/Config/Modbus/Modbus_UserData.ini")
         scriptEnv_Obj = ModbusScriptEnv(self, userdata_file_path=userdata_file_path)
         scriptEnv = scriptEnv_Obj.create_script_env()
         if os.path.exists(script_path):
             script = file(script_path, 'r')
-            scriptObj = compile(script.read().replace("\r\n","\n"), script_path, 'exec')
+            scriptObj = compile(script.read().replace("\r\n", "\n"), script_path, 'exec')
             exec scriptObj in scriptEnv
         else:
             raise Exception("Path does not exist: %s" % script_path)
@@ -206,13 +212,13 @@ class ModbusServer(object):
                 d["bit"] = self.config.getint(s, "Byte") * 8
                 d["size"] = d["bit"] / 16
                 d["type"] = self.config.get(s, "Type")
-                d["format"] = self.endian + "".join( [get_variable_type(d["bit"], d["type"])])
+                d["format"] = self.endian + "".join([get_variable_type(d["bit"], d["type"])])
                 if self.config.getboolean(s, "ReadOnly"):
                     d["register"] = INPUT_REGISTER
                 else:
                     d["register"] = HOLDING_REGISTER
             elif s.startswith("Bit_"):
-                name = s[4:]                
+                name = s[4:]
                 if self.config.getboolean(s, "ReadOnly"):
                     d["register"] = DISCRETE_INPUT
                 else:
@@ -237,27 +243,27 @@ class ModbusServer(object):
             li = [self.variable_params[v] for v in self.variable_params if self.variable_params[v]["register"] == (register + 1)]
             sorted_list = sorted(li, key=lambda k: k["address"])
             self.register_variables[register]["variables"] = [v["name"] for v in sorted_list]
-            if register >= 2:   # variables
+            if register >= 2:  # variables
                 self.register_variables[register]["size"] = self.check_variable_address(sorted_list)
                 self.register_variables[register]["format"] = self.endian + \
                     "".join( [get_variable_type(v["bit"], v["type"]) for v in sorted_list] )
-            else:       # bits
+            else:  # bits
                 self.register_variables[register]["size"] = self.check_bit_address(sorted_list)
         self.readonly_variables = self.register_variables[DISCRETE_INPUT-1]["variables"] \
                 + self.register_variables[INPUT_REGISTER-1]["variables"]
-    
+
     def check_variable_address(self, variable_list):
         addr, var_size = 0, 0
-        address_dict={}
+        address_dict = {}
         for v in variable_list:
             addr = v["address"]
             if addr in address_dict:
                 raise Exception("Variable address of %s is wrong, Address is already used by other variable!" % (v["name"]))
             var_size = v["bit"] / 16
-            for i in range(0,var_size):
-                address_dict[addr+i] = True
+            for i in range(0, var_size):
+                address_dict[addr + i] = True
         return addr + var_size
-        
+
     def check_bit_address(self, bit_list):
         addr = 0
         address_dict = {}
@@ -266,7 +272,7 @@ class ModbusServer(object):
             if addr in address_dict:
                 raise Exception("Variable address of %s is wrong. Address is already used by other variable!" % (b["name"]))
             address_dict[addr] = True
-        return addr+1
+        return addr + 1
 
     def get_simulation_params(self):
         self.simulation_dict = {}
@@ -274,7 +280,7 @@ class ModbusServer(object):
             if s.startswith("Variable_") and self.config.getboolean(s, "ReadOnly") and self.config.has_option("Simulation", s):
                 self.simulation_dict[s[9:]] = self.config.get("Simulation", s)
         self.simulation_env = {func: getattr(math, func) for func in dir(math) if not func.startswith("__")}
-        self.simulation_env.update({'random':  random.random, 'time': time, 'x': 0})
+        self.simulation_env.update({'random': random.random, 'time': time, 'x': 0})
         self.simulation_max_index = self.config.getint('Simulation', 'Max_Index', 100)
 
     # Method use to write read only register values
@@ -288,7 +294,7 @@ class ModbusServer(object):
                     values = [value_dict[v]]
                     if len(values) > 0:
                         str = pack(variableParam['format'], *values)
-                        value_to_write = list( unpack('%s%dH' % (self.endian, variableParam['size']), str) )
+                        value_to_write = list(unpack('%s%dH' % (self.endian, variableParam['size']), str))
                         self.context[self.slaveid].setValues(INPUT_REGISTER, variableParam['address'], value_to_write)
             # write di bits
             for v in self.register_variables[DISCRETE_INPUT - 1]["variables"]:
@@ -308,7 +314,7 @@ class ModbusServer(object):
     # will have new data (Means race condition)
     def write_readonly_all_data_with_one_lock(self, value_dict):
         try:
-            addressValues_dict={}
+            addressValues_dict = {}
             for v in self.register_variables[INPUT_REGISTER - 1]["variables"]:
                 if v in value_dict:
                     variableParam = self.variable_params[v]
@@ -316,9 +322,9 @@ class ModbusServer(object):
                     values = [value_dict[v]]
                     if len(values) > 0:
                         str = pack(variableParam['format'], *values)
-                        value_to_write = list( unpack('%s%dH' % (self.endian, variableParam['size']), str) )
-                        addressValues_dict[variableParam['address']]=value_to_write
-            self.context[self.slaveid].setValues(INPUT_REGISTER, 0 ,addressValues_dict)
+                        value_to_write = list(unpack('%s%dH' % (self.endian, variableParam['size']), str))
+                        addressValues_dict[variableParam['address']] = value_to_write
+            self.context[self.slaveid].setValues(INPUT_REGISTER, 0, addressValues_dict)
             addressValues_dict = {}
             # write di bits
             for v in self.register_variables[DISCRETE_INPUT - 1]["variables"]:
@@ -327,7 +333,7 @@ class ModbusServer(object):
                     values = [value_dict[v]]
                     if len(values) > 0:
                         addressValues_dict[variableParam['address']] = values
-            self.context[self.slaveid].setValues(DISCRETE_INPUT, 0 ,addressValues_dict)
+            self.context[self.slaveid].setValues(DISCRETE_INPUT, 0, addressValues_dict)
         except KeyError:
             pass
 
@@ -339,8 +345,8 @@ class ModbusServer(object):
             # write ir variables
             values = []
             format = self.endian
-            datasize=0
-            startaddress=0
+            datasize = 0
+            startaddress = 0
             for v in self.register_variables[INPUT_REGISTER - 1]["variables"]:
                 if v in value_dict:
                     variableParam = self.variable_params[v]
@@ -365,10 +371,9 @@ class ModbusServer(object):
                     datasize += 1
                     values.extend([value_dict[v]])
             if len(values) > 0:
-               self.context[self.slaveid].setValues(DISCRETE_INPUT, startaddress, values)
+                self.context[self.slaveid].setValues(DISCRETE_INPUT, startaddress, values)
         except KeyError:
             pass
-
 
     def write_readonly_constant_data(self):
         try:
@@ -386,16 +391,16 @@ class ModbusServer(object):
             try:
                 self.Write_Instrument_Cal_File_Data(instr_cal_file_path)
             except Exception as ex:
-                LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
+                LogExc("Unable to Start Modbus Server properly, %s" % ex.message)
 
             try:
                 self.Write_User_Cal_Data(user_cal_file_path)
             except Exception as ex:
-                LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
+                LogExc("Unable to Start Modbus Server properly, %s" % ex.message)
 
             self.Write_All_Const_Values()
         except Exception as ex:
-            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
+            LogExc("Unable to Start Modbus Server properly, %s" % ex.message)
 
     def Write_Instrument_Cal_File_Data(self, file_path):
         """
@@ -418,10 +423,8 @@ class ModbusServer(object):
                 data_dict[v] = instrument_cal_config.getfloat('Data', v)
 
         # let make sure that there is data to write
-        if len (data_dict) > 0:
+        if len(data_dict) > 0:
             self.write_readonly_registers(data_dict)
-
-
 
     def Write_User_Cal_Data(self, file_path):
         '''
@@ -440,7 +443,7 @@ class ModbusServer(object):
         # lets go through all available variable and check if variable are slope or offset related
         for v in self.register_variables[INPUT_REGISTER - 1]["variables"]:
             if (v.endswith('_slope') or v.endswith('_offset')) and 'Value' not in self.variable_params[v]:
-                words = v.rsplit('_',1)
+                words = v.rsplit('_', 1)
                 if len(words) == 2:
                     section = words[0]
                     option = words[1]
@@ -467,7 +470,7 @@ class ModbusServer(object):
         # let make sure that there is data to write
         if len(data_dict) > 0:
             self.write_readonly_registers(data_dict)
-        
+
     def _streamFilter(self, streamOut):
         try:
             if streamOut["source"] == self.source:
@@ -478,7 +481,7 @@ class ModbusServer(object):
                 return result
         except Exception, err:
             print "Error: %s" % err
-            
+
     def process_data(self, data_dict):
         result = {}
         for v in self.readonly_variables:
@@ -495,7 +498,7 @@ class ModbusServer(object):
                 if v in data_dict:
                     result[v] = data_dict[v]
         return result
-        
+
     def simulate_data(self):
         data = {}
         while True:
@@ -508,20 +511,20 @@ class ModbusServer(object):
                 self.simulation_env['x'] = 0
             else:
                 self.simulation_env['x'] += 1
-                
+
     def run_simulation_expression(self, expression):
         if len(expression) > 0:
             exec "simulation_result=" + expression in self.simulation_env
             return self.simulation_env["simulation_result"]
         else:
             return 0.0
-            
+
     def controller(self):
         # Some time LogExc does not find reference in thread so importing in thread
         from Host.Common.EventManagerProxy import LogExc, Log
         try:
             addr_func_map = {}
-            for v in self.register_variables[COIL-1]['variables']:
+            for v in self.register_variables[COIL - 1]['variables']:
                 if "function" in self.variable_params[v]:
                     addr_func_map[self.variable_params[v]['address']] = self.variable_params[v]['function']
             while True:
@@ -533,10 +536,10 @@ class ModbusServer(object):
                     else:
                         Log("Modbus Client attempted to access non-existent register: {}".format(addr), Level=0)
         except Exception as ex:
-            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
-                
+            LogExc("Unable to Start Modbus Server properly, %s" % ex.message)
+
     def data_writer(self):
-        # Some time LogExc does not find reference in thread so importing in thread 
+        # Some time LogExc does not find reference in thread so importing in thread
         from Host.Common.EventManagerProxy import LogExc
         try:
             time.sleep(1)
@@ -547,8 +550,8 @@ class ModbusServer(object):
                     data = self.data_queue.get(False)
                     self.write_readonly_all_data_with_one_lock(data)
         except Exception as ex:
-            LogExc("Unable to Start Modbus Server properly, %s" %ex.message)
-        
+            LogExc("Unable to Start Modbus Server properly, %s" % ex.message)
+
     def run(self):
         self.control_thread.start()
         self.writer_thread.start()
@@ -619,6 +622,7 @@ class ModbusServer(object):
 
         return ledState
 
+
 HELP_STRING = """ModbusServer.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following:
@@ -628,8 +632,10 @@ Where the options can be a combination of the following:
 --debug              debug mode
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hs'
@@ -641,10 +647,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     file_path = os.path.dirname(os.path.abspath(__file__))
     configFile = file_path + "../../../AppConfig/Config/Utilities/ModbusServer.ini"

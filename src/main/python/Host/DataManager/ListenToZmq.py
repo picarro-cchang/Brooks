@@ -32,13 +32,15 @@ class DataManagerListener(object):
 
 def main():
     parser = OptionParser()
-    parser.add_option("-a", dest="ipAddr", default="127.0.0.1",
-        help="IP address of analyzer (def: 127.0.0.1)")
-    parser.add_option("-p", dest="port", default=BROADCAST_PORT_DATA_MANAGER_ZMQ,
-        help="Data manager rebroadcaster port (def: %d)" % BROADCAST_PORT_DATA_MANAGER_ZMQ)
+    parser.add_option("-a", dest="ipAddr", default="127.0.0.1", help="IP address of analyzer (def: 127.0.0.1)")
+    parser.add_option("-p",
+                      dest="port",
+                      default=BROADCAST_PORT_DATA_MANAGER_ZMQ,
+                      help="Data manager rebroadcaster port (def: %d)" % BROADCAST_PORT_DATA_MANAGER_ZMQ)
     (options, args) = parser.parse_args()
     dml = DataManagerListener(options.ipAddr, options.port)
     dml.run()
+
 
 if __name__ == "__main__":
     main()

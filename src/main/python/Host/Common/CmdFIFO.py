@@ -46,19 +46,13 @@ if float(Pyro4.__version__) < 4.43:
     raise RuntimeError("CmdFIFO requires Pyro4 v4.43")
 
 ##### set some constants (using chars to make easier to decipher and avoid lookups)
-CMD_TYPE_Default     = "D" #0 #Block until complete, then return to client
-CMD_TYPE_Blocking    = "B" #1 #Block until complete, then return to client
-CMD_TYPE_VerifyOnly  = "V" #2 #Return immediately to client.  Return is lost.
-CMD_TYPE_Callback    = "C" #3 #Confirm receipt, then execute callback when done.
-CMD_TYPE_ERROR       = "E" #-1
+CMD_TYPE_Default = "D"  #0 #Block until complete, then return to client
+CMD_TYPE_Blocking = "B"  #1 #Block until complete, then return to client
+CMD_TYPE_VerifyOnly = "V"  #2 #Return immediately to client.  Return is lost.
+CMD_TYPE_Callback = "C"  #3 #Confirm receipt, then execute callback when done.
+CMD_TYPE_ERROR = "E"  #-1
 
-CMD_Types = [
-    CMD_TYPE_Default,
-    CMD_TYPE_Blocking,
-    CMD_TYPE_VerifyOnly,
-    CMD_TYPE_Callback,
-    CMD_TYPE_ERROR
-    ]
+CMD_Types = [CMD_TYPE_Default, CMD_TYPE_Blocking, CMD_TYPE_VerifyOnly, CMD_TYPE_Callback, CMD_TYPE_ERROR]
 
 uriRegex = re.compile("http://(.*):(\d+)")
 Pyro4.config.SERIALIZER = 'pickle'
@@ -66,8 +60,10 @@ Pyro4.config.THREADPOOL_SIZE = 80
 Pyro4.config.SERIALIZERS_ACCEPTED.add('pickle')
 Pyro4.config.SOCK_REUSE = True
 
+
 class RemoteException(RuntimeError):
     pass
+
 
 #@decorator
 #def rpc_wrap(func, *a, **k):
@@ -76,17 +72,20 @@ class RemoteException(RuntimeError):
 #    except:
 #        raise RemoteException(traceback.format_exc())
 
+
 def rpc_wrap(func):
-    def wrapper(*a,**k):
+    def wrapper(*a, **k):
         try:
-            return func(*a,**k)
+            return func(*a, **k)
         except:
             raise RemoteException(traceback.format_exc())
+
     wrapper.__wrapped_co_argcount = func.func_code.co_argcount
     wrapper.__wrapped_co_varnames = func.func_code.co_varnames
     wrapper.__wrapped_defaults = func.func_defaults
     wrapper.__wrapped_doc = pydoc.getdoc(func)
     return wrapper
+
 
 def resolve_dotted_attribute(obj, attr, allow_dotted_names=True):
     """resolve_dotted_attribute(a, 'b.c.d') => a.b.c.d
@@ -105,20 +104,18 @@ def resolve_dotted_attribute(obj, attr, allow_dotted_names=True):
 
     for i in attrs:
         if i.startswith('_'):
-            raise AttributeError(
-                'attempt to access private attribute "%s"' % i
-                )
+            raise AttributeError('attempt to access private attribute "%s"' % i)
         else:
-            obj = getattr(obj,i)
+            obj = getattr(obj, i)
     return obj
+
 
 def list_public_methods(obj):
     """Returns a list of attribute strings, found in the specified
     object, which represent callable attributes"""
 
-    return [member for member in dir(obj)
-                if not member.startswith('_') and
-                    callable(getattr(obj, member))]
+    return [member for member in dir(obj) if not member.startswith('_') and callable(getattr(obj, member))]
+
 
 def remove_duplicates(lst):
     """remove_duplicates([2,2,2,1,3,3]) => [3,1,2]
@@ -132,31 +129,40 @@ def remove_duplicates(lst):
         u[x] = 1
 
     return u.keys()
+
+
 class DaemonicThread(threading.Thread):
-    def __init__(self,*a,**k):
-        threading.Thread.__init__(self,*a,**k)
+    def __init__(self, *a, **k):
+        threading.Thread.__init__(self, *a, **k)
         self.setDaemon(True)
+
 
 class CmdFIFOError(Exception):
     pass
 
+
 class TimeoutError(CmdFIFOError):
     pass
+
 
 class CommunicationError(CmdFIFOError):
     pass
 
+
 class ShutdownInProgress(CmdFIFOError):
     pass
 
+
 class KillInProgress(ShutdownInProgress):
     pass
+
 
 class DummyDaemon(object):
     """Stub for compatibility with Pyro3"""
     def __init__(self, pyroDaemon):
         self.pyroDaemon = pyroDaemon
         self.mustShutdown = False
+
     def handleRequests(self, timeout=0.5, others=None, callback_func=None):
         rs = set(self.pyroDaemon.sockets)
         if others is None:
@@ -171,26 +177,30 @@ class DummyDaemon(object):
         if rOthers and (callback_func is not None):
             callback_func(list(rOthers))
 
+
 class CmdFIFOServer(object):
     loggerInst = 0
+
     @Pyro4.expose
     class CallbackObject(object):
         """This class is used to instntiate an object which is accessible via the Pyro protocol. It contains a dispatch method which allows callback functions previously registered using register_callback_fuction to be executed"""
-        def __init__(self,server):
+        def __init__(self, server):
             self.server = server
             # Dictionary of callback functions indexed by name
             self.funcs = {}
-        def __dispatch__(self,dottedMethodName,a,k):
+
+        def __dispatch__(self, dottedMethodName, a, k):
             """Dispatches the dottedMethodName applied to the arguments *a, **k."""
             method = dottedMethodName
             try:
                 func = self.funcs[method]
             except KeyError:
                 raise CmdFIFOError('Callback method "%s" is not supported' % method)
-            return func(*a,**k)
+            return func(*a, **k)
+
     @Pyro4.expose
     class ServerObject(object):
-        def __init__(self,server):
+        def __init__(self, server):
             self.instance = None
             self.server = server
             self.allowDottedNames = False
@@ -201,7 +211,8 @@ class CmdFIFOServer(object):
             self.event = threading.Event()
             self.queueLength = 0
             self.event.set()
-        def __dispatch__(self,dottedMethodName,client,modeOverride,callbackInfo,a,k):
+
+        def __dispatch__(self, dottedMethodName, client, modeOverride, callbackInfo, a, k):
             """Dispatches the dottedMethodName applied to the arguments *a, **k.
             The method may be a registered function, or a method of the registered
             instance. Depending on whether the method is registered as a priority
@@ -254,15 +265,11 @@ class CmdFIFOServer(object):
                 if self.instance is not None:
                     # check for a __dispatch__ method
                     if hasattr(self.instance, '__dispatch__'):
-                        func = lambda *a, **k: self.instance.__dispatch__(method,a,k)
+                        func = lambda *a, **k: self.instance.__dispatch__(method, a, k)
                     else:
                         # call instance method directly
                         try:
-                            func = resolve_dotted_attribute(
-                                self.instance,
-                                method,
-                                self.allow_dotted_names
-                                )
+                            func = resolve_dotted_attribute(self.instance, method, self.allow_dotted_names)
                         except AttributeError:
                             pass
 
@@ -271,12 +278,12 @@ class CmdFIFOServer(object):
 
             if self.server.logRequests and self.server.logger != None:
                 # Write the arguments in standard form, positional arguments followed by keyword arguments
-                argStr = ",".join(["%r" % (arg,) for arg in a] + ["%s=%r" % (key,k[key]) for key in k])
+                argStr = ",".join(["%r" % (arg, ) for arg in a] + ["%s=%r" % (key, k[key]) for key in k])
                 self.server.logger.info("%s calls %s(%s)" % (client, method, argStr))
 
             if method in self.priorityFunctions:
                 # Skip serialization for priority functions
-                return func(*a,**k)
+                return func(*a, **k)
 
             # To serialize execution of non-priority functions, a collection of Events
             #  is used. The attribute self.event names the event which the next
@@ -311,13 +318,13 @@ class CmdFIFOServer(object):
             if funcMode == CMD_TYPE_Blocking:
                 myEvent.wait()
                 # Set the name and time attributes while the function is executing
-                self.server.CurrentCmd_RxTime     = rxTime
+                self.server.CurrentCmd_RxTime = rxTime
                 self.server.CurrentCmd_ClientName = client
                 try:
                     if self.server.ServerKillRequested:
                         raise KillInProgress("RPC aborted because server has been killed")
                     else:
-                        return func(*a,**k)
+                        return func(*a, **k)
                 finally:
                     self.eventLock.acquire()
                     self.queueLength -= 1
@@ -329,16 +336,17 @@ class CmdFIFOServer(object):
             # Execute Callback mode functions in VerifyOnly mode, if no callback
             #  info is available
             elif funcMode == CMD_TYPE_VerifyOnly or callbackInfo == None:
+
                 def __waitAndDispatch():
                     """This function is executed within a daemonic thread at the
                     correct time, because it waits on the appropriate event."""
                     myEvent.wait()
                     # Set the name and time attributes while the function is executing
-                    self.server.CurrentCmd_RxTime     = rxTime
+                    self.server.CurrentCmd_RxTime = rxTime
                     self.server.CurrentCmd_ClientName = client
                     try:
                         if not self.server.ServerKillRequested:
-                            func(*a,**k)
+                            func(*a, **k)
                     finally:
                         self.eventLock.acquire()
                         self.queueLength -= 1
@@ -346,10 +354,11 @@ class CmdFIFOServer(object):
                         self.eventLock.release()
                         # Allow next function to run by setting its event
                         nextEvent.set()
+
                 DaemonicThread(target=__waitAndDispatch).start()
                 return "OK"
 
-            else: # funcMode == CMD_TYPE_Callback
+            else:  # funcMode == CMD_TYPE_Callback
                 uri, callbackName = callbackInfo
                 m = uriRegex.match(uri)
                 if m:
@@ -359,8 +368,9 @@ class CmdFIFOServer(object):
                     raise ValueError("Invalid callback URI %s (should be http://address:port)" % uri)
 
                 # Set the name and time attributes while the function is executing
-                self.server.CurrentCmd_RxTime     = rxTime
+                self.server.CurrentCmd_RxTime = rxTime
                 self.server.CurrentCmd_ClientName = client
+
                 def __waitDispatchAndCallback():
                     """This function is executed within a daemonic thread at the
                     correct time, because it waits on the appropriate event. After
@@ -372,8 +382,8 @@ class CmdFIFOServer(object):
                         if self.server.ServerKillRequested:
                             raise KillInProgress("RPC aborted because server has been killed")
                         else:
-                            result = func(*a,**k)
-                    except Exception,exc:
+                            result = func(*a, **k)
+                    except Exception, exc:
                         faultString = "%s:%s" % (repr(exc), str(exc))
                     try:
                         while True:
@@ -382,7 +392,7 @@ class CmdFIFOServer(object):
                             try:
                                 callbackObject = Pyro4.core.Proxy("PYRO:callbackObject@%s:%d" % (address, port))
                                 callbackObject._pyroOneway.add("__dispatch__")
-                                callbackObject.__dispatch__(callbackName,(result,faultString),{})
+                                callbackObject.__dispatch__(callbackName, (result, faultString), {})
                                 break
                             except Pyro4.errors.ConnectionClosedError:
                                 pass
@@ -393,11 +403,20 @@ class CmdFIFOServer(object):
                         self.eventLock.release()
                         # Allow next function to run by setting its event
                         nextEvent.set()
+
                 DaemonicThread(target=__waitDispatchAndCallback).start()
                 return "CB"
-    def __init__(self, addr, ServerName, requestHandler = None,
-             logRequests = False, threaded = True, DumpToStdout = False,
-             ServerDescription = "", ServerVersion = "", LogFunc = None):
+
+    def __init__(self,
+                 addr,
+                 ServerName,
+                 requestHandler=None,
+                 logRequests=False,
+                 threaded=True,
+                 DumpToStdout=False,
+                 ServerDescription="",
+                 ServerVersion="",
+                 LogFunc=None):
         """Creates a CmdFIFOServer. Parameters are:
             addr:              (hostName,port) tuple for server
             ServerName:        string identifying the server
@@ -423,10 +442,12 @@ class CmdFIFOServer(object):
             # If a LogFunc is specified, entries to a stream object have to be passed
             #  to this function. The following class provides this feature.
             class LogStream(object):
-                def write(self,x):
+                def write(self, x):
                     LogFunc(x)
+
                 def flush(self):
                     pass
+
             # No formatter is used, so logging data are passed directly to LogFunc
             logFuncHandle = logging.StreamHandler(LogStream())
             logFuncHandle.setLevel(level=logging.INFO)
@@ -434,7 +455,7 @@ class CmdFIFOServer(object):
 
         if DumpToStdout:
             # Deal with logging to stdout
-            formatter = logging.Formatter('%(asctime)s %(message)s',datefmt='%H:%M:%S')
+            formatter = logging.Formatter('%(asctime)s %(message)s', datefmt='%H:%M:%S')
             stdoutHandle = logging.StreamHandler(sys.stdout)
             stdoutHandle.setFormatter(formatter)
             stdoutHandle.setLevel(level=logging.INFO)
@@ -444,7 +465,7 @@ class CmdFIFOServer(object):
         self.logRequests = logRequests
 
         # Variables used by other applications which can monitor the state of the server
-        self.CurrentCmd_RxTime     = -1  #can be used by RPC implementations if needed
+        self.CurrentCmd_RxTime = -1  #can be used by RPC implementations if needed
         self.CurrentCmd_ClientName = "__NO_ACTIVE_COMMAND__"
         self.ServerStopRequested = False
         self.ServerKillRequested = False
@@ -454,15 +475,14 @@ class CmdFIFOServer(object):
         self.serverVersion = ServerVersion
         self.hostName, self.port = addr
         try:
-            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName,port=self.port)
+            self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName, port=self.port)
         except Exception, e:
             # Could not get port as it's being actively used by another (likely)
             # zombie process. Let's kill whatever process is using the port and
             # try again.
             from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log
             EventManagerProxy_Init("CmdFIFO")
-            Log("Port %s already in-use, killing offending application and "
-                   "trying again" % self.port)
+            Log("Port %s already in-use, killing offending application and " "trying again" % self.port)
             commands.getoutput("fuser -n tcp -k %s" % self.port)
             time.sleep(1)
             self.pyroDaemon = Pyro4.core.Daemon(host=self.hostName, port=self.port)
@@ -474,21 +494,21 @@ class CmdFIFOServer(object):
         self.serverObject = CmdFIFOServer.ServerObject(self)
         self.callbackObject = CmdFIFOServer.CallbackObject(self)
         # Register these objects will well-known names
-        self.pyroDaemon.register(self.serverObject,"serverObject")
-        self.pyroDaemon.register(self.callbackObject,"callbackObject")
+        self.pyroDaemon.register(self.serverObject, "serverObject")
+        self.pyroDaemon.register(self.callbackObject, "callbackObject")
         # Register built-in functions for the server
         self._register_cmdfifo_functions()
 
-    def handle_requests(self,*a,**k):
+    def handle_requests(self, *a, **k):
         # Delegate to DummyDaemon for compatibility with Pyro3
-        self.daemon.handleRequests(*a,**k)
+        self.daemon.handleRequests(*a, **k)
 
     def Launch(self):
         """Starts the server service loop within a daemonic thread"""
-        self.thread = DaemonicThread(target = self.serve_forever)
+        self.thread = DaemonicThread(target=self.serve_forever)
         self.thread.start()
 
-    def serve_forever(self,timeout=0.5):
+    def serve_forever(self, timeout=0.5):
         """Calls the service loop function. This may be broken using the shutdown method
         of the daemon"""
         self.running = True
@@ -524,6 +544,7 @@ class CmdFIFOServer(object):
     def _CmdFIFO_GetProcessID(self):
         """Gets the os process ID of the process using the CmdFIFO class."""
         return os.getpid()
+
     def _CmdFIFO_GetQueueLength(self):
         """Returns the number of commands currently in the FIFO queue."""
         return self.serverObject.queueLength
@@ -533,12 +554,12 @@ class CmdFIFOServer(object):
         return self.serverVersion
 
     @rpc_wrap
-    def _CmdFIFO_DebugDelay(self,sec):
-        if sec>0: time.sleep(sec)
+    def _CmdFIFO_DebugDelay(self, sec):
+        if sec > 0: time.sleep(sec)
         else:
             raise ValueError("Invalid delay: %s" % sec)
 
-    def _CmdFIFO_KillServer(self,password):
+    def _CmdFIFO_KillServer(self, password):
         """Stops the server immediately"""
         if password == "please":
             self.ServerKillRequested = True
@@ -546,15 +567,19 @@ class CmdFIFOServer(object):
         else:
             raise CmdFIFOError("Invalid password for KillServer")
         return "OK"
+
     def _CmdFIFO_PingDispatcher(self):
         """Immediately returns the string "Ping OK", bypassing the FIFO"""
         return "Ping OK"
+
     def _CmdFIFO_PingFIFO(self):
         """Enqueues a function that returns "Ping OK" on the FIFO"""
         return "Ping OK"
+
     def _CmdFIFO_StopServer(self):
         """Stops the server once all entries in queue have completed"""
         self.stop_server()
+
     def system_listMethods(self):
         """system.listMethods() => ['add', 'subtract', 'multiple']
 
@@ -565,18 +590,15 @@ class CmdFIFOServer(object):
             # Instance can implement _listMethod to return a list of
             # methods
             if hasattr(self.serverObject.instance, '_listMethods'):
-                methods = remove_duplicates(
-                        methods + self.serverObject.instance._listMethods()
-                    )
+                methods = remove_duplicates(methods + self.serverObject.instance._listMethods())
             # if the instance has a __dispatch__ method then we
             # don't have enough information to provide a list
             # of methods
             elif not hasattr(self.serverObject.instance, '__dispatch__'):
-                methods = remove_duplicates(
-                        methods + list_public_methods(self.serverObject.instance)
-                    )
+                methods = remove_duplicates(methods + list_public_methods(self.serverObject.instance))
         methods.sort()
         return methods
+
     def system_methodSignature(self, method_name):
         """system.methodSignature('add') => (x,y)
 
@@ -584,24 +606,25 @@ class CmdFIFOServer(object):
         optionals wrapped in square brackets."""
 
         if method_name not in self.serverObject.funcs:
-             return "%s method not found" % method_name
+            return "%s method not found" % method_name
         f = self.serverObject.funcs[method_name]
-        argCount = getattr(f,"__wrapped_co_argcount",f.func_code.co_argcount)
+        argCount = getattr(f, "__wrapped_co_argcount", f.func_code.co_argcount)
         optionalCount = 0
-        defaults = getattr(f,"__wrapped_defaults",f.func_defaults)
+        defaults = getattr(f, "__wrapped_defaults", f.func_defaults)
         if defaults:
             optionalCount = len(defaults)
 
         if argCount == 0:
             ret = ''
         else:
-            varNames = getattr(f,"__wrapped_co_varnames",f.func_code.co_varnames)
+            varNames = getattr(f, "__wrapped_co_varnames", f.func_code.co_varnames)
             args = list(varNames)[:argCount]
             #wrap the optionals in square brackets...
             if optionalCount > 0:
-                args[-optionalCount:] = ["[%s]" % (s,) for s in args[-optionalCount:]]
+                args[-optionalCount:] = ["[%s]" % (s, ) for s in args[-optionalCount:]]
             ret = '(' + ', '.join(args[:argCount]) + ')'
         return ret
+
     def system_methodHelp(self, method_name):
         """system.methodHelp('add') => "Adds two integers together"
 
@@ -618,11 +641,7 @@ class CmdFIFOServer(object):
             # don't have enough information to provide help
             elif not hasattr(self.serverObject.instance, '__dispatch__'):
                 try:
-                    method = resolve_dotted_attribute(
-                                self.serverObject.instance,
-                                method_name,
-                                self.serverObject.allow_dotted_names
-                                )
+                    method = resolve_dotted_attribute(self.serverObject.instance, method_name, self.serverObject.allow_dotted_names)
                 except AttributeError:
                     pass
 
@@ -631,9 +650,9 @@ class CmdFIFOServer(object):
         if method is None:
             return "%s method not found" % method_name
         else:
-            return getattr(method,"__wrapped_doc",pydoc.getdoc(method))
+            return getattr(method, "__wrapped_doc", pydoc.getdoc(method))
 
-    def register_function(self, function,name = None,DefaultMode = CMD_TYPE_Blocking,NameSlice = 0,EscapeDoubleUS = False):
+    def register_function(self, function, name=None, DefaultMode=CMD_TYPE_Blocking, NameSlice=0, EscapeDoubleUS=False):
         """Registers a function to respond to RPC requests.
 
         The optional name argument can be used to set a name
@@ -650,7 +669,8 @@ class CmdFIFOServer(object):
         self.serverObject.funcs[name] = function
         self.serverObject.funcModes[name] = DefaultMode
         return name
-    def register_callback_function(self, function, name = None, NameSlice = 0):
+
+    def register_callback_function(self, function, name=None, NameSlice=0):
         """Registers a callback function.  Callbacks are unique from regular functions.
 
         - Callbacks must be defined in the following way:
@@ -669,7 +689,7 @@ class CmdFIFOServer(object):
         if (isinstance(function, types.MethodType) and codeObj.co_argcount != 3) or \
           (not isinstance(function,types.MethodType) and codeObj.co_argcount != 2):
             argList = codeObj.co_varnames[:codeObj.co_argcount]
-            errMsg = "Callback functions must have exactly two arguments [excluding self].  Attempted argList: %r" % (argList,)
+            errMsg = "Callback functions must have exactly two arguments [excluding self].  Attempted argList: %r" % (argList, )
             raise CmdFIFOError(errMsg)
         else:
             if name is None:
@@ -716,9 +736,8 @@ class CmdFIFOServer(object):
         """
         self.serverObject.instance = instance
         self.serverObject.allow_dotted_names = allow_dotted_names
-    def _register_priority_function(self, function, name = None,
-                                    DefaultMode = CMD_TYPE_VerifyOnly,
-                                    NameSlice = 0):
+
+    def _register_priority_function(self, function, name=None, DefaultMode=CMD_TYPE_VerifyOnly, NameSlice=0):
         """Registers a function so that it is immediately executed by the dispatcher.
 
         Priority functions need not be entered into a queue but are immediately executed.
@@ -726,29 +745,31 @@ class CmdFIFOServer(object):
         DefaultMode is not actually used (the modes only apply to serialized execution).
         It is being kept here purely for legacy reasons to avoid a code change.
         """
-        registeredName = self.register_function(function, name, DefaultMode, NameSlice = NameSlice)
+        registeredName = self.register_function(function, name, DefaultMode, NameSlice=NameSlice)
         self.serverObject.priorityFunctions.append(registeredName)
+
     def _register_cmdfifo_functions(self):
         """Registers the built-in functions for the CmdFIFO"""
         # register the 'standard' introspection functions...
-        self._register_priority_function(self.system_listMethods,'system.listMethods', CMD_TYPE_Blocking)
-        self._register_priority_function(self.system_methodSignature,'system.methodSignature',CMD_TYPE_Blocking)
-        self._register_priority_function(self.system_methodHelp,'system.methodHelp',CMD_TYPE_Blocking)
+        self._register_priority_function(self.system_listMethods, 'system.listMethods', CMD_TYPE_Blocking)
+        self._register_priority_function(self.system_methodSignature, 'system.methodSignature', CMD_TYPE_Blocking)
+        self._register_priority_function(self.system_methodHelp, 'system.methodHelp', CMD_TYPE_Blocking)
 
         # register some CmdFIFO specific RPCs...
         self.register_function(self._CmdFIFO_PingFIFO, 'CmdFIFO.PingFIFO', CMD_TYPE_Blocking)
-        self._CmdFIFO_StopServer = self.stop_server # alias
+        self._CmdFIFO_StopServer = self.stop_server  # alias
         self.register_function(self._CmdFIFO_StopServer, 'CmdFIFO.StopServer', CMD_TYPE_VerifyOnly)
         self.register_function(self._CmdFIFO_DebugDelay, 'CmdFIFO.DebugDelay', CMD_TYPE_Blocking)
 
         # register some priority CmdFIFO RPCs (that don't need to wait in the FIFO queue)...
-        self._register_priority_function(self._CmdFIFO_PingDispatcher,'CmdFIFO.PingDispatcher',CMD_TYPE_Blocking)
-        self._register_priority_function(self._CmdFIFO_KillServer,'CmdFIFO.KillServer',CMD_TYPE_VerifyOnly)
-        self._register_priority_function(self._CmdFIFO_GetProcessID,'CmdFIFO.GetProcessID',CMD_TYPE_Blocking)
-        self._register_priority_function(self._CmdFIFO_GetQueueLength,'CmdFIFO.GetQueueLength',CMD_TYPE_Blocking)
-        self._register_priority_function(self._CmdFIFO_GetName,'CmdFIFO.GetName',CMD_TYPE_Blocking)
-        self._register_priority_function(self._CmdFIFO_GetDescription,'CmdFIFO.GetDescription',CMD_TYPE_Blocking)
-        self._register_priority_function(self._CmdFIFO_GetVersion,'CmdFIFO.GetVersion',CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_PingDispatcher, 'CmdFIFO.PingDispatcher', CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_KillServer, 'CmdFIFO.KillServer', CMD_TYPE_VerifyOnly)
+        self._register_priority_function(self._CmdFIFO_GetProcessID, 'CmdFIFO.GetProcessID', CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_GetQueueLength, 'CmdFIFO.GetQueueLength', CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_GetName, 'CmdFIFO.GetName', CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_GetDescription, 'CmdFIFO.GetDescription', CMD_TYPE_Blocking)
+        self._register_priority_function(self._CmdFIFO_GetVersion, 'CmdFIFO.GetVersion', CMD_TYPE_Blocking)
+
 
 class CmdFIFOSimpleCallbackServer(object):
     """Macro class to use when ONLY setting up a callback server.
@@ -776,38 +797,37 @@ class CmdFIFOSimpleCallbackServer(object):
     of the constructor (yes - it is a bad arg name, and reasons for it being a
     tuple are historic).
     """
-    def __init__(self, addr, threaded = True, DumpToStdout = False, CallbackList = None, **kwargs):
+    def __init__(self, addr, threaded=True, DumpToStdout=False, CallbackList=None, **kwargs):
         self.thread = None
-        self.server = CmdFIFOServer(addr, "CBServer", threaded = threaded, DumpToStdout = DumpToStdout, **kwargs)
-        self.Server = self.server # Legacy name for compatibility
+        self.server = CmdFIFOServer(addr, "CBServer", threaded=threaded, DumpToStdout=DumpToStdout, **kwargs)
+        self.Server = self.server  # Legacy name for compatibility
         if CallbackList != None:
             assert isinstance(CallbackList, tuple), "Contrary to the name, this arg should be a tuple"
             for func in CallbackList:
                 self.server.register_callback_function(func)
-    def handle_requests(self,*a,**k):
-        self.server.handle_requests(*a,**k)
+
+    def handle_requests(self, *a, **k):
+        self.server.handle_requests(*a, **k)
+
     def Launch(self):
-        self.thread = DaemonicThread(target = self.server.serve_forever,kwargs=dict(timeout=.1))
+        self.thread = DaemonicThread(target=self.server.serve_forever, kwargs=dict(timeout=.1))
         self.thread.start()
 
-    def serve_forever(self,*a,**k):
-        self.server.serve_forever(*a,**k)
+    def serve_forever(self, *a, **k):
+        self.server.serve_forever(*a, **k)
+
     def Stop(self):
         self.server.stop_server()
         if self.thread != None:
             self.thread.join()
             self.thread = None
-    def stop_server(self,*a,**k):
-        self.server.stop_server(*a,**k)
+
+    def stop_server(self, *a, **k):
+        self.server.stop_server(*a, **k)
+
 
 class CmdFIFOServerProxy(object):
-    def __init__(self,
-                 uri,
-                 ClientName,
-                 CallbackURI = "",
-                 IsDontCareConnection = False,
-                 Timeout_s = None,
-                 min_ms_interval = 0):
+    def __init__(self, uri, ClientName, CallbackURI="", IsDontCareConnection=False, Timeout_s=None, min_ms_interval=0):
         """Called by the client to create a proxy object which may be called to
             execute code on a CmdFIFOServer. Parameters are:
             uri:                  "http://address:port" string specifying the server
@@ -824,7 +844,7 @@ class CmdFIFOServerProxy(object):
                                     it will ignore rpc calls that come faster than this interval.
         """
         self.ClientName = ClientName
-        self.CallbackURI = CallbackURI.lower() # should be "http://address:port".  eg: "http://localhost:8000"
+        self.CallbackURI = CallbackURI.lower()  # should be "http://address:port".  eg: "http://localhost:8000"
         self.IsDontCare = IsDontCareConnection
         # Following dictionaries are used by SetFunctionMode to specify that
         #  certain functions should be treated specially
@@ -851,13 +871,15 @@ class CmdFIFOServerProxy(object):
             self.remoteObject._pyroOneway.add("__dispatch__")
         else:
             self.remoteObject._pyroOneway.clear()
-    def __getattr__(self,name):
+
+    def __getattr__(self, name):
         # Suppose that the proxy is called as proxy.system.test.func. This __getattr__ function
         #  will be called with "name" set to "system". It returns an object whose __call__ method
         #  is defined, so that when it is applied to a list of arguments, the effect is to
         #  execute self.applyRemoteFunction("system.test.func",positional args-tuple,kwd args-dict)
-        return _Method(self.applyRemoteFunction,name)
-    def applyRemoteFunction(self,dottedMethodName,a,k):
+        return _Method(self.applyRemoteFunction, name)
+
+    def applyRemoteFunction(self, dottedMethodName, a, k):
         # Calls the __dispatch__ function of the remote object to apply a method
         #  to some arguments.
         # The additional parameters client, modeOverride and callbackInfo are
@@ -876,22 +898,24 @@ class CmdFIFOServerProxy(object):
         if dottedMethodName in self._FuncModes:
             modeOverride = self._FuncModes[dottedMethodName]
         if dottedMethodName in self._FuncCallbacks:
-            callbackInfo = (self.CallbackURI,self._FuncCallbacks[dottedMethodName].__name__)
+            callbackInfo = (self.CallbackURI, self._FuncCallbacks[dottedMethodName].__name__)
         # If the function is to be executed in VerifyOnly or Callback modes,
         #  or if the proxy is in don't care mode, we send off the request
         #  in a thread
-        if self.IsDontCare or modeOverride in ["V","C"]:
+        if self.IsDontCare or modeOverride in ["V", "C"]:
             if not self.setup:
                 try:
                     self.setupRemoteObject()
                 except Pyro4.errors.ProtocolError:
                     self.setup = False
             if self.setup:
+
                 def curried():
                     try:
-                        self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                        self.remoteObject.__dispatch__(dottedMethodName, client, modeOverride, callbackInfo, a, k)
                     except:
                         self.setup = False
+
                 DaemonicThread(target=curried).start()
             if self.IsDontCare: return "DC"
             elif modeOverride == "V": return "OK"
@@ -900,23 +924,23 @@ class CmdFIFOServerProxy(object):
             # Perform command and re-establish connection if necessary
             if self.setup:
                 try:
-                    return self.remoteObject.__dispatch__(dottedMethodName,client,modeOverride,callbackInfo,a,k)
+                    return self.remoteObject.__dispatch__(dottedMethodName, client, modeOverride, callbackInfo, a, k)
                 #
                 #Handle these exceptions later!!!
                 #
-                except Pyro4.errors.TimeoutError,e:
+                except Pyro4.errors.TimeoutError, e:
                     #raise TimeoutError("%s" % e)
                     pass
                 except Pyro4.errors.ConnectionClosedError:
                     pass
                     # print "Retrying proxy call: %s" % (dottedMethodName,)
-                except Pyro4.errors.CommunicationError,e:
+                except Pyro4.errors.CommunicationError, e:
                     #raise CommunicationError("%s" % e)
                     pass
                 # ClaimInterfaceError is not an attribute of Pyro4, but the applyRemoteFunction
                 # sometimes attempts to pass _Method.__call__ to claim a USB interface via RPC
                 # then choke and throw multiple unhandled exceptions when Driver is down.
-                except Exception,e:
+                except Exception, e:
                     if "ClaimInterfaceError" in str(e):
                         #raise ClaimInterfaceError("%s" % e)
                         pass
@@ -932,7 +956,7 @@ class CmdFIFOServerProxy(object):
                 self.setup = False
                 raise RemoteException("Remote cannot be reached for RPC")
 
-    def SetFunctionMode(self, FuncName, FuncMode = CMD_TYPE_Default, Callback = None):
+    def SetFunctionMode(self, FuncName, FuncMode=CMD_TYPE_Default, Callback=None):
         """Sets how the client would like a registered server function to behave.
 
         You must be very careful to get the FuncName reference right.  It must
@@ -954,16 +978,19 @@ class CmdFIFOServerProxy(object):
         else:
             if Callback != None:
                 raise CmdFIFOError("Unexpected Callback argument since FuncMode != CMD_Type_Callback.")
-    def SetTimeout(self,sec):
+
+    def SetTimeout(self, sec):
         """Set the socket timeout for the proxy. Use None to remove timeout"""
         self.timeout = sec
         if sec is None:
             Pyro4.config.COMMTIMEOUT = 0.0
         else:
             Pyro4.config.COMMTIMEOUT = sec
+
     def GetTimeout(self):
         """Gets the socket timeout for the proxy."""
         return self.timeout
+
 
 class _Method:
     # some magic to bind an XML-RPC method to an RPC server.
@@ -971,7 +998,9 @@ class _Method:
     def __init__(self, send, name):
         self.__send = send
         self.__name = name
+
     def __getattr__(self, name):
         return _Method(self.__send, "%s.%s" % (self.__name, name))
+
     def __call__(self, *args, **kwargs):
         return self.__send(self.__name, args, kwargs)

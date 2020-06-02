@@ -22,7 +22,7 @@ try:
 except:
     import json
 
-NaN = 1e1000/1e1000
+NaN = 1e1000 / 1e1000
 
 VALVE_STATE_EPSILON = 1.0e-4
 
@@ -34,117 +34,107 @@ DELTA_POSITIVE_THRESHOLD = 0.0
 CONCENTRATION_HIGH_THRESHOLD = 20.0
 
 OUTPUT_COLUMNS = [
-    'EPOCH_TIME',
-    'DISTANCE',
-    'GPS_ABS_LONG',
-    'GPS_ABS_LAT',
-    'CONC',
-    'DELTA',
-    'UNCERTAINTY',
-    'REPLAY_MAX',
-    'REPLAY_LMIN',
-    'REPLAY_RMIN',
-    'DISPOSITION']
+    'EPOCH_TIME', 'DISTANCE', 'GPS_ABS_LONG', 'GPS_ABS_LAT', 'CONC', 'DELTA', 'UNCERTAINTY', 'REPLAY_MAX', 'REPLAY_LMIN',
+    'REPLAY_RMIN', 'DISPOSITION'
+]
 
-DISPOSITIONS = [
-    'COMPLETE',
-    'USER_CANCELLATION',
-    'UNCERTAINTY_OOR',
-    'DELTA_OOR',
-    'SAMPLE_SIZE_TOO_SMALL']
+DISPOSITIONS = ['COMPLETE', 'USER_CANCELLATION', 'UNCERTAINTY_OOR', 'DELTA_OOR', 'SAMPLE_SIZE_TOO_SMALL']
+
+PeakData = namedtuple('PeakData', 'time dist lng lat conc delta uncertainty replay_max ' 'replay_lmin replay_rmin disposition')
 
 
-PeakData = namedtuple('PeakData',
-                      'time dist lng lat conc delta uncertainty replay_max '
-                      'replay_lmin replay_rmin disposition')
-
-
-def genLatestFiles(baseDir,pattern):
+def genLatestFiles(baseDir, pattern):
     # Generate files in baseDir and its subdirectories which match pattern
     for dirPath, dirNames, fileNames in os.walk(baseDir):
         dirNames.sort(reverse=True)
         fileNames.sort(reverse=True)
         for name in fileNames:
-            if fnmatch.fnmatch(name,pattern):
-                yield os.path.join(dirPath,name)
+            if fnmatch.fnmatch(name, pattern):
+                yield os.path.join(dirPath, name)
 
 
-def fixed_width(text,width):
+def fixed_width(text, width):
     start = 0
     result = []
     while True:
-        atom = text[start:start+width].strip()
+        atom = text[start:start + width].strip()
         if not atom: return result
         result.append(atom)
         start += width
+
+
 #######################################################################
 # Longitude and latitude handling routines
 #######################################################################
+
 
 def distVincenty(lat1, lng1, lat2, lng2):
     # WGS-84 ellipsiod. lat and lng in DEGREES
     a = 6378137
     b = 6356752.3142
-    f = 1/298.257223563;
-    toRad = pi/180.0
-    L = (lng2-lng1)*toRad
-    U1 = arctan((1-f) * tan(lat1*toRad))
-    U2 = arctan((1-f) * tan(lat2*toRad));
+    f = 1 / 298.257223563
+    toRad = pi / 180.0
+    L = (lng2 - lng1) * toRad
+    U1 = arctan((1 - f) * tan(lat1 * toRad))
+    U2 = arctan((1 - f) * tan(lat2 * toRad))
     sinU1 = sin(U1)
     cosU1 = cos(U1)
     sinU2 = sin(U2)
     cosU2 = cos(U2)
 
     Lambda = L
-    iterLimit = 100;
+    iterLimit = 100
     for iter in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
-                        (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
-        if sinSigma==0:
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
+        if sinSigma == 0:
             return 0  # co-incident points
-        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = arctan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha*sinAlpha
+        cosSqAlpha = 1 - sinAlpha * sinAlpha
         if cosSqAlpha == 0:
             cos2SigmaM = 0
         else:
-            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqAlpha
-        C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
-        lambdaP = Lambda;
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
+        C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
+        lambdaP = Lambda
         Lambda = L + (1-C) * f * sinAlpha * \
           (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
-        if abs(Lambda-lambdaP)<=1.e-12: break
+        if abs(Lambda - lambdaP) <= 1.e-12: break
     else:
         raise ValueError("Failed to converge")
 
-    uSq = cosSqAlpha * (a*a - b*b) / (b*b)
-    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
-    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
-    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
-                 B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
-    return b*A*(sigma-deltaSigma)
+    uSq = cosSqAlpha * (a * a - b * b) / (b * b)
+    A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
+    B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM *
+                                                       (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    return b * A * (sigma - deltaSigma)
 
-def toXY(lat,lng,lat_ref,lng_ref):
-    x = distVincenty(lat_ref,lng_ref,lat_ref,lng)
-    if lng<lng_ref: x = -x
-    y = distVincenty(lat_ref,lng,lat,lng)
-    if lat<lat_ref: y = -y
-    return x,y
+
+def toXY(lat, lng, lat_ref, lng_ref):
+    x = distVincenty(lat_ref, lng_ref, lat_ref, lng)
+    if lng < lng_ref: x = -x
+    y = distVincenty(lat_ref, lng, lat, lng)
+    if lat < lat_ref: y = -y
+    return x, y
+
 
 #######################################################################
 # Protected linear fit with uncertainties in y values
 #######################################################################
 
-def linfit(x,y,sigma):
+
+def linfit(x, y, sigma):
     # Calculate the linear fit of (x,y) to a line, where sigma are the errors in the y values
-    S = sum(1/sigma**2)
-    Sx = sum(x/sigma**2)
-    Sy = sum(y/sigma**2)
-    Sxx = sum(x**2/sigma**2)
-    Sxy = sum(x*y/sigma**2)
+    S = sum(1 / sigma**2)
+    Sx = sum(x / sigma**2)
+    Sy = sum(y / sigma**2)
+    Sxx = sum(x**2 / sigma**2)
+    Sxy = sum(x * y / sigma**2)
     # Delta = S*Sxx - Sx**2
     # a = (Sxx*Sy - Sx*Sxy)/Delta
     # b = (S*Sxy - Sx*Sy)/Delta
@@ -152,24 +142,25 @@ def linfit(x,y,sigma):
     # sb2 = S/Delta
     # sab = -Sx/Delta
     # rab = -Sx/sqrt(S*Sxx)
-    t = (x-Sx/S)/sigma
+    t = (x - Sx / S) / sigma
     Stt = sum(t**2)
-    b = sum(t*y/sigma)/Stt
-    a = (Sy-Sx*b)/S
-    sa2 = (1+Sx**2/(S*Stt))/S
-    sb2 = 1/Stt
-    sab = -Sx/(S*Stt)
-    rab = sab/sqrt(sa2*sb2)
-    chisq = sum(((y-a-b*x)/sigma)**2)
-    df = len(x)-2
-    Q = scipy.stats.chi2.sf(chisq,df)
-    return namedtuple('LinFit','coeffs cov rab chisq df Q')(asarray([b,a]),asarray([[sb2,sab],[sab,sa2]]),rab,chisq,df,Q)
+    b = sum(t * y / sigma) / Stt
+    a = (Sy - Sx * b) / S
+    sa2 = (1 + Sx**2 / (S * Stt)) / S
+    sb2 = 1 / Stt
+    sab = -Sx / (S * Stt)
+    rab = sab / sqrt(sa2 * sb2)
+    chisq = sum(((y - a - b * x) / sigma)**2)
+    df = len(x) - 2
+    Q = scipy.stats.chi2.sf(chisq, df)
+    return namedtuple('LinFit', 'coeffs cov rab chisq df Q')(asarray([b, a]), asarray([[sb2, sab], [sab, sa2]]), rab, chisq, df, Q)
+
 
 # Peak analyzer carries out Keeling plot analysis of peaks found by the isotopic methane
 #  analyzer
 
-class PeakAnalyzer(object):
 
+class PeakAnalyzer(object):
     @staticmethod
     def getDisposition(cancelled, delta, uncertainty, tooFewPoints):
         disposition = 'COMPLETE'
@@ -203,14 +194,12 @@ class PeakAnalyzer(object):
 
         return roundedErr < VALVE_STATE_EPSILON and (int(rounded) & 0x10) > 0
 
-
     def __init__(self, *args, **kwargs):
 
         if 'legacyValveStop' in kwargs:
             self.legacyValveStop = kwargs['legacyValveStop']
         else:
-            self.legacyValveStop = time.mktime(
-                time.strptime('Fri Sep 27 23:59:59 2013'))
+            self.legacyValveStop = time.mktime(time.strptime('Fri Sep 27 23:59:59 2013'))
 
         if 'analyzerId' in kwargs:
             self.analyzerId = kwargs['analyzerId']
@@ -220,7 +209,7 @@ class PeakAnalyzer(object):
         if 'appDir' in kwargs:
             self.appDir = kwargs['appDir']
         else:
-            if hasattr(sys, "frozen"): #we're running compiled with py2exe
+            if hasattr(sys, "frozen"):  #we're running compiled with py2exe
                 AppPath = sys.executable
             else:
                 AppPath = sys.argv[0]
@@ -292,7 +281,6 @@ class PeakAnalyzer(object):
         if 'debug' in kwargs:
             self.debug = kwargs['debug']
 
-
         self.samples_to_skip = None
         if 'samples_to_skip' in kwargs:
             if kwargs['samples_to_skip']:
@@ -303,23 +291,24 @@ class PeakAnalyzer(object):
         self.logtype = "analysis"
         self.last_peakname = None
         self.sockettimeout = 10
+
     #######################################################################
     # Generators for getting data from files or the database
     #######################################################################
-    def sourceFromFile(self,fname):
+    def sourceFromFile(self, fname):
         # Generate lines from a specified user log file. Raise StopIteration at end of the file
-        fp = file(fname,'rb')
+        fp = file(fname, 'rb')
         while True:
             line = fp.readline()
             if line: yield line
             else: break
 
-    def followLastUserFile(self,fname):
+    def followLastUserFile(self, fname):
         # Generate lines from the live (last) user log file. If we reach the end of the file,
         #  wait for a new line to become available, and periodically check to see if
         #  we are still the latest file. Raise StopIteration if a new file has become
         #  the live file.
-        fp = file(fname,'rb')
+        fp = file(fname, 'rb')
         print "\r\nOpening source stream %s\r\n" % fname
         line = ""
         counter = 0
@@ -373,7 +362,8 @@ class PeakAnalyzer(object):
                 try:
                     rtn_data = None
 
-                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=2000' % (self.anzlog_url.replace("<TICKET>", self.ticket), lastlog, lastPos)
+                    qry_with_ticket = '%s?qry=byPos&alog=%s&startPos=%s&limit=2000' % (self.anzlog_url.replace(
+                        "<TICKET>", self.ticket), lastlog, lastPos)
                     if self.debug == True:
                         print "qry_with_ticket", qry_with_ticket
 
@@ -452,7 +442,8 @@ class PeakAnalyzer(object):
         waitForRetry = True
         while True:
             try:
-                qry_with_ticket = '%s?qry=byEpoch&anz=%s&startEtm=%s&limit=1&reverse=true' % (self.meta_url.replace("<TICKET>", self.ticket), self.analyzerId, self.lastEtm)
+                qry_with_ticket = '%s?qry=byEpoch&anz=%s&startEtm=%s&limit=1&reverse=true' % (self.meta_url.replace(
+                    "<TICKET>", self.ticket), self.analyzerId, self.lastEtm)
                 if self.debug == True:
                     print "getLastLog() qry_with_ticket", qry_with_ticket
 
@@ -587,7 +578,7 @@ class PeakAnalyzer(object):
     #  points followed by a DataTuple with the actual data
     #######################################################################
 
-    def analyzerDataDb(self,source):
+    def analyzerDataDb(self, source):
         # Generates data from a minimal archive in the database as a stream consisting
         #  of tuples (dist,DataTuple(<data from source>)). Yields (None,None) if there is a
         #  jump of more than JUMP_MAX meters between adjacent points
@@ -601,8 +592,8 @@ class PeakAnalyzer(object):
             try:
                 entry = {}
                 if DataTuple is None:
-                    DataTuple = namedtuple("DataTuple",["DISTANCE"] + line.keys())
-                for  h in line.keys():
+                    DataTuple = namedtuple("DataTuple", ["DISTANCE"] + line.keys())
+                for h in line.keys():
                     #if h not in ["_id", "ANALYZER", "SERVER_HASH"]:
                     try:
                         entry[h] = float(line[h])
@@ -615,25 +606,25 @@ class PeakAnalyzer(object):
                 if isnan(lng) or isnan(lat): continue
                 if lat_ref == None or lng_ref == None:
                     lat_ref, lng_ref = lat, lng
-                x,y = toXY(lat,lng,lat_ref,lng_ref)
+                x, y = toXY(lat, lng, lat_ref, lng_ref)
                 if dist is None:
                     jump = 0.0
                     dist = 0.0
                 else:
-                    jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
+                    jump = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0))
                 x0, y0 = x, y
                 if jump < JUMP_MAX:
                     dist += jump
                     if self.debug == True:
                         print "\ndist: ", dist
                         print "\nentry: ", entry
-                    yield DataTuple(dist,**entry)
+                    yield DataTuple(dist, **entry)
                 else:
                     lat_ref, lng_ref = None, None
             except:
                 print traceback.format_exc()
 
-    def analyzerData(self,source):
+    def analyzerData(self, source):
         # Generates data from a minimal log file as a stream consisting
         #  of tuples DataTuple(dist,**<data from source>). Yields None if there is a
         #  jump of more than JUMP_MAX meters between adjacent points
@@ -642,17 +633,17 @@ class PeakAnalyzer(object):
         lat_ref, lng_ref = None, None
         line = source.next()
         atoms = line.split()
-        headings = [a.replace(" ","_") for a in atoms]
-        DataTuple = namedtuple("DataTuple",["DISTANCE"] + headings)
+        headings = [a.replace(" ", "_") for a in atoms]
+        DataTuple = namedtuple("DataTuple", ["DISTANCE"] + headings)
         x0, y0 = 0, 0
         for line in source:
             try:
                 entry = {}
                 atoms = line.split()
                 if not headings:
-                    headings = [a.replace(" ","_") for a in atoms]
+                    headings = [a.replace(" ", "_") for a in atoms]
                 else:
-                    for h,a in zip(headings,atoms):
+                    for h, a in zip(headings, atoms):
                         try:
                             entry[h] = float(a)
                         except:
@@ -663,16 +654,16 @@ class PeakAnalyzer(object):
                     if isnan(lng) or isnan(lat): continue
                     if lat_ref == None or lng_ref == None:
                         lat_ref, lng_ref = lat, lng
-                    x,y = toXY(lat,lng,lat_ref,lng_ref)
+                    x, y = toXY(lat, lng, lat_ref, lng_ref)
                     if dist is None:
                         jump = 0.0
                         dist = 0.0
                     else:
-                        jump = sqrt((x-x0)*(x-x0) + (y-y0)*(y-y0))
+                        jump = sqrt((x - x0) * (x - x0) + (y - y0) * (y - y0))
                     x0, y0 = x, y
                     if jump < JUMP_MAX:
                         dist += jump
-                        yield DataTuple(dist,**entry)
+                        yield DataTuple(dist, **entry)
                     else:
                         lat_ref, lng_ref = None, None
             except:
@@ -739,10 +730,7 @@ class PeakAnalyzer(object):
             # samples and there is some Keeling data to report.
             if (notCollectingCount > doneAnalysisThreshold) and \
                 (lastAnalysis is not None):
-                disp = PeakAnalyzer.getDisposition(cancelled,
-                                                   lastAnalysis['delta'],
-                                                   lastAnalysis['uncertainty'],
-                                                   tooFewPoints)
+                disp = PeakAnalyzer.getDisposition(cancelled, lastAnalysis['delta'], lastAnalysis['uncertainty'], tooFewPoints)
                 yield PeakData(disposition=disp, **lastAnalysis)
 
                 lastAnalysis = None
@@ -758,9 +746,11 @@ class PeakAnalyzer(object):
 
                 if lastCollecting:
                     if len(keelingStore) > 10 + self.samples_to_skip:
-                        conc = asarray([s.CH4 for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
-                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
-                        protInvconc = 1/maximum(conc,0.001)
+                        conc = asarray([s.CH4 for s in keelingStore
+                                        ])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
+                        delta = asarray([s.HP_Delta_iCH4_Raw for s in keelingStore
+                                         ])[self.samples_to_skip:-(doneAnalysisThreshold + endpointBufferOffset)]
+                        protInvconc = 1 / maximum(conc, 0.001)
                         try:
                             replay_max = max(conc)
                         except:
@@ -775,28 +765,26 @@ class PeakAnalyzer(object):
                         except:
                             replay_rmin = 0
 
-                        result = linfit(protInvconc,delta,11.0*protInvconc)
+                        result = linfit(protInvconc, delta, 11.0 * protInvconc)
 
                         if lastPeak:
-                            lastAnalysis = dict(
-                                delta=result.coeffs[1],
-                                uncertainty=sqrt(result.cov[1][1]),
-                                replay_max=replay_max,
-                                replay_lmin=replay_lmin,
-                                replay_rmin=replay_rmin,
-                                **lastPeak._asdict())
+                            lastAnalysis = dict(delta=result.coeffs[1],
+                                                uncertainty=sqrt(result.cov[1][1]),
+                                                replay_max=replay_max,
+                                                replay_lmin=replay_lmin,
+                                                replay_rmin=replay_rmin,
+                                                **lastPeak._asdict())
                             lastPeak = None
 
                     else:
                         tooFewPoints = True
                         if lastPeak:
-                            lastAnalysis = dict(
-                                delta=0.0,
-                                uncertainty=0.0,
-                                replay_max=0.0,
-                                replay_lmin=0.0,
-                                replay_rmin=0.0,
-                                **lastPeak._asdict())
+                            lastAnalysis = dict(delta=0.0,
+                                                uncertainty=0.0,
+                                                replay_max=0.0,
+                                                replay_lmin=0.0,
+                                                replay_rmin=0.0,
+                                                **lastPeak._asdict())
                             lastPeak = None
 
                     del keelingStore[:]
@@ -815,10 +803,11 @@ class PeakAnalyzer(object):
                         conc = asarray([s.CH4 for s in tempStore])
                         dist = asarray([s.DISTANCE for s in tempStore])
                         epoch_time = asarray([s.EPOCH_TIME for s in tempStore])
-                        lat  = asarray([s.GPS_ABS_LAT  for s in tempStore])
+                        lat = asarray([s.GPS_ABS_LAT for s in tempStore])
                         lng = asarray([s.GPS_ABS_LONG for s in tempStore])
                         pk = conc.argmax()
-                        lastPeak = namedtuple('PeakData1','time dist lng lat conc')(epoch_time[pk],dist[pk],lng[pk],lat[pk],conc[pk])
+                        lastPeak = namedtuple('PeakData1', 'time dist lng lat conc')(epoch_time[pk], dist[pk], lng[pk], lat[pk],
+                                                                                     conc[pk])
                         tempStore.clear()
             lastCollecting = collectingNow
 
@@ -847,9 +836,8 @@ class PeakAnalyzer(object):
             print '\nissueTicket failed \n%s\n' % e
 
         if ticket:
-            self.ticket = ticket;
+            self.ticket = ticket
             print "new ticket: ", self.ticket
-
 
     def run(self):
         # Assemble the chain of generators which process the data from the logs in a file or in the database
@@ -895,12 +883,11 @@ class PeakAnalyzer(object):
                 else:
                     analysisFile = os.path.splitext(fname)[0] + '.analysis'
                     try:
-                        handle = open(analysisFile, 'wb+', 0) #open file with NO buffering
+                        handle = open(analysisFile, 'wb+', 0)  #open file with NO buffering
                     except:
                         raise RuntimeError('Cannot open analysis output file %s' % analysisFile)
                     # Write file header
-                    handle.write("%-14s" * len(OUTPUT_COLUMNS) %
-                                 tuple(OUTPUT_COLUMNS))
+                    handle.write("%-14s" * len(OUTPUT_COLUMNS) % tuple(OUTPUT_COLUMNS))
                     handle.write("\n")
 
                 # Make alignedData source from database or specified file
@@ -919,18 +906,10 @@ class PeakAnalyzer(object):
                     if self.usedb:
                         doc = {}
                         #Note: please assure that value list and doc_hdrs are in the same sequence
-                        dataPairs = zip(doc_hdrs,
-                                        [r.time,
-                                         r.dist,
-                                         r.lng,
-                                         r.lat,
-                                         r.conc,
-                                         r.delta,
-                                         r.uncertainty,
-                                         r.replay_max,
-                                         r.replay_lmin,
-                                         r.replay_rmin,
-                                         r.disposition])
+                        dataPairs = zip(doc_hdrs, [
+                            r.time, r.dist, r.lng, r.lat, r.conc, r.delta, r.uncertainty, r.replay_max, r.replay_lmin,
+                            r.replay_rmin, r.disposition
+                        ])
 
                         for col, val in dataPairs:
                             doc[col] = float(val)
@@ -954,11 +933,8 @@ class PeakAnalyzer(object):
                     else:
                         handle.write("%-14.2f%-14.3f%-14.6f%-14.6f%-14.3f"
                                      "%-14.2f%-14.2f%-14.3f%-14.3f%-14.3f"
-                                     "%-14.1f\n" % (r.time, r.dist, r.lng,
-                                                    r.lat, r.conc, r.delta,
-                                                    r.uncertainty, r.replay_max,
-                                                    r.replay_lmin, r.replay_rmin,
-                                                    r.disposition))
+                                     "%-14.1f\n" % (r.time, r.dist, r.lng, r.lat, r.conc, r.delta, r.uncertainty, r.replay_max,
+                                                    r.replay_lmin, r.replay_rmin, r.disposition))
 
                 if not self.usedb and handle is not None:
                     handle.close()
@@ -968,45 +944,59 @@ class PeakAnalyzer(object):
 
                 if self.file_path: break
 
+
 def main(argv=None):
     if argv is None:
         argv = sys.argv
 
     usage = "usage: %prog [options]"
     parser = OptionParser(usage=usage)
-    parser.add_option("-p", "--pid-path", dest="pid_path",
-                      help="path to specific pid (to test for running process).", metavar="<PID_PATH>")
-    parser.add_option("-l", "--listen-path", dest="listen_path",
-                      help="Search path for constant updates.", metavar="<LISTEN_PATH>")
-    parser.add_option("-f", "--file-path", dest="file_path",
-                      help="path to specific file to upload.", metavar="<FILE_PATH>")
-    parser.add_option("-a", "--analyzer", dest="analyzerId",
-                      help="Analyzer Name.", metavar="<ANALYZER>")
-    parser.add_option("-g", "--logname", dest="logname",
-                      help="Log Name.", metavar="<LOGNAME>")
-    parser.add_option("-t", "--timeout", dest="timeout",
-                      help="timeout value for response from server.", metavar="<TIMEOUT>")
-    parser.add_option("-u", "--anzlog-url", dest="anzlog_url",
-                      help="rest url for AnzLog Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<LOG_URL>")
-    parser.add_option("-m", "--meta-url", dest="meta_url",
-                      help="rest url for AnzLogMeta Resource. Use the string <TICKET> as the place-holder for the authentication ticket.", metavar="<META_URL>")
-    parser.add_option("-k", "--ticket-url", dest="ticket_url",
-                      help="rest url for authentication ticket. Use the string 'dummy' as the place-holder for the authentication ticket.",  metavar="<TICKET_URL>")
-    parser.add_option("-y", "--identity", dest="identity",
-                      help="Authentication identity string.", metavar="<IDENTITY>")
-    parser.add_option("-s", "--sys", dest="psys",
-                      help="Authentication sys.", metavar="<SYS>")
-    parser.add_option("-d", "--debug", dest="debug", action="store_true",
-                      help="Debug mode")
-    parser.add_option("--calc-samples_to_skip", dest="samples_to_skip",
-                      help="Default calc value for samples_to_skip.", metavar="<CALC_samples_to_skip>")
-    parser.add_option('--legacy-valve-stop', dest='legacyValveStop',
-                      metavar='LEGACY_VALVE_STOP', type='float',
+    parser.add_option("-p",
+                      "--pid-path",
+                      dest="pid_path",
+                      help="path to specific pid (to test for running process).",
+                      metavar="<PID_PATH>")
+    parser.add_option("-l", "--listen-path", dest="listen_path", help="Search path for constant updates.", metavar="<LISTEN_PATH>")
+    parser.add_option("-f", "--file-path", dest="file_path", help="path to specific file to upload.", metavar="<FILE_PATH>")
+    parser.add_option("-a", "--analyzer", dest="analyzerId", help="Analyzer Name.", metavar="<ANALYZER>")
+    parser.add_option("-g", "--logname", dest="logname", help="Log Name.", metavar="<LOGNAME>")
+    parser.add_option("-t", "--timeout", dest="timeout", help="timeout value for response from server.", metavar="<TIMEOUT>")
+    parser.add_option(
+        "-u",
+        "--anzlog-url",
+        dest="anzlog_url",
+        help="rest url for AnzLog Resource. Use the string <TICKET> as the place-holder for the authentication ticket.",
+        metavar="<LOG_URL>")
+    parser.add_option(
+        "-m",
+        "--meta-url",
+        dest="meta_url",
+        help="rest url for AnzLogMeta Resource. Use the string <TICKET> as the place-holder for the authentication ticket.",
+        metavar="<META_URL>")
+    parser.add_option(
+        "-k",
+        "--ticket-url",
+        dest="ticket_url",
+        help="rest url for authentication ticket. Use the string 'dummy' as the place-holder for the authentication ticket.",
+        metavar="<TICKET_URL>")
+    parser.add_option("-y", "--identity", dest="identity", help="Authentication identity string.", metavar="<IDENTITY>")
+    parser.add_option("-s", "--sys", dest="psys", help="Authentication sys.", metavar="<SYS>")
+    parser.add_option("-d", "--debug", dest="debug", action="store_true", help="Debug mode")
+    parser.add_option("--calc-samples_to_skip",
+                      dest="samples_to_skip",
+                      help="Default calc value for samples_to_skip.",
+                      metavar="<CALC_samples_to_skip>")
+    parser.add_option('--legacy-valve-stop',
+                      dest='legacyValveStop',
+                      metavar='LEGACY_VALVE_STOP',
+                      type='float',
                       default=time.mktime(time.strptime('Fri Sep 27 23:59:59 2013')),
                       help=('The time at which to start interpreting the valve '
                             'masks and values as supporting the user '
                             'cancellation bit.'))
-    parser.add_option("--newlog-wait", dest="newlog_wait",  action="store_true",
+    parser.add_option("--newlog-wait",
+                      dest="newlog_wait",
+                      action="store_true",
                       help="Wait for new log to appear before exiting (when processing single logname).")
 
     (options, args) = parser.parse_args()
@@ -1040,24 +1030,39 @@ def main(argv=None):
     class_opts = {}
 
     for copt in [
-                 "pid_path"         #path for PID file
-                 , "analyzerId"     #Analyzer ID
-                 , "anzlog_url"     #URL for AnzLog resource
-                 , "meta_url"       #URL for AnzLogMeta resource
-                 , "ticket_url"     #URL for Admin (issueTicket) resource
-                 , "logname"        #logname (when processing single log)
-                 , "identity"       #identity (authentication)
-                 , "psys"           #picarro sys (authentication)
-                 , "usedb"          #True/False use REST DB calls (instead of file system)
-                 , "listen_path"    #listen path (when processing file system)
-                 , "file_path"      #file path (when procesing single log from file system)
-                 , "samples_to_skip" #override default samples_to_skip value
-                 , "sleep_seconds"  #override default sleep_seconds value
-                 , "timeout"        #override default REST timeout value
-                 , "debug"          #True/False show debug print (in stdout)
-                 , 'legacyValveStop'
-                 , "newlog_wait"    #True/False wait for new lastlog (when processing single log SERVER ONLY)
-                 ]:
+            "pid_path"  #path for PID file
+            ,
+            "analyzerId"  #Analyzer ID
+            ,
+            "anzlog_url"  #URL for AnzLog resource
+            ,
+            "meta_url"  #URL for AnzLogMeta resource
+            ,
+            "ticket_url"  #URL for Admin (issueTicket) resource
+            ,
+            "logname"  #logname (when processing single log)
+            ,
+            "identity"  #identity (authentication)
+            ,
+            "psys"  #picarro sys (authentication)
+            ,
+            "usedb"  #True/False use REST DB calls (instead of file system)
+            ,
+            "listen_path"  #listen path (when processing file system)
+            ,
+            "file_path"  #file path (when procesing single log from file system)
+            ,
+            "samples_to_skip"  #override default samples_to_skip value
+            ,
+            "sleep_seconds"  #override default sleep_seconds value
+            ,
+            "timeout"  #override default REST timeout value
+            ,
+            "debug"  #True/False show debug print (in stdout)
+            ,
+            'legacyValveStop',
+            "newlog_wait"  #True/False wait for new lastlog (when processing single log SERVER ONLY)
+    ]:
         if copt in dir(options):
             class_opts[copt] = getattr(options, copt)
         else:
@@ -1087,10 +1092,11 @@ def main(argv=None):
         try:
             testf = open(class_opts["pid_path"], 'r')
             testf.close()
-            raise RuntimeError('pidfile exists. Verify that there is not another PeakAnalyzer task for the directory. path: %s.' % class_opts["pid_path"])
+            raise RuntimeError('pidfile exists. Verify that there is not another PeakAnalyzer task for the directory. path: %s.' %
+                               class_opts["pid_path"])
         except:
             try:
-                pidf = open(class_opts["pid_path"], 'wb+', 0) #open file with NO buffering
+                pidf = open(class_opts["pid_path"], 'wb+', 0)  #open file with NO buffering
             except:
                 raise RuntimeError('Cannot open pidfile for output. path: %s.' % class_opts["pid_path"])
 

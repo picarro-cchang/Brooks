@@ -1,4 +1,3 @@
-
 import numpy as np
 import pyodbc
 
@@ -7,8 +6,7 @@ server = "b-eng-db01.picarro.int"
 database = "SurveyorEngineering"
 uid = "engineering"
 password = "aDs76WoiJn"
-connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' %
-                        (server, database, uid, password))
+connection = pyodbc.connect('DRIVER={SQL Server}; SERVER=%s; DATABASE=%s; UID=%s; PWD=%s' % (server, database, uid, password))
 cursor = connection.cursor()
 
 # Get table names
@@ -19,7 +17,6 @@ cursor.execute("""
 print "\nTables Available"
 for row in cursor:
     print row
-
 
 # Get analyzer table column names
 cursor.execute("""

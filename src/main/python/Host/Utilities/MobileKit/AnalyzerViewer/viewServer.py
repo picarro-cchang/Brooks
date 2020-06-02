@@ -27,29 +27,33 @@ app.config.from_object(__name__)
 
 # Provide JSON RPC service for mapping software
 handler = JSONRPCHandler('jsonrpc')
-handler.connect(app,'/jsonrpc')
+handler.connect(app, '/jsonrpc')
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     appPath = sys.executable
 else:
     appPath = sys.argv[0]
 appDir = os.path.split(appPath)[0]
-changeIni = os.path.join(appDir,'MobileKit.ini')
+changeIni = os.path.join(appDir, 'MobileKit.ini')
+
 
 class JSON_Remote_Procedure_Error(RuntimeError):
     pass
+
 
 def rpcWrapper(func):
     """This decorator wraps a remote procedure call so that any exceptions from the procedure
     raise a JSON_Remote_Procedure_Error and has a traceback."""
     @wraps(func)
-    def JSON_RPC_wrapper(*args,**kwargs):
+    def JSON_RPC_wrapper(*args, **kwargs):
         try:
-            return func(*args,**kwargs)
+            return func(*args, **kwargs)
         except:
-            type,value = sys.exc_info()[:2]
-            raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(),)
+            type, value = sys.exc_info()[:2]
+            raise JSON_Remote_Procedure_Error, "\n%s" % (traceback.format_exc(), )
+
     return JSON_RPC_wrapper
+
 
 def emptyResponse():
     empty_kml = """<?xml version="1.0" encoding="UTF-8"?>
@@ -61,19 +65,21 @@ def emptyResponse():
     response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
     return response
 
+
 @app.route('/maps')
 def maps():
-    threshold = float(request.values.get('threshold',2.5))
-    return render_template('maps.html',threshold=threshold)
+    threshold = float(request.values.get('threshold', 2.5))
+    return render_template('maps.html', threshold=threshold)
+
 
 @app.route('/updateView')
 def updateView():
-    DTR = pi/180.0
+    DTR = pi / 180.0
     range = float(request.values['range'])
     tilt = float(request.values['tilt'])
     heading = float(request.values['heading'])
     altitude = float(request.values['altitude'])
-    if range<0 or range>20000:
+    if range < 0 or range > 20000:
         range = 2000.0
         tilt = 45
         heading = 0
@@ -94,13 +100,14 @@ def updateView():
           <altitude>%s</altitude>
     </LookAt>
 </Document>
-</kml>""" % (long,lat,range-altitude/cos(tilt*DTR),tilt,heading,altitude)
+</kml>""" % (long, lat, range - altitude / cos(tilt * DTR), tilt, heading, altitude)
         response = make_response(kml)
         response.headers['Content-Type'] = 'application/vnd.google-earth.kml+xml'
         return response
     except:
         print traceback.format_exc()
         return emptyResponse()
+
 
 @app.route('/updateData')
 def updateData():
@@ -110,11 +117,11 @@ def updateData():
 
     try:
         if 'lastPos' in request.values:
-            result = service.getData({'startPos':int(request.values['lastPos'])})
+            result = service.getData({'startPos': int(request.values['lastPos'])})
         else:
             result = service.getData({})
 
-        filename = request.values.get('filename','')
+        filename = request.values.get('filename', '')
         lastPos = result['lastPos']
         CH4 = result['CH4']
         long = result['GPS_ABS_LONG']
@@ -128,11 +135,11 @@ def updateData():
                 ini = ConfigObj(changeIni)
                 if 'SETTINGS' in ini:
                     settings = ini['SETTINGS']
-                    SCALE = float(settings.get('scale',SCALE))
-                    OFFSET = float(settings.get('offset',OFFSET))
-                    LINE_COLOR = settings.get('line_color',LINE_COLOR)
-                    POLY_COLOR = settings.get('poly_color',POLY_COLOR)
-                    restart = int(settings.get('restart',0))
+                    SCALE = float(settings.get('scale', SCALE))
+                    OFFSET = float(settings.get('offset', OFFSET))
+                    LINE_COLOR = settings.get('line_color', LINE_COLOR)
+                    POLY_COLOR = settings.get('poly_color', POLY_COLOR)
+                    restart = int(settings.get('restart', 0))
                     if restart:
                         service.restartDatalog({})
                         print "Restarting Data Log"
@@ -168,11 +175,11 @@ def updateData():
 </Create>""" % (LINE_COLOR, POLY_COLOR)
         else:
             cookie["lastPos"] = "%s" % lastPos
-            for ch4,lat,long in zip(CH4,lat,long):
-                data.append("%.5f,%.5f,%.0f" % (long,lat,SCALE*(ch4-OFFSET)))
+            for ch4, lat, long in zip(CH4, lat, long):
+                data.append("%.5f,%.5f,%.0f" % (long, lat, SCALE * (ch4 - OFFSET)))
 
         # Convert the cookie dictionary into a string
-        cookie = Markup.escape("&".join(["%s=%s" % (k,cookie[k]) for k in cookie]))
+        cookie = Markup.escape("&".join(["%s=%s" % (k, cookie[k]) for k in cookie]))
 
         kml = """<?xml version="1.0" encoding="UTF-8"?>
 <kml xmlns="http://www.opengis.net/kml/2.2">
@@ -207,6 +214,7 @@ def updateData():
         print traceback.format_exc()
         return emptyResponse()
 
+
 if __name__ == '__main__':
     import getopt
     shortOpts = 'a:'
@@ -228,4 +236,4 @@ if __name__ == '__main__':
 
     # Connect to the analyzer JSON RPC server
     service = Proxy('http://%s:5000/jsonrpc' % addr.strip())
-    app.run(host='127.0.0.1',port=5100)
+    app.run(host='127.0.0.1', port=5100)

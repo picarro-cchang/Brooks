@@ -37,7 +37,7 @@ class O2CalDlg(wx.Dialog):
 
         self.Bind(wx.EVT_BUTTON, self.OnNext, self.btnNext)
         self.Bind(wx.EVT_BUTTON, self.OnCancel, self.btnCancel)
-        
+
     def __set_properties(self):
         self.SetTitle("O2 Sensor Calibration")
         self.labelInfo.SetFont(wx.Font(10, wx.DEFAULT, wx.NORMAL, wx.BOLD, 0, ""))
@@ -49,7 +49,7 @@ class O2CalDlg(wx.Dialog):
         self.label_1_copy_2.SetMinSize((65, 16))
         self.labelPressure.SetMinSize((100, 20))
         self.btnNext.Enable(False)
-        
+
     def __do_layout(self):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
@@ -93,9 +93,10 @@ class O2CalDlg(wx.Dialog):
         print "Event handler 'OnCancel' not implemented!"
         event.Skip()
 
+
 # end of class O2CalDlg
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
+    gettext.install("app")  # replace with the appropriate catalog name
 
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

@@ -4,15 +4,17 @@ import time
 import sys
 from Host.autogen.interface import ProcessedRingdownEntryType
 
+
 def MyFilter(Obj):
-    print "Freq = %s, Loss = %s" % (Obj.frequency,Obj.uncorrectedAbsorbance)
+    print "Freq = %s, Loss = %s" % (Obj.frequency, Obj.uncorrectedAbsorbance)
+
 
 try:
     listenPort = int(sys.argv[1])
 except IndexError:
     listenPort = 40031
 
-l = Listener.Listener(None, listenPort, ProcessedRingdownEntryType, MyFilter, retry = True)
+l = Listener.Listener(None, listenPort, ProcessedRingdownEntryType, MyFilter, retry=True)
 
 print "Listening on port %d..." % listenPort
 

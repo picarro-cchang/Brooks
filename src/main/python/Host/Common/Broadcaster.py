@@ -19,6 +19,7 @@
 import zmq
 import time
 
+
 class Broadcaster(object):
     def __init__(self, port, name='Broadcaster', logFunc=None, sendHwm=500):
         self.name = name
@@ -30,33 +31,36 @@ class Broadcaster(object):
         self.publisher.setsockopt(zmq.SNDHWM, sendHwm)
         self.publisher.bind("tcp://*:%s" % port)
 
-    def send(self,msg):
+    def send(self, msg):
         self.publisher.send(msg)
-        
+
     def stop(self):
         self.publisher.close()
         self.publisher = None
         self.zmqContext.term()
         self.zmqContext = None
-                
+
+
 if __name__ == "__main__":
-    from time import strftime,localtime,sleep
+    from time import strftime, localtime, sleep
     import ctypes
     import StringPickler
+
     class MyTime(ctypes.Structure):
         _fields_ = [
-        ("year",ctypes.c_int),
-        ("month",ctypes.c_int),
-        ("day",ctypes.c_int),
-        ("hour",ctypes.c_int),
-        ("minute",ctypes.c_int),
-        ("second",ctypes.c_int),
-        ]    
-        
+            ("year", ctypes.c_int),
+            ("month", ctypes.c_int),
+            ("day", ctypes.c_int),
+            ("hour", ctypes.c_int),
+            ("minute", ctypes.c_int),
+            ("second", ctypes.c_int),
+        ]
+
     def myLog(msg):
         print msg
-    b = Broadcaster(8881,logFunc=myLog,sendHwm=10)
-    m = (MyTime*10000)()
+
+    b = Broadcaster(8881, logFunc=myLog, sendHwm=10)
+    m = (MyTime * 10000)()
     while True:
         t = localtime()
         for i in range(10000):

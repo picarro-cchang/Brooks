@@ -27,7 +27,7 @@
 
 import os
 import os.path
-import shutil #for file copying
+import shutil  #for file copying
 from sys import platform as sys_platform
 if sys_platform == 'win32':
     from time import clock as TimeStamp
@@ -40,6 +40,7 @@ __all__ = ["SafeFile", "FileExists"]
 _TEMP_PREFIX = "!Temp!"
 _FIRST_TIME_PREFIX = '!FirstWrite!'
 MAX_RETRY_DURATION_s = 0.5
+
 
 class SafeFile(file):
     """A file object replacement that protects against mid-write crashes.
@@ -75,12 +76,12 @@ class SafeFile(file):
         self._TempPath = os.path.join(self._RequestedDir, self._TempFileName)
         firstWritePath = os.path.join(self._RequestedDir, "%s%s" % (_FIRST_TIME_PREFIX, self._RequestedFileName))
 
-        self._UsedPath = "" #tbd later.  This is what the root file object will get.
+        self._UsedPath = ""  #tbd later.  This is what the root file object will get.
 
         #Quickly clean up any incompleted "first time" write...
         if os.path.exists(firstWritePath):
             os.remove(firstWritePath)
-            self.LogFunc("Incomplete 'first write' SafeFile found and deleted.", "File = %s" % (firstWritePath,))
+            self.LogFunc("Incomplete 'first write' SafeFile found and deleted.", "File = %s" % (firstWritePath, ))
 
         tempExists = os.path.exists(self._TempPath)
         primaryExists = os.path.exists(self._RequestedPath)
@@ -93,21 +94,22 @@ class SafeFile(file):
                 #Neither exist!  This is a fresh start.
                 if "r" in mode:
                     #r modes require the file to exist, and it doesn't! Just let the normal file object deal with it...
-                    self._UsedPath = self._RequestedPath #This will end up with a standard exception
+                    self._UsedPath = self._RequestedPath  #This will end up with a standard exception
                     return
                 else:
                     #we're doing a first time write or append - this gets a special name...
                     self._UsedPath = firstWritePath
                     return
-            else: # No primary, but there is a non-first-write temporary.
+            else:  # No primary, but there is a non-first-write temporary.
                 #This should be VERY rare.  This means that the software was stopped in the
                 #brief period between temp file completion and renaming to the primary name.
                 #(remember that any interrupted first-time writes are obliterated by now)
                 #The temp file is the legit, completed, file, so we want to make it so...
-                os.rename(self._TempPath, self._RequestedPath) #Turn the temp (a good one) into the primary
+                os.rename(self._TempPath, self._RequestedPath)  #Turn the temp (a good one) into the primary
                 primaryExists = True
                 tempExists = False
-                self.LogFunc("SafeFile temp file exists without primary - temp renamed as primary.","File = %s" % (self._TempPath,))
+                self.LogFunc("SafeFile temp file exists without primary - temp renamed as primary.",
+                             "File = %s" % (self._TempPath, ))
 
         if tempExists:
             os.remove(self._TempPath)
@@ -134,7 +136,7 @@ class SafeFile(file):
         if self._UsedPath != self._RequestedPath:
             #We must be writing to the file.  We want to close it, then get it
             #transferred to the primary location.
-            file.close(self) #the base class closure
+            file.close(self)  #the base class closure
             #clear a spot...
             if os.path.exists(self._RequestedPath): os.remove(self._RequestedPath)
             #Now we want to transform our "temporary" file into the primary...
@@ -153,10 +155,10 @@ class SafeFile(file):
                     if (TimeStamp() - startTime) > MAX_RETRY_DURATION_s:
                         raise
                     else:
-                        self.LogFunc("OSError trapped when trying to rename tempory file to primary.",
-                                     dict(File = self._TempPath))
+                        self.LogFunc("OSError trapped when trying to rename tempory file to primary.", dict(File=self._TempPath))
                         sleep(0)
                         pass
+
 
 def FileExists(FilePath):
     """Checks if the indicated file (or its SafeFile temporary instance) exists.
@@ -179,13 +181,14 @@ def FileExists(FilePath):
             tempPath = os.path.join(fDir, "%s%s" % (_TEMP_PREFIX, fName))
             return os.path.exists(tempPath)
 
+
 if __name__ == "__main__":
     testpath = r"c:\SafeFileTest.txt"
     if os.path.exists(testpath):
         os.remove(testpath)
 
     try:
-        fp = SafeFile(testpath,"r")
+        fp = SafeFile(testpath, "r")
     except Exception, E:
         print E
 

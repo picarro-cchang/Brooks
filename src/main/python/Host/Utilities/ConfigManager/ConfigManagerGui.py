@@ -8,7 +8,6 @@ import wx
 # end wxGlade
 
 
-
 class ConfigManagerGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ConfigManagerGui.__init__
@@ -32,9 +31,11 @@ class ConfigManagerGui(wx.Frame):
         self.SetMenuBar(self.frame_1_menubar)
         # Menu Bar end
         self.frameMainStatusbar = self.CreateStatusBar(3, 0)
-        self.windowSplitter = wx.SplitterWindow(self, -1, style=wx.SP_3D|wx.SP_BORDER)
+        self.windowSplitter = wx.SplitterWindow(self, -1, style=wx.SP_3D | wx.SP_BORDER)
         self.windowTree = wx.Panel(self.windowSplitter, -1)
-        self.treeCtrlFiles = wx.TreeCtrl(self.windowTree, -1, style=wx.TR_HAS_BUTTONS|wx.TR_LINES_AT_ROOT|wx.TR_DEFAULT_STYLE|wx.SUNKEN_BORDER)
+        self.treeCtrlFiles = wx.TreeCtrl(self.windowTree,
+                                         -1,
+                                         style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.windowEditors = wx.Panel(self.windowSplitter, -1)
         self.notebookEditors = wx.Notebook(self.windowEditors, -1, style=0)
 
@@ -76,36 +77,36 @@ class ConfigManagerGui(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def onReload(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onReload(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onReload' not implemented!"
         event.Skip()
 
-    def onSave(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onSave(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onSave' not implemented!"
         event.Skip()
 
-    def onSaveAs(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onSaveAs(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onSaveAs' not implemented!"
         event.Skip()
 
-    def onSaveAll(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onSaveAll(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onSaveAll' not implemented!"
         event.Skip()
 
-    def onExit(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onExit(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onExit' not implemented!"
         event.Skip()
 
-    def onHelpFind(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onHelpFind(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onHelpFind' not implemented!"
         event.Skip()
 
-    def onHelpReplace(self, event): # wxGlade: ConfigManagerGui.<event_handler>
+    def onHelpReplace(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onHelpReplace' not implemented!"
         event.Skip()
 
-# end of class ConfigManagerGui
 
+# end of class ConfigManagerGui
 
 if __name__ == "__main__":
     appConfigManager = wx.PySimpleApp(0)

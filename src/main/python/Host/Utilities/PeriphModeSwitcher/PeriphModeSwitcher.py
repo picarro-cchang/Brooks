@@ -20,11 +20,12 @@ from Host.Common.SingleInstance import SingleInstance
 DEFAULT_CONFIG_NAME = "PeriphModeSwitcher.ini"
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 class PeriphModeSwitcher(PeriphModeSwitcherFrame):
     def __init__(self, configFile, *args, **kwds):
@@ -74,7 +75,7 @@ class PeriphModeSwitcher(PeriphModeSwitcherFrame):
                         if m == f.split(".")[0].upper()[11:]:
                             self.periphModeDict[m] = os.path.join(periphModeDir, f)
         else:
-            raise Exception, "PeriphMode files not found in %s" % (periphModeDir,)
+            raise Exception, "PeriphMode files not found in %s" % (periphModeDir, )
 
         typeChoices = sorted(self.periphModeDict.keys())
         PeriphModeSwitcherFrame.__init__(self, typeChoices, currentPeriphMode, *args, **kwds)
@@ -114,8 +115,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -143,6 +146,7 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()

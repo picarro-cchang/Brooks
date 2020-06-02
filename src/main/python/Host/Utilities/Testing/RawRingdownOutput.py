@@ -12,8 +12,10 @@ from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
 from Host.Common import AppStatus
 
+
 def Log(msg):
     print msg
+
 
 class RingdownOutput(object):
     def __init__(self):
@@ -21,19 +23,23 @@ class RingdownOutput(object):
 
     def listen(self):
         self.rdListener = Listener(self.rdQueue,
-                                    BROADCAST_PORT_RDRESULTS,
-                                    interface.RingdownEntryType,
-                                    retry = True,
-                                    name = "Ringdown listener",logFunc = Log)
+                                   BROADCAST_PORT_RDRESULTS,
+                                   interface.RingdownEntryType,
+                                   retry=True,
+                                   name="Ringdown listener",
+                                   logFunc=Log)
+
     def run(self):
         i = 0
         while True:
             while not self.rdQueue.empty():
                 output = self.rdQueue.get()
                 i += 1
-                if i%100 == 0:
-                    print "Processed Ringdown Delay: %s" % (0.001*(timestamp.getTimestamp()-output.timestamp),)
+                if i % 100 == 0:
+                    print "Processed Ringdown Delay: %s" % (0.001 * (timestamp.getTimestamp() - output.timestamp), )
             time.sleep(0.1)
+
+
 if __name__ == "__main__":
     f = RingdownOutput()
     f.listen()

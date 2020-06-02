@@ -41,6 +41,7 @@ from QDateTimeUtilities import get_nseconds_of_latest_data
 from ReferenceGas import ReferenceGas, GasEnum
 import ReportUtilities
 
+
 class Task(QtCore.QObject):
     task_finish_signal = QtCore.pyqtSignal(str)
     task_abort_signal = QtCore.pyqtSignal(str)
@@ -53,23 +54,24 @@ class Task(QtCore.QObject):
     # Send up a signal if we start a timer and are waiting for user input
     task_prompt_user_signal = QtCore.pyqtSignal()
 
-    def __init__(self,
-                 my_parent = None,
-                 settings = {},
-                 results = {},
-                 reference_gases = {},
-                 my_id = None,
-                 data_source = None,
-                 ):
+    def __init__(
+        self,
+        my_parent=None,
+        settings={},
+        results={},
+        reference_gases={},
+        my_id=None,
+        data_source=None,
+    ):
         super(Task, self).__init__()
         self._my_parent = my_parent
         self._reference_gases = reference_gases
         self._settings = settings
         self._my_id = my_id
         self._running = False
-        self._abort =   False
+        self._abort = False
         self._results = results
-        self.skip = False                   # If true this task is never run
+        self.skip = False  # If true this task is never run
         self.data_source = data_source
         self._mutex = QtCore.QMutex()
         self.set_connections()
@@ -134,7 +136,7 @@ class Task(QtCore.QObject):
         :return:
         """
         self._abort = True
-        self.task_stop_clock_signal.emit()      # Stop the clock of any running subtasks
+        self.task_stop_clock_signal.emit()  # Stop the clock of any running subtasks
         self.task_abort_signal.emit(self._my_id)
         return
 
@@ -217,10 +219,10 @@ class Task(QtCore.QObject):
             if "Data_Source_Units" in self._settings:
                 units = self._settings["Data_Source_Units"]
                 if units == "PPB":
-                    scale = 1/1000.0
+                    scale = 1 / 1000.0
                 if units == "Percent":
                     scale = 10000
-                data = [i*scale for i in data]
+                data = [i * scale for i in data]
 
             (subset_times, subset_data, flag) =\
                 get_nseconds_of_latest_data(timestamps, data, int(self._settings["GasMeasureSeconds"]))
@@ -231,7 +233,7 @@ class Task(QtCore.QObject):
                 self._results["Meas_Conc_Std"].append(std)
 
         except Exception as e:
-            print("Excep: %s" %e)
+            print("Excep: %s" % e)
 
         if self._abort:
             return
@@ -252,17 +254,15 @@ class Task(QtCore.QObject):
         # The tick signal is needed to emit the user prompt to the main GUI.
         #
         self.task_prompt_user_signal.emit()
-        delay = 1e10    # about 31 years
-        busy = True     # Show busy state in progress bars if no time defined
+        delay = 1e10  # about 31 years
+        busy = True  # Show busy state in progress bars if no time defined
         if "Pre_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Pre_Task_Delay_Sec"])
             busy = False
         # instructions = "Generic message from Task {0}: Open the correct valve to let in the gas and then click NEXT".format(self._my_id)
         tank = self._reference_gases[self._settings["Gas"]].tankName
         instructions = QGuiText.pre_task_instructions(tank)
-        t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions,
-                              busy_hint = busy)
+        t = QNonBlockingTimer(set_time_sec=delay, description=instructions, busy_hint=busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
@@ -280,16 +280,14 @@ class Task(QtCore.QObject):
         # GUI.
         #
         self.task_prompt_user_signal.emit()
-        delay = 1e10    # about 31 years
+        delay = 1e10  # about 31 years
         busy = True  # Show busy state in progress bars if no time defined
         if "Post_Task_Delay_Sec" in self._settings:
             delay = int(self._settings["Post_Task_Delay_Sec"])
             busy = False
         # instructions = "Generic message from Task {0}: Close the reference gas valve and then click NEXT".format(self._my_id)
         instructions = QGuiText.post_task_instructions()
-        t = QNonBlockingTimer(set_time_sec=delay,
-                              description=instructions,
-                              busy_hint = busy)
+        t = QNonBlockingTimer(set_time_sec=delay, description=instructions, busy_hint=busy)
         t.tick_signal.connect(self.task_countdown_signal)
         self.task_stop_clock_signal.connect(t.stop)
         self.task_next_signal.connect(t.stop)
@@ -307,7 +305,7 @@ class Task(QtCore.QObject):
             if "No" in zeroAirFlag:
                 measConc = self._results["Meas_Conc"][idx]
                 refConc = self._results["Ref_Conc"][idx]
-                self._results["Percent_Deviation"].append(abs(100.0*(measConc - refConc)/refConc))
+                self._results["Percent_Deviation"].append(abs(100.0 * (measConc - refConc) / refConc))
             else:
                 self._results["Percent_Deviation"].append(numpy.NaN)
         return
@@ -324,13 +322,13 @@ class Task(QtCore.QObject):
         #
         self._results["Zero_Air_Test"] = []
         zeroMax = 0.1
-        zeroMin = -0.01 # 0.01 ppm or 10 ppb
+        zeroMin = -0.01  # 0.01 ppm or 10 ppb
         for idx, zeroAirFlag in enumerate(self._results["Zero_Air"]):
             if "Zero" in zeroAirFlag:
                 if "Standard" in zeroAirFlag:
-                    zeroMax = 1.0 # 1 ppml
+                    zeroMax = 1.0  # 1 ppml
                 elif "Ultra" in zeroAirFlag:
-                    zeroMax = 0.1 # 0.1 ppm
+                    zeroMax = 0.1  # 0.1 ppm
                 measConc = self._results["Meas_Conc"][idx]
                 if measConc >= zeroMin and measConc <= zeroMax:
                     self._results["Zero_Air_Test"].append((measConc, "Pass", zeroMin, zeroMax))
@@ -373,7 +371,7 @@ class Task(QtCore.QObject):
             else:
                 measConc = self._results["Meas_Conc"][idx]
                 refConc = self._results["Ref_Conc"][idx]
-                if percent_deviation < percent_acceptance :
+                if percent_deviation < percent_acceptance:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Pass", percent_acceptance))
                 else:
                     self._results["Deviation_Test"].append((measConc, percent_deviation, "Fail", percent_acceptance))
@@ -389,13 +387,13 @@ class Task(QtCore.QObject):
 
         x = self._results["Meas_Conc"]
         y = self._results["Ref_Conc"]
-        coeffs = numpy.polyfit(x,y,1)
+        coeffs = numpy.polyfit(x, y, 1)
         yfit = numpy.poly1d(coeffs)(x)
 
         ybar = numpy.sum(y)
         ssreg = numpy.sum((yfit - ybar)**2)
         sstot = numpy.sum((y - ybar)**2)
-        r2 = ssreg/sstot
+        r2 = ssreg / sstot
         self._results["slope"] = coeffs[0]
         self._results["intercept"] = coeffs[1]
         self._results["r2"] = r2

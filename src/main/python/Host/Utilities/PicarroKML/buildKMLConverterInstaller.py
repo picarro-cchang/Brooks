@@ -28,8 +28,7 @@ ISCC = 'c:/program files/Inno Setup 5/ISCC.exe'
 ISCC_WIN7 = 'c:/program files (x86)/Inno Setup 5/ISCC.exe'
 INSTALLER_SCRIPTS_DIR = 'InstallerScripts'
 
-
-g_logMsgLevel = 0   # should be 0 for check-in
+g_logMsgLevel = 0  # should be 0 for check-in
 
 
 def LogErrmsg(str):
@@ -40,7 +39,9 @@ def LogMsg(level, str):
     if level <= g_logMsgLevel:
         print str
 
+
 ###############################################################################
+
 
 def makeInstaller(opts):
     # get OS type so we can run ISS from the appropriate path
@@ -70,9 +71,7 @@ def runCommand(command):
     Run a command line command so we can capture its output.
     """
     #print "runCommand: '%s'" % command
-    p = subprocess.Popen(command,
-                         stdout=subprocess.PIPE,
-                         stderr=subprocess.STDOUT)
+    p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
     stdout_value, stderr_value = p.communicate()
     # print "stdout:", repr(stdout_value)
@@ -98,13 +97,13 @@ def _compileInstaller(osType, ver):
 
     currentYear = time.strftime("%Y")
 
-    args = [isccApp, "/dkmlConverterVersion=%s" % ver,
-            "/dproductYear=%s" % currentYear,
-            "/dsandboxDir=%s" % SANDBOX_DIR,
-            "/v9",
-            "/O%s" % os.path.abspath(os.path.join(currentDir,
-                                                    'Installers')),
-            setupFilePath]
+    args = [
+        isccApp,
+        "/dkmlConverterVersion=%s" % ver,
+        "/dproductYear=%s" % currentYear,
+        "/dsandboxDir=%s" % SANDBOX_DIR, "/v9",
+        "/O%s" % os.path.abspath(os.path.join(currentDir, 'Installers')), setupFilePath
+    ]
 
     print subprocess.list2cmdline(args)
     print "current dir='%s'" % os.getcwd()
@@ -115,10 +114,12 @@ def _compileInstaller(osType, ver):
         LogErrmsg("Error building KMLConverter installer, retCode=%d." % retCode)
         sys.exit(retCode)
 
+
 def compileSource():
     py_compile.compile('KMLConverter.py')
     py_compile.compile('KMLConverterFrame.py')
     py_compile.compile('CustomConfigObj.py')
+
 
 def main():
     usage = """
@@ -130,7 +131,6 @@ Builds an installer
     global g_logMsgLevel
 
     parser = OptionParser(usage=usage)
-
     """
     parser.add_option('-c', '--version', dest='version', metavar='VERSION',
                       default=None, help=('Specify a version for this release '
@@ -138,17 +138,23 @@ Builds an installer
                                           'repository.'))
     """
 
-    parser.add_option('-l', '--loglevel', dest='loglevel', action='store', type='int',
-                      default=g_logMsgLevel, help=('Use this option to specify logging level to '
-                                                   'debug this application. 0=highest, 5=lowest (noisy)'))
+    parser.add_option('-l',
+                      '--loglevel',
+                      dest='loglevel',
+                      action='store',
+                      type='int',
+                      default=g_logMsgLevel,
+                      help=('Use this option to specify logging level to '
+                            'debug this application. 0=highest, 5=lowest (noisy)'))
 
     options, args = parser.parse_args()
     #print "options=", options
 
     g_logMsgLevel = options.loglevel
-    
+
     compileSource()
     makeInstaller(options)
-    
+
+
 if __name__ == '__main__':
     main()

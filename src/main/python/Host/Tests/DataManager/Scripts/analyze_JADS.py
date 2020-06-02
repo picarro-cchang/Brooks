@@ -6,7 +6,7 @@ from numpy.linalg import inv, norm
 
 # Forward analysis script for interference removal
 if _PERSISTENT_["init"]:
-    influence_of = {"peak_1a":{}, "peak_2":{}, "peak15":{}, "ch4_splinemax":{}, "nh3_conc_ave":{}}
+    influence_of = {"peak_1a": {}, "peak_2": {}, "peak15": {}, "ch4_splinemax": {}, "nh3_conc_ave": {}}
 
     test1 = influence_of["peak_1a"]
     test1["peak_1a"] = 1
@@ -44,10 +44,10 @@ if _PERSISTENT_["init"]:
     test1["nh3_conc_ave"] = 1
 
     n = len(xp.crossList)
-    A = zeros((n,n),dtype=float)
-    for i,(c1,_,_) in enumerate(xp.crossList):
-        for j,(c2,_,_) in enumerate(xp.crossList):
-            A[i,j] = influence_of[c2][c1]
+    A = zeros((n, n), dtype=float)
+    for i, (c1, _, _) in enumerate(xp.crossList):
+        for j, (c2, _, _) in enumerate(xp.crossList):
+            A[i, j] = influence_of[c2][c1]
     # Define correction to linear transformation between actual and measured values
     #  as a function acting on the vector of actual values
 
@@ -61,29 +61,30 @@ if _PERSISTENT_["init"]:
     _PERSISTENT_["Ainv"] = inv(A)
     _PERSISTENT_["init"] = False
 
-
 xs = xh.popleft()
 
 newValues = asarray(xs.valueArray)
 for iter in range(5):
-    next = dot(_PERSISTENT_["Ainv"],asarray(xs.valueArray)-_PERSISTENT_["nonLinCorr"](newValues))
-    print iter, norm(next-newValues)/norm(newValues)
+    next = dot(_PERSISTENT_["Ainv"], asarray(xs.valueArray) - _PERSISTENT_["nonLinCorr"](newValues))
+    print iter, norm(next - newValues) / norm(newValues)
     newValues = next
 
-for i,(c,f,v) in enumerate(xp.crossList):
+for i, (c, f, v) in enumerate(xp.crossList):
     _REPORT_[c + '_raw'] = xs.valueArray[xs.indexByName[c]]
     _REPORT_[c + '_corr'] = newValues[xs.indexByName[c]]
 
+
 # Convert corrected peak heights to concentrations
 # Define linear transformtions for post-processing
-def applyLinear(value,xform):
-    return xform[0]*value + xform[1]
+def applyLinear(value, xform):
+    return xform[0] * value + xform[1]
 
-CH4 = (_INSTR_["concentration_ch4_slope"],_INSTR_["concentration_ch4_intercept"])
-CO2 = (_INSTR_["concentration_co2_slope"],_INSTR_["concentration_co2_intercept"])
-H2O = (_INSTR_["concentration_h2o_slope"],_INSTR_["concentration_h2o_intercept"])
-N2O = (_INSTR_["concentration_n2o_slope"],_INSTR_["concentration_n2o_intercept"])
-NH3 = (_INSTR_["concentration_nh3_slope"],_INSTR_["concentration_nh3_intercept"])
+
+CH4 = (_INSTR_["concentration_ch4_slope"], _INSTR_["concentration_ch4_intercept"])
+CO2 = (_INSTR_["concentration_co2_slope"], _INSTR_["concentration_co2_intercept"])
+H2O = (_INSTR_["concentration_h2o_slope"], _INSTR_["concentration_h2o_intercept"])
+N2O = (_INSTR_["concentration_n2o_slope"], _INSTR_["concentration_n2o_intercept"])
+NH3 = (_INSTR_["concentration_nh3_slope"], _INSTR_["concentration_nh3_intercept"])
 
 n2o = newValues[xs.indexByName["peak_1a"]] / 1.82
 co2 = newValues[xs.indexByName["peak_2"]] * 252.9
@@ -91,11 +92,11 @@ h2o = newValues[xs.indexByName["peak15"]] * 2.685
 ch4 = newValues[xs.indexByName["ch4_splinemax"]] / 216.3
 nh3 = newValues[xs.indexByName["nh3_conc_ave"]]
 
-_REPORT_["N2O_raw"] = applyLinear(n2o,N2O)
-_REPORT_["CO2"] = applyLinear(co2,CO2)
-_REPORT_["H2O"] = applyLinear(h2o,H2O)
-_REPORT_["CH4"] = applyLinear(ch4,CH4)
-_REPORT_["NH3"] = applyLinear(nh3,NH3)
+_REPORT_["N2O_raw"] = applyLinear(n2o, N2O)
+_REPORT_["CO2"] = applyLinear(co2, CO2)
+_REPORT_["H2O"] = applyLinear(h2o, H2O)
+_REPORT_["CH4"] = applyLinear(ch4, CH4)
+_REPORT_["NH3"] = applyLinear(nh3, NH3)
 
 _REPORT_["timestamp"] = int(xs.timestamp)
 
@@ -108,4 +109,4 @@ for d in xs.new_data:
     _REPORT_[d] = xs.new_data[d]
 
 if xh and xh[0].ready:
-    _ANALYZE_[xp.forward_id] = {"new_timestamp":xh[0].timestamp}
+    _ANALYZE_[xp.forward_id] = {"new_timestamp": xh[0].timestamp}

@@ -5,5 +5,5 @@ from Host.autogen import interface
 Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%s" % SharedTypes.RPC_PORT_DRIVER,
                                     'DriverRPCTests',
                                     IsDontCareConnection=False)
-                                    
-print Driver.rdDasReg("LASER1_TEMPERATURE_REGISTER")                                    
+
+print Driver.rdDasReg("LASER1_TEMPERATURE_REGISTER")

@@ -4,39 +4,39 @@ import time
 import ntplib
 
 MapPort2Program = {
-         50000: "LOGGER",
-         50010: "DRIVER",
-         50015: "FREQ_CONVERTER",
-         50030: "SUPERVISOR",
-         50031: "SUPERVISOR_BACKUP",
-         50050: "CONTROLLER",
-         50060: "ARCHIVER",
-         50070: "MEAS_SYSTEM",
-         50075: "SPECTRUM_COLLECTOR",
-         50080: "SAMPLE_MGR",
-         50090: "DATALOGGER",
-         50100: "ALARM_SYSTEM",
-         50110: "INSTR_MANAGER",
-         50120: "COMMAND_HANDLER",
-         50160: "DATA_MANAGER",
-         50180: "FITTER1",
-         50181: "FITTER2",
-         50182: "FITTER3",
-         50200: "VALVE_SEQUENCER",
-         50210: "COORDINATOR",
-         50220: "QUICK_GUI",
-         50072: "PERIPH_INTRF",
-         50073: "CONFIG_MONITOR"
-    }
+    50000: "LOGGER",
+    50010: "DRIVER",
+    50015: "FREQ_CONVERTER",
+    50030: "SUPERVISOR",
+    50031: "SUPERVISOR_BACKUP",
+    50050: "CONTROLLER",
+    50060: "ARCHIVER",
+    50070: "MEAS_SYSTEM",
+    50075: "SPECTRUM_COLLECTOR",
+    50080: "SAMPLE_MGR",
+    50090: "DATALOGGER",
+    50100: "ALARM_SYSTEM",
+    50110: "INSTR_MANAGER",
+    50120: "COMMAND_HANDLER",
+    50160: "DATA_MANAGER",
+    50180: "FITTER1",
+    50181: "FITTER2",
+    50182: "FITTER3",
+    50200: "VALVE_SEQUENCER",
+    50210: "COORDINATOR",
+    50220: "QUICK_GUI",
+    50072: "PERIPH_INTRF",
+    50073: "CONFIG_MONITOR"
+}
 
 TableColumns = {
-    "time": Float64Col(),  
-    "CPU_Usage": Float32Col(), 
+    "time": Float64Col(),
+    "CPU_Usage": Float32Col(),
     "Memory_Usage": Float32Col(),
     "Time_Offset": Float32Col(),
     "Time_Delay": Float32Col()
 }
-    
+
 date = time.strftime("%Y%m%d_%H%M%S", time.localtime())
 output = openFile(r"test_results_" + date + ".h5", "w")
 Picarro_Programs = []

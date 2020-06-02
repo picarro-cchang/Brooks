@@ -34,10 +34,10 @@ OLD_DATA_ID = "_OLD_DATA_"
 OLD_REPORTS_ID = "_OLD_REPORT_"
 OLD_SENSORS_ID = "_OLD_SENSOR_"
 DRIVER_RPC_SERVER_ID = "_DRIVER_"
-MEAS_SYS_RPC_SERVER_ID = "_MEAS_SYS_" # provides tagalong data calls
-FREQ_CONV_RPC_SERVER_ID = "_FREQ_CONV_" # provides getWlmOffset and setWlmOffset calls
-SPEC_COLL_RPC_SERVER_ID = "_SPEC_COLL_" # provides getSequenceNames and setSequence calls
-DATA_LOGGER_RPC_SERVER_ID = "_DATA_LOGGER_" # provides DATALOGGER_stopLogRpc and DATALOGGER_startLogRpc calls
+MEAS_SYS_RPC_SERVER_ID = "_MEAS_SYS_"  # provides tagalong data calls
+FREQ_CONV_RPC_SERVER_ID = "_FREQ_CONV_"  # provides getWlmOffset and setWlmOffset calls
+SPEC_COLL_RPC_SERVER_ID = "_SPEC_COLL_"  # provides getSequenceNames and setSequence calls
+DATA_LOGGER_RPC_SERVER_ID = "_DATA_LOGGER_"  # provides DATALOGGER_stopLogRpc and DATALOGGER_startLogRpc calls
 FSR_HOPPING_CONTROLLER_RPC_SERVER_ID = "_FSR_HOPPING_CONTROLLER_"
 PERIPH_INTRF_ID = "_PERIPH_INTRF_"
 PERIPH_INTRF_COLS_ID = "_PERIPH_INTRF_COLS_"
@@ -51,12 +51,11 @@ UTILS_ID = "_UTILS_"
 ALARM_PARAMS_ID = "_ALARM_PARAMS_"
 ALARM_FUNCTIONS_ID = "_ALARM_FUNCTIONS_"
 
-
 # Synchronizer output function name...
 SYNC_OUT_ID = "_SYNC_OUT_"
 
 #Output prefix definitions...
-REPORT_ID = "_REPORT_" #Report is an output from the data manager but is also an input to the alarm script
+REPORT_ID = "_REPORT_"  #Report is an output from the data manager but is also an input to the alarm script
 FORWARD_ID = "_ANALYZE_"
 MEAS_GOOD_ID = "_MEAS_GOOD_"
 SCRIPT_NAME_ID = "_SCRIPT_NAME_"
@@ -70,21 +69,26 @@ globalsDict = {}
 
 alarmGlobals = {}
 
+
 class Synchronizer(object):
-    def __init__(self,analyzer,varList=[],syncInterval=100,syncLatency=500,processInterval=500,maxDelay=2000):
+    def __init__(self, analyzer, varList=[], syncInterval=100, syncLatency=500, processInterval=500, maxDelay=2000):
         if "synchronizer" not in globalsDict: globalsDict["synchronizer"] = {}
         if analyzer in globalsDict["synchronizer"]:
             raise ValueError("Synchronizer %s already exists" % analyzer)
-        globalsDict["synchronizer"][analyzer] = dict(varList=varList,syncInterval=syncInterval,
-                                                 syncLatency=syncLatency,processInterval=processInterval,maxDelay=maxDelay)
+        globalsDict["synchronizer"][analyzer] = dict(varList=varList,
+                                                     syncInterval=syncInterval,
+                                                     syncLatency=syncLatency,
+                                                     processInterval=processInterval,
+                                                     maxDelay=maxDelay)
         self.analyzer = analyzer
         self.processInterval = processInterval
         self.lastTimestamp = None
 
-    def dispatch(self,timestamp,forwarder):
-        if self.lastTimestamp == None or (timestamp - self.lastTimestamp)>self.processInterval:
+    def dispatch(self, timestamp, forwarder):
+        if self.lastTimestamp == None or (timestamp - self.lastTimestamp) > self.processInterval:
             forwarder[self.analyzer] = dict(timestamp=timestamp)
             self.lastTimestamp = timestamp
+
 
 class NewDataDict(dict):
     """Class to allow new data in the script to be managed like a dict, but
@@ -94,10 +98,12 @@ class NewDataDict(dict):
     def __init__(self, OldDataDict):
         dict.__init__(self)
         self._OldData = OldDataDict
+
     def __setitem__(self, key, value):
         if key in self._OldData:
             raise Exception("Key already exists in old data!  New data keys must be new.")
         return dict.__setitem__(self, key, value)
+
 
 def RunAnalysisScript(ScriptCodeObj,
                       ScriptArgs,
@@ -121,9 +127,9 @@ def RunAnalysisScript(ScriptCodeObj,
                       ScriptName,
                       ExcLogFunc,
                       UserCalDict,
-                      CalEnabled = True,
-                      PulseAnalyzerIni = None,
-                      Options = ""):
+                      CalEnabled=True,
+                      PulseAnalyzerIni=None,
+                      Options=""):
     """Executes the CodeObj in an environment built with the other parameters.
 
     Returns a tuple: (ReportedData, ForwardedData, NewData, MeasGood, ScriptName)
@@ -172,12 +178,12 @@ def RunAnalysisScript(ScriptCodeObj,
 
     if ScriptName not in persistentDict:
         persistentDict[ScriptName] = {"init": True}
-    dataEnviron = {"_GLOBALS_" : globalsDict, "_PERSISTENT_" : persistentDict[ScriptName], "Synchronizer" : Synchronizer }
+    dataEnviron = {"_GLOBALS_": globalsDict, "_PERSISTENT_": persistentDict[ScriptName], "Synchronizer": Synchronizer}
 
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
     dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
     dataEnviron[DATA_ID] = DataDict.copy()
-    dataEnviron[DATA_ID].update({"cal_enabled":CalEnabled})
+    dataEnviron[DATA_ID].update({"cal_enabled": CalEnabled})
     dataEnviron[INSTR_ID] = InstrDataDict.copy()
     dataEnviron[SENSOR_ID] = SensorDataDict.copy()
     dataEnviron[OLD_DATA_ID] = DataHistory.copy()
@@ -195,7 +201,7 @@ def RunAnalysisScript(ScriptCodeObj,
     dataEnviron[PERIPH_INTRF_COLS_ID] = PeriphIntrfCols
     dataEnviron[NEW_DATA_ID] = NewDataDict(dataEnviron[DATA_ID])
     dataEnviron[SCRIPT_ARGS_ID] = tuple(ScriptArgs)
-    dataEnviron[MEAS_GOOD_ID] = True #script guy has to consciously make it false
+    dataEnviron[MEAS_GOOD_ID] = True  #script guy has to consciously make it false
     dataEnviron[INSTR_STATUS_ID] = InstrumentStatus
     dataEnviron[SCRIPT_NAME_ID] = ScriptName
     dataEnviron[SERIAL_INTERFACE_ID] = SerialInterface
@@ -209,20 +215,20 @@ def RunAnalysisScript(ScriptCodeObj,
     #
     # Warning: Do not remove existing dictionary keys that are function names
     #          or you may break existing scripts!
-    dataEnviron[UTILS_ID] = { "doAdjustTempOffset": DoAdjustTempOffset.doAdjustTempOffset }
+    dataEnviron[UTILS_ID] = {"doAdjustTempOffset": DoAdjustTempOffset.doAdjustTempOffset}
 
     ##Now set up the direct variables (couldn't decide which one was best, so both!)...
     #for k in DataDict.keys():
-        #dataEnviron["%s%s" % (DATA_ID, k)] = DataDict[k]
+    #dataEnviron["%s%s" % (DATA_ID, k)] = DataDict[k]
     #for k in InstrDataDict.keys():
-        #dataEnviron["%s%s" % (INSTR_ID, k)] = InstrDataDict[k]
+    #dataEnviron["%s%s" % (INSTR_ID, k)] = InstrDataDict[k]
     #for k in OldDataDict.keys():
-        #dataEnviron["%s%s" % (OLD_DATA_ID, k)] = OldDataDict[k]
+    #dataEnviron["%s%s" % (OLD_DATA_ID, k)] = OldDataDict[k]
 
     def synchronizer(analyzer):
-        return DataSynchronizer.resync(analyzer,dataEnviron)
+        return DataSynchronizer.resync(analyzer, dataEnviron)
 
-    dataEnviron.update({SYNC_OUT_ID : synchronizer})
+    dataEnviron.update({SYNC_OUT_ID: synchronizer})
 
     try:
         exec ScriptCodeObj in dataEnviron
@@ -244,26 +250,13 @@ def RunAnalysisScript(ScriptCodeObj,
     if reportedData:
         reportedData["dm_latency"] = timestamp.unixTime(timestamp.getTimestamp()) - SourceTime_s
         if "max_fitter_latency" in DataDict:
-          reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
+            reportedData["max_fitter_latency"] = DataDict["max_fitter_latency"]
     return (reportedData, forwardedData, newData, measGood, scriptName)
 
-def RunAlarmScript(   ScriptCodeObj,
-                      SourceTime_s,
-                      AlarmParamsDict,
-                      ReportDict,
-                      ReportHistory,
-                      SensorHistory,
-                      DriverRpcServer,
-                      InstrumentStatus,
-                      MeasSysRpcServer,
-                      FreqConvRpcServer,
-                      SpecCollRpcServer,
-                      DataLoggerRpcServer,
-                      FsrHoppingControllerRpcServer,
-                      PeriphIntrfFunc,
-                      PeriphIntrfCols,
-                      ExcLogFunc,
-                      numAlarmWords):
+
+def RunAlarmScript(ScriptCodeObj, SourceTime_s, AlarmParamsDict, ReportDict, ReportHistory, SensorHistory, DriverRpcServer,
+                   InstrumentStatus, MeasSysRpcServer, FreqConvRpcServer, SpecCollRpcServer, DataLoggerRpcServer,
+                   FsrHoppingControllerRpcServer, PeriphIntrfFunc, PeriphIntrfCols, ExcLogFunc, numAlarmWords):
     """Executes the CodeObj in an environment built with the other parameters.
 
     Returns a tuple: (ReportedData, ForwardedData, NewData, MeasGood, ScriptName)
@@ -311,7 +304,7 @@ def RunAlarmScript(   ScriptCodeObj,
     # - providing copies to make sure the script doesn't screw the data up
     if "init" not in alarmGlobals:
         alarmGlobals["init"] = True
-    dataEnviron = {"_GLOBALS_" : alarmGlobals }
+    dataEnviron = {"_GLOBALS_": alarmGlobals}
 
     dataEnviron[SOURCE_TIME_ID] = SourceTime_s
     dataEnviron[SOURCE_TIMESTAMP_ID] = timestamp.unixTimeToTimestamp(SourceTime_s)
@@ -320,7 +313,7 @@ def RunAlarmScript(   ScriptCodeObj,
     dataEnviron[OLD_REPORTS_ID] = ReportHistory.copy()
     dataEnviron[OLD_SENSORS_ID] = SensorHistory.copy()
     dataEnviron[ALARM_REPORT_ID] = {}
-    dataEnviron[ALARMS_ID] = numAlarmWords*[0]
+    dataEnviron[ALARMS_ID] = numAlarmWords * [0]
     dataEnviron[DRIVER_RPC_SERVER_ID] = DriverRpcServer
     dataEnviron[MEAS_SYS_RPC_SERVER_ID] = MeasSysRpcServer
     dataEnviron[FREQ_CONV_RPC_SERVER_ID] = FreqConvRpcServer

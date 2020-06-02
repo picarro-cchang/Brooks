@@ -3,7 +3,7 @@ import os
 import sys
 
 # Need to find path to the translation table
-here = os.path.split(os.path.abspath(inspect.getfile( inspect.currentframe())))[0]
+here = os.path.split(os.path.abspath(inspect.getfile(inspect.currentframe())))[0]
 if here not in sys.path: sys.path.append(here)
 from Host.Tests.DataManager.Scripts.translate import newname
 

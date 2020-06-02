@@ -10,12 +10,9 @@ exclusionList = []
 inclusionList = ["zmq.core.*", "zmq.utils", "zmq.utils.jsonapi", "zmq.utils.strtypes"]
 packageList = []
 data_files = []
-setup(console=['DriverToZmq.py', 'ListenToDriverZmq.py'],
-      options=dict(py2exe=dict(compressed=1,
-                               optimize=1,
-                   bundle_files=1,
-                   excludes=exclusionList,
-                   includes=inclusionList,
-                   packages=packageList)),
-      data_files=data_files,
-      )
+setup(
+    console=['DriverToZmq.py', 'ListenToDriverZmq.py'],
+    options=dict(py2exe=dict(
+        compressed=1, optimize=1, bundle_files=1, excludes=exclusionList, includes=inclusionList, packages=packageList)),
+    data_files=data_files,
+)

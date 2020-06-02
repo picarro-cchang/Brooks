@@ -16,7 +16,6 @@ from Host.Common.GraphPanel import GraphPanel
 # end wxGlade
 
 
-
 class SandboxGUI(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: SandboxGUI.__init__
@@ -35,11 +34,14 @@ class SandboxGUI(wx.Frame):
         self.ListboxY = wx.ListBox(self.notebook_1_pane_1, -1, choices=[])
         self.ClearButton = wx.Button(self.notebook_1_pane_1, -1, "Clear")
         self.graphPanel1 = GraphPanel(self.notebook_1_pane_1, -1)
-        self.EventLog = wx.TextCtrl(self.notebook_1_pane_2, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH2)
+        self.EventLog = wx.TextCtrl(self.notebook_1_pane_2,
+                                    -1,
+                                    "",
+                                    style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL | wx.TE_RICH2)
         self.Analyser1Label = wx.StaticText(self.notebook_1_pane_3, -1, "Chart1", style=wx.ALIGN_CENTRE)
-        self.Chart1LB = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_SINGLE|wx.LB_HSCROLL)
+        self.Chart1LB = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_SINGLE | wx.LB_HSCROLL)
         self.Analyser2Label = wx.StaticText(self.notebook_1_pane_3, -1, "Chart2")
-        self.Chart2LB = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_SINGLE|wx.LB_HSCROLL)
+        self.Chart2LB = wx.ListBox(self.notebook_1_pane_3, -1, choices=[], style=wx.LB_SINGLE | wx.LB_HSCROLL)
         self.ClearAnalyzebutton = wx.Button(self.notebook_1_pane_3, -1, "Clear")
         self.analyzeGraph1 = GraphPanel(self.notebook_1_pane_3, -1)
         self.analyzeGraph2 = GraphPanel(self.notebook_1_pane_3, -1)
@@ -72,8 +74,12 @@ class SandboxGUI(wx.Frame):
         self.DriverRegisterTextCtrl = wx.TextCtrl(self.notebook_1_pane_5, -1, "")
         self.label_6 = wx.StaticText(self.notebook_1_pane_5, -1, "     Value:")
         self.DriverRegValueTextCtrl = wx.TextCtrl(self.notebook_1_pane_5, -1, "")
-        self.DriverTextCtrl = wx.TextCtrl(self.notebook_1_pane_5, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.HSCROLL|wx.TE_RICH2|wx.TE_LINEWRAP|wx.TE_WORDWRAP)
-        self.DriverRegisterListBox = wx.ListBox(self.notebook_1_pane_5, -1, choices=[], style=wx.LB_SINGLE|wx.LB_HSCROLL)
+        self.DriverTextCtrl = wx.TextCtrl(self.notebook_1_pane_5,
+                                          -1,
+                                          "",
+                                          style=wx.TE_MULTILINE | wx.TE_READONLY | wx.HSCROLL | wx.TE_RICH2 | wx.TE_LINEWRAP
+                                          | wx.TE_WORDWRAP)
+        self.DriverRegisterListBox = wx.ListBox(self.notebook_1_pane_5, -1, choices=[], style=wx.LB_SINGLE | wx.LB_HSCROLL)
         self.HD5Viewerbutton = wx.Button(self.notebook_1_pane_6, -1, "HD5Viewer")
         self.StartFlowbutton = wx.Button(self.notebook_1_pane_6, -1, "StartFlow")
         self.WLMPkScrnbutton = wx.Button(self.notebook_1_pane_6, -1, "WLMPkScrn")
@@ -130,7 +136,7 @@ class SandboxGUI(wx.Frame):
         self.button_51 = wx.Button(self.notebook_1_pane_6, -1, "")
         self.label_3 = wx.StaticText(self.notebook_1_pane_6, -1, ".")
         self.Commenttext_ctrl = wx.TextCtrl(self.notebook_1_pane_6, -1, "")
-        self.TestResulttext_ctrl = wx.TextCtrl(self.notebook_1_pane_6, -1, "", style=wx.TE_MULTILINE|wx.TE_READONLY|wx.TE_RICH)
+        self.TestResulttext_ctrl = wx.TextCtrl(self.notebook_1_pane_6, -1, "", style=wx.TE_MULTILINE | wx.TE_READONLY | wx.TE_RICH)
         self.TestGraph1Title = wx.StaticText(self.notebook_1_pane_6, -1, "")
         self.TestGraph1 = GraphPanel(self.notebook_1_pane_6, -1)
 
@@ -212,9 +218,9 @@ class SandboxGUI(wx.Frame):
         # begin wxGlade: SandboxGUI.__set_properties
         self.SetTitle("Config Utils...")
         self.SetSize((600, 600))
-        self.ListboxX.SetMinSize((140,155))
+        self.ListboxX.SetMinSize((140, 155))
         self.ListboxY.SetMinSize((140, 150))
-        self.graphPanel1.SetMinSize((400,300))
+        self.graphPanel1.SetMinSize((400, 300))
         self.notebook_1_pane_2.SetMinSize((584, 535))
         self.Analyser1Label.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
         self.Analyser2Label.SetFont(wx.Font(12, wx.DEFAULT, wx.NORMAL, wx.NORMAL, 0, "MS Shell Dlg 2"))
@@ -269,22 +275,22 @@ class SandboxGUI(wx.Frame):
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_3.Add(self.label_1, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 10)
+        sizer_3.Add(self.label_1, 0, wx.TOP | wx.ALIGN_CENTER_HORIZONTAL, 10)
         sizer_3.Add(self.ListboxX, 1, wx.EXPAND, 0)
-        sizer_3.Add(self.label_2, 0, wx.TOP|wx.ALIGN_CENTER_HORIZONTAL, 10)
+        sizer_3.Add(self.label_2, 0, wx.TOP | wx.ALIGN_CENTER_HORIZONTAL, 10)
         sizer_3.Add(self.ListboxY, 1, wx.EXPAND, 0)
-        sizer_3.Add(self.ClearButton, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 6)
+        sizer_3.Add(self.ClearButton, 0, wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_HORIZONTAL, 6)
         sizer_2.Add(sizer_3, 0, wx.EXPAND, 0)
         sizer_2.Add(self.graphPanel1, 1, wx.EXPAND, 0)
         self.notebook_1_pane_1.SetSizer(sizer_2)
-        sizer_4.Add(self.EventLog, 1, wx.ALL|wx.EXPAND, 6)
+        sizer_4.Add(self.EventLog, 1, wx.ALL | wx.EXPAND, 6)
         self.notebook_1_pane_2.SetSizer(sizer_4)
         sizer_6.Add(self.Analyser1Label, 0, wx.ALL, 10)
-        sizer_6.Add(self.Chart1LB, 1, wx.LEFT|wx.RIGHT, 6)
+        sizer_6.Add(self.Chart1LB, 1, wx.LEFT | wx.RIGHT, 6)
         sizer_6.Add((20, 20), 0, 0, 0)
         sizer_6.Add(self.Analyser2Label, 0, wx.ALL, 10)
-        sizer_6.Add(self.Chart2LB, 1, wx.LEFT|wx.RIGHT, 6)
-        sizer_6.Add(self.ClearAnalyzebutton, 0, wx.TOP|wx.BOTTOM|wx.ALIGN_CENTER_HORIZONTAL, 6)
+        sizer_6.Add(self.Chart2LB, 1, wx.LEFT | wx.RIGHT, 6)
+        sizer_6.Add(self.ClearAnalyzebutton, 0, wx.TOP | wx.BOTTOM | wx.ALIGN_CENTER_HORIZONTAL, 6)
         sizer_5.Add(sizer_6, 0, wx.EXPAND, 0)
         sizer_7.Add(self.analyzeGraph1, 1, wx.EXPAND, 0)
         sizer_7.Add(self.analyzeGraph2, 1, wx.EXPAND, 0)
@@ -294,7 +300,7 @@ class SandboxGUI(wx.Frame):
         sizer_9.Add(self.SensorLB1, 1, 0, 0)
         sizer_9.Add(self.SensorLabel2, 0, wx.ALL, 10)
         sizer_9.Add(self.SensorLB2, 1, 0, 0)
-        sizer_9.Add(self.SensorClearButton, 0, wx.TOP|wx.BOTTOM, 6)
+        sizer_9.Add(self.SensorClearButton, 0, wx.TOP | wx.BOTTOM, 6)
         sizer_8.Add(sizer_9, 0, wx.EXPAND, 0)
         sizer_10.Add(self.SensorChart1, 1, wx.EXPAND, 0)
         sizer_10.Add(self.SensorChart2, 1, wx.EXPAND, 0)
@@ -384,10 +390,10 @@ class SandboxGUI(wx.Frame):
         grid_sizer_2.Add(self.button_50, 0, 0, 0)
         grid_sizer_2.Add(self.button_51, 0, 0, 0)
         sizer_16.Add(grid_sizer_2, 0, 0, 0)
-        sizer_19.Add(self.label_3, 0, wx.LEFT|wx.RIGHT, 5)
+        sizer_19.Add(self.label_3, 0, wx.LEFT | wx.RIGHT, 5)
         sizer_19.Add(self.Commenttext_ctrl, 1, wx.EXPAND, 0)
         sizer_18.Add(sizer_19, 1, wx.EXPAND, 0)
-        sizer_18.Add(self.TestResulttext_ctrl, 25, wx.ALL|wx.EXPAND, 3)
+        sizer_18.Add(self.TestResulttext_ctrl, 25, wx.ALL | wx.EXPAND, 3)
         sizer_16.Add(sizer_18, 1, wx.EXPAND, 0)
         sizer_17.Add(self.TestGraph1Title, 0, wx.ALIGN_CENTER_HORIZONTAL, 0)
         sizer_17.Add(self.TestGraph1, 3, wx.EXPAND, 0)
@@ -405,284 +411,284 @@ class SandboxGUI(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def OnListBoxXSelected(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnListBoxXSelected(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnListBoxXSelected' not implemented!"
         event.Skip()
 
-    def OnListBoxYSelected(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnListBoxYSelected(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnListBoxYSelected' not implemented!"
         event.Skip()
 
-    def OnClear(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnClear(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnClear' not implemented!"
         event.Skip()
 
-    def OnChart1LB(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnChart1LB(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnChart1LB' not implemented!"
         event.Skip()
 
-    def OnChart2LB(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnChart2LB(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnChart2LB' not implemented!"
         event.Skip()
 
-    def OnClearAnalzeButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnClearAnalzeButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnClearAnalzeButton' not implemented!"
         event.Skip()
 
-    def OnSensorLB1(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSensorLB1(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSensorLB1' not implemented!"
         event.Skip()
 
-    def OnSensorLB2(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSensorLB2(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSensorLB2' not implemented!"
         event.Skip()
 
-    def OnSensorClearButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSensorClearButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSensorClearButton' not implemented!"
         event.Skip()
 
-    def OnDriverRdSchemeButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverRdSchemeButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverRdSchemeButton' not implemented!"
         event.Skip()
 
-    def OnDriverAllVersionsButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverAllVersionsButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverAllVersionsButton' not implemented!"
         event.Skip()
 
-    def OnDriverDASGetTicksButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverDASGetTicksButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverDASGetTicksButton' not implemented!"
         event.Skip()
 
-    def OnDriverGetConfigFileButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverGetConfigFileButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverGetConfigFileButton' not implemented!"
         event.Skip()
 
-    def OnDriverGetLockStatusButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverGetLockStatusButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverGetLockStatusButton' not implemented!"
         event.Skip()
 
-    def OnDriverGetPressureReadingButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverGetPressureReadingButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverGetPressureReadingButton' not implemented!"
         event.Skip()
 
-    def OnDriverGetValveMaskButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverGetValveMaskButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverGetValveMaskButton' not implemented!"
         event.Skip()
 
-    def OnDriverGetHostTicksButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverGetHostTicksButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverGetHostTicksButton' not implemented!"
         event.Skip()
 
-    def OnDriverLoadINIFileButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverLoadINIFileButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverLoadINIFileButton' not implemented!"
         event.Skip()
 
-    def OnDriverReadSchemeSequenceButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverReadSchemeSequenceButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverReadSchemeSequenceButton' not implemented!"
         event.Skip()
 
-    def OnDriverStopScanButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverStopScanButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverStopScanButton' not implemented!"
         event.Skip()
 
-    def OnDriverResynchDASButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverResynchDASButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverResynchDASButton' not implemented!"
         event.Skip()
 
-    def OnStartEngineButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnStartEngineButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnStartEngineButton' not implemented!"
         event.Skip()
 
-    def OnDriverStartScan(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverStartScan(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverStartScan' not implemented!"
         event.Skip()
 
-    def OnDriverRdDASRegButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverRdDASRegButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverRdDASRegButton' not implemented!"
         event.Skip()
 
-    def OnWrtDASRegButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWrtDASRegButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWrtDASRegButton' not implemented!"
         event.Skip()
 
-    def OnDriverHostReadyButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverHostReadyButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverHostReadyButton' not implemented!"
         event.Skip()
 
-    def OnDriverRdValveSeqButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverRdValveSeqButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverRdValveSeqButton' not implemented!"
         event.Skip()
 
-    def OnDriverRegisterListBox(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnDriverRegisterListBox(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnDriverRegisterListBox' not implemented!"
         event.Skip()
 
-    def OnHD5Viewerbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnHD5Viewerbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnHD5Viewerbutton' not implemented!"
         event.Skip()
 
-    def OnStartFlowbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnStartFlowbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnStartFlowbutton' not implemented!"
         event.Skip()
 
-    def OnWLMPkScrnbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLMPkScrnbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLMPkScrnbutton' not implemented!"
         event.Skip()
 
-    def OnSchemeBuildbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSchemeBuildbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSchemeBuildbutton' not implemented!"
         event.Skip()
 
-    def OnCalibrateSystemButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnCalibrateSystemButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnCalibrateSystemButton' not implemented!"
         event.Skip()
 
-    def OnViewSystemCalButton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnViewSystemCalButton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnViewSystemCalButton' not implemented!"
         event.Skip()
 
-    def OnSetFitParmsbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSetFitParmsbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSetFitParmsbutton' not implemented!"
         event.Skip()
 
-    def OnThresStatsbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnThresStatsbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnThresStatsbutton' not implemented!"
         event.Skip()
 
-    def OnViewTStatsbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnViewTStatsbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnViewTStatsbutton' not implemented!"
         event.Skip()
 
-    def OnFSRSquishbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnFSRSquishbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnFSRSquishbutton' not implemented!"
         event.Skip()
 
-    def OnSet20Kbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSet20Kbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSet20Kbutton' not implemented!"
         event.Skip()
 
-    def OnWLM_ETA_ThermTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLM_ETA_ThermTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLM_ETA_ThermTestbutton' not implemented!"
         event.Skip()
 
-    def OnWLM_WBHSK_ThermTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLM_WBHSK_ThermTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLM_WBHSK_ThermTestbutton' not implemented!"
         event.Skip()
 
-    def OnWLM_OpticalSwitchTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLM_OpticalSwitchTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLM_OpticalSwitchTestbutton' not implemented!"
         event.Skip()
 
-    def OnWLM_EEPROMTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLM_EEPROMTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLM_EEPROMTestbutton' not implemented!"
         event.Skip()
 
-    def OnWLMECETA1Testbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLMECETA1Testbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLMECETA1Testbutton' not implemented!"
         event.Skip()
 
-    def OnWLMEC_ETA2Testbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLMEC_ETA2Testbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLMEC_ETA2Testbutton' not implemented!"
         event.Skip()
 
-    def OnWLMEC_REF1Testbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLMEC_REF1Testbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLMEC_REF1Testbutton' not implemented!"
         event.Skip()
 
-    def OnWLMEC_REF2Testbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnWLMEC_REF2Testbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnWLMEC_REF2Testbutton' not implemented!"
         event.Skip()
 
-    def OnPB_HBTECbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_HBTECbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_HBTECbutton' not implemented!"
         event.Skip()
 
-    def OnPB_WBTECbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_WBTECbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_WBTECbutton' not implemented!"
         event.Skip()
 
-    def OnPB_Htrbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_Htrbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_Htrbutton' not implemented!"
         event.Skip()
 
-    def OnPB_ProportionalValveTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_ProportionalValveTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_ProportionalValveTestbutton' not implemented!"
         event.Skip()
 
-    def OnPB_ProportionalValve2Testbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_ProportionalValve2Testbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_ProportionalValve2Testbutton' not implemented!"
         event.Skip()
 
-    def OnPB_SolenoidValveTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_SolenoidValveTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_SolenoidValveTestbutton' not implemented!"
         event.Skip()
 
-    def OnPB_PZTWaveformTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPB_PZTWaveformTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPB_PZTWaveformTestbutton' not implemented!"
         event.Skip()
 
-    def OnPS_U2(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPS_U2(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPS_U2' not implemented!"
         event.Skip()
 
-    def OnPS_U3(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPS_U3(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPS_U3' not implemented!"
         event.Skip()
 
-    def OnPS_U6(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPS_U6(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPS_U6' not implemented!"
         event.Skip()
 
-    def OnPS_U7(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnPS_U7(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnPS_U7' not implemented!"
         event.Skip()
 
-    def OnSOA_Therm(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSOA_Therm(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSOA_Therm' not implemented!"
         event.Skip()
 
-    def OnSOA_Current(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSOA_Current(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSOA_Current' not implemented!"
         event.Skip()
 
-    def OnSOA_TEC(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnSOA_TEC(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnSOA_TEC' not implemented!"
         event.Skip()
 
-    def OnLB_SelfTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_SelfTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_SelfTestbutton' not implemented!"
         event.Skip()
 
-    def OnLB_EEPROMTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_EEPROMTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_EEPROMTestbutton' not implemented!"
         event.Skip()
 
-    def OnLB_RDAtoDTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_RDAtoDTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_RDAtoDTestbutton' not implemented!"
         event.Skip()
 
-    def OnLB_FPGA_DIGIOTestbutton(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_FPGA_DIGIOTestbutton(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_FPGA_DIGIOTestbutton' not implemented!"
         event.Skip()
 
-    def OnLB_Laser1(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_Laser1(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_Laser1' not implemented!"
         event.Skip()
 
-    def OnLB_Laser2(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_Laser2(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_Laser2' not implemented!"
         event.Skip()
 
-    def OnLB_Laser3(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_Laser3(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_Laser3' not implemented!"
         event.Skip()
 
-    def OnLB_Laser4(self, event): # wxGlade: SandboxGUI.<event_handler>
+    def OnLB_Laser4(self, event):  # wxGlade: SandboxGUI.<event_handler>
         print "Event handler `OnLB_Laser4' not implemented!"
         event.Skip()
 
-# end of class SandboxGUI
 
+# end of class SandboxGUI
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

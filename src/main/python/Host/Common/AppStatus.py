@@ -27,13 +27,15 @@ import Host.Common.Broadcaster as Broadcaster
 from Host.Common.StringPickler import ObjAsString
 from ctypes import Structure, c_uint
 
-STATUS_STATE_MASK       = 0x0000000F
-STATUS_MASK_FULL_LENGTH = 0x7FFFFFFF #avoiding MSB to avoid +/- confusion
+STATUS_STATE_MASK = 0x0000000F
+STATUS_MASK_FULL_LENGTH = 0x7FFFFFFF  #avoiding MSB to avoid +/- confusion
+
 
 class STREAM_Status(Structure):
     _fields_ = [
-      ("status",c_uint), #32 bits
+        ("status", c_uint),  #32 bits
     ]
+
 
 class AppStatus(object):
     def __init__(self, InitialStatus, BroadcastPort, AppName):
@@ -116,7 +118,7 @@ class AppStatus(object):
         self._StatusLock.acquire()
         try:
             oldStatus = self._Status
-            self._Status ^= BitMaskToUpdate #xor
+            self._Status ^= BitMaskToUpdate  #xor
             self._SendStatus()
         finally:
             self._StatusLock.release()

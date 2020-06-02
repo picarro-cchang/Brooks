@@ -8,9 +8,10 @@ import simplekml
 import sys
 from traitlets import (Any, Bool, Dict, Float, Instance, Integer, List, Unicode)
 
-DTR = np.pi/180.0
-RTD = 180.0/np.pi
+DTR = np.pi / 180.0
+RTD = 180.0 / np.pi
 EARTH_RADIUS = 6378100.
+
 
 class AutoThresholdBlock(TransformBlock):
     normWidthLo = Float()
@@ -25,7 +26,7 @@ class AutoThresholdBlock(TransformBlock):
         self.normAmplLo = normAmplLo
         self.normWidthHi = normWidthHi
         self.normAmplHi = normAmplHi
-        self.normAmplDef = normAmplDef if normAmplDef is not None else 0.5*(normAmplHi + normAmplLo)
+        self.normAmplDef = normAmplDef if normAmplDef is not None else 0.5 * (normAmplHi + normAmplLo)
 
     def newData(self, newDat):
         eps = 1.0e-7
@@ -34,15 +35,17 @@ class AutoThresholdBlock(TransformBlock):
             amplThreshold = self.normAmplDef * background
         else:
             speed = newDat['CAR_SPEED']
-            timeThroughPeak = newDat['SIGMA']/(speed + eps)
-            slope = (self.normAmplHi - self.normAmplLo)/(self.normWidthHi - self.normWidthLo)
+            timeThroughPeak = newDat['SIGMA'] / (speed + eps)
+            slope = (self.normAmplHi - self.normAmplLo) / (self.normWidthHi - self.normWidthLo)
             amplThreshold = background * (self.normAmplLo + (timeThroughPeak - self.normWidthLo) * slope)
         return dict(newDat, AMPL_THRESHOLD=amplThreshold)
+
 
 class CsvWriterBlock(ActionBlock):
     fp = Instance(file)
     headerWritten = Bool()
     writer = Instance(csv.DictWriter, allow_none=True)
+
     def __init__(self, filename):
         super(CsvWriterBlock, self).__init__(self.newData)
         self.fp = open(filename, "wb")
@@ -61,6 +64,7 @@ class CsvWriterBlock(ActionBlock):
         if self.fp:
             self.fp.close()
         self.defaultContinuation(srcBlock)
+
 
 class DataFetcherBlock(TransformManyBlock):
     def __init__(self):
@@ -83,7 +87,7 @@ class DataFetcherBlock(TransformManyBlock):
                 colHeadings = l.split()
                 headerLine = False
             else:
-                yield {k:self.pFloat(v) for k, v in zip(colHeadings, l.split())}
+                yield {k: self.pFloat(v) for k, v in zip(colHeadings, l.split())}
         source.close()
 
     def xReadDatFileAsDict(self, fileName):
@@ -96,6 +100,7 @@ class DataFetcherBlock(TransformManyBlock):
         for d in self.xReadDatFileAsDict(filename):
             yield d
 
+
 class FrameFetcherBlock(TransformManyBlock):
     def __init__(self):
         super(FrameFetcherBlock, self).__init__(self.newData)
@@ -107,6 +112,7 @@ class FrameFetcherBlock(TransformManyBlock):
                 result['ValveMask'] = result['solenoid_valves']
             yield result
 
+
 class InterpolatorBlock(TransformManyBlock):
     interpKey = Unicode()
     linInterpKeys = List(Unicode())
@@ -116,6 +122,7 @@ class InterpolatorBlock(TransformManyBlock):
     xInterp = Float(allow_none=True)
     interval = Float()
     row = Integer()
+
     def __init__(self, interpKey, interval, linInterpKeys=None, minInterpKeys=None, maxInterpKeys=None):
         super(InterpolatorBlock, self).__init__(self.newData)
         assert isinstance(interval, float)
@@ -140,7 +147,7 @@ class InterpolatorBlock(TransformManyBlock):
         if self.previous is None:
             self.previous = current
             xPrevious = xCurrent
-            self.xInterp = self.interval * ceil(xPrevious/self.interval)
+            self.xInterp = self.interval * ceil(xPrevious / self.interval)
         else:
             xPrevious = self.previous[self.interpKey]
             assert xCurrent >= xPrevious
@@ -173,6 +180,7 @@ class InterpolatorBlock(TransformManyBlock):
     def maxInterp(self, x0, x1, y0, y1, xi):
         return max([y0, y1])
 
+
 class JoinerBlock(MergeBlock):
     """Adjoins data from input 0 to those from input 1 based on values in a specified "joinKey".
 
@@ -196,6 +204,7 @@ class JoinerBlock(MergeBlock):
     kMin = Integer(allow_none=True)
     kMax = Integer(allow_none=True)
     lookup = Dict()
+
     def __init__(self, joinKey, interval, maxLookback=1000, linInterpKeys=None):
         super(JoinerBlock, self).__init__(self.newData, nInputs=2)
         assert isinstance(interval, float)
@@ -246,7 +255,7 @@ class JoinerBlock(MergeBlock):
             data = deque0.popleft()
             xVal = data[self.joinKey]
             if isfinite(xVal):
-                key = int(round(xVal/self.interval))
+                key = int(round(xVal / self.interval))
                 self.kMin = min(self.kMin, key) if self.kMin is not None else key
                 self.kMax = max(self.kMax, key) if self.kMax is not None else key
                 self.lookup[key] = data
@@ -256,7 +265,7 @@ class JoinerBlock(MergeBlock):
                 data = deque1.popleft()
                 xVal = data[self.joinKey]
                 if isfinite(xVal):
-                    k1 = int(floor(xVal/self.interval))
+                    k1 = int(floor(xVal / self.interval))
                     k2 = k1 + 1
                     # Check if we can do the interpolation, if so yield the adjoined data
                     if self.kMin <= k1 and k2 <= self.kMax:
@@ -271,11 +280,13 @@ class JoinerBlock(MergeBlock):
                         return
                 # If the key values are not finite, return nan
                 else:
-                    yield dict(data, **{k:nan for k in self.linInterpKeys})
+                    yield dict(data, **{k: nan for k in self.linInterpKeys})
+
 
 class LineCountBlock(ActionBlock):
     freq = Integer()
     lineNumber = Integer()
+
     def __init__(self, freq=1000):
         super(LineCountBlock, self).__init__(self.newData)
         self.freq = freq
@@ -291,6 +302,7 @@ class LineCountBlock(ActionBlock):
         sys.stdout.write('\n')
         self.defaultContinuation(srcBlock)
 
+
 class FovKmlWriterBlock(ActionBlock):
     filename = Unicode()
     kml = Instance(simplekml.Kml)
@@ -300,6 +312,7 @@ class FovKmlWriterBlock(ActionBlock):
     lastLng = Float()
     lastDeltaLat = Float()
     lastDeltaLng = Float()
+
     def __init__(self, filename):
         super(FovKmlWriterBlock, self).__init__(self.newData)
         self.filename = filename
@@ -326,21 +339,15 @@ class FovKmlWriterBlock(ActionBlock):
         row = newDat['row']
         bearing = arctan2(windE, windN)
         cosLat = cos(lat * DTR)
-        deltaLat = RTD*width*cos(bearing)/EARTH_RADIUS
-        deltaLng = RTD*width*sin(bearing)/(EARTH_RADIUS*cosLat)
+        deltaLat = RTD * width * cos(bearing) / EARTH_RADIUS
+        deltaLng = RTD * width * sin(bearing) / (EARTH_RADIUS * cosLat)
         if isfinite(lat) and isfinite(lng) and isfinite(deltaLat) and isfinite(deltaLng):
-            if row-1 == self.lastRow:
-                coords = [(self.lastLng, self.lastLat),
-                          (lng, lat),
-                          (lng + deltaLng, lat + deltaLat),
-                          (self.lastLng + self.lastDeltaLng, self.lastLat + self.lastDeltaLat),
-                          (self.lastLng, self.lastLat)]
+            if row - 1 == self.lastRow:
+                coords = [(self.lastLng, self.lastLat), (lng, lat), (lng + deltaLng, lat + deltaLat),
+                          (self.lastLng + self.lastDeltaLng, self.lastLat + self.lastDeltaLat), (self.lastLng, self.lastLat)]
                 #if self.isClockwise(coords):
                 #    coords.reverse()
-                self.multipoly.newpolygon(
-                    outerboundaryis=coords,
-                    extrude=0
-                )
+                self.multipoly.newpolygon(outerboundaryis=coords, extrude=0)
             self.lastRow = row
             self.lastLat, self.lastLng, self.lastDeltaLat, self.lastDeltaLng = lat, lng, deltaLat, deltaLng
 
@@ -351,11 +358,13 @@ class FovKmlWriterBlock(ActionBlock):
             kp.write(self.kml.kml())
         self.defaultContinuation(srcBlock)
 
+
 class PathKmlWriterBlock(ActionBlock):
     filename = Unicode()
     kml = Instance(simplekml.Kml)
     lastRow = Integer(allow_none=True)
     points = List()
+
     def __init__(self, filename):
         super(PathKmlWriterBlock, self).__init__(self.newData)
         self.filename = filename
@@ -369,9 +378,11 @@ class PathKmlWriterBlock(ActionBlock):
         lng = newDat['GPS_ABS_LONG']
         row = newDat['row']
         if isfinite(lat) and isfinite(lng):
-            if row-1 != self.lastRow:
+            if row - 1 != self.lastRow:
                 if self.points:
-                    lin = self.kml.newlinestring(coords=self.points, extrude=1, altitudemode=simplekml.AltitudeMode.relativetoground)
+                    lin = self.kml.newlinestring(coords=self.points,
+                                                 extrude=1,
+                                                 altitudemode=simplekml.AltitudeMode.relativetoground)
                     lin.style.linestyle.color = "ffff0000"
                     lin.style.linestyle.width = 6
                     self.points = []
@@ -387,9 +398,11 @@ class PathKmlWriterBlock(ActionBlock):
             kp.write(self.kml.kml())
         self.defaultContinuation(srcBlock)
 
+
 class PathWriterBlock(ActionBlock):
     fp = Instance(file)
     firstRow = Bool()
+
     def __init__(self, filename):
         super(PathWriterBlock, self).__init__(self.newData)
         self.fp = open(filename, "w")
@@ -408,7 +421,7 @@ class PathWriterBlock(ActionBlock):
                 self.firstRow = False
             else:
                 self.fp.write(",\n")
-            self.fp.write(json.dumps({'R':row, 'P':path, 'T':pType}))
+            self.fp.write(json.dumps({'R': row, 'P': path, 'T': pType}))
 
     def _continuation(self, srcBlock):
         if self.fp:
@@ -416,9 +429,11 @@ class PathWriterBlock(ActionBlock):
             self.fp.close()
         self.defaultContinuation(srcBlock)
 
+
 class PeaksKmlWriterBlock(ActionBlock):
     filename = Unicode()
     kml = Instance(simplekml.Kml)
+
     def __init__(self, filename):
         super(PeaksKmlWriterBlock, self).__init__(self.newData)
         self.filename = filename
@@ -435,11 +450,11 @@ class PeaksKmlWriterBlock(ActionBlock):
         if 'ETHANE_RATIO' in newDat and not isnan(newDat['ETHANE_RATIO']):
             ratio = newDat['ETHANE_RATIO']
             sdev = newDat['ETHANE_RATIO_SDEV']
-            descr.append('ethane = %.1f%%' % (100.0*ratio,))
-            descr.append('ethane std_dev = %.1f%%' % (100.0*sdev,))
-            if ratio + 2*sdev < 0.01:
+            descr.append('ethane = %.1f%%' % (100.0 * ratio, ))
+            descr.append('ethane std_dev = %.1f%%' % (100.0 * sdev, ))
+            if ratio + 2 * sdev < 0.01:
                 color = "ff00ff00"
-            elif ratio - 2*sdev > 0.01:
+            elif ratio - 2 * sdev > 0.01:
                 color = "ff0000ff"
             else:
                 color = "ff00ffff"
@@ -457,10 +472,12 @@ class PeaksKmlWriterBlock(ActionBlock):
             kp.write(self.kml.kml())
         self.defaultContinuation(srcBlock)
 
+
 class JsonWriterBlock(ActionBlock):
     filename = Unicode()
     fp = Instance(file)
     firstRow = Bool()
+
     def __init__(self, filename):
         super(JsonWriterBlock, self).__init__(self.newData)
         self.filename = filename
@@ -481,16 +498,17 @@ class JsonWriterBlock(ActionBlock):
             result = result.replace("NaN", "null").replace("-Infinity", "null").replace("Infinity", "null")
             self.fp.write(result)
 
-
     def _continuation(self, srcBlock):
         if self.fp:
             self.fp.write("]\n")
             self.fp.close()
         self.defaultContinuation(srcBlock)
 
+
 class PeakWriterBlock(ActionBlock):
     fp = Instance(file)
     firstRow = Bool()
+
     def __init__(self, filename):
         super(PeakWriterBlock, self).__init__(self.newData)
         self.fp = open(filename, "w")
@@ -518,16 +536,31 @@ class PeakWriterBlock(ActionBlock):
             carN = newDat['CAR_VEL_N']
         #carspeed = abs(carN + 1j*carE)
         carspeed = newDat['CAR_SPEED']
-        wind = sqrt(windE*windE + windN*windN)
+        wind = sqrt(windE * windE + windN * windN)
         bearing = RTD * arctan2(windE, windN)
         if isfinite(lat) and isfinite(lng) and isfinite(bearing) and isfinite(windStdDev):
             if self.firstRow:
                 self.firstRow = False
             else:
                 self.fp.write(",\n")
-            peakData = {'ampl':amp, 'CH4':conc, 'Time':epochTime, 'Lat':lat, 'Long':lng, 'WindN':windN, 'WindE':windE,
-                        'Wind':wind, 'Sigma':sigma, 'thresh':thresh, 'Dist':dist, 'WStd':windStdDev,
-                        'CarSpeed':carspeed, 'carE':carE, 'carN':carN, 'passedThresh':passed_thresh}
+            peakData = {
+                'ampl': amp,
+                'CH4': conc,
+                'Time': epochTime,
+                'Lat': lat,
+                'Long': lng,
+                'WindN': windN,
+                'WindE': windE,
+                'Wind': wind,
+                'Sigma': sigma,
+                'thresh': thresh,
+                'Dist': dist,
+                'WStd': windStdDev,
+                'CarSpeed': carspeed,
+                'carE': carE,
+                'carN': carN,
+                'passedThresh': passed_thresh
+            }
             if 'ETHANE_RATIO' in newDat:
                 peakData['ethaneRatio'] = newDat.get('ETHANE_RATIO', float('nan'))
                 peakData['ethaneRatioStd'] = newDat.get('ETHANE_RATIO_SDEV', float('nan'))
@@ -548,9 +581,11 @@ class PeakWriterBlock(ActionBlock):
             self.fp.close()
         self.defaultContinuation(srcBlock)
 
+
 class PrinterBlock(ActionBlock):
     filename = Unicode()
     fp = Instance(file)
+
     def __init__(self, filename=None, append=False):
         super(PrinterBlock, self).__init__(self.newData)
         self.filename = filename
@@ -571,12 +606,14 @@ class PrinterBlock(ActionBlock):
             self.fp = None
         self.defaultContinuation(srcBlock)
 
+
 # The following path types are ordered so that a maximum interpolator may be used
 NORMAL = 0
 ANALYZING = 1
 INACTIVE = 2
 BADSTATUS = 3
 GPS_BAD = 4
+
 
 class ProcessStatusBlock(TransformManyBlock):
     """This block processes species, ValveMask, InstrumentStatus and GPS_FIT and adds a sequential row number.
@@ -590,6 +627,7 @@ class ProcessStatusBlock(TransformManyBlock):
     pathType = Integer()
     row = Integer()
     speciesList = List(Integer())
+
     def __init__(self, speciesList=None):
         self.pathType = NORMAL
         self.row = 0
@@ -623,4 +661,3 @@ class ProcessStatusBlock(TransformManyBlock):
                     pType = NORMAL
             self.pathType = pType
             yield dict(newDat, row=self.row, GPS_ABS_LAT=lat, GPS_ABS_LONG=lng, PATH_TYPE=pType)
-

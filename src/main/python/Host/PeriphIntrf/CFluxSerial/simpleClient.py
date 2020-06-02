@@ -7,6 +7,7 @@ from threading import Thread
 HOST = 'localhost'
 PORT = 5193
 
+
 class Receiver(object):
     def __init__(self):
         self.queue = Queue.Queue(0)
@@ -25,7 +26,7 @@ class Receiver(object):
         try:
             while True:
                 data = self.sock.recv(1024)
-                if len(data)>0:
+                if len(data) > 0:
                     for c in data:
                         self.queue.put(c)
         finally:
@@ -54,7 +55,7 @@ class Receiver(object):
                 else:
                     state = "SYNC1"
             elif state == "TIMESTAMP":
-                value += ord(c)<<(8*counter)
+                value += ord(c) << (8 * counter)
                 counter += 1
                 if counter == maxcount:
                     ts = value
@@ -64,19 +65,20 @@ class Receiver(object):
                 value, counter, maxcount = 0, 0, 2
                 state = "BYTECOUNT"
             elif state == "BYTECOUNT":
-                value += ord(c)<<(8*counter)
+                value += ord(c) << (8 * counter)
                 counter += 1
                 if counter == maxcount:
                     print ts, port, value
                     counter, maxcount = 0, value
                     state = "DATA"
             elif state == "DATA":
-                if c not in ['\r','\n']:
+                if c not in ['\r', '\n']:
                     sys.stdout.write(c)
                 counter += 1
                 if counter == maxcount:
                     sys.stdout.write('\n')
                     state = "SYNC1"
+
 
 if __name__ == "__main__":
     r = Receiver()

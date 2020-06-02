@@ -18,18 +18,15 @@
 import threading
 
 from configobj import ConfigObj
-from numpy import (allclose, arange, arccos, arctan2, argmax, array, asarray,
-                   ceil, column_stack, concatenate, cos, cumsum, diff,
-                   digitize, dot, floor, linspace, mean, ones, pi, polyfit,
-                   polyval, ptp, real, reshape, roots, sin, sqrt, std, unwrap,
-                   vstack, zeros)
+from numpy import (allclose, arange, arccos, arctan2, argmax, array, asarray, ceil, column_stack, concatenate, cos, cumsum, diff,
+                   digitize, dot, floor, linspace, mean, ones, pi, polyfit, polyval, ptp, real, reshape, roots, sin, sqrt, std,
+                   unwrap, vstack, zeros)
 from numpy.linalg import eig, inv
 from textwrap import dedent
 
 
 class Bunch(object):
     """ This class is used to group together a collection as a single object, so that they may be accessed as attributes of that object"""
-
     def __init__(self, **kwds):
         """ The namespace of the object may be initialized using keyword arguments """
         self.__dict__.update(kwds)
@@ -41,11 +38,13 @@ class Bunch(object):
 def bestFit(x, y, d):
     """ Carry out least-squares polynomial fit of degree d with data x,y """
     p = polyfit(x, y, d)
-    y = reshape(y, (-1,))
-    y1 = reshape(polyval(p, x), (-1,))
+    y = reshape(y, (-1, ))
+    y1 = reshape(polyval(p, x), (-1, ))
     res = sum((y - y1)**2) / len(y)
 
-    def eval(self, xx): return polyval(self.coeffs, xx)
+    def eval(self, xx):
+        return polyval(self.coeffs, xx)
+
     return Bunch(coeffs=p, residual=res, fittedValues=y1, call=eval)
 
 
@@ -58,15 +57,18 @@ def bestFitCentered(x, y, d):
     xc = (x - mu_x) / sdev_x
     f = bestFit(xc, y, d)
 
-    def eval(self, xx): return polyval(
-        self.coeffs, (xx - self.xcen) / self.xscale)
-    return Bunch(xcen=mu_x, xscale=sdev_x, coeffs=f.coeffs, residual=f.residual, fittedValues=f.fittedValues,
-                 call=eval)
+    def eval(self, xx):
+        return polyval(self.coeffs, (xx - self.xcen) / self.xscale)
+
+    return Bunch(xcen=mu_x, xscale=sdev_x, coeffs=f.coeffs, residual=f.residual, fittedValues=f.fittedValues, call=eval)
 
 
 def polyFitEvaluator(coeffs, cen=0, scale=1):
-    def eval(self, xx): return polyval(coeffs, (xx - cen) / scale)
+    def eval(self, xx):
+        return polyval(coeffs, (xx - cen) / scale)
+
     return Bunch(xcen=cen, xscale=scale, coeffs=coeffs, call=eval)
+
 
 # Routines for manipulating cubic B-splines defined on a regular
 # unit-spaced grid
@@ -136,8 +138,7 @@ def bspUpdate(N, x, y):
     W[:, 0] = polyval(array([-1, 3, -3, 1], 'd') / 6, fx)
     for k in range(len(ix)):
         if ix[k] >= 0 and ix[k] < N:
-            result[ix[k]:(ix[k] + 4)] = result[ix[k]
-                          :(ix[k] + 4)] + y[k] * W[k, :]
+            result[ix[k]:(ix[k] + 4)] = result[ix[k]:(ix[k] + 4)] + y[k] * W[k, :]
     return result[1:-3]
 
 
@@ -158,8 +159,7 @@ def bspInverse(p0, coeffs, y):
     y = asarray(y)
     x0 = arange(1, len(coeffs) - 1, dtype='d')
     # Evaluate spline + linear polynomial at the knots
-    ygrid = polyval(p0, x0) + (coeffs[:-2] +
-                               4 * coeffs[1:-1] + coeffs[2:]) / 6.0
+    ygrid = polyval(p0, x0) + (coeffs[:-2] + 4 * coeffs[1:-1] + coeffs[2:]) / 6.0
     # Check for monotonicity within the range of values at which inverse
     #  interpolation is performed
     ymin, ymax = y.min(), y.max()
@@ -211,7 +211,6 @@ def fetchCoeffs(sec, prefix):
 
 
 class BspInterp(object):
-
     def __init__(self, N):
         self.N = N
         self.coeffs = zeros(N + 4, 'd')
@@ -267,6 +266,7 @@ class BspInterp(object):
             w3 * pcoeffs[ix + 1] + w4 * pcoeffs[ix]
         return y
 
+
 # Routines for ellipse fitting
 
 
@@ -303,13 +303,11 @@ def fitEllipse(X, Y):
     evec_y = -dot(tmpE, A)
     A = vstack([A, evec_y]).ravel()
     # Unnormalize
-    par = array([A[0] * sy * sy, A[1] * sx * sy, A[2] * sx * sx,
-                 -2 * A[0] * sy * sy * mx - A[1] *
-                 sx * sy * my + A[3] * sx * sy * sy,
-                 -A[1] * sx * sy * mx - 2 * A[2] *
-                 sx * sx * my + A[4] * sx * sx * sy,
-                 A[0] * sy * sy * mx * mx + A[1] * sx * sy * mx * my + A[2] * sx * sx * my * my -
-                 A[3] * sx * sy * sy * mx - A[4] * sx * sx * sy * my + A[5] * sx * sx * sy * sy])
+    par = array([
+        A[0] * sy * sy, A[1] * sx * sy, A[2] * sx * sx, -2 * A[0] * sy * sy * mx - A[1] * sx * sy * my + A[3] * sx * sy * sy,
+        -A[1] * sx * sy * mx - 2 * A[2] * sx * sx * my + A[4] * sx * sx * sy, A[0] * sy * sy * mx * mx + A[1] * sx * sy * mx * my +
+        A[2] * sx * sx * my * my - A[3] * sx * sy * sy * mx - A[4] * sx * sx * sy * my + A[5] * sx * sx * sy * sy
+    ])
     # Find center of ellipse
     den = 4 * par[0] * par[2] - par[1]**2
     x0 = (par[1] * par[4] - 2 * par[2] * par[3]) / den
@@ -320,10 +318,8 @@ def fitEllipse(X, Y):
     rr = par[0] * x0 * x0 + par[1] * x0 * y0 + par[2] * y0 * y0 - par[5]
     cphi = cos(phi)
     sphi = sin(phi)
-    r1 = sqrt(rr / (par[0] * cphi * cphi + par[1]
-                    * cphi * sphi + par[2] * sphi * sphi))
-    r2 = sqrt(rr / (par[0] * sphi * sphi - par[1]
-                    * cphi * sphi + par[2] * cphi * cphi))
+    r1 = sqrt(rr / (par[0] * cphi * cphi + par[1] * cphi * sphi + par[2] * sphi * sphi))
+    r2 = sqrt(rr / (par[0] * sphi * sphi - par[1] * cphi * sphi + par[2] * cphi * cphi))
     return (x0, y0, r1, r2, phi)
 
 
@@ -342,11 +338,11 @@ def parametricEllipse(X, Y):
         epsilon = -epsilon
     return (x0, y0, A, B, epsilon)
 
+
 # Routine for reading in WLM files
 
 
 class WlmFile(object):
-
     def __init__(self, fp):
         """ Read data from a .wlm file into an object """
         # Get parameter values
@@ -396,26 +392,16 @@ class WlmFile(object):
         while True:
             line = fp.readline()
             if line == "":
-                self.TLaser = array(
-                    self.data[self.colindex["Laser temperature"]], dtype=float)
-                self.WaveNumber = array(
-                    self.data[self.colindex["Wavenumber"]], dtype=float)
-                self.Ratio1 = array(
-                    self.data[self.colindex["Wavelength ratio 1"]], dtype=float)
-                self.Ratio2 = array(
-                    self.data[self.colindex["Wavelength ratio 2"]], dtype=float)
-                self.TEtalon = array(
-                    self.data[self.colindex["Etalon temperature"]], dtype=float)
-                self.Etalon1 = array(
-                    self.data[self.colindex["Etalon 1 (offset removed)"]], dtype=float)
-                self.Reference1 = array(
-                    self.data[self.colindex["Reference 1 (offset removed)"]], dtype=float)
-                self.Etalon2 = array(
-                    self.data[self.colindex["Etalon 2 (offset removed)"]], dtype=float)
-                self.Reference2 = array(
-                    self.data[self.colindex["Reference 2 (offset removed)"]], dtype=float)
-                self.PointsAveraged = array(
-                    self.data[self.colindex["Points averaged"]], int)
+                self.TLaser = array(self.data[self.colindex["Laser temperature"]], dtype=float)
+                self.WaveNumber = array(self.data[self.colindex["Wavenumber"]], dtype=float)
+                self.Ratio1 = array(self.data[self.colindex["Wavelength ratio 1"]], dtype=float)
+                self.Ratio2 = array(self.data[self.colindex["Wavelength ratio 2"]], dtype=float)
+                self.TEtalon = array(self.data[self.colindex["Etalon temperature"]], dtype=float)
+                self.Etalon1 = array(self.data[self.colindex["Etalon 1 (offset removed)"]], dtype=float)
+                self.Reference1 = array(self.data[self.colindex["Reference 1 (offset removed)"]], dtype=float)
+                self.Etalon2 = array(self.data[self.colindex["Etalon 2 (offset removed)"]], dtype=float)
+                self.Reference2 = array(self.data[self.colindex["Reference 2 (offset removed)"]], dtype=float)
+                self.PointsAveraged = array(self.data[self.colindex["Points averaged"]], int)
                 # Effective calibration temperature for etalon
                 self.Tcal = mean(self.TEtalon)
 
@@ -434,7 +420,6 @@ class WlmFile(object):
 
 # Routine for reading calibration files for analyzers with no WLM
 class NoWlmFile(object):
-
     def __init__(self, fp):
         """ Read data from a .nowlm file into an object """
         # Get parameter values
@@ -484,10 +469,8 @@ class NoWlmFile(object):
         while True:
             line = fp.readline()
             if line == "":
-                self.TLaser = array(
-                    self.data[self.colindex["Laser temperature"]], dtype=float)
-                self.WaveNumber = array(
-                    self.data[self.colindex["Wavenumber"]], dtype=float)
+                self.TLaser = array(self.data[self.colindex["Laser temperature"]], dtype=float)
+                self.WaveNumber = array(self.data[self.colindex["Wavenumber"]], dtype=float)
                 # Calculating polynomial fits of Wavenumber vs Temperature"
                 self.WtoT = bestFitCentered(self.WaveNumber, self.TLaser, 3)
                 self.TtoW = bestFitCentered(self.TLaser, self.WaveNumber, 3)
@@ -515,10 +498,8 @@ class WlmSat(object):
         ratio2Ampl = %.2f
         temp_cen = %.3f
         temp_scale = %.3f
-        """ % (
-            self.coarseCurrent, self.thetaBase, self.dTheta, self.nCoeffs,
-            self.ratio1Ampl, self.ratio2Ampl, self.tempCen, self.tempScale
-        ))
+        """ % (self.coarseCurrent, self.thetaBase, self.dTheta, self.nCoeffs, self.ratio1Ampl, self.ratio2Ampl, self.tempCen,
+               self.tempScale))
 
     def loadFromIni(self, ini, vLaserNum):
         """Fill up the WlmSat structure based on the information in the .ini file
@@ -533,11 +514,9 @@ class WlmSat(object):
         if (paramSec not in ini) and (coeffSec not in ini):
             return None  # i.e., no WlmSat object is available
         if paramSec not in ini:
-            raise ValueError(
-                "loadFromIni failed due to missing section %s" % paramSec)
+            raise ValueError("loadFromIni failed due to missing section %s" % paramSec)
         if coeffSec not in ini:
-            raise ValueError(
-                "loadFromIni failed due to missing section %s" % coeffSec)
+            raise ValueError("loadFromIni failed due to missing section %s" % coeffSec)
 
         self.coarseCurrent = float(ini[paramSec]["COARSE_CURRENT"])
         self.thetaBase = float(ini[paramSec]["ANGLE_BASE"])
@@ -614,10 +593,8 @@ class AutoCal(object):
             if wMax is None:
                 wMax = wlmFile.WaveNumber.max()
             if wMin < wlmFile.WaveNumber.min() or wMax > wlmFile.WaveNumber.max():
-                raise ValueError(
-                    "Range of wavenumbers requested is not available in WLM file")
-            window = (wlmFile.WaveNumber >= wMin) & (
-                wlmFile.WaveNumber <= wMax)
+                raise ValueError("Range of wavenumbers requested is not available in WLM file")
+            window = (wlmFile.WaveNumber >= wMin) & (wlmFile.WaveNumber <= wMax)
             # Fit ratios to a parametric ellipse
             self.ratio1Center, self.ratio2Center, self.ratio1Scale, self.ratio2Scale, self.wlmPhase = \
                 parametricEllipse(
@@ -631,32 +608,27 @@ class AutoCal(object):
             # Calculate the unwrapped WLM angles
             X = wlmFile.Ratio1[window] - self.ratio1Center
             Y = wlmFile.Ratio2[window] - self.ratio2Center
-            thetaCalMeasured = unwrap(arctan2(
-                self.ratio1Scale * Y - self.ratio2Scale *
-                X * sin(self.wlmPhase),
-                self.ratio2Scale * X * cos(self.wlmPhase)))
+            thetaCalMeasured = unwrap(
+                arctan2(self.ratio1Scale * Y - self.ratio2Scale * X * sin(self.wlmPhase),
+                        self.ratio2Scale * X * cos(self.wlmPhase)))
             # Extract parameters of angle vs laser temperature
-            self.laserTemp2WaveNumber = lambda T: wlmFile.TtoW(
-                T - self.tempOffset)
-            self.waveNumber2LaserTemp = lambda W: wlmFile.WtoT(
-                W) + self.tempOffset
+            self.laserTemp2WaveNumber = lambda T: wlmFile.TtoW(T - self.tempOffset)
+            self.waveNumber2LaserTemp = lambda W: wlmFile.WtoT(W) + self.tempOffset
             # Extract parameters of wavenumber against angle
-            thetaCal2WaveNumber = bestFit(
-                thetaCalMeasured, wlmFile.WaveNumber[window], 1)
+            thetaCal2WaveNumber = bestFit(thetaCalMeasured, wlmFile.WaveNumber[window], 1)
             # Include Burleigh data in object for plotting and debug
             self.thetaMeasured = thetaCalMeasured
             self.waveNumberMeasured = wlmFile.WaveNumber[window]
             # Extract spline scaling constants
-            self.thetaBase = (
-                wMin - thetaCal2WaveNumber.coeffs[1]) / thetaCal2WaveNumber.coeffs[0]
+            self.thetaBase = (wMin - thetaCal2WaveNumber.coeffs[1]) / thetaCal2WaveNumber.coeffs[0]
             self.dTheta = dTheta
             self.sLinear0 = array([thetaCal2WaveNumber.coeffs[0] * self.dTheta,
-                                   thetaCal2WaveNumber([self.thetaBase])[0]], dtype="d")
+                                   thetaCal2WaveNumber([self.thetaBase])[0]],
+                                  dtype="d")
             self.sLinear = self.sLinear0 + array([0.0, self.offset])
             # Find number of spline coefficients needed and initialize the
             # coefficients to zero
-            self.nCoeffs = int(
-                ceil((wMax - wMin) / (thetaCal2WaveNumber.coeffs[0] * self.dTheta)))
+            self.nCoeffs = int(ceil((wMax - wMin) / (thetaCal2WaveNumber.coeffs[0] * self.dTheta)))
             self.coeffs = zeros(self.nCoeffs, dtype="d")
             self.coeffsOrig = zeros(self.nCoeffs, dtype="d")
             # Temperature sensitivity of etalon
@@ -671,13 +643,11 @@ class AutoCal(object):
         with self.lock:
             ratio1 = array([row['ratio1'] for row in eepromDict['wlmCalRows']])
             ratio2 = array([row['ratio2'] for row in eepromDict['wlmCalRows']])
-            waveNumber = array([1.0e-5 * row['waveNumberAsUint']
-                                for row in eepromDict['wlmCalRows']])
+            waveNumber = array([1.0e-5 * row['waveNumberAsUint'] for row in eepromDict['wlmCalRows']])
             # Select those data which lie within the specified range of
             # wavenumbers
             if wMin < waveNumber.min() or wMax > waveNumber.max():
-                raise ValueError(
-                    "Range of wavenumbers requested is not available in EEPROM")
+                raise ValueError("Range of wavenumbers requested is not available in EEPROM")
             window = (waveNumber >= wMin) & (waveNumber <= wMax)
             # Fit ratios to a parametric ellipse
             self.ratio1Center, self.ratio2Center, self.ratio1Scale, self.ratio2Scale, self.wlmPhase = \
@@ -691,24 +661,21 @@ class AutoCal(object):
             # Calculate the unwrapped WLM angles
             X = ratio1[window] - self.ratio1Center
             Y = ratio2[window] - self.ratio2Center
-            thetaCalMeasured = unwrap(arctan2(
-                self.ratio1Scale * Y - self.ratio2Scale *
-                X * sin(self.wlmPhase),
-                self.ratio2Scale * X * cos(self.wlmPhase)))
+            thetaCalMeasured = unwrap(
+                arctan2(self.ratio1Scale * Y - self.ratio2Scale * X * sin(self.wlmPhase),
+                        self.ratio2Scale * X * cos(self.wlmPhase)))
             # Extract parameters of wavenumber against angle
-            thetaCal2WaveNumber = bestFit(
-                thetaCalMeasured, waveNumber[window], 1)
+            thetaCal2WaveNumber = bestFit(thetaCalMeasured, waveNumber[window], 1)
             # Extract spline scaling constants
-            self.thetaBase = (
-                wMin - thetaCal2WaveNumber.coeffs[1]) / thetaCal2WaveNumber.coeffs[0]
+            self.thetaBase = (wMin - thetaCal2WaveNumber.coeffs[1]) / thetaCal2WaveNumber.coeffs[0]
             self.dTheta = dTheta
             self.sLinear0 = array([thetaCal2WaveNumber.coeffs[0] * self.dTheta,
-                                   thetaCal2WaveNumber([self.thetaBase])[0]], dtype="d")
+                                   thetaCal2WaveNumber([self.thetaBase])[0]],
+                                  dtype="d")
             self.sLinear = self.sLinear0 + array([0.0, self.offset])
             # Find number of spline coefficients needed and initialize the
             # coefficients to zero
-            self.nCoeffs = int(
-                ceil((wMax - wMin) / (thetaCal2WaveNumber.coeffs[0] * self.dTheta)))
+            self.nCoeffs = int(ceil((wMax - wMin) / (thetaCal2WaveNumber.coeffs[0] * self.dTheta)))
             self.coeffs = zeros(self.nCoeffs, dtype="d")
             self.coeffsOrig = zeros(self.nCoeffs, dtype="d")
             # Temperature sensitivity of etalon
@@ -733,24 +700,20 @@ class AutoCal(object):
             if (paramSec not in ini) and (currentSec not in ini) and (originalSec not in ini):
                 return None  # i.e., vLaserNum is not specified
             if paramSec not in ini:
-                raise ValueError(
-                    "loadFromIni failed due to missing section %s" % paramSec)
+                raise ValueError("loadFromIni failed due to missing section %s" % paramSec)
             if currentSec not in ini:
-                raise ValueError(
-                    "loadFromIni failed due to missing section %s" % currentSec)
+                raise ValueError("loadFromIni failed due to missing section %s" % currentSec)
             if originalSec not in ini:
-                raise ValueError(
-                    "loadFromIni failed due to missing section %s" % originalSec)
+                raise ValueError("loadFromIni failed due to missing section %s" % originalSec)
             # Find the actual laser
             mapSec = "LASER_MAP"
             if mapSec not in ini:
-                raise ValueError(
-                    "loadFromIni failed due to missing section %s" % mapSec)
+                raise ValueError("loadFromIni failed due to missing section %s" % mapSec)
             aLaserNum = int(ini[mapSec]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
             aLaserSec = "ACTUAL_LASER_%d" % aLaserNum
             if aLaserSec not in ini:
-                raise ValueError("loadFromIni failed due to missing section %s (required by virtual laser %d)" % (
-                    aLaserSec, vLaserNum))
+                raise ValueError("loadFromIni failed due to missing section %s (required by virtual laser %d)" %
+                                 (aLaserSec, vLaserNum))
             cen = float(ini[aLaserSec]["WAVENUM_CEN"])
             scale = float(ini[aLaserSec]["WAVENUM_SCALE"])
             coeffs = array(fetchCoeffs(ini[aLaserSec], "W2T_"))
@@ -778,8 +741,7 @@ class AutoCal(object):
             self.wlmTempSensitivity = float(ini[paramSec]["TEMP_SENSITIVITY"])
             self.thetaBase = float(ini[paramSec]["ANGLE_BASE"])
             self.dTheta = float(ini[paramSec]["ANGLE_INCREMENT"])
-            self.sLinear0 = array([float(ini[paramSec]["LINEAR_MODEL_SLOPE"]),
-                                   float(ini[paramSec]["LINEAR_MODEL_OFFSET"])])
+            self.sLinear0 = array([float(ini[paramSec]["LINEAR_MODEL_SLOPE"]), float(ini[paramSec]["LINEAR_MODEL_OFFSET"])])
             self.offset = float(ini[paramSec]["WLM_OFFSET"])
             self.sLinear = self.sLinear0 + array([0.0, self.offset])
             self.tempOffset = float(ini[paramSec].get("TEMP_OFFSET", 0.0))
@@ -871,8 +833,9 @@ class AutoCal(object):
 
     def thetaCal2ThetaRaw(self, thetaCal, etalonTemperature, ambientPressure):
         dp = ambientPressure - self.calPressure
-        thetaRaw = thetaCal - (self.pressureC0 + dp * (self.pressureC1 + dp * (self.pressureC2 + dp * self.pressureC3)) +
-                               self.wlmTempSensitivity * (etalonTemperature - self.tEtalonCal))
+        thetaRaw = thetaCal - (self.pressureC0 + dp * (self.pressureC1 + dp *
+                                                       (self.pressureC2 + dp * self.pressureC3)) + self.wlmTempSensitivity *
+                               (etalonTemperature - self.tEtalonCal))
         return thetaRaw
 
     def wlmAngleAndLaserTemp2ThetaCalAndThetaRaw(self, wlmAngle, laserTemp, etalonTemperature, ambientPressure):
@@ -888,8 +851,9 @@ class AutoCal(object):
             thetaCal = wlmAngle + 2 * pi * \
                 floor((thetaHat - wlmAngle) / (2 * pi) + 0.5)
             dp = ambientPressure - self.calPressure
-            thetaRaw = thetaCal - (self.pressureC0 + dp * (self.pressureC1 + dp * (self.pressureC2 + dp * self.pressureC3)) +
-                                   self.wlmTempSensitivity * (etalonTemperature - self.tEtalonCal))
+            thetaRaw = thetaCal - (self.pressureC0 + dp * (self.pressureC1 + dp *
+                                                           (self.pressureC2 + dp * self.pressureC3)) + self.wlmTempSensitivity *
+                                   (etalonTemperature - self.tEtalonCal))
             return thetaCal, thetaRaw
 
     def laserTemp2ThetaCal(self, laserTemp):
@@ -912,14 +876,20 @@ class AutoCal(object):
             if self.ignoreSpline:
                 result = (waveNumbers - self.sLinear[1]) / self.sLinear[0]
             else:
-                result, monotonic = bspInverse(
-                    self.sLinear, self.coeffs, waveNumbers)
+                result, monotonic = bspInverse(self.sLinear, self.coeffs, waveNumbers)
                 if not monotonic:
                     self.autocalStatus |= 1
             return self.thetaBase + self.dTheta * result
 
-    def updateWlmCal(self, thetaCal, waveNumbers, weights=1, relax=5e-3, relative=True,
-                     relaxDefault=5e-3, relaxZero=5e-5, maxDiff=0.4):
+    def updateWlmCal(self,
+                     thetaCal,
+                     waveNumbers,
+                     weights=1,
+                     relax=5e-3,
+                     relative=True,
+                     relaxDefault=5e-3,
+                     relaxZero=5e-5,
+                     maxDiff=0.4):
         """Update the calibration coefficients
         thetaCal      array of calibrated WLM angles
         waveNumbers   array of waveNumbers to which these angles map
@@ -970,8 +940,7 @@ class AutoCal(object):
     def isIncreasing(self):
         """Determine if the current coefficients + linear model results in a monotonically increasing angle to
         wavenumber transformation at the knots"""
-        ygrid = self.sLinear[0] * arange(1, self.nCoeffs - 1) + (
-            self.coeffs[:-2] + 4 * self.coeffs[1:-1] + self.coeffs[2:]) / 6.0
+        ygrid = self.sLinear[0] * arange(1, self.nCoeffs - 1) + (self.coeffs[:-2] + 4 * self.coeffs[1:-1] + self.coeffs[2:]) / 6.0
         return (diff(ygrid) >= 0).all()
 
     def replaceCurrent(self):
@@ -1013,8 +982,7 @@ class AutoCal(object):
             if self.ignoreSpline:
                 currentWaveNumber = polyval(self.sLinear, asarray([x]))[0]
             else:
-                currentWaveNumber = bspEval(
-                    self.sLinear, self.coeffs, asarray([x]))[0]
+                currentWaveNumber = bspEval(self.sLinear, self.coeffs, asarray([x]))[0]
             res = waveNumber - currentWaveNumber
             self.sLinear[1] += relax * res
 

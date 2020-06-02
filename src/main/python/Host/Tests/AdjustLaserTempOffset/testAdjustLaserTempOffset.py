@@ -130,10 +130,7 @@ class TestAdjustLaserTempOffset(object):
         enableControlLoop(self._INSTR_, True)
 
         # do the calculations and stick results in _REPORT_
-        doAdjustTempOffset(instr=self._INSTR_,
-                           data=self._DATA_,
-                           freqConv=self._FREQ_CONV_,
-                           report=self._REPORT_)
+        doAdjustTempOffset(instr=self._INSTR_, data=self._DATA_, freqConv=self._FREQ_CONV_, report=self._REPORT_)
 
         # validate results in the report
         # should only have results for lasers 1, 2, 4, 5
@@ -148,26 +145,26 @@ class TestAdjustLaserTempOffset(object):
 
             # I can't seem to make assertAlmostEqual accessible
             #if vLaserNum == 1:
-                #tc = unittest.TestCase()
-                #tc.assertIn(devName, self._REPORT_)
-                #self.assertAlmostEqual(self._REPORT_[devName], -76.0)
-                #assert(self._REPORT_[devName] == diffs[vLaserNum])
+            #tc = unittest.TestCase()
+            #tc.assertIn(devName, self._REPORT_)
+            #self.assertAlmostEqual(self._REPORT_[devName], -76.0)
+            #assert(self._REPORT_[devName] == diffs[vLaserNum])
 
             if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
-                assert(devName in self._REPORT_), "%s missing from _REPORT_" % (devName, )
-                assert(ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
-                assert(offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
+                assert (devName in self._REPORT_), "%s missing from _REPORT_" % (devName, )
+                assert (ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
+                assert (offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
 
-                assert(self._REPORT_[devName] == diffs[vLaserNum])
-                assert(self._REPORT_[ctrlName] == 1)
+                assert (self._REPORT_[devName] == diffs[vLaserNum])
+                assert (self._REPORT_[ctrlName] == 1)
 
                 # we expect the new calculated offsets to be different from the existing temp offset
-                assert(self._REPORT_[offsetName] != self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
+                assert (self._REPORT_[offsetName] != self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
 
             else:
-                assert(devName not in self._REPORT_), "%s should not be in _REPORT_" % (devName, )
-                assert(ctrlName not in self._REPORT_), "%s should not be in _REPORT_" % (ctrlName, )
-                assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
+                assert (devName not in self._REPORT_), "%s should not be in _REPORT_" % (devName, )
+                assert (ctrlName not in self._REPORT_), "%s should not be in _REPORT_" % (ctrlName, )
+                assert (offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
 
     def test_AdjustOffsetBadLow(self):
         print "test_AdjustOffsetBadLow"
@@ -175,10 +172,7 @@ class TestAdjustLaserTempOffset(object):
         enableControlLoop(self._INSTR_, True)
 
         # do the calculations and stick results in _REPORT_
-        doAdjustTempOffset(instr=self._INSTR_,
-                           data=self._DATA_,
-                           freqConv=self._FREQ_CONV_,
-                           report=self._REPORT_)
+        doAdjustTempOffset(instr=self._INSTR_, data=self._DATA_, freqConv=self._FREQ_CONV_, report=self._REPORT_)
 
         # hard-coded lasers 1, 2, 4, 5 should all have control turned off
         for v in range(8):
@@ -190,52 +184,49 @@ class TestAdjustLaserTempOffset(object):
             self.outputReport(vLaserNum)
 
             if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
-                assert(ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
-                assert(offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
+                assert (ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
+                assert (offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
 
                 # control loop should be disabled for all lasers
-                assert(self._REPORT_[ctrlName] == 0)
+                assert (self._REPORT_[ctrlName] == 0)
 
                 # current offset should be unchanged since control loop disabled
-                assert(self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
+                assert (self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
             else:
                 # check whether report contains items that should not be there
-                assert(ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
-                assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
+                assert (ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
+                assert (offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
 
     def test_AdjustOffsetBadHigh(self):
-            print "test_AdjustOffsetBadHigh"
-            initBadDataHigh(self._DATA_)
-            enableControlLoop(self._INSTR_, True)
+        print "test_AdjustOffsetBadHigh"
+        initBadDataHigh(self._DATA_)
+        enableControlLoop(self._INSTR_, True)
 
-            # do the calculations and stick results in _REPORT_
-            doAdjustTempOffset(instr=self._INSTR_,
-                               data=self._DATA_,
-                               freqConv=self._FREQ_CONV_,
-                               report=self._REPORT_)
+        # do the calculations and stick results in _REPORT_
+        doAdjustTempOffset(instr=self._INSTR_, data=self._DATA_, freqConv=self._FREQ_CONV_, report=self._REPORT_)
 
-            # hard-coded lasers 1, 2, 4, 5 should all have control turned off
-            for v in range(8):
-                vLaserNum = v + 1
+        # hard-coded lasers 1, 2, 4, 5 should all have control turned off
+        for v in range(8):
+            vLaserNum = v + 1
 
-                ctrlName = "fineLaserCurrent_%d_controlOn" % vLaserNum
-                offsetName = "fineLaserCurrent_%d_offset" % vLaserNum
+            ctrlName = "fineLaserCurrent_%d_controlOn" % vLaserNum
+            offsetName = "fineLaserCurrent_%d_offset" % vLaserNum
 
-                self.outputReport(vLaserNum)
+            self.outputReport(vLaserNum)
 
-                if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
-                    assert(ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
-                    assert(offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
+            if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
+                assert (ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
+                assert (offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
 
-                    # control loop should be disabled for all lasers
-                    assert(self._REPORT_[ctrlName] == 0)
+                # control loop should be disabled for all lasers
+                assert (self._REPORT_[ctrlName] == 0)
 
-                    # current offset should be unchanged since control loop disabled
-                    assert(self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
-                else:
-                    # check whether report contains items that should not be there
-                    assert(ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
-                    assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
+                # current offset should be unchanged since control loop disabled
+                assert (self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
+            else:
+                # check whether report contains items that should not be there
+                assert (ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
+                assert (offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
 
     def test_AdjustControlLoopOff(self):
         print "test_AdjustControlLoopOff"
@@ -244,10 +235,7 @@ class TestAdjustLaserTempOffset(object):
         enableControlLoop(self._INSTR_, False)
 
         # do the calculations and stick results in _REPORT_
-        doAdjustTempOffset(instr=self._INSTR_,
-                           data=self._DATA_,
-                           freqConv=self._FREQ_CONV_,
-                           report=self._REPORT_)
+        doAdjustTempOffset(instr=self._INSTR_, data=self._DATA_, freqConv=self._FREQ_CONV_, report=self._REPORT_)
 
         for v in range(8):
             vLaserNum = v + 1
@@ -261,13 +249,13 @@ class TestAdjustLaserTempOffset(object):
             # the fine current offsets in the report should match the original since
             # control is turned off
             if vLaserNum == 1 or vLaserNum == 2 or vLaserNum == 4 or vLaserNum == 5:
-                assert(ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
-                assert(offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
+                assert (ctrlName in self._REPORT_), "%s missing from _REPORT_" % (ctrlName, )
+                assert (offsetName in self._REPORT_), "%s missing from _REPORT_" % (offsetName, )
 
                 # control loop should be disabled for all lasers and temp offsets unchanged
-                assert(self._REPORT_[ctrlName] == 0)
-                assert(self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
+                assert (self._REPORT_[ctrlName] == 0)
+                assert (self._REPORT_[offsetName] == self._FREQ_CONV_.getLaserTempOffset(vLaserNum))
 
             else:
-                assert(ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
-                assert(offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )
+                assert (ctrlName not in self._REPORT_), "%s should not be in output report" % (ctrlName, )
+                assert (offsetName not in self._REPORT_), "%s should not be in output report" % (offsetName, )

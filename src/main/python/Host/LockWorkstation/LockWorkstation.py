@@ -21,7 +21,10 @@ Lock the workstation and require valid credentials to be entered to login.
 """
 
     parser = optparse.OptionParser(usage=usage)
-    parser.add_option('--time', dest='delayTime', default=5.0, type='float',
+    parser.add_option('--time',
+                      dest='delayTime',
+                      default=5.0,
+                      type='float',
                       metavar='DELAY_TIME',
                       help='The amount of time to delay before locking the '
                       'workstation.')

@@ -1,6 +1,7 @@
 from configobj import ConfigObj
 from optparse import OptionParser
 
+
 def merge(a, b, path=None):
     "merges b into a"
     if path is None:
@@ -14,6 +15,7 @@ def merge(a, b, path=None):
         else:
             a[key] = b[key]
     return a
+
 
 usage = "usage: %prog inFilename changeFilename outFilename"
 parser = OptionParser(usage=usage)

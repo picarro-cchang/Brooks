@@ -4,30 +4,36 @@
 import wx
 from Host.Common.GraphPanel import GraphPanel
 
+
 class PageOne(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "This is a PageOne object", (20,20))
+        t = wx.StaticText(self, -1, "This is a PageOne object", (20, 20))
+
 
 class PageTwo(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "This is a PageTwo object", (40,40))
+        t = wx.StaticText(self, -1, "This is a PageTwo object", (40, 40))
+
 
 class PageThree(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, "This is a PageThree object", (60,60))
+        t = wx.StaticText(self, -1, "This is a PageThree object", (60, 60))
+
 
 class MyFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         kwds["style"] = wx.DEFAULT_FRAME_STYLE
         wx.Frame.__init__(self, *args, **kwds)
         self.graphPanel1 = GraphPanel(self, -1)
-        self.keys=['ambientPressure','pztValue','uncorrectedAbsorbance','ratio1','laserTemperature','ratio2','etalonTemperature','schemeTable','tunerValue','timestamp',
-              'correctedAbsorbance','waveNumberSetpoint','ringdownThreshold','status','cavityPressure','subschemeId','lockerOffset','count','coarseLaserCurrent',
-              'waveNumber','laserUsed','schemeRow','fineLaserCurrent','lockerError']
-
+        self.keys = [
+            'ambientPressure', 'pztValue', 'uncorrectedAbsorbance', 'ratio1', 'laserTemperature', 'ratio2', 'etalonTemperature',
+            'schemeTable', 'tunerValue', 'timestamp', 'correctedAbsorbance', 'waveNumberSetpoint', 'ringdownThreshold', 'status',
+            'cavityPressure', 'subschemeId', 'lockerOffset', 'count', 'coarseLaserCurrent', 'waveNumber', 'laserUsed', 'schemeRow',
+            'fineLaserCurrent', 'lockerError'
+        ]
 
         self.__set_properties()
         self.__do_layout()
@@ -50,10 +56,10 @@ class MyFrameGui(wx.Frame):
         self.page2 = PageTwo(self.nb)
         self.page3 = PageThree(self.nb)
 
-        self.ListBoxYLabel = wx.StaticText(self.panel_1,-1,"Y Axis")
-        self.ListboxY = wx.ListBox(self.panel_1, -1, choices=self.keys, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
-        self.ListBoxXLabel = wx.StaticText(self.panel_1,-1,"X Axis")
-        self.ListboxX = wx.ListBox(self.panel_1, -1, choices=self.keys, style=wx.LB_SINGLE|wx.LB_HSCROLL|wx.LB_NEEDED_SB)
+        self.ListBoxYLabel = wx.StaticText(self.panel_1, -1, "Y Axis")
+        self.ListboxY = wx.ListBox(self.panel_1, -1, choices=self.keys, style=wx.LB_SINGLE | wx.LB_HSCROLL | wx.LB_NEEDED_SB)
+        self.ListBoxXLabel = wx.StaticText(self.panel_1, -1, "X Axis")
+        self.ListboxX = wx.ListBox(self.panel_1, -1, choices=self.keys, style=wx.LB_SINGLE | wx.LB_HSCROLL | wx.LB_NEEDED_SB)
         self.clearButton = wx.Button(self.panel_1, -1, "Clear")
         self.ListboxY.SetMinSize((140, 155))
         self.ListboxY.SetSelection(0)
@@ -95,6 +101,7 @@ class MyFrameGui(wx.Frame):
     def onClear(self, event):
         print "Event handler `onClear' not implemented!"
         event.Skip()
+
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

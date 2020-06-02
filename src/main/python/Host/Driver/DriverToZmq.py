@@ -8,14 +8,14 @@ import zmq
 
 BROADCAST_PORT_RDRESULTS_ZMQ = 45030
 
+
 class RdResultsRebroadcaster(object):
     def __init__(self):
         self.context = zmq.Context()
         self.broadcastSock = self.context.socket(zmq.PUB)
         self.broadcastSock.bind("tcp://0.0.0.0:%d" % BROADCAST_PORT_RDRESULTS_ZMQ)
         self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue, SharedTypes.BROADCAST_PORT_RDRESULTS,
-                                          interface.RingdownEntryType, retry=True)
+        self.listener = Listener.Listener(self.queue, SharedTypes.BROADCAST_PORT_RDRESULTS, interface.RingdownEntryType, retry=True)
 
     def run(self):
         try:
@@ -26,6 +26,7 @@ class RdResultsRebroadcaster(object):
             self.broadcastSock.close()
             self.context.term()
             self.listener.stop()
+
 
 if __name__ == "__main__":
     rdr = RdResultsRebroadcaster()

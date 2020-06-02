@@ -113,11 +113,13 @@ Broadcast data captured by the InputListener app.
 """
     parser = OptionParser(usage=usage)
 
-    parser.add_option('--delay', dest='delay',
-                      default="0.25", help=('Delay between samples, in seconds (default=0.25).'))
+    parser.add_option('--delay', dest='delay', default="0.25", help=('Delay between samples, in seconds (default=0.25).'))
 
-    parser.add_option('-f', '--filename', dest='filename',
-                      default="C:/temp/CFIDS2085_20140409.dat", help=('Filename containing data captured by InputListener.'))
+    parser.add_option('-f',
+                      '--filename',
+                      dest='filename',
+                      default="C:/temp/CFIDS2085_20140409.dat",
+                      help=('Filename containing data captured by InputListener.'))
 
     options, _ = parser.parse_args()
 
@@ -131,6 +133,7 @@ Broadcast data captured by the InputListener app.
 
     bl = BroadcastToDataLogger(filename, delay)
     bl.playback()
+
 
 if __name__ == "__main__":
     main()

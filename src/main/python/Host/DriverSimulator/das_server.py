@@ -34,7 +34,8 @@ api = Api(app)
 app.config.update(SEND_FILE_MAX_AGE_DEFAULT=0)
 
 das_registers = interface.INTERFACE_NUMBER_OF_REGISTERS * [0]
-fpga_registers = 512*[0]
+fpga_registers = 512 * [0]
+
 
 def coerce(value):
     try:
@@ -46,6 +47,7 @@ def coerce(value):
             pass
     return value
 
+
 def _value(valueOrName):
     """Convert valueOrName into an value, raising an exception if the name is not found"""
     if isinstance(valueOrName, types.StringType):
@@ -55,6 +57,7 @@ def _value(valueOrName):
             raise AttributeError("Value identifier not recognized %s" % valueOrName)
     return valueOrName
 
+
 def _reg_index(indexOrName):
     """Convert a name or index into an integer index, raising an exception if the name is not found"""
     if isinstance(indexOrName, types.IntType):
@@ -63,7 +66,8 @@ def _reg_index(indexOrName):
         try:
             return interface.registerByName[indexOrName.strip().upper()]
         except KeyError:
-            raise ValueError("Unknown register name %s" % (indexOrName,))
+            raise ValueError("Unknown register name %s" % (indexOrName, ))
+
 
 def wrDasReg(regIndexOrName, value, convert=True):
     if convert:
@@ -76,9 +80,13 @@ def wrDasReg(regIndexOrName, value, convert=True):
         elif ri.type == ctypes.c_float:
             das_registers[index] = float(value)
         else:
-            raise ValueError("Type %s of register %s is not known" % (ri.type, regIndexOrName,))
+            raise ValueError("Type %s of register %s is not known" % (
+                ri.type,
+                regIndexOrName,
+            ))
     else:
         raise IndexError('Register index not in range')
+
 
 def rdDasReg(regIndexOrName):
     index = _reg_index(regIndexOrName)
@@ -87,17 +95,20 @@ def rdDasReg(regIndexOrName):
     else:
         raise IndexError('Register index not in range')
 
-def wrFPGA(baseIndexOrName,regIndexOrName,value,convert=True):
+
+def wrFPGA(baseIndexOrName, regIndexOrName, value, convert=True):
     base = _value(baseIndexOrName)
     reg = _value(regIndexOrName)
     if convert:
         value = _value(value)
     fpga_registers[base + reg] = int(value)
 
-def rdFPGA(baseIndexOrName,regIndexOrName):
+
+def rdFPGA(baseIndexOrName, regIndexOrName):
     base = _value(baseIndexOrName)
     reg = _value(regIndexOrName)
     return fpga_registers[base + reg]
+
 
 def initSimulator():
     this_dir = os.path.dirname(os.path.abspath(inspect.getsourcefile(lambda: 0)))
@@ -111,11 +122,14 @@ def initSimulator():
                 for key, value in config[secname].items():
                     wrFPGA(secname, key, int(value))
 
+
 initSimulator()
+
 
 @auth.get_password
 def get_password(username):
     raise NotImplementedError
+
 
 @auth.error_handler
 def unauthorized():
@@ -123,20 +137,24 @@ def unauthorized():
     # auth dialog
     return make_response(jsonify({'message': 'Unauthorized access'}), 403)
 
+
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
 
+
 @app.route('/shutdown', methods=['POST'])
 def shutdown():
     shutdown_server()
     return 'Server shutting down...'
 
+
 class ParamFormsAPI(Resource):
     def get(self):
         return {'param_forms': interface.parameter_forms}
+
 
 class RegisterAPI(Resource):
     def get(self):
@@ -149,7 +167,7 @@ class RegisterAPI(Resource):
             if request_dict['dsp'] is not None:
                 for item in request_dict['dsp']:
                     atoms = [_value(coerce(atom.strip())) for atom in item.split(",")]
-                    if len(atoms) in (1,):
+                    if len(atoms) in (1, ):
                         index = sum(atoms)
                         response.append(dict(type='dsp', index=index, value=rdDasReg(index)))
                     else:
@@ -180,7 +198,7 @@ class RegisterAPI(Resource):
             if request_dict['dsp'] is not None:
                 for item in request_dict['dsp']:
                     atoms = [_value(coerce(atom.strip())) for atom in item.split(",")]
-                    if len(atoms) in (2,):
+                    if len(atoms) in (2, ):
                         wrDasReg(atoms[0], atoms[1])
                         response.append(dict(type='dsp', index=atoms[0], value=rdDasReg(atoms[0])))
                     else:
@@ -201,6 +219,7 @@ class RegisterAPI(Resource):
             return {'error': 'ValueError: ' + e.message}
         except Exception, e:
             return {'error': 'Uncaught exception in get register ' + e.message}
+
 
 api.add_resource(ParamFormsAPI, '/api/v1.0/driver/paramforms', endpoint='paramforms')
 api.add_resource(RegisterAPI, '/api/v1.0/driver/register', endpoint='register')

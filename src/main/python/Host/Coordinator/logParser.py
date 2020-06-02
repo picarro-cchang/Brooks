@@ -25,6 +25,7 @@ autosamplerLog2 = """   Print Date: 2008/08/13   10:04:35
 |
 """
 
+
 def parseAutosamplerLog(logText):
     logString = logText.split("\n")
     logDate = logString[0].strip().split()[-2]
@@ -40,14 +41,14 @@ def parseAutosamplerLog(logText):
         while True:
             injLine = logString[sampleLineNum].strip().split()
             if len(injLine) == 4:
-                if injLine[1] == "Sample" and injLine[3]=="Injected":
+                if injLine[1] == "Sample" and injLine[3] == "Injected":
                     injTime = injLine[0]
                     sampleNum = int(injLine[2])
                     break
             sampleLineNum -= 1
         while True:
             trayLine = logString[sampleLineNum].strip().split()
-            if trayLine and trayLine[0]=="Tray":
+            if trayLine and trayLine[0] == "Tray":
                 trayName = trayLine[1]
                 break
             sampleLineNum -= 1
@@ -67,21 +68,23 @@ def parseAutosamplerLog(logText):
 
 class TestLogParser(unittest.TestCase):
     def testBasic1(self):
-        logDate,logTime,injTime,sampleNum,jobNum,methodName = parseAutosamplerLog(autosamplerLog1)
-        self.assertEqual(logDate,"2008/08/13")
-        self.assertEqual(logTime,"10:04:35")
-        self.assertEqual(injTime,"10:04:17")
-        self.assertEqual(sampleNum,1)
-        self.assertEqual(jobNum,4)
-        self.assertEqual(methodName,"5ulMethd")
+        logDate, logTime, injTime, sampleNum, jobNum, methodName = parseAutosamplerLog(autosamplerLog1)
+        self.assertEqual(logDate, "2008/08/13")
+        self.assertEqual(logTime, "10:04:35")
+        self.assertEqual(injTime, "10:04:17")
+        self.assertEqual(sampleNum, 1)
+        self.assertEqual(jobNum, 4)
+        self.assertEqual(methodName, "5ulMethd")
+
     def testBasic2(self):
-        logDate,logTime,injTime,sampleNum,jobNum,methodName = parseAutosamplerLog(autosamplerLog2)
-        self.assertEqual(logDate,"2008/08/13")
-        self.assertEqual(logTime,"10:04:35")
-        self.assertEqual(injTime,"10:03:46")
-        self.assertEqual(sampleNum,3)
-        self.assertEqual(jobNum,1)
-        self.assertEqual(methodName,"5ulMethd")
+        logDate, logTime, injTime, sampleNum, jobNum, methodName = parseAutosamplerLog(autosamplerLog2)
+        self.assertEqual(logDate, "2008/08/13")
+        self.assertEqual(logTime, "10:04:35")
+        self.assertEqual(injTime, "10:03:46")
+        self.assertEqual(sampleNum, 3)
+        self.assertEqual(jobNum, 1)
+        self.assertEqual(methodName, "5ulMethd")
+
 
 if __name__ == "__main__":
     unittest.main()

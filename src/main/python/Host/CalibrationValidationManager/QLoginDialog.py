@@ -1,4 +1,5 @@
 from PyQt4 import QtGui, QtCore
+
 # import os.path
 # import sip
 #
@@ -7,15 +8,15 @@ from PyQt4 import QtGui, QtCore
 
 # Collection of short prompts
 
+
 # This is a singleton
 class _PromptManager(object):
     # Prompts user for text.
     # This function takes no callbacks and stalls until the user gives a result
     def getDirectory(self, controller, parentDirectory):
         title = "Create Folder"
-        label = "Enter a name for the new folder in \""+parentDirectory+"\":"
-        result, ok = QtGui.QInputDialog.getText(controller.getMainWindow(), title,
-            label, flags=QtCore.Qt.FramelessWindowHint)
+        label = "Enter a name for the new folder in \"" + parentDirectory + "\":"
+        result, ok = QtGui.QInputDialog.getText(controller.getMainWindow(), title, label, flags=QtCore.Qt.FramelessWindowHint)
 
         # If user pressed OK
         if ok:
@@ -25,8 +26,7 @@ class _PromptManager(object):
 
     # Show error
     def error(self, controller, message):
-        self.errorDialog = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Error", message,
-            parent = None)
+        self.errorDialog = QtGui.QMessageBox(QtGui.QMessageBox.Warning, "Error", message, parent=None)
 
         # Remove borders
         self.errorDialog.setWindowFlags(self.errorDialog.windowFlags() | QtCore.Qt.FramelessWindowHint)
@@ -51,6 +51,7 @@ class _PromptManager(object):
     # def login(self, controller):
     #     self.loginDialogInstance = LoginDialog(controller)
     #     return self.loginDialogInstance.show()
+
 
 # Singleton definition
 PromptManager = _PromptManager()
@@ -93,11 +94,11 @@ PromptManager = _PromptManager()
 #         # Connect ok
 #         self.buttonOK.clicked.connect(self.accept)
 
+
 class QLoginDialog(QtGui.QDialog):
     def __init__(self, parent=None):
         # Create a dialog - no parent, frameless
-        super(QLoginDialog, self).__init__(parent = parent,
-            flags = QtCore.Qt.FramelessWindowHint)
+        super(QLoginDialog, self).__init__(parent=parent, flags=QtCore.Qt.FramelessWindowHint)
 
         self.parent = parent
 

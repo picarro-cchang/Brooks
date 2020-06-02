@@ -32,7 +32,9 @@ class ConfigManagerGui(wx.Frame):
         self.frameMainStatusbar = self.CreateStatusBar(3, 0)
         self.windowSplitter = wx.SplitterWindow(self, -1, style=wx.SP_3D | wx.SP_BORDER)
         self.windowTree = wx.Panel(self.windowSplitter, -1)
-        self.treeCtrlFiles = wx.TreeCtrl(self.windowTree, -1, style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
+        self.treeCtrlFiles = wx.TreeCtrl(self.windowTree,
+                                         -1,
+                                         style=wx.TR_HAS_BUTTONS | wx.TR_LINES_AT_ROOT | wx.TR_DEFAULT_STYLE | wx.SUNKEN_BORDER)
         self.windowEditors = wx.Panel(self.windowSplitter, -1)
         self.notebookEditors = wx.Notebook(self.windowEditors, -1, style=0)
         self.notebookEditor1 = wx.Panel(self.notebookEditors, -1)
@@ -102,6 +104,7 @@ class ConfigManagerGui(wx.Frame):
     def onHelpReplace(self, event):  # wxGlade: ConfigManagerGui.<event_handler>
         print "Event handler `onHelpReplace' not implemented!"
         event.Skip()
+
 
 # end of class ConfigManagerGui
 if __name__ == "__main__":

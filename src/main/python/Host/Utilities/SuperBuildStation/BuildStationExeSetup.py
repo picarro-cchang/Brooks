@@ -36,6 +36,8 @@ from distutils.core import setup
 import py2exe
 import sys
 import glob
+
+
 ################################################################
 # Start of a pile of special setup with the sole purpose
 # of making the wxPython apps look like Windows-native
@@ -43,6 +45,8 @@ import glob
 class Target:
     def __init__(self, **kw):
         self.__dict__.update(kw)
+
+
 # The manifest will be inserted as resource into test_wx.exe.  This
 # gives the controls the Windows XP appearance (if run on XP ;-)
 #
@@ -75,41 +79,41 @@ manifest_template = '''
 </assembly>
 '''
 RT_MANIFEST = 24
-BuildStation = Target(description = "BuildStation", # used for the versioninfo resource
-                    script = "BuildStation.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="BuildStation")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "BuildStation"
-                    )
-DetectorViewer = Target(description = "DetectorViewer", # used for the versioninfo resource
-                    script = "DetectorViewer.py", # what to build
-                    other_resources = [(RT_MANIFEST,
-                                        1,
-                                        manifest_template % dict(prog="DetectorViewer")
-                                        )],
-                    ##    icon_resources = [(1, "icon.ico")],
-                    dest_base = "DetectorViewer"
-                    )
+BuildStation = Target(
+    description="BuildStation",  # used for the versioninfo resource
+    script="BuildStation.py",  # what to build
+    other_resources=[(RT_MANIFEST, 1, manifest_template % dict(prog="BuildStation"))],
+    ##    icon_resources = [(1, "icon.ico")],
+    dest_base="BuildStation")
+DetectorViewer = Target(
+    description="DetectorViewer",  # used for the versioninfo resource
+    script="DetectorViewer.py",  # what to build
+    other_resources=[(RT_MANIFEST, 1, manifest_template % dict(prog="DetectorViewer"))],
+    ##    icon_resources = [(1, "icon.ico")],
+    dest_base="DetectorViewer")
 
 ################################################################
 
 # And now to the main setup routine...
-exclusionList = ["Tkconstants","Tkinter","tcl", '_gtkagg', '_tkagg', '_agg2', '_cairo', '_cocoaagg',
-                '_fltkagg', '_gtk', '_gtkcairo', ]
-inclusionList = ["encodings.*", "tables.*" ]
+exclusionList = [
+    "Tkconstants",
+    "Tkinter",
+    "tcl",
+    '_gtkagg',
+    '_tkagg',
+    '_agg2',
+    '_cairo',
+    '_cocoaagg',
+    '_fltkagg',
+    '_gtk',
+    '_gtkcairo',
+]
+inclusionList = ["encodings.*", "tables.*"]
 dllexclusionList = ['libgdk-win32-2.0-0.dll', 'libgobject-2.0-0.dll']
 
-setup(version = "1.0",
-      description = "Build Station Software",
-      name = "CRDS Build Station Software",
-      options = dict(py2exe = dict(compressed = 1,
-                                   optimize = 1,
-                                   bundle_files = 1,
-                                   excludes = exclusionList,
-                                   includes = inclusionList,
-                                   dll_excludes = dllexclusionList)
-                     ),
-      windows = [BuildStation, DetectorViewer])
+setup(version="1.0",
+      description="Build Station Software",
+      name="CRDS Build Station Software",
+      options=dict(py2exe=dict(
+          compressed=1, optimize=1, bundle_files=1, excludes=exclusionList, includes=inclusionList, dll_excludes=dllexclusionList)),
+      windows=[BuildStation, DetectorViewer])

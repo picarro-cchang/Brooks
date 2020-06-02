@@ -7,6 +7,7 @@ import zmq
 
 BROADCAST_PORT_RDRESULTS_ZMQ = 45030
 
+
 class RdResultsListener(object):
     def __init__(self, ipAddr, port):
         self.context = zmq.Context()
@@ -33,13 +34,15 @@ class RdResultsListener(object):
 
 def main():
     parser = OptionParser()
-    parser.add_option("-a", dest="ipAddr", default="127.0.0.1",
-        help="IP address of analyzer (def: 127.0.0.1)")
-    parser.add_option("-p", dest="port", default=BROADCAST_PORT_RDRESULTS_ZMQ,
-        help="Ringdown results rebroadcaster port (def: %d)" % BROADCAST_PORT_RDRESULTS_ZMQ)
+    parser.add_option("-a", dest="ipAddr", default="127.0.0.1", help="IP address of analyzer (def: 127.0.0.1)")
+    parser.add_option("-p",
+                      dest="port",
+                      default=BROADCAST_PORT_RDRESULTS_ZMQ,
+                      help="Ringdown results rebroadcaster port (def: %d)" % BROADCAST_PORT_RDRESULTS_ZMQ)
     (options, args) = parser.parse_args()
     dml = RdResultsListener(options.ipAddr, options.port)
     dml.run()
+
 
 if __name__ == "__main__":
     main()

@@ -10,7 +10,6 @@ from Host.Common.GraphPanel import GraphPanel
 # end wxGlade
 
 
-
 class ModeViewGUI(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ModeViewGUI.__init__
@@ -58,17 +57,17 @@ class ModeViewGUI(wx.Frame):
         sizer_graph1.Add(self.graph_panel_1, 1, wx.EXPAND, 0)
         grid_sizer_graph_panel_1.Add(self.panel_filler1_1, 1, wx.EXPAND, 0)
         grid_sizer_graph_panel_1.Add(self.panel_filler2_1, 1, wx.EXPAND, 0)
-        grid_sizer_graph_panel_1.Add(self.label_autoscale1, 0, wx.LEFT|wx.RIGHT, 10)
+        grid_sizer_graph_panel_1.Add(self.label_autoscale1, 0, wx.LEFT | wx.RIGHT, 10)
         grid_sizer_graph_panel_1.Add(self.checkbox_autoscale_1, 0, 0, 0)
-        grid_sizer_graph_panel_1.Add(self.label_min_1, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_1.Add(self.text_ctrl_min_1, 0, wx.RIGHT|wx.EXPAND, 10)
-        grid_sizer_graph_panel_1.Add(self.label_max_1, 0, wx.LEFT|wx.RIGHT, 10)
-        grid_sizer_graph_panel_1.Add(self.text_ctrl_max_1, 0, wx.RIGHT|wx.EXPAND, 10)
+        grid_sizer_graph_panel_1.Add(self.label_min_1, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_1.Add(self.text_ctrl_min_1, 0, wx.RIGHT | wx.EXPAND, 10)
+        grid_sizer_graph_panel_1.Add(self.label_max_1, 0, wx.LEFT | wx.RIGHT, 10)
+        grid_sizer_graph_panel_1.Add(self.text_ctrl_max_1, 0, wx.RIGHT | wx.EXPAND, 10)
         self.panel_2.SetSizer(grid_sizer_graph_panel_1)
         sizer_graph1.Add(self.panel_2, 0, wx.EXPAND, 0)
         sizer_for_graphs.Add(sizer_graph1, 1, wx.EXPAND, 0)
         sizer_3.Add(self.button_clear, 0, wx.ALL, 20)
-        sizer_3.Add(self.button_connect, 0, wx.ALL|wx.ALIGN_CENTER_VERTICAL, 20)
+        sizer_3.Add(self.button_connect, 0, wx.ALL | wx.ALIGN_CENTER_VERTICAL, 20)
         sizer_3.Add((20, 20), 1, wx.ALIGN_CENTER_VERTICAL, 0)
         self.panel_control.SetSizer(sizer_3)
         sizer_for_graphs.Add(self.panel_control, 0, wx.EXPAND, 0)
@@ -78,25 +77,26 @@ class ModeViewGUI(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def onAutoscale1(self, event): # wxGlade: ModeViewGUI.<event_handler>
+    def onAutoscale1(self, event):  # wxGlade: ModeViewGUI.<event_handler>
         print "Event handler `onAutoscale1' not implemented!"
         event.Skip()
 
-    def onMin1Enter(self, event): # wxGlade: ModeViewGUI.<event_handler>
+    def onMin1Enter(self, event):  # wxGlade: ModeViewGUI.<event_handler>
         print "Event handler `onMin1Enter' not implemented!"
         event.Skip()
 
-    def onMax1Enter(self, event): # wxGlade: ModeViewGUI.<event_handler>
+    def onMax1Enter(self, event):  # wxGlade: ModeViewGUI.<event_handler>
         print "Event handler `onMax1Enter' not implemented!"
         event.Skip()
 
-    def onClear(self, event): # wxGlade: ModeViewGUI.<event_handler>
+    def onClear(self, event):  # wxGlade: ModeViewGUI.<event_handler>
         print "Event handler `onClear' not implemented!"
         event.Skip()
 
-    def onConnect(self, event): # wxGlade: ModeViewGUI.<event_handler>
+    def onConnect(self, event):  # wxGlade: ModeViewGUI.<event_handler>
         print "Event handler `onConnect' not implemented!"
         event.Skip()
+
 
 # end of class ModeViewGUI
 
@@ -108,6 +108,7 @@ class MyApp(wx.App):
         self.SetTopWindow(modeViewGUI)
         modeViewGUI.Show()
         return 1
+
 
 # end of class MyApp
 

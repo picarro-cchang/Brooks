@@ -12,8 +12,7 @@ File History:
 Copyright 2017 Picarro, Inc. 
 """
 
-
-import sys,time,os
+import sys, time, os
 import serial
 import getopt
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -23,22 +22,24 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR
 from Host.Common.AppRequestRestart import RequestRestart
 import threading
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 APP_NAME = "4to20Server"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 
+
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.RpcServer = RpcServer
         self.ExitFunction = ExitFunction
+
     def run(self):
         self.RpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             if self.ExitFunction is not None:
                 self.ExitFunction()
             Log("RpcServer exited and no longer serving.")
@@ -52,23 +53,24 @@ class Four220Server(object):
             self.config = CustomConfigObj(configFile)
         else:
             raise Exception("Configuration file not found: %s" % configFile)
-        
+
         self.port = self.config.get('SERIAL_PORT_SETUP', 'PORT')
         self.baudrate = self.config.getint('SERIAL_PORT_SETUP', 'BAUDRATE')
         self.timeout = self.config.getfloat('SERIAL_PORT_SETUP', 'TIMEOUT')
         self.analyzer_source = self.config.get('MAIN', 'ANALYZER')
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         try:
-            self.ser = serial.Serial(self.port, self.baudrate, timeout = self.timeout)
+            self.ser = serial.Serial(self.port, self.baudrate, timeout=self.timeout)
         except:
-            print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. "% self.port
-        
+            print "Can not connect to %s port. Please check the SERIAL_PORT_SETUP configuration. " % self.port
+
         #set the device configuration to 4-20 mA outputs. Send the command '%0101310600'. You should get this reply '!01' saying that your re-configuration of the module was successful.
         try:
-            self.ser.write('%0101310600'+ '\r')
+            self.ser.write('%0101310600' + '\r')
             s = ''
-            #wait for response. 
+            #wait for response.
             while True:
                 c = self.ser.read(1)
                 if c == "\r":
@@ -83,7 +85,7 @@ class Four220Server(object):
         except:
             print "Can not set the device configuration to 4-20 mA outputs."
             sys.exit(1)
-        #simulation mode or execution mode    
+        #simulation mode or execution mode
         if simulation:
             self.data_thread = threading.Thread(target=self.simulate_data)
             self.data_thread.daemon = True
@@ -92,31 +94,30 @@ class Four220Server(object):
             self.get_channel_info()
             print self.channel_par
             self.startServer()
-            self.data_thread = Listener.Listener(None, 
-                                        SharedTypes.BROADCAST_PORT_DATA_MANAGER, 
-                                        StringPickler.ArbitraryObject,
-                                        self._streamFilter,
-                                        retry = True,
-                                        name = APP_NAME)
-        
+            self.data_thread = Listener.Listener(None,
+                                                 SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+                                                 StringPickler.ArbitraryObject,
+                                                 self._streamFilter,
+                                                 retry=True,
+                                                 name=APP_NAME)
+
     def simulate_data(self):
         """
         Simulate the concentration data. Send mapped current value to COM port.
         """
-        
-        
+
         self.simulation_env = {}
         self.simulation_env['min'] = self.config.getfloat('Simulation', 'MIN')
         self.simulation_env['max'] = self.config.getfloat('Simulation', 'MAX')
         self.con_max = self.simulation_env['max']
         self.con_min = self.simulation_env['min']
-        
+
         self.simulation_env['Test_mode'] = self.config.getboolean('Simulation', 'TEST_MODE')
         self.simulation_env['Test_num'] = self.config.getint('Simulation', 'TEST_NUM')
         self.simulation_env['channel'] = self.config.getint('Simulation', 'CHANNEL')
         if self.simulation_env['min'] != 'None' and self.simulation_env['max'] != 'None':
-            slope = 16.0/(float(self.simulation_env['max']) - float(self.simulation_env['min']))
-            offset = 4.0 - slope*float(self.simulation_env['min'])
+            slope = 16.0 / (float(self.simulation_env['max']) - float(self.simulation_env['min']))
+            offset = 4.0 - slope * float(self.simulation_env['min'])
             print "Simulation: Slope and Offset: ", slope, offset
         else:
             print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in Simulation section ini file."
@@ -134,20 +135,21 @@ class Four220Server(object):
                     self.data_processor(data, slope, offset, self.simulation_env['channel'])
                 except:
                     print "Can not send to serial port."
-                    continue 
+                    continue
                 time.sleep(1)
-            
+
         else:
             for i in range(201):
                 data = float(i * 4)
                 print "simulated concentration: ", data, 'ppb'
-                
+
                 try:
                     self.data_processor(data, slope, offset, self.simulation_env['channel'])
                 except:
                     print "Can not send to serial port."
-                    break 
+                    break
                 time.sleep(5)
+
     #this fun is called every time when the listener gets data obj from data manager.
     def _streamFilter(self, streamOut):
         try:
@@ -168,11 +170,11 @@ class Four220Server(object):
                         except:
                             continue
                             #sys.exit(1)
-                            
+
                         #compute slope and offset values based in given max/min range
                         if self.con_min <= self.con_max:
-                            slope = 16.0/(self.con_max - self.con_min)
-                            offset = 4.0 - slope*self.con_min
+                            slope = 16.0 / (self.con_max - self.con_min)
+                            offset = 4.0 - slope * self.con_min
                         else:
                             print "Configuration Error: Please input valid SOURCE_MIN, SOURCE_MAX values in ini file. Make sure min you put is less than max."
                             sys.exit(1)
@@ -184,29 +186,28 @@ class Four220Server(object):
         except Exception, err:
             print "Error in streamFilter. Wrong values in ini file..."
             print err, "   ****"
-            
+
     def data_processor(self, data, slope, offset, channel_num):
         """
         It takes the concentration (data), map to 4-20 mA, and send the command to the designated COM port.
         Any value lower than 4.0 mA will output 4.0 mA, any value higher than 20.0 mA will output 20.0 mA.
         
         """
-        
+
         cur = float(slope * data + offset)
-        
+
         if cur < 4.0:
             cur_str = '04.000'
         elif cur > 20.0:
             cur_str = '20.000'
         elif cur < 10.0:
-            cur_str = '0'+ format(cur, '.3f')
+            cur_str = '0' + format(cur, '.3f')
         else:
             cur_str = format(cur, '.3f')
 
-
         #If send the command '#010+05.000'. This tells the module at address 01 to set channel 0 to 5.000 mA.
-        cmd_str = '#01'+ str(channel_num) + '+' + cur_str
-        
+        cmd_str = '#01' + str(channel_num) + '+' + cur_str
+
         try:
             self.ser.write(cmd_str + '\r')
             self.waitForRet()
@@ -215,23 +216,23 @@ class Four220Server(object):
             ###print self.channel_par['OUTPUT_CHANNEL'+str(channel_num)]["SOURCE"], " Value: ", data
             ###print "Write current %s mA to serial port %s."%(cur_str,self.port)
             ###print "-------------------"
-            
+
         except:
             "Failed to write to serial port."
-        
+
     def waitForRet(self):
         while True:
             c = self.ser.read(1)
             if c == "\r":
-                break    
-        
+                break
+
     def run(self):
         """
         Main loop.
         """
-        while True: 
+        while True:
             time.sleep(10)
-    
+
     def get_channel_info(self):
         """
         config parse. get parameters in each channel 
@@ -239,25 +240,25 @@ class Four220Server(object):
         self.channel_par = {}
         for s in self.config:
             if s.startswith("OUTPUT_CHANNEL"):
-                #if self.config[s]["SOURCE"] != 'Disabled': 
-                print "here: " #self.config[s]
+                #if self.config[s]["SOURCE"] != 'Disabled':
+                print "here: "  #self.config[s]
                 self.channel_par[s] = self.config[s]
-                        #print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s
-                        #sys.exit(1)
+                #print "Please check configuration file. Make sure you set the SOURCE_MIN and SOURCE_MAX in", s
+                #sys.exit(1)
 
     def startServer(self):
         """
         Start rpc server thread.  
         """
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_4to20_SERVER),
-                                            ServerName = APP_NAME,
-                                            ServerDescription = "",
-                                            ServerVersion = "1.0.0",
-                                            threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription="",
+                                               ServerVersion="1.0.0",
+                                               threaded=True)
         self.rpcThread = RpcServerThread(self.rpcServer, None)
-        self.rpcThread.start()                        
-        
-        
+        self.rpcThread.start()
+
+
 HELP_STRING = """Four220Server.py [-c<FILENAME>] [-h|--help]
 
 Where the options can be a combination of the following:
@@ -266,8 +267,10 @@ Where the options can be a combination of the following:
 -s                   simulation mode
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hs'
@@ -279,14 +282,14 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = os.path.join(os.path.dirname(AppPath), "4to20Server.ini")
     simulation = False
-    
+
     if "-h" in options or "--help" in options:
         printUsage()
         sys.exit()
@@ -296,6 +299,7 @@ def handleCommandSwitches():
         simulation = True
 
     return (configFile, simulation)
+
 
 def main():
     server = Four220Server(*handleCommandSwitches())

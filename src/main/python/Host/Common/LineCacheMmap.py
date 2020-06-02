@@ -30,9 +30,10 @@ from Host.Common.namedtuple import namedtuple
 
 MAX_CACHED_FILES = 32
 cachedFiles = OrderedDict()
-NumberedLine = namedtuple('NumberedLine','lineNumber line')
+NumberedLine = namedtuple('NumberedLine', 'lineNumber line')
 
-def getSliceIter(filename,start=None,end=None,clear=False):
+
+def getSliceIter(filename, start=None, end=None, clear=False):
     filename = os.path.abspath(filename)
     if filename in cachedFiles:
         # Move to front and return cached file
@@ -45,40 +46,45 @@ def getSliceIter(filename,start=None,end=None,clear=False):
         if len(cachedFiles) > MAX_CACHED_FILES:
             cachedFiles.popitem(last=False).clear()
     if clear: cachedFiles[filename].clear()
-    for l in cachedFiles[filename].getSliceIter(start,end): yield l
+    for l in cachedFiles[filename].getSliceIter(start, end):
+        yield l
 
-def getSlice(filename,start=None,end=None,clear=False):
-    return [l for l in getSliceIter(filename,start,end,clear)]
+
+def getSlice(filename, start=None, end=None, clear=False):
+    return [l for l in getSliceIter(filename, start, end, clear)]
+
 
 class LineCachedFile(object):
-    def __init__(self,filename):
+    def __init__(self, filename):
         self.linePtr = [0]
         self.filename = os.path.abspath(filename)
 
-    def getSliceIter(self,start=None,end=None):
+    def getSliceIter(self, start=None, end=None):
         if os.path.getsize(self.filename) == 0: return
         try:
-            f = open(self.filename,"rb")
-            fmap = mmap.mmap(f.fileno(),0,access=mmap.ACCESS_READ)
+            f = open(self.filename, "rb")
+            fmap = mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)
+
             def getLine(p):
                 fmap.seek(p)
                 return fmap.readline()
+
             sol = self.linePtr[-1]
-            eol = fmap.find("\n",sol)
-            while  eol>= 0:
-                sol = eol+1
-                if sol>=len(fmap) or (end>=0 and len(self.linePtr)>=end): break
+            eol = fmap.find("\n", sol)
+            while eol >= 0:
+                sol = eol + 1
+                if sol >= len(fmap) or (end >= 0 and len(self.linePtr) >= end): break
                 self.linePtr.append(sol)
-                eol = fmap.find("\n",sol)
+                eol = fmap.find("\n", sol)
             result = []
             # Assemble the slice by reading lines starting at locations in fmap
             if start is None: start = 0
-            elif start<0: start=max(0,start+len(self.linePtr))
-            for i,p in enumerate(self.linePtr[start:end]):
+            elif start < 0: start = max(0, start + len(self.linePtr))
+            for i, p in enumerate(self.linePtr[start:end]):
                 # If we do not see expected newlines, this is an error
-                if p>0 and fmap[p-1] != "\n":
+                if p > 0 and fmap[p - 1] != "\n":
                     raise RuntimeError("Lines changed in cached file!")
-                yield NumberedLine(start+i,getLine(p))
+                yield NumberedLine(start + i, getLine(p))
             fmap.close()
         finally:
             f.close()
@@ -86,54 +92,55 @@ class LineCachedFile(object):
     def clear(self):
         self.linePtr = [0]
 
+
 # Simple test code
 
 if __name__ == "__main__":
     import tempfile
 
     try:
-        f = open("tempFile.tmp",mode="wb")
+        f = open("tempFile.tmp", mode="wb")
         fname = f.name
         pass
     finally:
         f.close()
-    assert getSlice(fname,0,10) == []
-    assert getSlice(fname,0) == []
+    assert getSlice(fname, 0, 10) == []
+    assert getSlice(fname, 0) == []
 
     try:
-        f = open(fname,"wb")
+        f = open(fname, "wb")
         f.write("\n\n ")
     finally:
         f.close()
-    assert getSlice(fname,0,10,clear=True) == [(0,"\n"), (1,"\n"), (2," ")]
-    assert getSlice(fname,0,-1) == [(0,"\n"), (1,"\n")]
+    assert getSlice(fname, 0, 10, clear=True) == [(0, "\n"), (1, "\n"), (2, " ")]
+    assert getSlice(fname, 0, -1) == [(0, "\n"), (1, "\n")]
 
     try:
-        f = open(fname,"wb")
+        f = open(fname, "wb")
         f.write("First line\nNo newline at EOF")
     finally:
         f.close()
-    assert getSlice(fname,0,10,clear=True) == [(0,"First line\n"), (1,"No newline at EOF")]
+    assert getSlice(fname, 0, 10, clear=True) == [(0, "First line\n"), (1, "No newline at EOF")]
 
     try:
-        f = open(fname,"wb")
+        f = open(fname, "wb")
         f.write("First line\nWith newline at EOF\n")
     finally:
         f.close()
-    assert getSlice(fname,0,10,clear=True) == [(0,"First line\n"), (1,"With newline at EOF\n")]
+    assert getSlice(fname, 0, 10, clear=True) == [(0, "First line\n"), (1, "With newline at EOF\n")]
 
     try:
-        f = open("tempFile1.tmp",mode="wb")
+        f = open("tempFile1.tmp", mode="wb")
         fname1 = f.name
         for i in range(20000):
-            print >>f, "This is line %d" % i
+            print >> f, "This is line %d" % i
     finally:
         f.close()
-    assert getSlice(fname1,None,10) == [(i,"This is line %d\n" % i) for i in range(10)]
-    assert getSlice(fname1,-10,None)  == [(i,"This is line %d\n" % i) for i in range(20000-10,20000)]
-    assert getSlice(fname1,17,54)  == [(i,"This is line %d\n" % i) for i in range(17,54)]
-    assert getSlice(fname1,1000,-1000)  == [(i,"This is line %d\n" % i) for i in range(1000,20000-1000)]
-    assert getSlice(fname1,-30000,10)  == [(i,"This is line %d\n" % i) for i in range(0,10)]
+    assert getSlice(fname1, None, 10) == [(i, "This is line %d\n" % i) for i in range(10)]
+    assert getSlice(fname1, -10, None) == [(i, "This is line %d\n" % i) for i in range(20000 - 10, 20000)]
+    assert getSlice(fname1, 17, 54) == [(i, "This is line %d\n" % i) for i in range(17, 54)]
+    assert getSlice(fname1, 1000, -1000) == [(i, "This is line %d\n" % i) for i in range(1000, 20000 - 1000)]
+    assert getSlice(fname1, -30000, 10) == [(i, "This is line %d\n" % i) for i in range(0, 10)]
 
     os.unlink(fname)
     os.unlink(fname1)

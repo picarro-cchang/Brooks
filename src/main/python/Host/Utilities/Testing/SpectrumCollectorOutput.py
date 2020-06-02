@@ -12,8 +12,10 @@ from Host.Common.Listener import Listener
 from Host.Common.InstErrors import INST_ERROR_DATA_MANAGER
 from Host.Common import AppStatus
 
+
 def Log(msg):
     print msg
+
 
 class SpectrumCollectorOutput(object):
     def __init__(self):
@@ -23,17 +25,21 @@ class SpectrumCollectorOutput(object):
         self.spectListener = Listener(self.spectQueue,
                                       BROADCAST_PORT_SPECTRUM_COLLECTOR,
                                       StringPickler.ArbitraryObject,
-                                      retry = True,
-                                      name = "Spectrum Collector Output Listener")
+                                      retry=True,
+                                      name="Spectrum Collector Output Listener")
+
     def run(self):
         while True:
             while not self.spectQueue.empty():
                 output = self.spectQueue.get()
                 timevect = output["rdData"]["timestamp"]
                 now = timestamp.getTimestamp()
-                print "Spectrum Collector Output: %s - %s" % (0.001*(now-timevect.max()),
-                0.001*(now-timevect.min()),)
+                print "Spectrum Collector Output: %s - %s" % (
+                    0.001 * (now - timevect.max()),
+                    0.001 * (now - timevect.min()),
+                )
             time.sleep(0.05)
+
 
 if __name__ == "__main__":
     f = SpectrumCollectorOutput()

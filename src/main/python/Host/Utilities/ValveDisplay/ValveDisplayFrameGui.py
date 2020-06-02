@@ -9,11 +9,10 @@ from Host.Utilities.ValveDisplay.CheckIndicator import CheckIndicator
 # end wxGlade
 
 
-
 class ValveDisplayFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ValveDisplayFrameGui.__init__
-        kwds["style"] = wx.CAPTION|wx.CLOSE_BOX|wx.SYSTEM_MENU|wx.RESIZE_BORDER
+        kwds["style"] = wx.CAPTION | wx.CLOSE_BOX | wx.SYSTEM_MENU | wx.RESIZE_BORDER
         wx.Frame.__init__(self, *args, **kwds)
 
         self.__set_properties()
@@ -32,6 +31,7 @@ class ValveDisplayFrameGui(wx.Frame):
         self.SetSizer(sizer_1)
         self.Layout()
         # end wxGlade
+
 
 # end of class ValveDisplayFrameGui
 
@@ -56,14 +56,14 @@ class ValveWidgetGui(wx.Panel):
     def __do_layout(self):
         # begin wxGlade: ValveWidgetGui.__do_layout
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_2.Add(self.cbStatus, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 10)
-        sizer_2.Add(self.lblStatus, 0, wx.LEFT|wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2.Add(self.cbStatus, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 10)
+        sizer_2.Add(self.lblStatus, 0, wx.LEFT | wx.ALIGN_CENTER_VERTICAL, 10)
         self.SetSizer(sizer_2)
         sizer_2.Fit(self)
         # end wxGlade
 
-# end of class ValveWidgetGui
 
+# end of class ValveWidgetGui
 
 if __name__ == "__main__":
     app = wx.PySimpleApp(0)

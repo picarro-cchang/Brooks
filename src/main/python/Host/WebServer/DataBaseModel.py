@@ -7,53 +7,53 @@ from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
+
 class Base(db.Model):
     __abstract__ = True
     id = db.Column(db.Integer, primary_key=True)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    modified_at = db.Column(db.DateTime, default=db.func.current_timestamp(),
-                            onupdate=db.func.current_timestamp())
+    modified_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 
 class SystemVariable(db.Model):
     name = db.Column(db.String(64), unique=True, primary_key=True)
     value = db.Column(db.String(128))
-    
+
     def __init__(self, name, value):
         self.name = name
         self.value = value
-        
+
+
 class Password(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp(),
-                onupdate=db.func.current_timestamp())
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     username = db.Column(db.String(64))
     value = db.Column(db.String(255))
-    
+
     def __init__(self, username, value):
         self.username = username
         self.value = utils.encrypt_password(value)
-    
+
+
 class UserAction(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    taken_at = db.Column(db.DateTime, default=db.func.current_timestamp(),
-                onupdate=db.func.current_timestamp())
+    taken_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
     username = db.Column(db.String(64))
     action = db.Column(db.String(128))
-    
+
     def __init__(self, username, action):
         self.username = username
         self.action = action
 
-roles_users = db.Table(
-    'roles_users',
-    db.Column('user_name', db.Integer(), db.ForeignKey('user.username')),
-    db.Column('role_name', db.Integer(), db.ForeignKey('role.name'))
-)
+
+roles_users = db.Table('roles_users', db.Column('user_name', db.Integer(), db.ForeignKey('user.username')),
+                       db.Column('role_name', db.Integer(), db.ForeignKey('role.name')))
+
 
 class Role(Base, RoleMixin):
     name = db.Column(db.String(64), unique=True)
     description = db.Column(db.String(255))
+
 
 class User(Base, UserMixin):
     username = db.Column(db.String(64), unique=True)
@@ -63,11 +63,7 @@ class User(Base, UserMixin):
     employee_id = db.Column(db.String(32))
     phone_number = db.Column(db.String(24))
     active = db.Column(db.Boolean())
-    roles = db.relationship(
-        'Role',
-        secondary=roles_users,
-        backref=db.backref('users', lazy='dynamic')
-    )
+    roles = db.relationship('Role', secondary=roles_users, backref=db.backref('users', lazy='dynamic'))
 
 
 class PicarroDataStore(SQLAlchemyUserDatastore):
@@ -83,7 +79,7 @@ class PicarroDataStore(SQLAlchemyUserDatastore):
     def get_all_from_model(self, model_name):
         model = getattr(self, model_name)
         return model.query.all()
-    
+
     def get_password(self, username):
         return self.pwd_model.query.filter_by(username=username).order_by(pds.pwd_model.id.desc())
 
@@ -104,13 +100,6 @@ class PicarroDataStore(SQLAlchemyUserDatastore):
         p = self.pwd_model(username, password)
         self.put(p)
         self.commit()
-        
-pds = PicarroDataStore(db, 
-        {
-            "user": User,
-            "role": Role,
-            "system": SystemVariable,
-            "pwd": Password,
-            "action": UserAction
-        }
-    )
+
+
+pds = PicarroDataStore(db, {"user": User, "role": Role, "system": SystemVariable, "pwd": Password, "action": UserAction})

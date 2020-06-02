@@ -16,7 +16,6 @@ class WindDataTableType(tables.IsDescription):
 
 
 class WeatherStationListener(object):
-
     def __init__(self, ipAddr, port):
         self.context = zmq.Context()
         self.listenSock = self.context.socket(zmq.SUB)
@@ -29,10 +28,8 @@ class WeatherStationListener(object):
 
     def setSaveFile(self, name):
         self.saveFname = name
-        self.saveHandle = tables.openFile(
-            self.saveFname, mode='w', title="Weather Station Data")
-        self.saveTable = self.saveHandle.createTable(
-            self.saveHandle.root, "windData", WindDataTableType)
+        self.saveHandle = tables.openFile(self.saveFname, mode='w', title="Weather Station Data")
+        self.saveTable = self.saveHandle.createTable(self.saveHandle.root, "windData", WindDataTableType)
 
     def closeSaveFile(self):
         if self.saveTable is not None:
@@ -76,8 +73,7 @@ class WeatherStationListener(object):
             wtot = sqrt(wlon * wlon + wlat * wlat) + 1.e-5
             wcos = wlon / wtot
             wsin = wlat / wtot
-            newDat = array([wlon, wlat, wcos, wsin,
-                            windDict["WS_COS_HEADING"], windDict["WS_SIN_HEADING"]])
+            newDat = array([wlon, wlat, wcos, wsin, windDict["WS_COS_HEADING"], windDict["WS_SIN_HEADING"]])
             if len(deque) == 0:
                 deque.append((windDict["timestamp"], newDat, newDat.copy()))
             else:
@@ -112,7 +108,7 @@ class WeatherStationListener(object):
         wsin = asarray([averages[w][3] for w in where])
         hcos = asarray([averages[w][4] for w in where])
         hsin = asarray([averages[w][5] for w in where])
-        eps = sqrt(1.0 - wsin ** 2 - wcos ** 2)
+        eps = sqrt(1.0 - wsin**2 - wcos**2)
         ystd = (180.0 / pi) * arcsin(eps) * \
             (1 + (2.0 / sqrt(3) - 1) * eps ** 3)
         return wlon, wlat, tobearing(wsin, wcos), tobearing(hsin, hcos), ystd

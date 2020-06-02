@@ -12,24 +12,19 @@ from Host.Utilities.ModbusServer.ErrorHandler import Errors
 from Host.autogen import interface
 from Host.Common.CustomConfigObj import CustomConfigObj
 
-
-DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"        
-ORIGIN = datetime.datetime(datetime.MINYEAR,1,1,0,0,0,0)
+DB_SERVER_URL = "http://127.0.0.1:3600/api/v1.0/"
+ORIGIN = datetime.datetime(datetime.MINYEAR, 1, 1, 0, 0, 0, 0)
 OFFSET = datetime.datetime.now() - datetime.datetime.utcnow()
 
-struct_type_map = {
-    "int_16"  :  "h",
-    "int_32"  :  "i",
-    "int_64"  :  "q",
-    "float_32":  "f",
-    "float_64":  "d"
-}
+struct_type_map = {"int_16": "h", "int_32": "i", "int_64": "q", "float_32": "f", "float_64": "d"}
+
 
 def get_variable_type(bit, type):
     if type == "string":
-        return "%ds" % (bit/8)
+        return "%ds" % (bit / 8)
     else:
         return struct_type_map["%s_%s" % (type.strip().lower(), bit)]
+
 
 class ModbusScriptEnv(object):
     def __init__(self, server, userdata_file_path):
@@ -37,14 +32,13 @@ class ModbusScriptEnv(object):
         self.host_session = requests.Session()
         self.current_user = None
         self._Modbus_Userdata_INI_File(userdata_file_path)
-        self._driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-            ClientName = "ModbusServer")
-        self._instrument_manager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER, 
-            ClientName = "ModbusServer")
-        self._valve_sequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_VALVE_SEQUENCER, 
-            ClientName = "ModbusServer")
+        self._driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, ClientName="ModbusServer")
+        self._instrument_manager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER,
+                                                              ClientName="ModbusServer")
+        self._valve_sequencer = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_VALVE_SEQUENCER,
+                                                           ClientName="ModbusServer")
         self.sampleMgrRpc = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_SAMPLE_MGR,
-            ClientName="ModbusServer")
+                                                       ClientName="ModbusServer")
         self.cavityPressureS = None
         self.cavityPressureT = None
         try:
@@ -59,7 +53,7 @@ class ModbusScriptEnv(object):
         for line in proc.stdout.readlines():
             (key, val) = line.split(':', 1)
             self._clockStatus[key.lstrip().rstrip(' \n')] = val.lstrip().rstrip(' \n')
-        
+
     def create_script_env(self):
         script_env = {}
         class_dir = dir(self)
@@ -68,7 +62,7 @@ class ModbusScriptEnv(object):
             if callable(attr) and s.startswith("MODBUS_"):
                 script_env[s] = attr
         return script_env
-                
+
     def _send_request(self, action, api, payload):
         """
         action: 'get' or 'post'
@@ -84,9 +78,9 @@ class ModbusScriptEnv(object):
             return response, json
         except Exception, err:
             return response, {"error": str(err)}
-                
+
     ########## Functions for accessing Modbus memory #####################################
-        
+
     def MODBUS_GetValue(self, name):
         if name in self.server.variable_params:
             d = self.server.variable_params[name]
@@ -97,12 +91,12 @@ class ModbusScriptEnv(object):
             else:
                 bit = d["bit"]
                 type = d["type"]
-                count = bit/16
+                count = bit / 16
                 values = self.server.context[self.server.slaveid].getValues(reg, addr, count)
                 value_str = struct.pack("%s%dH" % (self.server.endian, count), *values)
                 ret = struct.unpack("%s%s" % (self.server.endian, get_variable_type(bit, type)), value_str)
                 return ret[0]
-                
+
     def MODBUS_SetValue(self, name, value):
         if name in self.server.variable_params:
             d = self.server.variable_params[name]
@@ -113,26 +107,26 @@ class ModbusScriptEnv(object):
             else:
                 bit = d["bit"]
                 type = d["type"]
-                count = bit/16
+                count = bit / 16
                 value_str = struct.pack("%s%s" % (self.server.endian, get_variable_type(bit, type)), value)
-                value_to_write = list( struct.unpack('%s%dH' % (self.server.endian, count), value_str) )
+                value_to_write = list(struct.unpack('%s%dH' % (self.server.endian, count), value_str))
                 self.server.context[self.server.slaveid].setValues(reg, addr, value_to_write)
 
     def MODBUS_SetError(self, error):
         self.server.errorhandler.set_error(error)
 
     ########## Time related functions #####################################
-                
+
     def MODBUS_TimestampToLocalDatetime(self, timestamp):
         """Converts 64-bit millisecond resolution timestamp to local datetime"""
-        return datetime.timedelta(microseconds=1000*timestamp) + ORIGIN + OFFSET
-        
+        return datetime.timedelta(microseconds=1000 * timestamp) + ORIGIN + OFFSET
+
     def MODBUS_GetSystemTime(self):
         """Get 64-bit millisecond resolution timestamp"""
-        currenttime = time.time()*1000+62135596800000
+        currenttime = time.time() * 1000 + 62135596800000
         self.server.errorhandler.set_error(Errors.NO_ERROR)
         return currenttime
-        
+
     def MODBUS_SetSystemTime(self, timestamp):
         """Set system clock using 64-bit millisecond resolution timestamp"""
         dt = self.MODBUS_TimestampToLocalDatetime(timestamp)
@@ -146,8 +140,7 @@ class ModbusScriptEnv(object):
                 dt.hour,
                 dt.minute,
                 dt.second,
-                dt.microsecond / 1000
-            )
+                dt.microsecond / 1000)
         elif sys.platform == 'linux2':
             try:
                 datetimeStr = dt.strftime("%Y-%m-%d %H:%M:%S")
@@ -188,13 +181,13 @@ class ModbusScriptEnv(object):
         return
 
     ########## Instrument Manager functions #####################################
-    
+
     def MODBUS_EnableMeasurement(self):
         self._instrument_manager.INSTMGR_StartMeasureRpc()
 
     def MODBUS_DisableMeasurement(self):
         self._instrument_manager.INSTMGR_StopMeasureRpc()
-        
+
     def MODBUS_ParkInstrument(self):
         self._instrument_manager.INSTMGR_ShutdownRpc(0, False)
         self.MODBUS_SetError(Errors.NO_ERROR)
@@ -204,9 +197,9 @@ class ModbusScriptEnv(object):
         self._instrument_manager.INSTMGR_ShutdownRpc(0, True)
         self.MODBUS_SetError(Errors.NO_ERROR)
         return 1
-    
+
     ########## Valve Sequencer functions #####################################
-    
+
     def MODBUS_StartValveSequence(self):
         self._valve_sequencer.startValveSeq()
 
@@ -219,14 +212,11 @@ class ModbusScriptEnv(object):
     def MODBUS_SetValveState(self, valveMask):
         self._valve_sequencer.stopValveSeq()
         self._valve_sequencer.setValves(int(valveMask))
-        
+
     ########## User Database functions #####################################
-    
+
     def MODBUS_UserLogin(self, username, password):
-        payload = {'command': "log_in_user",
-                   'requester': "Modbus",
-                   'username': username, 
-                   'password': password}
+        payload = {'command': "log_in_user", 'requester': "Modbus", 'username': username, 'password': password}
         response, return_dict = self._send_request("post", "account", payload)
         if "error" not in return_dict and response.status_code == 200:
             self.current_user = return_dict
@@ -246,9 +236,9 @@ class ModbusScriptEnv(object):
                 error_code = Errors.ERROR
             self.MODBUS_SetError(error_code)
             return 0
-        
+
     def MODBUS_UserLogoff(self):
-        response, return_dict = self._send_request("post", "account", {"command":"log_out_user", 'requester': "Modbus"})
+        response, return_dict = self._send_request("post", "account", {"command": "log_out_user", 'requester': "Modbus"})
         if "error" not in return_dict and response.status_code == 200:
             self.current_user = None
             self.MODBUS_SetError(Errors.NO_ERROR)
@@ -256,7 +246,7 @@ class ModbusScriptEnv(object):
         else:
             self.MODBUS_SetError(Errors.ERROR)
             return 0
-            
+
     def MODBUS_ChangeUserPassword(self, username, new_password):
         payload = dict(command="update_user", username=username, password=new_password)
         response, return_dict = self._send_request("post", "users", payload)
@@ -306,7 +296,7 @@ class ModbusScriptEnv(object):
         '''
         try:
             lockStatus = self._driver.rdDasReg("DAS_STATUS_REGISTER")
-            return ((lockStatus >> interface.DAS_STATUS_WarmBoxTempCntrlLockedBit ) & 1)
+            return ((lockStatus >> interface.DAS_STATUS_WarmBoxTempCntrlLockedBit) & 1)
         except:
             pass
 
@@ -398,7 +388,7 @@ class ModbusScriptEnv(object):
         # check if userdata object is created
         if self.userdata_config:
             self.userdata_config.set("Main", userdata_key, userdata_new_value)
-            
+
             # write value to file
             with open(self.userdata_file_path, "w") as fh:
                 self.userdata_config.write(fh)

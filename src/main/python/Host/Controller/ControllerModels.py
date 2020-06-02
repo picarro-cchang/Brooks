@@ -47,10 +47,8 @@ class DriverProxy(SharedTypes.Singleton):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                                          SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(
-                serverURI, ClientName="Controller")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="Controller")
             self.initialized = True
 
 
@@ -62,10 +60,8 @@ class RDFreqConvProxy(SharedTypes.Singleton):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                                          SharedTypes.RPC_PORT_FREQ_CONVERTER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(
-                serverURI, ClientName="Controller")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_FREQ_CONVERTER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="Controller")
             self.initialized = True
 
 
@@ -77,25 +73,23 @@ class SpectrumCollectorProxy(SharedTypes.Singleton):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                                          SharedTypes.RPC_PORT_SPECTRUM_COLLECTOR)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(
-                serverURI, ClientName="Controller")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_SPECTRUM_COLLECTOR)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="Controller")
             self.initialized = True
 
 
 class RingdownListener(SharedTypes.Singleton):
-
     def __init__(self):
-        self.listener = Listener(queue=None,
-                                 # port = SharedTypes.BROADCAST_PORT_RDRESULTS,
-                                 port=SharedTypes.BROADCAST_PORT_RD_RECALC,
-                                 # elementType = interface.RingdownEntryType,
-                                 elementType=interface.ProcessedRingdownEntryType,
-                                 streamFilter=self.filter,
-                                 retry=True,
-                                 name="Controller ringdown stream listener",
-                                 logFunc=event_manager_proxy.Log)
+        self.listener = Listener(
+            queue=None,
+            # port = SharedTypes.BROADCAST_PORT_RDRESULTS,
+            port=SharedTypes.BROADCAST_PORT_RD_RECALC,
+            # elementType = interface.RingdownEntryType,
+            elementType=interface.ProcessedRingdownEntryType,
+            streamFilter=self.filter,
+            retry=True,
+            name="Controller ringdown stream listener",
+            logFunc=event_manager_proxy.Log)
 
     def filter(self, data):
         # if data.status & interface.RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask:
@@ -118,7 +112,6 @@ class RingdownListener(SharedTypes.Singleton):
 
 
 class SensorListener(SharedTypes.Singleton):
-
     def __init__(self):
         self.listener = Listener(queue=None,
                                  port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
@@ -244,7 +237,6 @@ class SensorListener(SharedTypes.Singleton):
 
 
 class LogListener(SharedTypes.Singleton):
-
     def __init__(self):
         self.queue = Queue()
         self.listener = TextListener(queue=self.queue,
@@ -286,8 +278,7 @@ class ControllerRpcHandler(SharedTypes.Singleton):
             attr = obj.__getattribute__(s)
             if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
                 # if __debug__: print "registering", s
-                self.server.register_function(
-                    attr, DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
+                self.server.register_function(attr, DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
 
     def _register_rpc_functions(self):
         """ Registers the functions accessible by XML-RPC """

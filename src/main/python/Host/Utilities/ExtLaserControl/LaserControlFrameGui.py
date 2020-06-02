@@ -61,4 +61,5 @@ class LaserControlFrameGui(wx.Frame):
         self.Layout()
         # end wxGlade
 
+
 # end of class LaserControlFrameGui

@@ -4,6 +4,7 @@ from PyQt4.QtGui import *
 import pyqtgraph as pg
 from DateAxisItem import DateAxisItem
 
+
 class H2O2ValidationFrame(QMainWindow):
     """
     Define user interface of H2O2Validation program
@@ -17,14 +18,14 @@ class H2O2ValidationFrame(QMainWindow):
         with open(os.path.join(self.curr_dir, 'styleSheet.qss'), 'r') as f:
             self.style_data = f.read()
         self.setStyleSheet(self.style_data)
-        pg.setConfigOption('background', (64,64,64))
+        pg.setConfigOption('background', (64, 64, 64))
         self.create_widgets()
         self.set_connections()
-        self.resize(1200,800)      
-        
+        self.resize(1200, 800)
+
     def create_widgets(self):
         self.measurement_timer = QTimer()
-        
+
         self.top_frame = QWidget()
         self.top_frame.setMaximumHeight(150)
         self.display_conc_ch4 = QLabel("0.00")
@@ -40,8 +41,8 @@ class H2O2ValidationFrame(QMainWindow):
         self.display_conc_h2o.setFrameShape(QFrame.Panel)
         self.display_conc_h2o.setFixedWidth(100)
         time_axis = DateAxisItem("bottom")
-        time_series_plot = pg.PlotWidget(axisItems={'bottom':time_axis})
-        time_series_plot.setMouseEnabled(x=False,y=False)
+        time_series_plot = pg.PlotWidget(axisItems={'bottom': time_axis})
+        time_series_plot.setMouseEnabled(x=False, y=False)
         time_series_plot.setMenuEnabled(False)
         time_series_plot.showGrid(x=True, y=True)
         time_series_plot.setLabels(left="CH4 (ppm)")
@@ -51,12 +52,12 @@ class H2O2ValidationFrame(QMainWindow):
         time_series_plot.getAxis("bottom").setStyle(autoExpandTextSpace=False)
 
         # Add top and right axes without labels to create a box around the plot.
-        time_series_plot.showAxis("top",show=True)
+        time_series_plot.showAxis("top", show=True)
         time_series_plot.getAxis("top").setStyle(showValues=False)
-        time_series_plot.showAxis("right",show=True)
+        time_series_plot.showAxis("right", show=True)
         time_series_plot.getAxis("right").setStyle(showValues=False)
 
-        self.ch4_plot = time_series_plot.plot(pen=pg.mkPen(color=(255,255,255), width=1))
+        self.ch4_plot = time_series_plot.plot(pen=pg.mkPen(color=(255, 255, 255), width=1))
         top_layout = QHBoxLayout()
         data_layout = QVBoxLayout()
         data_layout.addStretch(1)
@@ -78,7 +79,7 @@ class H2O2ValidationFrame(QMainWindow):
         top_layout.addLayout(data_layout)
         top_layout.addWidget(time_series_plot)
         self.top_frame.setLayout(top_layout)
-        
+
         self.wizard_frame = QWidget()
         self.display_caption = QLabel("")
         self.display_caption.setAccessibleName("caption")
@@ -112,7 +113,7 @@ class H2O2ValidationFrame(QMainWindow):
         information_layout.addLayout(info_layout)
         information_layout.addWidget(self.cylinder_selection)
         #information_layout.addStretch(1)
-                
+
         # control buttons
         self.button_skip_step = QPushButton("Skip")
         self.button_skip_step.setAutoDefault(True)
@@ -131,15 +132,15 @@ class H2O2ValidationFrame(QMainWindow):
         button_layout.addWidget(self.button_last_step)
         button_layout.addWidget(self.button_next_step)
         button_layout.addWidget(self.button_cancel_process)
-        
+
         wizard_layout = QGridLayout()
-        wizard_layout.setColumnStretch(0,1)
-        wizard_layout.setColumnStretch(2,1)
-        wizard_layout.addLayout(information_layout,0,1,Qt.AlignHCenter)
-        wizard_layout.addLayout(button_layout,1,1, Qt.AlignHCenter)
+        wizard_layout.setColumnStretch(0, 1)
+        wizard_layout.setColumnStretch(2, 1)
+        wizard_layout.addLayout(information_layout, 0, 1, Qt.AlignHCenter)
+        wizard_layout.addLayout(button_layout, 1, 1, Qt.AlignHCenter)
         self.wizard_frame.setLayout(wizard_layout)
-        
-        # report 
+
+        # report
         self.report_frame = QWidget()
         self.report = QTextEdit()
         self.report.setFixedWidth(800)
@@ -149,7 +150,7 @@ class H2O2ValidationFrame(QMainWindow):
         self.button_exit.setStyleSheet("width: 100px")
         self.button_report_file = QPushButton("Download Report")
         self.button_report_file.setStyleSheet("width: 120px")
-        
+
         control_layout = QHBoxLayout()
         control_layout.addStretch(1)
         control_layout.addWidget(self.button_report_file)
@@ -157,12 +158,12 @@ class H2O2ValidationFrame(QMainWindow):
         control_layout.addWidget(self.button_exit)
         control_layout.addStretch(1)
         report_layout = QGridLayout()
-        report_layout.setColumnStretch(0,1)
-        report_layout.setColumnStretch(2,1)
-        report_layout.addWidget(self.report,0,1,Qt.AlignHCenter)
-        report_layout.addLayout(control_layout,1,1,Qt.AlignHCenter)
+        report_layout.setColumnStretch(0, 1)
+        report_layout.setColumnStretch(2, 1)
+        report_layout.addWidget(self.report, 0, 1, Qt.AlignHCenter)
+        report_layout.addLayout(control_layout, 1, 1, Qt.AlignHCenter)
         self.report_frame.setLayout(report_layout)
-        
+
         # login
         self.login_frame = QWidget()
         # Picarro logo
@@ -170,12 +171,12 @@ class H2O2ValidationFrame(QMainWindow):
         picarro_label = QLabel("")
         picarro_label.setPixmap(picarro_logo.scaledToHeight(36, Qt.SmoothTransformation))
         logo_box = QVBoxLayout()
-        logo_box.addWidget(picarro_label,0,Qt.AlignHCenter)
-        logo_box.addWidget(QLabel("<h3>System Validation Tool</h3>"),0,Qt.AlignHCenter)
+        logo_box.addWidget(picarro_label, 0, Qt.AlignHCenter)
+        logo_box.addWidget(QLabel("<h3>System Validation Tool</h3>"), 0, Qt.AlignHCenter)
         self.label_login_message = QLabel("")
         self.input_user_name = QLineEdit()
         self.input_password = QLineEdit()
-        self.input_password.setEchoMode(QLineEdit.Password)        
+        self.input_password.setEchoMode(QLineEdit.Password)
         self.button_user_login = QPushButton("Login")
         self.button_user_login.setAutoDefault(True)
         self.button_cancel_login = QPushButton("Cancel")
@@ -192,14 +193,14 @@ class H2O2ValidationFrame(QMainWindow):
         login_buttons.addWidget(self.button_user_login)
         login_buttons.addWidget(self.button_cancel_login)
         grid_layout = QGridLayout()
-        grid_layout.setColumnStretch(0,1)
-        grid_layout.setColumnStretch(2,1)
-        grid_layout.setRowStretch(0,1)
-        grid_layout.addWidget(self.label_login_message,1,1,Qt.AlignHCenter)
-        grid_layout.addLayout(login_hbox,2,1,Qt.AlignHCenter)
-        grid_layout.addLayout(login_buttons,3,1,Qt.AlignHCenter)
-        grid_layout.addWidget(self.label_login_info,4,1,Qt.AlignHCenter)
-        grid_layout.setRowStretch(5,1)
+        grid_layout.setColumnStretch(0, 1)
+        grid_layout.setColumnStretch(2, 1)
+        grid_layout.setRowStretch(0, 1)
+        grid_layout.addWidget(self.label_login_message, 1, 1, Qt.AlignHCenter)
+        grid_layout.addLayout(login_hbox, 2, 1, Qt.AlignHCenter)
+        grid_layout.addLayout(login_buttons, 3, 1, Qt.AlignHCenter)
+        grid_layout.addWidget(self.label_login_info, 4, 1, Qt.AlignHCenter)
+        grid_layout.setRowStretch(5, 1)
         login_layout = QVBoxLayout()
         login_layout.addSpacing(25)
         login_layout.addLayout(logo_box)
@@ -240,16 +241,16 @@ class H2O2ValidationFrame(QMainWindow):
         info_layout.addRow("CH4 concentration (ppm)", self.input_cylinder_ch4)
         info_layout.addRow("Uncertainty (%)", self.input_cylinder_uncertainty)
         cylinder_layout = QGridLayout()
-        cylinder_layout.setColumnStretch(0,1)
-        cylinder_layout.setColumnStretch(2,1)
-        cylinder_layout.setRowStretch(0,1)
+        cylinder_layout.setColumnStretch(0, 1)
+        cylinder_layout.setColumnStretch(2, 1)
+        cylinder_layout.setRowStretch(0, 1)
         label1 = QLabel("<h3>Available Cylinders. Please review infomation of all cylinders for validation.</h3>" +
-            "<h3>Then click 'Exit' to proceed.</h3>") 
-        cylinder_layout.addWidget(label1,1,1,Qt.AlignLeft)
-        cylinder_layout.addWidget(self.table_cylinder_list,2,1,Qt.AlignHCenter)
-        cylinder_layout.addLayout(info_layout,3,1,Qt.AlignHCenter)
-        cylinder_layout.addLayout(control_layout,4,1,Qt.AlignHCenter)
-        cylinder_layout.setRowStretch(5,1)
+                        "<h3>Then click 'Exit' to proceed.</h3>")
+        cylinder_layout.addWidget(label1, 1, 1, Qt.AlignLeft)
+        cylinder_layout.addWidget(self.table_cylinder_list, 2, 1, Qt.AlignHCenter)
+        cylinder_layout.addLayout(info_layout, 3, 1, Qt.AlignHCenter)
+        cylinder_layout.addLayout(control_layout, 4, 1, Qt.AlignHCenter)
+        cylinder_layout.setRowStretch(5, 1)
         self.cylinder_frame.setLayout(cylinder_layout)
 
         # add cylinder
@@ -263,20 +264,20 @@ class H2O2ValidationFrame(QMainWindow):
         control_layout.addWidget(self.button_add_cylinder_ok)
         control_layout.addStretch(1)
         control_layout.addWidget(self.button_add_cylinder_cancel)
-        info_layout = QFormLayout()        
+        info_layout = QFormLayout()
         info_layout.addRow("Identification <font color='#FF0000'>*</font>", self.input_add_cylinder_ident)
         info_layout.addRow("CH4 concentration (ppm) <font color='#FF0000'>*</font>", self.input_add_cylinder_ch4)
         info_layout.addRow("Uncertainty (%) <font color='#FF0000'>*</font>", self.input_add_cylinder_uncertainty)
         info_layout.addRow(control_layout)
         add_cylinder_layout = QGridLayout()
-        add_cylinder_layout.setColumnStretch(0,1)
-        add_cylinder_layout.setColumnStretch(2,1)
-        add_cylinder_layout.setRowStretch(0,1)
-        add_cylinder_layout.addWidget(QLabel("<font size='6'>Add Cylinder</font>"), 1,1, Qt.AlignHCenter)
-        add_cylinder_layout.addLayout(info_layout, 2,1, Qt.AlignHCenter)
-        add_cylinder_layout.setRowStretch(3,1)
+        add_cylinder_layout.setColumnStretch(0, 1)
+        add_cylinder_layout.setColumnStretch(2, 1)
+        add_cylinder_layout.setRowStretch(0, 1)
+        add_cylinder_layout.addWidget(QLabel("<font size='6'>Add Cylinder</font>"), 1, 1, Qt.AlignHCenter)
+        add_cylinder_layout.addLayout(info_layout, 2, 1, Qt.AlignHCenter)
+        add_cylinder_layout.setRowStretch(3, 1)
         self.add_cylinder_frame.setLayout(add_cylinder_layout)
-            
+
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.top_frame)
         main_layout.addWidget(self.wizard_frame)
@@ -284,17 +285,17 @@ class H2O2ValidationFrame(QMainWindow):
         main_layout.addWidget(self.login_frame)
         main_layout.addWidget(self.cylinder_frame)
         main_layout.addWidget(self.add_cylinder_frame)
-        
+
         central_widget = QWidget()
         central_widget.setLayout(main_layout)
         self.setCentralWidget(central_widget)
-        
+
         self.report_frame.hide()
         self.top_frame.hide()
         self.wizard_frame.hide()
         self.cylinder_frame.hide()
         self.add_cylinder_frame.hide()
-        
+
     def set_connections(self):
         self.measurement_timer.timeout.connect(self.measurement)
         self.button_skip_step.clicked.connect(self.skip_step)

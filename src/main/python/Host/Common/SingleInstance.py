@@ -12,6 +12,7 @@ import os
 
 class SingleInstance:
     """ Limits application to single instance """
+
     # The recommended place to put pid files is /run.  This location is
     # preferred because early in the boot process this directory is cleared
     # out so we don't have stale pid files hanging about after a power

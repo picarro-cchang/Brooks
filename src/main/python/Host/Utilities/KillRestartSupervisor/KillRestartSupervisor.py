@@ -10,20 +10,16 @@ from Host.Common import CmdFIFO
 from Host.Common import SharedTypes
 from Host.Common import EventManagerProxy
 
-
 APP_NAME = 'KillRestartSupervisor'
-
 
 if __name__ == '__main__':
     EventManagerProxy.EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
-
     EventManagerProxy.Log('Preparing to kill restart supervisor.')
 
-    restartSupervisor = CmdFIFO.CmdFIFOServerProxy(
-        "http://localhost:%d" % SharedTypes.RPC_PORT_RESTART_SUPERVISOR,
-        APP_NAME,
-        IsDontCareConnection=False)
+    restartSupervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_RESTART_SUPERVISOR,
+                                                   APP_NAME,
+                                                   IsDontCareConnection=False)
 
     try:
         restartSupervisor.Terminate()

@@ -48,12 +48,14 @@ RINGDOWN_BASE = interface.DSP_DATA_ADDRESS
 
 ValveSequenceType = (interface.ValveSequenceEntryType * interface.NUM_VALVE_SEQUENCE_ENTRIES)
 
+
 def usbLockProtect(func):
     """Decorator using usbLock to serialize access to function f
 
     The lock used is a property of self.deviceUsb in the underlying USB interface
     """
     assert callable(func)
+
     def wrapper(self, *a, **k):
         """Wrapper for function
         """
@@ -62,9 +64,11 @@ def usbLockProtect(func):
             return func(self, *a, **k)
         finally:
             self.deviceUsb.usbLock.release()
+
     return wrapper
 
-class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
+
+class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     """Encapsulates communications between host and DSP.
 
     This provides for the DSP to be programmed, as well as for accessing
@@ -76,6 +80,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
     """
 
     initialized = False
+
     # Object that keeps track of sequence numbers, and packages
     #  data for host to Dsp communications
 
@@ -112,7 +117,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         assert isinstance(fileName, (str, unicode))
         self.dspAccessor.program(fileName)
         self.programmed = True
-            
+
     ############################################################################
     # The following methods are used when the host needs to write to the DSP
     #  via the host area
@@ -143,7 +148,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         assert isinstance(command, (int, long))
         assert hasattr(data, '__iter__')
         assert isinstance(env, (int, long))
-        
+
         if not self.programmed:
             raise DasException("Cannot write to DSP before programming it.")
         self.initStatus = self.rdRegUint(interface.COMM_STATUS_REGISTER)
@@ -165,7 +170,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
                 hostMsg[i] = c_uint(datum & 0xFFFFFFFF)
             elif isinstance(datum, float):
                 floatVal = c_float(datum)
-                hostMsg[i] = c_uint.from_address(addressof(floatVal)) # pylint: disable=E1101
+                hostMsg[i] = c_uint.from_address(addressof(floatVal))  # pylint: disable=E1101
             else:
                 raise ValueError("Data type %s is unknown in send" % type(datum))
             i += 1
@@ -215,7 +220,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         seqNum = self.seqNum
         self.seqNum = None
         msgFmt = ("Timeout getting status after %s tries. Initial status: 0x%x," +
-            "Final status: 0x%x, Expected sequence number: %s")
+                  "Final status: 0x%x, Expected sequence number: %s")
         raise DasException(msgFmt % (ntries, self.initStatus, self.status, seqNum))
 
     @usbLockProtect
@@ -226,8 +231,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         try:
             if 0 != (self.status & interface.COMM_STATUS_BadCrcMask):
                 raise DasCommsException("Bad CRC detected")
-            if 0 != (self.status &
-                     interface.COMM_STATUS_BadSequenceNumberMask):
+            if 0 != (self.status & interface.COMM_STATUS_BadSequenceNumberMask):
                 raise DasCommsException("DSP unexpected sequence number: %d, %d" % (seqNum, self.seqNum))
             if seqNum != self.seqNum:
                 raise DasCommsException("Host unexpected sequence number: %d, %d" % (seqNum, self.seqNum))
@@ -239,7 +243,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         finally:
             # Prepare for next send
             self.seqNum = (seqNum + 1) & 0xFF
-        
+
     ############################################################################
     # The following methods are used to read and write DSP memory from the host
     ############################################################################
@@ -256,10 +260,12 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         chunkSize = 250
         status = 0
         while True:
-            chunk = [lookup(v) for v in values[start:start+chunkSize]]
+            chunk = [lookup(v) for v in values[start:start + chunkSize]]
             n = len(chunk)
             if n > 0:
-                status = self.send(interface.ACTION_WRITE_BLOCK, [offset+start,] + chunk)
+                status = self.send(interface.ACTION_WRITE_BLOCK, [
+                    offset + start,
+                ] + chunk)
                 start += n
             else:
                 break
@@ -390,7 +396,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
     # The following methods are used to transfer data from the DSP to the host
     #  within the main loop of the driver
     ############################################################################
-    
+
     @usbLockProtect
     def rdSensorData(self, index):
         """Reads one entry from sensor data area in DSP memory.
@@ -493,7 +499,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         data = (c_char * 120)()
         self.dspAccessor.hpiRead(MESSAGE_BASE + 128 * index + 8, data)
         return data.value
-        
+
     @usbLockProtect
     def rdDspTimerRegisters(self):
         """Reads DSP TIMER0 registers.
@@ -533,15 +539,14 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
             address: Name or starting address of environmental table entry. Note that an environment
                 takes up one or more addresses, depending on its size.
             env: ctypes object containing the environment
-        """    
+        """
         # Write the environment structure env to the environment
         #  table at the specified index (integer offset)
         assert isinstance(address, (int, long, str, unicode))
         assert isinstance(env, Structure)
         numInt = sizeof(env) / sizeof(c_uint)
         envAsArray = (c_uint * numInt).from_address(addressof(env))
-        return self.wrBlock(interface.ENVIRONMENT_OFFSET + lookup(address), *envAsArray) # pylint: disable=W0142
-
+        return self.wrBlock(interface.ENVIRONMENT_OFFSET + lookup(address), *envAsArray)  # pylint: disable=W0142
 
     @usbLockProtect
     def doOperation(self, oper):
@@ -554,7 +559,6 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         """
         assert isinstance(oper, Operation)
         return self.send(oper.opcode, oper.operandList, oper.env)
-    
 
     ############################################################################
     # The following methods are used to read and write schemes to the DSP
@@ -576,7 +580,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         assert isinstance(schemeNum, (int, long))
         assert isinstance(numRepeats, (int, long))
         assert hasattr(schemeRows, '__iter__')
-        
+
         schemeBase = interface.DSP_DATA_ADDRESS + 4 * interface.SCHEME_OFFSET
         if schemeNum >= interface.NUM_SCHEME_TABLES:
             raise ValueError("Maximum number of schemes available is %d" % interface.NUM_SCHEME_TABLES)
@@ -620,13 +624,15 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         self.dspAccessor.hpiRead(schemeTableAddr, schemeHeader)
         schemeTable = getSchemeTableClass(schemeHeader.numRows)()
         self.dspAccessor.hpiRead(schemeTableAddr, schemeTable)
-        return {"numRepeats": schemeTable.numRepeats,
-                "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser,
-                               row.threshold, row.pztSetpoint, 0.001 * row.laserTemp) for row in schemeTable.rows]}
-    
+        return {
+            "numRepeats":
+            schemeTable.numRepeats,
+            "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser, row.threshold, row.pztSetpoint,
+                            0.001 * row.laserTemp) for row in schemeTable.rows]
+        }
 
     ############################################################################
-    # The following methods are used to read and write valve sequences to 
+    # The following methods are used to read and write valve sequences to
     #  the DSP
     ############################################################################
 
@@ -676,13 +682,11 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
             entry = valveSequence[i]
             sequenceRows.append(((entry.maskAndValue >> 8) & 0xFF, entry.maskAndValue & 0xFF, entry.dwell))
         return sequenceRows
-    
 
     ############################################################################
     # The following methods are used to read and write virtual laser
     #  parameters to the DSP
     ############################################################################
-
 
     @usbLockProtect
     def wrVirtualLaserParams(self, vLaserNum, vLaserParams):
@@ -698,8 +702,7 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
         if not isinstance(vLaserParams, interface.VirtualLaserParamsType):
             raise ValueError("Invalid object to write in wrVirtualLaserParams")
         virtualLaserParamsAddr = virtualLaserParamsBase + 4 * (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
-        self.doOperation(Operation("ACTION_WB_INV_CACHE", 
-                                   [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
+        self.doOperation(Operation("ACTION_WB_INV_CACHE", [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiWrite(virtualLaserParamsAddr, vLaserParams)
 
     @usbLockProtect
@@ -716,7 +719,6 @@ class HostToDspSender(Singleton): # pylint: disable=R0902, R0904
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         vLaserParams = interface.VirtualLaserParamsType()
         virtualLaserParamsAddr = virtualLaserParamsBase + 4 * (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
-        self.doOperation(Operation("ACTION_WB_CACHE", 
-                                   [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
+        self.doOperation(Operation("ACTION_WB_CACHE", [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiRead(virtualLaserParamsAddr, vLaserParams)
         return vLaserParams

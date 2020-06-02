@@ -7,4 +7,4 @@ if __name__ == "__main__":
     except:
         tbMsg = traceback.format_exc()
         print "Unhandled exception trapped by last chance handler"
-        print "%s" % (tbMsg,)
+        print "%s" % (tbMsg, )

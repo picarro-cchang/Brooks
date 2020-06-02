@@ -20,7 +20,6 @@
 #WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 #OTHER DEALINGS IN THE SOFTWARE.
-
 """
 Fetches weather reports from Yahoo Weather
 """
@@ -29,10 +28,11 @@ import re
 from xml.dom import minidom
 from urllib import quote
 
-YAHOO_WEATHER_URL    = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=%s'
-YAHOO_WEATHER_NS     = 'http://xml.weather.yahoo.com/ns/rss/1.0'
+YAHOO_WEATHER_URL = 'http://xml.weather.yahoo.com/forecastrss?p=%s&u=%s'
+YAHOO_WEATHER_NS = 'http://xml.weather.yahoo.com/ns/rss/1.0'
 
-def get_weather_from_yahoo(location_id, units = 'metric'):
+
+def get_weather_from_yahoo(location_id, units='metric'):
     """
     Fetches weather report from Yahoo!
 
@@ -82,12 +82,13 @@ def get_weather_from_yahoo(location_id, units = 'metric'):
 
     forecasts = []
     for forecast in dom.getElementsByTagNameNS(YAHOO_WEATHER_NS, 'forecast'):
-        forecasts.append(xml_get_attrs(forecast,('date', 'low', 'high', 'text', 'code')))
+        forecasts.append(xml_get_attrs(forecast, ('date', 'low', 'high', 'text', 'code')))
     weather_data['forecasts'] = forecasts
 
     dom.unlink()
 
     return weather_data
+
 
 def xml_get_ns_yahoo_tag(dom, ns, tag, attrs):
     """
@@ -102,7 +103,7 @@ def xml_get_ns_yahoo_tag(dom, ns, tag, attrs):
     Returns: a dictionary of elements
     """
     element = dom.getElementsByTagNameNS(ns, tag)[0]
-    return xml_get_attrs(element,attrs)
+    return xml_get_attrs(element, attrs)
 
 
 def xml_get_attrs(xml_element, attrs):
@@ -121,8 +122,9 @@ def xml_get_attrs(xml_element, attrs):
         result[attr] = xml_element.getAttribute(attr)
     return result
 
+
 if __name__ == "__main__":
     import pprint
     pp = pprint.PrettyPrinter(indent=4)
 
-    pp.pprint(get_weather_from_yahoo('94085',units=''))
+    pp.pprint(get_weather_from_yahoo('94085', units=''))

@@ -15,7 +15,8 @@ class RequestRestart(object):
         :param APP_NAME: Name of the application you wish to restart. This variable can
             typically be found at the header of any individual application's source.
         """
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME,
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
+                                                     APP_NAME,
                                                      IsDontCareConnection=False)
         self.APP_NAME = APP_NAME
         self.status = None

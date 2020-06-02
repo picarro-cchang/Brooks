@@ -25,16 +25,16 @@ from Host.autogen.interface import *
 from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.SharedTypes import RPC_PORT_DRIVER
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                    "", IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, "", IsDontCareConnection=False)
+
 
 class GetRdWaveforms(object):
-    def __init__(self,configFile,options):
+    def __init__(self, configFile, options):
         pass
 
     def run(self):
@@ -42,13 +42,13 @@ class GetRdWaveforms(object):
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
         self.d = []
         for i in range(50):
-            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_PausedState)
+            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER, SPECT_CNTRL_PausedState)
             time.sleep(0.05)
             data, meta, params = Driver.rdRingdown(0)
-            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER,SPECT_CNTRL_RunningState)
+            Driver.wrDasReg(SPECT_CNTRL_STATE_REGISTER, SPECT_CNTRL_RunningState)
             self.d.append(data)
             time.sleep(0.05)
             print i
@@ -66,8 +66,10 @@ settings in the configuration file:
 -c                   specify a config file:  default = "./getRdWaveforms.ini"
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:'
@@ -79,10 +81,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in options or "--help" in options:
@@ -91,6 +93,7 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
     return configFile, options
+
 
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()

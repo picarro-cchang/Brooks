@@ -60,13 +60,14 @@ DEFAULT_DELETE_TIME_HRS = 1.0
 SECONDS_PER_HOUR = 3600
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-EventManagerProxy_Init(APP_NAME,DontCareConnection = True)
+EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
+
 
 class FileEraser(object):
     def __init__(self, configFile):
@@ -81,7 +82,7 @@ class FileEraser(object):
             path = os.path.abspath(os.path.join(basePath, co.get(dir, "path")))
             self.policyDict[dir] = {"path": path, "delete_time_hrs": co.getfloat(dir, "delete_time_hrs", DEFAULT_DELETE_TIME_HRS)}
             extension = co.get(dir, "extension", "")
-            extensionList = re.split('\s*\s',extension.replace(',',' ').strip())
+            extensionList = re.split('\s*\s', extension.replace(',', ' ').strip())
             if extensionList[0] == '':
                 extensionList = ['*']
             self.policyDict[dir]["extension"] = extensionList
@@ -89,10 +90,10 @@ class FileEraser(object):
 
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FILE_ERASER),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = __version__,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=__version__,
+                                               threaded=True)
 
     def eraseOldFiles(self):
         for dir in self.policyDict.keys():
@@ -101,10 +102,10 @@ class FileEraser(object):
             extensionList = self.policyDict[dir]["extension"]
             numExtensions = self.policyDict[dir]["numExtensions"]
 
-            Log("Removing " + "\"*.%s\", "*numExtensions % tuple(extensionList)
-                + "in %s that are older than %.1f hours" % (pathToClean, deleteTimeHrs))
-            print("Removing " + "\"*.%s\", "*numExtensions % tuple(extensionList)
-                + "in %s that are older than %.1f hours" % (pathToClean, deleteTimeHrs))
+            Log("Removing " + "\"*.%s\", " * numExtensions % tuple(extensionList) + "in %s that are older than %.1f hours" %
+                (pathToClean, deleteTimeHrs))
+            print("Removing " + "\"*.%s\", " * numExtensions % tuple(extensionList) + "in %s that are older than %.1f hours" %
+                  (pathToClean, deleteTimeHrs))
 
             # Remove files with specified extensions that are older than the specified time
             _removeOldFiles(pathToClean, extensionList, deleteTimeHrs)
@@ -121,17 +122,18 @@ class FileEraser(object):
             time.sleep(self.interval)
 
     def runApp(self):
-        rpcThread = threading.Thread(target = self.keepErasingOldFiles)
+        rpcThread = threading.Thread(target=self.keepErasingOldFiles)
         rpcThread.setDaemon(True)
         rpcThread.start()
         self.RpcServer.serve_forever()
 
+
 def _removeOldFiles(pathToClean, extensionList, deleteTimeHrs):
     for root, dirs, files in os.walk(pathToClean):
         for filename in files:
-            filepath = os.path.join(root,filename)
-            if (((os.path.basename(filename).split('.')[-1] in extensionList) or (extensionList[0] == '*')) and
-                (os.path.getmtime(filepath) < (time.time() - deleteTimeHrs * SECONDS_PER_HOUR))):
+            filepath = os.path.join(root, filename)
+            if (((os.path.basename(filename).split('.')[-1] in extensionList) or (extensionList[0] == '*'))
+                    and (os.path.getmtime(filepath) < (time.time() - deleteTimeHrs * SECONDS_PER_HOUR))):
                 try:
                     """
                     Removing chmod on filepath, appears to be breaking on linux
@@ -141,8 +143,9 @@ def _removeOldFiles(pathToClean, extensionList, deleteTimeHrs):
                     """
                     os.remove(filepath)
                     print('Removing file: %s' % (filepath))
-                except OSError,errorMsg:
+                except OSError, errorMsg:
                     Log('%s' % (errorMsg))
+
 
 def _removeEmptyDirs(rootPath, deleteTimeHrs):
     emptyDirFound = False
@@ -160,7 +163,7 @@ def _removeEmptyDirs(rootPath, deleteTimeHrs):
                     os.rmdir(dirpath)
                     print('Removing folder: %s' % (dirpath))
                     emptyDirFound = True
-                except OSError,errorMsg:
+                except OSError, errorMsg:
                     Log('%s' % (errorMsg))
 
     return emptyDirFound
@@ -177,8 +180,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -208,10 +213,11 @@ def HandleCommandSwitches():
 
     return configFile
 
+
 def main():
     #Get and handle the command line options...
     configFile = HandleCommandSwitches()
-    Log("%s started." % APP_NAME, dict(ConfigFile = configFile), Level = 0)
+    Log("%s started." % APP_NAME, dict(ConfigFile=configFile), Level=0)
     try:
         fEraser = FileEraser(configFile)
         fEraser.runApp()
@@ -220,7 +226,8 @@ def main():
         if DEBUG: raise
         msg = "Exception trapped outside execution"
         print msg + ": %s %r" % (E, E)
-        Log(msg, Level = 3, Verbose = "Exception = %s %r" % (E, E))
+        Log(msg, Level=3, Verbose="Exception = %s %r" % (E, E))
+
 
 if __name__ == "__main__":
     DEBUG = __debug__

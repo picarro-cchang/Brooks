@@ -28,36 +28,39 @@ from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.StringPickler import StringAsObject, ObjAsString
 from Host.Common.WlmCalUtilities import WlmFile
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="writeLaserEeprom")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="writeLaserEeprom")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+
 class WriteLaserEeprom(object):
     """Write parameters from WLM file to laser EEPROM"""
-    def __init__(self,configFile,options):
+    def __init__(self, configFile, options):
         self.config = ConfigObj(configFile)
         # Analyze options
         if "-l" in options:
             self.laserNum = int(options["-l"])
         else:
             self.laserNum = int(self.config["SETTINGS"]["LASER"])
-        if self.laserNum<=0 or self.laserNum>MAX_LASERS:
+        if self.laserNum <= 0 or self.laserNum > MAX_LASERS:
             raise ValueError("LASER must be in range 1..4")
 
         if "-f" in options:
@@ -65,7 +68,7 @@ class WriteLaserEeprom(object):
         else:
             fname = self.config["SETTINGS"]["FILENAME"]
         self.fname = fname.strip() + ".wlm"
-        self.fp = file(self.fname,"r")
+        self.fp = file(self.fname, "r")
 
         if "-s" in options:
             self.serialNo = options["-s"]
@@ -77,18 +80,18 @@ class WriteLaserEeprom(object):
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
 
         eepromId = "LASER%d_EEPROM" % self.laserNum
         wlmFile = WlmFile(self.fp)
         sec = {}
         sec["COARSE_CURRENT"] = float(wlmFile.parameters["laser_current"])
-        sec["WAVENUM_CEN"]    = wlmFile.WtoT.xcen
-        sec["WAVENUM_SCALE"]  = wlmFile.WtoT.xscale
-        sec["W2T_0"],sec["W2T_1"],sec["W2T_2"],sec["W2T_3"] = wlmFile.WtoT.coeffs
-        sec["TEMP_CEN"]    = wlmFile.TtoW.xcen
-        sec["TEMP_SCALE"]  = wlmFile.TtoW.xscale
-        sec["T2W_0"],sec["T2W_1"],sec["T2W_2"],sec["T2W_3"] = wlmFile.TtoW.coeffs
+        sec["WAVENUM_CEN"] = wlmFile.WtoT.xcen
+        sec["WAVENUM_SCALE"] = wlmFile.WtoT.xscale
+        sec["W2T_0"], sec["W2T_1"], sec["W2T_2"], sec["W2T_3"] = wlmFile.WtoT.coeffs
+        sec["TEMP_CEN"] = wlmFile.TtoW.xcen
+        sec["TEMP_SCALE"] = wlmFile.TtoW.xscale
+        sec["T2W_0"], sec["T2W_1"], sec["T2W_2"], sec["T2W_3"] = wlmFile.TtoW.coeffs
         sec["TEMP_ERMS"] = np.sqrt(wlmFile.WtoT.residual)
         sec["WAVENUM_ERMS"] = np.sqrt(wlmFile.TtoW.residual)
 
@@ -104,12 +107,13 @@ class WriteLaserEeprom(object):
                         serialNo="%s" % self.serialNo,
                         date=hdrDict["CRDS Header"]["Date"],
                         time=hdrDict["CRDS Header"]["Time"],
-                        laserTemperature = wlmFile.TLaser,
-                        waveNumber = wlmFile.WaveNumber)
+                        laserTemperature=wlmFile.TLaser,
+                        waveNumber=wlmFile.WaveNumber)
         print "Starting to write to EEPROM"
-        Driver.shelveObject(eepromId,laserDat)
+        Driver.shelveObject(eepromId, laserDat)
         print "Writing to EEPROM complete. Starting verification."
-        print "Verification %s" % "succeeded." if Driver.verifyObject(eepromId,laserDat) else "FAILED."
+        print "Verification %s" % "succeeded." if Driver.verifyObject(eepromId, laserDat) else "FAILED."
+
 
 HELP_STRING = """writeLaserEeprom.py [-c<FILENAME>] [-h|--help]
 
@@ -123,8 +127,10 @@ settings in the configuration file:
 -s                   serial number of laser
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hc:f:l:s:'
@@ -136,10 +142,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     configFile = os.path.splitext(AppPath)[0] + ".ini"
     if "-h" in options or "--help" in options:
@@ -148,6 +154,7 @@ def handleCommandSwitches():
     if "-c" in options:
         configFile = options["-c"]
     return configFile, options
+
 
 if __name__ == "__main__":
     configFile, options = handleCommandSwitches()

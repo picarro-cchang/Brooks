@@ -15,8 +15,7 @@ import time
 import threading
 import shutil
 from configobj import ConfigObj
-from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import (SupervisorLauncherFrame,
-    UserNotificationsFrameGui)
+from Host.Utilities.SupervisorLauncher.SupervisorLauncherFrame import (SupervisorLauncherFrame, UserNotificationsFrameGui)
 from Host.autogen import interface
 from Host.Common import CmdFIFO
 from Host.Common.SingleInstance import SingleInstance
@@ -25,21 +24,16 @@ from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_QUICK_GUI, RPC
 APP_NAME = "SupervisorLauncher"
 DEFAULT_CONFIG_NAME = "SupervisorLauncher.ini"
 
-CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_Supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR, APP_NAME, IsDontCareConnection=False)
+CRDS_QuickGui = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_QUICK_GUI, APP_NAME, IsDontCareConnection=False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
+
 
 class SupervisorLauncher(SupervisorLauncherFrame):
     def __init__(self, configFile, autoLaunch, closeValves, delay, killAll, *args, **kwds):
@@ -77,7 +71,7 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         try:
             self.timeBeforeKillApp = int(self.co["Main"]["timeBeforeKillApp"].strip())
         except:
-            self.timeBeforeKillApp = 5000 # millisecond
+            self.timeBeforeKillApp = 5000  # millisecond
 
         self.onSelect(None)
         self.Bind(wx.EVT_COMBOBOX, self.onSelect, self.comboBoxSelect)
@@ -88,10 +82,10 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         self.closeValves = closeValves
         self.killAll = killAll
         if self.delay:
-            self.notificationsFrame = UserNotificationsFrameGui(None,-1,"")
+            self.notificationsFrame = UserNotificationsFrameGui(None, -1, "")
             self.notificationsFrame.button_dismiss.SetLabel("System Clock Reset - Restarting Analyzer")
             self.notificationsFrame.Show()
-            wx.CallLater(1000*self.delay, self.doAutomatic)
+            wx.CallLater(1000 * self.delay, self.doAutomatic)
         else:
             self.doAutomatic()
 
@@ -111,15 +105,15 @@ class SupervisorLauncher(SupervisorLauncherFrame):
             self.assignType(self.mode)
             self.runExplicitModeLaunch()
             wx.CallLater(3000, self.Hide)
-        elif self.autoLaunch and self.delay > 0: # auto launching by Driver due to system clock reset
+        elif self.autoLaunch and self.delay > 0:  # auto launching by Driver due to system clock reset
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
             wx.CallLater(3000, self.Hide)
-        elif self.autoLaunch and self.delay == 0:    # auto launching by Start Instrument
+        elif self.autoLaunch and self.delay == 0:  # auto launching by Start Instrument
             self.supervisorIni = self.startupSupervisorIni
             self.runForcedLaunch()
             if self.timeBeforeKillApp > 0:
-              wx.CallLater(self.timeBeforeKillApp, self.Destroy)
+                wx.CallLater(self.timeBeforeKillApp, self.Destroy)
         else:
             self.Show()
 
@@ -190,12 +184,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                     time.sleep(2.0)
                     pass
                 if self.closeValves:
-                    CRDS_Driver.wrDasReg( interface.VALVE_CNTRL_STATE_REGISTER, interface.VALVE_CNTRL_DisabledState )
+                    CRDS_Driver.wrDasReg(interface.VALVE_CNTRL_STATE_REGISTER, interface.VALVE_CNTRL_DisabledState)
                     CRDS_Driver.setValveMask(0)
         except:
             pass
 
-        if (not self.forcedLaunch): #and (self.launchType == "exe"):
+        if (not self.forcedLaunch):  #and (self.launchType == "exe"):
             try:
                 shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
                 startupIni = ConfigObj(self.startupSupervisorIni, list_values=False)
@@ -231,12 +225,12 @@ class SupervisorLauncher(SupervisorLauncherFrame):
         if self.launchType != "exe":
             if sys.platform == "win32":
                 info = subprocess.STARTUPINFO()
-                proc = subprocess.Popen(["python.exe", "Supervisor.py","-c",self.supervisorIni], startupinfo=info)
+                proc = subprocess.Popen(["python.exe", "Supervisor.py", "-c", self.supervisorIni], startupinfo=info)
             elif sys.platform == "linux2":
                 if os.path.exists("Supervisor.py"):
-                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.py","-c",self.supervisorIni]
+                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.py", "-c", self.supervisorIni]
                 else:
-                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.pyo","-c",self.supervisorIni]
+                    cmd = ["xterm", "-T", "Supervisor", "-e", "python", "-O", "Supervisor.pyo", "-c", self.supervisorIni]
                 proc = subprocess.Popen(cmd)
         else:
             backupSupervisorRunning = False
@@ -249,14 +243,14 @@ class SupervisorLauncher(SupervisorLauncherFrame):
                 if self.consoleMode != 1:
                     info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
                     info.wShowWindow = subprocess.SW_HIDE
-                supervisor_proc = subprocess.Popen(["supervisor.exe","-c",self.supervisorIni], startupinfo=info)
+                supervisor_proc = subprocess.Popen(["supervisor.exe", "-c", self.supervisorIni], startupinfo=info)
                 info = subprocess.STARTUPINFO()
-                subprocess.Popen(["HostStartup.exe","-c",self.supervisorIni], startupinfo=info)
+                subprocess.Popen(["HostStartup.exe", "-c", self.supervisorIni], startupinfo=info)
                 for waitBackupSupervisor in range(12):
                     if backupSupervisorRunning:
                         break
                     retcode = supervisor_proc.poll()
-                    if retcode is not None: # i.e. main supervisor terminated
+                    if retcode is not None:  # i.e. main supervisor terminated
                         break
                     # Call psutil to see if backup supervisor is running
                     for proc in psutil.process_iter():
@@ -311,8 +305,10 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
@@ -346,9 +342,10 @@ def HandleCommandSwitches():
     autoLaunch = "-a" in options
     closeValves = "-v" in options
     killAll = "-k" in options
-    modeSpecified = options.get("-m",None)
+    modeSpecified = options.get("-m", None)
 
     return (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified)
+
 
 def main():
     (configFile, autoLaunch, closeValves, delay, killAll, modeSpecified) = HandleCommandSwitches()
@@ -373,13 +370,13 @@ def main():
                 break
 
         app = wx.App(False)
-        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "",
-                                   mode=modeSpecified)
+        frame = SupervisorLauncher(configFile, autoLaunch, closeValves, delay, killAll, None, -1, "", mode=modeSpecified)
         if not autoLaunch:
             frame.initMode()
             app.SetTopWindow(frame)
             # frame.Show()
         app.MainLoop()
+
 
 if __name__ == "__main__":
     main()

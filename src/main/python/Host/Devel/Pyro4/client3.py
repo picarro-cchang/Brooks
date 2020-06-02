@@ -7,9 +7,9 @@ jokes = Pyro.core.getProxyForURI("PYROLOC://localhost:7766/jokegen")
 
 start = time.time()
 print "Start", start
-threading.Thread(target=lambda x:jokes.delay(x), args=(0.2,)).start()
-threading.Thread(target=lambda x:jokes.delay(x), args=(0.3,)).start()
-threading.Thread(target=lambda x:jokes.delay(x), args=(0.2,)).start()
+threading.Thread(target=lambda x: jokes.delay(x), args=(0.2, )).start()
+threading.Thread(target=lambda x: jokes.delay(x), args=(0.3, )).start()
+threading.Thread(target=lambda x: jokes.delay(x), args=(0.2, )).start()
 time.sleep(0.1)
 print "Calling joke at", time.time()
 jokes.joke("Irmen")

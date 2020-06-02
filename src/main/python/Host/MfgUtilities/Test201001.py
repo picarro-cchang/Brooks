@@ -37,9 +37,9 @@ if __name__ == "__main__":
         engineName = raw_input("Engine name? ")
     else:
         engineName = sys.argv[1]
-    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname,)
-    tp = TestParameters(engineName,bname[4:10])
-    tst = TestLogicBoardLaserDriver(tp,1)
+    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname, )
+    tp = TestParameters(engineName, bname[4:10])
+    tst = TestLogicBoardLaserDriver(tp, 1)
     tst.run()
     tp.appendReport()
     tp.makeHTML()

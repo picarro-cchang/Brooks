@@ -8,7 +8,7 @@ if __name__ == "__main__":
     spectListener = Listener.Listener(spectQueue,
                                       int(raw_input('Fitter broadcast port? ')),
                                       StringPickler.ArbitraryObject,
-                                      retry = True,
-                                      name = "Fitter listener")
+                                      retry=True,
+                                      name="Fitter listener")
     while True:
         print spectQueue.get()

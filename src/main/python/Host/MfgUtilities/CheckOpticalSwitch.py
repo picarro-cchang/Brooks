@@ -28,7 +28,7 @@ from Host.Common import CmdFIFO, SharedTypes
 from Host.Common.Listener import Listener
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -36,26 +36,29 @@ else:
 APP_NAME = "CheckSwitch"
 EventManagerProxy_Init(APP_NAME)
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER,
-                                    APP_NAME, IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
+
 
 class Averager(object):
     # Averages non-None values added to it
     def __init__(self):
         self.total = 0
         self.count = 0
-    def addValue(self,value):
+
+    def addValue(self, value):
         if value is not None:
             self.total += value
             self.count += 1
+
     def getAverage(self):
         if self.count != 0:
-            return self.total/self.count
+            return self.total / self.count
         else:
-            raise ValueError,"No values to average"
+            raise ValueError, "No values to average"
+
 
 class CheckSwitch(object):
-    def __init__(self,outputFile,nLasers):
+    def __init__(self, outputFile, nLasers):
         self.nLasers = nLasers
         self.outputFile = outputFile
 
@@ -66,8 +69,7 @@ class CheckSwitch(object):
         self.latestDict = {}
         self.lastTime = 0
 
-        self.listener = Listener(self.queue,SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-                                 SensorEntryType,self.streamFilter)
+        self.listener = Listener(self.queue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType, self.streamFilter)
 
     def flushQueue(self):
         while True:
@@ -77,7 +79,7 @@ class CheckSwitch(object):
             except Empty:
                 break
 
-    def streamFilter(self,result):
+    def streamFilter(self, result):
         # This filter is designed to enqueue sensor entries which all have the same timestamp.
         #  A 3-ple consisting of the timestamp, a dictionary of sensor data at that time
         #  and a dictionary of the most current sensor data as of that time
@@ -90,13 +92,13 @@ class CheckSwitch(object):
 
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
-            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:] : self.cachedResult.value}
+            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:]: self.cachedResult.value}
 
         if result.timestamp != self.lastTime:
-            self.cachedResult = SensorEntryType(result.timestamp,result.streamNum,result.value)
+            self.cachedResult = SensorEntryType(result.timestamp, result.streamNum, result.value)
             self.streamFilterState = "RETURNED_RESULT"
             if self.resultDict:
-                return self.lastTime,self.resultDict.copy(),self.latestDict.copy()
+                return self.lastTime, self.resultDict.copy(), self.latestDict.copy()
             else:
                 return
         else:
@@ -108,9 +110,9 @@ class CheckSwitch(object):
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
 
-        op = open(self.outputFile,"wb",0)
+        op = open(self.outputFile, "wb", 0)
 
         while True:
             for i in range(self.nLasers):
@@ -119,7 +121,7 @@ class CheckSwitch(object):
                 time.sleep(0.3)
                 self.flushQueue()
                 # Read the wavelength monitor data
-                tStart,d,last = self.queue.get()
+                tStart, d, last = self.queue.get()
                 t = tStart
                 etalon1Avg = Averager()
                 reference1Avg = Averager()
@@ -130,23 +132,24 @@ class CheckSwitch(object):
                 time.sleep(1)
                 while True:
                     try:
-                        t,d,last = self.queue.get(False)
+                        t, d, last = self.queue.get(False)
                         etalon1Avg.addValue(d.get("Etalon1"))
                         reference1Avg.addValue(d.get("Reference1"))
                         etalon2Avg.addValue(d.get("Etalon2"))
                         reference2Avg.addValue(d.get("Reference2"))
                     except Empty:
-                        if t-tStart < 1000:
+                        if t - tStart < 1000:
                             time.sleep(1)
                             continue
                         etalon1 = etalon1Avg.getAverage()
                         reference1 = reference1Avg.getAverage()
                         etalon2 = etalon2Avg.getAverage()
                         reference2 = reference2Avg.getAverage()
-                        msg = "%9d %9.0f %9.0f %9.0f %9.0f" % (aLaserNum,etalon1,reference1,etalon2,reference2)
+                        msg = "%9d %9.0f %9.0f %9.0f %9.0f" % (aLaserNum, etalon1, reference1, etalon2, reference2)
                         op.write("%s\n" % msg)
                         print msg
                         break
+
 
 HELP_STRING = """CheckOpticalSwitch.py [-n<NUMBER_OF_LASERS>] [-o<FILENAME>] [-h|--help]
 
@@ -158,8 +161,10 @@ settings in the configuration file:
 -o                   output file name (default: CheckOpticalSwitch.txt)
 """
 
+
 def printUsage():
     print HELP_STRING
+
 
 def handleCommandSwitches():
     shortOpts = 'hn:o:'
@@ -171,10 +176,10 @@ def handleCommandSwitches():
         sys.exit(1)
     #assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
-    for o,a in switches:
-        options.setdefault(o,a)
+    for o, a in switches:
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
-        options.setdefault('-h',"")
+        options.setdefault('-h', "")
     #Start with option defaults...
     if "-h" in options or "--help" in options:
         printUsage()
@@ -186,6 +191,7 @@ def handleCommandSwitches():
     if "-n" in options:
         nLasers = int(options["-n"])
     return outputFile, nLasers
+
 
 if __name__ == "__main__":
     outputFile, nLasers = handleCommandSwitches()

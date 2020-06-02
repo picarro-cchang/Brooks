@@ -14,8 +14,7 @@ from Host.autogen import interface
 from Host.Common import CmdFIFO, configobj, Listener
 from Host.Common.PConfigurable import PConfigurable
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
-from Host.Common.SharedTypes import (BROADCAST_PORT_RDRESULTS, RPC_PORT_DRIVER,
-                                     RPC_PORT_FSR_HOPPING_CONTROLLER,
+from Host.Common.SharedTypes import (BROADCAST_PORT_RDRESULTS, RPC_PORT_DRIVER, RPC_PORT_FSR_HOPPING_CONTROLLER,
                                      RPC_PORT_SPECTRUM_COLLECTOR)
 import numpy as np
 import os
@@ -25,25 +24,23 @@ from scipy.signal import order_filter
 import sys
 from threading import Thread
 import time
-from traitlets import (CaselessStrEnum, CBool, CFloat, CInt, Float, ForwardDeclaredInstance,
-                       Instance, Integer, List)
+from traitlets import (CaselessStrEnum, CBool, CFloat, CInt, Float, ForwardDeclaredInstance, Instance, Integer, List)
 
 APP_NAME = "FSR Hopping Controller"
 APP_VERSION = "1.0.0"
 EventManagerProxy_Init(APP_NAME)
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     app_path = sys.executable
 else:
     app_path = sys.argv[0]
 
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                    APP_NAME, IsDontCareConnection = False)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
 
 SpectrumCollector = None
 
-def setup_current_generator(actual_laser, slope_factor, time_between_steps,
-                            lower_window, upper_window, levels, sequence_id):
+
+def setup_current_generator(actual_laser, slope_factor, time_between_steps, lower_window, upper_window, levels, sequence_id):
     assert len(levels) <= 0x200
     assert 1 <= actual_laser <= interface.MAX_LASERS
     bank = 0
@@ -59,35 +56,37 @@ def setup_current_generator(actual_laser, slope_factor, time_between_steps,
     second_offset = int(round(M * (2 * slope_factor - 1) / (slope_factor - 1)))
     first_breakpoint = int(np.ceil((1 - slope_factor) * T / 2))
     second_breakpoint = int(np.ceil((1 + slope_factor) * T / 2))
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_SLOW_SLOPE", slow_slope)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_FAST_SLOPE", fast_slope)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_FIRST_OFFSET", first_offset)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_SECOND_OFFSET", second_offset)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_FIRST_BREAKPOINT", first_breakpoint)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_SECOND_BREAKPOINT", second_breakpoint)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_TRANSITION_COUNTER_LIMIT", T)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_PERIOD_COUNTER_LIMIT", period)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_LOWER_WINDOW", lower_window)
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_UPPER_WINDOW", upper_window)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_SLOW_SLOPE", slow_slope)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_FAST_SLOPE", fast_slope)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_FIRST_OFFSET", first_offset)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_SECOND_OFFSET", second_offset)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_FIRST_BREAKPOINT", first_breakpoint)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_SECOND_BREAKPOINT", second_breakpoint)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_TRANSITION_COUNTER_LIMIT", T)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_PERIOD_COUNTER_LIMIT", period)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_LOWER_WINDOW", lower_window)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_UPPER_WINDOW", upper_window)
     # Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_SEQUENCE_ID", sequence_id)
     control = ((1 << interface.LASERCURRENTGENERATOR_CONTROL_STATUS_MODE_B) |
                ((actual_laser - 1) << interface.LASERCURRENTGENERATOR_CONTROL_STATUS_LASER_SELECT_B) |
                (bank << interface.LASERCURRENTGENERATOR_CONTROL_STATUS_BANK_SELECT_B))
-    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_CONTROL_STATUS", control)
+    Driver.wrFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_CONTROL_STATUS", control)
     # Wait until the parameters have been loaded for the particular laser
-    while (Driver.rdFPGA("FPGA_LASERCURRENTGENERATOR","LASERCURRENTGENERATOR_CONTROL_STATUS") &
+    while (Driver.rdFPGA("FPGA_LASERCURRENTGENERATOR", "LASERCURRENTGENERATOR_CONTROL_STATUS") &
            (1 << interface.LASERCURRENTGENERATOR_CONTROL_STATUS_MODE_B)):
         time.sleep(0.01)
     # Turn on extended laser current mode
-    inj = Driver.rdFPGA("FPGA_INJECT","INJECT_CONTROL2")
-    Driver.wrFPGA("FPGA_INJECT","INJECT_CONTROL2", inj | (1<<interface.INJECT_CONTROL2_EXTENDED_CURRENT_MODE_B))
+    inj = Driver.rdFPGA("FPGA_INJECT", "INJECT_CONTROL2")
+    Driver.wrFPGA("FPGA_INJECT", "INJECT_CONTROL2", inj | (1 << interface.INJECT_CONTROL2_EXTENDED_CURRENT_MODE_B))
+
+
 class ClusterAnalyzer(PConfigurable):
     """Perform clustering of data in the range [0,1] using kernel density estimation with a Gaussian kernel
         of standard deviation sigma and an auxiliary array of size nbins for accumulating the probability
         density estimate"""
     naverage = CFloat(1000.0, config=True)  # Effective number of values used to make histogram
     nbins = CInt(1024, config=True)  # Number of bins for accumulating histogram
-    sigma = CFloat(100.0/65536.0, config=True)  # Half-width of kernel for density estimation
+    sigma = CFloat(100.0 / 65536.0, config=True)  # Half-width of kernel for density estimation
     base = Instance(np.ndarray)
     kernel = Instance(np.ndarray)
     laser_current_model = ForwardDeclaredInstance('LaserCurrentModel')
@@ -107,9 +106,9 @@ class ClusterAnalyzer(PConfigurable):
         self.initialize_kernel()
 
     def initialize_kernel(self):
-        self.base = (np.arange(2*self.nbins) - self.nbins)/float(self.nbins)
+        self.base = (np.arange(2 * self.nbins) - self.nbins) / float(self.nbins)
         # The kernel is evaluated once on an array of size 2*nbins
-        self.kernel = np.exp(-0.5*(self.base/self.sigma)**2)
+        self.kernel = np.exp(-0.5 * (self.base / self.sigma)**2)
         self.reset_density()
 
     def reset_density(self):
@@ -125,9 +124,9 @@ class ClusterAnalyzer(PConfigurable):
         """values is an array containing the data to cluster. Each value must be in the range [0,1]"""
         values = np.asarray(values)
         for value in values:
-            index = int(self.nbins*value + 0.5)
-            self.density = (self.kernel[self.nbins-index:2*self.nbins-index] +
-                            (self.naverage-1) * self.density) / self.naverage
+            index = int(self.nbins * value + 0.5)
+            self.density = (self.kernel[self.nbins - index:2 * self.nbins - index] +
+                            (self.naverage - 1) * self.density) / self.naverage
         # Find strict local minima. Note that the indices are shifted by 1 by the slicing, so
         #  we take this into account when converting back to normalized values
         min_indices = ((self.density[1:-1] < self.density[:-2]) & (self.density[1:-1] < self.density[2:]))
@@ -157,35 +156,35 @@ class ClusterAnalyzer(PConfigurable):
         good = np.arange(len(dx))
         while len(dx) > 1:
             min_sep_pos = np.argmin(dx)
-            min_sep = self.min_bin_width if self.min_bin_width is not None else 0.6*np.median(dx)
+            min_sep = self.min_bin_width if self.min_bin_width is not None else 0.6 * np.median(dx)
             if dx[min_sep_pos] >= min_sep:
                 break
             dx_min = dx[min_sep_pos]
             if min_sep_pos > 0:
-                dx[min_sep_pos-1] += 0.5 * dx_min
+                dx[min_sep_pos - 1] += 0.5 * dx_min
             if min_sep_pos < len(dx) - 1:
-                dx[min_sep_pos+1] += 0.5 * dx_min
+                dx[min_sep_pos + 1] += 0.5 * dx_min
             dx = np.delete(dx, min_sep_pos)
             good = np.delete(good, min_sep_pos)
         self.bin_boundaries = self.bin_boundaries[good]
         self.update_bins(values)
         # Perform mode assignment
         dx = np.diff(self.bin_means)
-        mx = order_filter(dx,np.ones(2*self.local_jump_estimator_halfwidth+1), 0)
+        mx = order_filter(dx, np.ones(2 * self.local_jump_estimator_halfwidth + 1), 0)
         # Extend the FSR estimate out to the ends of the frequency range
         mx[:self.local_jump_estimator_halfwidth] = mx[self.local_jump_estimator_halfwidth]
-        mx[-(self.local_jump_estimator_halfwidth+1):] = mx[-(self.local_jump_estimator_halfwidth+1)]
+        mx[-(self.local_jump_estimator_halfwidth + 1):] = mx[-(self.local_jump_estimator_halfwidth + 1)]
         mode_boundaries = []
         m = [0]
         # Go through assigning indices, using the local FSR estimates to determine jumps
-        for i,d in enumerate(dx):
-            jump = int(np.round(d/mx[i]))
+        for i, d in enumerate(dx):
+            jump = int(np.round(d / mx[i]))
             m.append(m[-1] + jump)
             for k in range(jump):
                 # Calculate boundaries between modes, assuming that there are "jump" modes between self.bin_mean[i] and
                 #  self.bin_mean[i+1]
                 boundary_index = 2 * k + 1
-                boundary = ((2 * jump - boundary_index) * self.bin_means[i] + boundary_index * self.bin_means[i+1]) / (2 * jump)
+                boundary = ((2 * jump - boundary_index) * self.bin_means[i] + boundary_index * self.bin_means[i + 1]) / (2 * jump)
                 mode_boundaries.append(boundary)
         self.mode_boundaries = np.asarray(mode_boundaries)
         self.mode_numbers = np.asarray(m)
@@ -193,26 +192,27 @@ class ClusterAnalyzer(PConfigurable):
             print "%3d: %7.0f (%4d)" % (m, 65536.0 * v, c)
         if SpectrumCollector is None:
             SpectrumCollector = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SPECTRUM_COLLECTOR,
-                                       APP_NAME, IsDontCareConnection = False)
+                                                           APP_NAME,
+                                                           IsDontCareConnection=False)
         try:
-            SpectrumCollector.setFsrModeBoundaries(self.laser_current_model.actual_laser, 65536.0*self.mode_boundaries)
+            SpectrumCollector.setFsrModeBoundaries(self.laser_current_model.actual_laser, 65536.0 * self.mode_boundaries)
         except Pyro.errors.ProtocolError:
             Log("Cannot communicate with spectrum collector")
             SpectrumCollector = None
 
-
     def update_bins(self, values):
         self.bin_indices = np.digitize(values, bins=self.bin_boundaries)
         # Find means and number of values in each bin.
-        self.bin_sums = np.zeros(len(self.bin_boundaries)+1, dtype=float)
-        self.bin_counts = np.zeros(len(self.bin_boundaries)+1)
-        for b,v in zip(self.bin_indices, values):
+        self.bin_sums = np.zeros(len(self.bin_boundaries) + 1, dtype=float)
+        self.bin_counts = np.zeros(len(self.bin_boundaries) + 1)
+        for b, v in zip(self.bin_indices, values):
             self.bin_sums[b] += v
             self.bin_counts[b] += 1
         mask = (self.bin_counts > 0)
         self.bin_counts = self.bin_counts[mask]
         self.bin_means = self.bin_sums[mask] / self.bin_counts
         self.bin_boundaries = self.bin_boundaries[mask[:-1]]
+
 
 class LaserCurrentModel(PConfigurable):
     actual_laser = CInt(-1)
@@ -284,14 +284,14 @@ class LaserCurrentModel(PConfigurable):
         levels = []
         for slope, current in zip(slopes, mode_currents):
             if self.mode == 'sawtooth':
-                levels.append(int(max(0, current - sawtooth_size*slope)))
-                levels.append(int(min(65535, current + sawtooth_size*slope)))
+                levels.append(int(max(0, current - sawtooth_size * slope)))
+                levels.append(int(min(65535, current + sawtooth_size * slope)))
             elif self.mode == 'staircase':
                 levels.append(int(current))
         self.levels = levels
         self.sequence_id = 0
-        setup_current_generator(self.actual_laser, slope_factor, self.time_between_steps,
-                                self.lower_window, self.upper_window, self.levels, self.sequence_id)
+        setup_current_generator(self.actual_laser, slope_factor, self.time_between_steps, self.lower_window, self.upper_window,
+                                self.levels, self.sequence_id)
         if reset_density:
             self.cluster_analyzer.reset_density()
 
@@ -331,12 +331,12 @@ class LaserCurrentModel(PConfigurable):
         # self.upper lies betwen self.upper_window and
         # self.upper_window + 2*self.approx_mode_separation
         self.lower = mode_currents[lower_index]
-        self.lower = max(self.lower, 0.0, self.lower_window - 2*self.approx_mode_separation)
+        self.lower = max(self.lower, 0.0, self.lower_window - 2 * self.approx_mode_separation)
         self.lower = min(self.lower, self.lower_window)
         self.upper = mode_currents[upper_index]
-        self.upper = min(self.upper, 65535.0, self.upper_window + 2*self.approx_mode_separation)
+        self.upper = min(self.upper, 65535.0, self.upper_window + 2 * self.approx_mode_separation)
         self.upper = max(self.upper, self.upper_window)
-        mode_currents = mode_currents[lower_index:upper_index+1]
+        mode_currents = mode_currents[lower_index:upper_index + 1]
         peak_indices = [np.argmin(abs(mode_currents - pk)) for pk in self.centers]
         sawtooth_size = self.sawtooth_size
         slope_factor = self.slope_factor
@@ -348,13 +348,13 @@ class LaserCurrentModel(PConfigurable):
             if self.mode == 'sawtooth':
                 for j, pk in enumerate(peak_indices):
                     try:
-                        idx = self.offsets[j].index(i-pk)
+                        idx = self.offsets[j].index(i - pk)
                         dwell = self.dwells[j][idx]
                     except ValueError:
                         pass
                 for j in range(dwell):
-                    levels.append(int(current - sawtooth_size*median_slope))
-                    levels.append(int(current + sawtooth_size*median_slope))
+                    levels.append(int(current - sawtooth_size * median_slope))
+                    levels.append(int(current + sawtooth_size * median_slope))
             elif self.mode == 'staircase':
                 levels.append(int(current))
 
@@ -364,20 +364,25 @@ class LaserCurrentModel(PConfigurable):
         print levels
         self.levels = levels
         self.sequence_id += 1
-        setup_current_generator(self.actual_laser, slope_factor, self.time_between_steps,
-                                self.lower_window, self.upper_window, self.levels, self.sequence_id)
+        setup_current_generator(self.actual_laser, slope_factor, self.time_between_steps, self.lower_window, self.upper_window,
+                                self.levels, self.sequence_id)
+
 
 class Laser1(LaserCurrentModel):
     actual_laser = CInt(1)
 
+
 class Laser2(LaserCurrentModel):
     actual_laser = CInt(2)
+
 
 class Laser3(LaserCurrentModel):
     actual_laser = CInt(3)
 
+
 class Laser4(LaserCurrentModel):
     actual_laser = CInt(4)
+
 
 class FsrHoppingController(PConfigurable):
     config = Instance(configobj.ConfigObj)
@@ -396,10 +401,10 @@ class FsrHoppingController(PConfigurable):
         super(FsrHoppingController, self).__init__(*args, **kwargs)
         self.rd_queue = Queue.Queue(1000)
         self.rd_listener = Listener.Listener(self.rd_queue,
-                                   BROADCAST_PORT_RDRESULTS,
-                                   interface.RingdownEntryType,
-                                   retry = True,
-                                   name = "FsrHoppingController Ringdown listener")
+                                             BROADCAST_PORT_RDRESULTS,
+                                             interface.RingdownEntryType,
+                                             retry=True,
+                                             name="FsrHoppingController Ringdown listener")
         self.config = configobj.ConfigObj(options["config"], list_values=False)
         self.process_config()
         self.start_rpc_server()
@@ -432,18 +437,18 @@ class FsrHoppingController(PConfigurable):
                     sys.stdout.write('.')
                 # Get actual laser index in range 1-4
                 actual_laser = (datum.laserUsed & 3) + 1
-                self.currents_at_rd[actual_laser-1].append(datum.fineLaserCurrent)
-                lcm = self.lcm[actual_laser-1]
-                if len(self.currents_at_rd[actual_laser-1]) == lcm.batch_size:
+                self.currents_at_rd[actual_laser - 1].append(datum.fineLaserCurrent)
+                lcm = self.lcm[actual_laser - 1]
+                if len(self.currents_at_rd[actual_laser - 1]) == lcm.batch_size:
                     if lcm.optimize_levels:
-                        lcm.setup_custom_levels(self.currents_at_rd[actual_laser-1])
+                        lcm.setup_custom_levels(self.currents_at_rd[actual_laser - 1])
                     else:
                         if lcm.sequence_id == 0:
-                            lcm.cluster_currents(self.currents_at_rd[actual_laser-1])
+                            lcm.cluster_currents(self.currents_at_rd[actual_laser - 1])
                             lcm.setup_uniform_levels(reset_density=False)
                         else:
                             lcm.setup_uniform_levels()
-                    self.currents_at_rd[actual_laser-1] = []
+                    self.currents_at_rd[actual_laser - 1] = []
             except Queue.Empty:
                 for lcm in self.lcm:
                     if lcm is not None:
@@ -455,8 +460,8 @@ class FsrHoppingController(PConfigurable):
 
     def get_lcm_param(self, name):
         results = []
-        for laser in range(1, interface.MAX_LASERS+1):
-            lcm = self.lcm[laser-1]
+        for laser in range(1, interface.MAX_LASERS + 1):
+            lcm = self.lcm[laser - 1]
             if isinstance(lcm, LaserCurrentModel):
                 results.append(getattr(lcm, name))
             else:
@@ -486,8 +491,8 @@ class FsrHoppingController(PConfigurable):
         bin the ringdowns into cavity modes. If a laser is not
         present, the entry is None"""
         results = []
-        for laser in range(1, interface.MAX_LASERS+1):
-            lcm = self.lcm[laser-1]
+        for laser in range(1, interface.MAX_LASERS + 1):
+            lcm = self.lcm[laser - 1]
             if isinstance(lcm, LaserCurrentModel) and lcm.cluster_analyzer.mode_boundaries is not None:
                 results.append(65536.0 * lcm.cluster_analyzer.mode_boundaries)
             else:
@@ -505,7 +510,7 @@ class FsrHoppingController(PConfigurable):
     def get_sawtooth_scheme(self, laser):
         """Retrieve the center laser currents, FSR offsets and dwells for the
         specified laser"""
-        lcm = self.lcm[laser-1]
+        lcm = self.lcm[laser - 1]
         return dict(centers=lcm.centers, offsets=lcm.offsets, dwells=lcm.dwells)
 
     def get_sawtooth_size(self):
@@ -538,7 +543,7 @@ class FsrHoppingController(PConfigurable):
         elif not hasattr(lasers, '__iter__'):  # If there is only one laser specified
             lasers = [lasers]
         for laser in lasers:
-            lcm = self.lcm[laser-1]
+            lcm = self.lcm[laser - 1]
             if isinstance(lcm, LaserCurrentModel):
                 setattr(lcm, name, deepcopy(value))
 
@@ -614,7 +619,7 @@ class FsrHoppingController(PConfigurable):
         are peaks. Offsets specifies the list of integer mode offsets relative to the
         peak and dwells specify the number of ringdowns desired at these offsets.
         """
-        lcm = self.lcm[laser-1]
+        lcm = self.lcm[laser - 1]
         if centers is None:
             centers = lcm.centers
         else:
@@ -642,10 +647,10 @@ class FsrHoppingController(PConfigurable):
 
     def start_rpc_server(self):
         self.rpc_server = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FSR_HOPPING_CONTROLLER),
-                                        ServerName = APP_NAME,
-                                        ServerDescription = "FSR Hopping controller",
-                                        ServerVersion = APP_VERSION,
-                                        threaded = True)
+                                                ServerName=APP_NAME,
+                                                ServerDescription="FSR Hopping controller",
+                                                ServerVersion=APP_VERSION,
+                                                threaded=True)
         self.rpc_thread = Thread(target=self.rpc_server.serve_forever)
         self.register_rpc()
         self.rpc_thread.setDaemon(True)
@@ -673,14 +678,17 @@ class FsrHoppingController(PConfigurable):
         self.rpc_server.register_function(self.set_time_between_steps)
         self.rpc_server.register_function(self.set_window)
 
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = "Fsr Hopping Controller")
-    parser.add_argument('-c', dest='config', help='Name of configuration file',
+    parser = argparse.ArgumentParser(description="Fsr Hopping Controller")
+    parser.add_argument('-c',
+                        dest='config',
+                        help='Name of configuration file',
                         default=os.path.splitext(os.path.abspath(app_path))[0] + ".ini")
     options_dict = vars(parser.parse_args())
     try:
         fhc = FsrHoppingController(options_dict)
-        Log("%s started." % APP_NAME, dict(ConfigFile = options_dict['config']), Level = 0)
+        Log("%s started." % APP_NAME, dict(ConfigFile=options_dict['config']), Level=0)
         fhc.main_loop()
     except Exception:
         LogExc("Unhandled exception")

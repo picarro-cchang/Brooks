@@ -54,13 +54,11 @@ class PlotControlPanelGui(wx.Panel):
         plotControlsSizer = wx.FlexGridSizer(cols=3, hgap=5, vgap=5)
         plotControlsSizer.AddGrowableCol(1)
 
-        plotControlsSizer.Add(dataSetNameLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(dataSetNameLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.dataSetNameChoice, 0, wx.EXPAND)
         plotControlsSizer.Add((10, 10))  # some empty space
 
-        plotControlsSizer.Add(varNameLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(varNameLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.varNameChoice, 0, wx.EXPAND)
         plotControlsSizer.Add((10, 10))  # some empty space
 
@@ -72,41 +70,31 @@ class PlotControlPanelGui(wx.Panel):
         # center the checkboxes in the middle column
         # or we could left align it (like it was without this sizer)
         plotControlsSizer.Add((10, 10))  # some empty space
-        plotControlsSizer.Add(checkBoxSizer, 0,
-                              wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER_HORIZONTAL)  # some empty space
+        plotControlsSizer.Add(checkBoxSizer, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALIGN_CENTER_HORIZONTAL)  # some empty space
         plotControlsSizer.Add((20, 20))  # some empty space
 
-        plotControlsSizer.Add(transformLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(transformLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.transformText, 0, wx.EXPAND)
         plotControlsSizer.Add((10, 10))  # some empty space
 
         # put a little extra vertical space above this next
         # group of controls
         topBorder = 10
-        plotControlsSizer.Add(meanLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.TOP,
-                              topBorder)
-        plotControlsSizer.Add(self.meanText, 0,
-                              wx.EXPAND | wx.TOP,
-                              topBorder)
+        plotControlsSizer.Add(meanLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL | wx.TOP, topBorder)
+        plotControlsSizer.Add(self.meanText, 0, wx.EXPAND | wx.TOP, topBorder)
         plotControlsSizer.Add((10, 10))  # some empty space
 
-        plotControlsSizer.Add(stdDevLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(stdDevLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.stdDevText, 0, wx.EXPAND)
         plotControlsSizer.Add((10, 10))  # some empty space
 
-        plotControlsSizer.Add(peak2PeakLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(peak2PeakLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.peak2PeakText, 0, wx.EXPAND)
         plotControlsSizer.Add((10, 10))  # some empty space
 
-        plotControlsSizer.Add(nAvgLbl, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(nAvgLbl, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
         plotControlsSizer.Add(self.nAvgText, 0, wx.EXPAND)
-        plotControlsSizer.Add(self.calcNAvgBtn, 0,
-                              wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
+        plotControlsSizer.Add(self.calcNAvgBtn, 0, wx.ALIGN_RIGHT | wx.ALIGN_CENTER_VERTICAL)
 
         # attemptto not disallow resize outer window any smaller so
         # controls not cut off, but didn't work

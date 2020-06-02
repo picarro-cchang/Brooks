@@ -27,31 +27,34 @@ from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.Listener import Listener
 from Host.Common.timestamp import unixTime
 
+
 class DriverProxy(SharedTypes.Singleton):
     """Encapsulates access to the Driver via RPC calls"""
     initialized = False
+
     def __init__(self):
         if not self.initialized:
             self.hostaddr = "localhost"
             self.myaddr = socket.gethostbyname(socket.gethostname())
-            serverURI = "http://%s:%d" % (self.hostaddr,
-                SharedTypes.RPC_PORT_DRIVER)
-            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI,ClientName="MakeWlmFile1")
+            serverURI = "http://%s:%d" % (self.hostaddr, SharedTypes.RPC_PORT_DRIVER)
+            self.rpc = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="MakeWlmFile1")
             self.initialized = True
+
 
 # For convenience in calling driver functions
 Driver = DriverProxy().rpc
 
+
 class LaserTemperatureSetpointStepTest(object):
-    def __init__(self,tp):
+    def __init__(self, tp):
         self.testParameters = tp
         self.hdfName = "data1.h5"
-        self.h5 = openFile(tp.absoluteTestDirectory + self.hdfName,"w")
+        self.h5 = openFile(tp.absoluteTestDirectory + self.hdfName, "w")
         self.graph1Name = "graph1.png"
         try:
             print "Driver version: %s" % Driver.allVersions()
         except:
-            raise ValueError,"Cannot communicate with driver, aborting"
+            raise ValueError, "Cannot communicate with driver, aborting"
 
         # Define a queue for the sensor stream data
         self.queue = Queue(0)
@@ -68,7 +71,7 @@ class LaserTemperatureSetpointStepTest(object):
             except Empty:
                 break
 
-    def streamFilter(self,result):
+    def streamFilter(self, result):
         # This filter is designed to enqueue sensor entries which all have the same timestamp.
         #  A 3-ple consisting of the timestamp, a dictionary of sensor data at that time
         #  and a dictionary of the most current sensor data as of that time
@@ -81,13 +84,13 @@ class LaserTemperatureSetpointStepTest(object):
 
         if self.streamFilterState == "RETURNED_RESULT":
             self.lastTime = self.cachedResult.timestamp
-            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:] : self.cachedResult.value}
+            self.resultDict = {STREAM_MemberTypeDict[self.cachedResult.streamNum][7:]: self.cachedResult.value}
 
         if result.timestamp != self.lastTime:
-            self.cachedResult = SensorEntryType(result.timestamp,result.streamNum,result.value)
+            self.cachedResult = SensorEntryType(result.timestamp, result.streamNum, result.value)
             self.streamFilterState = "RETURNED_RESULT"
             if self.resultDict:
-                return self.lastTime,self.resultDict.copy(),self.latestDict.copy()
+                return self.lastTime, self.resultDict.copy(), self.latestDict.copy()
             else:
                 return
         else:
@@ -95,13 +98,11 @@ class LaserTemperatureSetpointStepTest(object):
             self.streamFilterState = "COLLECTING_DATA"
 
     def run(self):
-        self.listener = Listener(self.queue,SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-                                 SensorEntryType,self.streamFilter)
-        filters = Filters(complevel=1,fletcher32=True)
+        self.listener = Listener(self.queue, SharedTypes.BROADCAST_PORT_SENSORSTREAM, SensorEntryType, self.streamFilter)
+        filters = Filters(complevel=1, fletcher32=True)
         try:
-            regVault = Driver.saveRegValues(["LASER1_TEMP_CNTRL_STATE_REGISTER",
-                                             "LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER",
-                                             "LASER1_MANUAL_TEC_REGISTER"])
+            regVault = Driver.saveRegValues(
+                ["LASER1_TEMP_CNTRL_STATE_REGISTER", "LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER", "LASER1_MANUAL_TEC_REGISTER"])
             dataList = []
             setPoint = 25.0
             stepSize = 2.0
@@ -111,41 +112,41 @@ class LaserTemperatureSetpointStepTest(object):
             stepDuration = 30.0
             DacStepSize = 1000
             DacStepDuration = 120.0
-            Driver.wrDasReg("LASER1_TEMP_CNTRL_STATE_REGISTER","TEMP_CNTRL_EnabledState")
-            Driver.wrDasReg("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER",setPoint)
+            Driver.wrDasReg("LASER1_TEMP_CNTRL_STATE_REGISTER", "TEMP_CNTRL_EnabledState")
+            Driver.wrDasReg("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER", setPoint)
             print "Waiting for loop to stabilize before collecting data"
             self.flushQueue()
-            tStart,d,last = self.queue.get()
+            tStart, d, last = self.queue.get()
             t = tStart
-            while t-tStart < 1000*stabilizeDuration:
-                t,d,last = self.queue.get()
+            while t - tStart < 1000 * stabilizeDuration:
+                t, d, last = self.queue.get()
                 sys.stdout.write('.')
             print "\nRecording baseline data"
-            while t-tStart < 1000*baselineDuration:
+            while t - tStart < 1000 * baselineDuration:
                 if "Laser1Temp" in d and "Laser1Tec" in d:
-                    print "%20.1f %20.3f %20.0f" % (0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"])
-                    dataList.append((t,0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"]))
-                t,d,last = self.queue.get()
+                    print "%20.1f %20.3f %20.0f" % (0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"])
+                    dataList.append((t, 0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"]))
+                t, d, last = self.queue.get()
             print "Applying step in temperature setpoint"
-            Driver.wrDasReg("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER",setPoint+stepSize)
+            Driver.wrDasReg("LASER1_TEMP_CNTRL_USER_SETPOINT_REGISTER", setPoint + stepSize)
             tStart = t
             tecVals = []
-            while t-tStart < 1000*baselineDuration:
+            while t - tStart < 1000 * baselineDuration:
                 if "Laser1Temp" in d and "Laser1Tec" in d:
-                    print "%20.1f %20.3f %20.0f" % (0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"])
-                    dataList.append((t,0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"]))
+                    print "%20.1f %20.3f %20.0f" % (0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"])
+                    dataList.append((t, 0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"]))
                     tecVals.append(d["Laser1Tec"])
-                t,d,last = self.queue.get()
-            tecMean = mean(tecVals[len(tecVals)//2:])
+                t, d, last = self.queue.get()
+            tecMean = mean(tecVals[len(tecVals) // 2:])
             print "Applying step in TEC drive"
-            Driver.wrDasReg("LASER1_TEMP_CNTRL_STATE_REGISTER","TEMP_CNTRL_ManualState")
-            Driver.wrDasReg("LASER1_MANUAL_TEC_REGISTER",int(tecMean+DacStepSize))
+            Driver.wrDasReg("LASER1_TEMP_CNTRL_STATE_REGISTER", "TEMP_CNTRL_ManualState")
+            Driver.wrDasReg("LASER1_MANUAL_TEC_REGISTER", int(tecMean + DacStepSize))
             tStart = t
-            while t-tStart < 1000*DacStepDuration:
+            while t - tStart < 1000 * DacStepDuration:
                 if "Laser1Temp" in d and "Laser1Tec" in d:
-                    print "%20.1f %20.3f %20.0f" % (0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"])
-                    dataList.append((t,0.001*(t-tStart),d["Laser1Temp"],d["Laser1Tec"]))
-                t,d,last = self.queue.get()
+                    print "%20.1f %20.3f %20.0f" % (0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"])
+                    dataList.append((t, 0.001 * (t - tStart), d["Laser1Temp"], d["Laser1Tec"]))
+                t, d, last = self.queue.get()
         finally:
             self.listener.stop()
             Driver.restoreRegValues(regVault)
@@ -159,16 +160,17 @@ class LaserTemperatureSetpointStepTest(object):
         #table.attrs.TestDuration = testDuration
         self.h5.close()
 
+
 if __name__ == "__main__":
-  pname = sys.argv[0]
-  bname = os.path.basename(pname)
-  if len(sys.argv) < 2:
-    engineName = raw_input("Engine name? ")
-  else:
-    engineName = sys.argv[1]
-  assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname,)
-  tp = TestParameters(engineName,bname[4:10])
-  tst = LaserTemperatureSetpointStepTest(tp)
-  tst.run()
-  tp.appendReport()
-  # tp.makeHTML()
+    pname = sys.argv[0]
+    bname = os.path.basename(pname)
+    if len(sys.argv) < 2:
+        engineName = raw_input("Engine name? ")
+    else:
+        engineName = sys.argv[1]
+    assert bname[:4].upper() == "TEST", "Test program name %s is invalid (should start with Test)" % (bname, )
+    tp = TestParameters(engineName, bname[4:10])
+    tst = LaserTemperatureSetpointStepTest(tp)
+    tst.run()
+    tp.appendReport()
+    # tp.makeHTML()

@@ -186,11 +186,11 @@ import wx
 
 CWD = os.getcwd()
 
-ipvusr="ipvadmin"
-ipvpass="p3c1rr4p3c1rr4"
+ipvusr = "ipvadmin"
+ipvpass = "p3c1rr4p3c1rr4"
 ipvup = "%s:%s@" % (ipvusr, ipvpass)
 #RPCURI_DFT = "http://%smfg.picarro.com/xmlrpc/" % (ipvup) # Production
-RPCURI_DFT = "http://plucky/xmlrpc/" # Plucky TEST
+RPCURI_DFT = "http://plucky/xmlrpc/"  # Plucky TEST
 #RPCURI_DFT = "http://ubuntuhost64:8000/xmlrpc/" # Dev (local machine)
 
 XMLRPC_USER = 'xml_user'
@@ -201,30 +201,31 @@ BTN_WIDTH = 35
 MSG_WIDTH = 300
 
 PNL_LBLS = {
-            'doc_choice': 'Document',
-            'rdmdoc_wavelength': 'Wavelength',
-            'rdmdoc_rd_time': 'RDT',
-            'rdmdoc_s2s_pct': 'S-S Noise',
-            'rdmdoc_vert': 'Vertical',
-            'rdmdoc_horiz': 'Horizontal',
-            'rdmdoc_vpzt': 'Vpzt',
-            'new_set': 'Continue step?',
-            'userid': 'User',
-            }
+    'doc_choice': 'Document',
+    'rdmdoc_wavelength': 'Wavelength',
+    'rdmdoc_rd_time': 'RDT',
+    'rdmdoc_s2s_pct': 'S-S Noise',
+    'rdmdoc_vert': 'Vertical',
+    'rdmdoc_horiz': 'Horizontal',
+    'rdmdoc_vpzt': 'Vpzt',
+    'new_set': 'Continue step?',
+    'userid': 'User',
+}
 
 MEASURE_STEP = {
-             'step_3': 'cadoc_front_rd_measure',
-             'step_6': 'cadoc_pzt_rd_measure',
-             'step_9': 'cadoc_post_glue_rd_measure',
-             'step_12': 'cadoc_post_heat_rd_measure',
-             'step_17': 'cadoc_initial_rd_measure',
-             'step_20': 'cadoc_final_rd_measure',
-                }
+    'step_3': 'cadoc_front_rd_measure',
+    'step_6': 'cadoc_pzt_rd_measure',
+    'step_9': 'cadoc_post_glue_rd_measure',
+    'step_12': 'cadoc_post_heat_rd_measure',
+    'step_17': 'cadoc_initial_rd_measure',
+    'step_20': 'cadoc_final_rd_measure',
+}
 
 
 class Usage(Exception):
     def __init__(self, msg):
         self.msg = msg
+
 
 class _Logger(object):
     def __init__(self, **kwargs):
@@ -245,11 +246,7 @@ class _Logger(object):
             ts = datetime.datetime.now()
 
         try:
-            self.logf.write('%s.%s: %s\n' % (
-                                             ts.strftime("%Y%m%d%H%M%S"),
-                                             ts.microsecond,
-                                             msg)
-                            )
+            self.logf.write('%s.%s: %s\n' % (ts.strftime("%Y%m%d%H%M%S"), ts.microsecond, msg))
         except:
             return False
 
@@ -262,6 +259,7 @@ class _Logger(object):
             return False
 
         return True
+
 
 class TravellerDataPushPnl(wx.Frame):
     def _step(self, stat):
@@ -287,7 +285,6 @@ class TravellerDataPushPnl(wx.Frame):
 
     def quit(self, event):
         self.Destroy()
-
 
     def send_button_press(self, new_set=True):
         def _send_doc_to_mfg(data_dict):
@@ -334,23 +331,18 @@ class TravellerDataPushPnl(wx.Frame):
         def _logme(nky, nval, depth=''):
             try:
                 for sky, sval in nval.iteritems():
-                    _logme(sky, sval, '%s: ' %(nky))
+                    _logme(sky, sval, '%s: ' % (nky))
             except:
-                self.my_log.write('%s%s' %(depth, _dict_filter(nky, nval)))
-
+                self.my_log.write('%s%s' % (depth, _dict_filter(nky, nval)))
 
         data_dict = {}
-        for ky in (
-                  'doc_choice',
-                  ):
+        for ky in ('doc_choice', ):
             if ky in self.cntls:
                 data_dict[ky] = self.cntls[ky]['entry'].GetValue()
 
         ky = 'userid'
         if ky in self.cntls:
-            data_dict[ky] = self.cntls[ky]['entry'].GetString(
-                                    self.cntls[ky]['entry'].GetSelection()
-                                                              )
+            data_dict[ky] = self.cntls[ky]['entry'].GetString(self.cntls[ky]['entry'].GetSelection())
             self.last_userid = data_dict[ky]
             #passing last userid into log class to preserve value after frame
             self.my_log.msg_dict['last_userid'] = self.last_userid
@@ -400,7 +392,6 @@ class TravellerDataPushPnl(wx.Frame):
 
         self.quit(None)
 
-
     def createWidgets(self):
         def _new_entry_widget_dict(label, value, size=None):
             lbl = wx.StaticText(self.panel, -1, label)
@@ -424,15 +415,15 @@ class TravellerDataPushPnl(wx.Frame):
                 pnllbl = ky
             return pnllbl
 
-        row=0
+        row = 0
         self.cntls = {}
         self.gbsizer = wx.GridBagSizer(4, 4)
 
         #Spacers
-        self.gbsizer.Add((20,2), pos=(row, 0), flag=wx.EXPAND)
-        self.gbsizer.Add((20,2), pos=(row, 3), flag=wx.EXPAND)
+        self.gbsizer.Add((20, 2), pos=(row, 0), flag=wx.EXPAND)
+        self.gbsizer.Add((20, 2), pos=(row, 3), flag=wx.EXPAND)
 
-        row+=1
+        row += 1
 
         ky = 'userid'
 
@@ -468,7 +459,7 @@ class TravellerDataPushPnl(wx.Frame):
                 'rdmdoc_vert',
                 'rdmdoc_horiz',
                 'rdmdoc_vpzt',
-                   ):
+        ):
             if ky in self.data_dict:
                 val = self.data_dict[ky]
             else:
@@ -483,48 +474,48 @@ class TravellerDataPushPnl(wx.Frame):
         self.QUIT = wx.Button(self.panel, -1, "Cancel")
         self.QUIT.SetMinSize((BTN_WIDTH, 20))
         self.Bind(wx.EVT_BUTTON, self.quit, self.QUIT)
-        self.gbsizer.Add(self.QUIT, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
+        self.gbsizer.Add(self.QUIT, pos=(row, 1), span=(1, 2), flag=wx.EXPAND)
 
-        row +=1
+        row += 1
         self.send_button = wx.Button(self.panel, -1, "Send as new %s" % (self._step(self.doc_tuple[2])))
         self.send_button.SetMinSize((BTN_WIDTH, 20))
         self.Bind(wx.EVT_BUTTON, self.send_new_btn_press, self.send_button)
-        self.gbsizer.Add(self.send_button, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
+        self.gbsizer.Add(self.send_button, pos=(row, 1), span=(1, 2), flag=wx.EXPAND)
 
-        row +=1
+        row += 1
         self.send_button2 = wx.Button(self.panel, -1, "Send as continuation %s" % (self._step(self.doc_tuple[2])))
         self.send_button2.SetMinSize((BTN_WIDTH, 20))
         self.Bind(wx.EVT_BUTTON, self.send_cnt_btn_press, self.send_button2)
-        self.gbsizer.Add(self.send_button2, pos=(row, 1), span=(1,2), flag=wx.EXPAND)
+        self.gbsizer.Add(self.send_button2, pos=(row, 1), span=(1, 2), flag=wx.EXPAND)
 
-        row +=1
+        row += 1
         #Spacers
-        self.gbsizer.Add((20,2), pos=(row, 0), flag=wx.EXPAND)
-        self.gbsizer.Add((20,2), pos=(row, 3), flag=wx.EXPAND)
+        self.gbsizer.Add((20, 2), pos=(row, 0), flag=wx.EXPAND)
+        self.gbsizer.Add((20, 2), pos=(row, 3), flag=wx.EXPAND)
 
         self.panel.SetAutoLayout(True)
         self.panel.SetSizer(self.gbsizer)
         self.panel.Fit()
 
     def __init__(self, *args, **kwargs):
-        kwargs["style"] = wx.DEFAULT_FRAME_STYLE|wx.TAB_TRAVERSAL|wx.RAISED_BORDER|wx.STAY_ON_TOP
+        kwargs["style"] = wx.DEFAULT_FRAME_STYLE | wx.TAB_TRAVERSAL | wx.RAISED_BORDER | wx.STAY_ON_TOP
 
-        self.parm_dict=kwargs['parm_dict']
+        self.parm_dict = kwargs['parm_dict']
         del kwargs['parm_dict']
 
-        self.data_dict=kwargs['data_dict']
+        self.data_dict = kwargs['data_dict']
         del kwargs['data_dict']
 
-        self.my_log=kwargs['my_log']
+        self.my_log = kwargs['my_log']
         del kwargs['my_log']
 
-        self.doc_tuple=kwargs['doc_tuple']
+        self.doc_tuple = kwargs['doc_tuple']
         del kwargs['doc_tuple']
 
-        self.mfg_uri=kwargs['mfg_uri']
+        self.mfg_uri = kwargs['mfg_uri']
         del kwargs['mfg_uri']
 
-        self.last_userid=kwargs['last_userid']
+        self.last_userid = kwargs['last_userid']
         del kwargs['last_userid']
 
         self.data_items = []
@@ -555,6 +546,7 @@ class TravellerDataPushPnl(wx.Frame):
             return dlist
 
         return None
+
 
 class TravellerDataPush():
     def __init__(self, *args, **kwargs):
@@ -591,13 +583,13 @@ class TravellerDataPush():
                 self._file_pull(parm_dict['ctl_file'], ctl_dict)
 
                 for ctlk in (
-                            'data_file',
-                            'image_file',
-                            'plot_file',
-                            'traveller_identifier',
-                            'traveller_name',
-                            'mfg_url',
-                             ):
+                        'data_file',
+                        'image_file',
+                        'plot_file',
+                        'traveller_identifier',
+                        'traveller_name',
+                        'mfg_url',
+                ):
 
                     if ctlk in ctl_dict:
                         parm_dict[ctlk] = ctl_dict[ctlk]
@@ -660,7 +652,7 @@ class TravellerDataPush():
 
     def _show_message(self, msg):
         app = wx.App()
-        dlg = wx.MessageDialog(None, msg, caption=PNL_TITLE, style=wx.OK|wx.ICON_INFORMATION|wx.STAY_ON_TOP)
+        dlg = wx.MessageDialog(None, msg, caption=PNL_TITLE, style=wx.OK | wx.ICON_INFORMATION | wx.STAY_ON_TOP)
         dlg.ShowModal()
         dlg.Destroy()
         app.MainLoop()
@@ -668,16 +660,14 @@ class TravellerDataPush():
     def _show_panel(self, parm_dict, data_dict, my_log, doc_tuple, mfg_uri):
 
         app = wx.App()
-        frame = TravellerDataPushPnl(
-                          None,
-                          title=PNL_TITLE,
-                          parm_dict=parm_dict,
-                          data_dict=data_dict,
-                          my_log=my_log,
-                          doc_tuple=doc_tuple,
-                          mfg_uri=mfg_uri,
-                          last_userid=self.last_userid
-                          )
+        frame = TravellerDataPushPnl(None,
+                                     title=PNL_TITLE,
+                                     parm_dict=parm_dict,
+                                     data_dict=data_dict,
+                                     my_log=my_log,
+                                     doc_tuple=doc_tuple,
+                                     mfg_uri=mfg_uri,
+                                     last_userid=self.last_userid)
         frame.Show(True)
         app.MainLoop()
 
@@ -726,19 +716,19 @@ class TravellerDataPush():
 
         rtn_list = []
         for sts in (
-                    'step_2',
-                    'step_3',
-                    'step_5',
-                    'step_6',
-                    'step_8',
-                    'step_9',
-                    'step_11',
-                    'step_12',
-                    'step_16',
-                    'step_17',
-                    'step_19',
-                    'step_20',
-                    ):
+                'step_2',
+                'step_3',
+                'step_5',
+                'step_6',
+                'step_8',
+                'step_9',
+                'step_11',
+                'step_12',
+                'step_16',
+                'step_17',
+                'step_19',
+                'step_20',
+        ):
             data_dict['cadoc_status'] = sts
             dlist = XMLProxy.travx_getlist(data_dict)
             if dlist:
@@ -747,6 +737,7 @@ class TravellerDataPush():
 
         return None
 
+
 def main(argv=None):
     run_ts = datetime.datetime.now()
 
@@ -754,22 +745,19 @@ def main(argv=None):
         argv = sys.argv
     try:
         try:
-            opts, args = getopt.getopt(argv[1:],
-                                       'hcdiptnlu',
-                                       [
-                                        'help',
-                                        'ctl-file=',
-                                        'data-file=',
-                                        'image-file=',
-                                        'plot-file=',
-                                        'traveller-identifier=',
-                                        'traveller-name=',
-                                        'mfg-url=',
-                                        'log-file=',
-                                        ]
-                                       )
+            opts, args = getopt.getopt(argv[1:], 'hcdiptnlu', [
+                'help',
+                'ctl-file=',
+                'data-file=',
+                'image-file=',
+                'plot-file=',
+                'traveller-identifier=',
+                'traveller-name=',
+                'mfg-url=',
+                'log-file=',
+            ])
         except getopt.error, msg:
-             raise Usage(msg)
+            raise Usage(msg)
 
         for o, a in opts:
             if o in ('-h', '--help'):
@@ -785,7 +773,7 @@ def main(argv=None):
                 'traveller_identifier',
                 'traveller_name',
                 'mfg_url',
-                  ):
+        ):
             parm_dict[p] = None
 
         _get_opts_and_args(parm_dict, opts)
@@ -798,6 +786,7 @@ def main(argv=None):
         print >> sys.stderr, err.msg
         print >> sys.stderr, "for help use --help"
         return 2
+
 
 def _get_opts_and_args(parm_dict, opts):
     '''
@@ -823,6 +812,7 @@ def _get_opts_and_args(parm_dict, opts):
             parm_dict['mfg_url'] = user_arg
         if user_opt in ('-l', '--log-file'):
             parm_dict['log_file'] = user_arg
+
 
 def _setup_and_validate_parms(parm_dict, args):
     '''

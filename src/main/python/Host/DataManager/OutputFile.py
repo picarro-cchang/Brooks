@@ -1,5 +1,5 @@
 # FileManager
-# 
+#
 # This class is designed to make creating, closing, and writing to Picarro
 # output files easier.
 # It is designed to:
@@ -18,7 +18,7 @@
 # code doesn't have to manipulate file handles.
 #
 # [1]   File names must be unique in a given directory.  Filenames should
-#       have an embedded date and incremented counter so that it is easy to 
+#       have an embedded date and incremented counter so that it is easy to
 #       spot missing files and the order of the files is obvious. Example
 #
 #       AMADS_DAT_20170222_0000.txt
@@ -58,22 +58,22 @@ class OutputFile:
     # Compression options (in enum style)
     NoCompression, Gzip, Zip, Bzip2 = range(4)
 
-    def __init__(self,
+    def __init__(
+            self,
             analyzerType,
-            newFileInterval = 3600, # 3600 seconds i.e. 1 hour
-            fileType = "DAT",
+            newFileInterval=3600,  # 3600 seconds i.e. 1 hour
+            fileType="DAT",
             fileCounter=0000,
             fileExtension="txt",
-            zipType = "NoCompression"
-            ):
+            zipType="NoCompression"):
         self._rootPathName = "/Picarro"
 
         self._fileHandle = None
         self._requestCloseFile = False
-        self._stopWatch = None # file timer thread
+        self._stopWatch = None  # file timer thread
         self._dateStopWatch = None
 
-        # Keep track if we wrote data to the current file.  When we close, delete the 
+        # Keep track if we wrote data to the current file.  When we close, delete the
         # file if we haven't written any data so that we don't pollute the file system
         # with empty files.  This can happen if we are repeatedly starting and stopping
         # the code before the system starts measuring.
@@ -157,7 +157,7 @@ class OutputFile:
         self._currentDatePath = self.getNewDatePath()
         self._currentOpenFileName = self.getNewFileName()
         fn = os.path.join(self._currentDatePath, self._currentOpenFileName)
-        self._fileHandle = open(fn,"w")
+        self._fileHandle = open(fn, "w")
         self._requestCloseFile = False
         return
 
@@ -175,7 +175,7 @@ class OutputFile:
             if self._zipType == OutputFile.Bzip2:
                 subprocess32.Popen(["bzip2", txtFile])
             if self._zipType == OutputFile.Zip:
-                subprocess32.Popen(["zip", "-mj", txtFile+".zip", txtFile])
+                subprocess32.Popen(["zip", "-mj", txtFile + ".zip", txtFile])
         else:
             os.remove(txtFile)
         self._wroteToFile = False
@@ -188,8 +188,8 @@ class OutputFile:
         The timezone is the local (system) setting.
         """
         dateStr = date.today().strftime("%Y%m%d")
-        if(self._debugMode):
-            dateStr = self._fileDate #self._testDate
+        if (self._debugMode):
+            dateStr = self._fileDate  #self._testDate
         return dateStr
 
     def getNewDatePath(self):
@@ -230,22 +230,14 @@ class OutputFile:
         except:
             pass
 
-        if(cnt >= 0 and cnt <= 9999):
-            rootName = '_'.join([self._analyzerType,
-                                self._fileType,
-                                self._fileDate,
-                                str(cnt).zfill(4)
-                                ])
+        if (cnt >= 0 and cnt <= 9999):
+            rootName = '_'.join([self._analyzerType, self._fileType, self._fileDate, str(cnt).zfill(4)])
         # else do a literal substitution for wildcard matches
         else:
-            rootName = '_'.join([self._analyzerType,
-                                self._fileType,
-                                self._fileDate,
-                                counter
-                                ])
+            rootName = '_'.join([self._analyzerType, self._fileType, self._fileDate, counter])
         return rootName + '.' + self._fileExtension
 
-    def getFileCounter(self, path, which = 0):
+    def getFileCounter(self, path, which=0):
         """
         Examine the files in the directory defined by 'path' and determine
         the counter to apply to the next file to be created.
@@ -272,7 +264,7 @@ class OutputFile:
         # If no matches are found, we start with the first file '0000'.
         #
         myRegExp = r"(\d{4})\." + self._fileExtension
-        counterList = [ int(re.search(myRegExp, x).group(1)) for x in fileList]
+        counterList = [int(re.search(myRegExp, x).group(1)) for x in fileList]
         if counterList:
             if 0 == which:
                 nextCounter = max(counterList) + 1
@@ -294,7 +286,7 @@ class OutputFile:
         newFileName = self.makeFileName(newCounter)
         return newFileName
 
-    def writeData(self,data):
+    def writeData(self, data):
         """
         Assume 'data' is a formatted string single line output.
         The format is set in <need class names here>.
@@ -324,7 +316,7 @@ class OutputFile:
         self._fileDate = "20170201"
         self._rootPathName = "./"
 
-    def runTest0(self, msg = "", numOfWrites = 86400, writeDelay = 1.0, incrementDateAfterNWrites = -1):
+    def runTest0(self, msg="", numOfWrites=86400, writeDelay=1.0, incrementDateAfterNWrites=-1):
         """
         Create a date directory. Open a new file and write some data to it.
 
@@ -342,7 +334,7 @@ class OutputFile:
         """
         self.makeDirs()
         self.openNewFile()
-        for x in xrange(0,numOfWrites):
+        for x in xrange(0, numOfWrites):
             print("Writing to %s with 2 sec delay" % self._currentOpenFileName)
             self.writeData("%s\tTest Data from runTest0() %s\n" % (str(datetime.now()), msg))
             if incrementDateAfterNWrites == x:
@@ -353,16 +345,16 @@ class OutputFile:
         self.closeFile()
         return
 
-    def runTest1(self, msg = ""):
+    def runTest1(self, msg=""):
         """
         Repeat single file creation several times to verify that the counter
         is being incremented correctly.
         """
-        for x in range(0,5):
-            self.runTest0(msg = "Invoked by runTest1()")
+        for x in range(0, 5):
+            self.runTest0(msg="Invoked by runTest1()")
         return
 
-    def runTest2(self, msg = ""):
+    def runTest2(self, msg=""):
         """
         Delete the oldest file in the path.
         Create a new file and verify that the counter continues the series
@@ -379,22 +371,22 @@ class OutputFile:
                 os.remove(fn)
             except:
                 pass
-        self.runTest0(msg = "Invoked by runTest2()")
+        self.runTest0(msg="Invoked by runTest2()")
         return
 
-    def runTest3(self, msg = ""):
+    def runTest3(self, msg=""):
         """
         Test date change while a file is open and creating new files in the new
         directory.
         """
-        for x in range(0,10):
+        for x in range(0, 10):
             if 5 == x:
-                self.runTest0(msg = "Invoked by runTest3(), advancing date", incrementDateAfterNWrites = 2)
+                self.runTest0(msg="Invoked by runTest3(), advancing date", incrementDateAfterNWrites=2)
             else:
-                self.runTest0(msg = "Invoked by runTest3()")
+                self.runTest0(msg="Invoked by runTest3()")
         return
 
-    def runTest4(self, msg = ""):
+    def runTest4(self, msg=""):
         """
         Simulate a constant data stream with a timer creating and closing files every
         60 seconds.  Every 5 minutes increment the date to test directory creation
@@ -408,10 +400,10 @@ class OutputFile:
         self.openNewFile()
         self._stopWatch = IntervalTimer(60, "NewFileTimer", self.closeFileAndOpenANewOne)
         self._stopWatch.start()
-        self._dateStopWatch = IntervalTimer(60*5, "DateIncTimer", self.testFuncIncrementDate)
+        self._dateStopWatch = IntervalTimer(60 * 5, "DateIncTimer", self.testFuncIncrementDate)
         self._dateStopWatch.start()
         msg = ""
-        for i in xrange(0,1500):
+        for i in xrange(0, 1500):
             if not self._stopWatch.is_alive():
                 break
             self.writeData("%s->%s\tTest Data from runTest4() %s\n" % (str(i), str(datetime.now()), msg))
@@ -431,13 +423,14 @@ class OutputFile:
         self._stopWatch.stop()
         self._dateStopWatch.stop()
 
+
 class IntervalTimer(threading.Thread):
     """
     IntervalTimer is a non-blocking timer that runs a callback function
     every n seconds.  If no callback function is defined the timer 'pings'
     for debugging purposes.
     """
-    def __init__(self, n, timerName = "", callback = None):
+    def __init__(self, n, timerName="", callback=None):
         threading.Thread.__init__(self)
         self._n = n
         self._keepRunning = True
@@ -446,7 +439,7 @@ class IntervalTimer(threading.Thread):
 
     def run(self):
         while self._keepRunning and self._n > 0:
-            for _ in xrange(0,self._n):
+            for _ in xrange(0, self._n):
                 if self._keepRunning:
                     time.sleep(1.0)
             if self._keepRunning:
@@ -460,7 +453,7 @@ class IntervalTimer(threading.Thread):
         self._keepRunning = False
 
 
-def UnitTest(ofObj = None, msg = ""):
+def UnitTest(ofObj=None, msg=""):
     """
     Simulate a constant data stream with a timer creating and closing files every
     60 seconds.  Every 5 minutes increment the date to test directory creation
@@ -470,9 +463,9 @@ def UnitTest(ofObj = None, msg = ""):
     """
 
     ofObj.start()
-    dateIncrementer = IntervalTimer(60*5, "DateIncTimer", ofObj.testFuncIncrementDate)
+    dateIncrementer = IntervalTimer(60 * 5, "DateIncTimer", ofObj.testFuncIncrementDate)
     dateIncrementer.start()
-    for i in xrange(0,1000):
+    for i in xrange(0, 1000):
         if not ofObj.isRunning():
             break
         ofObj.writeData("%s->%s\tTest Data from runTest4() %s\n" % (str(i), str(datetime.now()), msg))
@@ -480,6 +473,7 @@ def UnitTest(ofObj = None, msg = ""):
     ofObj.stop()
     dateIncrementer.stop()
     return
+
 
 def main():
     of = OutputFile(newFileInterval=60, analyzerType="AMADS", fileType="DAT")
@@ -506,6 +500,6 @@ def main():
 
     return
 
+
 if __name__ == '__main__':
     main()
-

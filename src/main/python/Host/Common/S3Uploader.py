@@ -13,6 +13,7 @@ import os
 import boto
 from boto.s3.key import Key as BotoKey
 
+
 class S3Uploader(object):
     def __init__(self, bucketName, analyzerId):
         self.bucketName = bucketName
@@ -45,6 +46,7 @@ class S3Uploader(object):
             return {"error": "S3 bucket issue"}
 
         return "OK"
+
 
 if __name__ == "__main__":
 

@@ -28,11 +28,11 @@ from Host.autogen.interface import LASER_CURRENT_CNTRL_DisabledState, LASER_CURR
                                    SPECT_CNTRL_IdleState, TEMP_CNTRL_EnabledState, TEMP_CNTRL_SweepingState
 
 APP_NAME = "WLMStation"
-Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                   ClientName = APP_NAME)
+Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, ClientName=APP_NAME)
+
 
 class _QtGraphEditor(Editor):
-    scrollable  = True
+    scrollable = True
 
     def init(self, parent):
         self.control = self._create_canvas(parent)
@@ -47,14 +47,16 @@ class _QtGraphEditor(Editor):
         pg.setConfigOption('foreground', 'k')
         canvas = pg.GraphicsLayoutWidget()
         canvas.addItem(self.object.figure)
-       
+
         vbox = QtGui.QVBoxLayout()
         vbox.addWidget(canvas)
         frame.setLayout(vbox)
         return frame
 
+
 class QtGraphEditor(BasicEditorFactory):
     klass = _QtGraphEditor
+
 
 class Laser(HasTraits):
     laserIndex = Int
@@ -65,32 +67,36 @@ class Laser(HasTraits):
     fitDataNum = Int
     temperature = Float
     current = Float
-    
+
+
 class NewUnitSelector(HasTraits):
     unitList = ListStr
     selectedUnit = Str
     newUnitName = Str("WLM")
     action = Enum(0, 1)
-    
+
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
-        self.traits_view = View(
-                                VGroup(
-                                    Item(label=' '),
-                                    HGroup(
-                                        Item(label=' '*5),
-                                        Item('action', editor=EnumEditor(values={0:'Select existing unit', 1:'Create new unit'}), 
-                                              show_label=False, style='custom', height=-47),
-                                        VGroup(
-                                            Item('newUnitName', enabled_when='action==1'),
-                                            Item('selectedUnit', editor=EnumEditor(name='unitList'), enabled_when='action==0')
-                                            ),
-                                        Item(label=' '*5)
-                                        ),
-                                    Item(label=' ')
-                                ),
-                            buttons=OKCancelButtons, title="Create or Select a unit", kind="livemodal")
-    
+        self.traits_view = View(VGroup(
+            Item(label=' '),
+            HGroup(
+                Item(label=' ' * 5),
+                Item('action',
+                     editor=EnumEditor(values={
+                         0: 'Select existing unit',
+                         1: 'Create new unit'
+                     }),
+                     show_label=False,
+                     style='custom',
+                     height=-47),
+                VGroup(Item('newUnitName', enabled_when='action==1'),
+                       Item('selectedUnit', editor=EnumEditor(name='unitList'), enabled_when='action==0')), Item(label=' ' * 5)),
+            Item(label=' ')),
+                                buttons=OKCancelButtons,
+                                title="Create or Select a unit",
+                                kind="livemodal")
+
+
 class WLMStationHandler(Handler):
     def getUnitList(self, info):
         folders = []
@@ -99,7 +105,7 @@ class WLMStationHandler(Handler):
             if os.path.isdir(path) and f.startswith("WLM"):
                 folders.append(f)
         return folders
-        
+
     def onNewUnit(self, info):
         obj = info.object
         ns = NewUnitSelector(unitList=self.getUnitList(info))
@@ -108,7 +114,7 @@ class WLMStationHandler(Handler):
             obj.unitName = ns.selectedUnit
         elif ns.action == 1 and len(ns.newUnitName) > 3:
             if not ns.newUnitName.startswith("WLM"):
-                error(message = "  Unit name should start with 'WLM'! ", title = 'Error', buttons = ['OK'])
+                error(message="  Unit name should start with 'WLM'! ", title='Error', buttons=['OK'])
                 return
             obj.unitName = ns.newUnitName
             path = os.path.join(obj.fileDir, obj.unitName)
@@ -117,13 +123,13 @@ class WLMStationHandler(Handler):
         else:
             return
         obj.figure.setLabels(title=obj.unitName)
-            
+
     def onSetConfig(self, info):
         obj = info.object
         obj.configure_traits(view=obj.edit_view)
         obj.WLM_channels = "Dev1/ai%d,Dev1/ai%d,Dev1/ai%d,Dev1/ai%d" % (obj.channelForReference1, obj.channelForReference2, \
                                 obj.channelForEtalon1, obj.channelForEtalon2)
-        
+
     def onLoadOffset(self, info):
         obj = info.object
         file = pg.FileDialog.getOpenFileName(None, 'Select dark current config file', os.getcwd(), "Config files (*.ini)")
@@ -134,16 +140,16 @@ class WLMStationHandler(Handler):
             obj.etalon2Offset = config.getfloat('Main', 'etalon2Offset')
             obj.reference2Offset = config.getfloat('Main', 'reference2Offset')
             obj.enableMeasure = True
-    
+
     def onMeasureOffset(self, info):
         obj = info.object
         dc = getDarkCurrent(obj.WLM_channels, obj.laserNum)
-        optRun = threading.Thread(target = dc.run)
+        optRun = threading.Thread(target=dc.run)
         optRun.setDaemon(True)
         optRun.start()
         pb = ProgressBar(title="Measuring Offset...", object=dc)
         pb.configure_traits(view=pb.traits_view)
-        margin = ' '*5
+        margin = ' ' * 5
         msg = "\n" + margin + "Reference1 Offset = %.4f \n" % dc.reference1_offset + \
               margin + "Reference2 Offset = %.4f \n" % dc.reference2_offset + \
               margin + "Etalon1 Offset = %.4f \n" % dc.etalon1_offset + \
@@ -154,17 +160,17 @@ class WLMStationHandler(Handler):
             obj.reference1Offset = dc.reference1_offset
             obj.etalon2Offset = dc.etalon2_offset
             obj.reference2Offset = dc.reference2_offset
-       
+
             # defaultPath = os.getcwd() + r'\DarkCurrent_' + time.strftime('%Y-%m-%d_%H-%M-%S') + '.ini'
             # file = pg.FileDialog.getSaveFileName(None, 'Select dark current config file', defaultPath, "Config files (*.ini)")
             # if file:
-                # with open(file, 'w') as f:
-                    # f.write('[Main]\n')
-                    # f.write('etalon1Offset = %s\n' % dc.etalon1_offset)
-                    # f.write('reference1Offset = %s\n' % dc.reference1_offset)
-                    # f.write('etalon2Offset = %s\n' % dc.etalon2_offset)
-                    # f.write('reference2Offset = %s' % dc.reference2_offset)
-                
+            # with open(file, 'w') as f:
+            # f.write('[Main]\n')
+            # f.write('etalon1Offset = %s\n' % dc.etalon1_offset)
+            # f.write('reference1Offset = %s\n' % dc.reference1_offset)
+            # f.write('etalon2Offset = %s\n' % dc.etalon2_offset)
+            # f.write('reference2Offset = %s' % dc.reference2_offset)
+
     def onTakeScreenshot(self, info):
         obj = info.object
         if obj.unitName is None:
@@ -176,8 +182,8 @@ class WLMStationHandler(Handler):
             file = os.path.join(dirPath, time.strftime('Screenshot_%Y-%m-%d_%H-%M-%S.jpg'))
             hwnd = win32gui.FindWindow(None, 'Picarro WLMStation')
             QtGui.QPixmap.grabWindow(hwnd).save(file, 'jpg')
-            message(message="Screenshot is saved at: %s" % file, title = 'Screenshot', buttons = ['OK'])
-                
+            message(message="Screenshot is saved at: %s" % file, title='Screenshot', buttons=['OK'])
+
     def onSaveConfig(self, info):
         obj = info.object
         with open(obj.configPath, 'w') as f:
@@ -186,7 +192,7 @@ class WLMStationHandler(Handler):
             f.write('Laser_Num = %d\n' % obj.totalLaserNum)
             f.write('Laser_Coarse_Current_Convertor = %s\n' % obj.coarseCurrentConvertor)
             f.write('Laser_Fine_Current_Convertor = %s\n' % obj.fineCurrentConvertor)
-            f.write( 'Laser_Current_Offset = %s\n' % obj.laserCurrentOffset)
+            f.write('Laser_Current_Offset = %s\n' % obj.laserCurrentOffset)
             f.write('[Acquisition]\n')
             f.write('Channel_Etalon1 = %d\n' % obj.channelForEtalon1)
             f.write('Channel_Etalon2 = %d\n' % obj.channelForEtalon2)
@@ -212,19 +218,20 @@ class WLMStationHandler(Handler):
                 f.write('Fit_DataSet_Num = %d\n' % obj.lasers[i].fitDataNum)
                 f.write('Temperature = %s\n' % obj.lasers[i].temperature)
                 f.write('Current = %s\n' % obj.lasers[i].current)
-    
+
     def onHelp(self, info):
-        webbrowser.open(r'file:///' + os.path.split(sys.argv[0])[0]+ r'/Manual/index.html')
-                
+        webbrowser.open(r'file:///' + os.path.split(sys.argv[0])[0] + r'/Manual/index.html')
+
     def onSwitchLaser1(self, info):
         info.object.switchLaser(1)
-        
+
     def onSwitchLaser2(self, info):
         info.object.switchLaser(2)
-        
+
     def onSwitchLaser3(self, info):
         info.object.switchLaser(3)
-    
+
+
 class WLMStation(HasTraits):
     figure = Instance(pg.PlotItem, ())
     configPath = Str
@@ -276,7 +283,7 @@ class WLMStation(HasTraits):
     sampleTime = Float
     monitorRate = Int
     monitorTimeSpan = Int
-    
+
     def __init__(self, *a, **k):
         super(WLMStation, self).__init__(*a, **k)
         self.allChannel = [i for i in range(8)]
@@ -291,7 +298,7 @@ class WLMStation(HasTraits):
             self.channelForEtalon2 = self.config.getint('Acquisition', 'Channel_Etalon2')
             self.channelForReference1 = self.config.getint('Acquisition', 'Channel_Reference1')
             self.channelForReference2 = self.config.getint('Acquisition', 'Channel_Reference2')
-            self.channelForPowerMeter= self.config.getint('Acquisition', 'Channel_PowerMeter')
+            self.channelForPowerMeter = self.config.getint('Acquisition', 'Channel_PowerMeter')
             self.etalon1Gain = self.config.getfloat('Acquisition', 'Etalon1_Gain')
             self.etalon2Gain = self.config.getfloat('Acquisition', 'Etalon2_Gain')
             self.reference1Gain = self.config.getfloat('Acquisition', 'Reference1_Gain')
@@ -302,7 +309,7 @@ class WLMStation(HasTraits):
             self.sampleTime = self.config.getfloat('Sampling', 'Sample_Time')
             self.monitorRate = self.config.getint('Sampling', 'Monitor_Rate')
             self.monitorTimeSpan = self.config.getint('Sampling', 'Monitor_Time_Span')
-            for i in range(1, self.totalLaserNum+1):
+            for i in range(1, self.totalLaserNum + 1):
                 laserIndex = self.config.getint('Laser%d' % i, 'Laser_Index')
                 maxSweepValue = self.config.getfloat('Laser%d' % i, 'Max_Sweep_Value')
                 minSweepValue = self.config.getfloat('Laser%d' % i, 'Min_Sweep_Value')
@@ -311,9 +318,15 @@ class WLMStation(HasTraits):
                 fitDataNum = self.config.getint('Laser%d' % i, 'Fit_DataSet_Num')
                 temperature = self.config.getfloat('Laser%d' % i, 'Temperature')
                 current = self.config.getint('Laser%d' % i, 'Current')
-                self.lasers.append(Laser(laserIndex=laserIndex, maxSweepValue=maxSweepValue, minSweepValue=minSweepValue,
-                                         sweepSpeed=sweepSpeed, fullScanTime=fullScanTime, fitDataNum=fitDataNum, 
-                                         temperature=temperature, current=current))
+                self.lasers.append(
+                    Laser(laserIndex=laserIndex,
+                          maxSweepValue=maxSweepValue,
+                          minSweepValue=minSweepValue,
+                          sweepSpeed=sweepSpeed,
+                          fullScanTime=fullScanTime,
+                          fitDataNum=fitDataNum,
+                          temperature=temperature,
+                          current=current))
         # Menu
         newUnit = Action(name="New WLM unit\tCtrl+N", accelerator='Ctrl+N', action="onNewUnit")
         setConfig = Action(name="Configuration", action="onSetConfig", enabled_when='not onMeasurement')
@@ -323,125 +336,135 @@ class WLMStation(HasTraits):
         takeScreenshot = Action(name="Take screenshot\tF6", accelerator='F6', action="onTakeScreenshot")
         help = Action(name="Help\tF1", accelerator='F1', action="onHelp")
         switchLaser = []
-        for i in range(1, self.totalLaserNum+1): 
+        for i in range(1, self.totalLaserNum + 1):
             switchLaser.append( Action(name="Laser %d" % i, action="onSwitchLaser%d" % i, style="radio", \
                                        enabled_when='not onMeasurement', checked=True if i==1 else False) )
-        
-        self.view = View(VGroup(Item(label=' '),
-                       HGroup(Item(label=' '*3),
-                              Item('figure', editor=QtGraphEditor(), show_label=False),
-                              Item(label=' '*3)),
-                       Item(label=' '),
-                       HGroup(
-                            Item(label=' '*3),
-                            HGroup(
-                                Group(
-                                    HGroup(Item(label=' '*5),
-                                        HGroup(
-                                            Item('startMeasureRT', label='Start', show_label=False, enabled_when='not onMeasurement'),
-                                            Item('stopMeasureRT', label='Stop', show_label=False, enabled_when='onMeasurement==2'),
-                                            label='Measurement', show_border=True),
-                                        Item(label=' '*5),
-                                        VGroup(
-                                            Item('displayRT', editor=EnumEditor(values={0:'T1 (blue) R1 (red)', 1:'T2 (blue) R2 (red)'}), 
-                                                show_label=False, style='custom', enabled_when='not onMeasurement'),
-                                            label='Display', show_border=True)
-                                        ),
-                                    HGroup(Item(label=' '*5),
-                                        Group(Item('reflectance1', label='R1', width=-60, format_str='%.3f'),
-                                            Item('transmittance1', label='T1', width=-60, format_str='%.3f'),
-                                            Item('reflectance2', label='R2', width=-60, format_str='%.3f'),
-                                            Item('transmittance2', label='T2', width=-60, format_str='%.3f'),
-                                            columns=2, show_border=True, label=u'Reflectance and transmittance signals (\u03bcA)'
-                                            ),
-                                        Item(label=' '*5)),
-                                    HGroup(Item(label=' '*5),
-                                        VGroup(
-                                            HGroup(Item('laserTemperature', label=u'Temperature (C)', width=-60, format_str='%.3f'),
+
+        self.view = View(VGroup(
+            Item(label=' '),
+            HGroup(Item(label=' ' * 3), Item('figure', editor=QtGraphEditor(), show_label=False), Item(label=' ' * 3)),
+            Item(label=' '),
+            HGroup(
+                Item(label=' ' * 3),
+                HGroup(
+                    Group(HGroup(
+                        Item(label=' ' * 5),
+                        HGroup(Item('startMeasureRT', label='Start', show_label=False, enabled_when='not onMeasurement'),
+                               Item('stopMeasureRT', label='Stop', show_label=False, enabled_when='onMeasurement==2'),
+                               label='Measurement',
+                               show_border=True), Item(label=' ' * 5),
+                        VGroup(Item('displayRT',
+                                    editor=EnumEditor(values={
+                                        0: 'T1 (blue) R1 (red)',
+                                        1: 'T2 (blue) R2 (red)'
+                                    }),
+                                    show_label=False,
+                                    style='custom',
+                                    enabled_when='not onMeasurement'),
+                               label='Display',
+                               show_border=True)),
+                          HGroup(
+                              Item(label=' ' * 5),
+                              Group(Item('reflectance1', label='R1', width=-60, format_str='%.3f'),
+                                    Item('transmittance1', label='T1', width=-60, format_str='%.3f'),
+                                    Item('reflectance2', label='R2', width=-60, format_str='%.3f'),
+                                    Item('transmittance2', label='T2', width=-60, format_str='%.3f'),
+                                    columns=2,
+                                    show_border=True,
+                                    label=u'Reflectance and transmittance signals (\u03bcA)'), Item(label=' ' * 5)),
+                          HGroup(
+                              Item(label=' ' * 5),
+                              VGroup(HGroup(Item('laserTemperature', label=u'Temperature (C)', width=-60, format_str='%.3f'),
                                             Item('laserCurrent', label='Current (mA)', width=-60, format_str='%.3f')),
-                                            HGroup(Item('setLaser', label='Set', show_label=False),
-                                            Item('readLaser', label='Read', show_label=False),
-                                            Item('laserOn')),
-                                            show_border=True, label='Laser settings'
-                                            ),
-                                        Item(label=' '*5)),
-                                    label='Monitor', show_border=True, enabled_when='onMeasurement==2 or onMeasurement==0'),
-                                Group(
-                                    HGroup(Item(label=' '*5),
-                                        HGroup(
-                                            Item('startScan', label='Start', show_label=False, enabled_when='not onMeasurement'),
-                                            Item('stopScan', label='Stop', show_label=False, enabled_when='onMeasurement==3'),
-                                            label='Scan', show_border=True),
-                                        Item(label=' '*2),
-                                        Group(Item('scanRatio1', label='Ratio 1 (blue)', enabled_when='not onMeasurement'),
-                                            Item('scanRatio2', label='Ratio 2 (red)', enabled_when='not onMeasurement'),
-                                            show_border=True, label='Display')
-                                        ),
-                                    HGroup(Item(label=' '*5),
-                                        Group(Item('center1', label='Center 1', width=-60, format_str='%.3f'),
-                                            Item('center2', label='Center 2', width=-60, format_str='%.3f'),
-                                            Item('scale1', label='Scale 1', width=-60, format_str='%.3f'),
-                                            Item('scale2', label='Scale 2', width=-60, format_str='%.3f'),
-                                            Item('phase', emphasized=True, width=-60, format_str='%.1f'),
-                                            columns=2, show_border=True, label='Ellipse'
-                                                ),
-                                        Item(label=' '*5)),
-                                    HGroup(Item(label=' '*5),
-                                        Group(Item('ratio1Min', label='Ratio1 Min', width=-60, format_str='%.3f'),
-                                            Item('ratio1Max', label='Ratio1 Max', width=-60, format_str='%.3f'),
-                                            Item('ratio2Min', label='Ratio2 Min', width=-60, format_str='%.3f'),
-                                            Item('ratio2Max', label='Ratio2 Max', width=-60, format_str='%.3f'),
-                                            columns=2, show_border=True, label='Ratio'),
-                                        Item(label=' '*5)),
-                                    label='Scan', show_border=True, enabled_when='onMeasurement==3 or onMeasurement==0'),
-                                ),
-                            Item(label=' '*3)
-                            ),
-                       HGroup(Item(label=' '*5),
-                            Item('measurementNote', label='Note', style='custom', width=600, height=-25),
-                            Item(label=' '*5)),
-                       Item(label=' ')    
-                       ),
-                menubar=MenuBar(Menu(newUnit, loadOffset, takeScreenshot, saveConfig, name='&File'),
-                                Menu(setConfig, measureOffset, Separator(), *switchLaser, name='&Action'),
-                                Menu(help, name='&Help')),
-                resizable=True, handler=WLMStationHandler(), title='Picarro WLMStation')
-        self.edit_view = View(
-                            VGroup(
-                                Item(label=' '),
-                                HGroup( Item(label=' '*5),
-                                        Group(Item('channelForReference1', editor=EnumEditor(name="allChannel")),
-                                             Item('channelForReference2', editor=EnumEditor(name="allChannel")),
-                                             Item('channelForEtalon1', editor=EnumEditor(name="allChannel")),
-                                             Item('channelForEtalon2', editor=EnumEditor(name="allChannel")),
-                                             Item('channelForPowerMeter', editor=EnumEditor(name="allChannel")),
-                                             columns=2, show_border=True, label='ADC Channels'),
-                                        Item(label=' '*5)),
-                                Item(label=' '),
-                                HGroup( Item(label=' '*5),
-                                        Group(Item('sampleRate', tooltip='samples taken per second in scan'),
-                                             Item('sampleTime', tooltip='time for a sampling period'),
-                                             Item('monitorRate', tooltip='samples taken per second in monitoring'),
-                                             Item('monitorTimeSpan', tooltip='time span of monitor window'),
-                                             columns=2, show_border=True, label='Sampling'),
-                                        Item(label=' '*5)),
-                                Item(label=' '),
-                                HGroup( Item(label=' '*5),
-                                        Group(
-                                            Item('lasers', show_label=False, editor=TableEditor(
-                                                columns = [ ObjectColumn(name = 'laserIndex' ),
-                                                            ObjectColumn(name = 'maxSweepValue' ),
-                                                            ObjectColumn(name = 'minSweepValue' ),
-                                                            ObjectColumn(name = 'sweepSpeed' ),
-                                                            ObjectColumn(name = 'fullScanTime' ),
-                                                            ObjectColumn(name = 'fitDataNum' )],
-                                                orientation = 'vertical',
-                                                row_factory = Laser )),
-                                            show_border=True, label='Lasers'),
-                                        Item(label=' '*5)),
-                                Item(label=' ')        
-                                ),
-                            buttons=OKCancelButtons, resizable=False, kind="livemodal", title="Configuration")
+                                     HGroup(Item('setLaser', label='Set', show_label=False),
+                                            Item('readLaser', label='Read', show_label=False), Item('laserOn')),
+                                     show_border=True,
+                                     label='Laser settings'), Item(label=' ' * 5)),
+                          label='Monitor',
+                          show_border=True,
+                          enabled_when='onMeasurement==2 or onMeasurement==0'),
+                    Group(HGroup(
+                        Item(label=' ' * 5),
+                        HGroup(Item('startScan', label='Start', show_label=False, enabled_when='not onMeasurement'),
+                               Item('stopScan', label='Stop', show_label=False, enabled_when='onMeasurement==3'),
+                               label='Scan',
+                               show_border=True), Item(label=' ' * 2),
+                        Group(Item('scanRatio1', label='Ratio 1 (blue)', enabled_when='not onMeasurement'),
+                              Item('scanRatio2', label='Ratio 2 (red)', enabled_when='not onMeasurement'),
+                              show_border=True,
+                              label='Display')),
+                          HGroup(
+                              Item(label=' ' * 5),
+                              Group(Item('center1', label='Center 1', width=-60, format_str='%.3f'),
+                                    Item('center2', label='Center 2', width=-60, format_str='%.3f'),
+                                    Item('scale1', label='Scale 1', width=-60, format_str='%.3f'),
+                                    Item('scale2', label='Scale 2', width=-60, format_str='%.3f'),
+                                    Item('phase', emphasized=True, width=-60, format_str='%.1f'),
+                                    columns=2,
+                                    show_border=True,
+                                    label='Ellipse'), Item(label=' ' * 5)),
+                          HGroup(
+                              Item(label=' ' * 5),
+                              Group(Item('ratio1Min', label='Ratio1 Min', width=-60, format_str='%.3f'),
+                                    Item('ratio1Max', label='Ratio1 Max', width=-60, format_str='%.3f'),
+                                    Item('ratio2Min', label='Ratio2 Min', width=-60, format_str='%.3f'),
+                                    Item('ratio2Max', label='Ratio2 Max', width=-60, format_str='%.3f'),
+                                    columns=2,
+                                    show_border=True,
+                                    label='Ratio'), Item(label=' ' * 5)),
+                          label='Scan',
+                          show_border=True,
+                          enabled_when='onMeasurement==3 or onMeasurement==0'),
+                ), Item(label=' ' * 3)),
+            HGroup(Item(label=' ' * 5), Item('measurementNote', label='Note', style='custom', width=600, height=-25),
+                   Item(label=' ' * 5)), Item(label=' ')),
+                         menubar=MenuBar(Menu(newUnit, loadOffset, takeScreenshot, saveConfig, name='&File'),
+                                         Menu(setConfig, measureOffset, Separator(), *switchLaser, name='&Action'),
+                                         Menu(help, name='&Help')),
+                         resizable=True,
+                         handler=WLMStationHandler(),
+                         title='Picarro WLMStation')
+        self.edit_view = View(VGroup(
+            Item(label=' '),
+            HGroup(
+                Item(label=' ' * 5),
+                Group(Item('channelForReference1', editor=EnumEditor(name="allChannel")),
+                      Item('channelForReference2', editor=EnumEditor(name="allChannel")),
+                      Item('channelForEtalon1', editor=EnumEditor(name="allChannel")),
+                      Item('channelForEtalon2', editor=EnumEditor(name="allChannel")),
+                      Item('channelForPowerMeter', editor=EnumEditor(name="allChannel")),
+                      columns=2,
+                      show_border=True,
+                      label='ADC Channels'), Item(label=' ' * 5)), Item(label=' '),
+            HGroup(
+                Item(label=' ' * 5),
+                Group(Item('sampleRate', tooltip='samples taken per second in scan'),
+                      Item('sampleTime', tooltip='time for a sampling period'),
+                      Item('monitorRate', tooltip='samples taken per second in monitoring'),
+                      Item('monitorTimeSpan', tooltip='time span of monitor window'),
+                      columns=2,
+                      show_border=True,
+                      label='Sampling'), Item(label=' ' * 5)), Item(label=' '),
+            HGroup(
+                Item(label=' ' * 5),
+                Group(Item('lasers',
+                           show_label=False,
+                           editor=TableEditor(columns=[
+                               ObjectColumn(name='laserIndex'),
+                               ObjectColumn(name='maxSweepValue'),
+                               ObjectColumn(name='minSweepValue'),
+                               ObjectColumn(name='sweepSpeed'),
+                               ObjectColumn(name='fullScanTime'),
+                               ObjectColumn(name='fitDataNum')
+                           ],
+                                              orientation='vertical',
+                                              row_factory=Laser)),
+                      show_border=True,
+                      label='Lasers'), Item(label=' ' * 5)), Item(label=' ')),
+                              buttons=OKCancelButtons,
+                              resizable=False,
+                              kind="livemodal",
+                              title="Configuration")
 
         self.niInput = None
         self.unitName = None
@@ -450,24 +473,24 @@ class WLMStation(HasTraits):
         self.dataQueue = Queue.Queue()
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.update)
-                        
+
         self.plot1 = self.figure.plot(pen=pg.mkPen(color=(0, 0, 255), width=3))
         self.plot2 = self.figure.plot(pen=pg.mkPen(color=(255, 0, 0), width=3))
         self.figure.showGrid(x=True, y=True)
-        self.figure.setRange(xRange=[0,self.fullScanTime])
-        self.figure.setLabels(title="WLM Station",left="Ratio")
+        self.figure.setRange(xRange=[0, self.fullScanTime])
+        self.figure.setLabels(title="WLM Station", left="Ratio")
         self.figure.getAxis("bottom").setLabel('Time', units='second')
-        
+
         if not os.path.isdir(self.fileDir):
             os.makedirs(self.fileDir)
-    
+
     def emptyDataQueue(self):
         while True:
             try:
                 self.dataQueue.get(block=False)
             except Queue.Empty:
                 break
-                
+
     def switchLaser(self, laserIndex):
         if self.laserNum is not None:
             Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % self.laserNum, TEMP_CNTRL_EnabledState)
@@ -482,54 +505,54 @@ class WLMStation(HasTraits):
         self.laserCurrent = laser.current
         Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_MIN_REGISTER" % index, minSweepValue)
         Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_MAX_REGISTER" % index, maxSweepValue)
-        Driver.wrDasReg("LASER%d_TEMP_CNTRL_H_REGISTER" % index, 0.2)   # sample interval 0.2 sec
-        Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_INCR_REGISTER" % index, sweepSpeed*0.2)
+        Driver.wrDasReg("LASER%d_TEMP_CNTRL_H_REGISTER" % index, 0.2)  # sample interval 0.2 sec
+        Driver.wrDasReg("LASER%d_TEMP_CNTRL_SWEEP_INCR_REGISTER" % index, sweepSpeed * 0.2)
         self.laserNum = index
         self._setLaser_fired()
-    
+
     def _laserOn_changed(self):
         if self.laserNum is not None:
             if self.laserOn:
                 turnOnLaser(self.laserNum)
             else:
                 turnOffLaser(self.laserNum)
-    
+
     def readLaserCurrent(self):
         coarse = Driver.rdDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.laserNum)
         fine = Driver.rdDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.laserNum)
         return coarse * self.coarseCurrentConvertor / 1e4 + fine * self.fineCurrentConvertor / 1e4 + self.laserCurrentOffset
-        
+
     def _setLaser_fired(self):
         self.laserOn = True
         Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % self.laserNum, TEMP_CNTRL_EnabledState)
         Driver.wrDasReg("LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.laserNum, self.laserTemperature)
         if self.laserCurrent < self.laserCurrentOffset:
-            error(message = "Laser current is set too low!", title = 'Error', buttons = ['OK'])
+            error(message="Laser current is set too low!", title='Error', buttons=['OK'])
             self.laserCurrent = self.readLaserCurrent()
         elif self.laserCurrent > 170:
-            error(message = "Laser current is set too high!", title = 'Error', buttons = ['OK'])
+            error(message="Laser current is set too high!", title='Error', buttons=['OK'])
             self.laserCurrent = self.readLaserCurrent()
         else:
             coarse = (self.laserCurrent - self.laserCurrentOffset) / self.coarseCurrentConvertor * 1e4
             fine = (coarse % 1) * self.coarseCurrentConvertor / self.fineCurrentConvertor
             Driver.wrDasReg("LASER%d_MANUAL_COARSE_CURRENT_REGISTER" % self.laserNum, int(coarse))
             Driver.wrDasReg("LASER%d_MANUAL_FINE_CURRENT_REGISTER" % self.laserNum, fine)
-        
+
     def _readLaser_fired(self):
         self.laserTemperature = Driver.rdDasReg("LASER%d_TEMP_CNTRL_USER_SETPOINT_REGISTER" % self.laserNum)
         self.laserCurrent = self.readLaserCurrent()
-        
+
     def _startMeasureRT_fired(self):
         if not self.etalon1Offset and not self.etalon2Offset \
            and not self.reference1Offset and not self.reference2Offset:
-            msg = '\n'+' '*5+'Please measure dark current before scanning ratio!'+' '*5+'\n'
-            error(message = msg, title = 'Error', buttons = ['OK'])
-            return 
+            msg = '\n' + ' ' * 5 + 'Please measure dark current before scanning ratio!' + ' ' * 5 + '\n'
+            error(message=msg, title='Error', buttons=['OK'])
+            return
         self.laserOn = True
         Driver.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % self.laserNum, TEMP_CNTRL_EnabledState)
         self.dataNum = 1
         self.totalDataNum = int(self.monitorTimeSpan * self.monitorRate)
-        self.time_array = np.array([float(x)/self.monitorRate for x in range(self.totalDataNum)])
+        self.time_array = np.array([float(x) / self.monitorRate for x in range(self.totalDataNum)])
         self.data1_array = np.empty(self.totalDataNum)
         self.data1_array[:] = np.NAN
         self.data2_array = np.empty(self.totalDataNum)
@@ -538,27 +561,27 @@ class WLMStation(HasTraits):
         self.emptyDataQueue()
         self.plot1.setData(self.time_array, self.data1_array)
         self.plot2.setData(self.time_array, self.data2_array)
-        self.figure.setRange(xRange=[0,self.monitorTimeSpan])
+        self.figure.setRange(xRange=[0, self.monitorTimeSpan])
         self.figure.setLabels(left="Signal (V)")
         self.niInput = daq.Task()
         self.niInput.CreateAIVoltageChan(self.WLM_channels, "", daq.DAQmx_Val_Cfg_Default, -10.0, 10.0, daq.DAQmx_Val_Volts, None)
-        self.niInput.CfgSampClkTiming("", self.monitorRate, daq.DAQmx_Val_Rising, daq.DAQmx_Val_ContSamps, 1)  
+        self.niInput.CfgSampClkTiming("", self.monitorRate, daq.DAQmx_Val_Rising, daq.DAQmx_Val_ContSamps, 1)
         self.onMeasurement = 2
-        d = threading.Thread(target = self.getNiData)
+        d = threading.Thread(target=self.getNiData)
         d.setDaemon(True)
         d.start()
-        self.timer.start(20)    # interval = 20 ms
-        
+        self.timer.start(20)  # interval = 20 ms
+
     def _stopMeasureRT_fired(self):
         self.onMeasurement = 0
         self.timer.stop()
-                
+
     def _startScan_fired(self):
         if not self.etalon1Offset and not self.etalon2Offset \
            and not self.reference1Offset and not self.reference2Offset:
-            msg = '\n'+' '*5+'Please measure dark current before scanning ratio!'+' '*5+'\n'
-            error(message = msg, title = 'Error', buttons = ['OK'])
-            return 
+            msg = '\n' + ' ' * 5 + 'Please measure dark current before scanning ratio!' + ' ' * 5 + '\n'
+            error(message=msg, title='Error', buttons=['OK'])
+            return
         self.laserOn = True
         self.center1, self.center2 = 0, 0
         self.scale1, self.scale2 = 0, 0
@@ -572,7 +595,7 @@ class WLMStation(HasTraits):
         self.ratio1_deque = deque(maxlen=self.dataNum * self.fitDataNum)
         self.ratio2_deque = deque(maxlen=self.dataNum * self.fitDataNum)
         self.time_index = 0
-        self.time_array = np.array([float(x)/self.sampleRate for x in range(self.totalDataNum)])
+        self.time_array = np.array([float(x) / self.sampleRate for x in range(self.totalDataNum)])
         self.data1_array = np.empty(self.totalDataNum)
         self.data1_array[:] = np.NAN
         self.data2_array = np.empty(self.totalDataNum)
@@ -586,15 +609,15 @@ class WLMStation(HasTraits):
         self.plot2.setData(self.time_array, self.data2_array)
         self.figure.setRange(xRange=[0, self.fullScanTime])
         self.figure.setLabels(left="Ratio")
-        d = threading.Thread(target = self.getNiData)
+        d = threading.Thread(target=self.getNiData)
         d.setDaemon(True)
         d.start()
-        self.timer.start(20)    # interval = 20 ms
-        
+        self.timer.start(20)  # interval = 20 ms
+
     def _stopScan_fired(self):
         self.onMeasurement = 0
         self.timer.stop()
-    
+
     def update(self):
         try:
             while True:
@@ -604,16 +627,16 @@ class WLMStation(HasTraits):
                     endP = startP + self.dataNum
                     if self.scanRatio1:
                         ref1 = data[:self.dataNum] - self.reference1Offset
-                        eta1 = data[2*self.dataNum : 3*self.dataNum] - self.etalon1Offset
-                        r1 = ref1/eta1
-                        self.data1_array[startP : endP] = r1
+                        eta1 = data[2 * self.dataNum:3 * self.dataNum] - self.etalon1Offset
+                        r1 = ref1 / eta1
+                        self.data1_array[startP:endP] = r1
                         self.ratio1Max = np.max(self.data1_array)
                         self.ratio1Min = np.min(self.data1_array)
-                    if self.scanRatio2:    
-                        ref2 = data[self.dataNum : 2*self.dataNum] - self.reference2Offset
-                        eta2 = data[3*self.dataNum : 4*self.dataNum] - self.etalon2Offset
-                        r2 = ref2/eta2
-                        self.data2_array[startP : endP] = r2
+                    if self.scanRatio2:
+                        ref2 = data[self.dataNum:2 * self.dataNum] - self.reference2Offset
+                        eta2 = data[3 * self.dataNum:4 * self.dataNum] - self.etalon2Offset
+                        r2 = ref2 / eta2
+                        self.data2_array[startP:endP] = r2
                         self.ratio2Max = np.max(self.data2_array)
                         self.ratio2Min = np.min(self.data2_array)
                     self.time_index += 1
@@ -629,18 +652,19 @@ class WLMStation(HasTraits):
                         # self.scale1norm = scale * self.scale1
                         # self.scale2norm = scale * self.scale2
                         self.phase = phi * 180 / np.pi
-                        newVector = [np.mean(r1)-self.center1, np.mean(r2)-self.center2]
+                        newVector = [np.mean(r1) - self.center1, np.mean(r2) - self.center2]
                         if self.vector is not None:
-                            if (self.vector[0]*newVector[1] - self.vector[1]*newVector[0]) < 0:
-                                self.phase = 180 - self.phase if self.phase>=0 else -180-self.phase
+                            if (self.vector[0] * newVector[1] - self.vector[1] * newVector[0]) < 0:
+                                self.phase = 180 - self.phase if self.phase >= 0 else -180 - self.phase
                         self.vector = newVector
-                            
+
                 elif self.onMeasurement == 2:
-                    self.transmittance1 = (data[2] - self.etalon1Offset) / self.etalon1Gain * 1e6   # Etalon1
-                    self.transmittance2 = (data[3] - self.etalon2Offset) / self.etalon2Gain * 1e6   # Etalon2
-                    self.reflectance1 = (data[0] - self.reference1Offset) / self.reference1Gain * 1e6    # Reference1
-                    self.reflectance2 = (data[1] - self.reference2Offset) / self.reference2Gain * 1e6    # Reference2
-                    displayValue = (self.transmittance2, self.reflectance2) if self.displayRT else (self.transmittance1, self.reflectance1)
+                    self.transmittance1 = (data[2] - self.etalon1Offset) / self.etalon1Gain * 1e6  # Etalon1
+                    self.transmittance2 = (data[3] - self.etalon2Offset) / self.etalon2Gain * 1e6  # Etalon2
+                    self.reflectance1 = (data[0] - self.reference1Offset) / self.reference1Gain * 1e6  # Reference1
+                    self.reflectance2 = (data[1] - self.reference2Offset) / self.reference2Gain * 1e6  # Reference2
+                    displayValue = (self.transmittance2, self.reflectance2) if self.displayRT else (self.transmittance1,
+                                                                                                    self.reflectance1)
                     if self.time_index < self.totalDataNum - 1:
                         self.data1_array[self.time_index] = displayValue[0]
                         self.data2_array[self.time_index] = displayValue[1]
@@ -654,73 +678,82 @@ class WLMStation(HasTraits):
                 self.plot2.setData(self.time_array, self.data2_array)
         except Queue.Empty:
             pass
-        
+
     def getNiData(self):
         read = daq.int32()
         bufferSize = len(self.WLM_channels.split(",")) * self.dataNum
         data = np.zeros(bufferSize, dtype=np.float64)
         self.niInput.StartTask()
         while self.onMeasurement:
-            self.niInput.ReadAnalogF64(self.dataNum, 2, daq.DAQmx_Val_GroupByChannel, # timeout is set to 2 seconds
-                                       data, bufferSize, daq.byref(read), None)
+            self.niInput.ReadAnalogF64(
+                self.dataNum,
+                2,
+                daq.DAQmx_Val_GroupByChannel,  # timeout is set to 2 seconds
+                data,
+                bufferSize,
+                daq.byref(read),
+                None)
             self.dataQueue.put(data)
         self.niInput.StopTask()
         self.niInput = None
-            
+
+
 class progressBarHandler(Handler):
     def init(self, info):
         Handler.init(self, info)
-        thread = threading.Thread(target = self.run, args=[info])
+        thread = threading.Thread(target=self.run, args=[info])
         thread.setDaemon(True)
         thread.start()
 
     def object_status_changed(self, info):
         if info.object.status == 100:
-            info.ui.dispose()   # close ui in the main GUI thread otherwise program will crash randomly
-    
+            info.ui.dispose()  # close ui in the main GUI thread otherwise program will crash randomly
+
     def run(self, info):
         obj = info.object
         while obj.object.progress < 100:
             obj.status = obj.object.progress
             obj.message = obj.object.message
             time.sleep(0.3)
-        obj.status = 100            
-            
+        obj.status = 100
+
+
 class ProgressBar(HasTraits):
     title = CStr("")
     message = CStr("This is the program to measure dark current.")
     status = Int(0)
     traits_view = Instance(View)
-    
+
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
-        self.traits_view = View(VGroup(Item(label=' '),
-                                       HGroup(Item(label=' '), 
-                                              Item('message', show_label=False, style="readonly"),
-                                              Item(label=' ')),
-                                       HGroup(Item(label=' '),       
-                                              Item('status', show_label=False, 
-                                                    editor=ProgressEditor(min=0, max=100, show_percent=True)),
-                                              Item(label=' ')),
-                                       Item(label=' ')
-                                       ),
-                               resizable=False, title=self.title, kind="livemodal", handler=progressBarHandler())
-            
+        self.traits_view = View(VGroup(
+            Item(label=' '), HGroup(Item(label=' '), Item('message', show_label=False, style="readonly"), Item(label=' ')),
+            HGroup(Item(label=' '), Item('status', show_label=False, editor=ProgressEditor(min=0, max=100, show_percent=True)),
+                   Item(label=' ')), Item(label=' ')),
+                                resizable=False,
+                                title=self.title,
+                                kind="livemodal",
+                                handler=progressBarHandler())
+
+
 class Averager(object):
     # Averages non-None values added to it
     def __init__(self):
         self.total = 0
         self.count = 0
-    def addValue(self,value):
+
+    def addValue(self, value):
         if value is not None:
             self.total += value
             self.count += 1
+
     def getAverage(self):
         if self.count != 0:
-            return self.total/self.count
+            return self.total / self.count
         else:
-            raise ValueError,"No values to average"            
-            
+            raise ValueError, "No values to average"
+
+
 class getDarkCurrent():
     def __init__(self, WLM_channels, laserNum):
         self.WLM_channels = WLM_channels
@@ -734,21 +767,21 @@ class getDarkCurrent():
         self.reference1_offset = 0
         self.etalon2_offset = 0
         self.reference2_offset = 0
-        
+
     def run(self):
         self.message = "Turning off laser..."
         if not turnOffLaser(self.laserNum):
             return
         time.sleep(2)
         self.progress = 10
-        
+
         tDuration = 5
-        self.message = "Measuring WLM offsets for %.1f seconds" % tDuration 
+        self.message = "Measuring WLM offsets for %.1f seconds" % tDuration
         etalon1Avg = Averager()
         reference1Avg = Averager()
         etalon2Avg = Averager()
         reference2Avg = Averager()
-        
+
         read = daq.int32()
         bufferSize = len(self.WLM_channels.split(","))
         data = np.zeros(bufferSize, dtype=np.float64)
@@ -756,8 +789,7 @@ class getDarkCurrent():
         t = tStart
         while t < tStart + tDuration:
             self.niInput.StartTask()
-            self.niInput.ReadAnalogF64(1, 1.0, daq.DAQmx_Val_GroupByChannel,
-                                       data, bufferSize, daq.byref(read), None)
+            self.niInput.ReadAnalogF64(1, 1.0, daq.DAQmx_Val_GroupByChannel, data, bufferSize, daq.byref(read), None)
             self.niInput.StopTask()
             reference1Avg.addValue(data[0])
             reference2Avg.addValue(data[1])
@@ -767,32 +799,35 @@ class getDarkCurrent():
             self.progress = int((t - tStart) * 80 / tDuration + 10)
         self.message = "Turning laser back on..."
         turnOnLaser(self.laserNum)
-        
+
         self.etalon1_offset = etalon1Avg.getAverage()
         self.reference1_offset = reference1Avg.getAverage()
         self.etalon2_offset = etalon2Avg.getAverage()
         self.reference2_offset = reference2Avg.getAverage()
         self.progress = 100
-        
+
+
 def turnOffLaser(laserNum):
-    Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER",SPECT_CNTRL_IdleState)
+    Driver.wrDasReg("SPECT_CNTRL_STATE_REGISTER", SPECT_CNTRL_IdleState)
     i = 0
     while True:
         Driver.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, LASER_CURRENT_CNTRL_DisabledState)
         time.sleep(0.5)
         if Driver.rdDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum) != LASER_CURRENT_CNTRL_DisabledState:
             if i > 10:
-                error(message="Analyzer error: fail to turn off laser!", title = 'Error', buttons = ['OK'])
+                error(message="Analyzer error: fail to turn off laser!", title='Error', buttons=['OK'])
                 return False
             i += 1
         else:
             return True
-            
+
+
 def turnOnLaser(laserNum):
     Driver.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, LASER_CURRENT_CNTRL_ManualState)
     time.sleep(0.5)
 
-if __name__ == "__main__": 
+
+if __name__ == "__main__":
     config = "WLMStation.ini"
     ws = WLMStation(configPath=config)
     ws.configure_traits(view=ws.view)

@@ -107,7 +107,7 @@ class RunningApps:
                 # os.kill operations.
                 while len(pid) == 0:
                     new_pid = pid_file.read().strip()
-                    if len(new_pid) > 0 :
+                    if len(new_pid) > 0:
                         pid = new_pid
                 try:
                     pid = int(pid)

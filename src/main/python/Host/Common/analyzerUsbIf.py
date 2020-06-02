@@ -42,7 +42,6 @@ class AnalyzerUsb(Singleton):
         pid: Product ID of USB device
         timeout: Timeout (ms) for synchronous calls to USB
     """
-
     def __init__(self, vid, pid, timeout=5000):
         self.context = usb1.USBContext()
         self.device = None
@@ -77,15 +76,15 @@ class AnalyzerUsb(Singleton):
             claim: Whether to claim interface. Under Linux, an unprogrammed Cypress device hangs if 
                 we try to claim the interface.
         """
-    def connect(self, claim = True):
+
+    def connect(self, claim=True):
         def _connect():
             """Low-level connect to USB.
             """
             self.checkHandleAndClose()
             self.device = self.context.getByVendorIDAndProductID(self.vid, self.pid)
             if self.device is None:
-                raise UsbConnectionError(
-                    "Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid, self.pid))
+                raise UsbConnectionError("Cannot connect to device with VID: 0x%x, PID: 0x%x" % (self.vid, self.pid))
             self.handle = self.device.open()
             if claim:
                 self.handle.setConfiguration(1)
@@ -119,8 +118,7 @@ class AnalyzerUsb(Singleton):
         sv = sizeof(var)
         result = self.handle.controlRead(0xC0, cmd, value, index, sv, self.timeout)
         if len(result) != sv:
-            raise UsbPacketLengthError(
-                "Unexpected packet length %d [%d] in controlIn transaction 0x%2x" % (len(result), sv, cmd))
+            raise UsbPacketLengthError("Unexpected packet length %d [%d] in controlIn transaction 0x%2x" % (len(result), sv, cmd))
         memmove(addressof(var), result, sv)
 
     def controlOutTransaction(self, msg, cmd, value=0, index=0):
@@ -141,8 +139,7 @@ class AnalyzerUsb(Singleton):
         sm = sizeof(msg)
         actual = self.handle.controlWrite(0x40, cmd, value, index, buffer(msg)[:], self.timeout)
         if actual != sm:
-            raise UsbPacketLengthError(
-                "Unexpected packet length %d [%d] in controlOut transaction 0x%2x" % (actual, sm, cmd))
+            raise UsbPacketLengthError("Unexpected packet length %d [%d] in controlOut transaction 0x%2x" % (actual, sm, cmd))
 
     def controlOutBlock(self, cmd, address, data):
         """Performs a control transfer of a big block of data to the USB device.
@@ -189,12 +186,12 @@ class AnalyzerUsb(Singleton):
 
                 for r in regions:
                     # r.data contains the data as a list of bytes.
-                    self.controlOutBlock(
-                        0xA0, r.address, create_string_buffer("".join(r.data), len(r.data)))
+                    self.controlOutBlock(0xA0, r.address, create_string_buffer("".join(r.data), len(r.data)))
 
             # Release the reset to renumerate
             self.controlOutTransaction(c_ubyte(0x0), 0xA0, 0xE600)
             self.disconnect()
+
         # Do not wrap function, since it disconnects on completion
         return _loadHexFile()
 
@@ -205,7 +202,7 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.close()
             except Exception as e:
-                raise UsbConnectionError("Error %s while closing USB" % (e,))
+                raise UsbConnectionError("Error %s while closing USB" % (e, ))
             self.handle = None
 
     def disconnect(self):
@@ -215,11 +212,9 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.releaseInterface(0)
             except Exception as e:
-                raise ClaimInterfaceError(
-                    "Error %s while releasing interface" % (e,))
+                raise ClaimInterfaceError("Error %s while releasing interface" % (e, ))
             self.interfaceClaimed = False
         self.checkHandleAndClose()
-
 
     def claimInterfaceWrapper(self, func, *args, **kwargs):
         """Wraps function call between claim interface and release interface.
@@ -242,8 +237,7 @@ class AnalyzerUsb(Singleton):
             try:
                 self.handle.claimInterface(0)
             except Exception as e:
-                raise ClaimInterfaceError(
-                    "Error %s while claiming interface for %s" % (e, func.__name__))
+                raise ClaimInterfaceError("Error %s while claiming interface for %s" % (e, func.__name__))
             self.interfaceClaimed = True
         try:
             return func(*args, **kwargs)
@@ -252,8 +246,7 @@ class AnalyzerUsb(Singleton):
                 try:
                     self.handle.releaseInterface(0)
                 except Exception as e:
-                    raise ClaimInterfaceError(
-                        "Error %s while releasing interface for %s" % (e, func.__name__))
+                    raise ClaimInterfaceError("Error %s while releasing interface for %s" % (e, func.__name__))
                 self.interfaceClaimed = False
 
     def getUsbVersion(self):
@@ -267,6 +260,7 @@ class AnalyzerUsb(Singleton):
             version = c_ushort()
             self.controlInTransaction(version, usbdefs.VENDOR_GET_VERSION)
             return version.value
+
         return self.claimInterfaceWrapper(_getUsbVersion)
 
     def getUsbSpeed(self):
@@ -274,26 +268,26 @@ class AnalyzerUsb(Singleton):
             Also sets up usbMaxPacketSize."""
         def _getUsbSpeed():
             speed = c_ubyte()
-            self.controlInTransaction(
-                speed, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_SPEED)
+            self.controlInTransaction(speed, usbdefs.VENDOR_GET_STATUS, usbdefs.USB_STATUS_SPEED)
             self.usbMaxPacketSize = 512 if speed.value else 64
             return speed.value
+
         return self.claimInterfaceWrapper(_getUsbSpeed)
 
     def setDspControl(self, value):
         """Use vendor command to reset DSP or send HINT"""
         def _setDspControl():
             result = c_ubyte(0)
-            self.controlInTransaction(
-                result, usbdefs.VENDOR_DSP_CONTROL, value)
+            self.controlInTransaction(result, usbdefs.VENDOR_DSP_CONTROL, value)
             if result.value != value:
                 raise ValueError("Invalid response in setDspControl")
-        self.claimInterfaceWrapper(_setDspControl)
 
+        self.claimInterfaceWrapper(_setDspControl)
 
     def pingWatchdog(self):
         """Use vendor command to ping watchdog"""
         def _pingWatchdog():
             result = c_ubyte(0)
-            self.controlInTransaction(result,usbdefs.VENDOR_PING_WATCHDOG)
+            self.controlInTransaction(result, usbdefs.VENDOR_PING_WATCHDOG)
+
         self.claimInterfaceWrapper(_pingWatchdog)

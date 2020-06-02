@@ -62,7 +62,7 @@ from enthought.traits.ui.menu import *
 #from traceback import format_exc
 from configobj import ConfigObj
 
-Button1 = Button   # This is overwritten by pylab import
+Button1 = Button  # This is overwritten by pylab import
 #
 # FigureInteraction  ##########################
 #
@@ -72,15 +72,13 @@ FULLAPPNAME = "Picarro Data File Viewer"
 APPNAME = "DatViewer"
 APPVERSION = "2.0.4"
 
-
 # definitions for filtering by spectrum ID
 SPECTRUM_ID_NAME = "SpectrumID"
 SPECTRUM_ID_INIT = "-1"
 
+
 class Bunch(object):
-
     """ This class is used to group together a collection as a single object, so that they may be accessed as attributes of that object"""
-
     def __init__(self, **kwds):
         """ The namespace of the object may be initialized using keyword arguments """
         self.__dict__.update(kwds)
@@ -92,12 +90,13 @@ class Bunch(object):
 def bestFit(x, y, d):
     """ Carry out least-squares polynomial fit of degree d with data x,y """
     p = polyfit(x, y, d)
-    y = reshape(y, (-1,))
-    y1 = reshape(polyval(p, x), (-1,))
-    res = sum((y - y1) ** 2) / len(y)
+    y = reshape(y, (-1, ))
+    y1 = reshape(polyval(p, x), (-1, ))
+    res = sum((y - y1)**2) / len(y)
 
     def eval(self, xx):
         return polyval(self.coeffs, xx)
+
     return Bunch(coeffs=p, residual=res, fittedValues=y1, call=eval)
 
 
@@ -112,13 +111,15 @@ def bestFitCentered(x, y, d):
 
     def eval(self, xx):
         return polyval(self.coeffs, (xx - self.xcen) / self.xscale)
-    return Bunch(
-        xcen=mu_x, xscale=sdev_x, coeffs=f.coeffs, residual=f.residual, fittedValues=f.fittedValues,
-        call=eval)
+
+    return Bunch(xcen=mu_x, xscale=sdev_x, coeffs=f.coeffs, residual=f.residual, fittedValues=f.fittedValues, call=eval)
+
 
 # cursors
 class Cursors:  # namespace
     HAND, POINTER, SELECT_REGION, MOVE, MAGNIFIER = range(5)
+
+
 cursors = Cursors()
 # Dictionary for mapping cursor names to wx cursor names
 cursord = {
@@ -126,20 +127,22 @@ cursord = {
     cursors.HAND: wx.CURSOR_HAND,
     cursors.POINTER: wx.CURSOR_ARROW,
     cursors.SELECT_REGION: wx.CURSOR_CROSS,
-    cursors.MAGNIFIER: wx.CURSOR_MAGNIFIER}
-
+    cursors.MAGNIFIER: wx.CURSOR_MAGNIFIER
+}
 
 # Dictionary of known h5 column heading names that are too long and their
 # shortened names for DAT files.
-H5ColNamesToDatNames = {"ch4_splinemax_for_correction": "ch4_splinemax_for_correct",
-                        "fineLaserCurrent_1_controlOn": "fineLaserCurr_1_ctrlOn",
-                        "fineLaserCurrent_2_controlOn": "fineLaserCurr_2_ctrlOn",
-                        "fineLaserCurrent_3_controlOn": "fineLaserCurr_3_ctrlOn",
-                        "fineLaserCurrent_4_controlOn": "fineLaserCurr_4_ctrlOn",
-                        "fineLaserCurrent_5_controlOn": "fineLaserCurr_5_ctrlOn",
-                        "fineLaserCurrent_6_controlOn": "fineLaserCurr_6_ctrlOn",
-                        "fineLaserCurrent_7_controlOn": "fineLaserCurr_7_ctrlOn",
-                        "fineLaserCurrent_8_controlOn": "fineLaserCurr_8_ctrlOn"}
+H5ColNamesToDatNames = {
+    "ch4_splinemax_for_correction": "ch4_splinemax_for_correct",
+    "fineLaserCurrent_1_controlOn": "fineLaserCurr_1_ctrlOn",
+    "fineLaserCurrent_2_controlOn": "fineLaserCurr_2_ctrlOn",
+    "fineLaserCurrent_3_controlOn": "fineLaserCurr_3_ctrlOn",
+    "fineLaserCurrent_4_controlOn": "fineLaserCurr_4_ctrlOn",
+    "fineLaserCurrent_5_controlOn": "fineLaserCurr_5_ctrlOn",
+    "fineLaserCurrent_6_controlOn": "fineLaserCurr_6_ctrlOn",
+    "fineLaserCurrent_7_controlOn": "fineLaserCurr_7_ctrlOn",
+    "fineLaserCurrent_8_controlOn": "fineLaserCurr_8_ctrlOn"
+}
 
 
 # Decorator to protect access to matplotlib figure from several threads
@@ -151,11 +154,11 @@ def checkLock(func):
             return func(self, *a, **k)
         finally:
             self.lock.release()
+
     return wrapper
 
 
 class FigureInteraction(object):
-
     def __init__(self, fig, lock):
         self.fig = fig
         self.lock = lock
@@ -232,7 +235,7 @@ class FigureInteraction(object):
         if not event.inaxes:
             self.setCursor(cursors.POINTER)
         elif event.key == "shift":
-                self.setCursor(cursors.MAGNIFIER)
+            self.setCursor(cursors.MAGNIFIER)
 
     @checkLock
     def draw(self):
@@ -564,18 +567,16 @@ class FigureInteraction(object):
 # Allan variance routines   ######################
 #
 class AllanVar(object):
-
     """ Class for computation of Allan Variance of a data series. Variances are computed over sets of
   size 1,2,...,2**(nBins-1). In order to process a new data point call processDatum(value). In order
   to recover the results, call getVariances(). In order to reset the calculation, call reset(). """
-
     def __init__(self, nBins):
         """ Construct an AllanVar object for calculating Allan variances over 1,2,...,2**(nBins-1) points """
         self.nBins = nBins
         self.counter = 0
         self.bins = []
         for i in range(nBins):
-            self.bins.append(AllanBin(2 ** i))
+            self.bins.append(AllanBin(2**i))
 
     def reset(self):
         """ Resets calculation """
@@ -595,9 +596,7 @@ class AllanVar(object):
 
 
 class AllanBin(object):
-
     """ Internal class for Allan variance calculation """
-
     def __init__(self, averagingLength):
         self.averagingLength = averagingLength
         self.reset()
@@ -618,11 +617,13 @@ class AllanBin(object):
         if self.numNeg == self.averagingLength:
             y = (self.sumPos / self.numPos) - (self.sumNeg / self.numNeg)
             self.sum += y
-            self.sumSq += y ** 2
+            self.sumSq += y**2
             self.nPairs += 1
             self.allanVar = 0.5 * self.sumSq / self.nPairs
             self.sumPos, self.numPos = 0, 0
             self.sumNeg, self.numNeg = 0, 0
+
+
 #
 
 
@@ -674,6 +675,7 @@ def walkTree(top, onError=None, sortDir=None, sortFiles=None):
         yield 'file', os.path.join(top, file)
     # Yield up the current directory
     yield 'dir', top
+
 
 ORIGIN = datetime.datetime(datetime.MINYEAR, 1, 1, 0, 0, 0, 0)
 UNIXORIGIN = datetime.datetime(1970, 1, 1, 0, 0, 0, 0)
@@ -856,7 +858,6 @@ class Plot2D(HasTraits):
 
 
 class XyViewerHandler(Handler):
-
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -881,9 +882,7 @@ class XyViewer(HasTraits):
     mode = CInt(1)  # 1 for line of best fit, 2 for Allan Std Dev
     parent = Instance(object)
 
-    traits_view = View(Item("plot",
-                            style="custom",
-                            show_label=False),
+    traits_view = View(Item("plot", style="custom", show_label=False),
                        width=800,
                        height=600,
                        resizable=True,
@@ -916,13 +915,11 @@ class XyViewer(HasTraits):
         self.sel = (self.xData >= self.xLim[0]) & (self.xData <= self.xLim[1])
         boxsel = self.sel & (self.yData >= self.yLim[0]) & (self.yData <= self.yLim[1])
         if self.mode == 1 and any(boxsel):
-            self.poly = bestFitCentered(
-                self.xData[boxsel], self.yData[boxsel], 1)
+            self.poly = bestFitCentered(self.xData[boxsel], self.yData[boxsel], 1)
             c0, c1 = self.poly.coeffs
             slope = c0 / self.poly.xscale
             intercept = c1 - slope * self.poly.xcen
-            self.plot.axes.set_title(
-                "Best fit line: y = %s * x + %s" % (slope, intercept))
+            self.plot.axes.set_title("Best fit line: y = %s * x + %s" % (slope, intercept))
             self.fitHandle.set_data(self.xLim, self.poly(self.xLim))
         elif self.mode == 2:
             y = self.yData[0] / sqrt(self.xData / self.xData[0])
@@ -952,16 +949,10 @@ class DatViewer(HasTraits):
     nLines = CInt(3)
 
     # what does this do?
-    traits_view = View(Group(Item("plot",
-                                  style="custom",
-                                  show_label=False),
-                             Item("dataSetName",
-                                  editor=EnumEditor(name="dataSetNameList")),
-                             Item("varName",
-                                  editor=EnumEditor(name="varNameList")),
-                             Item("spectrumId",
-                                  editor=EnumEditor(name="spectrumIdList")),
-                             Item("transform")))
+    traits_view = View(
+        Group(Item("plot", style="custom", show_label=False), Item("dataSetName", editor=EnumEditor(name="dataSetNameList")),
+              Item("varName", editor=EnumEditor(name="varNameList")), Item("spectrumId", editor=EnumEditor(name="spectrumIdList")),
+              Item("transform")))
 
     def __init__(self, *a, **k):
         HasTraits.__init__(self, *a, **k)
@@ -1005,7 +996,7 @@ class DatViewer(HasTraits):
 
         if any(boxsel):
             self.mean = oldSum(self.yData[0][boxsel]) / sum(boxsel)
-            self.stdDev = sqrt(oldSum((self.yData[0][boxsel] - self.mean) ** 2) / sum(boxsel))
+            self.stdDev = sqrt(oldSum((self.yData[0][boxsel] - self.mean)**2) / sum(boxsel))
             self.peakToPeak = ptp(self.yData[0][boxsel])
         if self.parent.listening:
             wx.CallAfter(self.parent.notify, self, self.xLim, self.yLim)
@@ -1081,14 +1072,14 @@ class DatViewer(HasTraits):
                         #print "using DATE_TIME (SpectrumID=%.1f)" % spectrumId
                     except:
                         try:
-                            dateTime = array([unixTime(int(x["timestamp"])) for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
+                            dateTime = array(
+                                [unixTime(int(x["timestamp"])) for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
                             #print "using timestamp (SpectrumID=%.1f)" % spectrumId
                         except:
                             dateTime = array([x["time"] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
                             #print "using time (SpectrumID=%.1f)" % spectrumId
 
                     values = array([x[self.varName] for x in self.table.iterrows() if x[SPECTRUM_ID_NAME] == spectrumId])
-
                 """
                 print "len(dateTime)=", len(dateTime)
                 print "type(dateTime)=", type(dateTime)
@@ -1211,7 +1202,8 @@ class Dat2h5(HasTraits):
             fp = open(self.datFileName, "r")
             root, ext = os.path.splitext(self.datFileName)
             self.h5FileName = ".".join([root, "h5"])
-            d = wx.ProgressDialog("Convert DAT file to H5 format", "Converting %s" % (os.path.split(self.datFileName)[-1],),
+            d = wx.ProgressDialog("Convert DAT file to H5 format",
+                                  "Converting %s" % (os.path.split(self.datFileName)[-1], ),
                                   style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
             h5f = tables.openFile(self.h5FileName, "w")
             filters = tables.Filters(complevel=1, fletcher32=True)
@@ -1227,7 +1219,7 @@ class Dat2h5(HasTraits):
                     for h in headings:
                         if h not in ["DATE", "TIME"]:
                             colDict[h] = tables.Float32Col()
-                    TableType = type("TableType", (tables.IsDescription,), colDict)
+                    TableType = type("TableType", (tables.IsDescription, ), colDict)
                     table = h5f.createTable(h5f.root, "results", TableType, filters=filters)
                 else:
                     minCol = 0
@@ -1277,7 +1269,8 @@ class h52Dat(HasTraits):
         try:
             root, ext = os.path.splitext(self.h5FileName)
             self.datFileName = ".".join([root, "dat"])
-            d = wx.ProgressDialog("Convert H5 file to DAT format", "Converting %s" % (os.path.split(self.h5FileName)[-1],),
+            d = wx.ProgressDialog("Convert H5 file to DAT format",
+                                  "Converting %s" % (os.path.split(self.h5FileName)[-1], ),
                                   style=wx.PD_APP_MODAL | wx.PD_AUTO_HIDE)
 
             ip = tables.openFile(self.h5FileName, "r")
@@ -1406,7 +1399,6 @@ class Window(HasTraits):
 
 
 class SeriesWindowHandler(Handler):
-
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1440,23 +1432,23 @@ class SeriesWindow(Window):
             a.append(
                 HGroup(
                     Item("plot", object="h%d" % i, style="custom", show_label=False, springy=True),
-                    VGroup(
-                        Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
-                        Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
-                        HGroup(Item("autoscaleY", object="h%d" % i), Item("showPoints", object="h%d" % i)),
-                        Item("transform", object="h%d" % i, width=w),
-                        Item("mean", object="h%d" % i, width=w),
-                        Item("stdDev", object="h%d" % i, width=w),
-                        Item("peakToPeak", object="h%d" % i, width=w),
-                        HGroup(Item("nAverage", object="h%d" % i), Item("doAverage", object="h%d" % i, show_label=False))
-                    )))
+                    VGroup(Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
+                           Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
+                           HGroup(Item("autoscaleY", object="h%d" % i), Item("showPoints", object="h%d" % i)),
+                           Item("transform", object="h%d" % i, width=w), Item("mean", object="h%d" % i, width=w),
+                           Item("stdDev", object="h%d" % i, width=w), Item("peakToPeak", object="h%d" % i, width=w),
+                           HGroup(Item("nAverage", object="h%d" % i), Item("doAverage", object="h%d" % i, show_label=False)))))
             self.cDict["h%d" % i] = fr
 
         tGroup = Group(*a, **dict(layout="split"))
         self.cDict["object"] = self
         self.traits_view = View(VGroup(tGroup),
-                                buttons=NoButtons, title="Time Series Viewer",
-                                width=800, height=600, resizable=True, handler=SeriesWindowHandler())
+                                buttons=NoButtons,
+                                title="Time Series Viewer",
+                                width=800,
+                                height=600,
+                                resizable=True,
+                                handler=SeriesWindowHandler())
 
     def notify(self, child, xlim, ylim):
         self.listening = False
@@ -1471,7 +1463,6 @@ class SeriesWindow(Window):
 
 
 class CorrelationWindowHandler(Handler):
-
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1520,14 +1511,19 @@ class CorrelationWindow(Window):
             self.cDict["h%d" % i] = fr
         tGroup = Group(*a, **dict(layout="split"))
         self.cDict["object"] = self
-        self.traits_view = View(VGroup(tGroup,
-                                       HGroup(Item("nAverage"),
-                                              Item("doAverage", show_label=False),
-                                              Item('correlate', show_label=False, label='Show correlation', springy=True),
-                                              )
-                                       ),
-                                buttons=NoButtons, title="Correlation Viewer",
-                                width=800, height=600, resizable=True, handler=SeriesWindowHandler())
+        self.traits_view = View(VGroup(
+            tGroup,
+            HGroup(
+                Item("nAverage"),
+                Item("doAverage", show_label=False),
+                Item('correlate', show_label=False, label='Show correlation', springy=True),
+            )),
+                                buttons=NoButtons,
+                                title="Correlation Viewer",
+                                width=800,
+                                height=600,
+                                resizable=True,
+                                handler=SeriesWindowHandler())
 
     def notify(self, child, xlim, ylim):
         self.listening = False
@@ -1547,9 +1543,14 @@ class CorrelationWindow(Window):
         try:
             if not (len(xV.yData[0][xV.sel]) > 0 and len(yV.yData[0][yV.sel]) > 0):
                 raise ValueError
-            viewer.set(xArray=xV.yData[0][xV.sel], yArray=yV.yData[0][yV.sel],
-                       xLabel=xV.varName, yLabel=yV.varName,
-                       xMin=xV.yLim[0], xMax=xV.yLim[1], yMin=yV.yLim[0], yMax=yV.yLim[1])
+            viewer.set(xArray=xV.yData[0][xV.sel],
+                       yArray=yV.yData[0][yV.sel],
+                       xLabel=xV.varName,
+                       yLabel=yV.varName,
+                       xMin=xV.yLim[0],
+                       xMax=xV.yLim[1],
+                       yMin=yV.yLim[0],
+                       yMax=yV.yLim[1])
             viewer.update()
             viewer.trait_view().set(title=self.dataFile)
             viewer.edit_traits()
@@ -1566,7 +1567,6 @@ class CorrelationWindow(Window):
 
 
 class AllanWindowHandler(Handler):
-
     def init(self, info):
         info.object.parent.uiSet.add(info.ui)
         Handler.init(self, info)
@@ -1606,7 +1606,11 @@ class AllanWindow(Window):
                     VGroup(
                         Item("dataSetName", object="h%d" % i, editor=EnumEditor(name="dataSetNameList"), width=w),
                         Item("varName", object="h%d" % i, editor=EnumEditor(name="varNameList"), width=w),
-                        Item("spectrumId", object="h%d" % i, label="Spectrum ID:", editor=EnumEditor(name="spectrumIdList"), width=w),
+                        Item("spectrumId",
+                             object="h%d" % i,
+                             label="Spectrum ID:",
+                             editor=EnumEditor(name="spectrumIdList"),
+                             width=w),
                         HGroup(Item("autoscaleY", object="h%d" % i), Item("showPoints", object="h%d" % i)),
                         Item("transform", object="h%d" % i, width=w),
                         Item("mean", object="h%d" % i, width=w),
@@ -1616,10 +1620,13 @@ class AllanWindow(Window):
             self.cDict["h%d" % i] = fr
         tGroup = Group(*a, **dict(layout="split"))
         self.cDict["object"] = self
-        self.traits_view = View(VGroup(tGroup,
-                                       Item('plotAllan', show_label=False, label='Show Allan standard deviation')),
-                                buttons=NoButtons, title="Allan Standard Deviation Viewer",
-                                width=800, height=600, resizable=True, handler=SeriesWindowHandler())
+        self.traits_view = View(VGroup(tGroup, Item('plotAllan', show_label=False, label='Show Allan standard deviation')),
+                                buttons=NoButtons,
+                                title="Allan Standard Deviation Viewer",
+                                width=800,
+                                height=600,
+                                resizable=True,
+                                handler=SeriesWindowHandler())
 
     def notify(self, child, xlim, ylim):
         #print "AllanWindow::notify"
@@ -1659,8 +1666,16 @@ class AllanWindow(Window):
             else:
                 xLabel = "Time (s) [Spectrum ID = %s]" % xV.spectrumId
 
-            viewer.set(xArray=2 ** arange(npts) * slope * 24 * 3600, yArray=sdev, xLabel=xLabel, yLabel='Allan Std Dev',
-                       xMin=1, xMax=2 ** npts, yMin=sdev.min(), yMax=sdev.max(), xScale='log', yScale='log')
+            viewer.set(xArray=2**arange(npts) * slope * 24 * 3600,
+                       yArray=sdev,
+                       xLabel=xLabel,
+                       yLabel='Allan Std Dev',
+                       xMin=1,
+                       xMax=2**npts,
+                       yMin=sdev.min(),
+                       yMax=sdev.max(),
+                       xScale='log',
+                       yScale='log')
             viewer.update()
             viewer.trait_view().set(title=self.dataFile)
             viewer.edit_traits()
@@ -1694,7 +1709,8 @@ class NotebookHandler(Handler):
 
     def onOpenZip(self, info):
         # first let the user choose the .zip archive
-        dz = wx.FileDialog(None, "Open .zip HD5 archive to concatenate",
+        dz = wx.FileDialog(None,
+                           "Open .zip HD5 archive to concatenate",
                            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
                            wildcard="zip files (*.zip)|*.zip")
 
@@ -1707,7 +1723,8 @@ class NotebookHandler(Handler):
                 fname = os.path.splitext(zipname)[0] + ".h5"
 
                 # give the user a chance to change it and warn about overwrites
-                fd = wx.FileDialog(None, "Output file",
+                fd = wx.FileDialog(None,
+                                   "Output file",
                                    style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
                                    defaultFile=fname,
                                    wildcard="h5 files (*.h5)|*.h5")
@@ -1829,7 +1846,11 @@ class NotebookHandler(Handler):
 
     def onConcatenate(self, info):
         fname = time.strftime("DatViewer_%Y%m%d_%H%M%S.h5", time.localtime())
-        fd = wx.FileDialog(None, "Output file", style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR, defaultFile=fname, wildcard="h5 files (*.h5)|*.h5")
+        fd = wx.FileDialog(None,
+                           "Output file",
+                           style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
+                           defaultFile=fname,
+                           wildcard="h5 files (*.h5)|*.h5")
         if fd.ShowModal() == wx.ID_OK:
             fname = fd.GetPath()
             if not self.datDirName:
@@ -1841,7 +1862,8 @@ class NotebookHandler(Handler):
                 return
             try:
                 # dir must exist, this suppresses the Make New Folder button
-                d = wx.DirDialog(None, "Select directory tree with individual .h5 and/or zipped .h5 files",
+                d = wx.DirDialog(None,
+                                 "Select directory tree with individual .h5 and/or zipped .h5 files",
                                  style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
                                  defaultPath=self.datDirName)
 
@@ -1852,7 +1874,8 @@ class NotebookHandler(Handler):
                     allData = []
 
                     for what, name in walkTree(path, sortDir=sortByName, sortFiles=sortByName):
-                        if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(".")[-1] not in fname:
+                        if what == "file" and os.path.splitext(name)[1] == ".h5" and os.path.splitext(name)[0].split(
+                                ".")[-1] not in fname:
                             if not progress:
                                 pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(name)[1], style=wx.PD_APP_MODAL)
                             ip = tables.openFile(name[:-3] + ".h5", "r")
@@ -1885,7 +1908,9 @@ class NotebookHandler(Handler):
 
                                         # create a modal progress dialog if not created yet
                                         if not progress:
-                                            pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+                                            pd = wx.ProgressDialog("Concatenating files",
+                                                                   "%s" % os.path.split(zfname)[1],
+                                                                   style=wx.PD_APP_MODAL)
 
                                         # extract the .h5 file from the zip archive into the temp dir
                                         zf = zipArchive.extract(zfname, tmpDir)
@@ -1982,7 +2007,8 @@ class NotebookHandler(Handler):
 
         # get folder containing files to concatenate
         while fValidDir is False and fPromptForDir is True:
-            d = wx.DirDialog(None, "Select directory tree containing .h5 and/or zip archive of .h5 files",
+            d = wx.DirDialog(None,
+                             "Select directory tree containing .h5 and/or zip archive of .h5 files",
                              style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER,
                              defaultPath=defaultPath)
 
@@ -2002,8 +2028,9 @@ class NotebookHandler(Handler):
                 else:
                     # warn user that the folder doesn't contain any H5 or ZIP H5 archives
                     # let the user choose whether to select a different folder
-                    retCode = wx.MessageBox("Selected folder does not contain any .h5 files or zip archives of .h5 files.\n\nChoose a different folder?",
-                                            path, wx.YES_NO | wx.ICON_ERROR)
+                    retCode = wx.MessageBox(
+                        "Selected folder does not contain any .h5 files or zip archives of .h5 files.\n\nChoose a different folder?",
+                        path, wx.YES_NO | wx.ICON_ERROR)
 
                     if retCode == wx.ID_YES:
                         # use the parent folder for the last selected folder as a new default,
@@ -2043,7 +2070,8 @@ class NotebookHandler(Handler):
 
         while fValidFilename is False and fPromptForFilename is True:
             # prompt for the filename
-            fd = wx.FileDialog(None, "Concatenated output h5 filename",
+            fd = wx.FileDialog(None,
+                               "Concatenated output h5 filename",
                                style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT | wx.FD_CHANGE_DIR,
                                defaultFile=fname,
                                defaultDir=defaultOutputPath,
@@ -2115,7 +2143,7 @@ class NotebookHandler(Handler):
 
             elif what == "file" and os.path.splitext(name)[1] == ".zip" and zipfile.is_zipfile(name):
                 # tables.openFile() imports the .h5 data, but cannot read the files
-                    #  directly from the archive, so we must unpack them first.
+                #  directly from the archive, so we must unpack them first.
 
                 # open zip archive
                 zipArchive = zipfile.ZipFile(name, 'r')
@@ -2134,7 +2162,9 @@ class NotebookHandler(Handler):
 
                             # create a modal progress dialog if not created yet
                             if not progress:
-                                pd = wx.ProgressDialog("Concatenating files", "%s" % os.path.split(zfname)[1], style=wx.PD_APP_MODAL)
+                                pd = wx.ProgressDialog("Concatenating files",
+                                                       "%s" % os.path.split(zfname)[1],
+                                                       style=wx.PD_APP_MODAL)
 
                             # extract the .h5 file from the zip archive into the temp dir
                             zf = zipArchive.extract(zfname, tmpDir)
@@ -2202,7 +2232,8 @@ class NotebookHandler(Handler):
         op.close()
 
     def onBatchConvertDatToH5(self, info):
-        d = wx.DirDialog(None, "Open directory with .dat files",
+        d = wx.DirDialog(None,
+                         "Open directory with .dat files",
                          style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         if d.ShowModal() == wx.ID_OK:
@@ -2218,7 +2249,8 @@ class NotebookHandler(Handler):
         d.Destroy()
 
     def onBatchConvertH5ToDat(self, info):
-        d = wx.DirDialog(None, "Open directory with .h5 files",
+        d = wx.DirDialog(None,
+                         "Open directory with .h5 files",
                          style=wx.DD_DIR_MUST_EXIST | wx.DEFAULT_DIALOG_STYLE | wx.RESIZE_BORDER)
 
         if d.ShowModal() == wx.ID_OK:
@@ -2234,9 +2266,7 @@ class NotebookHandler(Handler):
         d.Destroy()
 
     def onConvertDatToH5(self, info):
-        d = wx.FileDialog(None, "Open DAT file",
-                          style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST,
-                          wildcard="dat files (*.dat)|*.dat")
+        d = wx.FileDialog(None, "Open DAT file", style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard="dat files (*.dat)|*.dat")
 
         if d.ShowModal() == wx.ID_OK:
             c = Dat2h5(datFileName=d.GetPath())
@@ -2354,39 +2384,35 @@ class ViewNotebook(HasTraits):
         #title = "HDF5 File Viewer"
         title = "%s %s" % (FULLAPPNAME, APPVERSION)
 
-        self.traits_view = View(Item("dataFile", style="readonly", label="H5 file:", padding=10),
-                                buttons=NoButtons, title=title,
-                                menubar=MenuBar(Menu(exitAction,
-                                                     Separator(),
-                                                     openAction,
-                                                     Separator(),
-                                                     openZipAction,
-                                                     #concatenateAction,
-                                                     concatenateActionNew,
-                                                     Separator(),
-                                                     convertDatAction,
-                                                     convertH5Action,
-                                                     Separator(),
-                                                     batchConvertDatAction,
-                                                     batchConvertH5Action,
-                                                     name='&File'),
-                                                Menu(xyViewAction,
-                                                     allanAction,
-                                                     Separator(),
-                                                     series1Action,
-                                                     series2Action,
-                                                     series3Action,
-                                                     name='&New'),
-                                                Menu(aboutAction,
-                                                     name='&Help')),
-                                handler=NotebookHandler(),
-                                width=800,
-                                # height=100,
-                                resizable=True)
+        self.traits_view = View(
+            Item("dataFile", style="readonly", label="H5 file:", padding=10),
+            buttons=NoButtons,
+            title=title,
+            menubar=MenuBar(
+                Menu(
+                    exitAction,
+                    Separator(),
+                    openAction,
+                    Separator(),
+                    openZipAction,
+                    #concatenateAction,
+                    concatenateActionNew,
+                    Separator(),
+                    convertDatAction,
+                    convertH5Action,
+                    Separator(),
+                    batchConvertDatAction,
+                    batchConvertH5Action,
+                    name='&File'),
+                Menu(xyViewAction, allanAction, Separator(), series1Action, series2Action, series3Action, name='&New'),
+                Menu(aboutAction, name='&Help')),
+            handler=NotebookHandler(),
+            width=800,
+            # height=100,
+            resizable=True)
 
 
 _DEFAULT_CONFIG_NAME = "DatViewer.ini"
-
 
 HELP_STRING = """\
 DatViewer.py [-h] [-c<FILENAME>] [-v]
@@ -2447,6 +2473,7 @@ def handleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
+
 
 if __name__ == "__main__":
     configFile = handleCommandSwitches()

@@ -38,18 +38,17 @@ from Host.Common.GuiTools import getInnerStr
 from Host.IPV.IPVFrame import IPVFrame
 from Host.IPV.ReportSender import ReportSender
 
-
 APP_NAME = "IPV"
 APP_DESCRIPTION = "Instrument Performance Verification"
 __version__ = 1.0
 DEFAULT_CONFIG_NAME = "IPV.ini"
 
+EventManagerProxy.EventManagerProxy_Init(APP_NAME, DontCareConnection=False)
 
-EventManagerProxy.EventManagerProxy_Init(APP_NAME,DontCareConnection = False)
 
 def Log(desc, data=None, level=1, code=-1, verbose=''):
-    EventManagerProxy.Log(desc, Data=data, Level=level, Code=code,
-                          Verbose=verbose)
+    EventManagerProxy.Log(desc, Data=data, Level=level, Code=code, Verbose=verbose)
+
 
 def LogExc(desc):
     EventManagerProxy.LogExc(desc)
@@ -67,47 +66,47 @@ for streamNum in interface.STREAM_MemberTypeDict:
     STREAM_NUM_TO_NAME_DICT[streamNum] = interface.STREAM_MemberTypeDict[streamNum][7:]
     NAME_TO_STREAM_NUM_DICT[interface.STREAM_MemberTypeDict[streamNum][7:]] = streamNum
 
-UNIXORIGIN = datetime(1970,1,1,0,0,0,0)
+UNIXORIGIN = datetime(1970, 1, 1, 0, 0, 0, 0)
 
-INTERNAL_VERSION_RX = re.compile(
-    r'Internal\s\((.*)\)')
+INTERNAL_VERSION_RX = re.compile(r'Internal\s\((.*)\)')
 
 #Set up a useful AppPath reference...
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
 AppPath = os.path.abspath(AppPath)
 
-CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
+CRDS_Archiver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_ARCHIVER, APP_NAME, IsDontCareConnection=False)
 
-CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER,
-                                            APP_NAME,
-                                            IsDontCareConnection = False)
+CRDS_Driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DRIVER, APP_NAME, IsDontCareConnection=False)
+
 
 def floatListToString(fList, precision=3):
-    format = "%."+ "%ie" % int(precision)
+    format = "%." + "%ie" % int(precision)
     return " ".join([format % i for i in fList])
+
 
 def listToString(inList):
     return " ".join([str(i) for i in inList])
 
+
 def datetimeToUnixTime(t):
     td = t - UNIXORIGIN
-    return td.days*86400 + td.seconds
+    return td.days * 86400 + td.seconds
 
-def getSpecUTC(specTime = "00:00:00", option="float"):
+
+def getSpecUTC(specTime="00:00:00", option="float"):
     """Get the sepcified GMT time"""
     (hr, min, sec) = specTime.split(":")
-    newTime = datetime.timetuple(datetime.utcnow().replace(hour=int(hr), minute=int(min), second = int(sec)))
+    newTime = datetime.timetuple(datetime.utcnow().replace(hour=int(hr), minute=int(min), second=int(sec)))
     if option.lower() == "tuple":
         return newTime
     if option.lower() == "float":
         return time.mktime(newTime)
     elif option.lower() == "string":
         return time.ctime(time.mktime(newTime))
+
 
 def getUTCTime(option="float"):
     """Get UTC (GMT) time"""
@@ -119,21 +118,24 @@ def getUTCTime(option="float"):
     elif option.lower() == "string":
         return time.ctime(time.mktime(uctTimeTuple))
 
+
 class RpcServerThread(threading.Thread):
     def __init__(self, rpcServer, exitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.rpcServer = rpcServer
         self.exitFunction = exitFunction
+
     def run(self):
         self.rpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             self.exitFunction()
             Log("RpcServer exited and no longer serving.")
             print "RpcServer exited and no longer serving."
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
             print "Exception raised when calling exit function at exit of RPC server."
+
 
 class FileUploader(object):
     def __init__(self, ipv):
@@ -215,14 +217,15 @@ class FileUploader(object):
                 ret = self.xmlReportSender.sendDiagFile(filepath)
             if ret == "OK":
                 os.remove(filepath)
-                self.writeToStatus("%s sent via XML-RPC" % (filepath,))
+                self.writeToStatus("%s sent via XML-RPC" % (filepath, ))
                 self.connectStatus = 1
                 return
             else:
                 self.connectStatus = 0
         except:
             self.connectStatus = 0
-        self.writeToStatus("Failed to send %s via XML-RPC" % (filepath,))
+        self.writeToStatus("Failed to send %s via XML-RPC" % (filepath, ))
+
 
 class IPV(IPVFrame):
     def __init__(self, configFile, useViewer, *args, **kwds):
@@ -230,12 +233,13 @@ class IPV(IPVFrame):
         self.commandQueue = Queue()
         self._processIni(configFile)
         self.eventListener = TextListener.TextListener(None,
-                                          BROADCAST_PORT_EVENTLOG,
-                                          self._eventFilter,
-                                          retry = True,
-                                          name = "IPV event log listener", logFunc = Log)
+                                                       BROADCAST_PORT_EVENTLOG,
+                                                       self._eventFilter,
+                                                       retry=True,
+                                                       name="IPV event log listener",
+                                                       logFunc=Log)
         self.eventDeque = deque()
-        self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName,"enabled")]
+        self.signalList = [sigName for sigName in self.co if self.co.getboolean(sigName, "enabled")]
         self.numSignals = len(self.signalList)
         self.descrDict = {}
         self.methodDict = {}
@@ -244,10 +248,10 @@ class IPV(IPVFrame):
         self.testValDict = {}
         self.statDict = {}
         self.statDescrDict = {}
-        self.groupDict = {0:[], 1:[], 2:[]}
+        self.groupDict = {0: [], 1: [], 2: []}
         for sigName in self.signalList:
-            self.groupDict[self.co.getint(sigName,"group")].append(sigName)
-            self.descrDict[sigName] = "  " + self.co.get(sigName,"descr","")
+            self.groupDict[self.co.getint(sigName, "group")].append(sigName)
+            self.descrDict[sigName] = "  " + self.co.get(sigName, "descr", "")
             self.methodDict[sigName] = self._getMethodList(sigName)
             self.setpointDict[sigName] = self._getSetpointList(sigName)
             self.toleranceDict[sigName] = self._getToleranceList(sigName)
@@ -260,13 +264,13 @@ class IPV(IPVFrame):
             self.numRowsList.append(len(self.groupDict[group]))
 
         self.filters = tables.Filters(complevel=1, fletcher32=True)
-        histColDict = {"time":tables.Int64Col(), "date_time":tables.Int64Col(), "idx":tables.Int32Col()}
+        histColDict = {"time": tables.Int64Col(), "date_time": tables.Int64Col(), "idx": tables.Int32Col()}
         for sigName in self.signalList:
             if not sigName.startswith("WlmOffset"):
-                histColDict[sigName] = tables.Float32Col(shape=(3,))
-        self.histTableType = type("HistTableType",(tables.IsDescription,),histColDict)
-        wlmColDict = {"vLaserNum":tables.Int32Col(), "time":tables.Int64Col(), "wlmOffset":tables.Float32Col()}
-        self.wlmTableType = type("WlmTableType",(tables.IsDescription,),wlmColDict)
+                histColDict[sigName] = tables.Float32Col(shape=(3, ))
+        self.histTableType = type("HistTableType", (tables.IsDescription, ), histColDict)
+        wlmColDict = {"vLaserNum": tables.Int32Col(), "time": tables.Int64Col(), "wlmOffset": tables.Float32Col()}
+        self.wlmTableType = type("WlmTableType", (tables.IsDescription, ), wlmColDict)
         self.h5 = None
         self.histTable = None
         self.wlmTable = None
@@ -312,7 +316,7 @@ class IPV(IPVFrame):
         # If enalbed, start the three major threads
         if self.enabled:
             self.writeToStatus("Starting Time: %s" % time.ctime(self.reportTime))
-            self.writeToStatus("Time interval: %.2f hours" % (self.repeatSec/3600.0))
+            self.writeToStatus("Time interval: %.2f hours" % (self.repeatSec / 3600.0))
             self.writeToStatus("Will test connectivity every %.2f hours." % self.testConnHrs)
             self.startIPVThread()
             self.startTestConnectionThread()
@@ -332,7 +336,7 @@ class IPV(IPVFrame):
     def _eventFilter(self, data):
         """Listener filter for event logs"""
         try:
-            index,eventTime,source,level,code,desc = [s.strip() for s in data.split("|",6)]
+            index, eventTime, source, level, code, desc = [s.strip() for s in data.split("|", 6)]
             level = level[1:]
             logDate, logTime = [s.strip() for s in self._convertTimeStrLocalToGMT(eventTime).split()]
             eventTuple = (index, logDate, logTime, source, level, desc)
@@ -343,10 +347,13 @@ class IPV(IPVFrame):
                 self.eventDeque.popleft()
         except:
             tbMsg = traceback.format_exc()
-            Log("Listener Exception", data=dict(Note = "<See verbose for debug info>"), level=3, verbose=tbMsg)
+            Log("Listener Exception", data=dict(Note="<See verbose for debug info>"), level=3, verbose=tbMsg)
 
     def writeToStatus(self, message):
-        self.statusMessage.append("%s   %s\n" % (self._getTime(), message,))
+        self.statusMessage.append("%s   %s\n" % (
+            self._getTime(),
+            message,
+        ))
         self.statusMessage = self.statusMessage[-30:]
         self.textCtrlStatus.SetValue("".join(self.statusMessage))
         self.textCtrlStatus.SetInsertionPointEnd()
@@ -367,11 +374,11 @@ class IPV(IPVFrame):
 
     def _processIni(self, configFile):
         self.statusMessage = []
-        self.baseCo = CustomConfigObj(configFile, list_values = True)
+        self.baseCo = CustomConfigObj(configFile, list_values=True)
         basePath = os.path.split(configFile)[0]
         self.instrCoFilename = os.path.join(basePath, self.baseCo.get("Main", "instrConfigPath"))
         try:
-            self.instrCo = CustomConfigObj(self.instrCoFilename, list_values = True)
+            self.instrCo = CustomConfigObj(self.instrCoFilename, list_values=True)
         except:
             self.instrCo = None
         self._mergeConfig()
@@ -441,10 +448,10 @@ class IPV(IPVFrame):
 
     def startServer(self):
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_IPV),
-                                                ServerName = APP_NAME,
-                                                ServerDescription = APP_DESCRIPTION,
-                                                ServerVersion = __version__,
-                                                threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription=APP_DESCRIPTION,
+                                               ServerVersion=__version__,
+                                               threaded=True)
         self.rpcServer.register_function(self.getIPVReport)
         self.rpcServer.register_function(self.uploadIPV)
         self.rpcServer.register_function(self.createDiagFile)
@@ -503,26 +510,28 @@ class IPV(IPVFrame):
         self.Hide()
 
     def runLicense(self):
-        f = os.popen("C:\Picarro\G2000\HostExe\IPVLicense.exe -s 0 -r %f -t %f -c %s" % (self.licenseRemindDays, self.licenseTrialDays, self.instrCoFilename), "r")
+        f = os.popen(
+            "C:\Picarro\G2000\HostExe\IPVLicense.exe -s 0 -r %f -t %f -c %s" %
+            (self.licenseRemindDays, self.licenseTrialDays, self.instrCoFilename), "r")
         f.read()
 
     def startIPVLicense(self):
-        appThread = threading.Thread(target = self.runLicense)
+        appThread = threading.Thread(target=self.runLicense)
         appThread.setDaemon(True)
         appThread.start()
 
     def startIPVThread(self):
-        appThread = threading.Thread(target = self.runIPV)
+        appThread = threading.Thread(target=self.runIPV)
         appThread.setDaemon(True)
         appThread.start()
 
     def startTestConnectionThread(self):
-        appThread = threading.Thread(target = self.testConnection)
+        appThread = threading.Thread(target=self.testConnection)
         appThread.setDaemon(True)
         appThread.start()
 
     def startBroadcaseStatusThread(self):
-        appThread = threading.Thread(target = self.broadcastStatus)
+        appThread = threading.Thread(target=self.broadcastStatus)
         appThread.setDaemon(True)
         appThread.start()
 
@@ -532,10 +541,10 @@ class IPV(IPVFrame):
             if currTime > self.reportTime:
                 self.getIPVReport(auto=True)
                 self.reportTime += self.repeatSec
-                time.sleep(self.repeatSec-60)
+                time.sleep(self.repeatSec - 60)
             else:
-                if (self.reportTime-currTime) > 60:
-                    time.sleep(self.reportTime-currTime-60)
+                if (self.reportTime - currTime) > 60:
+                    time.sleep(self.reportTime - currTime - 60)
                 else:
                     time.sleep(10)
 
@@ -558,10 +567,10 @@ class IPV(IPVFrame):
             self.connStatusLock.release()
             time.sleep(100)
 
-    def onClose(self,event):
+    def onClose(self, event):
         self.hideViewer()
 
-    def onIdle(self,event):
+    def onIdle(self, event):
         while not self.commandQueue.empty():
             func, args, kwargs = self.commandQueue.get()
             func(*args, **kwargs)
@@ -597,28 +606,28 @@ class IPV(IPVFrame):
         for group in self.groupDict:
             for rowIdx in range(self.numRowsList[group]):
                 sigName = self.groupDict[group][rowIdx]
-                dataDurHrs = max(0.1, self.co.getfloat(sigName,"durationHrs",6.0))
+                dataDurHrs = max(0.1, self.co.getfloat(sigName, "durationHrs", 6.0))
                 startDatetime = self.endDatetime - timedelta(hours=dataDurHrs)
                 startTimestamp = timestamp.datetimeToTimestamp(startDatetime)
                 endTimestamp = timestamp.datetimeToTimestamp(self.endDatetime)
                 timeLimits = [startTimestamp, endTimestamp]
                 level = 2
-                reqNumData =  int(self.requiredDataHrs*3600*10**(-level))
+                reqNumData = int(self.requiredDataHrs * 3600 * 10**(-level))
                 actNumData = self._estNumData(sigName, level, endTimestamp)
-                if reqNumData > (actNumData+1):
+                if reqNumData > (actNumData + 1):
                     self.writeToStatus("Insufficient analyzer data for IPV analysis.")
                     print "Insufficient analyzer data for IPV analysis."
                     ipvFinished = False
                     allOK = False
                     self._enableButtons()
-                    return (ipvFinished , allOK)
+                    return (ipvFinished, allOK)
                 if sigName.startswith("WlmOffset"):
                     self._readWlmDatabase(sigName, timeLimits)
                 else:
                     self._readHistoryDatabase(sigName, timeLimits)
         allOK = self._verifySignals()
         self._enableButtons()
-        return (ipvFinished , allOK)
+        return (ipvFinished, allOK)
 
     def _writeReport(self):
         if self.useUTC:
@@ -629,22 +638,19 @@ class IPV(IPVFrame):
         print "softwareVersion = '%s'" % self.softwareVersion
         print "reportFilename = '%s'" % self.reportFilename
         linesToWrite = []
-        linesToWrite.append(REPORT_FORMAT % ("Signal","Status","Action","Method","Set Point","Tolerance","Value"))
+        linesToWrite.append(REPORT_FORMAT % ("Signal", "Status", "Action", "Method", "Set Point", "Tolerance", "Value"))
         for group in self.groupDict:
             for rowIdx in range(self.numRowsList[group]):
                 sigName = self.groupDict[group][rowIdx]
-                linesToWrite.append(REPORT_FORMAT % (sigName,
-                                                     self.statDict[sigName],
-                                                     self.statDescrDict[sigName],
-                                                     listToString(self.methodDict[sigName]),
-                                                     floatListToString(self.setpointDict[sigName], 3),
-                                                     floatListToString(self.toleranceDict[sigName], 4),
-                                                     floatListToString(self.testValDict[sigName], 4))
-                                    )
+                linesToWrite.append(
+                    REPORT_FORMAT %
+                    (sigName, self.statDict[sigName], self.statDescrDict[sigName], listToString(self.methodDict[sigName]),
+                     floatListToString(self.setpointDict[sigName], 3), floatListToString(
+                         self.toleranceDict[sigName], 4), floatListToString(self.testValDict[sigName], 4)))
         # Add event logs to the end if any:
         if len(self.eventDeque) > 0:
             linesToWrite.append("\n[EVENTS]\n")
-            linesToWrite.append(EVENTLOG_FORMAT % ("Index","Date","Time","Source","Level","Description"))
+            linesToWrite.append(EVENTLOG_FORMAT % ("Index", "Date", "Time", "Source", "Level", "Description"))
             while len(self.eventDeque) > 0:
                 eventTuple = self.eventDeque.popleft()
                 linesToWrite.append(EVENTLOG_FORMAT % eventTuple)
@@ -659,14 +665,14 @@ class IPV(IPVFrame):
             self.writeToStatus("%r" % err)
 
     def _getMethodList(self, sigName):
-        methodList = self.co.get(sigName,"method","")
+        methodList = self.co.get(sigName, "method", "")
         assert len(methodList) > 0, "No method specified for %s" % sigName
         if type(methodList) != type([]):
             methodList = [methodList]
         return methodList
 
     def _getSetpointList(self, sigName):
-        setpointList = self.co.get(sigName,"setpoint","")
+        setpointList = self.co.get(sigName, "setpoint", "")
         assert len(setpointList) > 0, "No setpoint specified for %s" % sigName
         if type(setpointList) != type([]):
             setpointList = [setpointList]
@@ -679,7 +685,7 @@ class IPV(IPVFrame):
         return retList
 
     def _getToleranceList(self, sigName):
-        toleranceList = self.co.get(sigName,"tolerance","")
+        toleranceList = self.co.get(sigName, "tolerance", "")
         assert len(toleranceList) > 0, "No tolerance specified for %s" % sigName
         if type(toleranceList) != type([]):
             toleranceList = [toleranceList]
@@ -705,23 +711,23 @@ class IPV(IPVFrame):
         for group in self.groupDict:
             for rowIdx in range(self.numRowsList[group]):
                 sigName = self.groupDict[group][rowIdx]
-                self.enqueueViewerCommand(self.gridList[group].SetCellValue,rowIdx,0,"UNKNOWN")
-                self.enqueueViewerCommand(self.gridList[group].SetCellAlignment,rowIdx,0,wx.ALIGN_CENTRE,wx.ALIGN_CENTRE)
-                self.enqueueViewerCommand(self.gridList[group].SetCellFont,rowIdx,0,wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD))
-                self.enqueueViewerCommand(self.gridList[group].SetRowLabelValue,rowIdx, self.co.get(sigName,"title",sigName))
+                self.enqueueViewerCommand(self.gridList[group].SetCellValue, rowIdx, 0, "UNKNOWN")
+                self.enqueueViewerCommand(self.gridList[group].SetCellAlignment, rowIdx, 0, wx.ALIGN_CENTRE, wx.ALIGN_CENTRE)
+                self.enqueueViewerCommand(self.gridList[group].SetCellFont, rowIdx, 0, wx.Font(8, wx.DEFAULT, wx.NORMAL, wx.BOLD))
+                self.enqueueViewerCommand(self.gridList[group].SetRowLabelValue, rowIdx, self.co.get(sigName, "title", sigName))
 
     def _readHistoryDatabase(self, sigName, timeLimits):
         sqlCommand = "select time,idx,streamNum,value,minVal,maxVal from history" +\
                      " where level=? and time >= ? and time <= ? and streamNum=?"
         sqlArgs = (DB_LEVEL, timeLimits[0], timeLimits[1], NAME_TO_STREAM_NUM_DICT[sigName])
         values = CRDS_Driver.getHistoryByCommand(sqlCommand, sqlArgs)
-        self.sigValueDict[sigName] = {"time":[], "value":[], "min":[], "max":[]}
+        self.sigValueDict[sigName] = {"time": [], "value": [], "min": [], "max": []}
         if len(values) > 0:
             for data in values:
                 dTime = data[0]
                 idx = data[1]
                 if idx not in self.dataDict:
-                    self.dataDict[idx] = {"time":dTime}
+                    self.dataDict[idx] = {"time": dTime}
                 else:
                     self.dataDict[idx]["time"] = max(self.dataDict[idx]["time"], dTime)
                 self.dataDict[idx][sigName] = tuple(data[3:])
@@ -737,11 +743,11 @@ class IPV(IPVFrame):
                      " where timestamp >= ? and timestamp <= ? and vLaserNum=?"
         sqlArgs = (timeLimits[0], timeLimits[1], vLaserNum)
         values = CRDS_Driver.getHistoryByCommand(sqlCommand, sqlArgs)
-        self.sigValueDict[sigName] = {"time":[], "value":[]}
+        self.sigValueDict[sigName] = {"time": [], "value": []}
         wlmDataIdx = 0
         if len(values) > 0:
             for data in values:
-                self.wlmDataDict[wlmDataIdx]={"vLaserNum": vLaserNum}
+                self.wlmDataDict[wlmDataIdx] = {"vLaserNum": vLaserNum}
                 self.wlmDataDict[wlmDataIdx]["time"] = data[0]
                 self.wlmDataDict[wlmDataIdx]["wlmOffset"] = data[2]
                 self.sigValueDict[sigName]["time"].append(data[0])
@@ -749,7 +755,7 @@ class IPV(IPVFrame):
                 wlmDataIdx += 1
 
     def _estNumData(self, sigName, level, endTime):
-        startTime = endTime - (self.requiredDataHrs*3600*1000)
+        startTime = endTime - (self.requiredDataHrs * 3600 * 1000)
         sqlCommand = "select time from history" +\
                      " where level=? and time >= ? and time <= ? and streamNum=?"
         sqlArgs = (level, startTime, endTime, NAME_TO_STREAM_NUM_DICT[sigName])
@@ -786,42 +792,42 @@ class IPV(IPVFrame):
             setpoint = self.setpointDict[sigName][idx]
             tolerance = self.toleranceDict[sigName][idx]
             timeList = self.sigValueDict[sigName]["time"]
-            valList =self.sigValueDict[sigName]["value"]
-            minList =self.sigValueDict[sigName]["min"]
-            maxList =self.sigValueDict[sigName]["max"]
+            valList = self.sigValueDict[sigName]["value"]
+            minList = self.sigValueDict[sigName]["min"]
+            maxList = self.sigValueDict[sigName]["max"]
             if method == "mean":
                 testVal = numpy.mean(valList)
-                if abs(testVal-setpoint) > tolerance:
+                if abs(testVal - setpoint) > tolerance:
                     result.append("Failed")
                 else:
                     result.append("OK")
             elif method == "std":
-                testVal =numpy.std(valList)
+                testVal = numpy.std(valList)
                 if testVal > (tolerance + setpoint):
                     result.append("Failed")
                 else:
                     result.append("OK")
             elif method == "variation":
-                testVal = numpy.std(valList)/numpy.mean(valList)
-                if abs(testVal-setpoint) > tolerance:
+                testVal = numpy.std(valList) / numpy.mean(valList)
+                if abs(testVal - setpoint) > tolerance:
                     result.append("Failed")
                 else:
                     result.append("OK")
             elif method == "min":
                 testVal = min(minList)
-                if testVal < (setpoint-tolerance):
+                if testVal < (setpoint - tolerance):
                     result.append("Failed")
                 else:
                     result.append("OK")
             elif method == "max":
                 testVal = max(maxList)
-                if testVal > (setpoint+tolerance):
+                if testVal > (setpoint + tolerance):
                     result.append("Failed")
                 else:
                     result.append("OK")
             elif method == "slope":
                 testVal = self._getSlope(timeList, valList)
-                if abs(testVal-setpoint) > tolerance:
+                if abs(testVal - setpoint) > tolerance:
                     result.append("Failed")
                 else:
                     result.append("OK")
@@ -831,18 +837,18 @@ class IPV(IPVFrame):
         if "Failed" in result:
             self.statDict[sigName] = "WARNING"
             self.statDescrDict[sigName] = self.descrDict[sigName]
-            self.enqueueViewerCommand(self.gridList[group].SetCellValue,rowIdx,0,"WARNING")
-            self.enqueueViewerCommand(self.gridList[group].SetCellBackgroundColour,rowIdx,0,"yellow")
-            self.enqueueViewerCommand(self.gridList[group].SetCellValue,rowIdx,1,self.descrDict[sigName])
-            self.enqueueViewerCommand(self.gridList[group].SetCellTextColour,rowIdx,1,"red")
+            self.enqueueViewerCommand(self.gridList[group].SetCellValue, rowIdx, 0, "WARNING")
+            self.enqueueViewerCommand(self.gridList[group].SetCellBackgroundColour, rowIdx, 0, "yellow")
+            self.enqueueViewerCommand(self.gridList[group].SetCellValue, rowIdx, 1, self.descrDict[sigName])
+            self.enqueueViewerCommand(self.gridList[group].SetCellTextColour, rowIdx, 1, "red")
             okStatus = False
         else:
             self.statDict[sigName] = "OK"
             self.statDescrDict[sigName] = ""
-            self.enqueueViewerCommand(self.gridList[group].SetCellValue,rowIdx,0,"OK")
-            self.enqueueViewerCommand(self.gridList[group].SetCellBackgroundColour,rowIdx,0,"green")
-            self.enqueueViewerCommand(self.gridList[group].SetCellValue,rowIdx,1,"")
-            self.enqueueViewerCommand(self.gridList[group].SetCellTextColour,rowIdx,1,"black")
+            self.enqueueViewerCommand(self.gridList[group].SetCellValue, rowIdx, 0, "OK")
+            self.enqueueViewerCommand(self.gridList[group].SetCellBackgroundColour, rowIdx, 0, "green")
+            self.enqueueViewerCommand(self.gridList[group].SetCellValue, rowIdx, 1, "")
+            self.enqueueViewerCommand(self.gridList[group].SetCellTextColour, rowIdx, 1, "black")
             okStatus = True
 
         return okStatus
@@ -915,14 +921,16 @@ Where the options can be a combination of the following:
 
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
 
 def HandleCommandSwitches():
     import getopt
 
     try:
-        switches, args = getopt.getopt(sys.argv[1:], "hvc:", ["help","viewer"])
+        switches, args = getopt.getopt(sys.argv[1:], "hvc:", ["help", "viewer"])
     except getopt.GetoptError, data:
         print "%s %r" % (data, data)
         sys.exit(1)
@@ -947,13 +955,12 @@ def HandleCommandSwitches():
 
     return configFile, useViewer
 
+
 if __name__ == "__main__":
     ipvApp = SingleInstance("PicarroIPV")
     if ipvApp.alreadyrunning():
         try:
-            CRDS_IPV = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_IPV,
-                                                  APP_NAME,
-                                                  IsDontCareConnection = False)
+            CRDS_IPV = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_IPV, APP_NAME, IsDontCareConnection=False)
             CRDS_IPV.showViewer()
         except:
             pass

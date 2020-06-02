@@ -20,6 +20,7 @@ import types
 from Host.autogen import usbdefs
 from Host.Common.analyzerUsbIf import AnalyzerUsb
 
+
 class FpgaProgrammer(object):
     """Programmer for Spartan 3 FPGA via the Cypress USB Controller.
 
@@ -69,8 +70,8 @@ class FpgaProgrammer(object):
             if 0 != (2 & self._getFpgaStatus()):
                 self.myLog("FPGA programming done, bytes sent: %d" % lTot)
             elif 0 == (1 & self._getFpgaStatus()):
-                raise ValueError("CRC error during FPGA load, bytes sent: %d" % (lTot,))
-            self.myLog("Time to load: %.1fs" % (time.time() - tStart,))
+                raise ValueError("CRC error during FPGA load, bytes sent: %d" % (lTot, ))
+            self.myLog("Time to load: %.1fs" % (time.time() - tStart, ))
             time.sleep(0.2)
 
     def _startFpgaProgram(self):
@@ -80,10 +81,10 @@ class FpgaProgrammer(object):
             """Low-level function to be wrapped by claimInterfaceWrapper.
             """
             result = c_ubyte(0x0)
-            self.deviceUsb.controlInTransaction(
-                result, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_START_PROGRAM)
+            self.deviceUsb.controlInTransaction(result, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_START_PROGRAM)
             if result.value != 1:
                 raise ValueError("Invalid response in startFpgaProgram")
+
         return self.deviceUsb.claimInterfaceWrapper(__startFpgaProgram)
 
     def _getFpgaStatus(self):
@@ -95,9 +96,9 @@ class FpgaProgrammer(object):
             """Low-level function to be wrapped by claimInterfaceWrapper.
             """
             status = c_ubyte()
-            self.deviceUsb.controlInTransaction(
-                status, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_GET_STATUS)
+            self.deviceUsb.controlInTransaction(status, usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_GET_STATUS)
             return status.value
+
         return self.deviceUsb.claimInterfaceWrapper(__getFpgaStatus)
 
     def _sendToFpga(self, string):
@@ -110,12 +111,13 @@ class FpgaProgrammer(object):
             string: String of bytes to send to the FPGA
         """
         assert isinstance(string, (str, unicode))
+
         def __sendToFpga():
             """Low-level function to be wrapped by claimInterfaceWrapper.
             """
-            self.deviceUsb.controlOutTransaction(
-                create_string_buffer(bitReverse(string), len(string)),
-                usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_SEND_DATA)
+            self.deviceUsb.controlOutTransaction(create_string_buffer(bitReverse(string), len(string)),
+                                                 usbdefs.VENDOR_FPGA_CONFIGURE, usbdefs.FPGA_SEND_DATA)
+
         self.deviceUsb.claimInterfaceWrapper(__sendToFpga)
 
 

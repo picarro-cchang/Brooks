@@ -4,20 +4,23 @@ import wx
 import Host.Coordinator.AutosamplerParameterDialog as AutosamplerParameterDialog
 from string import maketrans
 
-transtab = maketrans('\x91\x9b\x9d','\xba\xb1\xb5')
+transtab = maketrans('\x91\x9b\x9d', '\xba\xb1\xb5')
+
 
 class Choices(object):
-    def __init__(self,limit,choices):
+    def __init__(self, limit, choices):
         self.limit = limit
         self.choices = choices
+
     def __str__(self):
-        return "limit: %d\nchoices: %s" % (self.limit,self.choices)
+        return "limit: %d\nchoices: %s" % (self.limit, self.choices)
+
 
 class Lists(object):
-    def __init__(self,fp):
+    def __init__(self, fp):
         self.data = []
         if fp.readline().strip() != '[LISTS]':
-            raise ValueError,"Must start with '[LISTS]'"
+            raise ValueError, "Must start with '[LISTS]'"
         i = 0
         for line in fp:
             if not line.strip():
@@ -25,15 +28,16 @@ class Lists(object):
             line = line.translate(transtab)
             l = line.strip().split(";")
             if int(l[0]) != i:
-                raise ValueError,"LISTS entry is out of sequence"
+                raise ValueError, "LISTS entry is out of sequence"
             i += 1
-            self.data.append(Choices(int(l[1]),l[2:]))
+            self.data.append(Choices(int(l[1]), l[2:]))
+
 
 class Objects(object):
-    def __init__(self,fp):
+    def __init__(self, fp):
         self.objects = {}
         if fp.readline().strip() != '[OBJECTS]':
-            raise ValueError,"Must start with '[OBJECTS]'"
+            raise ValueError, "Must start with '[OBJECTS]'"
         for line in fp:
             if not line.strip():
                 break
@@ -41,16 +45,17 @@ class Objects(object):
             l = line.strip().split(";")
             if l[0] not in self.objects:
                 self.objects[l[0]] = []
-            self.objects[l[0]].append((l[1],l[2:]))
-    def labelProperties(self,classes,lists):
+            self.objects[l[0]].append((l[1], l[2:]))
+
+    def labelProperties(self, classes, lists):
         """Associate a parameter name with each parameter"""
         self.objectsByClass = {}
         for className in self.objects:
             classParams = classes.classes[className]
             objectDict = {}
-            for oName,params in self.objects[className]:
+            for oName, params in self.objects[className]:
                 paramDict = {}
-                for i,p in enumerate(params):
+                for i, p in enumerate(params):
                     paramName = classParams[i][0]
                     if paramName[0] == "#":
                         paramName = paramName[1:]
@@ -60,12 +65,13 @@ class Objects(object):
                         units = classParams[i][1][-1]
                         if units not in classes.classes:
                             if units == 'E': units = ''
-                            p = " ".join([p,units])
+                            p = " ".join([p, units])
                         else:
-                            p = (p,units)
+                            p = (p, units)
                     paramDict[paramName] = p
                 objectDict[oName] = paramDict
             self.objectsByClass[className] = objectDict
+
     def makeTreeDef(self):
         """Construct a list for passing to the tree drawing GUI"""
         self.treeList = []
@@ -80,34 +86,35 @@ class Objects(object):
                     if paramsDict:
                         paramsList = []
                         for p in sorted(paramsDict.keys()):
-                            if isinstance(paramsDict[p],str):
-                                paramsList.append(p+": "+paramsDict[p])
+                            if isinstance(paramsDict[p], str):
+                                paramsList.append(p + ": " + paramsDict[p])
                             else:
                                 item = paramsDict[p][0]
                                 if item == "None":
-                                    paramsList.append(p+": "+item)
+                                    paramsList.append(p + ": " + item)
                                 else:
-                                    link = [p+": "+item]
-                                    hyperLinks.append((item,link))
+                                    link = [p + ": " + item]
+                                    hyperLinks.append((item, link))
                                     paramsList.append(link)
-                        objectList.append([o,paramsList])
+                        objectList.append([o, paramsList])
                         hyperTargets[o] = paramsList
                     else:
                         objectList.append(o)
-                self.treeList.append([className,objectList])
+                self.treeList.append([className, objectList])
             else:
                 self.treeList.append(className)
         for h in hyperLinks:
             o = h[0]  # Recover object
-            l = h[1]    # Recover link
+            l = h[1]  # Recover link
             l.append(hyperTargets[o])
 
+
 class Classes(object):
-    def __init__(self,fp):
+    def __init__(self, fp):
         self.classes = {}
         current = []
         if fp.readline().strip() != '[CLASSES]':
-            raise ValueError,"Must start with '[CLASSES]'"
+            raise ValueError, "Must start with '[CLASSES]'"
         for line in fp:
             if not line.strip():
                 break
@@ -117,14 +124,15 @@ class Classes(object):
                 self.classes[line[1:].strip()] = current
             else:
                 l = line.strip().split(";")
-                current.append((l[0],l[1:]))
+                current.append((l[0], l[1:]))
+
 
 class Atoms(object):
-    def __init__(self,fp):
+    def __init__(self, fp):
         self.atoms = {}
         current = []
         if fp.readline().strip() != '[ATOMS]':
-            raise ValueError,"Must start with '[ATOMS]'"
+            raise ValueError, "Must start with '[ATOMS]'"
         for line in fp:
             if not line.strip():
                 break
@@ -134,14 +142,14 @@ class Atoms(object):
                 self.atoms[line[1:].strip()] = current
             else:
                 l = line.strip().split(";")
-                current.append((l[0],l[1:]))
+                current.append((l[0], l[1:]))
 
-    def setupChoices(self,objects,classes,lists):
+    def setupChoices(self, objects, classes, lists):
         self.atomParamDict = {}
         for a in self.atoms:
             params = self.atoms[a]
             paramList = []
-            for pname,pDescr in params:
+            for pname, pDescr in params:
                 minVal = ""
                 maxVal = ""
                 defVal = ""
@@ -174,28 +182,30 @@ class Atoms(object):
                         units = pDescr[4]
                         if units == 'E': units = ''
                 label = pname
-                paramList.append([type,label,format,units,optional,minVal,maxVal,defVal])
+                paramList.append([type, label, format, units, optional, minVal, maxVal, defVal])
             self.atomParamDict[a] = paramList
 
+
 def getAutosamplerConfig():
-    objects = Objects(file('objects.txt','r'))
-    classes = Classes(file('classes.txt','r'))
-    lists = Lists(file('lists.txt','r'))
-    atoms = Atoms(file('atoms.txt','r'))
-    objects.labelProperties(classes,lists)
+    objects = Objects(file('objects.txt', 'r'))
+    classes = Classes(file('classes.txt', 'r'))
+    lists = Lists(file('lists.txt', 'r'))
+    atoms = Atoms(file('atoms.txt', 'r'))
+    objects.labelProperties(classes, lists)
     objects.makeTreeDef()
-    atoms.setupChoices(objects,classes,lists)
-    return objects,classes,lists,atoms
+    atoms.setupChoices(objects, classes, lists)
+    return objects, classes, lists, atoms
+
 
 if __name__ == "__main__":
-    objects,classes,lists,atoms = getAutosamplerConfig()
+    objects, classes, lists, atoms = getAutosamplerConfig()
     # app = wx.PySimpleApp(0)
     # wx.InitAllImageHandlers()
 
     # parameter_forms = []
     # for a in atoms.atomParamDict:
-        # __p = atoms.atomParamDict[a]
-        # parameter_forms.append((a,__p))
+    # __p = atoms.atomParamDict[a]
+    # parameter_forms.append((a,__p))
 
     # frame_1 = AutosamplerParameterDialog.ParameterDialogBase(None, -1, descr=parameter_forms[35])
     # #frame_1.ReadFromDas()

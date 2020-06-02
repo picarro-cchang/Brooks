@@ -1,4 +1,3 @@
-
 def welcome_text(gasName, gasConcs):
     g0, g1, g2 = gasConcs
     str = "<h1><center>Welcome to the {0} Surrogate Gas Validation Tool</center></h1>".format(gasName)
@@ -21,6 +20,7 @@ def welcome_text(gasName, gasConcs):
     Any of the four Tasks may be skipped by selecting SKIP. When Validation Type and Task Sequence is confirmed, select Start Run below to proceed with the Validation Procedure.
     """.format(gasName, g0, g1, g2)
     return str
+
 
 def editor_instructions(gasName):
     str = "<h1><center>Editor Instructions</center></h1>"
@@ -47,6 +47,7 @@ def editor_instructions(gasName):
     """.format(gasName)
     return str
 
+
 def equilibrating_text(gasName):
     str = """
     <br><br><br><center>
@@ -55,9 +56,11 @@ def equilibrating_text(gasName):
     """.format(gasName)
     return str
 
+
 def measuring_text(gasName):
     str = "<br><br><br><center>Measuring {0}...".format(gasName)
     return str
+
 
 def pre_task_instructions(gasSource):
     str = """
@@ -69,9 +72,11 @@ def pre_task_instructions(gasSource):
     """.format(gasSource)
     return str
 
+
 def post_task_instructions():
     str = "<br><br><br><center>Disconnect the line from the analyzer and close the valve on the gas source. Click NEXT to proceed..</center>"
     return str
+
 
 def job_complete_text():
     str = """

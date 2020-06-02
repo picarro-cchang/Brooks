@@ -14,27 +14,27 @@ from Host.Common import CmdFIFO
 APP_NAME = "ControlBridge"
 EventManagerProxy_Init(APP_NAME)
 
+
 class RpcServerThread(threading.Thread):
     def __init__(self, RpcServer, ExitFunction):
         threading.Thread.__init__(self)
-        self.setDaemon(1) #THIS MUST BE HERE
+        self.setDaemon(1)  #THIS MUST BE HERE
         self.RpcServer = RpcServer
         self.ExitFunction = ExitFunction
+
     def run(self):
         self.RpcServer.serve_forever()
-        try: #it might be a threading.Event
+        try:  #it might be a threading.Event
             if self.ExitFunction is not None:
                 self.ExitFunction()
             Log("RpcServer exited and no longer serving.")
         except:
             LogExc("Exception raised when calling exit function at exit of RPC server.")
 
+
 class ControlBridge(object):
 
-    RESPONSE_STATUS = {
-        "success" : 0,
-        "unknown" : 1
-    }
+    RESPONSE_STATUS = {"success": 0, "unknown": 1}
 
     # Previously defined in the gdu.js REST call to AnalyzerServer
     INJECT_VALVE_BIT = 2
@@ -43,18 +43,18 @@ class ControlBridge(object):
     INJECT_FLAG_VALVE_MASK = 1 << INJECT_FLAG_VALVE_BIT
     INJECT_MASK = INJECT_VALVE_MASK | INJECT_FLAG_VALVE_MASK
     INJECT_SAMPLES = 5
-    EXTRA_FLAG_SAMPLES = 50 # each is 0.2 seconds
+    EXTRA_FLAG_SAMPLES = 50  # each is 0.2 seconds
 
     def __init__(self):
-        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, ClientName = APP_NAME)
+        self.driver = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_DRIVER, ClientName=APP_NAME)
         Log('Connected to Driver')
-        self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER, ClientName = APP_NAME)
+        self.instMgr = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % SharedTypes.RPC_PORT_INSTR_MANAGER, ClientName=APP_NAME)
         Log('Connected to Instrument Manager')
         self.rpcServer = CmdFIFO.CmdFIFOServer(("", SharedTypes.RPC_PORT_CONTROL_BRIDGE),
-                                            ServerName = APP_NAME,
-                                            ServerDescription = "",
-                                            ServerVersion = "1.0.0",
-                                            threaded = True)
+                                               ServerName=APP_NAME,
+                                               ServerDescription="",
+                                               ServerVersion="1.0.0",
+                                               threaded=True)
         self.rpcThread = RpcServerThread(self.rpcServer, None)
         self.rpcThread.start()
 
@@ -63,27 +63,27 @@ class ControlBridge(object):
         self.controlSocket.bind("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_CONTROL_BRIDGE_ZMQ)
 
         self.commands = {
-            "armIsotopicCapture" : self._armIsotopicCapture,
-            "shutdown" : self._shutdown,
-            "cancelIsotopicAnalysis" : self._cancelIsotopicAnalysis,
-            "getPeakDetectorState" : self._getPeakDetectorState,
-            "setToIdle" : self._setToIdle,
-            "referenceGasPrime" : self._referenceGasPrime,
-            "referenceGasInjection" : self._referenceGasInjection,
+            "armIsotopicCapture": self._armIsotopicCapture,
+            "shutdown": self._shutdown,
+            "cancelIsotopicAnalysis": self._cancelIsotopicAnalysis,
+            "getPeakDetectorState": self._getPeakDetectorState,
+            "setToIdle": self._setToIdle,
+            "referenceGasPrime": self._referenceGasPrime,
+            "referenceGasInjection": self._referenceGasInjection,
             "setToEQMode": self._setToEQMode,
-            "setToSurveyorMode": self._setToSurveyorMode, 
+            "setToSurveyorMode": self._setToSurveyorMode,
             "getHardwareCapabilities": self._getHardwareCapabilities,
             "getHostVersion": self._getHostVersion
         }
         self.requestTime = 0
- 
+
     def run(self):
         try:
             while True:
                 cmd = self.controlSocket.recv_string()
                 if cmd == "getPeakDetectorState":
                     current_time = time.time()
-                    if current_time > self.requestTime + 60: 
+                    if current_time > self.requestTime + 60:
                         Log("Command received from ZMQ bridge: %s" % cmd)
                         self.requestTime = current_time
                 else:
@@ -96,7 +96,7 @@ class ControlBridge(object):
 
                 except KeyError:
                     response = ControlBridge.RESPONSE_STATUS["unknown"]
-                
+
                 if cmd != "getPeakDetectorState":
                     Log("Command executed with return code = %s" % response)
                 self.controlSocket.send_string("%d,%s" % (response, ret))
@@ -132,34 +132,33 @@ class ControlBridge(object):
         self.driver.wrDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER", 6)
 
     def _referenceGasInjection(self):
-        self.driver.wrValveSequence([
-            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
-            [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, ControlBridge.EXTRA_FLAG_SAMPLES],
-            [ControlBridge.INJECT_MASK, 0, 1],
-            [0, 0, 0]
-        ])
-        
+        self.driver.wrValveSequence(
+            [[ControlBridge.INJECT_MASK, ControlBridge.INJECT_MASK, ControlBridge.INJECT_SAMPLES],
+             [ControlBridge.INJECT_MASK, ControlBridge.INJECT_FLAG_VALVE_MASK, ControlBridge.EXTRA_FLAG_SAMPLES],
+             [ControlBridge.INJECT_MASK, 0, 1], [0, 0, 0]])
+
         self.driver.wrDasReg("VALVE_CNTRL_SEQUENCE_STEP_REGISTER", 0)
-        
+
     def _setToEQMode(self):
-        self.driver.openValves(0x20)   # open valve 6
-        
+        self.driver.openValves(0x20)  # open valve 6
+
     def _setToSurveyorMode(self):
-        self.driver.closeValves(0x20)   # close valve 6
-        
+        self.driver.closeValves(0x20)  # close valve 6
+
     def _getHardwareCapabilities(self):
         analyzerDict = self.driver.fetchLogicEEPROM()[0]
         capabilityDict = self.driver.fetchHardwareCapabilities()
         analyzerDict.update(capabilityDict)
-        return json.dumps(analyzerDict)  
+        return json.dumps(analyzerDict)
 
     def _getHostVersion(self):
         try:
             dV = self.driver.allVersions()
             return dV["host release"]
         except:
-            return ""            
-        
+            return ""
+
+
 if __name__ == '__main__':
     bridge = ControlBridge()
     bridge.run()

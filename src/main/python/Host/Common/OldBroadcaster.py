@@ -23,60 +23,67 @@ import sets
 import Queue
 import array
 
+
 class BroadcastException(Exception):
     "Exception for broadcaster clients"
     pass
 
+
 class Client(object):
     "Class representing a client which subscribes to the broadcast service"
-    def __init__(self,broadcaster,listener):
+
+    def __init__(self, broadcaster, listener):
         """listener is the TCP socket which awaits connections to the broadcaster
         maxlen is the maximum number of characters in the client buffer before a forced disconnection
         """
-        socket,address = listener.accept()
+        socket, address = listener.accept()
         self.socket = socket
         self.address = address
         self.broadcaster = broadcaster
         # On initialization, the client's "readPosition" is set to the place where the broadcaster
         #  is going to write new data.
         self.readPosition = self.broadcaster.writePosition
+
     def close(self):
         "Close the client socket"
         self.socket.close()
+
     def sendCurrent(self):
         "Send as much data as possible to the socket and update the buffer. Returns number of bytes sent"
         nSent = 0
-        endPointer =  self.broadcaster.writePosition
+        endPointer = self.broadcaster.writePosition
         if self.readPosition == endPointer:
-            return nSent # no data to send
-        elif self.readPosition < endPointer: # Data are contiguous
+            return nSent  # no data to send
+        elif self.readPosition < endPointer:  # Data are contiguous
             n = self.socket.send(self.broadcaster.circularBuffer[self.readPosition:endPointer].tostring())
-            if n<=0:
-                raise BroadcastException,"socket.send returns non-positive count"
+            if n <= 0:
+                raise BroadcastException, "socket.send returns non-positive count"
             self.readPosition += n
             nSent += n
-        else: # Data are in two pieces
-            n = self.socket.send(self.broadcaster.circularBuffer[self.readPosition:self.broadcaster.circularBufferLength].tostring())
-            if n<=0:
-                raise BroadcastException,"socket.send returns non-positive count"
+        else:  # Data are in two pieces
+            n = self.socket.send(
+                self.broadcaster.circularBuffer[self.readPosition:self.broadcaster.circularBufferLength].tostring())
+            if n <= 0:
+                raise BroadcastException, "socket.send returns non-positive count"
             self.readPosition += n
             nSent += n
             if self.readPosition == self.broadcaster.circularBufferLength:
                 self.readPosition = 0
                 if self.readPosition == endPointer:
-                    return nSent # no more data to send
+                    return nSent  # no more data to send
                 n = self.socket.send(self.broadcaster.circularBuffer[:endPointer].tostring())
-                if n<=0:
-                    raise BroadcastException,"socket.send returns non-positive count"
+                if n <= 0:
+                    raise BroadcastException, "socket.send returns non-positive count"
                 self.readPosition += n
                 nSent += n
         return nSent
+
 
 class Broadcaster(threading.Thread):
     """A thread which can broadcast the same information to a collection of clients which connect
     to the specified port.
     """
-    def __init__(self,port,name='Broadcaster',logFunc=None):
+    def __init__(self, port, name='Broadcaster', logFunc=None):
         """port is the TCP port for clients to connect to the broadcaster
         name is used to name the thread
         logFunc is called to record logging data from the Broadcaster
@@ -89,42 +96,52 @@ class Broadcaster(threading.Thread):
         self.messageQueue = Queue.Queue(0)
         # Circular buffer is used by clients to get strings to send to the output socket
         self.circularBufferLength = 65536
-        self.circularBuffer = array.array('c',self.circularBufferLength*'\0')
+        self.circularBuffer = array.array('c', self.circularBufferLength * '\0')
         self.writePosition = 0
         self._stopevent = threading.Event()
-        threading.Thread.__init__(self,name=name)
+        threading.Thread.__init__(self, name=name)
         self.logFunc = logFunc
         self.setDaemon(True)
         self.start()
+
     def setupSockListen(self):
-        self.sockListen = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+        self.sockListen = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self.sockListen.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
-        self.sockListen.bind(('',self.port))
+        self.sockListen.bind(('', self.port))
         self.sockListen.listen(5)
-    def safeLog(self,msg,*args,**kwargs):
+
+    def safeLog(self, msg, *args, **kwargs):
         try:
-            if self.logFunc != None: self.logFunc(msg,*args,**kwargs)
+            if self.logFunc != None: self.logFunc(msg, *args, **kwargs)
         except:
             pass
-    def send(self,msg):
+
+    def send(self, msg):
         """ Send the message to all registered clients. This does not wait for socket transfers
         to complete
         """
         self.messageQueue.put(msg)
         return self.queueSize()
+
     def queueSize(self):
         return self.messageQueue.qsize()
-    def stop(self,timeout=None):
+
+    def stop(self, timeout=None):
         """ Used to stop the main loop """
         self._stopevent.set()
-        threading.Thread.join(self,timeout)
+        threading.Thread.join(self, timeout)
+
     def killBadClients(self):
         # Kill bad clients
         for client in self.badClients:
             sock = client.socket
-            self.safeLog("%s: Forced disconnection of client at %s" % (self.name,sock.getpeername(),))
+            self.safeLog("%s: Forced disconnection of client at %s" % (
+                self.name,
+                sock.getpeername(),
+            ))
             self.__killClient(sock)
-    def __killClient(self,sock):
+
+    def __killClient(self, sock):
         """ Close client socket and remove it from dictionary of clients """
         if sock in self.clients:
             try:
@@ -134,13 +151,14 @@ class Broadcaster(threading.Thread):
             del self.clients[sock]
         else:
             sock.close()
-    def handleInput(self,iw):
+
+    def handleInput(self, iw):
         """This handles sockets which have data available to read"""
         for sock in iw:
             # Generate a new client if we get a connection request
             if sock == self.sockListen:
-                c = Client(self,sock)
-                self.safeLog("%s: Connection from %s" % (self.name,c.address))
+                c = Client(self, sock)
+                self.safeLog("%s: Connection from %s" % (self.name, c.address))
                 self.clients[c.socket] = c
             else:
                 # Ignore input from clients by continually reading and discarding their data
@@ -149,16 +167,21 @@ class Broadcaster(threading.Thread):
                     if len(data) <= 0:
                         raise Exception
                 except:
-                    self.safeLog("%s: Client at %s disconnected" % (self.name,sock.getpeername(),))
+                    self.safeLog("%s: Client at %s disconnected" % (
+                        self.name,
+                        sock.getpeername(),
+                    ))
                     self.__killClient(sock)
-    def handleOutput(self,ow):
+
+    def handleOutput(self, ow):
         # Iterate through clients which are connected, sending as much as each will allow
         for sock in ow:
             try:
                 self.clients[sock].sendCurrent()
-            except Exception,e:
-                self.safeLog("%s: Client at %s disconnected, exception %s" % (self.name,sock.getpeername(),e))
+            except Exception, e:
+                self.safeLog("%s: Client at %s disconnected, exception %s" % (self.name, sock.getpeername(), e))
                 self.__killClient(sock)
+
     def updateClientInfo(self):
         # Update circularBuffer using strings from queue and find bad clients. This function runs until the queue
         #  has been emptied out.
@@ -177,16 +200,16 @@ class Broadcaster(threading.Thread):
             nBytes += len(msg)
             if nBytes >= self.circularBufferLength:
                 self.safeLog("Broadcast message overflows circular buffer. All clients disconnected.")
-                break # Overflow error, all clients must be disconnected
-            if self.writePosition+len(msg) >= self.circularBufferLength:
-                nFirst = self.circularBufferLength-self.writePosition
+                break  # Overflow error, all clients must be disconnected
+            if self.writePosition + len(msg) >= self.circularBufferLength:
+                nFirst = self.circularBufferLength - self.writePosition
                 nSecond = len(msg) - nFirst
-                self.circularBuffer[self.writePosition:] = array.array('c',msg[:nFirst])
-                self.circularBuffer[:nSecond] = array.array('c',msg[nFirst:])
+                self.circularBuffer[self.writePosition:] = array.array('c', msg[:nFirst])
+                self.circularBuffer[:nSecond] = array.array('c', msg[nFirst:])
                 self.writePosition = nSecond
             else:
-                self.circularBuffer[self.writePosition:self.writePosition+len(msg)] = array.array('c',msg)
-                self.writePosition = self.writePosition+len(msg)
+                self.circularBuffer[self.writePosition:self.writePosition + len(msg)] = array.array('c', msg)
+                self.writePosition = self.writePosition + len(msg)
 
         badClients = []
         if nBytes < self.circularBufferLength:
@@ -194,17 +217,18 @@ class Broadcaster(threading.Thread):
             for client in self.clients.values():
                 if self.writePosition > startPosition:
                     if self.writePosition >= client.readPosition > startPosition:
-                        self.safeLog("Client [%s] buffer overrun." % (client.socket.getpeername(),))
+                        self.safeLog("Client [%s] buffer overrun." % (client.socket.getpeername(), ))
                         badClients.append(client)
                 elif self.writePosition < startPosition:
                     if client.readPosition > startPosition or client.readPosition <= self.writePosition:
-                        self.safeLog("Client [%s] buffer overrun." % (client.socket.getpeername(),))
+                        self.safeLog("Client [%s] buffer overrun." % (client.socket.getpeername(), ))
                         badClients.append(client)
         else:
             badClients = self.clients.values()
             self.writePosition = 0
 
         return badClients
+
     def restartAll(self):
         try:
             badClients = self.clients.values()
@@ -214,9 +238,10 @@ class Broadcaster(threading.Thread):
                 self.sockListen.close()
                 self.sockListen = None
             self.setupSockListen()
-        except Exception,e:
-            self.safeLog("Exception %s during restartAll, ignoring" % (e,))
+        except Exception, e:
+            self.safeLog("Exception %s during restartAll, ignoring" % (e, ))
             pass
+
     def run(self):
         """ The thread execution function listens for new client connections and sends data to the registered client sockets """
         self.setupSockListen()
@@ -225,8 +250,8 @@ class Broadcaster(threading.Thread):
             while not self._stopevent.isSet():
                 try:
                     self.mainLoop()
-                except Exception,e:
-                    self.safeLog("Exception in broadcaster: %s" % (e,))
+                except Exception, e:
+                    self.safeLog("Exception in broadcaster: %s" % (e, ))
                     self.restartAll()
         finally:
             if self.sockListen != None:
@@ -244,12 +269,12 @@ class Broadcaster(threading.Thread):
         ewtd = []
 
         try:
-            iw,ow,ew = select.select(iwtd,owtd,ewtd,0.25)
+            iw, ow, ew = select.select(iwtd, owtd, ewtd, 0.25)
         except:
             # Error from select, deal with dead socket(s)
             for s in sets.Set(iwtd + owtd + ewtd):
                 try:
-                    select.select([s],[],[],0)
+                    select.select([s], [], [], 0)
                 except:
                     if s == self.sockListen:
                         if self.sockListen != None:
@@ -263,23 +288,26 @@ class Broadcaster(threading.Thread):
         # Empty out the input queue into the circular buffer and kick off those clients who have become overrun
         self.badClients = self.updateClientInfo()
 
+
 if __name__ == "__main__":
-    from time import strftime,localtime,sleep
+    from time import strftime, localtime, sleep
     import ctypes
     import Host.Common.StringPickler as StringPickler
+
     class MyTime(ctypes.Structure):
         _fields_ = [
-        ("year",ctypes.c_int),
-        ("month",ctypes.c_int),
-        ("day",ctypes.c_int),
-        ("hour",ctypes.c_int),
-        ("minute",ctypes.c_int),
-        ("second",ctypes.c_int),
+            ("year", ctypes.c_int),
+            ("month", ctypes.c_int),
+            ("day", ctypes.c_int),
+            ("hour", ctypes.c_int),
+            ("minute", ctypes.c_int),
+            ("second", ctypes.c_int),
         ]
 
     def myLog(msg):
         print msg
-    b = Broadcaster(8881,logFunc=myLog)
+
+    b = Broadcaster(8881, logFunc=myLog)
     m = MyTime()
     while True:
         t = localtime()

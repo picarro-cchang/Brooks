@@ -17,10 +17,11 @@ from threading import Thread
 APP_NAME = "Extended Laser Current Controller"
 APP_VERSION = "1.0.0"
 
-if hasattr(sys, "frozen"): #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  #we're running compiled with py2exe
     app_path = sys.executable
 else:
     app_path = sys.argv[0]
+
 
 class LaserControlFrame(LaserControlFrameGui):
     def __init__(self, *args, **kwargs):
@@ -28,10 +29,10 @@ class LaserControlFrame(LaserControlFrameGui):
         self.laser_current_models = None
         self.laser_current_view_models = None
         self.panel_lookup = {
-            "Laser1":self.laser1_control_panel,
-            "Laser2":self.laser2_control_panel,
-            "Laser3":self.laser3_control_panel,
-            "Laser4":self.laser4_control_panel
+            "Laser1": self.laser1_control_panel,
+            "Laser2": self.laser2_control_panel,
+            "Laser3": self.laser3_control_panel,
+            "Laser4": self.laser4_control_panel
         }
         self.laser_control_view_model = None
         self.process_rd_timer = wx.Timer(self)
@@ -54,31 +55,32 @@ class LaserControlFrame(LaserControlFrameGui):
                 self.laser_current_view_models.append(None)
         analyzer_model = AnalyzerModel(self.laser_current_models.models)
         self.laser_control_view_model = LaserControlViewModel(analyzer_model, self)
+
     def set_slope_factor(self, laser_num, slope_factor):
         """Sets slope factor for specified laser (1-origin)"""
-        view_model = self.laser_current_view_models[laser_num-1]
+        view_model = self.laser_current_view_models[laser_num - 1]
         view_model.set_model_parameter("slope_factor", slope_factor)
-        
+
     def set_timeBetweenSteps(self, laser_num, time_steps):
         """Sets time interval between steps for specified laser (1-origin)"""
-        view_model = self.laser_current_view_models[laser_num-1]
+        view_model = self.laser_current_view_models[laser_num - 1]
         view_model.set_model_parameter("time_between_steps", time_steps)
-    
+
     def set_upper_window(self, laser_num, upper_window):
         """Sets laser current upper window for specified laser (1-origin)"""
-        view_model = self.laser_current_view_models[laser_num-1]
-        view_model.set_model_parameter("upper_window" , upper_window)
-    
+        view_model = self.laser_current_view_models[laser_num - 1]
+        view_model.set_model_parameter("upper_window", upper_window)
+
     def set_lower_window(self, laser_num, lower_window):
         """Sets laser current lower window for specified laser (1-origin)"""
-        view_model = self.laser_current_view_models[laser_num-1]
-        view_model.set_model_parameter("lower_window" , lower_window)
-    
+        view_model = self.laser_current_view_models[laser_num - 1]
+        view_model.set_model_parameter("lower_window", lower_window)
+
     def set_binning_rd(self, laser_num, binning_rd):
         """Sets binning_rd for specified laser (1-origin)"""
-        view_model = self.laser_current_view_models[laser_num-1]
+        view_model = self.laser_current_view_models[laser_num - 1]
         view_model.set_model_parameter("binning_rd" , binning_rd)\
-        
+
     def registerRpc(self):
         self.rpcServer.register_function(self.multiplier)
         self.rpcServer.register_function(self.set_slope_factor)
@@ -86,19 +88,19 @@ class LaserControlFrame(LaserControlFrameGui):
         self.rpcServer.register_function(self.set_upper_window)
         self.rpcServer.register_function(self.set_lower_window)
         self.rpcServer.register_function(self.set_binning_rd)
-        
+
     def start_rpc_server(self):
         self.rpcServer = CmdFIFOServer(("", RPC_PORT_EXT_LASER_CONTROLLER),
-                                        ServerName = APP_NAME,
-                                        ServerDescription = "Extended laser current controller",
-                                        ServerVersion = APP_VERSION,
-                                        threaded = True)
+                                       ServerName=APP_NAME,
+                                       ServerDescription="Extended laser current controller",
+                                       ServerVersion=APP_VERSION,
+                                       threaded=True)
         self.registerRpc()
         #start the rpc server on another thread...
         self.rpcThread = Thread(target=self.do_rpc)
         self.rpcThread.setDaemon(True)
         self.rpcThread.start()
-        
+
     def do_rpc(self):
         try:
             while True:
@@ -106,19 +108,20 @@ class LaserControlFrame(LaserControlFrameGui):
         except:
             print "RPC server stopped"
             wx.CallAfter(self.Close, True)
-    
-        
+
+
 # def handle_command_switches():
-    # parser = argparse.ArgumentParser(description = "Extended Laser Control Panel")
-    # parser.add_argument('-c', '--config', dest='config', help='Name of configuration file', default=os.path.splitext(app_path)[0] + ".ini")
-    # args = parser.parse_args()
-    # return vars(args)
+# parser = argparse.ArgumentParser(description = "Extended Laser Control Panel")
+# parser.add_argument('-c', '--config', dest='config', help='Name of configuration file', default=os.path.splitext(app_path)[0] + ".ini")
+# args = parser.parse_args()
+# return vars(args)
+
 
 def handle_command_switches():
     import getopt
 
     shortOpts = 'c:d:hvo:'
-    longOpts = ["help","viewer"]
+    longOpts = ["help", "viewer"]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, data:
@@ -147,18 +150,22 @@ def handle_command_switches():
     if "-c" in options:
         configFile = options["-c"]
         print "Config file specified at command line: %s" % configFile
-    
-    parser = argparse.ArgumentParser(description = "Extended Laser Control Panel")
-    parser.add_argument('-c', '--config', dest='config', help='Name of configuration file', default=os.path.splitext(app_path)[0] + ".ini")
+
+    parser = argparse.ArgumentParser(description="Extended Laser Control Panel")
+    parser.add_argument('-c',
+                        '--config',
+                        dest='config',
+                        help='Name of configuration file',
+                        default=os.path.splitext(app_path)[0] + ".ini")
     args = parser.parse_args()
     return vars(args)
-    
+
     #parser.add_argument
     #return (configFile, useViewer, options)
 
-   
+
 if __name__ == "__main__":
-    gettext.install("app") # replace with the appropriate catalog name
+    gettext.install("app")  # replace with the appropriate catalog name
     options = handle_command_switches()
     app = wx.PySimpleApp(0)
     wx.InitAllImageHandlers()

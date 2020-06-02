@@ -11,15 +11,16 @@ import traceback
 import unittest
 from Host.Pipeline.EthaneAggregation import EthaneAggregation
 
+
 def distVincenty(lat1, lon1, lat2, lon2):
     # WGS-84 ellipsiod. lat and lon in DEGREES
     a = 6378137
     b = 6356752.3142
-    f = 1/298.257223563
-    toRad = pi/180.0
-    L = (lon2-lon1)*toRad
-    U1 = arctan((1-f) * tan(lat1*toRad))
-    U2 = arctan((1-f) * tan(lat2*toRad))
+    f = 1 / 298.257223563
+    toRad = pi / 180.0
+    L = (lon2 - lon1) * toRad
+    U1 = arctan((1 - f) * tan(lat1 * toRad))
+    U2 = arctan((1 - f) * tan(lat2 * toRad))
     sinU1 = sin(U1)
     cosU1 = cos(U1)
     sinU2 = sin(U2)
@@ -30,35 +31,37 @@ def distVincenty(lat1, lon1, lat2, lon2):
     for _ in range(iterLimit):
         sinLambda = sin(Lambda)
         cosLambda = cos(Lambda)
-        sinSigma = sqrt((cosU2*sinLambda) * (cosU2*sinLambda) +
-                        (cosU1*sinU2-sinU1*cosU2*cosLambda) * (cosU1*sinU2-sinU1*cosU2*cosLambda))
+        sinSigma = sqrt((cosU2 * sinLambda) * (cosU2 * sinLambda) + (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda) *
+                        (cosU1 * sinU2 - sinU1 * cosU2 * cosLambda))
         if sinSigma == 0:
             return 0  # co-incident points
-        cosSigma = sinU1*sinU2 + cosU1*cosU2*cosLambda
+        cosSigma = sinU1 * sinU2 + cosU1 * cosU2 * cosLambda
         sigma = arctan2(sinSigma, cosSigma)
         sinAlpha = cosU1 * cosU2 * sinLambda / sinSigma
-        cosSqAlpha = 1 - sinAlpha*sinAlpha
+        cosSqAlpha = 1 - sinAlpha * sinAlpha
         if cosSqAlpha == 0:
             cos2SigmaM = 0
         else:
-            cos2SigmaM = cosSigma - 2*sinU1*sinU2/cosSqAlpha
-        C = f/16*cosSqAlpha*(4+f*(4-3*cosSqAlpha))
+            cos2SigmaM = cosSigma - 2 * sinU1 * sinU2 / cosSqAlpha
+        C = f / 16 * cosSqAlpha * (4 + f * (4 - 3 * cosSqAlpha))
         lambdaP = Lambda
         Lambda = L + (1-C) * f * sinAlpha * \
           (sigma + C*sinSigma*(cos2SigmaM+C*cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)))
-        if abs(Lambda-lambdaP) <= 1.e-12: break
+        if abs(Lambda - lambdaP) <= 1.e-12: break
     else:
         raise ValueError("Failed to converge")
 
-    uSq = cosSqAlpha * (a*a - b*b) / (b*b)
-    A = 1 + uSq/16384*(4096+uSq*(-768+uSq*(320-175*uSq)))
-    B = uSq/1024 * (256+uSq*(-128+uSq*(74-47*uSq)))
-    deltaSigma = B*sinSigma*(cos2SigmaM+B/4*(cosSigma*(-1+2*cos2SigmaM*cos2SigmaM)-
-                                            B/6*cos2SigmaM*(-3+4*sinSigma*sinSigma)*(-3+4*cos2SigmaM*cos2SigmaM)))
-    return b*A*(sigma-deltaSigma)
+    uSq = cosSqAlpha * (a * a - b * b) / (b * b)
+    A = 1 + uSq / 16384 * (4096 + uSq * (-768 + uSq * (320 - 175 * uSq)))
+    B = uSq / 1024 * (256 + uSq * (-128 + uSq * (74 - 47 * uSq)))
+    deltaSigma = B * sinSigma * (cos2SigmaM + B / 4 * (cosSigma * (-1 + 2 * cos2SigmaM * cos2SigmaM) - B / 6 * cos2SigmaM *
+                                                       (-3 + 4 * sinSigma * sinSigma) * (-3 + 4 * cos2SigmaM * cos2SigmaM)))
+    return b * A * (sigma - deltaSigma)
+
 
 class EthaneAggregationTest(unittest.TestCase):
     exclusion_radius = 20
+
     @classmethod
     def setUpClass(cls):
         myconfig = Config()
@@ -100,10 +103,9 @@ class EthaneAggregationTest(unittest.TestCase):
         for indication in self.indications:
             if indication["ACTIVE"]:
                 for member in indication["GROUP_RANKS"]:
-                    self.assertLessEqual(distVincenty(indication["GPS_ABS_LAT"],
-                                                      indication["GPS_ABS_LONG"],
-                                                      self.indications[member]["GPS_ABS_LAT"],
-                                                      self.indications[member]["GPS_ABS_LONG"]), self.exclusion_radius)
+                    self.assertLessEqual(
+                        distVincenty(indication["GPS_ABS_LAT"], indication["GPS_ABS_LONG"], self.indications[member]["GPS_ABS_LAT"],
+                                     self.indications[member]["GPS_ABS_LONG"]), self.exclusion_radius)
 
     def test_distances_between_representatives(self):
         lat_list = []
@@ -142,14 +144,15 @@ class EthaneAggregationTest(unittest.TestCase):
                     ethane_ratio_sdev.append(self.indications[member]["ETHANE_RATIO_SDEV"])
                 ethane_ratio = asarray(ethane_ratio)
                 ethane_ratio_sdev = asarray(ethane_ratio_sdev)
-                agg_ethane_ratio_sdev = sum(ethane_ratio_sdev ** (-2)) ** (-0.5)
-                agg_ethane_ratio = sum(ethane_ratio * ethane_ratio_sdev ** (-2)) / sum(ethane_ratio_sdev ** (-2))
+                agg_ethane_ratio_sdev = sum(ethane_ratio_sdev**(-2))**(-0.5)
+                agg_ethane_ratio = sum(ethane_ratio * ethane_ratio_sdev**(-2)) / sum(ethane_ratio_sdev**(-2))
                 self.assertAlmostEqual(agg_ethane_ratio, indication["AGG_ETHANE_RATIO"])
                 self.assertAlmostEqual(agg_ethane_ratio_sdev, indication["AGG_ETHANE_RATIO_SDEV"])
 
     def test_all_have_agg_dispositions(self):
         for indication in self.indications:
             self.assertIn("AGG_VERDICT", indication)
+
 
 if __name__ == "__main__":
     unittest.main()

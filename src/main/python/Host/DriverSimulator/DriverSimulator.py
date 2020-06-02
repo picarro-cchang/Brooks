@@ -23,8 +23,7 @@ import traceback
 import types
 
 from Host.autogen import interface
-from Host.Common import (
-    CmdFIFO, SchemeProcessor, SharedTypes, StringPickler, timestamp)
+from Host.Common import (CmdFIFO, SchemeProcessor, SharedTypes, StringPickler, timestamp)
 from Host.Common.Broadcaster import Broadcaster
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.SharedTypes import getSchemeTableClass, Operation,\
@@ -66,6 +65,7 @@ if hasattr(sys, "frozen"):  # we're running compiled with py2exe
 else:
     AppPath = sys.argv[0]
 
+
 def _reg_index(indexOrName):
     """Convert a name or index into an integer index, raising an exception if the name is not found"""
     if isinstance(indexOrName, types.IntType):
@@ -74,7 +74,7 @@ def _reg_index(indexOrName):
         try:
             return interface.registerByName[indexOrName.strip().upper()]
         except KeyError:
-            raise SharedTypes.DasException("Unknown register name %s" % (indexOrName,))
+            raise SharedTypes.DasException("Unknown register name %s" % (indexOrName, ))
 
 
 def _value(valueOrName):
@@ -83,7 +83,7 @@ def _value(valueOrName):
         valueOrName = str(valueOrName)
     if isinstance(valueOrName, types.StringType):
         try:
-            valueOrName = getattr(interface,valueOrName)
+            valueOrName = getattr(interface, valueOrName)
         except AttributeError:
             raise AttributeError("Value identifier not recognized %r" % valueOrName)
     return valueOrName
@@ -146,7 +146,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         laserTempLockStatus = "Locked" if allLasersTempLocked else "Unlocked"
         warmChamberTempLockStatus = "Locked" if (lockStatus & (1 << interface.DAS_STATUS_WarmBoxTempCntrlLockedBit)) else "Unlocked"
         cavityTempLockStatus = "Locked" if (lockStatus & (1 << interface.DAS_STATUS_CavityTempCntrlLockedBit)) else "Unlocked"
-        result = dict(laserTempLockStatus=laserTempLockStatus, warmChamberTempLockStatus=warmChamberTempLockStatus, cavityTempLockStatus = cavityTempLockStatus)
+        result = dict(laserTempLockStatus=laserTempLockStatus,
+                      warmChamberTempLockStatus=warmChamberTempLockStatus,
+                      cavityTempLockStatus=cavityTempLockStatus)
         # Override lock status if this is specified in the config file
         if "LockStatusOverride" in self.config:
             section = self.config["LockStatusOverride"]
@@ -176,24 +178,21 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def getProportionalValves(self):
         """Fetches settings of inlet and output proportional valves.
         """
-        return self.rdDasReg("VALVE_CNTRL_INLET_VALVE_REGISTER"),self.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_REGISTER")
+        return self.rdDasReg("VALVE_CNTRL_INLET_VALVE_REGISTER"), self.rdDasReg("VALVE_CNTRL_OUTLET_VALVE_REGISTER")
 
     def getCavityTemperatureAndSetpoint(self):
         """Fetches cavity temperature and setpoint
         """
-        return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
+        return self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"), self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")
 
     def getWarmingState(self):
         """Fetches warm box temperature, cavity temperature and cavity pressure with their setpoints"""
-        return dict(WarmBoxTemperature=(
-            self.rdDasReg("WARM_BOX_TEMPERATURE_REGISTER"),
-            self.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")),
-            CavityTemperature=(
-                self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),
-                self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
-            CavityPressure=(
-                self.rdDasReg("CAVITY_PRESSURE_REGISTER"),
-                self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
+        return dict(WarmBoxTemperature=(self.rdDasReg("WARM_BOX_TEMPERATURE_REGISTER"),
+                                        self.rdDasReg("WARM_BOX_TEMP_CNTRL_SETPOINT_REGISTER")),
+                    CavityTemperature=(self.rdDasReg("CAVITY_TEMPERATURE_REGISTER"),
+                                       self.rdDasReg("CAVITY_TEMP_CNTRL_SETPOINT_REGISTER")),
+                    CavityPressure=(self.rdDasReg("CAVITY_PRESSURE_REGISTER"),
+                                    self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")))
 
     def getValveCtrlState(self):
         """Get the current valve control state. Valid values are:
@@ -208,14 +207,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """ Start outlet valve control with the specified pressure setpoint and inlet valve settings, or using values in the configuration registers if the parameters are omitted """
         result = {}
         if pressureSetpoint is not None:
-            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", pressureSetpoint)
         else:
             pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
         if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_OutletControlState:
-            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
-        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_OutletControlState")
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_OutletControlState")
         if inletValve is not None:
-            self.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER",inletValve)
+            self.wrDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER", inletValve)
         else:
             inletValve = self.rdDasReg("VALVE_CNTRL_USER_INLET_VALVE_REGISTER")
         result["cavityPressureSetpoint"] = pressureSetpoint
@@ -226,14 +225,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
         """ Start inlet valve control with the specified pressure setpoint and outlet valve settings, or using values in the configuration registers if the parameters are omitted """
         result = {}
         if pressureSetpoint is not None:
-            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER",pressureSetpoint)
+            self.wrDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER", pressureSetpoint)
         else:
             pressureSetpoint = self.rdDasReg("VALVE_CNTRL_CAVITY_PRESSURE_SETPOINT_REGISTER")
         if self.rdDasReg("VALVE_CNTRL_STATE_REGISTER") != interface.VALVE_CNTRL_InletControlState:
-            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_DisabledState")
-        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER","VALVE_CNTRL_InletControlState")
+            self.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_DisabledState")
+        self.wrDasReg("VALVE_CNTRL_STATE_REGISTER", "VALVE_CNTRL_InletControlState")
         if outletValve is not None:
-            self.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER",outletValve)
+            self.wrDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER", outletValve)
         else:
             outletValve = self.rdDasReg("VALVE_CNTRL_USER_OUTLET_VALVE_REGISTER")
         result["cavityPressureSetpoint"] = pressureSetpoint
@@ -258,8 +257,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
 
     def dasGetTicks(self):
         sender = self.dasSimulator.hostToDspSender
-        sender.doOperation(Operation("ACTION_GET_TIMESTAMP", ["TIMESTAMP_LSB_REGISTER","TIMESTAMP_MSB_REGISTER"]))
-        return self.rdDasReg("TIMESTAMP_MSB_REGISTER")<<32L | self.rdDasReg("TIMESTAMP_LSB_REGISTER")
+        sender.doOperation(Operation("ACTION_GET_TIMESTAMP", ["TIMESTAMP_LSB_REGISTER", "TIMESTAMP_MSB_REGISTER"]))
+        return self.rdDasReg("TIMESTAMP_MSB_REGISTER") << 32L | self.rdDasReg("TIMESTAMP_LSB_REGISTER")
 
     def getConfigFile(self):
         configFile = os.path.normpath(os.path.abspath(self.driver.instrConfig.filename))
@@ -288,8 +287,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         config = self.driver.instrConfig
         config.reloadFile()
         config.loadPersistentRegistersFromConfig()
-        Log("Loaded instrument configuration from file %s" %
-            config.filename, Level=1)
+        Log("Loaded instrument configuration from file %s" % config.filename, Level=1)
 
     def rdDasReg(self, regIndexOrName):
         return self.driver.rdDasReg(regIndexOrName)
@@ -325,9 +323,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
         assert isinstance(schemeNum, (int, long))
         schemeTable = self.driver.schemeTables[schemeNum]
         # Read from scheme table schemeNum
-        return {"numRepeats": schemeTable.numRepeats,
-                "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser,
-                               row.threshold, row.pztSetpoint, 0.001 * row.laserTemp) for row in schemeTable.rows]}
+        return {
+            "numRepeats":
+            schemeTable.numRepeats,
+            "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser, row.threshold, row.pztSetpoint,
+                            0.001 * row.laserTemp) for row in schemeTable.rows]
+        }
 
     def rdValveSequence(self):
         """Reads the valve sequence table"""
@@ -337,7 +338,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             sequenceRows.append(((entry.maskAndValue >> 8) & 0xFF, entry.maskAndValue & 0xFF, entry.dwell))
         return sequenceRows
 
-    def restoreRegValues(self,vault):
+    def restoreRegValues(self, vault):
         # Restore register values stored in the vault (produced by saveRegValues)
         for reg, value in vault:
             if isinstance(reg, (tuple, list)):
@@ -371,16 +372,16 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def scanIdle(self):
         return self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState
 
-    def selectActualLaser(self,aLaserNum):
+    def selectActualLaser(self, aLaserNum):
         # Select laserNum, placing it under automatic control and activating the optical switch. The value
         #  of aLaserNum is ONE-based
         injControl = self.rdFPGA("FPGA_INJECT", "INJECT_CONTROL")
         if aLaserNum <= 0 or aLaserNum > interface.MAX_LASERS:
             raise ValueError("aLaserNum must be in range 1..4 for selectActualLaser")
-        laserSel = (aLaserNum-1) << interface.INJECT_CONTROL_LASER_SELECT_B
-        laserMask = (interface.MAX_LASERS-1) << interface.INJECT_CONTROL_LASER_SELECT_B
+        laserSel = (aLaserNum - 1) << interface.INJECT_CONTROL_LASER_SELECT_B
+        laserMask = (interface.MAX_LASERS - 1) << interface.INJECT_CONTROL_LASER_SELECT_B
         injControl = (injControl & (~laserMask)) | laserSel
-        self.wrFPGA("FPGA_INJECT", "INJECT_CONTROL",injControl)
+        self.wrFPGA("FPGA_INJECT", "INJECT_CONTROL", injControl)
 
     def setMultipleNoRepeatScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_MODE_REGISTER, interface.SPECT_CNTRL_SchemeMultipleNoRepeatMode)
@@ -394,7 +395,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
     def shutDown(self):
         '''Place instrument in idle state for shutdown'''
         # Disable spectrum controller
-        self.wrDasReg('SPECT_CNTRL_STATE_REGISTER','SPECT_CNTRL_IdleState')
+        self.wrDasReg('SPECT_CNTRL_STATE_REGISTER', 'SPECT_CNTRL_IdleState')
         # Wait for all current controllers to leave automatic state
         auto = interface.LASER_CURRENT_CNTRL_AutomaticState
         while True:
@@ -406,30 +407,30 @@ class DriverRpcHandler(SharedTypes.Singleton):
             else:
                 time.sleep(0.1)
         # Close all solenoid valves
-        self.wrDasReg('VALVE_CNTRL_SOLENOID_VALVES_REGISTER',0)
+        self.wrDasReg('VALVE_CNTRL_SOLENOID_VALVES_REGISTER', 0)
         # Close proportional valves
-        self.wrDasReg('VALVE_CNTRL_STATE_REGISTER','VALVE_CNTRL_DisabledState')
+        self.wrDasReg('VALVE_CNTRL_STATE_REGISTER', 'VALVE_CNTRL_DisabledState')
         # Disable laser current control loops
-        self.wrDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
-        self.wrDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
-        self.wrDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
-        self.wrDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER','LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER', 'LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER', 'LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER', 'LASER_CURRENT_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER', 'LASER_CURRENT_CNTRL_DisabledState')
         # Ensure SOA is shorted and turn off laser currents in FPGA
-        self.wrFPGA('FPGA_INJECT','INJECT_CONTROL',0)
+        self.wrFPGA('FPGA_INJECT', 'INJECT_CONTROL', 0)
         # Disable all temperature controllers
-        self.wrDasReg('LASER1_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
-        self.wrDasReg('LASER2_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
-        self.wrDasReg('LASER3_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
-        self.wrDasReg('LASER4_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
-        self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER','TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER1_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER2_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER3_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
+        self.wrDasReg('LASER4_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
+        self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
         # Disable drive to warm box and hot box TECs
-        self.wrDasReg('TEC_CNTRL_REGISTER','TEC_CNTRL_Disabled')
+        self.wrDasReg('TEC_CNTRL_REGISTER', 'TEC_CNTRL_Disabled')
         # Disable proportional valve PWM
-        self.wrFPGA('FPGA_DYNAMICPWM_INLET','DYNAMICPWM_CS',0)
-        self.wrFPGA('FPGA_DYNAMICPWM_OUTLET','DYNAMICPWM_CS',0)
+        self.wrFPGA('FPGA_DYNAMICPWM_INLET', 'DYNAMICPWM_CS', 0)
+        self.wrFPGA('FPGA_DYNAMICPWM_OUTLET', 'DYNAMICPWM_CS', 0)
         # Turn off voltage to PZT
-        self.wrDasReg('ANALYZER_TUNING_MODE_REGISTER','ANALYZER_TUNING_LaserCurrentTuningMode')
-        self.wrFPGA('FPGA_TWGEN','TWGEN_PZT_OFFSET',0)
+        self.wrDasReg('ANALYZER_TUNING_MODE_REGISTER', 'ANALYZER_TUNING_LaserCurrentTuningMode')
+        self.wrFPGA('FPGA_TWGEN', 'TWGEN_PZT_OFFSET', 0)
 
     def startScan(self):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
@@ -440,20 +441,22 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for laserNum in xrange(1, interface.MAX_LASERS + 1):
             if self.driver.dasConfigure.installCheck("LASER%d_PRESENT" % laserNum) or \
                (laserNum == 4 and self.driver.dasConfigure.installCheck("SOA_PRESENT")):
-                self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum,interface.TEMP_CNTRL_EnabledState)
-        self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
-        if self.driver.dasConfigure.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_DELTA_TEMP,interface.HEATER_CNTRL_MODE_TEC_TARGET]:
-            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_EnabledState)
+                self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum, interface.TEMP_CNTRL_EnabledState)
+        self.wrDasReg("WARM_BOX_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_EnabledState)
+        self.wrDasReg("CAVITY_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_EnabledState)
+        if self.driver.dasConfigure.heaterCntrlMode in [
+                interface.HEATER_CNTRL_MODE_DELTA_TEMP, interface.HEATER_CNTRL_MODE_TEC_TARGET
+        ]:
+            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_EnabledState)
         elif self.driver.dasConfigure.heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
-            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER",interface.TEMP_CNTRL_ManualState)
+            self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_ManualState)
         self.wrDasReg("TEC_CNTRL_REGISTER", interface.TEC_CNTRL_Enabled)
-        for laserNum in xrange(1, interface.MAX_LASERS+1):
-            if self.driver.dasConfigure. installCheck("LASER%d_PRESENT" % laserNum):
-                self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum,interface.LASER_CURRENT_CNTRL_ManualState)
+        for laserNum in xrange(1, interface.MAX_LASERS + 1):
+            if self.driver.dasConfigure.installCheck("LASER%d_PRESENT" % laserNum):
+                self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, interface.LASER_CURRENT_CNTRL_ManualState)
 
     def stopScan(self):
-        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER,interface.SPECT_CNTRL_IdleState)
+        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
 
     def verifyInstallerId(self):
         return (self.driver.validInstallerId, self.driver.analyzerType, self.driver.installerId)
@@ -462,7 +465,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         return self.driver.wrDasReg(regIndexOrName, value, convert)
 
     def wrDasRegList(self, regList, values):
-        for r, value in zip(regList,values):
+        for r, value in zip(regList, values):
             self.wrDasReg(r, value)
 
     def wrFPGA(self, base, reg, value, convert=True):
@@ -475,7 +478,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
         config = self.driver.instrConfig
         config.savePersistentRegistersToConfig()
         name = config.writeConfig(filename)
-        Log("Saved instrument configuration to file %s" % (name,),Level=1)
+        Log("Saved instrument configuration to file %s" % (name, ), Level=1)
 
     def wrRegList(self, regList, values):
         for (regLoc, reg), value in zip(regList, values):
@@ -507,7 +510,7 @@ class DriverRpcHandler(SharedTypes.Singleton):
             schemeTable.rows[i].laserTemp = int(1000 * row[6]) if len(row) >= 7 else 0
         self.driver.schemeTables[schemeNum] = schemeTable
 
-    def wrValveSequence(self,sequenceRows):
+    def wrValveSequence(self, sequenceRows):
         """Writes a valve sequence"""
         if len(sequenceRows) > interface.NUM_VALVE_SEQUENCE_ENTRIES:
             raise ValueError("Maximum number of rows in a valve sequence is %d" % interface.NUM_VALVE_SEQUENCE_ENTRIES)
@@ -539,7 +542,8 @@ class DriverSimulator(SharedTypes.Singleton):
         analyzerSetupFile = os.path.join(basePath, self.config["Files"]["analyzerSetupFileName"])
         # Set up RPC port to supervisor
         self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                                     APP_NAME, IsDontCareConnection=False)
+                                                     APP_NAME,
+                                                     IsDontCareConnection=False)
         if not os.path.exists(analyzerSetupFile):
             print "Analyzer setup file not found: %s" % analyzerSetupFile
             sys.exit(0)
@@ -587,18 +591,13 @@ class DriverSimulator(SharedTypes.Singleton):
         # Set up RPC handler
         self.rpcHandler = DriverRpcHandler(self)
         # Set up object to access master.ini file
-        self.instrConfig = InstrumentConfig(self.instrConfigFile, self.rdDasReg,
-                                            self.wrDasReg, self.rdFPGA, self.wrFPGA)
+        self.instrConfig = InstrumentConfig(self.instrConfigFile, self.rdDasReg, self.wrDasReg, self.rdFPGA, self.wrFPGA)
         # Set up object for streaming sensor data
         self.streamSaver = StreamSaver(self.config, basePath, maxStreamLines)
         self.rpcHandler._register_rpc_functions_for_object(self.streamSaver)
         # Set up the broadcasters for the sensor stream and the ringdown result stream
-        self.streamCast = Broadcaster(
-            port=SharedTypes.BROADCAST_PORT_SENSORSTREAM,
-            name="CRDI Stream Broadcaster", logFunc=Log)
-        self.resultsCast = Broadcaster(
-            port=SharedTypes.BROADCAST_PORT_RDRESULTS,
-            name="CRDI RD Results Broadcaster", logFunc=Log)
+        self.streamCast = Broadcaster(port=SharedTypes.BROADCAST_PORT_SENSORSTREAM, name="CRDI Stream Broadcaster", logFunc=Log)
+        self.resultsCast = Broadcaster(port=SharedTypes.BROADCAST_PORT_RDRESULTS, name="CRDI RD Results Broadcaster", logFunc=Log)
         self.lastSaveDasState = 0
         if self.autoStreamFile:
             self.streamSaver.openStreamFile()
@@ -611,7 +610,7 @@ class DriverSimulator(SharedTypes.Singleton):
         index = _reg_index(regIndexOrName)
         ri = interface.registerInfo[index]
         if not ri.readable:
-            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName,))
+            raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName, ))
         return self.dasSimulator.rdDasReg(regIndexOrName)
 
     def rdFPGA(self, base, reg):
@@ -622,9 +621,9 @@ class DriverSimulator(SharedTypes.Singleton):
             ts, msg = data
             if len(msg) > 2 and msg[1] == ':':
                 level = int(msg[0])
-                Log("%s" % (msg[2:],), Level=level)
+                Log("%s" % (msg[2:], ), Level=level)
             else:
-                Log("%s" % (msg,))
+                Log("%s" % (msg, ))
 
         def sensorProcessor(data):
             self.streamCast.send(StringPickler.ObjAsString(data))
@@ -633,7 +632,7 @@ class DriverSimulator(SharedTypes.Singleton):
             self.resultsCast.send(StringPickler.ObjAsString(data))
 
         messageHandler = SharedTypes.makeHandler(self.dasSimulator.getMessage, messageProcessor)
-        sensorHandler = SharedTypes.makeHandler(self.dasSimulator.getSensorData,  sensorProcessor)
+        sensorHandler = SharedTypes.makeHandler(self.dasSimulator.getSensorData, sensorProcessor)
         ringdownHandler = SharedTypes.makeHandler(self.dasSimulator.getRingdownData, ringdownProcessor)
 
         self.instrConfig.loadPersistentRegistersFromConfig()
@@ -678,8 +677,7 @@ class DriverSimulator(SharedTypes.Singleton):
                 Log("Driver RPC handler shut down")
             except:
                 type, value, trace = sys.exc_info()
-                Log("Unhandled Exception in main loop: %s: %s" % (str(type), str(value)),
-                    Verbose=traceback.format_exc(), Level=3)
+                Log("Unhandled Exception in main loop: %s: %s" % (str(type), str(value)), Verbose=traceback.format_exc(), Level=3)
                 # Request a restart from Supervisor via RPC call
                 restart = RequestRestart(APP_NAME)
                 if restart.requestRestart(APP_NAME) is True:
@@ -697,7 +695,7 @@ class DriverSimulator(SharedTypes.Singleton):
         index = _reg_index(regIndexOrName)
         ri = interface.registerInfo[index]
         if not ri.writable:
-            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName,))
+            raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName, ))
         return self.dasSimulator.wrDasReg(regIndexOrName, value, convert)
 
     def wrFPGA(self, base, reg, value, convert=True):
@@ -722,7 +720,7 @@ class InstrumentConfig(object):
             self.config["DAS_REGISTERS"] = {}
         for ri in interface.registerInfo:
             if ri.persistence:
-                self.config["DAS_REGISTERS"][ri.name]=self.rdDasReg(ri.name)
+                self.config["DAS_REGISTERS"][ri.name] = self.rdDasReg(ri.name)
         for fpgaMap, regList in interface.persistent_fpga_registers:
             self.config[fpgaMap] = {}
             for r in regList:
@@ -755,7 +753,7 @@ class InstrumentConfig(object):
                     try:
                         self.wrFPGA(fpgaMap, name, value)
                     except:
-                        Log("Error writing FPGA register %s in %s" % (name,fpgaMap), Level=2)
+                        Log("Error writing FPGA register %s in %s" % (name, fpgaMap), Level=2)
 
     def writeConfig(self, filename=None):
         if filename is None:
@@ -795,10 +793,9 @@ class StreamSaver(SharedTypes.Singleton):
     #  of an RPC handler at "observerRpcPort", passing the "observerToken"
     #  to this method.
     def registerStreamStatusObserver(self, observerRpcPort, observerToken):
-        if not(observerRpcPort in self.observerAccess):
+        if not (observerRpcPort in self.observerAccess):
             serverURI = "http://%s:%d" % ("localhost", observerRpcPort)
-            proxy = CmdFIFO.CmdFIFOServerProxy(serverURI,
-                                               ClientName="StreamStatusNotifier")
+            proxy = CmdFIFO.CmdFIFOServerProxy(serverURI, ClientName="StreamStatusNotifier")
         else:
             proxy = self.observerAccess[observerRpcPort][0]
         self.observerAccess[observerRpcPort] = (proxy, observerToken)
@@ -844,9 +841,9 @@ class StreamSaver(SharedTypes.Singleton):
 
     def getStreamFileStatus(self):
         status = "open" if self.h5 else "closed"
-        return dict(status=status,filename=self.fileName)
+        return dict(status=status, filename=self.fileName)
 
-    def _writeData(self,data):
+    def _writeData(self, data):
         if self.h5:
             row = self.table.row
             row["time"] = data.timestamp
@@ -854,7 +851,7 @@ class StreamSaver(SharedTypes.Singleton):
             row["value"] = data.value
             row.append()
             self.streamLines += 1
-            if data.timestamp-self.lastWrite > 5000:
+            if data.timestamp - self.lastWrite > 5000:
                 self.table.flush()
                 self.lastWrite = data.timestamp
             if self.maxStreamLines > 0 and self.streamLines >= self.maxStreamLines:
@@ -876,7 +873,7 @@ def printUsage():
 
 def handleCommandSwitches():
     shortOpts = 'h'
-    longOpts = ["help","ini="]
+    longOpts = ["help", "ini="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError, E:
@@ -885,7 +882,7 @@ def handleCommandSwitches():
     # assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
     for o, a in switches:
-        options.setdefault(o,a)
+        options.setdefault(o, a)
     if "/?" in args or "/h" in args:
         options.setdefault('-h', "")
     # Start with option defaults...
@@ -896,6 +893,7 @@ def handleCommandSwitches():
     if "--ini" in options:
         configFile = os.path.join(CONFIG_DIR, options["--ini"])
     return configFile
+
 
 def main():
     my_instance = SingleInstance(APP_NAME)

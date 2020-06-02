@@ -14,21 +14,16 @@ import shutil
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common import CmdFIFO
 import threading
-RPC_PORT_MEAS_SYSTEM        = 50070
-RPC_PORT_DATA_MANAGER       = 50160
-RPC_PORT_DATALOGGER         = 50090
+RPC_PORT_MEAS_SYSTEM = 50070
+RPC_PORT_DATA_MANAGER = 50160
+RPC_PORT_DATALOGGER = 50090
 APP_NAME = "FluxSwitcher"
 DEFAULT_CONFIG_NAME = "FluxSwitcher.ini"
 
-CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
-CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER,
-                                         APP_NAME,
-                                         IsDontCareConnection = False)
+CRDS_MeasSys = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_MEAS_SYSTEM, APP_NAME, IsDontCareConnection=False)
+CRDS_DataManager = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATA_MANAGER, APP_NAME, IsDontCareConnection=False)
+CRDS_DataLogger = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_DATALOGGER, APP_NAME, IsDontCareConnection=False)
+
 
 class FluxSwitcher(object):
     def __init__(self, configFile, supervisorConfigFile, flux=True):
@@ -65,16 +60,17 @@ class FluxSwitcher(object):
                 time.sleep(2.0)
         os.system("C:/WINDOWS/system32/taskkill.exe /IM QuickGui.exe /F")
         time.sleep(.1)
-        launchQuickGuiThread = threading.Thread(target = self._restartQuickGui)
+        launchQuickGuiThread = threading.Thread(target=self._restartQuickGui)
         launchQuickGuiThread.setDaemon(True)
         launchQuickGuiThread.start()
 
     def _restartQuickGui(self):
         print "C:/Picarro/G2000/HostExe/QuickGui.exe"
-        subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe","-c",self.guiIni])
+        subprocess.Popen(["C:/Picarro/G2000/HostExe/QuickGui.exe", "-c", self.guiIni])
         shutil.copy2(self.supervisorIni, self.startupSupervisorIni)
         if self.flux:
             shutil.copy2(self.supervisorIni, self.fluxSupervisorIni)
+
 
 if __name__ == "__main__":
     configFile, supervisorConfigFile, flux, type = sys.argv[1:]

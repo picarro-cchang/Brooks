@@ -19,8 +19,8 @@ from Host.Common.CustomConfigObj import CustomConfigObj
 
 EventManager.EventManagerProxy_Init('DataManagerPublisher')
 
-class DataManagerPublisher(object):
 
+class DataManagerPublisher(object):
     def __init__(self, configFile):
         if os.path.exists(configFile):
             print "Configuration file is loaded from %s" % configFile
@@ -37,9 +37,11 @@ class DataManagerPublisher(object):
         self.broadcastSocket.bind("tcp://127.0.0.1:%d" % SharedTypes.TCP_PORT_DATAMANAGER_ZMQ_PUB)
 
         self.queue = Queue.Queue()
-        self.listener = Listener.Listener(self.queue, SharedTypes.BROADCAST_PORT_DATA_MANAGER,
+        self.listener = Listener.Listener(self.queue,
+                                          SharedTypes.BROADCAST_PORT_DATA_MANAGER,
                                           StringPickler.ArbitraryObject,
-                                          streamFilter=self.jsonifyMeasurements, retry=True)
+                                          streamFilter=self.jsonifyMeasurements,
+                                          retry=True)
         #self.instrumentStatusListener = Listener.Listener(self.queue, SharedTypes.STATUS_PORT_INST_MANAGER,
         #                                                  AppStatus.STREAM_Status,
         #                                                  streamFilter=self.jsonifyStatus, retry=True)
@@ -96,8 +98,11 @@ Where the options can be a combination of the following:
 -c  Specify a different config file.  Default = "./DataManagerPublisher.ini"
 """
 
+
 def PrintUsage():
     print HELP_STRING
+
+
 def HandleCommandSwitches():
     import getopt
 
@@ -121,7 +126,7 @@ def HandleCommandSwitches():
     if "-h" in options or "--help" in options:
         PrintUsage()
         sys.exit(0)
-    
+
     #Start with option defaults...
     configFile = "DataManagerPublisher.ini"
 
@@ -130,7 +135,8 @@ def HandleCommandSwitches():
         print "Config file specified at command line: %s" % configFile
 
     return configFile
-    
+
+
 if __name__ == "__main__":
     configFile = HandleCommandSwitches()
     pub = DataManagerPublisher(configFile)

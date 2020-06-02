@@ -32,8 +32,7 @@ else:
     AppPath = sys.argv[0]
 
 
-class UsbTransferTests (object):
-
+class UsbTransferTests(object):
     def __init__(self, configFile):
         self.config = configobj.ConfigObj(configFile)
         basePath = os.path.split(configFile)[0]
@@ -63,15 +62,15 @@ class UsbTransferTests (object):
                 start = time.time()
                 for _ in range(100):
                     usb.hpiRead(hostDasInterface.SENSOR_BASE, byte16Array)
-                print "Time to read 16 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0),)
+                print "Time to read 16 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0), )
                 byte256Array = (ctypes.c_byte * 256)()
                 for _ in range(100):
                     usb.hpiRead(hostDasInterface.SENSOR_BASE, byte256Array)
-                print "Time to read 256 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0),)
+                print "Time to read 256 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0), )
                 byte4096Array = (ctypes.c_byte * 4096)()
                 for _ in range(100):
                     usb.hpiRead(hostDasInterface.SENSOR_BASE, byte4096Array)
-                print "Time to read 4096 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0),)
+                print "Time to read 4096 element byte array %f ms" % (1000.0 * ((time.time() - start) / 100.0), )
             finally:
                 pass
         finally:
@@ -83,6 +82,7 @@ def handleCommandSwitches():
     defaultConfig = os.path.join(os.path.dirname(AppPath), "Driver.ini")
     parser.add_option("-c", dest="configFile", default=defaultConfig, help="Configuration file [%s]" % defaultConfig)
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     options, args = handleCommandSwitches()

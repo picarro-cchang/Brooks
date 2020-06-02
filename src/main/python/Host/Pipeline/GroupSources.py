@@ -2,7 +2,9 @@ import itertools
 import numpy as np
 
 from traitlets import (Bool, Enum, Float, HasTraits, Instance, Integer)
-from traitlets.config import (Configurable,)
+from traitlets.config import (
+    Configurable, )
+
 
 class CompositeVerdict(Configurable):
     state = Enum(['NONE', 'POSSIBLE_NATURAL_GAS', 'NOT_NATURAL_GAS', 'NATURAL_GAS'], default_value="NONE")
@@ -23,6 +25,7 @@ class CompositeVerdict(Configurable):
             self.ethane_ratio = ethane_ratio
             self.ethane_ratio_sdev = ethane_ratio_sdev
             self.confidence = confidence
+
         if self.state == 'NONE':
             replace_values()
         elif self.state == 'POSSIBLE_NATURAL_GAS':
@@ -40,6 +43,7 @@ class CompositeVerdict(Configurable):
                 replace_values()
         else:
             raise ValueError("Bad state", self.state)
+
 
 class SourceAggregator(Configurable):
     """Calculate the best ways of aggregating the given measurements
@@ -64,7 +68,7 @@ class SourceAggregator(Configurable):
             if source - max_sources > 1:
                 return False
             max_sources = max(max_sources, source)
-        return max_sources == num_sources-1
+        return max_sources == num_sources - 1
 
     def group_stats(self, sources):
         num_sources = max(sources) + 1
@@ -73,15 +77,15 @@ class SourceAggregator(Configurable):
         for meas_num, source in enumerate(sources):
             weight = self.uncertainties[meas_num]**(-2)
             weights[source] += weight
-            totals[source] += self.measurements[meas_num]*weight
-        group_means = totals/weights
-        group_uncertainties = 1.0/np.sqrt(weights)
+            totals[source] += self.measurements[meas_num] * weight
+        group_means = totals / weights
+        group_uncertainties = 1.0 / np.sqrt(weights)
         return group_means, group_uncertainties
 
     def weighted_combination(self, measurements, uncertainties):
         weights = uncertainties**(-2)
         wtot = sum(weights)
-        average = sum(weights * measurements)/wtot
+        average = sum(weights * measurements) / wtot
         uncertainty = wtot**(-0.5)
         return average, uncertainty
 
@@ -108,20 +112,22 @@ class SourceAggregator(Configurable):
             while len(measurements_sorted) > self.max_candidates:
                 # Find measurements that are closest together and coalasce them
                 closest = np.argmin(np.diff(measurements_sorted))
-                average, uncertainty = self.weighted_combination(measurements_sorted[closest:closest+2], uncertainties_sorted[closest:closest+2])
-                measurements_sorted = np.concatenate((measurements_sorted[:closest], [average], measurements_sorted[closest+2:]))
-                uncertainties_sorted = np.concatenate((uncertainties_sorted[:closest], [uncertainty], uncertainties_sorted[closest+2:]))
+                average, uncertainty = self.weighted_combination(measurements_sorted[closest:closest + 2],
+                                                                 uncertainties_sorted[closest:closest + 2])
+                measurements_sorted = np.concatenate((measurements_sorted[:closest], [average], measurements_sorted[closest + 2:]))
+                uncertainties_sorted = np.concatenate(
+                    (uncertainties_sorted[:closest], [uncertainty], uncertainties_sorted[closest + 2:]))
             self.measurements = measurements_sorted
             self.uncertainties = uncertainties_sorted
             num_measurements = len(self.measurements)
 
-        prior = self.prior_prob_factor_per_source ** np.arange(num_measurements + 1)
+        prior = self.prior_prob_factor_per_source**np.arange(num_measurements + 1)
 
         merit = {}
         max_merit = -float('inf')
         num_sources_max = min(num_measurements, self.max_sources)
 
-        for num_sources in range(1, num_sources_max+1):
+        for num_sources in range(1, num_sources_max + 1):
             merit[num_sources] = {}
             # Iterate through ways of dividing the measurements among the sources
             for sources in itertools.product(range(num_sources), repeat=num_measurements):
@@ -129,13 +135,13 @@ class SourceAggregator(Configurable):
                     group_means, group_uncertainties = self.group_stats(sources)
                     # Calculate merit in terms of log probabilities to avoid overflow
                     if self.ignore_source_range:
-                        merit[num_sources][sources] = (np.log(prior[num_sources]) +
-                                                       0.5*np.sum((group_means/group_uncertainties)**2))
+                        merit[num_sources][sources] = (np.log(prior[num_sources]) + 0.5 * np.sum(
+                            (group_means / group_uncertainties)**2))
                     else:
-                        merit[num_sources][sources] = (np.log(prior[num_sources] *
-                                                              (np.sqrt(2 * np.pi) / self.source_range) ** num_sources *
-                                                              np.prod(group_uncertainties)) +
-                                                       0.5*np.sum((group_means/group_uncertainties)**2))
+                        merit[num_sources][sources] = (
+                            np.log(prior[num_sources] *
+                                   (np.sqrt(2 * np.pi) / self.source_range)**num_sources * np.prod(group_uncertainties)) +
+                            0.5 * np.sum((group_means / group_uncertainties)**2))
                     #merit[num_sources][sources] = (np.log(prior[num_sources] *
                     #                                      (np.sqrt(2 * np.pi) / self.source_range) ** num_sources) +
                     #                               0.5*np.sum((group_means/group_uncertainties)**2))
@@ -144,7 +150,7 @@ class SourceAggregator(Configurable):
                 max_merit = max(max_merit, merit[num_sources][sources])
 
         # Exponentiate the merit
-        for num_sources in range(1, num_sources_max+1):
+        for num_sources in range(1, num_sources_max + 1):
             for sources in merit[num_sources]:
                 merit[num_sources][sources] = np.exp(merit[num_sources][sources] - max_merit)
 
@@ -153,13 +159,13 @@ class SourceAggregator(Configurable):
         for num_sources in range(1, num_sources_max + 1):
             prob_num[num_sources] = sum(merit[num_sources].values())
         tot_prob = sum(prob_num.values())
-        for num_sources in range(1, num_sources_max+1):
+        for num_sources in range(1, num_sources_max + 1):
             prob_num[num_sources] /= tot_prob
         # Find hypotheses with largest values of merit
         hypotheses = []
-        for num_sources in range(1, num_sources_max+1):
+        for num_sources in range(1, num_sources_max + 1):
             for key in merit[num_sources]:
-                hypotheses.append((merit[num_sources][key]/tot_prob, num_sources, key))
+                hypotheses.append((merit[num_sources][key] / tot_prob, num_sources, key))
         hypotheses.sort()
         hypotheses.reverse()
         return hypotheses
@@ -177,7 +183,7 @@ class SourceAggregator(Configurable):
         source_means, source_uncertainties = self.group_stats(assignment)
         groups = []
         for i in range(num_sources):
-            members = [j+1 for j in range(len(self.measurements)) if assignment[j] == i]
+            members = [j + 1 for j in range(len(self.measurements)) if assignment[j] == i]
             groups.append(dict(measurements=members, mean=source_means[i], uncertainty=source_uncertainties[i]))
         return dict(probability=prob, groups=groups)
 
@@ -189,6 +195,7 @@ class SourceAggregator(Configurable):
         print "Probability %.3g: %d sources" % (assignment["probability"], len(assignment["groups"]))
         for i, group in enumerate(assignment["groups"]):
             print "Source %d %s: %g +/- %g" % (i, group["measurements"], group["mean"], group["uncertainty"])
+
 
 if __name__ == "__main__":
     measurements = np.array([-0.038, 0.008, 0.005, 0.008, 0.009, 0.004, 0.038])

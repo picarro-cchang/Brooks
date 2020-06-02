@@ -2,6 +2,7 @@ import collections
 from enum import Enum
 from terminaltables import AsciiTable
 
+
 class GasEnum(Enum):
     Air = 1
     CH4 = 2
@@ -11,6 +12,7 @@ class GasEnum(Enum):
     NH3 = 6
     H2O = 7
 
+
 # ComponentGas
 # Object to contain the details of one gas component in a mixture.
 # For example if the reference gas is zero air, one component might be CO2
@@ -19,11 +21,11 @@ class GasEnum(Enum):
 #
 class ComponentGas(object):
     def __init__(self):
-        self.gasName = ""           # Human readable name, free form
-        self.gasType = ""           # GasEnum enum for defined gases
-        self.gasConcPpm = 0.0       # Vendor reported gas conc in PPM
-        self.gasAccPercent = 0.0    # Vendor reproted gas accuracy/uncertainty in %.
-                                    # Usual vendor values are 0.5, 1, 2, 5 %
+        self.gasName = ""  # Human readable name, free form
+        self.gasType = ""  # GasEnum enum for defined gases
+        self.gasConcPpm = 0.0  # Vendor reported gas conc in PPM
+        self.gasAccPercent = 0.0  # Vendor reproted gas accuracy/uncertainty in %.
+        # Usual vendor values are 0.5, 1, 2, 5 %
         return
 
     def setGasType(self, type):
@@ -68,26 +70,27 @@ class ComponentGas(object):
     def getGasAccPercent(self):
         return self.gasAccPercent
 
+
 # ReferenceGas
 # Represents a gas source that has one or more ComponentGas object.
 # This object also contains information about the source such as
 # the vendor name and serial number.
 #
 class ReferenceGas(object):
-    def __init__(self, gasDict, key = ""):
-        self.key = key          # Key (or section name like GAS0) in the ini file
-        self.tankName = ""      # Human readable name like '2ppm CH4 in N2', free form
-        self.tankVendor = ""    # Supplier
-        self.tankSN = ""        # Tank serial number or some other unique identifier
-        self.tankDesc = ""      # Free form field for any user input
+    def __init__(self, gasDict, key=""):
+        self.key = key  # Key (or section name like GAS0) in the ini file
+        self.tankName = ""  # Human readable name like '2ppm CH4 in N2', free form
+        self.tankVendor = ""  # Supplier
+        self.tankSN = ""  # Tank serial number or some other unique identifier
+        self.tankDesc = ""  # Free form field for any user input
         self.gasDict = gasDict  # Save the dict for writing changes back to disk
-        self.zeroAir = "No"     # Zero Air needs special treatment in the analysis, use as a string, "Yes" or "No"
+        self.zeroAir = "No"  # Zero Air needs special treatment in the analysis, use as a string, "Yes" or "No"
 
         # Store the component gases in the order that they appear in the task
         # manager ini file.  The order here sets the order that the gases appear in
         # the reference gas editor GUI.  It is assumed that the first component is
         # the molecule that we want to measure.
-        self.components = collections.OrderedDict()    # Collection of GasComponent objects
+        self.components = collections.OrderedDict()  # Collection of GasComponent objects
 
         if "Name" in gasDict:
             self.tankName = gasDict["Name"]
@@ -112,13 +115,13 @@ class ReferenceGas(object):
             else:
                 component.append(gasDict["Component"])
         except KeyError as e:
-            print("ReferenceGas.py - no defined component gases. Exception: %s" %e)
+            print("ReferenceGas.py - no defined component gases. Exception: %s" % e)
             exit(1)
 
         try:
             if isinstance(gasDict["Concentration"], list):
                 list1 = [0.0 if (i < 0 or i > 1e6) else i for i in gasDict["Concentration"]]
-                print("list:",list1)
+                print("list:", list1)
                 concentration.extend(gasDict["Concentration"])
             else:
                 if float(gasDict["Concentration"]) >= 0 and float(gasDict["Concentration"]) <= 1e6:
@@ -126,7 +129,7 @@ class ReferenceGas(object):
                 else:
                     concentration.append(0.0)
         except KeyError as e:
-            print("ReferenceGas.py - no defined gas concentrations. Exception: %s" %e)
+            print("ReferenceGas.py - no defined gas concentrations. Exception: %s" % e)
             exit(1)
 
         try:
@@ -137,7 +140,7 @@ class ReferenceGas(object):
         except KeyError as e:
             uncertainty = ["Unk"] * len(component)
 
-        if not component  or not concentration:
+        if not component or not concentration:
             print("ReferenceGas.py - A gas component or concentration field is empty.")
             exit(1)
         if len(component) != len(concentration):
@@ -183,7 +186,7 @@ class ReferenceGas(object):
         return d
 
     def getGasDetails(self):
-        d = {} #collections.OrderedDict()
+        d = {}  #collections.OrderedDict()
         d["Tank_Name"] = self.tankName
         d["Tank_Serial_Number"] = self.tankSN
         d["Tank_Description"] = self.tankDesc

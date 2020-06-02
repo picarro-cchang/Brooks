@@ -1,10 +1,10 @@
 import asyncore
 import logging
 
+
 class TcpServer(asyncore.dispatcher):
     """Receives connections and establishes handlers for each client.
     """
-
     def __init__(self, address):
         self.logger = logging.getLogger('TcpServer')
         asyncore.dispatcher.__init__(self)
@@ -36,9 +36,10 @@ class TcpServer(asyncore.dispatcher):
         self.close()
         return
 
+
 class GoAwayHandler(asyncore.dispatcher):
     """Tell client to go away and close the connection"""
-    def __init__(self,sock,chunk_size=256):
+    def __init__(self, sock, chunk_size=256):
         self.chunk_size = chunk_size
         self.logger = logging.getLogger('TcpHandler%s' % str(sock.getpeername()))
         asyncore.dispatcher.__init__(self, sock=sock)
@@ -61,10 +62,10 @@ class GoAwayHandler(asyncore.dispatcher):
         if not self.writable():
             self.handle_close()
 
+
 class TcpHandler(asyncore.dispatcher):
     """Handles echoing messages from a single client.
     """
-
     def __init__(self, sock, chunk_size=256):
         print "Creating new TcpHandler with sock %s" % sock
         self.chunk_size = chunk_size
@@ -99,14 +100,16 @@ class TcpHandler(asyncore.dispatcher):
         self.closed = True
         self.close()
 
+
 if __name__ == '__main__':
     import socket
 
-    logging.basicConfig(level=logging.DEBUG,
-                        format='%(name)s: %(message)s',
-                        )
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(name)s: %(message)s',
+    )
 
-    address = ('localhost', 50000) # let the kernel give us a port
+    address = ('localhost', 50000)  # let the kernel give us a port
     server = TcpServer(address)
 
     asyncore.loop()

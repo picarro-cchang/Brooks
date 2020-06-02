@@ -3,6 +3,7 @@ from email.MIMEText import MIMEText
 import smtplib
 COMMASPACE = ', '
 
+
 class AlarmEmail(object):
     def __init__(self, toAddrList=["alee@picarro.com"], fromAddr="alee@picarro.com"):
         self.smtpHostname = "woodstock.blueleaf.com"

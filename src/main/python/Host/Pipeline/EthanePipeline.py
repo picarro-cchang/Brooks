@@ -12,13 +12,13 @@ from traitlets import (Bool, Dict, Float, Instance, Integer, List, Unicode)
 from traitlets.config.application import Application
 
 from Host.Pipeline.Blocks import Pipeline
-from Host.Pipeline.PeaksBlocks import (AddDistanceBlock, BaselineFilterBlock, MinimumFilterBlock,
-                                       PeakFilterBlock, SpaceScaleAnalyzerBlock)
-from Host.Pipeline.UtilityBlocks import (AutoThresholdBlock,
-                                         FrameFetcherBlock, InterpolatorBlock, JoinerBlock,
-                                         LineCountBlock, PrinterBlock, ProcessStatusBlock)
-from Host.Pipeline.EthaneBlocks import (EthaneClassifier, EthaneComputationBlock, EthaneDispositionBlock,
-                                        JsonWriterBlock, VehicleExhaustClassifier)
+from Host.Pipeline.PeaksBlocks import (AddDistanceBlock, BaselineFilterBlock, MinimumFilterBlock, PeakFilterBlock,
+                                       SpaceScaleAnalyzerBlock)
+from Host.Pipeline.UtilityBlocks import (AutoThresholdBlock, FrameFetcherBlock, InterpolatorBlock, JoinerBlock, LineCountBlock,
+                                         PrinterBlock, ProcessStatusBlock)
+from Host.Pipeline.EthaneBlocks import (EthaneClassifier, EthaneComputationBlock, EthaneDispositionBlock, JsonWriterBlock,
+                                        VehicleExhaustClassifier)
+
 
 class EthanePipeline(Pipeline):
     addDistanceBlock = Instance(AddDistanceBlock)
@@ -40,17 +40,17 @@ class EthanePipeline(Pipeline):
     baseFilename = Unicode()
     dx = Float(1.0)  # Separation between points for distance interpolation
     # Parmeters for space-scale (peak) analysis
-    factor = Float(1.1)         # Factor between adjacent scales
-    sigmaMin = Float(2.0)       # Minimum half-width to consider for peak finding
-    sigmaMax = Float(20.0)      # Maximum half-width to consider for peak finding
+    factor = Float(1.1)  # Factor between adjacent scales
+    sigmaMin = Float(2.0)  # Minimum half-width to consider for peak finding
+    sigmaMax = Float(20.0)  # Maximum half-width to consider for peak finding
     # Parameters for peak filter
-    maxWidth = Float(20.0)      # Maximum half-width to allow for peak filtering
-    minAmpl = Float(0.035)      # Minimum amplitude for peak filtering
+    maxWidth = Float(20.0)  # Maximum half-width to allow for peak filtering
+    minAmpl = Float(0.035)  # Minimum amplitude for peak filtering
     # Parameters for high background (autothreshold) filtering
-    autoThresh = Bool(True)     # Enable or disable autothreshold
-    minimumFilterLength = Integer(51)   # Set distance range for minimum filter
-    baselineFilterLength = Integer(201) # Set distance range for calculating background standard deviation
-    autoThresholdOptions = Dict(default_value=dict(normWidthLo = 0.0, normWidthHi = 2.0, normAmplLo = 6.0, normAmplHi = 6.37))
+    autoThresh = Bool(True)  # Enable or disable autothreshold
+    minimumFilterLength = Integer(51)  # Set distance range for minimum filter
+    baselineFilterLength = Integer(201)  # Set distance range for calculating background standard deviation
+    autoThresholdOptions = Dict(default_value=dict(normWidthLo=0.0, normWidthHi=2.0, normAmplLo=6.0, normAmplHi=6.37))
 
     def __init__(self, **kwargs):
         super(EthanePipeline, self).__init__(**kwargs)
@@ -63,10 +63,10 @@ class EthanePipeline(Pipeline):
         self.processStatusBlock = ProcessStatusBlock(speciesList=[170])
         self.addDistanceBlock = AddDistanceBlock()
 
-        distanceInterpolatorOptions = dict(linInterpKeys=['EPOCH_TIME', 'CAR_VEL_N', 'CAR_VEL_E',
-                                                          'CAR_SPEED', 'WIND_N', 'WIND_E', 'WIND_DIR_SDEV',
-                                                          'CH4', 'C2H6', 'C2H4', 'GPS_ABS_LAT', 'GPS_ABS_LONG',
-                                                          'AnalyzerEthaneConcentrationUncertainty'],
+        distanceInterpolatorOptions = dict(linInterpKeys=[
+            'EPOCH_TIME', 'CAR_VEL_N', 'CAR_VEL_E', 'CAR_SPEED', 'WIND_N', 'WIND_E', 'WIND_DIR_SDEV', 'CH4', 'C2H6', 'C2H4',
+            'GPS_ABS_LAT', 'GPS_ABS_LONG', 'AnalyzerEthaneConcentrationUncertainty'
+        ],
                                            minInterpKeys=['GPS_FIT'],
                                            maxInterpKeys=['INST_STATUS', 'ValveMask', 'PATH_TYPE'])
         self.distanceInterpolatorBlock = InterpolatorBlock('DISTANCE', self.dx, **distanceInterpolatorOptions)
@@ -75,7 +75,6 @@ class EthanePipeline(Pipeline):
         nlevels = int(ceil((log(2 * self.sigmaMax * self.sigmaMax) - log(t0)) / log(self.factor))) + 1
         spaceScaleOptions = dict(dx=self.dx, minAmpl=self.minAmpl, t_0=t0, nlevels=nlevels, tfactor=self.factor)
         self.spaceScaleAnalyzerBlock = SpaceScaleAnalyzerBlock(**spaceScaleOptions)
-
 
         self.ethaneComputationBlock = EthaneComputationBlock(interval=self.dx, config=self.config)
         self.ethaneDispositionBlock = EthaneDispositionBlock(config=self.config)
@@ -108,6 +107,7 @@ class EthanePipeline(Pipeline):
         else:
             self.peakJoinerBlock.linkTo(self.peakFilterBlock)
         self.peakFilterBlock.linkTo(self.jsonWriterBlock)
+
 
 class EthanePipelineApp(Application):
     aliases = Dict(dict(config='EthanePipelineApp.config_file'))
@@ -162,8 +162,8 @@ class EthanePipelineApp(Application):
             except:
                 print traceback.format_exc()
 
+
 if __name__ == "__main__":
     app = EthanePipelineApp()
     app.initialize()
     app.start()
-

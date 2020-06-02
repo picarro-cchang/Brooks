@@ -13,6 +13,7 @@
 
 from ctypes import create_string_buffer, addressof, c_char, sizeof, memmove
 
+
 def ObjAsString(obj):
     """Takes a ctypes object (works on structures too) and returns it as a string"""
     # There is probably a better way, but this seems to work ok
@@ -21,15 +22,17 @@ def ObjAsString(obj):
     ptr = rawType.from_address(addressof(obj))
     return ptr.raw[:sz]
 
+
 def StringAsObject(aString, ObjType):
     """Takes a string and returns it as a ctypes object"""
     z = create_string_buffer(aString)
     x = ObjType()
-    memmove(addressof(x),addressof(z),sizeof(x))
+    memmove(addressof(x), addressof(z), sizeof(x))
     #x = ObjType.from_address(addressof(z))
     #x.__internal = z #ugly hack - save a ref to the buffer!
     del z
     return x
+
 
 import cPickle
 import binascii
@@ -37,20 +40,26 @@ import struct
 
 ID_COOKIE = "\x52\x00\x57\x00"
 
+
 class ArbitraryObjectErr(Exception):
     "Base class for erros in Arbitrary Object processing."
+
 
 class IncompletePacket(ArbitraryObjectErr):
     "String being unpacked is not a complete packet."
 
+
 class ChecksumErr(ArbitraryObjectErr):
     "Checksum does not match."
+
 
 class InvalidHeader(ArbitraryObjectErr):
     "First 4 bytes are not the expected cookie."
 
+
 class BadDataBlock(ArbitraryObjectErr):
     "Data block does not unpickle (but checksum matches!?)"
+
 
 class ArbitraryObject(object):
     """ID class for indicating when arbitrary object serialization should be used.
@@ -73,6 +82,7 @@ class ArbitraryObject(object):
 
     """
 
+
 def PackArbitraryObject(Obj):
     """Creates the full string output (length + data + checksum).
 
@@ -82,12 +92,10 @@ def PackArbitraryObject(Obj):
     data = cPickle.dumps(Obj, 1)
     dataChecksum = binascii.crc32(data)
     #print "checkSum = %r  data = %r" % (dataChecksum, data)
-    dataLen = 4 + 4 + len(data) + 4 #including cookie & len prefixes and crc suffix
-    packetStr = "%s%s%s%s" % (ID_COOKIE,
-                              struct.pack("=l", dataLen),
-                              data,
-                              struct.pack("=l", dataChecksum))
+    dataLen = 4 + 4 + len(data) + 4  #including cookie & len prefixes and crc suffix
+    packetStr = "%s%s%s%s" % (ID_COOKIE, struct.pack("=l", dataLen), data, struct.pack("=l", dataChecksum))
     return packetStr
+
 
 def UnPackArbitraryObject(String):
     """Strips a packed arbitrary object from the head of the string, returning

@@ -5,17 +5,17 @@ from glob import *
 import os.path
 
 dirName = raw_input("Directory with H5 spectral files? ")
-fnames = glob(os.path.join(dirName,"*.h5"))
+fnames = glob(os.path.join(dirName, "*.h5"))
 waveNumByRow = {}
 lossByRow = {}
 for fname in fnames:
-    h5 = openFile(fname,"r")
+    h5 = openFile(fname, "r")
     print fname
     data = h5.root.rdData.read()
     waveNum = data['waveNumber']
     loss = data['uncorrectedAbsorbance']
     schemeRow = data['schemeRow']
-    for i,row in enumerate(schemeRow):
+    for i, row in enumerate(schemeRow):
         if row not in waveNumByRow:
             waveNumByRow[row] = []
             lossByRow[row] = []
@@ -38,13 +38,13 @@ for row in sorted(waveNumByRow.keys()):
     std_loss.append(std(loss))
 
 figure()
-plot(mean_waveNum,mean_loss,'.')
+plot(mean_waveNum, mean_loss, '.')
 xlabel('Wavenumber')
 ylabel('Mean Loss')
 grid(True)
 
 figure()
-plot(mean_waveNum,std_loss,'.')
+plot(mean_waveNum, std_loss, '.')
 xlabel('Wavenumber')
 ylabel('StdDev Loss')
 grid(True)

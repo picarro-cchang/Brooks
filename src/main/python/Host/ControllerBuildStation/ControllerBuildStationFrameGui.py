@@ -18,7 +18,6 @@ from Host.ControllerBuildStation.ControllerBuildStationPanels import CommandLogP
 # end wxGlade
 
 
-
 class ControllerBuildStationFrameGui(wx.Frame):
     def __init__(self, *args, **kwds):
         # begin wxGlade: ControllerFrameGui.__init__
@@ -155,28 +154,29 @@ class ControllerBuildStationFrameGui(wx.Frame):
         self.Layout()
         # end wxGlade
 
-    def onUserInterface(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onUserInterface(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onUserInterface' not implemented!"
         event.Skip()
 
-    def onFullInterface(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onFullInterface(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onFullInterface' not implemented!"
         event.Skip()
 
-    def onClose(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onClose(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onClose' not implemented!"
         event.Skip()
 
-    def onLoadIni(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onLoadIni(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onLoadIni' not implemented!"
         event.Skip()
 
-    def onWriteIni(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onWriteIni(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onWriteIni' not implemented!"
         event.Skip()
 
-    def onAbout(self, event): # wxGlade: ControllerFrameGui.<event_handler>
+    def onAbout(self, event):  # wxGlade: ControllerFrameGui.<event_handler>
         print "Event handler `onAbout' not implemented!"
         event.Skip()
+
 
 # end of class ControllerFrameGui

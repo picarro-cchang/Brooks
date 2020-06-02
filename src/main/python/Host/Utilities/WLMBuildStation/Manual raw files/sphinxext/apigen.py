@@ -21,6 +21,7 @@ project."""
 import os
 import re
 
+
 # Functions and classes
 class ApiDocWriter(object):
     ''' Class for automatic detection and parsing of API docs
@@ -29,12 +30,13 @@ class ApiDocWriter(object):
     # only separating first two levels
     rst_section_levels = ['*', '=', '-', '~', '^']
 
-    def __init__(self,
-                 package_name,
-                 rst_extension='.rst',
-                 package_skip_patterns=None,
-                 module_skip_patterns=None,
-                 ):
+    def __init__(
+        self,
+        package_name,
+        rst_extension='.rst',
+        package_skip_patterns=None,
+        module_skip_patterns=None,
+    ):
         ''' Initialize package for parsing
 
         Parameters
@@ -91,8 +93,7 @@ class ApiDocWriter(object):
         self.root_path = self.root_module.__path__[0]
         self.written_modules = None
 
-    package_name = property(get_package_name, set_package_name, None,
-                            'get/set package_name')
+    package_name = property(get_package_name, set_package_name, None, 'get/set package_name')
 
     def _get_object_name(self, line):
         ''' Get second token in line
@@ -143,7 +144,7 @@ class ApiDocWriter(object):
         path = path.replace(self.package_name + os.path.sep, '')
         path = os.path.join(self.root_path, path)
         # XXX maybe check for extensions as well?
-        if os.path.exists(path + '.py'): # file
+        if os.path.exists(path + '.py'):  # file
             path += '.py'
         elif os.path.exists(os.path.join(path, '__init__.py')):
             path = os.path.join(path, '__init__.py')
@@ -163,12 +164,12 @@ class ApiDocWriter(object):
         filename = self._uri2path(uri)
         if filename is None:
             # nothing that we could handle here.
-            return ([],[])
+            return ([], [])
         f = open(filename, 'rt')
         functions, classes = self._parse_lines(f)
         f.close()
         return functions, classes
-    
+
     def _parse_lines(self, linesource):
         ''' Parse lines of text for functions and classes '''
         functions = []
@@ -206,18 +207,17 @@ class ApiDocWriter(object):
         # get the names of all classes and functions
         functions, classes = self._parse_module(uri)
         if not len(functions) and not len(classes):
-            print 'WARNING: Empty -',uri  # dbg
+            print 'WARNING: Empty -', uri  # dbg
             return ''
 
         # Make a shorter version of the uri that omits the package name for
-        # titles 
-        uri_short = re.sub(r'^%s\.' % self.package_name,'',uri)
-        
+        # titles
+        uri_short = re.sub(r'^%s\.' % self.package_name, '', uri)
+
         ad = '.. AUTO-GENERATED FILE -- DO NOT EDIT!\n\n'
 
         chap_title = uri_short
-        ad += (chap_title+'\n'+ self.rst_section_levels[1] * len(chap_title)
-               + '\n\n')
+        ad += (chap_title + '\n' + self.rst_section_levels[1] * len(chap_title) + '\n\n')
 
         # Set the chapter title to read 'module' for all modules except for the
         # main packages
@@ -291,8 +291,7 @@ class ApiDocWriter(object):
         elif match_type == 'package':
             patterns = self.package_skip_patterns
         else:
-            raise ValueError('Cannot interpret match type "%s"' 
-                             % match_type)
+            raise ValueError('Cannot interpret match type "%s"' % match_type)
         # Match to URI without package name
         L = len(self.package_name)
         if matchstr[:L] == self.package_name:
@@ -334,12 +333,10 @@ class ApiDocWriter(object):
         # raw directory parsing
         for dirpath, dirnames, filenames in os.walk(self.root_path):
             # Check directory names for packages
-            root_uri = self._path2uri(os.path.join(self.root_path,
-                                                   dirpath))
-            for dirname in dirnames[:]: # copy list - we modify inplace
+            root_uri = self._path2uri(os.path.join(self.root_path, dirpath))
+            for dirname in dirnames[:]:  # copy list - we modify inplace
                 package_uri = '.'.join((root_uri, dirname))
-                if (self._uri2path(package_uri) and
-                    self._survives_exclude(package_uri, 'package')):
+                if (self._uri2path(package_uri) and self._survives_exclude(package_uri, 'package')):
                     modules.append(package_uri)
                 else:
                     dirnames.remove(dirname)
@@ -347,12 +344,11 @@ class ApiDocWriter(object):
             for filename in filenames:
                 module_name = filename[:-3]
                 module_uri = '.'.join((root_uri, module_name))
-                if (self._uri2path(module_uri) and
-                    self._survives_exclude(module_uri, 'module')):
+                if (self._uri2path(module_uri) and self._survives_exclude(module_uri, 'module')):
                     modules.append(module_uri)
         return sorted(modules)
-    
-    def write_modules_api(self, modules,outdir):
+
+    def write_modules_api(self, modules, outdir):
         # write the list
         written_modules = []
         for m in modules:
@@ -360,8 +356,7 @@ class ApiDocWriter(object):
             if not api_str:
                 continue
             # write out to file
-            outfile = os.path.join(outdir,
-                                   m + self.rst_extension)
+            outfile = os.path.join(outdir, m + self.rst_extension)
             fileobj = open(outfile, 'wt')
             fileobj.write(api_str)
             fileobj.close()
@@ -389,8 +384,8 @@ class ApiDocWriter(object):
             os.mkdir(outdir)
         # compose list of modules
         modules = self.discover_modules()
-        self.write_modules_api(modules,outdir)
-        
+        self.write_modules_api(modules, outdir)
+
     def write_index(self, outdir, froot='gen', relative_to=None):
         """Make a reST API index file from written files
 
@@ -412,16 +407,16 @@ class ApiDocWriter(object):
         if self.written_modules is None:
             raise ValueError('No modules written')
         # Get full filename path
-        path = os.path.join(outdir, froot+self.rst_extension)
+        path = os.path.join(outdir, froot + self.rst_extension)
         # Path written into index is relative to rootpath
         if relative_to is not None:
             relpath = outdir.replace(relative_to + os.path.sep, '')
         else:
             relpath = outdir
-        idx = open(path,'wt')
+        idx = open(path, 'wt')
         w = idx.write
         w('.. AUTO-GENERATED FILE -- DO NOT EDIT!\n\n')
         w('.. toctree::\n\n')
         for f in self.written_modules:
-            w('   %s\n' % os.path.join(relpath,f))
+            w('   %s\n' % os.path.join(relpath, f))
         idx.close()
