@@ -72,6 +72,7 @@ class Listener(threading.Thread):
         self.logFunc = logFunc
         self.notify = notify
         self.retry = retry
+        self.rcvHwm = rcvHwm
 
         try:
             if StringPickler.ArbitraryObject in self.elementType.__mro__:
@@ -114,6 +115,7 @@ class Listener(threading.Thread):
                         self.socket = self.zmqContext.socket(zmq.SUB)
                         self.socket.connect("tcp://localhost:%s" % self.port)
                         self.socket.setsockopt(zmq.SUBSCRIBE, "")
+                        self.socket.setsockopt(zmq.RCVHWM, self.rcvHwm)
                         poller.register(self.socket, zmq.POLLIN)
                         self.safeLog("Connection made by %s to port %d." % (self.name, self.port))
                     except Exception:

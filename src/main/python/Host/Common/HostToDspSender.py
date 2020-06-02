@@ -101,7 +101,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
 
     def setTimeout(self, timeout=None):
         """Set timeout for checking status.
-        
+
         Args:
             timeout: Timeout for checking status in seconds
         """
@@ -110,7 +110,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
 
     def program(self, fileName):
         """Program the DSP.
-        
+
         Args:
             fileName: Name of file with DSP program
         """
@@ -139,10 +139,10 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             HOST[len(data)+2]: CRC32
 
         Args:
-            command: Specifies which action is to be carried out 
+            command: Specifies which action is to be carried out
             data: Payload which is an enumerable object whose elements are either integers or floats
             env: Optional environment address for the action
-            
+
         Returns: Status code
         """
         assert isinstance(command, (int, long))
@@ -251,8 +251,8 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def wrBlock(self, offset, *values):
         """Write a block of data to the DSP.
-        
-        Args: One or more quantities (int or float) to be written. Strings are looked up in the 
+
+        Args: One or more quantities (int or float) to be written. Strings are looked up in the
             interface file, so symbolic constants may also be passed.
         """
         offset = lookup(offset)
@@ -273,7 +273,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
 
     def wrRegFloat(self, reg, value):
         """Write a 32-bit floating point value to the specified DSP register.
-        
+
         Args:
             reg: Name or index of DSP register
             value: Floating point quantity to be written
@@ -282,7 +282,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
 
     def wrRegUint(self, reg, value):
         """Write a 32-bit integer value to the specified DSP register.
-        
+
         Args:
             reg: Name or index of DSP register
             value: Integer quantity to be written
@@ -292,11 +292,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdBlock(self, offset, numInt):
         """Reads a block of DSP memory into a list of unsigned 32-bit integers.
-        
+
         Args:
             offset: Word address in DSP shared memory area
             numInt: Number of 32-bit words to read
-        
+
         Returns: List of 32-bit unsigned integers
         """
         assert isinstance(offset, (int, long, str, unicode))
@@ -309,10 +309,10 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdRegFloat(self, reg):
         """Reads a single DSP register as a floating point number.
-        
+
         Args:
             reg: Register name or index
-        
+
         Returns: Floating point value
         """
         assert isinstance(reg, (int, long, str, unicode))
@@ -323,10 +323,10 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdRegUint(self, reg):
         """Reads a single DSP register as an unsigned 32-bit number.
-        
+
         Args:
             reg: Register name or index
-        
+
         Returns: Unsigned integer value
         """
         assert isinstance(reg, (int, long, str, unicode))
@@ -337,11 +337,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdFPGA(self, base, reg):
         """Reads a single FPGA register as an unsigned 32-bit number.
-        
+
         Args:
             base: FPGA block base address (can be symbolic)
             reg: Register within the block (can be symbolic)
-        
+
         Returns: Unsigned integer value
         """
         assert isinstance(base, (int, long, str, unicode))
@@ -353,7 +353,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def wrFPGA(self, base, reg, value):
         """Writes a single FPGA register as an unsigned 32-bit number.
-        
+
         Args:
             base: FPGA block base address (can be symbolic)
             reg: Register within the block (can be symbolic)
@@ -367,11 +367,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdDspMemArray(self, byteAddr, nwords=1):
         """Reads multiple words from DSP memory into a c_uint array.
-        
+
         Args:
-            byteAddr: Byte address in DSP memory 
+            byteAddr: Byte address in DSP memory
             nwords: Number of 32-bit unsigned integers to read
-        
+
         Returns: Array of (c_unint * nwords) containing data
         """
         result = (c_uint * nwords)()
@@ -381,30 +381,48 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdRingdownMemArray(self, offset, nwords=1):
         """Reads multiple words from ringdown area of DSP memory into a c_uint array.
-        
+
         Args:
             offset: Word offset into ringdown area of DSP memory
             nwords: Number of 32-bit unsigned integers to read
-        
+
         Returns: Array of (c_unint * nwords) containing data
         """
         result = (c_uint * nwords)()
         self.dspAccessor.hpiRead(interface.RDMEM_ADDRESS + 4 * offset, result)
         return result
 
-    ############################################################################
+    @usbLockProtect
+    def rdRingdownMem(self, offset):
+        """Reads single uint from ringdown memory"""
+        result = c_uint(0)
+        self.dspAccessor.hpiRead(interface.RDMEM_ADDRESS + 4 * offset, result)
+        return result.value
+
+    @usbLockProtect
+    def wrRingdownMem(self, offset, value):
+        """Writes single uint value to ringdown memory"""
+        result = c_uint(value)
+        self.dspAccessor.hpiWrite(interface.RDMEM_ADDRESS + 4 * offset, result)
+
+    @usbLockProtect
+    def wrRingdownMemArray(self, offset, array):
+        """Writes uint array to ringdown memory"""
+        self.dspAccessor.hpiWrite(interface.RDMEM_ADDRESS + 4 * offset, array)
+
+    ##########################################################################
     # The following methods are used to transfer data from the DSP to the host
     #  within the main loop of the driver
-    ############################################################################
+    ##########################################################################
 
     @usbLockProtect
     def rdSensorData(self, index):
         """Reads one entry from sensor data area in DSP memory.
-        
+
         Args:
-            index: Index of the entry within the sensor data area 
+            index: Index of the entry within the sensor data area
                 (in range 0 through interface.NUM_SENSOR_ENTRIES-1)
-            
+
         Returns: A SensorEntryType object containing the entry. This consists
             of 16 bytes (64 bit timestamp, 32 bit stream index and 32 bit data)
         """
@@ -418,14 +436,14 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdSensorDataBlock(self, index):
         """Reads a block of entries from the sensor data area in DSP memory.
-        
+
         The number of entries read is such that the returned array has size close to 512 bytes,
             which is the USB packet size. However, we never fetch past the end of the sensor data
             area which is of length interface.NUM_SENSOR_ENTRIES
-            
+
         Args:
             index: Starting entry to place in block.
-        
+
         Returns: An array of SensorEntryType objects
         """
         assert isinstance(index, (int, long))
@@ -437,11 +455,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdRingdownData(self, index):
         """Reads one entry from ringdown data area in DSP memory.
-        
+
         Args:
-            index: Index of the entry within the ringdown data area 
+            index: Index of the entry within the ringdown data area
                 (in range 0 through interface.NUM_RINGDOWN_ENTRIES-1)
-            
+
         Returns: A RingdownEntryType object containing the entry.
         """
         assert isinstance(index, (int, long))
@@ -454,14 +472,14 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdRingdownDataBlock(self, index):
         """Reads a block of entries from the ringdown data area in DSP memory.
-        
+
         The number of entries read is such that the returned array has size close to 512 bytes,
             which is the USB packet size. However, we never fetch past the end of the ringdown data
             area which is of length interface.NUM_RINGDOWN_ENTRIES
-            
+
         Args:
             index: Starting entry to place in block.
-        
+
         Returns: An array of RingdownEntryType objects
         """
         assert isinstance(index, (int, long))
@@ -473,11 +491,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdMessageTimestamp(self, index):
         """Reads timestamp from a message in the message data area in DSP memory.
-        
+
         Args:
-            index: Index of the entry within the message data area 
+            index: Index of the entry within the message data area
                 (in range 0 through interface.NUM_MESSAGES-1)
-            
+
         Returns: A 64 bit message timestamp
         """
         assert isinstance(index, (int, long))
@@ -488,11 +506,11 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdMessage(self, index):
         """Reads a message in the message data area in DSP memory.
-        
+
         Args:
-            index: Index of the entry within the message data area 
+            index: Index of the entry within the message data area
                 (in range 0 through interface.NUM_MESSAGES-1)
-            
+
         Returns: A string containing the message
         """
         assert isinstance(index, (int, long))
@@ -503,28 +521,28 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdDspTimerRegisters(self):
         """Reads DSP TIMER0 registers.
-        
+
         TIMER0 is used to generate the 1ms clock which the DSP uses to track time
-        
+
         Returns: Three 32-bit integers (Control, Period and Counter Registers)
         """
         timerRegs = (c_uint * 3)()
         self.dspAccessor.hpiRead(interface.DSP_TIMER0_BASE, timerRegs)
         return [x for x in timerRegs]
 
-    ############################################################################
+    ##########################################################################
     # The following methods are used to read and write environments and
     #  carry out operations
-    ############################################################################
+    ##########################################################################
 
     @usbLockProtect
     def rdEnv(self, address, envClass):
         """Reads an environment of the specified class from the DSP environment area.
-        
+
         Args:
             address: Starting address of the environment within the environment area
             envClass: Ctypes Structure name specifying type of the environment
-        
+
         Returns: Object of type envClass containing the environment
         """
         assert isinstance(address, (int, long, str, unicode))
@@ -534,7 +552,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
 
     def wrEnv(self, address, env):
         """Write an environment structure to the DSP environment table.
-        
+
         Args:
             address: Name or starting address of environmental table entry. Note that an environment
                 takes up one or more addresses, depending on its size.
@@ -551,31 +569,31 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def doOperation(self, oper):
         """Carry out an operation.
-        
+
         Args:
             oper: Instance of an Operation
-            
+
         Returns: Status code
         """
         assert isinstance(oper, Operation)
         return self.send(oper.opcode, oper.operandList, oper.env)
 
-    ############################################################################
+    ##########################################################################
     # The following methods are used to read and write schemes to the DSP
-    ############################################################################
+    ##########################################################################
 
     @usbLockProtect
     def wrScheme(self, schemeNum, numRepeats, schemeRows):
         """Write a scheme into a scheme table in the DSP.
-        
-        For speed, this is done directly via the HPI interface into DSP memory rather 
+
+        For speed, this is done directly via the HPI interface into DSP memory rather
         than through the host area. We need to declare the scheme areas as volatile in the
         DSP code so that they are always read from actual memory.
-        
+
         Args:
             schemeNum: Scheme table number (0 origin)
             numRepeats: Number of repetitions of the scheme
-            schemeRows: A list of rows, where each row has up to 7 entries
+            schemeRows: A list of rows, where each row has up to 12 entries
         """
         assert isinstance(schemeNum, (int, long))
         assert isinstance(numRepeats, (int, long))
@@ -598,19 +616,23 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             schemeTable.rows[i].threshold = int(row[4]) if len(row) >= 5 else 0
             schemeTable.rows[i].pztSetpoint = int(row[5]) if len(row) >= 6 else 0
             schemeTable.rows[i].laserTemp = int(1000 * row[6]) if len(row) >= 7 else 0
+            schemeTable.rows[i].frontMirrorDac = int(row[7]) if len(row) >= 8 else 0
+            schemeTable.rows[i].backMirrorDac = int(row[8]) if len(row) >= 9 else 0
+            schemeTable.rows[i].coarsePhaseDac = int(row[9]) if len(row) >= 10 else 0
         self.dspAccessor.hpiWrite(schemeTableAddr, schemeTable)
 
     @usbLockProtect
     def rdScheme(self, schemeNum):
         """Read a scheme into a scheme table in the DSP.
-        
+
         Args:
             schemeNum: Scheme table number (0 origin)
         Returns:
             A dictionary with numRepeats as the number of repetitions and schemeRows as a list of
-            7-tuples containing:
-            (setpoint, dwellCount, subschemeId, virtualLaser, threshold, pztSetpoint, laserTemp)
-        
+            10-tuples containing:
+            (setpoint, dwellCount, subschemeId, virtualLaser, threshold, pztSetpoint, laserTemp,
+             frontMirrorDac, backMirrorDac, coarsePhaseDac)
+
         """
         assert isinstance(schemeNum, (int, long))
         # Read from scheme table schemeNum
@@ -628,27 +650,29 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             "numRepeats":
             schemeTable.numRepeats,
             "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser, row.threshold, row.pztSetpoint,
-                            0.001 * row.laserTemp) for row in schemeTable.rows]
+                            0.001 * row.laserTemp, row.frontMirrorDac, row.backMirrorDac, row.coarsePhaseDac)
+                           for row in schemeTable.rows]
         }
 
-    ############################################################################
+    ##########################################################################
     # The following methods are used to read and write valve sequences to
     #  the DSP
-    ############################################################################
+    ##########################################################################
 
     @usbLockProtect
     def wrValveSequence(self, sequenceRows):
         """Write a valve sequence to the DSP.
-        
+
         Args:
            sequenceRows: List of triples (mask, duration, value) specifying, for
-              each step, the valves to affect, the duration (integer number of 
+              each step, the valves to affect, the duration (integer number of
               0.2s intervals), and the target states of the affected valves. The
               mask and value are at most 8 bits wide, and the duration is 16 bits
               wide.
         """
         assert hasattr(sequenceRows, '__iter__')
-        valveSequenceBase = interface.SHAREDMEM_ADDRESS + 4 * interface.VALVE_SEQUENCE_OFFSET
+        valveSequenceBase = interface.SHAREDMEM_ADDRESS + \
+            4 * interface.VALVE_SEQUENCE_OFFSET
         valveSequence = (ValveSequenceType)()
         if len(sequenceRows) > interface.NUM_VALVE_SEQUENCE_ENTRIES:
             raise ValueError("Maximum number of rows in a valve sequence is %d" % interface.NUM_VALVE_SEQUENCE_ENTRIES)
@@ -666,15 +690,16 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
     @usbLockProtect
     def rdValveSequence(self):
         """Reads the valve sequence from the DSP.
-        
+
         Returns: List of triples (mask, duration, value) specifying, for
-              each step, the valves to affect, the duration (integer number of 
+              each step, the valves to affect, the duration (integer number of
               0.2s intervals), and the target states of the affected valves. The
               mask and value are at most 8 bits wide, and the duration is 16 bits
               wide.
         """
         # Reads the valve sequence as a list of triples (mask,value,duration)
-        valveSequenceBase = interface.SHAREDMEM_ADDRESS + 4 * interface.VALVE_SEQUENCE_OFFSET
+        valveSequenceBase = interface.SHAREDMEM_ADDRESS + \
+            4 * interface.VALVE_SEQUENCE_OFFSET
         valveSequence = (ValveSequenceType)()
         self.dspAccessor.hpiRead(valveSequenceBase, valveSequence)
         sequenceRows = []
@@ -683,42 +708,46 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             sequenceRows.append(((entry.maskAndValue >> 8) & 0xFF, entry.maskAndValue & 0xFF, entry.dwell))
         return sequenceRows
 
-    ############################################################################
+    ##########################################################################
     # The following methods are used to read and write virtual laser
     #  parameters to the DSP
-    ############################################################################
+    ##########################################################################
 
     @usbLockProtect
     def wrVirtualLaserParams(self, vLaserNum, vLaserParams):
         """Write virtual laser parameters to the DSP.
-        
+
         Args:
            vLaserNum: ONE-based index of the virtual laser
            vLaserParams: Object of type interface.VirtualLaserParamsType containing parameters
         """
-        virtualLaserParamsBase = interface.DSP_DATA_ADDRESS + 4 * interface.VIRTUAL_LASER_PARAMS_OFFSET
+        virtualLaserParamsBase = interface.DSP_DATA_ADDRESS + \
+            4 * interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         if not isinstance(vLaserParams, interface.VirtualLaserParamsType):
             raise ValueError("Invalid object to write in wrVirtualLaserParams")
-        virtualLaserParamsAddr = virtualLaserParamsBase + 4 * (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
+        virtualLaserParamsAddr = virtualLaserParamsBase + 4 * \
+            (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
         self.doOperation(Operation("ACTION_WB_INV_CACHE", [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiWrite(virtualLaserParamsAddr, vLaserParams)
 
     @usbLockProtect
     def rdVirtualLaserParams(self, vLaserNum):
         """Read virtual laser parameters from the DSP.
-        
+
         Args:
            vLaserNum: ONE-based index of the virtual laser
-           
+
         Returns: Object of type interface.VirtualLaserParamsType containing parameters
         """
-        virtualLaserParamsBase = interface.DSP_DATA_ADDRESS + 4 * interface.VIRTUAL_LASER_PARAMS_OFFSET
+        virtualLaserParamsBase = interface.DSP_DATA_ADDRESS + \
+            4 * interface.VIRTUAL_LASER_PARAMS_OFFSET
         if vLaserNum > interface.NUM_VIRTUAL_LASERS:
             raise ValueError("Maximum number of virtual lasers available is %d" % interface.NUM_VIRTUAL_LASERS)
         vLaserParams = interface.VirtualLaserParamsType()
-        virtualLaserParamsAddr = virtualLaserParamsBase + 4 * (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
+        virtualLaserParamsAddr = virtualLaserParamsBase + 4 * \
+            (vLaserNum - 1) * interface.VIRTUAL_LASER_PARAMS_SIZE
         self.doOperation(Operation("ACTION_WB_CACHE", [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiRead(virtualLaserParamsAddr, vLaserParams)
         return vLaserParams

@@ -9,6 +9,7 @@
 #
 # File History:
 # 2010-10-21 sze   Created file
+# 2018-09-10 sze   Added handling of schemeInfo for passing any appropriate metadata
 
 import os
 import pickle
@@ -36,11 +37,14 @@ class Row(object):
         'extra1': 7,
         'extra2': 8,
         'extra3': 9,
-        'extra4': 10
+        'extra4': 10,
+        'frontMirrorDac': 11,
+        'backMirrorDac': 12,
+        'coarsePhaseDac': 13,
     }
 
     def __init__(self, *a, **k):
-        self.data = 11 * [0]
+        self.data = 14 * [0]
         self.data[:len(a)] = a
         for n in k:
             if n in self.keynames:
@@ -59,6 +63,14 @@ class Row(object):
             self.data[self.keynames[n]] = v
         else:
             object.__setattr__(self, n, v)
+
+    def __str__(self):
+        return "%.5f,%d,%d,%d,%d,%d,%.4f,%d,%d,%d,%d,%d,%d,%d" % (
+            self.setpoint, self.dwell, self.subschemeId, self.virtualLaser, self.threshold, self.pzt, self.laserTemp, self.extra1,
+            self.extra2, self.extra3, self.extra4, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac)
+
+    def __repr__(self):
+        return "Row(%s)" % self.__str__()
 
 
 class SchemeError(Exception):
@@ -94,6 +106,7 @@ class Scheme(object):
         self.version = 0
         self.nrepeat = 0
         self.numEntries = 0
+        self.schemeInfo = None
         self.setpoint = []
         self.dwell = []
         self.subschemeId = []
@@ -105,6 +118,9 @@ class Scheme(object):
         self.extra2 = []
         self.extra3 = []
         self.extra4 = []
+        self.frontMirrorDac = []
+        self.backMirrorDac = []
+        self.coarsePhaseDac = []
         #
         if self.fileName is not None:
             self.compile()
@@ -150,7 +166,8 @@ class Scheme(object):
                     x = x.strip()
                     if x:
                         cpos = x.find('#')
-                        if cpos >= 0: x = x[:cpos]
+                        if cpos >= 0:
+                            x = x[:cpos]
                         if not x:
                             continue  # Discard comments
                         elif x[0] == '$':
@@ -162,7 +179,8 @@ class Scheme(object):
                                 # print 'Code: ', x
                                 self.execInEnv(x)
                         else:  # This is a normal scheme line
-                            if self.env['schemeVersion'] == 0:  # This is an old-style scheme file
+                            # This is an old-style scheme file
+                            if self.env['schemeVersion'] == 0:
                                 x = ",".join(x.split()) if "," not in x else x
                                 if rowType == 'repeat':
                                     self.env['repeat'] = self.evalInEnv(x)
@@ -210,14 +228,21 @@ class Scheme(object):
                 self.extra2 = [s.extra2 for s in schemeRows]
                 self.extra3 = [s.extra3 for s in schemeRows]
                 self.extra4 = [s.extra4 for s in schemeRows]
+                self.frontMirrorDac = [s.frontMirrorDac for s in schemeRows]
+                self.backMirrorDac = [s.backMirrorDac for s in schemeRows]
+                self.coarsePhaseDac = [s.coarsePhaseDac for s in schemeRows]
+                self.schemeInfo = self.env.get('schemeInfo', None)
+            else:
+                raise SchemeError(self.__str__())
         finally:
             fp.close()
             del self.env
 
     def makeAngleTemplate(self):
-        # Make an angle based scheme template from a frequency based scheme where the setpoint
-        #  and laserTemp fields are copies of the original, while all the other fields point to
-        #  the originals
+        # Make an angle based scheme template from a frequency based scheme where the setpoint,
+        #  laserTemp, frontMirrorDac, backMirrorDac and coarsePhaseDac fields are
+        # copies of the original, while all the other fields point to the
+        # originals
         s = Scheme()
         s.version = self.version
         s.nrepeat = self.nrepeat
@@ -233,6 +258,11 @@ class Scheme(object):
         s.extra2 = self.extra2
         s.extra3 = self.extra3
         s.extra4 = self.extra4
+        s.frontMirrorDac = self.frontMirrorDac[:]
+        s.backMirrorDac = self.backMirrorDac[:]
+        s.coarsePhaseDac = self.coarsePhaseDac[:]
+        s.schemeInfo = self.schemeInfo
+
         return s
 
     def repack(self):
@@ -240,7 +270,7 @@ class Scheme(object):
         #  from the scheme, which is appropriate for sending it to the DAS
         return (self.nrepeat,
                 zip(self.setpoint, self.dwell, self.subschemeId, self.virtualLaser, self.threshold, self.pztSetpoint,
-                    self.laserTemp))
+                    self.laserTemp, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac))
 
 
 from sys import argv
@@ -250,14 +280,16 @@ if __name__ == "__main__":
     if len(argv) > 1:
         fname = argv[1]
     else:
-        fname = raw_input("Name of scheme file")
+        fname = raw_input("Name of scheme file? ")
     s = Scheme(fname)
+    s.compile()
     print "%-10d # Repetitions" % s.nrepeat
     print "%-10d # Scheme rows" % s.numEntries
     for i in range(s.numEntries):
-        print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d" % (s.setpoint[i],\
-                s.dwell[i],s.subschemeId[i],s.virtualLaser[i],s.threshold[i],s.pztSetpoint[i],\
-                s.laserTemp[i],s.extra1[i],s.extra2[i],s.extra3[i],s.extra4[i])
-
+        print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d, %d, %d, %d" % (
+            s.setpoint[i], s.dwell[i], s.subschemeId[i], s.virtualLaser[i], s.threshold[i], s.pztSetpoint[i], s.laserTemp[i],
+            s.extra1[i], s.extra2[i], s.extra3[i], s.extra4[i], s.frontMirrorDac[i], s.backMirrorDac[i], s.coarsePhaseDac[i])
+    if s.schemeInfo is not None:
+        print "Scheme info: %s" % (s.schemeInfo, )
     # fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"
     # fname = "../Tests/RDFrequencyConverter/ProgScheme.sch"

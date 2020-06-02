@@ -46,6 +46,10 @@ RPC_PORT_INTERFACE = 50040
 RPC_PORT_CONTROLLER = 50050
 RPC_PORT_ARCHIVER = 50060
 RPC_PORT_MEAS_SYSTEM = 50070
+RPC_PORT_READ_GPSWS = 50071
+RPC_PORT_PERIPH_INTRF = 50072
+RPC_PORT_CONFIG_MONITOR = 50073
+RPC_PORT_AUTOSAMPLER = 50074
 RPC_PORT_SPECTRUM_COLLECTOR = 50075
 RPC_PORT_SAMPLE_MGR = 50080
 RPC_PORT_DATALOGGER = 50090
@@ -64,6 +68,7 @@ RPC_PORT_COORDINATOR = 50210
 RPC_PORT_QUICK_GUI = 50220
 RPC_PORT_READ_EXT_SENSOR = 50230
 RPC_PORT_BACKPACK_SERVER = 50255
+RPC_PORT_SFP_SERVER = 50256
 RPC_PORT_4to20_SERVER = 50290
 RPC_PORT_FLASK_SERVER = 50295
 RPC_PORT_ACTIVE_FILE_MANAGER = 50300
@@ -75,6 +80,8 @@ RPC_PORT_CONFIG_MONITOR = 50073
 RPC_PORT_AUTOSAMPLER = 50074
 RPC_PORT_PEAK_FINDER = 50501
 RPC_PORT_PEAK_ANALYZER = 50502
+RPC_PORT_DATA_STORE = 50555
+RPC_PORT_DATA_FILE_SERVER = 50556
 RPC_PORT_ECHO_P3_BASE = 50600
 RPC_PORT_ECHO_P3_MAX = 50699
 RPC_PORT_SURVEYOR_ZMQ = 50700
@@ -101,6 +108,7 @@ BROADCAST_PORT_SENSORSTREAM = 40020  # All sensor data from the driver
 BROADCAST_PORT_RDRESULTS = 40030  # RD's broadcast straight from the driver
 # The re-calculated ringdowns (angle->freq) from the RDFrequencyConverter
 BROADCAST_PORT_RD_RECALC = 40031
+BROADCAST_PORT_RD_UNIFIED = 40032
 BROADCAST_PORT_RCB = 40040
 BROADCAST_PORT_SPECTRUM_COLLECTOR = 40045
 BROADCAST_PORT_MEAS_SYSTEM = 40050
@@ -266,9 +274,9 @@ def getSchemeTableClass(numRows):
     return schemeTableClassMemo[numRows]
 
 
-##########################################################################
+################################################################################
 # Utilities for converting between ctypes objects and dictionaries
-##########################################################################
+################################################################################
 
 
 def ctypesToDict(structure):
