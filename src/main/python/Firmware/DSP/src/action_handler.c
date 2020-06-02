@@ -47,6 +47,7 @@
 #include "i2cEeprom.h"
 #include "rddCntrl.h"
 #include "adxl345.h"
+#include "sgdbrCurrentSource.h"
 
 static char message[120];
 
@@ -269,7 +270,7 @@ int r_wbCache(unsigned int numInt, void *params, void *env)
 }
 
 int r_wbInvCache(unsigned int numInt, void *params, void *env)
-/* Write back and invalidate cache fors a region of memory
+/* Write back and invalidate cache for a region of memory
    Input:
         addr(int):      address to region
         length(int):    length of region in bytes
@@ -657,6 +658,59 @@ int r_ds1631_readTemp(unsigned int numInt, void *params, void *env)
         return ERROR_BAD_NUM_PARAMS;
     WRITE_REG(reg[0], ds1631_readTemperatureAsFloat(&i2c_devices[DAS_TEMP_SENSOR]));
     return STATUS_OK;
+}
+
+int r_read_thermistor_resistance_sgdbr(unsigned int numInt, void *params, void *env)
+/*
+    Reads thermistor resistance on the SGDBR current source board
+
+    Output:
+        Register (float): Register to contain result
+    Input:
+        Register (float): Register containing series resistance
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    float Vfrac = 0.0, Rseries;
+    if (3 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    if (reg[0] == 0)
+        Vfrac = sgdbrAReadThermistorAdc();
+    else if (reg[0] == 1)
+        Vfrac = sgdbrBReadThermistorAdc();
+    else
+        return ERROR_BAD_VALUE;
+    READ_REG(reg[2], Rseries);
+    if (Vfrac < 0.0 || Vfrac > 1.0)
+        return ERROR_BAD_VALUE;
+    WRITE_REG(reg[1], (Rseries * Vfrac) / (1.0 - Vfrac));
+    return STATUS_OK;
+}
+
+int r_sgdbr_cntrl_init(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (1 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    if (reg[0] == 0)
+        return sgdbrACntrlInit();
+    else if (reg[0] == 1)
+        return sgdbrBCntrlInit();
+    else
+        return ERROR_BAD_VALUE;
+}
+
+int r_sgdbr_cntrl_step(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (1 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    if (reg[0] == 0)
+        return sgdbrACntrlStep();
+    else if (reg[0] == 1)
+        return sgdbrBCntrlStep();
+    else
+        return ERROR_BAD_VALUE;
 }
 
 int r_read_thermistor_resistance(unsigned int numInt, void *params, void *env)
@@ -1220,7 +1274,7 @@ int r_read_flow_sensor(unsigned int numInt, void *params, void *env)
     return STATUS_OK;
 }
 
-// The following actions are for interacting with the variable gain ring down detector 1
+// The following actions are for interacting with the variable gain ring down detector
 
 int r_rdd_cntrl_init(unsigned int numInt, void *params, void *env)
 {
@@ -1358,6 +1412,18 @@ int r_average_float_registers(unsigned int numInt, void *params, void *env)
         sum += x;
     }
     WRITE_REG(reg[numInt - 1], sum / (numInt - 1));
+    return STATUS_OK;
+}
+
+int r_action_sgdbr_program_fpga(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (1 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    if (reg[0] == 0)
+        sgdbrAProgramFpga();
+    else if (reg[0] == 1)
+        sgdbrBProgramFpga();
     return STATUS_OK;
 }
 

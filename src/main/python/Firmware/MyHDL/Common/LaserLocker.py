@@ -61,13 +61,15 @@ from Host.autogen.interface import LASERLOCKER_CS_LASER_FREQ_OK_B, LASERLOCKER_C
 from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_CURRENT_OK_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B, LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W
 
 from Divider import Divider
 from SignedMultiplier import SignedMultiplier
 
 LOW, HIGH = bool(0), bool(1)
 
-def SignedFracMultiplier(a_in,b_in,p_out,o_out):
+
+def SignedFracMultiplier(a_in, b_in, p_out, o_out):
     # We create a 16*16 bit signed fractional multiplier out of the underlying SignedMultiplier block
     #  which is based on the MULT18x18 block in the Xilinx FPGA.
     #
@@ -76,29 +78,30 @@ def SignedFracMultiplier(a_in,b_in,p_out,o_out):
     # p: Product as signed binary fraction between -1<= a <1, of width 16 bits
     #     (i.e., binary point is immediately after the sign bit)
     # Note that we cannot multiply -1 x -1, since this causes an overflow (o bit set)
-    
-    # Signals for interfacing with SignedMultiplier block
-    a_s = Signal(intbv(0,min=-0x20000,max=0x20000))
-    b_s = Signal(intbv(0,min=-0x20000,max=0x20000))
-    p_s = Signal(intbv(0,min=-0x800000000,max=0x800000000))
 
-    sm = SignedMultiplier(p_s,a_s,b_s)
-    
+    # Signals for interfacing with SignedMultiplier block
+    a_s = Signal(intbv(0, min=-0x20000, max=0x20000))
+    b_s = Signal(intbv(0, min=-0x20000, max=0x20000))
+    p_s = Signal(intbv(0, min=-0x800000000, max=0x800000000))
+
+    sm = SignedMultiplier(p_s, a_s, b_s)
+
     @always_comb
     def comb():
-        a_s.next = concat(a_in,LOW,LOW).signed()
-        b_s.next = concat(b_in,LOW,LOW).signed()
-        p_out.next = concat(p_s[35],p_s[34:19]) % 65536
+        a_s.next = concat(a_in, LOW, LOW).signed()
+        b_s.next = concat(b_in, LOW, LOW).signed()
+        p_out.next = concat(p_s[35], p_s[34:19]) % 65536
         o_out.next = p_s[35] != p_s[34]
-        
+
     return instances()
 
-def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
-                eta1_in,ref1_in,eta2_in,ref2_in,tuning_offset_in,
-                acc_en_in,adc_strobe_in,ratio1_out,
-                ratio2_out,lock_error_out,fine_current_out,
-                tuning_offset_out,pid_out,laser_freq_ok_out,current_ok_out,
-                sim_actual_out,map_base):
+
+def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
+                eta1_in, ref1_in, eta2_in, ref2_in, tuning_offset_in,
+                acc_en_in, adc_strobe_in, ratio1_out,
+                ratio2_out, lock_error_out, fine_current_out,
+                tuning_offset_out, pid_out, laser_freq_ok_out, current_ok_out,
+                sim_actual_out, map_base):
     """ Laser frequency locking using wavelength monitor
 
     Parameters:
@@ -172,7 +175,9 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     LASERLOCKER_CS_CURRENT_OK    -- Indicates that laser current has been computed
 
     Fields in LASERLOCKER_OPTIONS:
-    LASERLOCKER_OPTIONS_SIM_ACTUAL
+    LASERLOCKER_OPTIONS_SIM_ACTUAL -- Selects between actual and simulated WLM
+    LASERLOCKER_OPTIONS_DIRECT_TUNE -- Directs tuner input (instead of PID locking loop integrator) to laser fine current output
+    LASERLOCKER_OPTIONS_RATIO_OUT_SEL -- Select between ratios and individual WLM photodiodes for ratio output ports
     """
     laserlocker_cs_addr = map_base + LASERLOCKER_CS
     laserlocker_options_addr = map_base + LASERLOCKER_OPTIONS
@@ -202,63 +207,68 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     laserlocker_wm_deriv_gain_addr = map_base + LASERLOCKER_WM_DERIV_GAIN
     laserlocker_fine_current_addr = map_base + LASERLOCKER_FINE_CURRENT
     laserlocker_cycle_counter_addr = map_base + LASERLOCKER_CYCLE_COUNTER
-    cs = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    options = Signal(intbv(0)[2:])
-    eta1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    ref1 = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    eta2 = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    ref2 = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    eta1_dark = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref1_dark = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    eta2_dark = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref2_dark = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    eta1_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref1_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    eta2_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ref2_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio1_center = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio1_multiplier = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio2_center = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio2_multiplier = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    tuning_offset = Signal(intbv(0x8000)[FPGA_REG_WIDTH:])
-    lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    wm_lock_window = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    wm_int_gain = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    wm_prop_gain = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    wm_deriv_gain = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    cycle_counter = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    cs = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    options = Signal(intbv(0)[4:])
+    eta1 = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    ref1 = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    eta2 = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    ref2 = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    eta1_dark = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ref1_dark = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    eta2_dark = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ref2_dark = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    eta1_offset = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ref1_offset = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    eta2_offset = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ref2_offset = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio1 = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio2 = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio1_center = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio1_multiplier = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio2_center = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio2_multiplier = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    tuning_offset = Signal(modbv(0x8000)[FPGA_REG_WIDTH:])
+    lock_error = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    wm_lock_window = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    wm_int_gain = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    wm_prop_gain = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    wm_deriv_gain = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    fine_current = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    cycle_counter = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    sat = Signal(intbv(0, min=-32768, max=98304))
 
-    FPGA_REG_MAXVAL = 1<<FPGA_REG_WIDTH
+
+    FPGA_REG_MAXVAL = 1 << FPGA_REG_WIDTH
     M2 = FPGA_REG_MAXVAL//2
-    
+
     # Signals interfacing to divider
-    div_num, div_den, div_quot = [Signal(intbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
+    div_num, div_den, div_quot = [
+        Signal(modbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
     div_rfd, div_ce = [Signal(LOW) for i in range(2)]
 
     # Signals to the signed fractional multiplier
-    mult_a, mult_b, mult_p = [Signal(intbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
+    mult_a, mult_b, mult_p = [
+        Signal(modbv(0)[FPGA_REG_WIDTH:]) for i in range(3)]
     mult_o = Signal(LOW)
 
-    prev_lock_error = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    prev_lock_error_deriv = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    deriv = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    deriv2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    prbs_reg = Signal(intbv(0)[8:]) # Use for ALM sequence
+    prev_lock_error = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    prev_lock_error_deriv = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    deriv = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    deriv2 = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    prbs_reg = Signal(modbv(0)[8:])  # Use for ALM sequence
     prbs_augment = Signal(LOW)
     awaiting_strobe = Signal(HIGH)
 
-    DIV_LATENCY  = 19
+    DIV_LATENCY = 19
     MULT_LATENCY = 2
-    MAX_CYCLES = 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 4
+    MAX_CYCLES = 2*DIV_LATENCY + 3 + 4*MULT_LATENCY + 5
+
 
     @always_comb
     def comb():
         tuning_offset_out.next = tuning_offset
         sim_actual_out.next = options[LASERLOCKER_OPTIONS_SIM_ACTUAL_B]
-        
+
     @instance
     def logic():
         while True:
@@ -307,81 +317,101 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                 awaiting_strobe.next = HIGH
             else:
                 if dsp_addr[EMIF_ADDR_WIDTH-1] == FPGA_REG_MASK:
-                    if False: pass
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_cs_addr: # rw
-                        if dsp_wr: cs.next = dsp_data_out
+                    if False:
+                        pass
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_cs_addr:  # rw
+                        if dsp_wr:
+                            cs.next = dsp_data_out
                         dsp_data_in.next = cs
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_options_addr: # rw
-                        if dsp_wr: options.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_options_addr:  # rw
+                        if dsp_wr:
+                            options.next = dsp_data_out
                         dsp_data_in.next = options
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_addr: # rw
-                        if dsp_wr: eta1.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_addr:  # rw
+                        if dsp_wr:
+                            eta1.next = dsp_data_out
                         dsp_data_in.next = eta1
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_addr: # rw
-                        if dsp_wr: ref1.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_addr:  # rw
+                        if dsp_wr:
+                            ref1.next = dsp_data_out
                         dsp_data_in.next = ref1
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_addr: # rw
-                        if dsp_wr: eta2.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_addr:  # rw
+                        if dsp_wr:
+                            eta2.next = dsp_data_out
                         dsp_data_in.next = eta2
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_addr: # rw
-                        if dsp_wr: ref2.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_addr:  # rw
+                        if dsp_wr:
+                            ref2.next = dsp_data_out
                         dsp_data_in.next = ref2
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_dark_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_dark_addr:  # r
                         dsp_data_in.next = eta1_dark
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_dark_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_dark_addr:  # r
                         dsp_data_in.next = ref1_dark
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_dark_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_dark_addr:  # r
                         dsp_data_in.next = eta2_dark
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_dark_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_dark_addr:  # r
                         dsp_data_in.next = ref2_dark
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_offset_addr: # rw
-                        if dsp_wr: eta1_offset.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta1_offset_addr:  # rw
+                        if dsp_wr:
+                            eta1_offset.next = dsp_data_out
                         dsp_data_in.next = eta1_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_offset_addr: # rw
-                        if dsp_wr: ref1_offset.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref1_offset_addr:  # rw
+                        if dsp_wr:
+                            ref1_offset.next = dsp_data_out
                         dsp_data_in.next = ref1_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_offset_addr: # rw
-                        if dsp_wr: eta2_offset.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_eta2_offset_addr:  # rw
+                        if dsp_wr:
+                            eta2_offset.next = dsp_data_out
                         dsp_data_in.next = eta2_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_offset_addr: # rw
-                        if dsp_wr: ref2_offset.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ref2_offset_addr:  # rw
+                        if dsp_wr:
+                            ref2_offset.next = dsp_data_out
                         dsp_data_in.next = ref2_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_addr:  # r
                         dsp_data_in.next = ratio1
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_addr:  # r
                         dsp_data_in.next = ratio2
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_center_addr: # rw
-                        if dsp_wr: ratio1_center.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_center_addr:  # rw
+                        if dsp_wr:
+                            ratio1_center.next = dsp_data_out
                         dsp_data_in.next = ratio1_center
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_multiplier_addr: # rw
-                        if dsp_wr: ratio1_multiplier.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio1_multiplier_addr:  # rw
+                        if dsp_wr:
+                            ratio1_multiplier.next = dsp_data_out
                         dsp_data_in.next = ratio1_multiplier
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_center_addr: # rw
-                        if dsp_wr: ratio2_center.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_center_addr:  # rw
+                        if dsp_wr:
+                            ratio2_center.next = dsp_data_out
                         dsp_data_in.next = ratio2_center
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_multiplier_addr: # rw
-                        if dsp_wr: ratio2_multiplier.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_ratio2_multiplier_addr:  # rw
+                        if dsp_wr:
+                            ratio2_multiplier.next = dsp_data_out
                         dsp_data_in.next = ratio2_multiplier
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_tuning_offset_addr: # rw
-                        if dsp_wr: tuning_offset.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_tuning_offset_addr:  # rw
+                        if dsp_wr:
+                            tuning_offset.next = dsp_data_out
                         dsp_data_in.next = tuning_offset
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_lock_error_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_lock_error_addr:  # r
                         dsp_data_in.next = lock_error
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_lock_window_addr: # rw
-                        if dsp_wr: wm_lock_window.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_lock_window_addr:  # rw
+                        if dsp_wr:
+                            wm_lock_window.next = dsp_data_out
                         dsp_data_in.next = wm_lock_window
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_int_gain_addr: # rw
-                        if dsp_wr: wm_int_gain.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_int_gain_addr:  # rw
+                        if dsp_wr:
+                            wm_int_gain.next = dsp_data_out
                         dsp_data_in.next = wm_int_gain
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_prop_gain_addr: # rw
-                        if dsp_wr: wm_prop_gain.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_prop_gain_addr:  # rw
+                        if dsp_wr:
+                            wm_prop_gain.next = dsp_data_out
                         dsp_data_in.next = wm_prop_gain
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_deriv_gain_addr: # rw
-                        if dsp_wr: wm_deriv_gain.next = dsp_data_out
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_wm_deriv_gain_addr:  # rw
+                        if dsp_wr:
+                            wm_deriv_gain.next = dsp_data_out
                         dsp_data_in.next = wm_deriv_gain
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_fine_current_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_fine_current_addr:  # r
                         dsp_data_in.next = fine_current
-                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_cycle_counter_addr: # r
+                    elif dsp_addr[EMIF_ADDR_WIDTH-1:] == laserlocker_cycle_counter_addr:  # r
                         dsp_data_in.next = cycle_counter
                     else:
                         dsp_data_in.next = 0
@@ -412,33 +442,42 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                         ref2_dark.next = ref2
 
                     # Share the divider between the two etalon channels
-                    div_ce.next = (cycle_counter == 1) or (cycle_counter == DIV_LATENCY+1)
+                    div_ce.next = (cycle_counter == 1) or (
+                        cycle_counter == DIV_LATENCY+1)
                     if cycle_counter == 0:
                         div_num.next = eta1 - eta1_offset
                         div_den.next = ref1 - ref1_offset
+                        if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==1:
+                            ratio1_out.next = eta1 - eta1_offset
+                            ratio2_out.next = ref1 - ref1_offset
                     elif cycle_counter == DIV_LATENCY:
                         div_num.next = eta2 - eta2_offset
                         div_den.next = ref2 - ref2_offset
+                        if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==2:
+                            ratio1_out.next = eta2 - eta2_offset
+                            ratio2_out.next = ref2 - ref2_offset
                     # Load the multiplier inputs
                     elif cycle_counter == DIV_LATENCY+1:
                         # assert div_rfd == HIGH
                         ratio1.next = div_quot
-                        ratio1_out.next = div_quot
-                    elif cycle_counter == DIV_LATENCY+2:
-                        mult_a.next = (ratio1 - ratio1_center) % FPGA_REG_MAXVAL
+                        if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==0:
+                            ratio1_out.next = div_quot
+                    elif cycle_counter == DIV_LATENCY+3:
+                        mult_a.next = (ratio1 - ratio1_center)
                         mult_b.next = ratio1_multiplier
-                    elif cycle_counter == DIV_LATENCY+2+MULT_LATENCY:
-                        lock_error.next = (lock_error + mult_p) % FPGA_REG_MAXVAL
+                    elif cycle_counter == DIV_LATENCY+3+MULT_LATENCY:
+                        lock_error.next = (lock_error + mult_p)
                     elif cycle_counter == 2*DIV_LATENCY+1:
                         # assert div_rfd == HIGH
                         ratio2.next = div_quot
-                        ratio2_out.next = div_quot
-                    elif cycle_counter == 2*DIV_LATENCY+2:
-                        mult_a.next = (ratio2 - ratio2_center) % FPGA_REG_MAXVAL
+                        if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==0:
+                            ratio2_out.next = div_quot
+                    elif cycle_counter == 2*DIV_LATENCY+3:
+                        mult_a.next = (ratio2 - ratio2_center)
                         mult_b.next = ratio2_multiplier
-                    elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY:
-                        lock_error.next = (lock_error + mult_p) % FPGA_REG_MAXVAL
-                    elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY + 1:
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + MULT_LATENCY:
+                        lock_error.next = (lock_error + mult_p)
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + MULT_LATENCY + 1:
                         lock_error_out.next = lock_error
                         if cs[LASERLOCKER_CS_PRBS_B]:
                             # N.B. lock_error is a SIGNED quantity
@@ -446,41 +485,54 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                 lock_error.next = 0x0100
                             else:
                                 lock_error.next = 0xFF00
-                    elif cycle_counter == 2*DIV_LATENCY + 2 + MULT_LATENCY + 2:
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + MULT_LATENCY + 2:
                         if lock_error.signed() >= 0:
                             laser_freq_ok_out.next = (lock_error <= wm_lock_window)
                         else:
-                            laser_freq_ok_out.next = (-lock_error.signed()) <= wm_lock_window
+                            laser_freq_ok_out.next = (-lock_error.signed()
+                                                      ) <= wm_lock_window
 
                         mult_a.next = lock_error
                         mult_b.next = wm_int_gain
-                        deriv.next = (lock_error - prev_lock_error) % FPGA_REG_MAXVAL
+                        deriv.next = (lock_error - prev_lock_error)
                         prev_lock_error.next = lock_error
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 2*MULT_LATENCY + 2:
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 2*MULT_LATENCY + 2:
                         mult_a.next = deriv
                         mult_b.next = wm_prop_gain
-                        deriv2.next = (deriv - prev_lock_error_deriv) % FPGA_REG_MAXVAL
+                        deriv2.next = (deriv - prev_lock_error_deriv)
                         prev_lock_error_deriv.next = deriv
-                        #fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
-                        t = fine_current + mult_p.signed()
-                        if t<0: fine_current.next = 0
-                        elif t>=65535: fine_current.next = 65535
-                        else: fine_current.next = t
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 3*MULT_LATENCY + 2:
+                        # fine_current.next = (fine_current + mult_p)
+                        sat.next = fine_current + mult_p.signed()
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 2*MULT_LATENCY + 3:
+                        if sat < 0:
+                            fine_current.next = 0
+                        elif sat >= 65535:
+                            fine_current.next = 65535
+                        else:
+                            fine_current.next = sat
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 3*MULT_LATENCY + 2:
                         mult_a.next = deriv2
                         mult_b.next = wm_deriv_gain
-                        #fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
-                        t = fine_current + mult_p.signed()
-                        if t<0: fine_current.next = 0
-                        elif t>=65535: fine_current.next = 65535
-                        else: fine_current.next = t
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 2:
-                        #fine_current.next = (fine_current + mult_p) % FPGA_REG_MAXVAL
-                        t = fine_current + mult_p.signed()
-                        if t<0: fine_current.next = 0
-                        elif t>=65535: fine_current.next = 65535
-                        else: fine_current.next = t
-                    elif cycle_counter == 2*DIV_LATENCY + 1 + 4*MULT_LATENCY + 3:
+                        # fine_current.next = (fine_current + mult_p)
+                        sat.next = fine_current + mult_p.signed()
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 3*MULT_LATENCY + 3:
+                        if sat < 0:
+                            fine_current.next = 0
+                        elif sat >= 65535:
+                            fine_current.next = 65535
+                        else:
+                            fine_current.next = sat
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 4*MULT_LATENCY + 2:
+                        # fine_current.next = (fine_current + mult_p)
+                        sat.next = fine_current + mult_p.signed()
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 4*MULT_LATENCY + 3:
+                        if sat < 0:
+                            fine_current.next = 0
+                        elif sat >= 65535:
+                            fine_current.next = 65535
+                        else:
+                            fine_current.next = sat
+                    elif cycle_counter == 2*DIV_LATENCY + 3 + 4*MULT_LATENCY + 4:
                         pid_out.next = fine_current
                         if cs[LASERLOCKER_CS_PRBS_B]:
                             if prbs_reg[0]:
@@ -491,9 +543,10 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                             prbs_augment.next = temp
                             if not temp:
                                 if prbs_reg[7]:
-                                    prbs_reg.next = concat(prbs_reg[7:]^0x34,intbv(1)[1:])
+                                    prbs_reg.next = concat(
+                                        prbs_reg[7:] ^ 0x34, modbv(1)[1:])
                                 else:
-                                    prbs_reg.next = concat(prbs_reg[7:],intbv(0)[1:])
+                                    prbs_reg.next = concat(prbs_reg[7:], modbv(0)[1:])
                         else:
                             fine_current_out.next = fine_current
                             prbs_reg.next = 1
@@ -513,16 +566,18 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
                                 current_ok_out.next = 0
                                 # Perform a shift with sign extension
                                 if tuning_offset[15]:
-                                    lock_error.next = concat(LOW,LOW,LOW,LOW,tuning_offset[15:3])
+                                    lock_error.next = concat(
+                                        LOW, LOW, LOW, LOW, tuning_offset[15:3])
                                 else:
-                                    lock_error.next = concat(HIGH,HIGH,HIGH,HIGH,tuning_offset[15:3])
+                                    lock_error.next = concat(
+                                        HIGH, HIGH, HIGH, HIGH, tuning_offset[15:3])
                         else:
                             awaiting_strobe.next = HIGH
 
                     if not cs[LASERLOCKER_CS_ACC_EN_B]:
                         fine_current.next = 0x8000
                         fine_current_out.next = 0x8000
-                        
+
                     if options[LASERLOCKER_OPTIONS_DIRECT_TUNE_B]:
                         fine_current_out.next = tuning_offset
 
@@ -537,48 +592,50 @@ def LaserLocker(clk,reset,dsp_addr,dsp_data_out,dsp_data_in,dsp_wr,
     divider = Divider(clk=clk, reset=reset, N_in=div_num, D_in=div_den, Q_out=div_quot,
                       rfd_out=div_rfd, ce_in=div_ce, width=FPGA_REG_WIDTH)
 
-    signedMultiplier = SignedFracMultiplier(a_in=mult_a, b_in=mult_b, p_out=mult_p, o_out=mult_o)
+    signedMultiplier = SignedFracMultiplier(
+        a_in=mult_a, b_in=mult_b, p_out=mult_p, o_out=mult_o)
 
     return instances()
+
 
 if __name__ == "__main__":
     clk = Signal(LOW)
     reset = Signal(LOW)
-    dsp_addr = Signal(intbv(0)[EMIF_ADDR_WIDTH:])
-    dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_addr = Signal(modbv(0)[EMIF_ADDR_WIDTH:])
+    dsp_data_out = Signal(modbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in = Signal(modbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr = Signal(LOW)
-    eta1_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    ref1_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    eta2_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    ref2_in = Signal(intbv(0)[WLM_ADC_WIDTH:])
-    tuning_offset_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    eta1_in = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    ref1_in = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    eta2_in = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    ref2_in = Signal(modbv(0)[WLM_ADC_WIDTH:])
+    tuning_offset_in = Signal(modbv(0)[FPGA_REG_WIDTH:])
     acc_en_in = Signal(LOW)
     adc_strobe_in = Signal(LOW)
-    ratio1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    ratio2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    lock_error_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    fine_current_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    tuning_offset_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
-    pid_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    ratio1_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    ratio2_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    lock_error_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    fine_current_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    tuning_offset_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    pid_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
     laser_freq_ok_out = Signal(LOW)
     current_ok_out = Signal(LOW)
     sim_actual_out = Signal(LOW)
     map_base = FPGA_LASERLOCKER
 
     toVHDL(LaserLocker, clk=clk, reset=reset, dsp_addr=dsp_addr,
-                        dsp_data_out=dsp_data_out,
-                        dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
-                        eta1_in=eta1_in, ref1_in=ref1_in,
-                        eta2_in=eta2_in, ref2_in=ref2_in,
-                        tuning_offset_in=tuning_offset_in,
-                        acc_en_in=acc_en_in,
-                        adc_strobe_in=adc_strobe_in,
-                        ratio1_out=ratio1_out, ratio2_out=ratio2_out,
-                        lock_error_out=lock_error_out,
-                        fine_current_out=fine_current_out,
-                        tuning_offset_out=tuning_offset_out,
-                        pid_out=pid_out,
-                        laser_freq_ok_out=laser_freq_ok_out,
-                        current_ok_out=current_ok_out,
-                        sim_actual_out=sim_actual_out, map_base=map_base)
+           dsp_data_out=dsp_data_out,
+           dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
+           eta1_in=eta1_in, ref1_in=ref1_in,
+           eta2_in=eta2_in, ref2_in=ref2_in,
+           tuning_offset_in=tuning_offset_in,
+           acc_en_in=acc_en_in,
+           adc_strobe_in=adc_strobe_in,
+           ratio1_out=ratio1_out, ratio2_out=ratio2_out,
+           lock_error_out=lock_error_out,
+           fine_current_out=fine_current_out,
+           tuning_offset_out=tuning_offset_out,
+           pid_out=pid_out,
+           laser_freq_ok_out=laser_freq_ok_out,
+           current_ok_out=current_ok_out,
+           sim_actual_out=sim_actual_out, map_base=map_base)

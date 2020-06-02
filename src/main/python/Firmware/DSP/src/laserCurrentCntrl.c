@@ -34,6 +34,8 @@
 #define extraCoarseScale  (*(c->extra_coarse_scale_))
 #define extraFineScale    (*(c->extra_fine_scale_))
 #define extraOffset       (*(c->extra_offset_))
+#define laserTemp         (*(c->laser_temp_))
+#define laserTempSetpoint (*(c->laser_temp_setpoint_))
 
 int laserCurrentCntrlStep(LaserCurrentCntrl *c)
 /*
@@ -104,8 +106,15 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
                          current_enable_mask | laser_enable_mask );
         break;
     }
-    writeFPGA(c->fpga_coarse, (unsigned short)coarse);
-    writeFPGA(c->fpga_fine, (unsigned short)fine);
+    // Only allow laser current once laser temperature is in range of setpoint
+    if ((laserTempSetpoint - laserTemp) <= 3.0 && (laserTempSetpoint - laserTemp) >= -3.0) {
+        writeFPGA(c->fpga_coarse, (unsigned short)coarse);
+        writeFPGA(c->fpga_fine, (unsigned short)fine);
+    }
+    else {
+        writeFPGA(c->fpga_coarse, 0);
+        writeFPGA(c->fpga_fine, 0);        
+    }
 
     writeFPGA(c->fpga_extra_coarse_scale, (unsigned short)min(65535.0, 32768.0*extraCoarseScale));
     writeFPGA(c->fpga_extra_fine_scale, (unsigned short)min(65535.0, 65536.0*extraFineScale));
@@ -153,8 +162,9 @@ int currentCntrlLaser1Init(void)
     c->fpga_extra_coarse_scale = FPGA_INJECT + INJECT_LASER1_EXTRA_COARSE_SCALE;
     c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER1_EXTRA_FINE_SCALE;
     c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER1_EXTRA_OFFSET;
-
     c->laserNum = 1;
+    c->laser_temp_ = (float *)registerAddr(LASER1_TEMPERATURE_REGISTER);
+    c->laser_temp_setpoint_ = (float *)registerAddr(LASER1_TEMP_CNTRL_SETPOINT_REGISTER);
     return STATUS_OK;
 }
 
@@ -185,6 +195,8 @@ int currentCntrlLaser2Init(void)
     c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER2_EXTRA_FINE_SCALE;
     c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER2_EXTRA_OFFSET;
     c->laserNum = 2;
+    c->laser_temp_ = (float *)registerAddr(LASER2_TEMPERATURE_REGISTER);
+    c->laser_temp_setpoint_ = (float *)registerAddr(LASER2_TEMP_CNTRL_SETPOINT_REGISTER);
     return STATUS_OK;
 }
 
@@ -215,6 +227,8 @@ int currentCntrlLaser3Init(void)
     c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER3_EXTRA_FINE_SCALE;
     c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER3_EXTRA_OFFSET;
     c->laserNum = 3;
+    c->laser_temp_ = (float *)registerAddr(LASER3_TEMPERATURE_REGISTER);
+    c->laser_temp_setpoint_ = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
     return STATUS_OK;
 }
 
@@ -245,6 +259,8 @@ int currentCntrlLaser4Init(void)
     c->fpga_extra_fine_scale = FPGA_INJECT + INJECT_LASER4_EXTRA_FINE_SCALE;
     c->fpga_extra_offset = FPGA_INJECT + INJECT_LASER4_EXTRA_OFFSET;
     c->laserNum = 4;
+    c->laser_temp_ = (float *)registerAddr(LASER4_TEMPERATURE_REGISTER);
+    c->laser_temp_setpoint_ = (float *)registerAddr(LASER4_TEMP_CNTRL_SETPOINT_REGISTER);
     return STATUS_OK;
 }
 

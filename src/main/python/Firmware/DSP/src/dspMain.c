@@ -26,15 +26,11 @@
 
 extern far LOG_Obj trace;
 
-void schedulerPrdFunc(void)
-{
-    SEM_post(&SEM_scheduler);
-}
-
 void timestampPrdFunc(void)
 {
     //DataType d;
     timestamp = timestamp + 1LL;
+    if ((timestamp % 100) == 0) SEM_post(&SEM_scheduler);
     SEM_postBinary(&SEM_waitForRdMan);
 }
 
