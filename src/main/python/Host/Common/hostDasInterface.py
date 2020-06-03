@@ -101,7 +101,6 @@ class DasInterface(Singleton):
         """
         Log("Holding DSP in reset...")
         self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
-        #raw_input("Press <Enter> to program FPGA")
         Log("Starting to program FPGA...")
         fpgaProgrammer = FpgaProgrammer(self.analyzerUsb, Log)
         fpgaProgrammer.program(self.fpgaFile)
