@@ -27,7 +27,7 @@ import traceback
 
 class Listener(threading.Thread):
     """ Listener object which allows access to broadcasts via INET sockets """
-    def __init__(self, queue, port, elementType, streamFilter=None, notify=None, retry=False, name="Listener", logFunc=None):
+    def __init__(self, queue, port, elementType, streamFilter=None, notify=None, retry=False, name="Listener", logFunc=None, rcvHwm=4000):
         """ Create a listener running in a new daemonic thread which subscribes to broadcasts at
         the specified "port". The broadcast consists of entries of type "elementType" (a subclass of
         ctypes.Structure)
