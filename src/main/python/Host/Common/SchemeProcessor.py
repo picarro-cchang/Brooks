@@ -84,10 +84,11 @@ class Scheme(object):
         self.errors = []
         self.numErrors = 0
         # Define sandbox environment for scheme
+        self.init_env = {'Row': Row, 'schemeVersion': 0, 'repeat': 0, 'numRows': None, 'schemeRows': [], 'deepcopy': deepcopy}
         self.env = {'Row': Row, 'schemeVersion': 0, 'repeat': 0, 'numRows': None, 'schemeRows': [], 'deepcopy': deepcopy}
-
-        if fileName is not None:
-            schemePath = os.path.split(os.path.abspath(fileName))[0]
+        self.schemePath = None
+        if self.fileName is not None:
+            self.schemePath = os.path.split(os.path.abspath(self.fileName))[0]
 
             def getConfig(relPath):
                 path = os.path.abspath(os.path.join(schemePath, relPath))
@@ -151,6 +152,20 @@ class Scheme(object):
             self.errors.append("Line %d [%s]: %s" % (self.lineNum, e.__class__.__name__, e))
 
     def compile(self):
+        self.env = self.init_env.copy()
+        if self.schemePath is not None:
+
+            def getConfig(relPath):
+                path = os.path.abspath(os.path.join(self.schemePath, relPath))
+                if path not in configMemo:
+                    fp = file(path, 'r')
+                    try:
+                        configMemo[path] = ConfigObj(fp)
+                    finally:
+                        fp.close()
+                return configMemo.get(path, {})
+
+            self.env['getConfig'] = getConfig
         try:
             fp = file(self.fileName, "r")
         except Exception, e:
