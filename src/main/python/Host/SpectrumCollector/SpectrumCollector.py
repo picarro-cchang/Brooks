@@ -139,10 +139,10 @@ class SpectrumCollector(object):
             raise ValueError("Unknown ringdownSource type: %s" % self.ringdownSource)
         if self.ringdownSource == 'raw':
             self.rdEntryType = RingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RDRESULTS
+            self.rdEntryName = "rawRd"
         else:
             self.rdEntryType = ProcessedRingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RD_RECALC
+            self.rdEntryName = "procRd"
         self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
         self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
         self.streamDir = os.path.abspath(os.path.join(basePath, cp.get("MainConfig", "streamDir", "../../../Log/RDF")))
@@ -261,7 +261,7 @@ class SpectrumCollector(object):
             while not self._shutdownRequested:
                 #Pull a spectral point from the RD queue...
                 try:
-                    rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+                    rdData = self.getFromRdQueue(timeToRetry=0.5)
                     if rdData is None:
                         time.sleep(0.5)
                         loops = 0
