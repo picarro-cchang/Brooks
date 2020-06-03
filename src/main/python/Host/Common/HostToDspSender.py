@@ -17,6 +17,7 @@ HISTORY:
 from ctypes import addressof, c_char, c_float, c_longlong, c_short, c_uint, sizeof, Structure
 import time
 import types
+import struct
 
 from Host.autogen import interface
 from Host.Common.analyzerUsbIf import AnalyzerUsb
@@ -751,3 +752,39 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
         self.doOperation(Operation("ACTION_WB_CACHE", [virtualLaserParamsAddr, 4 * interface.VIRTUAL_LASER_PARAMS_SIZE]))
         self.dspAccessor.hpiRead(virtualLaserParamsAddr, vLaserParams)
         return vLaserParams
+
+
+    ##########################################################################
+    # The following methods are used to write a lattice FPGA file to DSP
+    ##########################################################################
+
+    @usbLockProtect
+    def wrLatticeFpgaProgram(self, programAsString):
+        """Write a lattice FPGA program into the DSP memory area.
+
+        For speed, this is done directly via the HPI interface into DSP memory rather
+        than through the host area. We need to declare the scheme areas as volatile in the
+        DSP code so that they are always read from actual memory.
+
+        Args:
+            programAsString: String representation of the lattice FPGA program
+        """
+        latticeFpgaProgramsBase = interface.DSP_DATA_ADDRESS + \
+            4 * interface.LATTICE_FPGA_PROGRAMS_OFFSET
+
+        print "Before invalidating cache"
+        self.doOperation(Operation("ACTION_WB_INV_CACHE",
+                                   [latticeFpgaProgramsBase, 4 * interface.LATTICE_FPGA_PROGRAM_PARAMS_SIZE]))
+
+        #  ensure that the program length is a multiple of 4
+        extra = ((len(programAsString) + 19) // 4) * 4 - len(programAsString)
+        programAsString = programAsString + extra * "*"
+
+        print "Generating program"
+        program = interface.LatticeFpgaProgramType()
+        program.num_words = len(programAsString) // 4
+        print "Filled in num_words", program.num_words
+        for i, word in enumerate(struct.unpack("%dI" % program.num_words, programAsString)):
+            program.data[i] = word
+        self.dspAccessor.hpiWrite(latticeFpgaProgramsBase, program)
+
