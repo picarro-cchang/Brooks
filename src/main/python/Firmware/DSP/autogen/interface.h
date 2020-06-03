@@ -1787,9 +1787,7 @@ typedef enum {
 #define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W (1) // Enables laser shutdown (in automatic mode) bit width
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B (13) // Enables SOA shutdown (in automatic mode) bit position
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown (in automatic mode) bit width
-#define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B (14) // Select optical switch type bit position
-#define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W (1) // Select optical switch type bit width
-#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA or fiber amplifier present bit position
+#define INJECT_CONTROL_SOA_PRESENT_B (14) // SOA or fiber amplifier present bit position
 #define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA or fiber amplifier present bit width
 
 #define INJECT_CONTROL2 (1) // Control register 2

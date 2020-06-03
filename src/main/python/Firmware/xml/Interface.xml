@@ -4870,11 +4870,7 @@
                     <fielddef value="0">Disabled</fielddef>
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
-                <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="14" width="1">
-                    <fielddef value="0">2-way</fielddef>
-                    <fielddef value="1">4-way</fielddef>
-                </bitfield>
-                <bitfield ident="SOA_PRESENT" description="SOA or fiber amplifier present" lsb="15" width="1">
+                <bitfield ident="SOA_PRESENT" description="SOA or fiber amplifier present" lsb="14" width="1">
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>

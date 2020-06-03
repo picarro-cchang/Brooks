@@ -23,12 +23,11 @@ from MyHDL.Common.dsp_interface import Dsp_interface
 from MyHDL.Common.DynamicPwm import DynamicPwm
 from MyHDL.Common.Inject import Inject
 from MyHDL.Common.Kernel import Kernel
-from MyHDL.Common.LaserCurrentGenerator import LaserCurrentGenerator
+# from MyHDL.Common.LaserCurrentGenerator import LaserCurrentGenerator
 from MyHDL.Common.LaserLocker import LaserLocker
 from MyHDL.Common.Ltc2604DacD import Ltc2604DacD
 from MyHDL.Common.Pwm1 import Pwm
 from MyHDL.Common.RdMan import RdMan
-from MyHDL.Common.Rdmemory import Rdmemory
 from MyHDL.Common.RdSim import RdSim
 from MyHDL.Common.Scaler import Scaler
 from MyHDL.Common.SgdbrCurrentSource import SgdbrCurrentSource
@@ -74,7 +73,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     dsp_data_in_dynamicpwm_outlet = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_inject = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_kernel = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_lasercurrentgenerator = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    # dsp_data_in_lasercurrentgenerator = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_laserlocker = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_heater = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_hotbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
@@ -371,22 +370,22 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                     din_in=din,
                     map_base=FPGA_KERNEL)
 
-    laserCurrentGenerator = LaserCurrentGenerator(clk=clk0,
-                                                  reset=reset,
-                                                  dsp_addr=dsp_addr,
-                                                  dsp_data_out=dsp_data_out,
-                                                  dsp_data_in=dsp_data_in_lasercurrentgenerator,
-                                                  dsp_wr=dsp_wr,
-                                                  strobe_in=pulse_100k,
-                                                  sel_laser_in=sel_laser,
-                                                  laser1_fine_current_out=laser1_fine_ext,
-                                                  laser2_fine_current_out=laser2_fine_ext,
-                                                  laser3_fine_current_out=laser3_fine_ext,
-                                                  laser4_fine_current_out=laser4_fine_ext,
-                                                  laser_current_in_window_out=ext_laser_current_in_window,
-                                                  level_counter_out=ext_laser_level_counter,
-                                                  sequence_id_out=ext_laser_sequence_id,
-                                                  map_base=FPGA_LASERCURRENTGENERATOR)
+    # laserCurrentGenerator = LaserCurrentGenerator(clk=clk0,
+    #                                               reset=reset,
+    #                                               dsp_addr=dsp_addr,
+    #                                               dsp_data_out=dsp_data_out,
+    #                                               dsp_data_in=dsp_data_in_lasercurrentgenerator,
+    #                                               dsp_wr=dsp_wr,
+    #                                               strobe_in=pulse_100k,
+    #                                               sel_laser_in=sel_laser,
+    #                                               laser1_fine_current_out=laser1_fine_ext,
+    #                                               laser2_fine_current_out=laser2_fine_ext,
+    #                                               laser3_fine_current_out=laser3_fine_ext,
+    #                                               laser4_fine_current_out=laser4_fine_ext,
+    #                                               laser_current_in_window_out=ext_laser_current_in_window,
+    #                                               level_counter_out=ext_laser_level_counter,
+    #                                               sequence_id_out=ext_laser_sequence_id,
+    #                                               map_base=FPGA_LASERCURRENTGENERATOR)
 
     laserlocker = LaserLocker(clk=clk0,
                               reset=reset,
@@ -610,6 +609,20 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                 sgdbr_select_out=sgdbr_select,
                                 map_base=FPGA_SGDBRMANAGER)
 
+    rdsim = RdSim(clk=clk0,
+                  reset=reset,
+                  dsp_addr=dsp_addr,
+                  dsp_data_out=dsp_data_out,
+                  dsp_data_in=dsp_data_in_rdsim,
+                  dsp_wr=dsp_wr,
+                  rd_trig_in=rd_trig,
+                  pzt_value_in=pzt,
+                  rd_adc_clk_in=adc_clk,
+                  pzt_center_in=sim_pzt,
+                  decay_in=sim_loss,
+                  rdsim_value_out=rdsim_value,
+                  map_base=FPGA_RDSIM)
+
     sgdbrCurrentSourceA = SgdbrCurrentSource(clk=clk0,
                                              reset=reset,
                                              dsp_addr=dsp_addr,
@@ -643,20 +656,6 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                              resetn_out=sgdbr_b_resetn,
                                              done_out=sgdbr_b_done,
                                              map_base=FPGA_SGDBRCURRENTSOURCE_B)
-
-    rdsim = RdSim(clk=clk0,
-                  reset=reset,
-                  dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out,
-                  dsp_data_in=dsp_data_in_rdsim,
-                  dsp_wr=dsp_wr,
-                  rd_trig_in=rd_trig,
-                  pzt_value_in=pzt,
-                  rd_adc_clk_in=adc_clk,
-                  pzt_center_in=sim_pzt,
-                  decay_in=sim_loss,
-                  rdsim_value_out=rdsim_value,
-                  map_base=FPGA_RDSIM)
 
     twGen = TWGen(clk=clk0,
                   reset=reset,
@@ -1004,13 +1003,13 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     @always_comb
     def comb():
         dsp_data_in.next = (dsp_data_in_analyzermemory | dsp_data_in_dynamicpwm_inlet | dsp_data_in_dynamicpwm_outlet
-                            | dsp_data_in_inject | dsp_data_in_kernel | dsp_data_in_lasercurrentgenerator | dsp_data_in_laserlocker
+                            | dsp_data_in_inject | dsp_data_in_kernel | dsp_data_in_laserlocker
                             | dsp_data_in_pwm_heater | dsp_data_in_pwm_hotbox | dsp_data_in_pwm_engine1 | dsp_data_in_pwm_engine2
                             | dsp_data_in_pwm_laser1 | dsp_data_in_pwm_laser2 | dsp_data_in_pwm_laser3 | dsp_data_in_pwm_laser4
                             | dsp_data_in_rdman | dsp_data_in_rdsim | dsp_data_in_sgdbrcurrentsource_a
                             | dsp_data_in_sgdbrcurrentsource_b | dsp_data_in_sgdbrmanager | dsp_data_in_twGen
                             | dsp_data_in_pwm_warmbox | dsp_data_in_wlmsim | dsp_data_in_scaler | dsp_data_in_pwm_filter_heater)
-
+        # dsp_data_in_lasercurrentgenerator
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
         overload_in.next[OVERLOAD_HotBoxTecBit] = hot_box_tec_overload
 
