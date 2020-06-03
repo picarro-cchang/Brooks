@@ -23,7 +23,7 @@ import os
 import sys
 import time
 
-from threading import Thread, Lock
+from threading import Lock, RLock, Thread
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes, CmdFIFO
