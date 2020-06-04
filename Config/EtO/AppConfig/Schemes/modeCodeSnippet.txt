@@ -1,0 +1,11 @@
+SchemeCount = 10
+Scheme_1_Path = ../Schemes/FSRscheme_5995_6013.sch
+Scheme_2_Path = ../Schemes/FSRscheme_6013_6031.sch
+Scheme_3_Path = ../Schemes/FSRscheme_6031_6050.sch
+Scheme_4_Path = ../Schemes/FSRscheme_6050_6068.sch
+Scheme_5_Path = ../Schemes/FSRscheme_6068_6087.sch
+Scheme_6_Path = ../Schemes/FSRscheme_6087_6105.sch
+Scheme_7_Path = ../Schemes/FSRscheme_6105_6123.sch
+Scheme_8_Path = ../Schemes/FSRscheme_6123_6142.sch
+Scheme_9_Path = ../Schemes/FSRscheme_6142_6160.sch
+Scheme_10_Path = ../Schemes/FSRscheme_6160_6179.sch
