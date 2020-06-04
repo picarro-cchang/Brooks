@@ -364,7 +364,7 @@ class LOLoggerThread(threading.Thread):
             self.get_purging_old_logs_done()
 
 
-    def add_enrty_to_file_tracking(self, db_path):
+    def add_entry_to_file_tracking(self, db_path):
         # create connection to file_tracking_db
         if os.path.exists(self.file_tracking_db_path):
             self.file_tracking_db_connection = sqlite3.connect(self.file_tracking_db_path)
