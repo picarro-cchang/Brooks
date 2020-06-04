@@ -601,7 +601,7 @@ def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
-    parser.add_argument('-l', '--log_level', help='LogLevel: all the logs below that level will be ignorred', default=1)
+    parser.add_argument('-l', '--log_level', help='LogLevel: all the logs below that level will be ignored', default=1)
     parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=os.getcwd())
     parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
     parser.add_argument('-prh',
