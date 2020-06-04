@@ -4,7 +4,6 @@ import json
 import queue
 import signal
 import sqlite3
-import calendar
 import threading
 from datetime import datetime
 
@@ -361,7 +360,6 @@ class LOLoggerThread(threading.Thread):
             db_extension = os.path.splitext(db_path)[1]
             json_file_path = db_path.replace(db_extension, ".json")
             self.json_file = open(json_file_path, "a")
-
         if self.purge_old_logs is not None:
             self.get_purging_old_logs_done()
 
@@ -415,7 +413,6 @@ class LOLoggerThread(threading.Thread):
         fetched_end_date = entry[2]
         if end_date != fetched_end_date:
             self.flush_internal_log_messages(f"Failed to update end_date for {db_path} in the file_tracking_db", level=40)
-
 
     def check_if_need_to_switch_file(self):
         """Check if year or month has changed."""
