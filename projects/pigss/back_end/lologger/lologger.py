@@ -283,7 +283,7 @@ class LOLoggerThread(threading.Thread):
         self.move_to_new_file_every_month = move_to_new_file_every_month
         self.redundant_json = redundant_json
         self.file_tracking = file_tracking
-        if self.file_tracking:
+        if self.file_tracking and self.move_to_new_file_every_month:
             self.file_tracking_db_path = self._create_database_file_path(True)
 
         self.current_year_month = get_current_year_month()
@@ -354,7 +354,7 @@ class LOLoggerThread(threading.Thread):
             self.connection = sqlite3.connect(db_path)
             self._create_new_database_table()
             self.rowid = 0
-        if self.file_tracking:
+        if self.file_tracking and self.move_to_new_file_every_month:
             self.add_enrty_to_file_tracking(db_path)
         if self.redundant_json:
             db_extension = os.path.splitext(db_path)[1]
