@@ -53,11 +53,36 @@ MOVE_TO_NEW_FILE_EVERY_MONTH = True
 
 DEFAULT_DB_PATH = "."  # TODO
 
+FILE_TRACKING_DB_FILENAME = "lologger_file_tracking.db"
 
 def get_current_year_month():
     today = datetime.today()
     return f"{today.year}_{today.month:0{2}}"
 
+def approximate_end_of_the_month():
+    # this function will calculate approximate end of the month
+    # it is not neccessary for this method to return exact epoch time of the end of the month
+    # rather to make sure it is close enough and be above the actual end of the month.
+    # calculating the actual end of the month in the local time zone in epoch time would be too
+    # complicated, since we can't guarantee that we can always know current time zone and UTC offset
+    # and without further ado:
+    today = datetime.today()
+    current_year = today.year
+    current_month = today.month
+
+    if current_month==12:
+        next_month = 1
+        next_year = current_year + 1
+    else:
+        next_month = current_month + 1
+        next_year = current_year
+    return today.replace(year=next_year,
+                         month=next_month,
+                         day=2,
+                         hour=0,
+                         minute=0,
+                         second=0,
+                         microsecond=0).timestamp()
 
 class LOLogger(object):
     def __init__(self,
@@ -72,15 +97,17 @@ class LOLogger(object):
                  flushing_timeout=1,
                  move_to_new_file_every_month=MOVE_TO_NEW_FILE_EVERY_MONTH,
                  verbose=True,
+                 log_level=1,
                  redundant_json=False,
                  meta_table=False,
                  pkg_meta=None,
                  picarro_version=False,
-                 purge_old_logs=None):
+                 purge_old_logs=None,
+                 file_tracking=True):
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
         self.db_filename_hostname = db_filename_hostname
-        self.rpc_port = rpc_port
+        self.rpc_port = int(rpc_port)
         self.rpc_server_name = rpc_server_name
         self.rpc_server_description = rpc_server_description
 
@@ -96,9 +123,10 @@ class LOLogger(object):
 
         self.queue = queue.Queue(maxsize=2048)
         self.verbose = verbose
-        self.LogLevel = 1
+        self.LogLevel = log_level
         self.logs_passed_to_queue = 0
         self.redundant_json = redundant_json
+        self.file_tracking = file_tracking
 
         self.meta_table = meta_table
         self.pkg_meta = pkg_meta
@@ -123,7 +151,8 @@ class LOLogger(object):
                                               meta_table=self.meta_table,
                                               pkg_meta=self.pkg_meta,
                                               picarro_version=self.picarro_version,
-                                              purge_old_logs=self.purge_old_logs)
+                                              purge_old_logs=self.purge_old_logs,
+                                              file_tracking=self.file_tracking)
 
         self.register_rpc_functions()
 
@@ -242,16 +271,20 @@ class LOLoggerThread(threading.Thread):
                  meta_table=False,
                  pkg_meta=None,
                  picarro_version=False,
-                 purge_old_logs=None):
+                 purge_old_logs=None,
+                 file_tracking=True):
         threading.Thread.__init__(self, name="LOLoggerThread")
         self.db_folder_path = db_folder_path
         self.db_filename_prefix = db_filename_prefix
         self.db_filename_hostname = db_filename_hostname
-        self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
+        self.db_path = self._create_database_file_path()
         self.queue = queue
         self.parent = parent
         self.move_to_new_file_every_month = move_to_new_file_every_month
         self.redundant_json = redundant_json
+        self.file_tracking = file_tracking
+        if self.file_tracking and self.move_to_new_file_every_month:
+            self.file_tracking_db_path = self._create_database_file_path(True)
 
         self.current_year_month = get_current_year_month()
 
@@ -280,14 +313,17 @@ class LOLoggerThread(threading.Thread):
         else:
             return last_row_id
 
-    def _create_database_file_path(self, db_folder_path, db_filename_prefix, db_filename_hostname=None):
+    def _create_database_file_path(self, file_tracking_db=False):
         """Create a filename for the new sqlite file."""
-        db_filename = f"{db_filename_prefix}_{get_current_year_month()}.db"
-        self.full_prefix = f"{db_filename_prefix}_"
-        if db_filename_hostname is not None:
+        if file_tracking_db:
+            db_filename = f"{self.db_filename_prefix}_{FILE_TRACKING_DB_FILENAME}"
+        else:
+            db_filename = f"{self.db_filename_prefix}_{get_current_year_month()}.db"
+        self.full_prefix = f"{self.db_filename_prefix}_"
+        if self.db_filename_hostname is not None:
             self.full_prefix = f"{os.uname()[1]}_{self.full_prefix}"
             db_filename = f"{os.uname()[1]}_{db_filename}"
-        return os.path.join(db_folder_path, db_filename)
+        return os.path.join(self.db_folder_path, db_filename)
 
     def _create_new_database_table(self):
         """Create table."""
@@ -318,12 +354,65 @@ class LOLoggerThread(threading.Thread):
             self.connection = sqlite3.connect(db_path)
             self._create_new_database_table()
             self.rowid = 0
+        if self.file_tracking and self.move_to_new_file_every_month:
+            self.add_entry_to_file_tracking(db_path)
         if self.redundant_json:
             db_extension = os.path.splitext(db_path)[1]
             json_file_path = db_path.replace(db_extension, ".json")
             self.json_file = open(json_file_path, "a")
         if self.purge_old_logs is not None:
             self.get_purging_old_logs_done()
+
+
+    def add_entry_to_file_tracking(self, db_path):
+        # create connection to file_tracking_db
+        if os.path.exists(self.file_tracking_db_path):
+            self.file_tracking_db_connection = sqlite3.connect(self.file_tracking_db_path)
+        else:
+            self.file_tracking_db_connection = sqlite3.connect(self.file_tracking_db_path)
+            query = '''CREATE TABLE db_entry (filepath TEXT NOT NULL PRIMARY KEY,
+                         start_date INTEGER NOT NULL, end_date INTEGER NOT NULL)'''
+            self.file_tracking_db_connection.execute(query)
+        cursor = self.file_tracking_db_connection.cursor()
+
+        # check if db_path present in the file_tracking_db
+        cursor.execute("SELECT * FROM db_entry WHERE filepath=?", (db_path,))
+        if len(cursor.fetchall()) == 0:
+            # if not - make an entry with current time as start_date and approximate date for end_date
+            start_date = int(datetime.now().timestamp())
+            approximate_upper_bound_end = int(approximate_end_of_the_month())
+
+            # insert to file_tracking_db
+            cursor.execute(''' INSERT INTO db_entry(filepath,start_date,end_date)
+              VALUES(?,?,?) ''', (db_path,start_date ,approximate_upper_bound_end))
+            self.file_tracking_db_connection.commit()
+
+        # close connection to file_tracking_db
+        cursor.close()
+        self.file_tracking_db_connection.close()
+
+    def end_file_tracking(self, db_path):
+        # function that should be called in the end of the month if file tracking is enabled.
+        # it will replace the value "end_date" in the file_tracking_db for the passed db_path argument.
+        # previous value is an earlier made approximation, to be reaplaced with an exact
+        # epochtime of the last log message before moving to new months file
+        self.file_tracking_db_connection = sqlite3.connect(self.file_tracking_db_path)
+        cursor = self.file_tracking_db_connection.cursor()
+        cursor.execute("SELECT * FROM db_entry WHERE filepath=?", (db_path,))
+        entry = cursor.fetchall()[0]
+        start_date = entry[1] # needs to be preserved while replacing end_date
+        end_date = int(datetime.now().timestamp())
+        replacing_query = "REPLACE INTO db_entry (filepath, start_date, end_date) values (?, ?, ?);"
+        cursor.execute(replacing_query, (db_path, start_date, end_date, ))
+        self.file_tracking_db_connection.commit()
+        time.sleep(1)
+
+        # check with db that all went well
+        cursor.execute("SELECT * FROM db_entry WHERE filepath=?", (db_path,))
+        entry = cursor.fetchall()[0]
+        fetched_end_date = entry[2]
+        if end_date != fetched_end_date:
+            self.flush_internal_log_messages(f"Failed to update end_date for {db_path} in the file_tracking_db", level=40)
 
     def check_if_need_to_switch_file(self):
         """Check if year or month has changed."""
@@ -484,7 +573,9 @@ class LOLoggerThread(threading.Thread):
                         if self.move_to_new_file_every_month and self.check_if_need_to_switch_file():
                             if self.redundant_json:
                                 self.json_file.close()
-                            self.db_path = self._create_database_file_path(self.db_folder_path, self.db_filename_prefix, self.db_filename_hostname)
+                            if self.file_tracking:
+                                self.end_file_tracking(self.db_path)
+                            self.db_path = self._create_database_file_path()
                             self.get_connection(self.db_path)
 
                         if self._sigint_event.is_set():
@@ -510,7 +601,7 @@ def parse_arguments():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-r', '--rpc_port', help='Piglet RPC Port', default=rpc_ports["logger"])
-    parser.add_argument('-l', '--log_level', help='LogLevel', default=20)
+    parser.add_argument('-l', '--log_level', help='LogLevel: all the logs below that level will be ignored', default=1)
     parser.add_argument('-p', '--db_path', help='Path to where sqlite files with logs will be stored', default=os.getcwd())
     parser.add_argument('-pr', '--db_filename_prefix', help='SQLite filename will be started with that prefix', default="")
     parser.add_argument('-prh',
@@ -530,6 +621,7 @@ def parse_arguments():
                         default=False,
                         action="store_true")
     parser.add_argument('-pol', '--purge_old_logs', help='Will delete log files older than provided number of months', default=None)
+    parser.add_argument('-fl', '--file_tracking', help='Will create a separate db file to track created log files', default=True)
 
     args = parser.parse_args()
     return args
@@ -550,12 +642,13 @@ def main():
         rpc_port=args.rpc_port,
         move_to_new_file_every_month=args.move_to_new_file_every_month,
         verbose=args.verbose,
+        log_level=args.log_level,
         redundant_json=args.json,
         meta_table=args.meta_table,
         pkg_meta=args.pkg_meta,
         picarro_version=args.picarro_version,
-        purge_old_logs=args.purge_old_logs)
-
+        purge_old_logs=args.purge_old_logs,
+        file_tracking=args.file_tracking)
 
 if __name__ == "__main__":
     main()

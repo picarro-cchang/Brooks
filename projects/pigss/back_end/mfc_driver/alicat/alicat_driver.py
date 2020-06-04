@@ -93,7 +93,7 @@ class AlicatDriver(object):
                     response = None
         except serial.SerialException:
             response = None
-        self.logger.debug(f'Command sent: {command}\nResponse received: {response}\n')
+        self.logger.Log(f'Command sent: {command}\nResponse received: {response}\n', level=5)
         return response
 
     def close(self):
