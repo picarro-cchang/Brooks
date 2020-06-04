@@ -355,7 +355,7 @@ class LOLoggerThread(threading.Thread):
             self._create_new_database_table()
             self.rowid = 0
         if self.file_tracking and self.move_to_new_file_every_month:
-            self.add_enrty_to_file_tracking(db_path)
+            self.add_entry_to_file_tracking(db_path)
         if self.redundant_json:
             db_extension = os.path.splitext(db_path)[1]
             json_file_path = db_path.replace(db_extension, ".json")
