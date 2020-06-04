@@ -15,7 +15,7 @@ fH2O2a = 7011.567
 fH2O2b = 7011.605
 df = 0.5*(fH2O2b - fH2O2a)
 
-cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 schemeRows = []
 

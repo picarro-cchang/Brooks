@@ -77,6 +77,7 @@ int spectCntrlInit(void)
     s->pztOffsetByVirtualLaser_[5] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER6);
     s->pztOffsetByVirtualLaser_[6] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER7);
     s->pztOffsetByVirtualLaser_[7] = (float *)registerAddr(PZT_OFFSET_VIRTUAL_LASER8);
+    s->pztUpdateMode_ = (unsigned int *)registerAddr(PZT_UPDATE_MODE_REGISTER);
     s->schemeOffsetByVirtualLaser_[0] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER1);
     s->schemeOffsetByVirtualLaser_[1] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER2);
     s->schemeOffsetByVirtualLaser_[2] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER3);
@@ -85,6 +86,24 @@ int spectCntrlInit(void)
     s->schemeOffsetByVirtualLaser_[5] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER6);
     s->schemeOffsetByVirtualLaser_[6] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER7);
     s->schemeOffsetByVirtualLaser_[7] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER8);
+    s->frontMirrorDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER);
+    s->frontMirrorDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER);
+    s->backMirrorDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_BACK_MIRROR_REGISTER);
+    s->backMirrorDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER);
+    s->gainDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_GAIN_REGISTER);
+    s->gainDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_GAIN_REGISTER);
+    s->soaDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_SOA_REGISTER);
+    s->soaDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_SOA_REGISTER);
+    s->coarsePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_COARSE_PHASE_REGISTER);
+    s->coarsePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_COARSE_PHASE_REGISTER);
+    s->finePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FINE_PHASE_REGISTER);
+    s->finePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FINE_PHASE_REGISTER);
+    s->sgdbr_csr_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_CSR;
+    s->sgdbr_csr_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR;
+    s->sgdbr_mosi_data_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MOSI_DATA;
+    s->sgdbr_mosi_data_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MOSI_DATA;
+    s->sgdbr_miso_data_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MISO_DATA;
+    s->sgdbr_miso_data_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MISO_DATA;
     s->schemeThresholdFactorByVirtualLaser_[0] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER1);
     s->schemeThresholdFactorByVirtualLaser_[1] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER2);
     s->schemeThresholdFactorByVirtualLaser_[2] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER3);
@@ -281,6 +300,18 @@ void spectCntrl(void)
 }
 
 static int activeMemo = -1, rowMemo = -1;
+
+static inline void sgdbr_wait_done(SpectCntrlParams *s, int sgdbrIndex)
+{
+    while (0 == (readFPGA(s->sgdbr_csr_[sgdbrIndex]) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)))
+        ;
+}
+
+static inline int sgdbr_find_index(int aLaserNum)
+{
+    return (aLaserNum == 1) ? 0 : 1; // Actual laser 1 = SGDBR_A, 3 = SGDBR_B
+}
+
 void setupLaserTemperatureAndPztOffset(int useMemo)
 {
     SpectCntrlParams *s = &spectCntrlParams;
@@ -300,13 +331,17 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         // In continuous mode update the pztOffsets from the DSP registers immediately
         pztOffsets[vLaserNum - 1] = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
         pztOffset = pztOffsets[vLaserNum - 1]; // *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
-        writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
+        if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
+        {
+            writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
+        }
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
     { // With manual temperature control, do not adjust the PZT
     }
     else
     { // We are running a scheme
+        volatile SchemeRowType *schemeRowPtr;
         if (useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo)
             return;
         *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
@@ -317,6 +352,25 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         if (laserTemp != 0.0)
         {
             *(s->laserTempSetpoint_[aLaserNum - 1]) = laserTemp + *(s->schemeOffsetByVirtualLaser_[vLaserNum - 1]);
+        }
+
+        // If the laserType is one (for the SGDBR laser) we need to update the front and back mirror and the coarse
+        //  phase DAC. We need to modify the DSP registers as well as write to the FPGA block.
+        schemeRowPtr = &(schemeTable->rows[*(s->row_)]);
+        if (vLaserParams->laserType == 1)
+        {
+			int sgdbrIndex;
+            sgdbrIndex = sgdbr_find_index(aLaserNum);
+            *(s->frontMirrorDac_[sgdbrIndex]) = schemeRowPtr->frontMirrorDac;
+            *(s->backMirrorDac_[sgdbrIndex]) = schemeRowPtr->backMirrorDac;
+            *(s->coarsePhaseDac_[sgdbrIndex]) = schemeRowPtr->coarsePhaseDac;
+            sgdbr_wait_done(s, sgdbrIndex);
+            writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_FRONT_MIRROR_DAC | schemeRowPtr->frontMirrorDac);
+            sgdbr_wait_done(s, sgdbrIndex);
+            writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_BACK_MIRROR_DAC | schemeRowPtr->backMirrorDac);
+            sgdbr_wait_done(s, sgdbrIndex);
+            writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_COARSE_PHASE_DAC | schemeRowPtr->coarsePhaseDac);
+            sgdbr_wait_done(s, sgdbrIndex);
         }
 
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
@@ -331,8 +385,10 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         // In other modes, the pztOffset is only updated when we go from one scheme to the next since this is done
         //  in advanceScheme()
         pztOffset = pztOffsets[vLaserNum - 1] + schemeTable->rows[*(s->row_)].pztSetpoint;
-        writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
-
+        if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
+        {
+            writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
+        }
         activeMemo = *(s->active_);
         rowMemo = *(s->row_);
     }
@@ -344,11 +400,13 @@ void setupNextRdParams(void)
     RingdownParamsType *r = &nextRdParams;
 
     unsigned int laserNum, laserTempAsInt, lossTag;
+    int sgdbrIndex;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
-    float setpoint, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
+    float phi, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
 
     s->incrCounter_ = s->incrCounterNext_;
+
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
     {
         // In continuous mode, we run with the parameter values currently in the registers
@@ -364,9 +422,11 @@ void setupNextRdParams(void)
         r->countAndSubschemeId = (s->incrCounter_ << 16);
         r->ringdownThreshold = *(s->defaultThreshold_);
         r->status = 0;
+        r->angleSetpoint = 0.0;
         laserTempAsInt = 1000.0 * r->laserTemperature;
         // Set up the FPGA registers for this ringdown
         changeBitsFPGA(FPGA_INJECT + INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
+        changeBitsFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W, sgdbr_find_index(laserNum + 1));
         writeFPGA(FPGA_RDMAN + RDMAN_THRESHOLD, r->ringdownThreshold);
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
@@ -375,6 +435,7 @@ void setupNextRdParams(void)
         // In this way, if a virtual laser number is specified, it is used (for frequency conversion)
         //  but if not, it will still work.
         laserNum = readBitsFPGA(FPGA_INJECT + INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W);
+        changeBitsFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W, sgdbr_find_index(laserNum + 1));
         r->injectionSettings = (*(s->virtLaser_) << INJECTION_SETTINGS_virtualLaserShift) | (laserNum << INJECTION_SETTINGS_actualLaserShift);
         r->laserTemperature = *(s->laserTemp_[laserNum]);
         r->coarseLaserCurrent = *(s->coarseLaserCurrent_[laserNum]);
@@ -385,6 +446,7 @@ void setupNextRdParams(void)
         r->countAndSubschemeId = 0; // (s->incrCounter_ << 16);
         r->ringdownThreshold = *(s->defaultThreshold_);
         r->status = 0;
+        r->angleSetpoint = 0.0;
         laserTempAsInt = 1000.0 * r->laserTemperature;
         // Set up the FPGA registers for this ringdown
         writeFPGA(FPGA_RDMAN + RDMAN_THRESHOLD, r->ringdownThreshold);
@@ -393,11 +455,25 @@ void setupNextRdParams(void)
     {
         do
         {
+            schemeTable = &schemeTables[*(s->active_)];
+            *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
+            vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+            if (vLaserParams->laserType == 1)
+            {
+                // Deal with angle setpoint == -1.0e6 which indicates that the SGDBR laser
+                // cannot tune to this frequency and we should proceed to the next scheme row
+                if (schemeTable->rows[*(s->row_)].setpoint <= -1.0e6)
+                {
+                    s->incrFlag_ = schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask;
+                    advanceSchemeRow();
+                    s->incrCounter_ = s->incrCounterNext_;
+                    continue;
+                }
+            }
             // This loop is here so that a dwell count of zero can be used to set up the
             //  laser temperature without triggering a ringdown
             setupLaserTemperatureAndPztOffset(s->useMemo_);
             s->useMemo_ = 1;
-            schemeTable = &schemeTables[*(s->active_)];
             if (schemeTable->rows[*(s->row_)].dwellCount > 0)
                 break;
             s->incrFlag_ = schemeTable->rows[*(s->row_)].subschemeId & SUBSCHEME_ID_IncrMask;
@@ -405,10 +481,7 @@ void setupNextRdParams(void)
             s->incrCounter_ = s->incrCounterNext_;
         } while (1);
         // while (*(s->row_) != 0);
-        schemeTable = &schemeTables[*(s->active_)];
-        *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
-        vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
-        setpoint = schemeTable->rows[*(s->row_)].setpoint;
+
         laserNum = vLaserParams->actualLaser & 0x3;
         // The loss tag is used to classify ringdowns for storage in the LOSS_BUFFER_n registers
         lossTag = schemeTable->rows[*(s->row_)].pztSetpoint & 0x7;
@@ -458,18 +531,34 @@ void setupNextRdParams(void)
                 r->status |= RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask;
         }
 
-        // Correct the setpoint angle using the etalon temperature and ambient pressure
-        dp = r->ambientPressure - vLaserParams->calPressure;
-        theta = setpoint - vLaserParams->tempSensitivity * (r->etalonTemperature - vLaserParams->calTemp) -
-                (vLaserParams->pressureC0 + dp * (vLaserParams->pressureC1 + dp * (vLaserParams->pressureC2 + dp * vLaserParams->pressureC3)));
+        if (vLaserParams->laserType == 1)
+        {
+            // Set up the locker multipliers on the basis of the pseudo-angle setpoint
+            // Correct the setpoint angle using the etalon temperature and ambient pressure
+            r->angleSetpoint = schemeTable->rows[*(s->row_)].setpoint;
+            dp = r->ambientPressure - vLaserParams->calPressure;
+            phi = r->angleSetpoint - vLaserParams->tempSensitivity * (r->etalonTemperature - vLaserParams->calTemp) -
+                  (vLaserParams->pressureC0 + dp * (vLaserParams->pressureC1 + dp * (vLaserParams->pressureC2 + dp * vLaserParams->pressureC3)));
+            ratio1Multiplier = -sinsp(phi);
+            ratio2Multiplier = cossp(phi);
+        }
+        else
+        {
+            r->angleSetpoint = schemeTable->rows[*(s->row_)].setpoint;
+            // Correct the setpoint angle using the etalon temperature and ambient pressure
+            dp = r->ambientPressure - vLaserParams->calPressure;
+            theta = r->angleSetpoint - vLaserParams->tempSensitivity * (r->etalonTemperature - vLaserParams->calTemp) -
+                    (vLaserParams->pressureC0 + dp * (vLaserParams->pressureC1 + dp * (vLaserParams->pressureC2 + dp * vLaserParams->pressureC3)));
 
-        // Compute the ratio multipliers corresponding to this setpoint. Both ratios must be no greater than one in absolute value.
-        minScale = min(vLaserParams->ratio1Scale, vLaserParams->ratio2Scale);
-        ratio1Multiplier = -minScale * sinsp(theta + vLaserParams->phase) / vLaserParams->ratio1Scale;
-        ratio2Multiplier = minScale * cossp(theta) / vLaserParams->ratio2Scale;
+            // Compute the ratio multipliers corresponding to this setpoint. Both ratios must be no greater than one in absolute value.
+            minScale = min(vLaserParams->ratio1Scale, vLaserParams->ratio2Scale);
+            ratio1Multiplier = -minScale * sinsp(theta + vLaserParams->phase) / vLaserParams->ratio1Scale;
+            ratio2Multiplier = minScale * cossp(theta) / vLaserParams->ratio2Scale;
+        }
 
         // Set up the FPGA registers for this ringdown
         changeBitsFPGA(FPGA_INJECT + INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
+        changeBitsFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W, sgdbr_find_index(laserNum + 1));
 
         writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_RATIO1_MULTIPLIER, (int)(ratio1Multiplier * 32767.0));
         writeFPGA(FPGA_LASERLOCKER + LASERLOCKER_RATIO2_MULTIPLIER, (int)(ratio2Multiplier * 32767.0));
@@ -482,6 +571,11 @@ void setupNextRdParams(void)
         //  the simulator to calculate an angle that depends on laser temperature as well as current
         writeFPGA(FPGA_WLMSIM + WLMSIM_LASER_TEMP, laserTempAsInt);
     }
+
+    sgdbrIndex = sgdbr_find_index(laserNum + 1);
+    r->frontAndBackMirrorCurrentDac = ((0xFFFF & (int)(*(s->frontMirrorDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->backMirrorDac_[sgdbrIndex])));
+    r->gainAndSoaCurrentDac = ((0xFFFF & (int)(*(s->gainDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->soaDac_[sgdbrIndex])));
+    r->coarseAndFinePhaseCurrentDac = ((0xFFFF & (int)(*(s->coarsePhaseDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->finePhaseDac_[sgdbrIndex])));
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM0, *(uint32 *)&r->injectionSettings);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM1, *(uint32 *)&r->laserTemperature);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM2, *(uint32 *)&r->coarseLaserCurrent);
@@ -492,6 +586,10 @@ void setupNextRdParams(void)
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM7, *(uint32 *)&r->countAndSubschemeId);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM8, *(uint32 *)&r->ringdownThreshold);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM9, *(uint32 *)&r->status);
+    writeFPGA(FPGA_RDMAN + RDMAN_PARAM10, *(uint32 *)&r->angleSetpoint);
+    writeFPGA(FPGA_RDMAN + RDMAN_PARAM11, *(uint32 *)&r->frontAndBackMirrorCurrentDac);
+    writeFPGA(FPGA_RDMAN + RDMAN_PARAM12, *(uint32 *)&r->gainAndSoaCurrentDac);
+    writeFPGA(FPGA_RDMAN + RDMAN_PARAM13, *(uint32 *)&r->coarseAndFinePhaseCurrentDac);
 }
 
 void modifyParamsOnTimeout(unsigned int schemeCount)
@@ -547,6 +645,9 @@ void setAutomaticLaserCurrentControl(void)
     writeRegister(LASER2_CURRENT_CNTRL_STATE_REGISTER, data);
     writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER, data);
     writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER, data);
+    data.asInt = SGDBR_CNTRL_AutomaticState;
+    writeRegister(SGDBR_A_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_B_CNTRL_STATE_REGISTER, data);
 
     // Setting the FPGA optical injection block to automatic mode has to be done independently
     //  of setting the individual current controllers. Care is needed since the current controllers
@@ -568,6 +669,9 @@ void setManualControl(void)
     writeRegister(LASER2_CURRENT_CNTRL_STATE_REGISTER, data);
     writeRegister(LASER3_CURRENT_CNTRL_STATE_REGISTER, data);
     writeRegister(LASER4_CURRENT_CNTRL_STATE_REGISTER, data);
+    data.asInt = SGDBR_CNTRL_ManualState;
+    writeRegister(SGDBR_A_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_B_CNTRL_STATE_REGISTER, data);
 }
 
 void validateSchemePosition(void)

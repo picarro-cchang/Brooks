@@ -28,6 +28,8 @@ typedef struct LASER_CURRENT_CNTRL
     float *extra_coarse_scale_; // Scale factor for coarse current when applying extra current
     float *extra_fine_scale_; // Scale factor for fine current when applying extra current
     int *extra_offset_; // Offset when applying extra current
+    float *laser_temp_; // Temperature of laser
+    float *laser_temp_setpoint_; // Temperature setpoint of laser
     // FPGA register indices
     unsigned int fpga_control;
     unsigned int fpga_coarse;

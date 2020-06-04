@@ -27,7 +27,7 @@ import traceback
 
 class Listener(threading.Thread):
     """ Listener object which allows access to broadcasts via INET sockets """
-    def __init__(self, queue, port, elementType, streamFilter=None, notify=None, retry=False, name="Listener", logFunc=None):
+    def __init__(self, queue, port, elementType, streamFilter=None, notify=None, retry=False, name="Listener", logFunc=None, rcvHwm=4000):
         """ Create a listener running in a new daemonic thread which subscribes to broadcasts at
         the specified "port". The broadcast consists of entries of type "elementType" (a subclass of
         ctypes.Structure)
@@ -72,6 +72,7 @@ class Listener(threading.Thread):
         self.logFunc = logFunc
         self.notify = notify
         self.retry = retry
+        self.rcvHwm = rcvHwm
 
         try:
             if StringPickler.ArbitraryObject in self.elementType.__mro__:
@@ -114,6 +115,7 @@ class Listener(threading.Thread):
                         self.socket = self.zmqContext.socket(zmq.SUB)
                         self.socket.connect("tcp://localhost:%s" % self.port)
                         self.socket.setsockopt(zmq.SUBSCRIBE, "")
+                        self.socket.setsockopt(zmq.RCVHWM, self.rcvHwm)
                         poller.register(self.socket, zmq.POLLIN)
                         self.safeLog("Connection made by %s to port %d." % (self.name, self.port))
                     except Exception:

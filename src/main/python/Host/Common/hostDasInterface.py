@@ -28,6 +28,7 @@ from Host.Common.FpgaProgrammer import FpgaProgrammer
 from Host.Common.HostToDspSender import HostToDspSender
 from Host.Common.SharedTypes import Singleton
 from Host.Common.SharedTypes import UsbConnectionError
+from Host.Common.StateDatabase import SensorHistory, StateDatabase
 
 EventManagerProxy_Init(APP_NAME)
 
@@ -35,11 +36,14 @@ EventManagerProxy_Init(APP_NAME)
 class DasInterface(Singleton):
     initialized = False
 
-    def __init__(self, stateDbFile=None, usbFile=None, dspFile=None, fpgaFile=None):
+    def __init__(self, stateDbFile=None, usbFile=None, dspFile=None, fpgaFile=None, latticeFile=None):
         if not self.initialized:
+            self.stateDatabase = StateDatabase(stateDbFile, Log)
+            self.sensorHistory = SensorHistory()
             self.usbFile = usbFile
             self.dspFile = dspFile
             self.fpgaFile = fpgaFile
+            self.latticeFile = latticeFile
             self.analyzerUsb = None
             self.hostToDspSender = None
             self.stateDb = None
@@ -97,7 +101,6 @@ class DasInterface(Singleton):
         """
         Log("Holding DSP in reset...")
         self.analyzerUsb.setDspControl(usbdefs.VENDOR_DSP_CONTROL_RESET)
-        #raw_input("Press <Enter> to program FPGA")
         Log("Starting to program FPGA...")
         fpgaProgrammer = FpgaProgrammer(self.analyzerUsb, Log)
         fpgaProgrammer.program(self.fpgaFile)
@@ -125,6 +128,7 @@ class DasInterface(Singleton):
             self.sensorIndex += 1
             if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
                 self.sensorIndex = 0
+            self.sensorHistory.record(data)
             return data
 
     def getSensorDataBlock(self):
@@ -139,6 +143,7 @@ class DasInterface(Singleton):
                 self.sensorIndex += 1
                 if self.sensorIndex >= interface.NUM_SENSOR_ENTRIES:
                     self.sensorIndex = 0
+                self.sensorHistory.record(data)
             else:
                 break
         return {'block': block, 'validEntries': validEntries} if validEntries > 0 else None
@@ -226,6 +231,41 @@ class DasInterface(Singleton):
         return dict(groupTable=self.hostToDspSender.rdBlock(interface.GROUP_OFFSET, interface.GROUP_TABLE_SIZE),
                     operationTable=self.hostToDspSender.rdBlock(interface.OPERATION_OFFSET, interface.OPERATION_TABLE_SIZE),
                     operandTable=self.hostToDspSender.rdBlock(interface.OPERAND_OFFSET, interface.OPERAND_TABLE_SIZE))
+
+    def saveDasState(self):
+        """Write out all register contents to an SQLite database"""
+        floatRegList = []
+        intRegList = []
+        for regInfo in interface.registerInfo:
+            if regInfo.type == c_float:
+                floatRegList.append((regInfo.name, self.hostToDspSender.rdRegFloat(regInfo.name)))
+            else:
+                value = self.hostToDspSender.rdRegUint(regInfo.name)
+                if regInfo.type == c_int:
+                    if value >= 1 << 31:
+                        value -= 1 << 32
+                intRegList.append((regInfo.name, value))
+        self.stateDatabase.saveFloatRegList(floatRegList)
+        self.stateDatabase.saveIntRegList(intRegList)
+
+    def loadDasState(self):
+        """Read in all register contents from an SQLite database"""
+        floatRegList = self.stateDatabase.getFloatRegList()
+        intRegList = self.stateDatabase.getIntRegList()
+        for name, value in floatRegList:
+            try:
+                regNum = interface.registerByName[name]
+                if interface.registerInfo[regNum].writable:
+                    self.hostToDspSender.wrRegFloat(name, value)
+            except AttributeError:
+                print "Register %s in database is unrecognized" % name
+        for name, value in intRegList:
+            try:
+                regNum = interface.registerByName[name]
+                if interface.registerInfo[regNum].writable:
+                    self.hostToDspSender.wrRegUint(name, value)
+            except AttributeError:
+                print "Register %s in database is unrecognized" % name
 
     def pingWatchdog(self):
         return

@@ -9,7 +9,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2019 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
  */
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
@@ -113,6 +113,12 @@ typedef struct {
     uint32 addressAtRingdown;
     uint32 extLaserLevelCounter;
     uint32 extLaserSequenceId;
+    float angleSetpoint;
+    uint32 frontAndBackMirrorCurrentDac;
+    uint32 gainAndSoaCurrentDac;
+    uint32 coarseAndFinePhaseCurrentDac;
+    uint32 param14;
+    uint32 param15;
 } RingdownParamsType;
 
 typedef struct {
@@ -123,6 +129,7 @@ typedef struct {
 typedef struct {
     long long timestamp;
     float wlmAngle;
+    float angleSetpoint;
     float uncorrectedAbsorbance;
     float correctedAbsorbance;
     uint16 status;
@@ -144,11 +151,19 @@ typedef struct {
     float laserTemperature;
     float etalonTemperature;
     float cavityPressure;
+    uint16 frontMirrorDac;
+    uint16 backMirrorDac;
+    uint16 gainCurrentDac;
+    uint16 soaCurrentDac;
+    uint16 coarsePhaseDac;
+    uint16 finePhaseDac;
+    uint16 padToCacheLine[24];
 } RingdownEntryType;
 
 typedef struct {
     long long timestamp;
     float wlmAngle;
+    float angleSetpoint;
     double waveNumber;
     double waveNumberSetpoint;
     float uncorrectedAbsorbance;
@@ -172,6 +187,12 @@ typedef struct {
     float laserTemperature;
     float etalonTemperature;
     float cavityPressure;
+    uint16 frontMirrorDac;
+    uint16 backMirrorDac;
+    uint16 gainCurrentDac;
+    uint16 soaCurrentDac;
+    uint16 coarsePhaseDac;
+    uint16 finePhaseDac;
     uint32 extra1;
     uint32 extra2;
     uint32 extra3;
@@ -235,6 +256,10 @@ typedef struct {
     uint16 threshold;
     uint16 pztSetpoint;
     uint16 laserTemp;
+    uint16 frontMirrorDac;
+    uint16 backMirrorDac;
+    uint16 coarsePhaseDac;
+    uint16 padding[5];
 } SchemeRowType;
 
 typedef struct {
@@ -249,7 +274,8 @@ typedef struct {
 } SchemeTableType;
 
 typedef struct {
-    uint32 actualLaser;
+    uint16 actualLaser;
+    uint16 laserType;
     float tempSensitivity;
     float ratio1Center;
     float ratio2Center;
@@ -285,15 +311,20 @@ typedef struct {
     WLMCalRowType wlmCalRows[336];
 } WLMCalibrationType;
 
+typedef struct {
+    uint32 num_words;
+    uint32 data[20000];
+} LatticeFpgaProgramType;
+
 /* Constant definitions */
 // Scheduler period (ms)
 #define SCHEDULER_PERIOD (100)
 // Maximum number of lasers
 #define MAX_LASERS (4)
 // Number of points in controller waveforms
-#define CONTROLLER_WAVEFORM_POINTS (1000)
+#define CONTROLLER_WAVEFORM_POINTS (2500)
 // Number of points for waveforms on controller rindown pane
-#define CONTROLLER_RINGDOWN_POINTS (10000)
+#define CONTROLLER_RINGDOWN_POINTS (25000)
 // Number of points for Allan statistics plots in controller
 #define CONTROLLER_STATS_POINTS (32)
 // Base address for DSP data memory
@@ -320,6 +351,14 @@ typedef struct {
 #define NUM_VIRTUAL_LASERS (8)
 // Size of a virtual laser parameter table in 32 bit ints
 #define VIRTUAL_LASER_PARAMS_SIZE ((sizeof(VirtualLaserParamsType)/4))
+// Offset for Lattice FPGA programs in DSP shared memory
+#define LATTICE_FPGA_PROGRAMS_OFFSET ((VIRTUAL_LASER_PARAMS_OFFSET+NUM_VIRTUAL_LASERS*VIRTUAL_LASER_PARAMS_SIZE))
+// Number of programs
+#define NUM_LATTICE_FPGA_PROGRAMS (1)
+// Size of a program in 32 bit ints
+#define LATTICE_FPGA_PROGRAM_PARAMS_SIZE ((sizeof(LatticeFpgaProgramType)/4))
+// Offset following DSP data area
+#define DSP_DATA_END_OFFSET ((LATTICE_FPGA_PROGRAMS_OFFSET+NUM_LATTICE_FPGA_PROGRAMS*LATTICE_FPGA_PROGRAM_PARAMS_SIZE))
 // Base address for DSP shared memory
 #define SHAREDMEM_ADDRESS (0x10000)
 // Base address for ringdown memory
@@ -444,6 +483,46 @@ typedef struct {
 #define LASER_CURRENT_GEN_ACC_WIDTH (24)
 // Size of EEPROM blocks. Objects saved in EEPROM use integer number of blocks
 #define EEPROM_BLOCK_SIZE (128)
+// SGDBR source front mirror DAC select
+#define SGDBR_FRONT_MIRROR_DAC (0x0000000)
+// SGDBR source back mirror DAC select
+#define SGDBR_BACK_MIRROR_DAC (0x1000000)
+// SGDBR source gain DAC select
+#define SGDBR_GAIN_DAC (0x2000000)
+// SGDBR source SOA DAC select
+#define SGDBR_SOA_DAC (0x3000000)
+// SGDBR source coarse phase DAC select
+#define SGDBR_COARSE_PHASE_DAC (0x4000000)
+// SGDBR source fine phase DAC select
+#define SGDBR_FINE_PHASE_DAC (0x5000000)
+// SGDBR source coarse phase DAC select
+#define SGDBR_CHIRP_DAC (0x6000000)
+// SGDBR source fine phase DAC select
+#define SGDBR_SPARE_DAC (0x7000000)
+// SGDBR ADC configuration select
+#define SGDBR_ADC_CONFIG (0x8000000)
+// SGDBR ringdown configuration select
+#define SGDBR_RD_CONFIG (0x9000000)
+// SGDBR ADC configuration speed selection SPD
+#define SGDBR_ADC_CONFIG_SPD (0x1)
+// SGDBR ADC configuration rejection FOB
+#define SGDBR_ADC_CONFIG_FOB (0x2)
+// SGDBR ADC configuration rejection FOA
+#define SGDBR_ADC_CONFIG_FOA (0x4)
+// SGDBR ADC configuration temperature selection IM
+#define SGDBR_ADC_CONFIG_IM (0x8)
+// SGDBR ringdown configuration, SOA select
+#define SGDBR_RD_CONFIG_SOA (0x1)
+// SGDBR ringdown configuration, gain select
+#define SGDBR_RD_CONFIG_GAIN (0x2)
+// SGDBR ringdown configuration, front mirror select
+#define SGDBR_RD_CONFIG_FRONT_MIRROR (0x4)
+// SGDBR ringdown configuration, back mirror select
+#define SGDBR_RD_CONFIG_BACK_MIRROR (0x8)
+// SGDBR ringdown configuration, phase select
+#define SGDBR_RD_CONFIG_PHASE (0x10)
+// SGDBR ringdown configuration, chirp select
+#define SGDBR_RD_CONFIG_CHIRP (0x20)
 
 typedef enum {
     float_type = 0, // 
@@ -609,6 +688,12 @@ typedef enum {
 } PEAK_DETECT_CNTRL_StateType;
 
 typedef enum {
+    SGDBR_CNTRL_DisabledState = 0, // Controller Disabled
+    SGDBR_CNTRL_ManualState = 1, // Manual Control
+    SGDBR_CNTRL_AutomaticState = 2 // Automatic Control
+} SGDBR_CNTRL_StateType;
+
+typedef enum {
     VIRTUAL_LASER_1 = 0, // Virtual laser 1
     VIRTUAL_LASER_2 = 1, // Virtual laser 2
     VIRTUAL_LASER_3 = 2, // Virtual laser 3
@@ -721,6 +806,11 @@ typedef enum {
     LOG_LEVEL_CRITICAL = 3 // 
 } LOG_LEVEL_Type;
 
+typedef enum {
+    PZT_UPDATE_IgnoreVLOffset_Mode = 0, // Do not update
+    PZT_UPDATE_UseVLOffset_Mode = 1 // Update from VL Offset
+} PZT_UPDATE_ModeType;
+
 /* Definitions for COMM_STATUS_BITMASK */
 #define COMM_STATUS_CompleteMask (0x1)
 #define COMM_STATUS_BadCrcMask (0x2)
@@ -762,7 +852,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (582)
+#define INTERFACE_NUMBER_OF_REGISTERS (603)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1346,6 +1436,27 @@ typedef enum {
 #define CAVITY2_TEMPERATURE_REGISTER (579)
 #define RDD2_BALANCE_REGISTER (580)
 #define RDD2_GAIN_REGISTER (581)
+#define SGDBR_A_CNTRL_STATE_REGISTER (582)
+#define SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER (583)
+#define SGDBR_A_CNTRL_BACK_MIRROR_REGISTER (584)
+#define SGDBR_A_CNTRL_GAIN_REGISTER (585)
+#define SGDBR_A_CNTRL_SOA_REGISTER (586)
+#define SGDBR_A_CNTRL_COARSE_PHASE_REGISTER (587)
+#define SGDBR_A_CNTRL_FINE_PHASE_REGISTER (588)
+#define SGDBR_A_CNTRL_CHIRP_REGISTER (589)
+#define SGDBR_A_CNTRL_SPARE_DAC_REGISTER (590)
+#define SGDBR_A_CNTRL_RD_CONFIG_REGISTER (591)
+#define SGDBR_B_CNTRL_STATE_REGISTER (592)
+#define SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER (593)
+#define SGDBR_B_CNTRL_BACK_MIRROR_REGISTER (594)
+#define SGDBR_B_CNTRL_GAIN_REGISTER (595)
+#define SGDBR_B_CNTRL_SOA_REGISTER (596)
+#define SGDBR_B_CNTRL_COARSE_PHASE_REGISTER (597)
+#define SGDBR_B_CNTRL_FINE_PHASE_REGISTER (598)
+#define SGDBR_B_CNTRL_CHIRP_REGISTER (599)
+#define SGDBR_B_CNTRL_SPARE_DAC_REGISTER (600)
+#define SGDBR_B_CNTRL_RD_CONFIG_REGISTER (601)
+#define PZT_UPDATE_MODE_REGISTER (602)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -1500,6 +1611,8 @@ typedef enum {
 #define LASERLOCKER_OPTIONS_SIM_ACTUAL_W (1) // Wavelength Monitor Data Source bit width
 #define LASERLOCKER_OPTIONS_DIRECT_TUNE_B (1) // Route tuner input to fine current output bit position
 #define LASERLOCKER_OPTIONS_DIRECT_TUNE_W (1) // Route tuner input to fine current output bit width
+#define LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B (2) // Select source of ratio outputs bit position
+#define LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W (2) // Select source of ratio outputs bit width
 
 #define LASERLOCKER_ETA1 (2) // Etalon 1 reading
 #define LASERLOCKER_REF1 (3) // Reference 1 reading
@@ -1601,20 +1714,26 @@ typedef enum {
 #define RDMAN_PARAM7 (10) // Parameter 7 register
 #define RDMAN_PARAM8 (11) // Parameter 8 register
 #define RDMAN_PARAM9 (12) // Parameter 9 register
-#define RDMAN_DATA_ADDRCNTR (13) // Counter for ring-down data
-#define RDMAN_METADATA_ADDRCNTR (14) // Counter for ring-down metadata
-#define RDMAN_PARAM_ADDRCNTR (15) // Counter for parameter data
-#define RDMAN_DIVISOR (16) // Ring-down data counter rate divisor
-#define RDMAN_NUM_SAMP (17) // Number of samples to collect for ring-down waveform
-#define RDMAN_THRESHOLD (18) // Ring-down threshold
-#define RDMAN_LOCK_DURATION (19) // Duration (us) for laser frequency to be locked before ring-down is allowed
-#define RDMAN_PRECONTROL_DURATION (20) // Duration (us) for laser current to be at nominal value before frequency locking is enabled
-#define RDMAN_OFF_DURATION (21) // Duration (us) for ringdown (no injection)
-#define RDMAN_EXTRA_DURATION (22) // Duration (us) of extra laser current after ringdown
-#define RDMAN_TIMEOUT_DURATION (23) // Duration (us) within which ring-down must occur to be valid
-#define RDMAN_TUNER_AT_RINGDOWN (24) // Value of tuner at ring-down
-#define RDMAN_METADATA_ADDR_AT_RINGDOWN (25) // Metadata address at ring-down
-#define RDMAN_RINGDOWN_DATA (26) // Ringdown data
+#define RDMAN_PARAM10 (13) // Parameter 10 register
+#define RDMAN_PARAM11 (14) // Parameter 11 register
+#define RDMAN_PARAM12 (15) // Parameter 12 register
+#define RDMAN_PARAM13 (16) // Parameter 13 register
+#define RDMAN_PARAM14 (17) // Parameter 14 register
+#define RDMAN_PARAM15 (18) // Parameter 15 register
+#define RDMAN_DATA_ADDRCNTR (19) // Counter for ring-down data
+#define RDMAN_METADATA_ADDRCNTR (20) // Counter for ring-down metadata
+#define RDMAN_PARAM_ADDRCNTR (21) // Counter for parameter data
+#define RDMAN_DIVISOR (22) // Ring-down data counter rate divisor
+#define RDMAN_NUM_SAMP (23) // Number of samples to collect for ring-down waveform
+#define RDMAN_THRESHOLD (24) // Ring-down threshold
+#define RDMAN_LOCK_DURATION (25) // Duration (us) for laser frequency to be locked before ring-down is allowed
+#define RDMAN_PRECONTROL_DURATION (26) // Duration (us) for laser current to be at nominal value before frequency locking is enabled
+#define RDMAN_OFF_DURATION (27) // Duration (us) for ringdown (no injection)
+#define RDMAN_EXTRA_DURATION (28) // Duration (us) of extra laser current after ringdown
+#define RDMAN_TIMEOUT_DURATION (29) // Duration (us) within which ring-down must occur to be valid
+#define RDMAN_TUNER_AT_RINGDOWN (30) // Value of tuner at ring-down
+#define RDMAN_METADATA_ADDR_AT_RINGDOWN (31) // Metadata address at ring-down
+#define RDMAN_RINGDOWN_DATA (32) // Ringdown data
 
 /* Block TWGEN Tuner waveform generator */
 #define TWGEN_ACC (0) // Accumulator
@@ -1668,9 +1787,7 @@ typedef enum {
 #define INJECT_CONTROL_LASER_SHUTDOWN_ENABLE_W (1) // Enables laser shutdown (in automatic mode) bit width
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_B (13) // Enables SOA shutdown (in automatic mode) bit position
 #define INJECT_CONTROL_SOA_SHUTDOWN_ENABLE_W (1) // Enables SOA shutdown (in automatic mode) bit width
-#define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_B (14) // Select optical switch type bit position
-#define INJECT_CONTROL_OPTICAL_SWITCH_SELECT_W (1) // Select optical switch type bit width
-#define INJECT_CONTROL_SOA_PRESENT_B (15) // SOA or fiber amplifier present bit position
+#define INJECT_CONTROL_SOA_PRESENT_B (14) // SOA or fiber amplifier present bit position
 #define INJECT_CONTROL_SOA_PRESENT_W (1) // SOA or fiber amplifier present bit width
 
 #define INJECT_CONTROL2 (1) // Control register 2
@@ -1694,6 +1811,8 @@ typedef enum {
 #define INJECT_CONTROL2_DISABLE_SOA_WITH_LASER3_W (1) // Disable SOA for laser 3 bit width
 #define INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_B (8) // Disable SOA for laser 4 bit position
 #define INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_W (1) // Disable SOA for laser 4 bit width
+#define INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B (9) // Select optical switch type bit position
+#define INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W (2) // Select optical switch type bit width
 
 #define INJECT_LASER1_COARSE_CURRENT (2) // Sets coarse current for laser 1
 #define INJECT_LASER2_COARSE_CURRENT (3) // Sets coarse current for laser 2
@@ -1778,6 +1897,64 @@ typedef enum {
 #define LASERCURRENTGENERATOR_UPPER_WINDOW (10) // 
 #define LASERCURRENTGENERATOR_SEQUENCE_ID (11) // 
 
+/* Block SGDBRCURRENTSOURCE SGDBR current source */
+#define SGDBRCURRENTSOURCE_CSR (0) // Control/Status Register
+#define SGDBRCURRENTSOURCE_CSR_RESET_B (0) // Reset bit position
+#define SGDBRCURRENTSOURCE_CSR_RESET_W (1) // Reset bit width
+#define SGDBRCURRENTSOURCE_CSR_SELECT_B (1) // Chip select bit position
+#define SGDBRCURRENTSOURCE_CSR_SELECT_W (1) // Chip select bit width
+#define SGDBRCURRENTSOURCE_CSR_DESELECT_B (2) // Chip deselect bit position
+#define SGDBRCURRENTSOURCE_CSR_DESELECT_W (1) // Chip deselect bit width
+#define SGDBRCURRENTSOURCE_CSR_CPOL_B (3) // SPI Clock polarity bit position
+#define SGDBRCURRENTSOURCE_CSR_CPOL_W (1) // SPI Clock polarity bit width
+#define SGDBRCURRENTSOURCE_CSR_CPHA_B (4) // SPI Clock phase bit position
+#define SGDBRCURRENTSOURCE_CSR_CPHA_W (1) // SPI Clock phase bit width
+#define SGDBRCURRENTSOURCE_CSR_DONE_B (5) // SPI transaction complete bit position
+#define SGDBRCURRENTSOURCE_CSR_DONE_W (1) // SPI transaction complete bit width
+#define SGDBRCURRENTSOURCE_CSR_MISO_B (6) // MISO level bit position
+#define SGDBRCURRENTSOURCE_CSR_MISO_W (1) // MISO level bit width
+#define SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B (7) // Allow synchronous updates bit position
+#define SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_W (1) // Allow synchronous updates bit width
+#define SGDBRCURRENTSOURCE_CSR_SUPPRESS_UPDATE_B (8) // Suppress updates from DSP flag bit position
+#define SGDBRCURRENTSOURCE_CSR_SUPPRESS_UPDATE_W (1) // Suppress updates from DSP flag bit width
+
+#define SGDBRCURRENTSOURCE_MISO_DELAY (1) // Compensation for MISO propagation delay
+#define SGDBRCURRENTSOURCE_MOSI_DATA (2) // Data to send to slave
+#define SGDBRCURRENTSOURCE_MISO_DATA (3) // Data received from slave
+#define SGDBRCURRENTSOURCE_SYNC_REGISTER (4) // Select current source for synchronous updates
+#define SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_B (0) // Current source for sync updates bit position
+#define SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_W (4) // Current source for sync updates bit width
+#define SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_B (4) // Method used for selecting current source bit position
+#define SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_W (1) // Method used for selecting current source bit width
+
+#define SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT (5) // Maximum value of current for sync updates
+
+/* Block SGDBRMANAGER SGDBR laser manager */
+#define SGDBRMANAGER_CSR (0) // Control/status register
+#define SGDBRMANAGER_CSR_START_SCAN_B (0) // Start SGDBR scan bit position
+#define SGDBRMANAGER_CSR_START_SCAN_W (1) // Start SGDBR scan bit width
+#define SGDBRMANAGER_CSR_DONE_B (1) // Scan done bit position
+#define SGDBRMANAGER_CSR_DONE_W (1) // Scan done bit width
+#define SGDBRMANAGER_CSR_SCAN_ACTIVE_B (2) // Scan in progress bit position
+#define SGDBRMANAGER_CSR_SCAN_ACTIVE_W (1) // Scan in progress bit width
+
+#define SGDBRMANAGER_CONFIG (1) // Configuration of SGDBR
+#define SGDBRMANAGER_CONFIG_MODE_B (0) // Analyzer memory mode bit position
+#define SGDBRMANAGER_CONFIG_MODE_W (1) // Analyzer memory mode bit width
+#define SGDBRMANAGER_CONFIG_SELECT_B (1) // Select SGDBR laser to control bit position
+#define SGDBRMANAGER_CONFIG_SELECT_W (1) // Select SGDBR laser to control bit width
+
+#define SGDBRMANAGER_SCAN_SAMPLES (2) // Number of samples in a scan
+#define SGDBRMANAGER_SAMPLE_TIME (3) // Intersample duration
+#define SGDBRMANAGER_DELAY_SAMPLES (4) // Delay at start of scan
+#define SGDBRMANAGER_SCAN_ADDRESS (5) // Scan memory address
+#define SGDBRMANAGER_SGDBR_PRESENT (6) // Indicates which SGDBR lasers have been installed
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B (0) // SGDBR laser A present bit position
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W (1) // SGDBR laser A present bit width
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B (1) // SGDBR laser B present bit position
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W (1) // SGDBR laser B present bit width
+
+
 /* FPGA map indices */
 
 #define FPGA_KERNEL (0) // Kernel registers
@@ -1794,13 +1971,16 @@ typedef enum {
 #define FPGA_RDSIM (35) // Ringdown simulator registers
 #define FPGA_LASERLOCKER (43) // Laser frequency locker registers
 #define FPGA_RDMAN (71) // Ringdown manager registers
-#define FPGA_TWGEN (98) // Tuner waveform generator
-#define FPGA_INJECT (107) // Optical Injection Subsystem
-#define FPGA_WLMSIM (133) // WLM Simulator
-#define FPGA_DYNAMICPWM_INLET (142) // Inlet proportional valve dynamic PWM
-#define FPGA_DYNAMICPWM_OUTLET (147) // Outlet proportional valve dynamic PWM
-#define FPGA_SCALER (152) // Scaler for PZT waveform
-#define FPGA_LASERCURRENTGENERATOR (153) // Laser current generator
+#define FPGA_TWGEN (104) // Tuner waveform generator
+#define FPGA_INJECT (113) // Optical Injection Subsystem
+#define FPGA_WLMSIM (139) // WLM Simulator
+#define FPGA_DYNAMICPWM_INLET (148) // Inlet proportional valve dynamic PWM
+#define FPGA_DYNAMICPWM_OUTLET (153) // Outlet proportional valve dynamic PWM
+#define FPGA_SCALER (158) // Scaler for PZT waveform
+#define FPGA_LASERCURRENTGENERATOR (159) // Laser current generator
+#define FPGA_SGDBRCURRENTSOURCE_A (171) // SGDBR current source A
+#define FPGA_SGDBRCURRENTSOURCE_B (177) // SGDBR current source B
+#define FPGA_SGDBRMANAGER (183) // SGDBR manager
 
 /* Environment addresses */
 
@@ -1910,6 +2090,10 @@ typedef enum {
 #define ACTION_STEP_SIMULATORS (92)
 #define ACTION_TEMP_CNTRL_FILTER_HEATER_INIT (93)
 #define ACTION_TEMP_CNTRL_FILTER_HEATER_STEP (94)
+#define ACTION_SGDBR_PROGRAM_FPGA (95)
+#define ACTION_READ_THERMISTOR_RESISTANCE_SGDBR (96)
+#define ACTION_SGDBR_CNTRL_INIT (97)
+#define ACTION_SGDBR_CNTRL_STEP (98)
 
 /* Aliases */
 #define PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER (PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER) // Old name for number of samples spent in triggered state

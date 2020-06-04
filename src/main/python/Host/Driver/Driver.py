@@ -18,6 +18,7 @@ import os
 import struct
 import sys
 import tables
+import threading
 import time
 import types
 import traceback
@@ -109,15 +110,15 @@ class DriverRpcHandler(SharedTypes.Singleton):
         for s in classDir:
             attr = obj.__getattribute__(s)
             if callable(attr) and (not s.startswith("_")) and (not inspect.isclass(attr)):
-                #if __debug__: print "registering", s
+                # if __debug__: print "registering", s
                 self.server.register_function(attr, DefaultMode=CmdFIFO.CMD_TYPE_Blocking)
 
     def _register_rpc_functions(self):
         """ Registers the functions accessible by XML-RPC """
-        #register the functions contained in this file...
+        # register the functions contained in this file...
         self._register_rpc_functions_for_object(self)
-        #register some priority functions that can be used even while the Driver
-        #is performing a lengthy upload...
+        # register some priority functions that can be used even while the Driver
+        # is performing a lengthy upload...
         # server._register_priority_function(self.rdDasReg, "HP_rdDasReg")
         # server._register_priority_function(self._getLockStatus, NameSlice = 1)
         Log("Registered RPC functions")
@@ -128,12 +129,12 @@ class DriverRpcHandler(SharedTypes.Singleton):
     # These should be added to interface???
     # Enumerated definitions for DASCNTRL_StateType
     #DASCNTRL_StateType = c_ushort
-    #DASCNTRL_Reset = 0 # DASCNTRL Reset state.
-    #DASCNTRL_Ready = 1 # DASCNTRL Ready state.
-    #DASCNTRL_Startup = 2 # DASCNTRL Startup state.
-    #DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
-    #DASCNTRL_Error = 4 # DASCNTRL Error state.
-    #DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
+    # DASCNTRL_Reset = 0 # DASCNTRL Reset state.
+    # DASCNTRL_Ready = 1 # DASCNTRL Ready state.
+    # DASCNTRL_Startup = 2 # DASCNTRL Startup state.
+    # DASCNTRL_Diagnostic = 3 # DASCNTRL Diagnostic state.
+    # DASCNTRL_Error = 4 # DASCNTRL Error state.
+    # DASCNTRL_DspNotBooted = 5 # DASCNTRL Dsp Not Booted.
 
     def invokeSupervisorLauncher(self):
         self.driver.invokeSupervisorLauncher()
@@ -312,11 +313,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
             except KeyError:
                 raise SharedTypes.DasException("Unknown register name %s" % (indexOrName, ))
 
-    def rdDasReg(self, regIndexOrName):
+    def rdDasReg(self, regIndexOrName, override_access_control=False):
         """Reads a DAS register, using either its index or symbolic name"""
         index = self._reg_index(regIndexOrName)
         ri = interface.registerInfo[index]
-        if not ri.readable:
+        if not override_access_control and not ri.readable:
             raise SharedTypes.DasAccessException("Register %s is not readable" % (regIndexOrName, ))
         if ri.type == ctypes.c_float:
             return self.dasInterface.hostToDspSender.rdRegFloat(index)
@@ -374,14 +375,14 @@ class DriverRpcHandler(SharedTypes.Singleton):
             elif regLoc == "fpga":
                 self.wrFPGA(0, reg, value)
 
-    def wrDasReg(self, regIndexOrName, value, convert=True):
+    def wrDasReg(self, regIndexOrName, value, convert=True, override_access_control=False):
         """Writes to a DAS register, using either its index or symbolic name. If convert is True,
             value is a symbolic string that is looked up in the interface definition file. """
         if convert:
             value = self._value(value)
         index = self._reg_index(regIndexOrName)
         ri = interface.registerInfo[index]
-        if not ri.writable:
+        if not override_access_control and not ri.writable:
             raise SharedTypes.DasAccessException("Register %s is not writable" % (regIndexOrName, ))
         if ri.type in [ctypes.c_uint, ctypes.c_int, ctypes.c_long]:
             return self.dasInterface.hostToDspSender.wrRegUint(index, value)
@@ -393,11 +394,25 @@ class DriverRpcHandler(SharedTypes.Singleton):
                 regIndexOrName,
             ))
 
+    # def rdFpgaRam(self, offset, numWords=1):
+    #     """Read from FPGA memory at word offset "offset" a total of "nwords" 32-bit words"""
+    #     return self.rdRingdownMem(offset, numWords)
+
+    # def wrFpgaRam(self, offset, dataAsList):
+    #     """Write to FPGA memory at word offset "offset" a total of nwords 32-bit words"""
+    #     result = (ctypes.c_uint * len(dataAsList))()
+    #     for i, d in enumerate(dataAsList):
+    #         result[i] = d
+    #     self.dasInterface.hostToDspSender.wrRingdownMemArray(offset, result)
+
     def rdRingdownMem(self, offset, numWords):
         return [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(offset, numWords)]
 
     def wrRingdownMem(self, offset, listOfUint32):
-        self.dasInterface.hostToDspSender.wrRingdownMemArray(offset, listOfUint32)
+        array = (ctypes.c_uint32 * len(listOfUint32))()
+        for i, d in enumerate(listOfUint32):
+            array[i] = d
+        self.dasInterface.hostToDspSender.wrRingdownMemArray(offset, array)
 
     def rdRingdown(self, bank):
         """Fetches the contents of ringdown memory from the specified bank"""
@@ -409,14 +424,18 @@ class DriverRpcHandler(SharedTypes.Singleton):
         base = metaBase[bank]
         meta = [x for x in self.dasInterface.hostToDspSender.rdRingdownMemArray(base, 4096)]
         base = paramBase[bank]
-        paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(base, 12)
+        paramsAsUint = self.dasInterface.hostToDspSender.rdRingdownMemArray(
+            base,
+            ctypes.sizeof(interface.RingdownParamsType) / ctypes.sizeof(ctypes.c_uint32))
         param = interface.RingdownParamsType.from_address(ctypes.addressof(paramsAsUint))
         return (array(data), array(meta).reshape(512, 8).transpose(), ctypesToDict(param))
 
     def rdRingdownBuffer(self, buffNum):
         """Fetches contents of ringdown buffer which is QDMA transferred from the FPGA to DSP memory"""
-        RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + 4 * interface.RINGDOWN_BUFFER_OFFSET
-        base = RINGDOWN_BUFFER_BASE if buffNum == 0 else RINGDOWN_BUFFER_BASE + 4 * interface.RINGDOWN_BUFFER_SIZE
+        RINGDOWN_BUFFER_BASE = interface.SHAREDMEM_ADDRESS + \
+            4 * interface.RINGDOWN_BUFFER_OFFSET
+        base = RINGDOWN_BUFFER_BASE if buffNum == 0 else RINGDOWN_BUFFER_BASE + \
+            4 * interface.RINGDOWN_BUFFER_SIZE
         bufferAsUint = self.dasInterface.hostToDspSender.rdDspMemArray(base, interface.RINGDOWN_BUFFER_SIZE)
         rdBuffer = interface.RingdownBufferType.from_address(ctypes.addressof(bufferAsUint))
         data = [(x & 0xFFFF) for x in rdBuffer.ringdownWaveform]
@@ -610,9 +629,29 @@ class DriverRpcHandler(SharedTypes.Singleton):
         elif DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_ManualState)
         self.wrDasReg("TEC_CNTRL_REGISTER", interface.TEC_CNTRL_Enabled)
+        startLasersThread = threading.Thread(target=self.startLaserCurrents, args=(0.0, ))
+        startLasersThread.setDaemon(True)
+        startLasersThread.start()
+
+    def startLaserCurrents(self, delay):
+        time.sleep(delay)
         for laserNum in range(1, interface.MAX_LASERS + 1):
-            if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum):
-                self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, interface.LASER_CURRENT_CNTRL_ManualState)
+            present = DasConfigure().installCheck("LASER%d_PRESENT" % laserNum)
+            if present:
+                while True:
+                    lockStatus = self.rdDasReg("DAS_STATUS_REGISTER")
+                    if lockStatus & (1 << self._value("DAS_STATUS_Laser%dTempCntrlLockedBit" % laserNum)):
+                        # SGDBR lasers need to have the currents turned on separate source board
+                        if present == 2:
+                            if laserNum == 1:
+                                self.wrDasReg("SGDBR_A_CNTRL_STATE_REGISTER", interface.SGDBR_CNTRL_ManualState)
+                            elif laserNum == 3:
+                                self.wrDasReg("SGDBR_B_CNTRL_STATE_REGISTER", interface.SGDBR_CNTRL_ManualState)
+                        # All lasers need to have the state in the laser current controller changed as well, since
+                        #  this deasserts the shorting transistor
+                        self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, interface.LASER_CURRENT_CNTRL_ManualState)
+                        break
+                    time.sleep(1.0)
 
     def selectActualLaser(self, aLaserNum):
         # Select laserNum, placing it under automatic control and activating the optical switch. The value
@@ -888,7 +927,8 @@ class DriverRpcHandler(SharedTypes.Singleton):
             raise ValueError("%s is not available" % whichEeprom)
         s = cPickle.dumps(object, -1)
         nBytes, = struct.unpack("=I", "".join([chr(c) for c in self.rdEeprom(whichEeprom, startAddress, 4)]))
-        if nBytes != len(s): return False
+        if nBytes != len(s):
+            return False
         r = "".join([chr(c) for c in self.rdEeprom(whichEeprom, startAddress + 4, nBytes)])
         return r == s
 
@@ -982,11 +1022,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrDasReg('SPECT_CNTRL_STATE_REGISTER', 'SPECT_CNTRL_IdleState')
         # Wait for all current controllers to leave automatic state
         auto = interface.LASER_CURRENT_CNTRL_AutomaticState
-        while True:
-            if self.rdDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
-               self.rdDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
-               self.rdDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER')!=auto and \
-               self.rdDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER')!=auto:
+        for loops in range(10):
+            if self.rdDasReg('LASER1_CURRENT_CNTRL_STATE_REGISTER') != auto and \
+               self.rdDasReg('LASER2_CURRENT_CNTRL_STATE_REGISTER') != auto and \
+               self.rdDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER') != auto and \
+               self.rdDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER') != auto and \
+               self.rdDasReg('SGDBR_A_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState and \
+               self.rdDasReg('SGDBR_B_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState:
                 break
             else:
                 time.sleep(0.1)
@@ -1125,7 +1167,11 @@ class Driver(SharedTypes.Singleton):
         self.usbFile = os.path.join(basePath, self.config["Files"]["usbFileName"])
         self.dspFile = os.path.join(basePath, self.config["Files"]["dspFileName"])
         self.fpgaFile = os.path.join(basePath, self.config["Files"]["fpgaFileName"])
-        self.dasInterface = DasInterface(self.stateDbFile, self.usbFile, self.dspFile, self.fpgaFile)
+        if "latticeFileName" in self.config["Files"]:
+            self.latticeFile = os.path.join(basePath, self.config["Files"]["latticeFileName"])
+        else:
+            self.latticeFile = None
+        self.dasInterface = DasInterface(self.stateDbFile, self.usbFile, self.dspFile, self.fpgaFile, self.latticeFile)
         self.analogInterface = AnalogInterface(self, self.config)
         self.auxAccessor = None
         self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
@@ -1260,7 +1306,7 @@ class Driver(SharedTypes.Singleton):
                     ic.loadPersistentRegistersFromConfig()
                     Log("Configuring scheduler", Level=1)
                     self.dasInterface.pingWatchdog()
-                    DasConfigure(self.dasInterface, ic.config, self.config).run()
+                    DasConfigure(self.dasInterface, ic.config, self.config, driver=self).run()
                     try:
                         self.rpcHandler.readWlmDarkCurrents()
                     except:
@@ -1407,10 +1453,10 @@ class InstrumentConfig(SharedTypes.Singleton):
         for ri in interface.registerInfo:
             if ri.persistence:
                 if ri.type == ctypes.c_float:
-                    self.config["DAS_REGISTERS"][ri.name]= \
+                    self.config["DAS_REGISTERS"][ri.name] = \
                         s.rdRegFloat(ri.name)
                 else:
-                    self.config["DAS_REGISTERS"][ri.name]= \
+                    self.config["DAS_REGISTERS"][ri.name] = \
                         ri.type(s.rdRegUint(ri.name)).value
         for fpgaMap, regList in interface.persistent_fpga_registers:
             self.config[fpgaMap] = {}

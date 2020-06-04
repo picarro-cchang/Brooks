@@ -23,7 +23,7 @@ import os
 import sys
 import time
 
-from threading import Thread, Lock
+from threading import Lock, RLock, Thread
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes, CmdFIFO
@@ -75,6 +75,7 @@ class Sequencer(object):
         self.inDas = {}
         self.loadSequencePending = False
         self.loadSequenceLock = Lock()
+        self.fsmLock = RLock()
         self.pendingSequence = ""
 
     def runInThread(self):
@@ -90,7 +91,7 @@ class Sequencer(object):
             try:
                 int(key)
                 keysToDelete.append(key)
-            except:
+            except Exception:
                 pass
         for key in keysToDelete:
             del self.sequences[key]
@@ -117,7 +118,7 @@ class Sequencer(object):
                         schemes.append((Scheme(schemeFileName), repetitions, ext.lower() == ".sch"))
                     self.sequences["%s" % index] = schemes
                     nseq += 1
-                except:
+                except Exception:
                     LogExc("Error in processing schemes for %s" % section, Level=3)
         Log("Sequences read: %d" % nseq)
 
@@ -146,8 +147,14 @@ class Sequencer(object):
     def getSequenceName(self):
         return self.sequence
 
+    def stopScan(self):
+        with self.fsmLock:
+            self.state = Sequencer.IDLE
+
     def startSequence(self):
-        self.state = Sequencer.STARTUP
+        with self.fsmLock:
+            if self.state == Sequencer.IDLE:
+                self.state = Sequencer.STARTUP
 
     def getCurrent(self):
         ss = Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER)
@@ -161,92 +168,101 @@ class Sequencer(object):
         scs = RDFreqConv.getShortCircuitSchemeStatus()
         baseSequenceName = self.sequence
         while True:
-            try:
-                if self.state == Sequencer.STARTUP:
-                    for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
-                        RDFreqConv.useSpline(vLaserNum)
-                    Log("Sequencer enters STARTUP state")
-                    Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
-                    self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-                    seqList = self.sequences[self.sequence]
-                    # seqList is a list of tuples [(scheme,repetitions,freq_based),...] that define the
-                    #  sequence
-                    if not seqList:
-                        self.state = Sequencer.IDLE
-                    elif isinstance(seqList[0], tuple):
-                        if scs:
-                            Driver.setMultipleNoRepeatScan()
-                        else:
-                            Driver.setMultipleScan()
-                        self.scheme = 1
-                        self.repeat = 1
-                        self.state = Sequencer.SEND_SCHEME
-                elif self.state == Sequencer.SEND_SCHEME:
-                    # Read the peak detector state since this may modify the scheme sequence
-                    #  required
-                    peakDetectState = Driver.rdDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER")
-                    stateName = interface.PEAK_DETECT_CNTRL_StateTypeDict[peakDetectState]
-                    stateName = stateName[len("PEAK_DETECT_CNTRL_"):]
-                    # The state name is used to modify the base name of the sequence
-                    self.loadSequenceLock.acquire()
-                    try:
-                        if self.loadSequencePending:
-                            if self.pendingSequence not in self.sequences:
-                                raise ValueError("Invalid sequence name: %s" % self.pendingSequence)
-                            baseSequenceName = self.pendingSequence
-                        trialSequenceName = baseSequenceName + '_' + stateName
-                        if trialSequenceName in self.sequences:
-                            self.pendingSequence = trialSequenceName
-                        else:
-                            self.pendingSequence = baseSequenceName
-                        if self.pendingSequence != self.sequence:
-                            self.setSequenceName(self.pendingSequence)
+            with self.fsmLock:
+                try:
+                    if self.state == Sequencer.STARTUP:
+                        for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
+                            RDFreqConv.useSpline(vLaserNum)
+                        Log("Sequencer enters STARTUP state")
+                        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
+                        self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+                        seqList = self.sequences[self.sequence]
+                        # seqList is a list of tuples [(scheme,repetitions,freq_based),...] that define the
+                        #  sequence
+                        if not seqList:
+                            self.state = Sequencer.IDLE
+                        elif isinstance(seqList[0], tuple):
+                            if scs:
+                                Driver.setMultipleNoRepeatScan()
+                            else:
+                                Driver.setMultipleScan()
                             self.scheme = 1
                             self.repeat = 1
-                    finally:
-                        self.loadSequencePending = False
-                        self.loadSequenceLock.release()
+                            self.state = Sequencer.SEND_SCHEME
+                    elif self.state == Sequencer.SEND_SCHEME:
+                        # Read the peak detector state since this may modify the scheme sequence
+                        #  required
+                        peakDetectState = Driver.rdDasReg("PEAK_DETECT_CNTRL_STATE_REGISTER")
+                        stateName = interface.PEAK_DETECT_CNTRL_StateTypeDict[peakDetectState]
+                        stateName = stateName[len("PEAK_DETECT_CNTRL_"):]
+                        # The state name is used to modify the base name of the
+                        # sequence
+                        self.loadSequenceLock.acquire()
+                        try:
+                            if self.loadSequencePending:
+                                if self.pendingSequence not in self.sequences:
+                                    raise ValueError("Invalid sequence name: %s" % self.pendingSequence)
+                                baseSequenceName = self.pendingSequence
+                            trialSequenceName = baseSequenceName + '_' + stateName
+                            if trialSequenceName in self.sequences:
+                                self.pendingSequence = trialSequenceName
+                            else:
+                                self.pendingSequence = baseSequenceName
+                            if self.pendingSequence != self.sequence:
+                                self.setSequenceName(self.pendingSequence)
+                                self.scheme = 1
+                                self.repeat = 1
+                        finally:
+                            self.loadSequencePending = False
+                            self.loadSequenceLock.release()
 
-                    # Set "useIndex" to the next available index in the group of four
-                    self.useIndex = (self.activeIndex + 1) % 4
-                    schemes = self.sequences[self.sequence]
-                    scheme, rep, freqBased = schemes[self.scheme - 1]
-                    Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d" %
-                        (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
-                    self.inDas[self.useIndex] = (self.sequence, self.scheme, self.repeat, scheme.fileName)
-                    # Increment repeat and scheme number as needed
-                    self.repeat += 1
-                    if self.repeat > rep:
-                        self.repeat = 1
-                        self.scheme += 1
-                        if self.scheme > len(schemes):
-                            self.scheme = 1
-                    # Frequency-based schemes need to be compiled, whereas angle-based schemes are sent directly
-                    #  to the DAS
-                    if freqBased:
-                        RDFreqConv.wrFreqScheme(self.useIndex, scheme)
-                        RDFreqConv.convertScheme(self.useIndex)
-                        RDFreqConv.uploadSchemeToDAS(self.useIndex)
-                    else:
-                        Driver.wrScheme(self.useIndex, *(scheme.repack()))
-                    # Specify the just-loaded scheme to be the next one to execute
-                    Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.useIndex)
-                    if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
-                        Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
-                    self.state = Sequencer.WAIT_UNTIL_ACTIVE
-                elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
-                    # Loop around until the active scheme index is equal to the one we are expecting (in self.useIndex).
-                    #  When this is the case, we can send the next scheme or stop, if the SPECT_CNTRL_STATE_REGISTER
-                    #  is in the idle state
-                    self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
-                    next = Driver.rdDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
-                    if next != self.useIndex:
-                        Log("Unexpected next scheme register contents", Data={"expected": self.useIndex, "contents": next})
-                    if self.activeIndex == next:
-                        self.state = Sequencer.SEND_SCHEME
-                    elif Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
-                        self.state = Sequencer.IDLE
-            except Exception:
-                self.state = Sequencer.IDLE
-                LogExc("Sequencer state machine exception: %s", Level=2)
+                        # Set "useIndex" to the next available index in the group
+                        # of four
+                        self.useIndex = (self.activeIndex + 1) % 4
+                        schemes = self.sequences[self.sequence]
+                        scheme, rep, freqBased = schemes[self.scheme - 1]
+                        Log("Sequencer enters SEND_SCHEME state. Sequence = %s, Scheme = %d (%s), Repeat = %d, Table = %d" %
+                            (self.sequence, self.scheme, os.path.split(scheme.fileName)[-1], self.repeat, self.useIndex))
+                        self.inDas[self.useIndex] = (self.sequence, self.scheme, self.repeat, scheme.fileName)
+                        # Increment repeat and scheme number as needed
+                        self.repeat += 1
+                        if self.repeat > rep:
+                            self.repeat = 1
+                            self.scheme += 1
+                            if self.scheme > len(schemes):
+                                self.scheme = 1
+                        # Compile scheme when it is about to be used
+                        scheme.compile()
+                        # Frequency-based schemes need to be converted, whereas angle-based schemes are sent directly
+                        #  to the DAS
+                        if freqBased:
+                            RDFreqConv.wrFreqScheme(self.useIndex, scheme)
+                            RDFreqConv.convertScheme(self.useIndex)
+                            RDFreqConv.uploadSchemeToDAS(self.useIndex)
+                        else:
+                            # Added writing of angle schemes (2018/09/10 sze) so that schemeInfo can be broadcast
+                            #  by the RDFrequencyConverter to the SpectrumCollector
+                            RDFreqConv.wrAngleScheme(self.useIndex, scheme)
+                            Driver.wrScheme(self.useIndex, *(scheme.repack()))
+                        # Specify the just-loaded scheme to be the next one to
+                        # execute
+                        Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.useIndex)
+                        if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
+                        self.state = Sequencer.WAIT_UNTIL_ACTIVE
+                    elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
+                        # Loop around until the active scheme index is equal to the one we are expecting (in self.useIndex).
+                        #  When this is the case, we can send the next scheme or stop, if the SPECT_CNTRL_STATE_REGISTER
+                        #  is in the idle state
+                        self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
+                        next = Driver.rdDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER)
+                        if next != self.useIndex:
+                            Log("Unexpected next scheme register contents", Data={"expected": self.useIndex, "contents": next})
+                        if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                            self.state = Sequencer.IDLE
+                        elif self.activeIndex == next:
+                            self.state = Sequencer.SEND_SCHEME
+                except Exception:
+                    self.state = Sequencer.IDLE
+                    LogExc("Sequencer state machine exception: %s", Level=2)
             time.sleep(0.5)

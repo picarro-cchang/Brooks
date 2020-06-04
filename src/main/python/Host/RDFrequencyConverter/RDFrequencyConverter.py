@@ -46,9 +46,9 @@ from Host.autogen import interface
 from Host.Common import CmdFIFO, StringPickler, Listener, Broadcaster
 from Host.Common.qt_cluster import qt_cluster
 from Host.Common.SharedTypes import Singleton
-from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS, BROADCAST_PORT_RD_UNIFIED
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
-from Host.Common.WlmCalUtilities import AutoCal
+from Host.Common.WlmCalUtilities import AutoCal, SgdbrCal
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart
@@ -547,10 +547,8 @@ class SchemeBasedCalibrator(object):
                                 self.calFailed(vLaserNum)
                             else:
                                 self.calSucceeded(vLaserNum)
-
-                        # Turn off event manager noise - RSF
-                        # Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
-                        #     (vLaserNum, anglePerFsr, stdPzt))
+                        Log("WLM Cal for virtual laser %d done, angle per FSR = %.4g, PZT sdev = %.1f" %
+                            (vLaserNum, anglePerFsr, stdPzt))
 
     def applySchemeBasedCalibration(self):
         """Called after a scheme is completed to process data from calibration rows.
@@ -696,6 +694,7 @@ class RDFrequencyConverter(Singleton):
             else:
                 raise ValueError("Configuration file must be specified to initialize RDFrequencyConverter")
 
+            self.converterEnabled = True
             self.numLasers = interface.NUM_VIRTUAL_LASERS
             self.rdQueue = Queue.Queue()
             self.rdQueueMaxLevel = 0
@@ -723,6 +722,17 @@ class RDFrequencyConverter(Singleton):
                 name="Ringdown frequency converter broadcaster",
                 logFunc=event_manager_proxy.Log)
 
+            self.unifiedRdBroadcaster = Broadcaster.Broadcaster(port=BROADCAST_PORT_RD_UNIFIED,
+                                                                name="Ringdown frequency converter unified ringdown broadcaster",
+                                                                logFunc=event_manager_proxy.Log)
+
+            self.rdListener = Listener.Listener(self.rdQueue,
+                                                BROADCAST_PORT_RDRESULTS,
+                                                interface.RingdownEntryType,
+                                                retry=True,
+                                                name="Ringdown frequency converter listener",
+                                                logFunc=event_manager_proxy.Log)
+
             self.freqScheme = {}
             self.angleScheme = {}
             self.isAngleSchemeConverted = {}
@@ -743,10 +753,17 @@ class RDFrequencyConverter(Singleton):
             self.hotBoxCalUpdateTime = 0
             # For each virtual laser, keep track of the number of times the scheme-based calibration
             #  process has succeeded and failed
+            self.unusableCalPoints = 0
             self.calFailed = zeros(interface.NUM_VIRTUAL_LASERS)
             self.calSucceeded = zeros(interface.NUM_VIRTUAL_LASERS)
             self.rdListener = None
             self.schemeTableMask = (0xffff >> (16 - interface.SCHEME_VersionShift))
+            # Attributes for working with SGDBR lasers
+            self.sgdbrCals = {}
+
+    def getSchemeCount(self, entry):
+        """Fetch the "schemeCount" part of a ringdown which specifies which scheme it is associated with"""
+        return entry.status & interface.RINGDOWN_STATUS_SequenceMask
 
     def rd_Processor(self, entry):
         """Filter applied to RingdownEntryType objects obtained from Driver. Within this filter, the
@@ -754,16 +771,22 @@ class RDFrequencyConverter(Singleton):
         then placed onto the ringdown queue.
 
         Args:
-            entry: RingdownEntryType obtained from Listener to Driver
+            entry: ProcessedRingdownEntryType obtained from Driver
+
+        Returns:
+            entry: The ringdown entry
+            newScheme: Flag indicating that this is the first ringdown of a new scheme
         """
+        newScheme = False
         assert isinstance(entry, interface.ProcessedRingdownEntryType)
         if (self.tuningMode != interface.ANALYZER_TUNING_FsrHoppingTuningMode):
-            if (entry.status & interface.RINGDOWN_STATUS_SequenceMask) != self.lastSchemeCount:
+            if self.getSchemeCount(entry) != self.lastSchemeCount:
+                newScheme = True
                 # We have got to a new scheme
                 if self.sbc.calDataByRow:
                     self.sbc.applySchemeBasedCalibration()
                 self.sbc.clear()
-                self.lastSchemeCount = (entry.status & interface.RINGDOWN_STATUS_SequenceMask)
+                self.lastSchemeCount = self.getSchemeCount(entry)
             # Check if this is a calibration row and process it accordingly
             if entry.subschemeId & interface.SUBSCHEME_ID_IsCalMask:
                 rowNum = entry.schemeRow
@@ -777,10 +800,13 @@ class RDFrequencyConverter(Singleton):
                     # The spectral point is close to the setpoint
                     self.sbc.processCalRingdownEntry(entry)
                 else:
+                    self.unusableCalPoints += 1
                     event_manager_proxy.Log(
                         "WLM Calibration point cannot be used: rowNum: %d, tempError: %.1f, angleError: %.4f, vLaserNum: %d" %
                         (rowNum, tempError, min(angleError, 2 * pi - angleError), 1 + ((entry.laserUsed >> 2) & 7)))
-        return entry
+            if newScheme:
+                self.unusableCalPoints = 0
+        return entry, newScheme
 
     def run(self):
         """Runs main loop of the RDFrequencyConverter.
@@ -825,22 +851,49 @@ class RDFrequencyConverter(Singleton):
                     self.rdQueueMaxLevel = rdQueueSize
                     event_manager_proxy.Log("rdQueueSize reaches new peak level %d" % self.rdQueueMaxLevel)
                 if rdQueueSize > MIN_SIZE or time.time() - startTime > timeout:
-                    self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
-                    self._batchConvert()
+                    if self.freqConvertersLoaded:
+                        self.tuningMode = Driver.rdDasReg("ANALYZER_TUNING_MODE_REGISTER")
+                        self._batchConvert()
+                    else:
+                        # If no frequency converters are loaded, just rebroadcast the raw ringdowns on the
+                        #  unified ringdown ZMQ socket
+                        while not self.rdQueue.empty() and not self.freqConvertersLoaded:
+                            try:
+                                rdData = self.rdQueue.get(False)
+                                pickledRd = StringPickler.ObjAsString(rdData)
+                                data = ("rawRd", pickledRd)
+                                self.unifiedRdBroadcaster.send(StringPickler.PackArbitraryObject(data))
+                            except Queue.Empty:
+                                time.sleep(0.02)
+                                break
                     startTime = time.time()
                 else:
                     time.sleep(0.02)
                     continue
+
                 while self.rdProcessedCache:
                     try:
                         rdProcessedData = self.rdProcessedCache.pop(0)
-                        # self_calaberition
-                        self.rd_Processor(rdProcessedData)
-                        self.processedRdBroadcaster.send(StringPickler.ObjAsString(rdProcessedData))
+                        # Detect new scheme and do WLM calibration
+                        entry, newScheme = self.rd_Processor(rdProcessedData)
+                        # Broadcast data can either consist of a schemeInfo record or a ringdown record
+                        #  We send a tuple, the first element of which indicates the type of the record
+                        #  and the second contains the data associated with the record
+                        if newScheme:
+                            schemeTable = entry.schemeVersionAndTable & self.schemeTableMask
+                            data = ("schemeInfo", {
+                                "schemeTable": schemeTable,
+                                "schemeInfo": self.angleScheme[schemeTable].schemeInfo,
+                                "schemeCount": self.getSchemeCount(entry)
+                            })
+                            self.unifiedRdBroadcaster.send(StringPickler.PackArbitraryObject(data))
+                        pickledRd = StringPickler.ObjAsString(rdProcessedData)
+                        data = ("procRd", pickledRd)
+                        self.unifiedRdBroadcaster.send(StringPickler.PackArbitraryObject(data))
+                        self.processedRdBroadcaster.send(pickledRd)
                     except IndexError:
                         break
             except Exception, e:
-                #LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
                 event_manager_proxy.LogExc("Unhandled exception in %s: %s" % (APP_NAME, e), Level=3)
                 # Request a restart from Supervisor via RPC call
                 restart = RequestRestart(APP_NAME)
@@ -868,6 +921,8 @@ class RDFrequencyConverter(Singleton):
         index = 0
         while not self.rdQueue.empty():
             try:
+                if not self.converterEnabled:
+                    continue
                 rdProcessedData = interface.ProcessedRingdownEntryType()
                 rdData = self.rdQueue.get(False)
                 for name, _ctype in rdData._fields_:
@@ -937,6 +992,12 @@ class RDFrequencyConverter(Singleton):
         SchemeMultipleMode"""
         return len(self.shortCircuitSchemes) > 0
 
+    def RPC_wlmAngleAndLaserTemperatureToWavenumber(self, wlmAngles, laserTemps, vLaserNum):
+        """Use the frequency converter for vLaserNum (1-origin) to convert the arrays of WLM angles
+        and laser temperatures into wavenumbers"""
+        freqConv = self.freqConverter[vLaserNum - 1]
+        return freqConv.thetaCalAndLaserTemp2WaveNumber(asarray(wlmAngles), asarray(laserTemps))
+
     def RPC_angleToLaserTemperature(self, vLaserNum, angles):
         self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum - 1].thetaCal2LaserTemp(angles)
@@ -983,23 +1044,44 @@ class RDFrequencyConverter(Singleton):
         angleScheme = self.angleScheme[schemeNum]
         numEntries = scheme.numEntries
         dataByLaser = {}
+        # Reorganize the scheme by virtual laser number so that
+        #  we can do the translation one virtual laser at a time
+        #  using the appropriate frequency converter
         for i in xrange(numEntries):
             vLaserNum = scheme.virtualLaser[i] + 1
             waveNum = float(scheme.setpoint[i])
             if vLaserNum not in dataByLaser:
                 dataByLaser[vLaserNum] = ([], [])
+            # Index 0 is the list of scheme rows,
+            # 1 is the list of frequencies
             dataByLaser[vLaserNum][0].append(i)
             dataByLaser[vLaserNum][1].append(waveNum)
+
         for vLaserNum in dataByLaser:
             self._assertVLaserNum(vLaserNum)
             freqConv = self.freqConverter[vLaserNum - 1]
             waveNum = array(dataByLaser[vLaserNum][1])
-            wlmAngle = freqConv.waveNumber2ThetaCal(waveNum)
-            laserTemp = freqConv.thetaCal2LaserTemp(wlmAngle)
-            for j, i in enumerate(dataByLaser[vLaserNum][0]):
-                angleScheme.setpoint[i] = wlmAngle[j]
-                # Add in scheme.laserTemp as an offset to the value calculated
-                angleScheme.laserTemp[i] = laserTemp[j] + scheme.laserTemp[i]
+            schemeRows = asarray(dataByLaser[vLaserNum][0])
+
+            result = freqConv.calcInjectSettings(waveNum, schemeRows)
+            npts = len(waveNum)
+            if result["laserType"] == 0:
+                for j, i in enumerate(schemeRows):
+                    angleScheme.setpoint[i] = result["angleSetpoint"][j]
+                    angleScheme.laserTemp[i] = result["laserTemp"][j] + scheme.laserTemp[i]
+            elif result["laserType"] == 1:
+                for i in schemeRows:
+                    if i in result["frontMirrorDac"]:
+                        angleScheme.frontMirrorDac[i] = result["frontMirrorDac"][i]
+                        angleScheme.backMirrorDac[i] = result["backMirrorDac"][i]
+                        angleScheme.coarsePhaseDac[i] = result["coarsePhaseDac"][i]
+                        angleScheme.setpoint[i] = result["angleSetpoint"][i]
+                        angleScheme.laserTemp[i] = result["laserTemp"][i] + scheme.laserTemp[i]
+                    else:
+                        # Use -1.0e6 as the angle setpoint to indicate an inaccessible frequency
+                        #  (NaN is not handled properly by TI C compiler)
+                        angleScheme.setpoint[i] = -1.0e6
+
         self.isAngleSchemeConverted[schemeNum] = True
 
     def RPC_getHotBoxCalFilePath(self):
@@ -1100,6 +1182,12 @@ class RDFrequencyConverter(Singleton):
 
         # Load up the frequency converters for each laser in the DAS...
         ini = CustomConfigObj(self.warmBoxCalFilePath)
+
+        # Load the calibration objects for the SGDBR lasers
+        self.sgdbrCals["A"] = SgdbrCal(ini, "A")
+        self.sgdbrCals["B"] = SgdbrCal(ini, "B")
+
+        # Load up the frequency converters for each virtual laser
         # N.B. In AutoCal, laser indices are 1 based
         for vLaserNum in range(1, self.numLasers + 1):
             freqConv = AutoCal()
@@ -1109,8 +1197,14 @@ class RDFrequencyConverter(Singleton):
             if paramSec in ini:
                 param = ini[paramSec]
                 aLaserNum = int(ini["LASER_MAP"]["ACTUAL_FOR_VIRTUAL_%d" % vLaserNum])
+                aLaserSec = "ACTUAL_LASER_%d" % aLaserNum
+                if aLaserSec not in ini:
+                    raise ValueError("loadFromIni failed due to missing section %s (required by virtual laser %d)" %
+                                     (aLaserSec, vLaserNum))
+                laserType = int(ini[aLaserSec].get("LASER_TYPE", 0))
                 laserParams = {
                     'actualLaser': aLaserNum - 1,
+                    'laserType': laserType,
                     'ratio1Center': float(param['RATIO1_CENTER']),
                     'ratio1Scale': float(param['RATIO1_SCALE']),
                     'ratio2Center': float(param['RATIO2_CENTER']),
@@ -1132,6 +1226,13 @@ class RDFrequencyConverter(Singleton):
                     laserParams['pressureC3'] = 0.0
                 if not self.virtualMode:
                     Driver.wrVirtualLaserParams(vLaserNum, laserParams)
+                if laserType == 1:
+                    if aLaserNum == 1:
+                        freqConv.sgdbrCal = self.sgdbrCals['A']
+                    elif aLaserNum == 3:
+                        freqConv.sgdbrCal = self.sgdbrCals['B']
+                    else:
+                        raise ValueError("SGDBR laser must be Laser 1 or Laser 3")
         # Start the ringdown listener only once there are frequency converters
         # available to do the conversion
         if not self.freqConvertersLoaded:
@@ -1145,6 +1246,13 @@ class RDFrequencyConverter(Singleton):
                 logFunc=event_manager_proxy.Log)
             self.freqConvertersLoaded = True
         return "OK"
+
+    def RPC_enableFrequencyConverter(self, enable=None):
+        # Enable or disable conversion. Returns previous state of converter
+        prev = self.converterEnabled
+        if enable is not None:
+            self.converterEnabled = enable
+        return prev
 
     def RPC_replaceOriginalWlmCal(self, vLaserNum):
         # Copy current spline coefficients to original coefficients
@@ -1378,6 +1486,10 @@ class RDFrequencyConverter(Singleton):
     def RPC_waveNumberToAngle(self, vLaserNum, waveNumbers):
         self._assertVLaserNum(vLaserNum)
         return self.freqConverter[vLaserNum - 1].waveNumber2ThetaCal(waveNumbers)
+
+    def RPC_wrAngleScheme(self, schemeNum, angleScheme):
+        self.angleScheme[schemeNum] = angleScheme
+        self.isAngleSchemeConverted[schemeNum] = True
 
     def RPC_wrFreqScheme(self, schemeNum, freqScheme):
         self.freqScheme[schemeNum] = freqScheme

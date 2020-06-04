@@ -517,6 +517,8 @@ class SpectrumCollector(object):
     @CmdFIFO.rpc_wrap
     def RPC_startSequence(self, seq=None):
         self.RPC_setSequence(seq)
+        if seq is not None:
+            self.sequencer.sequence = str(seq)
         self.sequencer.startSequence()
 
     @CmdFIFO.rpc_wrap

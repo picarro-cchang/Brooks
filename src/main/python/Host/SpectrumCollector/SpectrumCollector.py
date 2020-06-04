@@ -28,13 +28,14 @@ import shutil
 import threading
 import time
 import ctypes
+from collections import deque
 
 from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
 from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
 from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
-from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR
+from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR, BROADCAST_PORT_RD_UNIFIED
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
@@ -138,10 +139,10 @@ class SpectrumCollector(object):
             raise ValueError("Unknown ringdownSource type: %s" % self.ringdownSource)
         if self.ringdownSource == 'raw':
             self.rdEntryType = RingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RDRESULTS
+            self.rdEntryName = "rawRd"
         else:
             self.rdEntryType = ProcessedRingdownEntryType
-            self.rdBroadcastPort = BROADCAST_PORT_RD_RECALC
+            self.rdEntryName = "procRd"
         self.useHDF5 = cp.getboolean("MainConfig", "useHDF5", "True")
         self.archiveGroup = cp.get("MainConfig", "archiveGroup", "RDF")
         self.streamDir = os.path.abspath(os.path.join(basePath, cp.get("MainConfig", "streamDir", "../../../Log/RDF")))
@@ -182,12 +183,12 @@ class SpectrumCollector(object):
 
         # Processed RD data (frequency-based) handling
         self.rdQueue = Queue.Queue()
-        self.processedRdListener = Listener.Listener(self.rdQueue,
-                                                     self.rdBroadcastPort,
-                                                     self.rdEntryType,
-                                                     retry=True,
-                                                     name="Spectrum collector listener",
-                                                     logFunc=Log)
+        self.rdListener = Listener.Listener(self.rdQueue,
+                                            BROADCAST_PORT_RD_UNIFIED,
+                                            StringPickler.ArbitraryObject,
+                                            retry=True,
+                                            name="Spectrum collector listener",
+                                            logFunc=Log)
 
         # Broadcaster for spectra
         self.spectrumBroadcaster = Broadcaster.Broadcaster(port=BROADCAST_PORT_SPECTRUM_COLLECTOR,
@@ -218,11 +219,10 @@ class SpectrumCollector(object):
         self.avgSensors = {}
         self.sumSensors = {}
         self.rdBuffer = {}
-
+        self.schemeInfo = deque(maxlen=4)
         self.useSequencer = True
         self.sequencer = None
         self.schemesUsed = {}
-
         self.fsrModeBoundaries = {}
 
     def run(self):
@@ -261,7 +261,7 @@ class SpectrumCollector(object):
             while not self._shutdownRequested:
                 #Pull a spectral point from the RD queue...
                 try:
-                    rdData = self.getSpectralDataPoint(timeToRetry=0.5)
+                    rdData = self.getFromRdQueue(timeToRetry=0.5)
                     if rdData is None:
                         time.sleep(0.5)
                         loops = 0
@@ -387,6 +387,42 @@ class SpectrumCollector(object):
                     raise SpectrumCollectionTimeout("No ringdown in %s seconds" % timeout)
         return rdData
 
+    def getFromRdQueue(self, timeToRetry, timeout=10):
+        """Gets data out of the unified RD listener queue and returns it. If the data is of schemeInfo
+        type, which arrives at the start of a new scheme, save it in self.schemeInfo and return None.
+        If the data is a ringdown of the type expected, return it as a RingdownEntry or 
+        ProcessedRingdownEntry. If there are no data within the timeToRetry interval, wait for 0.5s
+        and return None. If we have been trying for duration timeout and there are no data, raise 
+        SpectrumCollectionTimeout.
+        """
+        if self.emptyCount == 0:
+            self.startWaitTime = time.time()
+        if self.tempRdDataBuffer:
+            # The last time a spectrum was read it read one too many points,
+            # and this is it.
+            rdData = self.tempRdDataBuffer
+            self.tempRdDataBuffer = None
+            self.emptyCount = 0
+        else:
+            try:
+                rdData = self.rdQueue.get(True, timeToRetry)
+                self.emptyCount = 0
+                if rdData[0] == "schemeInfo":
+                    schemeCount = rdData[1]["schemeCount"]
+                    schemeInfo = rdData[1]["schemeInfo"]
+                    self.schemeInfo.append((schemeCount, schemeInfo))
+                    return None
+                elif rdData[0] == self.rdEntryName:
+                    return StringPickler.StringAsObject(rdData[1], self.rdEntryType)
+                else:
+                    return None
+            except Queue.Empty:
+                self.emptyCount += 1
+                if time.time() - self.startWaitTime > timeout:
+                    self.emptyCount = 0
+                    raise SpectrumCollectionTimeout("No ringdown in %s seconds" % timeout)
+                return None
+
     def prepareForNewSpectrum(self):
         self.numPts = 0
         #Initialize the sensor averaging...
@@ -453,13 +489,26 @@ class SpectrumCollector(object):
             controlData: Indicates number of ringdowns in spectrum and latency from ringdown collection time to
                 spectrum assembly time
         """
-        spectrumDict = {"rdData": {}, "sensorData": {}, "tagalongData": {}, "controlData": {}}
+        spectrumDict = {"rdData": {}, "sensorData": {}, "tagalongData": {}, "controlData": {}, "schemeInfo": None}
         # Convert the contents of self.rdBuffer lists into numpy arrays
         for fname in self.rdBuffer:
             data, dtype = self.rdBuffer[fname]
             spectrumDict["rdData"][fname] = numpy.asarray(data, ctypes2numpy[dtype])
-        spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
-        spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
+        # Get the scheme count which specifies which scheme was used
+        schemeCounts = spectrumDict["rdData"]["status"] & interface.RINGDOWN_STATUS_SequenceMask
+        schemeCount = numpy.unique(schemeCounts)
+        if len(schemeCount) > 1:
+            Log("Only one scheme should be present, but several were found", Data=schemeCount, Level=2)
+
+        if len(schemeCount) > 0:
+            schemeCount = schemeCount[0]  # Use the first element (if more than one)
+            # Search for this scheme in self.schemeInfo and store the associated information in spectrumDict
+            for sc, si in self.schemeInfo:
+                if schemeCount == sc:
+                    spectrumDict["schemeInfo"] = si
+            spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
+            spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
+
         # Append a mode number to each ringdown if the mode boundaries have been set up for the laser in
         # FSR hopping mode
         if self.fsrModeBoundaries:
@@ -474,7 +523,8 @@ class SpectrumCollector(object):
                         modeNum[sel] = numpy.digitize(fineLaserCurrent[sel], bins)
             spectrumDict["rdData"]["fsrIndex"] = modeNum
         else:
-            spectrumDict["rdData"]["fsrIndex"] = -999999 * numpy.ones_like(spectrumDict["rdData"]["timestamp"], dtype=int)
+            spectrumDict["rdData"]["fsrIndex"] = -999999 * \
+                numpy.ones_like(spectrumDict["rdData"]["timestamp"], dtype=int)
 
         # Append averaged sensor data
         for s in self.avgSensors:
@@ -509,7 +559,10 @@ class SpectrumCollector(object):
         """
         # Create HDF5 file
         numSchemes = len(self.schemesUsed)
-        attrs = {}
+        if len(spectraInScheme) > 0:
+            attrs = {"schemeInfo": spectraInScheme[-1]["schemeInfo"]}
+        else:
+            attrs = {}
 
         if numSchemes == 1:
             scheme = self.schemesUsed.values()[0]
@@ -579,6 +632,8 @@ class SpectrumCollector(object):
     @CmdFIFO.rpc_wrap
     def RPC_startSequence(self, seq=None):
         self.RPC_setSequence(seq)
+        if seq is not None:
+            self.sequencer.sequence = str(seq)
         self.sequencer.startSequence()
 
     @CmdFIFO.rpc_wrap
@@ -595,6 +650,12 @@ class SpectrumCollector(object):
             self.sequencer.startSequence()
         else:
             Driver.startScan()
+
+    @CmdFIFO.rpc_wrap
+    def RPC_stopScan(self):
+        if self.useSequencer:
+            self.sequencer.stopScan()
+        Driver.stopScan()
 
     @CmdFIFO.rpc_wrap
     def RPC_sequencerGetCurrent(self):

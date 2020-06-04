@@ -177,7 +177,8 @@ void scheduler(void)
         if (SEM_pend(&SEM_hpiIntBackend,10)) backend();
         if (SEM_pend(&SEM_scheduler,0)) {
             readRegister(SCHEDULER_CONTROL_REGISTER,&d);
-            if (d.asInt) do_groups(timestamp);
+            // Round the timestamp to a multiple of 100ms, the basic scheduler period
+            if (d.asInt) do_groups(((timestamp + 50)/100) * 100);
         }
     }
 }

@@ -21,7 +21,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use std.textio.all;
-use work.pck_myhdl_06.all;
+use work.pck_myhdl_090.all;
 
 ---- Uncomment the following library declaration if instantiating
 ---- any Xilinx primitives in this code.
@@ -166,21 +166,25 @@ architecture behavioral of top_io is
     signal LSR1_RD: std_logic;
     signal LSR1_SS_N: std_logic;
     signal LSR1_MOSI: std_logic;
+    signal LSR1_MISO: std_logic;
     signal LSR1_DISABLE: std_logic;
     signal LSR2_SCK: std_logic;
     signal LSR2_RD: std_logic;
     signal LSR2_SS_N: std_logic;
     signal LSR2_MOSI: std_logic;
+    signal LSR2_MISO: std_logic;
     signal LSR2_DISABLE: std_logic;
     signal LSR3_SCK: std_logic;
     signal LSR3_RD: std_logic;
     signal LSR3_SS_N: std_logic;
     signal LSR3_MOSI: std_logic;
+    signal LSR3_MISO: std_logic;
     signal LSR3_DISABLE: std_logic;
     signal LSR4_SCK: std_logic;
     signal LSR4_RD: std_logic;
     signal LSR4_SS_N: std_logic;
     signal LSR4_MOSI: std_logic;
+    signal LSR4_MISO: std_logic;
     signal LSR4_DISABLE: std_logic;
     signal AUX_DOUT: unsigned(3 downto 0);
     signal WARM_BOX_TEC_OVERLOAD_N: std_logic;
@@ -193,10 +197,10 @@ architecture behavioral of top_io is
     signal WMM_TRAN2: std_logic;
     signal WMM_BUSY1: std_logic;
     signal WMM_BUSY2: std_logic;
-    
+
     signal BUFF_OUT_U: unsigned(39 downto 0);
     signal BUFF_IN_U: unsigned(23 downto 0);
-    
+
 begin
     dioMap_inst : entity work.dioMap(MyHDL) port map(
         man                     => DOUT_MAN,
@@ -226,21 +230,25 @@ begin
         lsr1_rd                 => LSR1_RD,
         lsr1_ss_n               => LSR1_SS_N,
         lsr1_mosi               => LSR1_MOSI,
+        lsr1_miso               => LSR1_MISO,
         lsr1_disable            => LSR1_DISABLE,
         lsr2_sck                => LSR2_SCK,
         lsr2_rd                 => LSR2_RD,
         lsr2_ss_n               => LSR2_SS_N,
         lsr2_mosi               => LSR2_MOSI,
+        lsr2_miso               => LSR2_MISO,
         lsr2_disable            => LSR2_DISABLE,
         lsr3_sck                => LSR3_SCK,
         lsr3_rd                 => LSR3_RD,
         lsr3_ss_n               => LSR3_SS_N,
         lsr3_mosi               => LSR3_MOSI,
+        lsr3_miso               => LSR3_MISO,
         lsr3_disable            => LSR3_DISABLE,
         lsr4_sck                => LSR4_SCK,
         lsr4_rd                 => LSR4_RD,
         lsr4_ss_n               => LSR4_SS_N,
         lsr4_mosi               => LSR4_MOSI,
+        lsr4_miso               => LSR4_MISO,
         lsr4_disable            => LSR4_DISABLE,
         aux_dout                => AUX_DOUT,
         warm_box_tec_overload_n => WARM_BOX_TEC_OVERLOAD_N,
@@ -311,24 +319,28 @@ begin
        lsr1_ss        => LSR1_SS,
        lsr1_rd        => LSR1_RD,
        lsr1_mosi      => LSR1_MOSI,
+       lsr1_miso      => LSR1_MISO,
        lsr1_disable   => LSR1_DISABLE,
 
        lsr2_sck       => LSR2_SCK,
        lsr2_ss        => LSR2_SS,
        lsr2_rd        => LSR2_RD,
        lsr2_mosi      => LSR2_MOSI,
+       lsr2_miso      => LSR2_MISO,
        lsr2_disable   => LSR2_DISABLE,
 
        lsr3_sck       => LSR3_SCK,
        lsr3_ss        => LSR3_SS,
        lsr3_rd        => LSR3_RD,
        lsr3_mosi      => LSR3_MOSI,
+       lsr3_miso      => LSR3_MISO,
        lsr3_disable   => LSR3_DISABLE,
 
        lsr4_sck       => LSR4_SCK,
        lsr4_ss        => LSR4_SS,
        lsr4_rd        => LSR4_RD,
        lsr4_mosi      => LSR4_MOSI,
+       lsr4_miso      => LSR4_MISO,
        lsr4_disable   => LSR4_DISABLE,
 
        wmm_refl1      => WMM_REFL1,
@@ -392,10 +404,10 @@ begin
        );
 
     -- digital I/O lines
-    
+
     BUFF_OUT            <= std_logic_vector(BUFF_OUT_U);
     BUFF_IN_U           <= unsigned(BUFF_IN);
-    
+
     -- change logic polarity to fit hardware
 
     DSP_EMIF_WE         <= not DSP_EMIF_WE_N;

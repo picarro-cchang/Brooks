@@ -21,7 +21,7 @@ import time
 
 
 class Broadcaster(object):
-    def __init__(self, port, name='Broadcaster', logFunc=None, sendHwm=500):
+    def __init__(self, port, name='Broadcaster', logFunc=None, sendHwm=4000):
         self.name = name
         self.port = port
         self.logFunc = logFunc
