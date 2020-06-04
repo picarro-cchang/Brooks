@@ -53,7 +53,7 @@ MOVE_TO_NEW_FILE_EVERY_MONTH = True
 
 DEFAULT_DB_PATH = "."  # TODO
 
-file_tracking_db_filename = "lologger_file_tracking.db"
+FILE_TRACKING_DB_FILENAME = "lologger_file_tracking.db"
 
 def get_current_year_month():
     today = datetime.today()
@@ -316,7 +316,7 @@ class LOLoggerThread(threading.Thread):
     def _create_database_file_path(self, file_tracking_db=False):
         """Create a filename for the new sqlite file."""
         if file_tracking_db:
-            db_filename = f"{self.db_filename_prefix}_{file_tracking_db_filename}"
+            db_filename = f"{self.db_filename_prefix}_{FILE_TRACKING_DB_FILENAME}"
         else:
             db_filename = f"{self.db_filename_prefix}_{get_current_year_month()}.db"
         self.full_prefix = f"{self.db_filename_prefix}_"
