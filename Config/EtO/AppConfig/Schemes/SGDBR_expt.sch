@@ -3,7 +3,7 @@ import copy
 schemeVersion = 1
 repeat = 500
 f_CH4 = 6057.09
-cfg = getConfig(r'..\..\InstrConfig\Calibration\InstrCal\Beta2000_HotBoxCal.ini')
+cfg = getConfig(r'../../InstrConfig/Calibration/InstrCal/Beta2000_HotBoxCal.ini')
 fsr = float(cfg['AUTOCAL']['CAVITY_FSR'])
 CH4_Laser = 0
 CH4 = 25
