@@ -186,7 +186,7 @@ class BroadbandControl (object):
         K = self.targetMemory.keys()
         K.sort()
         if len(K) > 0:
-            homeDIR = r'C:\Picarro\G2000\InstrConfig\Calibration\InstrCal'
+            homeDIR = r'/home/picarro/I2000/InstrConfig/Calibration/InstrCal'
             targetfn = os.path.join(homeDIR, 'TargetValuesForPZT_%d.txt' % time.time())
             with open(targetfn, 'w') as outfile:
                 outfile.write('index, sumTargetValues, sumTargetValuesSquared, targetCounter\n')
