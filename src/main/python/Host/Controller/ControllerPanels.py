@@ -438,6 +438,26 @@ class RingdownPanel(RingdownPanelGui):
                                                  marker='square',
                                                  size=1,
                                                  width=1)
+        elif y == "SGDBRCurrents":
+            self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["frontMirrorCurrent"],
+                                                 colour='red',
+                                                 fillcolour='red',
+                                                 marker='square',
+                                                 size=1,
+                                                 width=1)
+            self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["backMirrorCurrent"],
+                                                 colour='green',
+                                                 fillcolour='green',
+                                                 marker='square',
+                                                 size=1,
+                                                 width=1)
+            self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["coarsePhaseCurrent"],
+                                                 colour='blue',
+                                                 fillcolour='blue',
+                                                 marker='square',
+                                                 size=1,
+                                                 width=1)
+
         for w in self.ringdownWfms:
             w.Clear()
 
@@ -954,6 +974,7 @@ class CommandLogPanel(CommandLogPanelGui):
         elif currentLabel == CommandLogPanel.acqLabels["resume"]:
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_RunningState)
         elif currentLabel in [CommandLogPanel.acqLabels["clear"], CommandLogPanel.acqLabels["stop"]]:
+            SpectrumCollector.stopScan()
             Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
 
     def updateLoopStatus(self):

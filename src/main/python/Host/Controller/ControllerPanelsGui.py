@@ -286,6 +286,7 @@ class RingdownPanelGui(wx.Panel):
         self.clearButton = wx.Button(self.panel_1, wx.ID_CLEAR, "")
         self.uncorrectedCheckBox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Uncorrected")
         self.correctedCheckBox = wx.CheckBox(self.panel_1, wx.ID_ANY, "Corrected")
+        self.sizer_4_staticbox = wx.StaticBox(self.panel_1, wx.ID_ANY, "Loss Type")
         self.graphTypeRadioBox = wx.RadioBox(self.panel_1,
                                              wx.ID_ANY,
                                              "Select Graph Type",
@@ -294,7 +295,8 @@ class RingdownPanelGui(wx.Panel):
                                                  "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1",
                                                  "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1",
                                                  "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber",
-                                                 "IL(fine) vs Time", "Loss vs IL(fine)"
+                                                 "IL(fine) vs Time", "Loss vs IL(fine)", "I[SGDBR] vs Wavenumber",
+                                                 "I[SGDBR] vs Time"
                                              ],
                                              majorDimension=4,
                                              style=wx.RA_SPECIFY_ROWS)
@@ -320,7 +322,8 @@ class RingdownPanelGui(wx.Panel):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)
-        sizer_4 = wx.StaticBoxSizer(wx.StaticBox(self.panel_1, wx.ID_ANY, "Loss Type"), wx.VERTICAL)
+        self.sizer_4_staticbox.Lower()
+        sizer_4 = wx.StaticBoxSizer(self.sizer_4_staticbox, wx.VERTICAL)
         sizer_1.Add(self.ringdownGraph, 1, wx.EXPAND, 0)
         sizer_3.Add(self.clearButton, 0, wx.ALL, 10)
         sizer_4.Add(self.uncorrectedCheckBox, 0, wx.BOTTOM | wx.TOP, 3)
@@ -586,6 +589,7 @@ class PressurePanelGui(wx.Panel):
         self.valve4State = CheckIndicator(self.panel_1, wx.ID_ANY, "Valve 4")
         self.valve5State = CheckIndicator(self.panel_1, wx.ID_ANY, "Valve 5")
         self.valve6State = CheckIndicator(self.panel_1, wx.ID_ANY, "Valve 6")
+        self.sizer_16_staticbox = wx.StaticBox(self.panel_1, wx.ID_ANY, "Solenoid valve states")
 
         self.__set_properties()
         self.__do_layout()
@@ -612,7 +616,8 @@ class PressurePanelGui(wx.Panel):
         # begin wxGlade: PressurePanelGui.__do_layout
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
-        sizer_16 = wx.StaticBoxSizer(wx.StaticBox(self.panel_1, wx.ID_ANY, "Solenoid valve states"), wx.HORIZONTAL)
+        self.sizer_16_staticbox.Lower()
+        sizer_16 = wx.StaticBoxSizer(self.sizer_16_staticbox, wx.HORIZONTAL)
         grid_sizer_2 = wx.GridSizer(2, 3, 0, 0)
         sizer_4 = wx.BoxSizer(wx.VERTICAL)
         sizer_3 = wx.BoxSizer(wx.VERTICAL)

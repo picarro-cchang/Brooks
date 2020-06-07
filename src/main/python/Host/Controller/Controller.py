@@ -148,7 +148,10 @@ class Controller(ControllerFrameGui):
                                      tuner=self.ringdownPanel.ringdownWfms[0],
                                      pzt=self.ringdownPanel.ringdownWfms[0],
                                      wavenumber=self.ringdownPanel.ringdownWfms[0],
-                                     fineCurrent=self.ringdownPanel.ringdownWfms[0])
+                                     fineCurrent=self.ringdownPanel.ringdownWfms[0],
+                                     frontMirrorCurrent=self.ringdownPanel.ringdownWfms[0],
+                                     backMirrorCurrent=self.ringdownPanel.ringdownWfms[1],
+                                     coarsePhaseCurrent=self.ringdownPanel.ringdownWfms[2])
 
     def setupParameterDialogs(self):
         idmin = None
