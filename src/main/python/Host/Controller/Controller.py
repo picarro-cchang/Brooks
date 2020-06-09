@@ -169,7 +169,6 @@ class Controller(ControllerFrameGui):
     def onParameterDialog(self, e):
         """Either open a new parameter dialog form or shift focus
            to a pre-existing one"""
-        # print "In onParameterDialog"
         id = e.GetId()
         if id in self.openParamDialogs:
             try:
@@ -177,7 +176,6 @@ class Controller(ControllerFrameGui):
                 self.openParamDialogs[id].SetFocus()
                 return
             except Exception, e:
-                # print "Cannot give focus to parameter dialog form: %s" % (e,)
                 del self.openParamDialogs[id]
         title, details = parameterForms[id]
         pd = ParameterDialog(None, wx.ID_ANY, "")
@@ -185,9 +183,7 @@ class Controller(ControllerFrameGui):
         pd.getRegisterValues = Driver.rdRegList
         pd.putRegisterValues = Driver.wrRegList
         self.openParamDialogs[id] = pd
-        # print "About to call ReadFromDas"
         pd.readParams()
-        # print "About to show dialog"
         pd.Show()
 
     def onAbout(self, evt):
