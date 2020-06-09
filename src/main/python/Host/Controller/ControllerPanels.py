@@ -61,7 +61,7 @@ class RingdownPanel(RingdownPanelGui):
                                               grid=True,
                                               frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                               backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.ringdownWfms = [ColorSeries(ringdownPoints) for i in range(2)]
+        self.ringdownWfms = [ColorSeries(ringdownPoints) for i in range(3)]
         self.latestRingdown = None
         self.appendData = None
         self.oldAppendData = None

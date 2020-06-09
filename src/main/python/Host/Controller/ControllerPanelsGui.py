@@ -295,8 +295,7 @@ class RingdownPanelGui(wx.Panel):
                                                  "Ratio vs Wavenumber", "Tuner vs Wavenumber", "Tuner vs Time", "Tuner vs Ratio 1",
                                                  "Tuner vs Ratio 2", "PZT vs Wavenumber", "PZT vs Time", "PZT vs Ratio 1",
                                                  "PZT vs Ratio 2", "Wavenumber vs Time", "IL(fine) vs Wavenumber",
-                                                 "IL(fine) vs Time", "Loss vs IL(fine)", "I[SGDBR] vs Wavenumber",
-                                                 "I[SGDBR] vs Time"
+                                                 "IL(fine) vs Time", "Loss vs IL(fine)"
                                              ],
                                              majorDimension=4,
                                              style=wx.RA_SPECIFY_ROWS)
