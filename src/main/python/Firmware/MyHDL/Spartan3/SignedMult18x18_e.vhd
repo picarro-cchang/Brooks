@@ -22,7 +22,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use std.textio.all;
 
-use work.pck_myhdl_06.all;
+use work.pck_myhdl_090.all;
 
 library UNISIM;
 use UNISIM.VComponents.all;
