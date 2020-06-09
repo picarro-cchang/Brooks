@@ -11,5 +11,5 @@ export PICARRO_LOG_DIR=/home/picarro/I2000/Log
 export EVENT_MANAGER_PROXY_MIN_MS_INTERVAL=0
 export PATH=/home/picarro/anaconda2/bin:$PATH
 cd /home/picarro/I2000/Host/pydCaller/
-python -O Supervisor.py -c ../../AppConfig/Config/Supervisor/supervisorEXE_AMSADS_LCT.ini
+python -O Supervisor.py -c ../../AppConfig/Config/Supervisor/supervisor_ETO.ini
 
