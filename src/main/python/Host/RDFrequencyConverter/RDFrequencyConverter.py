@@ -942,8 +942,7 @@ class RDFrequencyConverter(Singleton):
             if cacheIndex[vLaserNum - 1]:  # There are angles to convert for this laser
                 self._assertVLaserNum(vLaserNum)
                 freqConv = self.freqConverter[vLaserNum - 1]
-                waveNumbers = freqConv.thetaCalAndLaserTemp2WaveNumber(array(wlmAngle[vLaserNum - 1]),
-                                                                       array(laserTemperature[vLaserNum - 1]))
+                waveNumbers = freqConv.calcWaveNumber(array(wlmAngle[vLaserNum - 1]), array(laserTemperature[vLaserNum - 1]))
                 for i, waveNumber in enumerate(waveNumbers):
                     index = cacheIndex[vLaserNum - 1][i]
                     rdProcessedData = self.rdProcessedCache[index]
