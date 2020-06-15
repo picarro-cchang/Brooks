@@ -244,38 +244,28 @@ class DataStoreForQt(QtCore.QObject):
                 self.mode = obj["mode"]
                 if source not in self.sourceDict:
                     self.sourceDict[source] = {}
-                for key in obj.keys():
-                    # This eliminates storing duplicate data streams like 'time'.  Here the 'time' key
-                    # is a primary key at the same level as the 'data' key and 'time' is also a key
-                    # in 'data'.  This passes over the primary key if it also appears in 'data'.
-                    if "data" in obj.keys() and key in obj["data"].keys():
-                        continue
-                    # The dict in 'data' is variable.  About 1:5 to 1:10 instances do not contain any
-                    # fit results.  Don't know why.  The 'ngroups' key is a product of the fit so skip
-                    # any results that don't have fit data.
-                    fit_filters = ['ngroups', 'dataGroups']
-                    # Some fitscripts don't adhere to have 'ngroups' output in the fitscript
-                    # 'ngroups' can be assigned an arbitrary value
-                    count = 0
-                    for fit_filter in fit_filters:
-                        if fit_filter in fit_filters:
-                            count += 1
-                    if count == 0:
-                        continue
-                    if "data" in key:
-                        for dataKey in obj["data"].keys():
-                            if dataKey not in self.sourceDict[source]:
-                                self.sourceDict[source][dataKey] = collections.deque([], self.length)
-                            offset = 0.0
-                            if dataKey in self.offsets:
-                                offset = float(self.offsets[dataKey])
-                            self.sourceDict[source][dataKey].append(obj["data"][dataKey] + offset)
+                # Filter out the sensor stream
+                if not 'Sensors' in obj["source"]:
+                    for key in obj.keys():
+                        # This eliminates storing duplicate data streams like 'time'.  Here the 'time' key
+                        # is a primary key at the same level as the 'data' key and 'time' is also a key
+                        # in 'data'.  This passes over the primary key if it also appears in 'data'.
+                        if "data" in obj.keys() and key in obj["data"].keys():
+                            continue
+                        if "data" in key:
+                            for dataKey in obj["data"].keys():
+                                if dataKey not in self.sourceDict[source]:
+                                    self.sourceDict[source][dataKey] = collections.deque([], self.length)
+                                offset = 0.0
+                                if dataKey in self.offsets:
+                                    offset = float(self.offsets[dataKey])
+                                self.sourceDict[source][dataKey].append(obj["data"][dataKey] + offset)
+                                update = True
+                        else:
+                            if key not in self.sourceDict[source].keys():
+                                self.sourceDict[source][key] = collections.deque([], self.length)
+                            self.sourceDict[source][key].append(obj[key])
                             update = True
-                    else:
-                        if key not in self.sourceDict[source].keys():
-                            self.sourceDict[source][key] = collections.deque([], self.length)
-                        self.sourceDict[source][key].append(obj[key])
-                        update = True
                 if update:
                     i += 1
                     update = False
