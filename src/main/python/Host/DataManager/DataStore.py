@@ -253,7 +253,14 @@ class DataStoreForQt(QtCore.QObject):
                     # The dict in 'data' is variable.  About 1:5 to 1:10 instances do not contain any
                     # fit results.  Don't know why.  The 'ngroups' key is a product of the fit so skip
                     # any results that don't have fit data.
-                    if 'ngroups' not in obj["data"].keys():
+                    fit_filters = ['ngroups', 'dataGroups']
+                    # Some fitscripts don't adhere to have 'ngroups' output in the fitscript
+                    # 'ngroups' can be assigned an arbitrary value
+                    count = 0
+                    for fit_filter in fit_filters:
+                        if fit_filter in fit_filters:
+                            count += 1
+                    if count == 0:
                         continue
                     if "data" in key:
                         for dataKey in obj["data"].keys():
