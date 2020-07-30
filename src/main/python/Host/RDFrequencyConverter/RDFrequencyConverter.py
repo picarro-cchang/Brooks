@@ -696,7 +696,6 @@ class RDFrequencyConverter(Singleton):
 
             self.converterEnabled = True
             self.numLasers = interface.NUM_VIRTUAL_LASERS
-            self.rdQueue = Queue.Queue()
             self.rdQueueMaxLevel = 0
             self.rdProcessedCache = []
             self.rpcThread = None
@@ -726,6 +725,9 @@ class RDFrequencyConverter(Singleton):
                                                                 name="Ringdown frequency converter unified ringdown broadcaster",
                                                                 logFunc=event_manager_proxy.Log)
 
+            # Make sure to create a new Queue before attaching it to a Listener to avoid a bug in which the same
+            #  Queue becomes populated by more than one Listener
+            self.rdQueue = Queue.Queue(500)
             self.rdListener = Listener.Listener(self.rdQueue,
                                                 BROADCAST_PORT_RDRESULTS,
                                                 interface.RingdownEntryType,
@@ -1235,6 +1237,9 @@ class RDFrequencyConverter(Singleton):
         # Start the ringdown listener only once there are frequency converters
         # available to do the conversion
         if not self.freqConvertersLoaded:
+            # Make sure to create a new Queue before attaching it to a Listener to avoid a bug in which the same
+            #  Queue becomes populated by more than one Listener
+            self.rdQueue = Queue.Queue(500)
             self.rdListener = Listener.Listener(
                 self.rdQueue,
                 BROADCAST_PORT_RDRESULTS,
