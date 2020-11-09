@@ -261,9 +261,9 @@ class SpectrumCollector(object):
             while not self._shutdownRequested:
                 #Pull a spectral point from the RD queue...
                 try:
-                    rdData = self.getFromRdQueue(timeToRetry=0.5)
+                    rdData = self.getFromRdQueue(timeToRetry=0.005)
                     if rdData is None:
-                        time.sleep(0.5)
+                        time.sleep(0.005)
                         loops = 0
                         continue
                     now = TimeStamp()
