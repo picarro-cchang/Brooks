@@ -728,12 +728,6 @@ class RDFrequencyConverter(Singleton):
             # Make sure to create a new Queue before attaching it to a Listener to avoid a bug in which the same
             #  Queue becomes populated by more than one Listener
             self.rdQueue = Queue.Queue(500)
-            self.rdListener = Listener.Listener(self.rdQueue,
-                                                BROADCAST_PORT_RDRESULTS,
-                                                interface.RingdownEntryType,
-                                                retry=True,
-                                                name="Ringdown frequency converter listener",
-                                                logFunc=event_manager_proxy.Log)
 
             self.freqScheme = {}
             self.angleScheme = {}
