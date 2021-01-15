@@ -9,7 +9,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
  */
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
@@ -87,6 +87,8 @@ typedef struct {
     uint32 lockerOffset;
     uint32 fineLaserCurrent;
     int32 lockerError;
+    uint32 average1;
+    uint32 average2;
 } RingdownMetadataType;
 
 typedef struct {
@@ -96,6 +98,8 @@ typedef struct {
     double lockerOffset;
     double fineLaserCurrent;
     double lockerError;
+    double average1;
+    double average2;
 } RingdownMetadataDoubleType;
 
 typedef struct {
@@ -157,7 +161,10 @@ typedef struct {
     uint16 soaCurrentDac;
     uint16 coarsePhaseDac;
     uint16 finePhaseDac;
-    uint16 padToCacheLine[24];
+    uint32 sequenceNumber;
+    uint16 average1;
+    uint16 average2;
+    uint16 padToCacheLine[20];
 } RingdownEntryType;
 
 typedef struct {
@@ -197,6 +204,9 @@ typedef struct {
     uint32 extra2;
     uint32 extra3;
     uint32 extra4;
+    uint32 sequenceNumber;
+    uint16 average1;
+    uint16 average2;
 } ProcessedRingdownEntryType;
 
 typedef struct {
@@ -332,13 +342,13 @@ typedef struct {
 // Offset for ringdown results in DSP data memory
 #define RDRESULTS_OFFSET (0x0)
 // Number of ringdown entries
-#define NUM_RINGDOWN_ENTRIES (2048)
+#define NUM_RINGDOWN_ENTRIES (1024)
 // Size of a ringdown entry in 32 bit ints
 #define RINGDOWN_ENTRY_SIZE ((sizeof(RingdownEntryType)/4))
 // Offset for scheme table in DSP shared memory
 #define SCHEME_OFFSET ((RDRESULTS_OFFSET+NUM_RINGDOWN_ENTRIES*RINGDOWN_ENTRY_SIZE))
 // Number of scheme tables
-#define NUM_SCHEME_TABLES (16)
+#define NUM_SCHEME_TABLES (8)
 // Maximum rows in a scheme table
 #define NUM_SCHEME_ROWS (8192)
 // Size of a scheme row in 32 bit ints
@@ -781,8 +791,7 @@ typedef enum {
     HARDWARE_PRESENT_FanCntrlDisabledBit = 11, // Fan Control Disabled
     HARDWARE_PRESENT_FlowSensorBit = 12, // Flow Sensor
     HARDWARE_PRESENT_RddVarGainBit = 13, // Variable gain ringdown detector
-    HARDWARE_PRESENT_AccelerometerBit = 14, // Accelerometer
-    HARDWARE_PRESENT_FilterHeaterBit = 15 // Filter Heater
+    HARDWARE_PRESENT_AccelerometerBit = 14 // Accelerometer
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {
@@ -852,7 +861,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (603)
+#define INTERFACE_NUMBER_OF_REGISTERS (604)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1457,6 +1466,7 @@ typedef enum {
 #define SGDBR_B_CNTRL_SPARE_DAC_REGISTER (600)
 #define SGDBR_B_CNTRL_RD_CONFIG_REGISTER (601)
 #define PZT_UPDATE_MODE_REGISTER (602)
+#define SGDBR_FILTER_BY_TRAJECTORY_REGISTER (603)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0
@@ -2094,6 +2104,8 @@ typedef enum {
 #define ACTION_READ_THERMISTOR_RESISTANCE_SGDBR (96)
 #define ACTION_SGDBR_CNTRL_INIT (97)
 #define ACTION_SGDBR_CNTRL_STEP (98)
+#define ACTION_SGDBR_A_SET_CURRENTS (99)
+#define ACTION_SGDBR_B_SET_CURRENTS (100)
 
 /* Aliases */
 #define PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER (PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER) // Old name for number of samples spent in triggered state

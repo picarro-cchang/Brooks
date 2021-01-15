@@ -121,6 +121,8 @@
             <field ident="lockerOffset" type="uint32"/>
             <field ident="fineLaserCurrent" type="uint32"/>
             <field ident="lockerError" type="int32"/>
+            <field ident="average1" type="uint32"/>
+            <field ident="average2" type="uint32"/>
         </struct>
         <struct type="RingdownMetadataDoubleType">
             <field ident="ratio1" type="double"/>
@@ -129,6 +131,8 @@
             <field ident="lockerOffset" type="double"/>
             <field ident="fineLaserCurrent" type="double"/>
             <field ident="lockerError" type="double"/>
+            <field ident="average1" type="double"/>
+            <field ident="average2" type="double"/>
         </struct>
         <struct type="RingdownParamsType">
             <field ident="injectionSettings" type="uint32"/>
@@ -141,7 +145,6 @@
             <field ident="countAndSubschemeId" type="uint32"/>
             <field ident="ringdownThreshold" type="uint32"/>
             <field ident="status" type="uint32"/>
-
             <field ident="tunerAtRingdown" type="uint32"/>
             <field ident="addressAtRingdown" type="uint32"/>
             <field ident="extLaserLevelCounter" type="uint32"/>
@@ -190,7 +193,10 @@
             <field ident="soaCurrentDac" type="uint16"/>
             <field ident="coarsePhaseDac" type="uint16"/>
             <field ident="finePhaseDac" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="24"/>
+            <field ident="sequenceNumber" type="uint32"/>
+            <field ident="average1" type="uint16"/>
+            <field ident="average2" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="20"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -231,6 +237,9 @@
             <field ident="extra2" type="uint32"/>
             <field ident="extra3" type="uint32"/>
             <field ident="extra4" type="uint32"/>
+            <field ident="sequenceNumber" type="uint32"/>
+            <field ident="average1" type="uint16"/>
+            <field ident="average2" type="uint16"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
@@ -291,7 +300,7 @@
         <struct type="SchemeTableType">
             <field ident="numRepeats" type="uint32"/>
             <field ident="numRows" type="uint32"/>
-            <field ident="rows"  type="SchemeRowType" size="8192"/>
+            <field ident="rows" type="SchemeRowType" size="8192"/>
         </struct>
         <struct type="VirtualLaserParamsType">
             <field ident="actualLaser" type="uint16"/>
@@ -341,10 +350,10 @@
         <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
         <constant ident="DSP_DATA_ADDRESS" description="Base address for DSP data memory">0x80800000</constant>
         <constant ident="RDRESULTS_OFFSET" description="Offset for ringdown results in DSP data memory">0x0</constant>
-        <constant ident="NUM_RINGDOWN_ENTRIES" description="Number of ringdown entries">2048</constant>
+        <constant ident="NUM_RINGDOWN_ENTRIES" description="Number of ringdown entries">1024</constant>
         <constant ident="RINGDOWN_ENTRY_SIZE" description="Size of a ringdown entry in 32 bit ints">(sizeof(RingdownEntryType)/4)</constant>
         <constant ident="SCHEME_OFFSET" description="Offset for scheme table in DSP shared memory">(RDRESULTS_OFFSET+NUM_RINGDOWN_ENTRIES*RINGDOWN_ENTRY_SIZE)</constant>
-        <constant ident="NUM_SCHEME_TABLES" description="Number of scheme tables">16</constant>
+        <constant ident="NUM_SCHEME_TABLES" description="Number of scheme tables">8</constant>
         <constant ident="NUM_SCHEME_ROWS" description="Maximum rows in a scheme table">8192</constant>
         <constant ident="SCHEME_ROW_SIZE" description="Size of a scheme row in 32 bit ints">(sizeof(SchemeRowType)/4)</constant>
         <constant ident="SCHEME_TABLE_SIZE" description="Size of a scheme table in 32 bit ints">(sizeof(SchemeTableType)/4)</constant>
@@ -447,7 +456,7 @@
     </union_list>
     <enum_list>
         <enum type="RegTypes">
-        <description>DSP register types</description>
+            <description>DSP register types</description>
             <enum_value ident="float_type" />
             <enum_value ident="uint_type" />
             <enum_value ident="int_type" />
@@ -518,7 +527,7 @@
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
-            <enum_value ident="TEMP_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="TEMP_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
             <enum_value ident="TEMP_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
             <enum_value ident="TEMP_CNTRL_SuspendedState" value="2" caption="Controller Suspended" />
             <enum_value ident="TEMP_CNTRL_SweepingState" value="3" caption="Continuous Sweeping" />
@@ -528,31 +537,31 @@
         </enum>
         <enum type="LASER_CURRENT_CNTRL_StateType">
             <description>State of laser current controller</description>
-            <enum_value ident="LASER_CURRENT_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="LASER_CURRENT_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
             <enum_value ident="LASER_CURRENT_CNTRL_AutomaticState" value="1" caption="Automatic Control" />
             <enum_value ident="LASER_CURRENT_CNTRL_SweepingState" value="2" caption="Continuous Sweeping" />
             <enum_value ident="LASER_CURRENT_CNTRL_ManualState" value="3" caption="Manual Control" />
         </enum>
         <enum type="HEATER_CNTRL_StateType">
             <description>State of heater controller</description>
-            <enum_value ident="HEATER_CNTRL_DisabledState" value="0" caption="Controller Disabled"  />
+            <enum_value ident="HEATER_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
             <enum_value ident="HEATER_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
             <enum_value ident="HEATER_CNTRL_ManualState" value="2" caption="Manual Control" />
         </enum>
         <enum type="FAN_CNTRL_StateType">
             <description>State of fan controller</description>
-            <enum_value ident="FAN_CNTRL_OffState" value="0" caption="Fans off"  />
-            <enum_value ident="FAN_CNTRL_OnState"  value="1" caption="Fans on" />
+            <enum_value ident="FAN_CNTRL_OffState" value="0" caption="Fans off" />
+            <enum_value ident="FAN_CNTRL_OnState" value="1" caption="Fans on" />
         </enum>
         <enum type="SPECT_CNTRL_StateType">
             <description>State of spectrum controller</description>
-            <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring"  />
-            <enum_value ident="SPECT_CNTRL_StartingState" value="1" caption="Start acquisition"  />
-            <enum_value ident="SPECT_CNTRL_StartManualState" value="2" caption="Start acquisition with manual temperature control"  />
+            <enum_value ident="SPECT_CNTRL_IdleState" value="0" caption="Not acquiring" />
+            <enum_value ident="SPECT_CNTRL_StartingState" value="1" caption="Start acquisition" />
+            <enum_value ident="SPECT_CNTRL_StartManualState" value="2" caption="Start acquisition with manual temperature control" />
             <enum_value ident="SPECT_CNTRL_RunningState" value="3" caption="Acquisition in progress" />
             <enum_value ident="SPECT_CNTRL_PausedState" value="4" caption="Acquisition paused" />
-            <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state"  />
-            <enum_value ident="SPECT_CNTRL_DiagnosticState" value="6" caption="Diagnostic state"  />
+            <enum_value ident="SPECT_CNTRL_ErrorState" value="5" caption="Error state" />
+            <enum_value ident="SPECT_CNTRL_DiagnosticState" value="6" caption="Diagnostic state" />
         </enum>
         <enum type="SPECT_CNTRL_ModeType">
             <description>Spectrum controller modes</description>
@@ -662,13 +671,13 @@
         <enum type="OVERLOAD_BitType">
             <description>Bit positions in FPGA overload register</description>
             <enum_value ident="OVERLOAD_WarmBoxTecBit" value="0" caption="Warm box TEC overload" />
-            <enum_value ident="OVERLOAD_HotBoxTecBit"  value="1" caption="Hot box TEC overload" />
+            <enum_value ident="OVERLOAD_HotBoxTecBit" value="1" caption="Hot box TEC overload" />
         </enum>
         <enum type="ANALYZER_TUNING_ModeType">
             <description>Analyzer tuning modes</description>
             <enum_value ident="ANALYZER_TUNING_CavityLengthTuningMode" value="0" caption="Cavity Length Tuning" />
             <enum_value ident="ANALYZER_TUNING_LaserCurrentTuningMode" value="1" caption="Laser Current Tuning" />
-            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode"   value="2" caption="Fsr Hopping Tuning" />
+            <enum_value ident="ANALYZER_TUNING_FsrHoppingTuningMode" value="2" caption="Fsr Hopping Tuning" />
         </enum>
         <enum type="SENTRY_BitType">
             <description>Sentry bit position</description>
@@ -692,36 +701,35 @@
         </enum>
         <enum type="HARDWARE_PRESENT_BitType">
             <description>Bit positions indicating hardware configuration</description>
-            <enum_value ident="HARDWARE_PRESENT_Laser1Bit"         value="0" caption="Laser 1" />
-            <enum_value ident="HARDWARE_PRESENT_Laser2Bit"         value="1" caption="Laser 2" />
-            <enum_value ident="HARDWARE_PRESENT_Laser3Bit"         value="2" caption="Laser 3" />
-            <enum_value ident="HARDWARE_PRESENT_Laser4Bit"         value="3" caption="Laser 4" />
-            <enum_value ident="HARDWARE_PRESENT_SoaBit"            value="4" caption="SOA" />
-            <enum_value ident="HARDWARE_PRESENT_PowerBoardBit"     value="5" caption="Power Board" />
-            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit"        value="6" caption="Warm Box" />
-            <enum_value ident="HARDWARE_PRESENT_HotBoxBit"         value="7" caption="Hot Box" />
+            <enum_value ident="HARDWARE_PRESENT_Laser1Bit" value="0" caption="Laser 1" />
+            <enum_value ident="HARDWARE_PRESENT_Laser2Bit" value="1" caption="Laser 2" />
+            <enum_value ident="HARDWARE_PRESENT_Laser3Bit" value="2" caption="Laser 3" />
+            <enum_value ident="HARDWARE_PRESENT_Laser4Bit" value="3" caption="Laser 4" />
+            <enum_value ident="HARDWARE_PRESENT_SoaBit" value="4" caption="SOA" />
+            <enum_value ident="HARDWARE_PRESENT_PowerBoardBit" value="5" caption="Power Board" />
+            <enum_value ident="HARDWARE_PRESENT_WarmBoxBit" value="6" caption="Warm Box" />
+            <enum_value ident="HARDWARE_PRESENT_HotBoxBit" value="7" caption="Hot Box" />
             <enum_value ident="HARDWARE_PRESENT_DasTempMonitorBit" value="8" caption="Das Temp Monitor" />
-            <enum_value ident="HARDWARE_PRESENT_AnalogInterface"   value="9" caption="Analog Interface" />
+            <enum_value ident="HARDWARE_PRESENT_AnalogInterface" value="9" caption="Analog Interface" />
             <enum_value ident="HARDWARE_PRESENT_FiberAmplifierBit" value="10" caption="Fiber Amplifier" />
-            <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit"       value="11" caption="Fan Control Disabled" />
-            <enum_value ident="HARDWARE_PRESENT_FlowSensorBit"     value="12" caption="Flow Sensor" />
-            <enum_value ident="HARDWARE_PRESENT_RddVarGainBit"     value="13" caption="Variable gain ringdown detector" />
-            <enum_value ident="HARDWARE_PRESENT_AccelerometerBit"  value="14" caption="Accelerometer" />
-            <enum_value ident="HARDWARE_PRESENT_FilterHeaterBit"   value="15" caption="Filter Heater" />
+            <enum_value ident="HARDWARE_PRESENT_FanCntrlDisabledBit" value="11" caption="Fan Control Disabled" />
+            <enum_value ident="HARDWARE_PRESENT_FlowSensorBit" value="12" caption="Flow Sensor" />
+            <enum_value ident="HARDWARE_PRESENT_RddVarGainBit" value="13" caption="Variable gain ringdown detector" />
+            <enum_value ident="HARDWARE_PRESENT_AccelerometerBit" value="14" caption="Accelerometer" />
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description>
-            <enum_value ident="FLOAT_ARITHMETIC_Addition"         value="1" />
-            <enum_value ident="FLOAT_ARITHMETIC_Subtraction"      value="2" />
-            <enum_value ident="FLOAT_ARITHMETIC_Multiplication"   value="3" />
-            <enum_value ident="FLOAT_ARITHMETIC_Division"         value="4" />
-            <enum_value ident="FLOAT_ARITHMETIC_Average"          value="5" />
+            <enum_value ident="FLOAT_ARITHMETIC_Addition" value="1" />
+            <enum_value ident="FLOAT_ARITHMETIC_Subtraction" value="2" />
+            <enum_value ident="FLOAT_ARITHMETIC_Multiplication" value="3" />
+            <enum_value ident="FLOAT_ARITHMETIC_Division" value="4" />
+            <enum_value ident="FLOAT_ARITHMETIC_Average" value="5" />
         </enum>
         <enum type="HEATER_CNTRL_ModeType">
             <description>Enumeration specifying heater control mode</description>
-            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP"     value="0" />
-            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET"     value="1" />
-            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED"   value="2" />
+            <enum_value ident="HEATER_CNTRL_MODE_DELTA_TEMP" value="0" />
+            <enum_value ident="HEATER_CNTRL_MODE_TEC_TARGET" value="1" />
+            <enum_value ident="HEATER_CNTRL_MODE_HEATER_FIXED" value="2" />
         </enum>
         <enum type="LOG_LEVEL_Type">
             <description>Enumeration specifying event log level</description>
@@ -738,43 +746,43 @@
     </enum_list>
     <bits_list>
         <bits ident="COMM_STATUS_BITMASK">
-            <mask  ident="COMM_STATUS_CompleteMask">0x1</mask>
-            <mask  ident="COMM_STATUS_BadCrcMask">0x2</mask>
-            <mask  ident="COMM_STATUS_BadSequenceNumberMask">0x4</mask>
-            <mask  ident="COMM_STATUS_BadArgumentsMask">0x8</mask>
-            <mask  ident="COMM_STATUS_SequenceNumberMask">0xFF000000</mask>
+            <mask ident="COMM_STATUS_CompleteMask">0x1</mask>
+            <mask ident="COMM_STATUS_BadCrcMask">0x2</mask>
+            <mask ident="COMM_STATUS_BadSequenceNumberMask">0x4</mask>
+            <mask ident="COMM_STATUS_BadArgumentsMask">0x8</mask>
+            <mask ident="COMM_STATUS_SequenceNumberMask">0xFF000000</mask>
             <shift ident="COMM_STATUS_SequenceNumberShift">24</shift>
-            <mask  ident="COMM_STATUS_ReturnValueMask">0x00FFFF00</mask>
+            <mask ident="COMM_STATUS_ReturnValueMask">0x00FFFF00</mask>
             <shift ident="COMM_STATUS_ReturnValueShift">8</shift>
         </bits>
         <bits ident="RINGDOWN_STATUS_BITMASK">
-            <mask  ident="RINGDOWN_STATUS_SequenceMask">0x0F</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask">0x20</mask>
-            <mask  ident="RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask">0x40</mask>
-            <mask  ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
+            <mask ident="RINGDOWN_STATUS_SequenceMask">0x0F</mask>
+            <mask ident="RINGDOWN_STATUS_SchemeActiveMask">0x10</mask>
+            <mask ident="RINGDOWN_STATUS_SchemeCompleteAcqStoppingMask">0x20</mask>
+            <mask ident="RINGDOWN_STATUS_SchemeCompleteAcqContinuingMask">0x40</mask>
+            <mask ident="RINGDOWN_STATUS_RingdownTimeout">0x80</mask>
         </bits>
         <bits ident="SUBSCHEME_ID_BITMASK">
-            <mask  ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
-            <mask  ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
-            <mask  ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
-            <mask  ident="SUBSCHEME_ID_RecenterMask">0x2000</mask>
-            <mask  ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
-            <mask  ident="SUBSCHEME_ID_SpectrumSubsectionMask">0x0300</mask>
-            <mask  ident="SUBSCHEME_ID_SpectrumMask">0x00FF</mask>
+            <mask ident="SUBSCHEME_ID_IdMask">0x7FFF</mask>
+            <mask ident="SUBSCHEME_ID_IncrMask">0x8000</mask>
+            <mask ident="SUBSCHEME_ID_IgnoreMask">0x4000</mask>
+            <mask ident="SUBSCHEME_ID_RecenterMask">0x2000</mask>
+            <mask ident="SUBSCHEME_ID_IsCalMask">0x1000</mask>
+            <mask ident="SUBSCHEME_ID_SpectrumSubsectionMask">0x0300</mask>
+            <mask ident="SUBSCHEME_ID_SpectrumMask">0x00FF</mask>
         </bits>
         <bits ident="SCHEME_VERSION_AND_TABLE_BITMASK">
-            <mask  ident="SCHEME_VersionMask">0xFFF0</mask>
+            <mask ident="SCHEME_VersionMask">0xFFF0</mask>
             <shift ident="SCHEME_VersionShift">4</shift>
-            <mask  ident="SCHEME_TableMask">0xF</mask>
+            <mask ident="SCHEME_TableMask">0xF</mask>
             <shift ident="SCHEME_TableShift">0</shift>
         </bits>
         <bits ident="INJECTION_SETTINGS_BITMASK">
-            <mask  ident="INJECTION_SETTINGS_actualLaserMask">0x3</mask>
+            <mask ident="INJECTION_SETTINGS_actualLaserMask">0x3</mask>
             <shift ident="INJECTION_SETTINGS_actualLaserShift">0</shift>
-            <mask  ident="INJECTION_SETTINGS_virtualLaserMask">0x1C</mask>
+            <mask ident="INJECTION_SETTINGS_virtualLaserMask">0x1C</mask>
             <shift ident="INJECTION_SETTINGS_virtualLaserShift">2</shift>
-            <mask  ident="INJECTION_SETTINGS_lossTagMask">0xE0</mask>
+            <mask ident="INJECTION_SETTINGS_lossTagMask">0xE0</mask>
             <shift ident="INJECTION_SETTINGS_lossTagShift">5</shift>
         </bits>
     </bits_list>
@@ -2787,7 +2795,7 @@
             <description>Cavity pressure ADC register</description>
             <initial>32768</initial>
         </register>
-       <register ident="CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="CONVERSION_CAVITY_PRESSURE_SCALING_REGISTER" type="float" minver="1.0" access="rw">
             <description>Cavity pressure scaling</description>
             <initial>1.5258789E-2</initial>
             <save/>
@@ -4079,8 +4087,11 @@
             <display>Update PZT from VL laser offset</display>
             <save/>
         </register>
-
-
+        <register ident="SGDBR_FILTER_BY_TRAJECTORY_REGISTER" type="int32" minver="1.0" access="rw">
+            <description>Filter SGDBR WLM lookup by trajectory</description>
+            <initial>-1</initial>
+            <display format="%d">Restrict WLM lookup to trajectory (-1 for no restriction)</display>
+        </register>
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -4133,8 +4144,7 @@
     </i2c_list>
     <fpga_block_list>
         <fpga_block ident="KERNEL" description="Kernel">
-            <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed" access="r">
-            </reg>
+            <reg type="uint16" ident="MAGIC_CODE" description="Code indicating FPGA is programmed" access="r"></reg>
             <reg type="mask" ident="CONTROL" description="Kernel control register" access="rw">
                 <bitfield ident="CYPRESS_RESET" description="Reset Cypress FX2 and FPGA" lsb="0" width="1">
                     <fielddef value="0">Idle</fielddef>
@@ -4153,19 +4163,18 @@
                     <fielddef value="1">Manual control</fielddef>
                 </bitfield>
             </reg>
-            <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw">
-            </reg>
+            <reg type="uint16" ident="DIAG_1" description="DSP accessible register for diagnostics" access="rw"></reg>
             <reg type="mask" ident="CONFIG" description="Configuration register" access="rw">
                 <save />
-                <bitfield ident="AUX_PZT"       description="Auxiliary PZT Enable" lsb="0" width="1">
+                <bitfield ident="AUX_PZT" description="Auxiliary PZT Enable" lsb="0" width="1">
                     <fielddef value="0">Disable</fielddef>
                     <fielddef value="1">Enable</fielddef>
                 </bitfield>
-                <bitfield ident="ENGINE1_TEC"    description="Engine 1 TEC Enable" lsb="1" width="1">
+                <bitfield ident="ENGINE1_TEC" description="Engine 1 TEC Enable" lsb="1" width="1">
                     <fielddef value="0">Disable</fielddef>
                     <fielddef value="1">Enable</fielddef>
                 </bitfield>
-                <bitfield ident="ENGINE2_TEC"    description="Engine 2 TEC Enable" lsb="2" width="1">
+                <bitfield ident="ENGINE2_TEC" description="Engine 2 TEC Enable" lsb="2" width="1">
                     <fielddef value="0">Disable</fielddef>
                     <fielddef value="1">Enable</fielddef>
                 </bitfield>
@@ -4359,9 +4368,9 @@
         </fpga_block>
         <fpga_block ident="PWM" description="Pulse width modulator">
             <reg type="uint16" ident="CS" description="Control/Status register">
-                <bitfield ident="RUN"     description="STOP/RUN" lsb="0" width="1" />
-                <bitfield ident="CONT"    description="SINGLE/CONTINUOUS" lsb="1" width="1" />
-                <bitfield ident="PWM_OUT" description="PWM_OUT"  lsb="2" width="1" />
+                <bitfield ident="RUN" description="STOP/RUN" lsb="0" width="1" />
+                <bitfield ident="CONT" description="SINGLE/CONTINUOUS" lsb="1" width="1" />
+                <bitfield ident="PWM_OUT" description="PWM_OUT" lsb="2" width="1" />
             </reg>
             <reg type="uint16" ident="PULSE_WIDTH" description="Pulse width register"/>
         </fpga_block>
@@ -4395,8 +4404,7 @@
                 <save/>
                 <display format="%d">Offset to add to shifted decay input</display>
             </reg>
-            <reg type="uint16" ident="ACCUMULATOR" description="Simulated ringdown value" access="r">
-            </reg>
+            <reg type="uint16" ident="ACCUMULATOR" description="Simulated ringdown value" access="r"></reg>
         </fpga_block>
         <fpga_block ident="LASERLOCKER" description="Laser frequency locker">
             <reg type="mask" ident="CS" description="Control/Status register" access="rw">
@@ -4778,11 +4786,11 @@
                     <fielddef value="0">Single</fielddef>
                     <fielddef value="1">Continuous</fielddef>
                 </bitfield>
-                <bitfield ident="RESET" description="Reset generator"  lsb="2" width="1">
+                <bitfield ident="RESET" description="Reset generator" lsb="2" width="1">
                     <fielddef value="0">Idle</fielddef>
                     <fielddef value="1">Reset</fielddef>
                 </bitfield>
-                <bitfield ident="TUNE_PZT" description="Tune PZT"  lsb="3" width="1">
+                <bitfield ident="TUNE_PZT" description="Tune PZT" lsb="3" width="1">
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
@@ -4814,11 +4822,11 @@
         <fpga_block ident="INJECT" description="Optical injection subsystem">
             <reg type="mask" ident="CONTROL" description="Control register">
                 <save/>
-                <bitfield ident="MODE"   description="Manual/Automatic mode"  lsb="0" width="1">
+                <bitfield ident="MODE" description="Manual/Automatic mode" lsb="0" width="1">
                     <fielddef value="0">Manual</fielddef>
                     <fielddef value="1">Automatic</fielddef>
                 </bitfield>
-                <bitfield ident="LASER_SELECT"   description="Laser selected" lsb="1" width="2">
+                <bitfield ident="LASER_SELECT" description="Laser selected" lsb="1" width="2">
                     <fielddef value="0">Laser 1</fielddef>
                     <fielddef value="1">Laser 2</fielddef>
                     <fielddef value="2">Laser 3</fielddef>
@@ -4862,11 +4870,11 @@
                     <fielddef value="0">Off</fielddef>
                     <fielddef value="1">On</fielddef>
                 </bitfield>
-                <bitfield ident="LASER_SHUTDOWN_ENABLE" description="Enables laser shutdown (in automatic mode)"  lsb="12" width="1">
+                <bitfield ident="LASER_SHUTDOWN_ENABLE" description="Enables laser shutdown (in automatic mode)" lsb="12" width="1">
                     <fielddef value="0">Disabled</fielddef>
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
-                <bitfield ident="SOA_SHUTDOWN_ENABLE" description="Enables SOA shutdown (in automatic mode)"  lsb="13" width="1">
+                <bitfield ident="SOA_SHUTDOWN_ENABLE" description="Enables SOA shutdown (in automatic mode)" lsb="13" width="1">
                     <fielddef value="0">Disabled</fielddef>
                     <fielddef value="1">Enabled</fielddef>
                 </bitfield>
@@ -5014,11 +5022,11 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
-                <bitfield ident="PWM_OUT" description="PWM output" lsb="4" width="1" >
+                <bitfield ident="PWM_OUT" description="PWM output" lsb="4" width="1">
                     <fielddef value="0">Low</fielddef>
                     <fielddef value="1">High</fielddef>
                 </bitfield>
-                <bitfield ident="PWM_INVERT" description="Invert polarity of PWM signal" lsb="5" width="1" >
+                <bitfield ident="PWM_INVERT" description="Invert polarity of PWM signal" lsb="5" width="1">
                     <fielddef value="0">Normal</fielddef>
                     <fielddef value="1">Inverted</fielddef>
                 </bitfield>
@@ -5304,7 +5312,7 @@
         </fpga_map>
     </fpga_map_list>
     <environment_list>
-        <env type="Byte4EnvType"  ident="BYTE4_ENV" />
+        <env type="Byte4EnvType" ident="BYTE4_ENV" />
         <env type="Byte16EnvType" ident="BYTE16_ENV" />
         <env type="Byte64EnvType" ident="BYTE64_ENV" />
         <env type="InterpolatorEnvType" ident="WARM_BOX_TEC_INTERPOLATOR_ENV" />
@@ -5433,6 +5441,8 @@
         <action ident="ACTION_READ_THERMISTOR_RESISTANCE_SGDBR">r_read_thermistor_resistance_sgdbr</action>
         <action ident="ACTION_SGDBR_CNTRL_INIT">r_sgdbr_cntrl_init</action>
         <action ident="ACTION_SGDBR_CNTRL_STEP">r_sgdbr_cntrl_step</action>
+        <action ident="ACTION_SGDBR_A_SET_CURRENTS">r_sgdbr_a_set_currents</action>
+        <action ident="ACTION_SGDBR_B_SET_CURRENTS">r_sgdbr_b_set_currents</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

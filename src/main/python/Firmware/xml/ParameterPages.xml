@@ -573,6 +573,7 @@
         </gui_page>
         <gui_page>
             <title>Laser Locker Parameters</title>
+            <register>SGDBR_FILTER_BY_TRAJECTORY_REGISTER</register>
             <fpga_register offset="FPGA_LASERLOCKER">CS</fpga_register>
             <fpga_register offset="FPGA_LASERLOCKER">OPTIONS</fpga_register>
             <fpga_register offset="FPGA_LASERLOCKER">ETA1</fpga_register>

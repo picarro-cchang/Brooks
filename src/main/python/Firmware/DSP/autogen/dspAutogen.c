@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[603];
+RegTypes regTypes[604];
 
 /* I2C devices */
 I2C_device i2c_devices[41] = {
@@ -1173,6 +1173,8 @@ void initRegisters()
     writeRegister(SGDBR_B_CNTRL_RD_CONFIG_REGISTER,d);
     d.asUint = PZT_UPDATE_UseVLOffset_Mode;
     writeRegister(PZT_UPDATE_MODE_REGISTER,d);
+    d.asInt = -1;
+    writeRegister(SGDBR_FILTER_BY_TRAJECTORY_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -1776,6 +1778,7 @@ void initRegisters()
     regTypes[SGDBR_B_CNTRL_SPARE_DAC_REGISTER] = float_type;
     regTypes[SGDBR_B_CNTRL_RD_CONFIG_REGISTER] = uint_type;
     regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
+    regTypes[SGDBR_FILTER_BY_TRAJECTORY_REGISTER] = int_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -1977,6 +1980,10 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_sgdbr_cntrl_init(numInt,params,env);
         case ACTION_SGDBR_CNTRL_STEP:
             return r_sgdbr_cntrl_step(numInt,params,env);
+        case ACTION_SGDBR_A_SET_CURRENTS:
+            return r_sgdbr_a_set_currents(numInt,params,env);
+        case ACTION_SGDBR_B_SET_CURRENTS:
+            return r_sgdbr_b_set_currents(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

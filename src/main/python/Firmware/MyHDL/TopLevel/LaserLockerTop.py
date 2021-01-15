@@ -37,13 +37,14 @@ from MyHDL.Common.WlmAdcReader import WlmAdcReader
 from MyHDL.Common.WlmMux import WlmMux
 from MyHDL.Common.WlmSim import WlmSim
 
-from Host.autogen.interface import (
-    DATA_BANK_ADDR_WIDTH, EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_DYNAMICPWM_INLET, FPGA_DYNAMICPWM_OUTLET, FPGA_INJECT, FPGA_KERNEL,
-    FPGA_LASERCURRENTGENERATOR, FPGA_LASERLOCKER, FPGA_PWM_ENGINE1, FPGA_PWM_ENGINE2, FPGA_PWM_FILTER_HEATER, FPGA_PWM_HEATER,
-    FPGA_PWM_HOTBOX, FPGA_PWM_LASER1, FPGA_PWM_LASER2, FPGA_PWM_LASER3, FPGA_PWM_LASER4, FPGA_PWM_WARMBOX, FPGA_RDMAN, FPGA_RDSIM,
-    FPGA_REG_WIDTH, FPGA_SCALER, FPGA_SGDBRCURRENTSOURCE_A, FPGA_SGDBRCURRENTSOURCE_B, FPGA_SGDBRMANAGER, FPGA_TWGEN, FPGA_WLMSIM,
-    KERNEL_CONFIG_AUX_PZT_B, KERNEL_CONFIG_ENGINE1_TEC_B, KERNEL_CONFIG_ENGINE2_TEC_B, META_BANK_ADDR_WIDTH, PARAM_BANK_ADDR_WIDTH,
-    RDMEM_DATA_WIDTH, RDMEM_META_WIDTH, RDMEM_PARAM_WIDTH, OVERLOAD_HotBoxTecBit, OVERLOAD_WarmBoxTecBit)
+from Host.autogen.interface import (DATA_BANK_ADDR_WIDTH, EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_DYNAMICPWM_INLET,
+                                    FPGA_DYNAMICPWM_OUTLET, FPGA_INJECT, FPGA_KERNEL, FPGA_LASERLOCKER, FPGA_PWM_ENGINE1,
+                                    FPGA_PWM_ENGINE2, FPGA_PWM_FILTER_HEATER, FPGA_PWM_HEATER, FPGA_PWM_HOTBOX, FPGA_PWM_LASER1, FPGA_PWM_LASER2,
+                                    FPGA_PWM_LASER3, FPGA_PWM_LASER4, FPGA_PWM_WARMBOX, FPGA_RDMAN, FPGA_RDSIM, FPGA_REG_WIDTH,
+                                    FPGA_SCALER, FPGA_SGDBRCURRENTSOURCE_A, FPGA_SGDBRCURRENTSOURCE_B, FPGA_SGDBRMANAGER,
+                                    FPGA_TWGEN, FPGA_WLMSIM, KERNEL_CONFIG_AUX_PZT_B, KERNEL_CONFIG_ENGINE1_TEC_B,
+                                    KERNEL_CONFIG_ENGINE2_TEC_B, META_BANK_ADDR_WIDTH, PARAM_BANK_ADDR_WIDTH, RDMEM_DATA_WIDTH,
+                                    RDMEM_META_WIDTH, RDMEM_PARAM_WIDTH, OVERLOAD_HotBoxTecBit, OVERLOAD_WarmBoxTecBit)
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -154,6 +155,8 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
 
     ratio1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     ratio2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    average1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    average2 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     tuner_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_fine_current = Signal(intbv(0)[FPGA_REG_WIDTH:])
     laser_tuning_offset = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -173,8 +176,8 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     meta3 = laser_tuning_offset
     meta4 = sel_fine_current
     meta5 = lock_error
-    meta6 = laser_locking_pid
-    meta7 = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    meta6 = average1
+    meta7 = average2
 
     rdsim_value = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rd_trig = Signal(LOW)
@@ -409,6 +412,8 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                               laser_freq_ok_out=laser_freq_ok,
                               current_ok_out=metadata_strobe,
                               sim_actual_out=wlm_sim_actual,
+                              average1_out=average1,
+                              average2_out=average2,
                               map_base=FPGA_LASERLOCKER)
 
     pwm_laser1 = Pwm(clk=clk0,
@@ -593,6 +598,8 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                 dsp_wr=dsp_wr,
                                 rec0_in=ratio1,
                                 rec1_in=ratio2,
+                                rec2_in=average1,
+                                rec3_in=average2,
                                 rec_strobe_in=metadata_strobe,
                                 pb0_out=pb0_out,
                                 pb1_out=pb1_out,
