@@ -98,10 +98,10 @@ def SignedFracMultiplier(a_in, b_in, p_out, o_out):
 
 def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                 eta1_in, ref1_in, eta2_in, ref2_in, tuning_offset_in,
-                acc_en_in, adc_strobe_in, ratio1_out,
-                ratio2_out, lock_error_out, fine_current_out,
-                tuning_offset_out, pid_out, laser_freq_ok_out, current_ok_out,
-                sim_actual_out, map_base):
+                acc_en_in, adc_strobe_in, ratio1_out, ratio2_out,
+                lock_error_out, fine_current_out, tuning_offset_out,
+                pid_out, laser_freq_ok_out, current_ok_out,
+                sim_actual_out, average1_out, average2_out, map_base):
     """ Laser frequency locking using wavelength monitor
 
     Parameters:
@@ -129,6 +129,8 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     laser_freq_ok_out   -- High once absolute value of lock error is within window
     current_ok_out      -- Goes high once fine current has been calculated
     sim_actual_out      -- Low for simulator, high to select actual WLM
+    average1_out        -- Average of WLM photodiodes contributing to ratio1
+    average2_out        -- Average of WLM photodiodes contributing to ratio2
     map_base
 
     Registers:
@@ -450,6 +452,8 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                         if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==1:
                             ratio1_out.next = eta1 - eta1_offset
                             ratio2_out.next = ref1 - ref1_offset
+                    elif cycle_counter == 1:
+                        average1_out.next = (div_num + div_den) >> 1
                     elif cycle_counter == DIV_LATENCY:
                         div_num.next = eta2 - eta2_offset
                         div_den.next = ref2 - ref2_offset
@@ -458,6 +462,7 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                             ratio2_out.next = ref2 - ref2_offset
                     # Load the multiplier inputs
                     elif cycle_counter == DIV_LATENCY+1:
+                        average2_out.next = (div_num + div_den) >> 1
                         # assert div_rfd == HIGH
                         ratio1.next = div_quot
                         if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==0:
@@ -621,6 +626,8 @@ if __name__ == "__main__":
     laser_freq_ok_out = Signal(LOW)
     current_ok_out = Signal(LOW)
     sim_actual_out = Signal(LOW)
+    average1_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
+    average2_out = Signal(modbv(0)[FPGA_REG_WIDTH:])
     map_base = FPGA_LASERLOCKER
 
     toVHDL(LaserLocker, clk=clk, reset=reset, dsp_addr=dsp_addr,
@@ -638,4 +645,6 @@ if __name__ == "__main__":
            pid_out=pid_out,
            laser_freq_ok_out=laser_freq_ok_out,
            current_ok_out=current_ok_out,
-           sim_actual_out=sim_actual_out, map_base=map_base)
+           sim_actual_out=sim_actual_out, 
+           average1_out=average1_out, average2_out=average2_out,
+           map_base=map_base)

@@ -6,9 +6,13 @@
 # DESCRIPTION:
 #   Manages the generation of SGDBR current scans and the synchronous collection
 # of wavelength monitor information by implementing a "recorder" with two playack
-# channels and two record channels. The playback channels read data out of the
+# channels and four record channels. The playback channels read data out of the
 # analyzer metadata memory while the record channels write data into the analyzer
 # data memory (which is normally used for storing ringdown waveforms).
+# Record channels 0 and 1 are placed in the addresses corresponding to playback
+#  channels 0 and 1, but record channels 2 and 3 are offset relative to these
+#  by 2048, so that there can be at most 2048 samples for each channel. 
+
 #
 # SEE ALSO:
 #
@@ -45,15 +49,17 @@ LOW, HIGH = bool(0), bool(1)
 
 SeqState = enum("READ_PB_WFM0", "READ_PB_WFM1", "WRITE_PB_DATA",
                 "AWAIT_REC_STROBE", "READ_REC_DATA", "WRITE_REC_WFM0",
-                "WRITE_REC_WFM1", "ADVANCE_ADDRESS")
+                "WRITE_REC_WFM2", "WRITE_REC_WFM1", "WRITE_REC_WFM3",
+                "ADVANCE_ADDRESS")
 
 
 def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
-                 dsp_wr, rec0_in, rec1_in, rec_strobe_in, pb0_out,
-                 pb1_out, pb_strobe_out, rec_addr_out, rec_data_out,
-                 rec_wfm_sel_out, rec_we_out, pb_data_in,
-                 pb_wfm_sel_out, mode_out, scan_active_out,
-                 sgdbr_present_out, sgdbr_select_out, map_base):
+                  dsp_wr, rec0_in, rec1_in, rec2_in, rec3_in,
+                  rec_strobe_in, pb0_out, pb1_out, pb_strobe_out,
+                  rec_addr_out, rec_data_out, rec_wfm_sel_out,
+                  rec_we_out, pb_data_in, pb_wfm_sel_out, mode_out,
+                  scan_active_out, sgdbr_present_out, sgdbr_select_out,
+                  map_base):
     """
     Parameters:
     clk                 -- Clock input
@@ -64,6 +70,8 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
     dsp_wr              -- single-cycle write command from dsp_interface block
     rec0_in             -- record channel 0 input
     rec1_in             -- record channel 1 input
+    rec2_in             -- record channel 2 input
+    rec3_in             -- record channel 3 input
     rec_strobe_in       -- record strobe input
     pb0_out             -- playback channel 0 output
     pb1_out             -- playback channel 1 output
@@ -112,7 +120,7 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
     csr = Signal(intbv(0)[3:])
     config = Signal(intbv(0)[2:])
     scan_samples = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH+1:])
-    sample_time = Signal(intbv(0)[7:])
+    sample_time = Signal(intbv(0)[16:])
     delay_samples = Signal(intbv(0)[16:])
     scan_address = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
     sgdbr_present = Signal(intbv(0)[2:])
@@ -123,14 +131,18 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
     pb1 = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rec_strobe_edge = Signal(LOW)
     mem_flag = Signal(LOW)
-    sample_time_counter = Signal(intbv(0)[7:])
+    sample_time_counter = Signal(intbv(0)[16:])
+    sel_rec_23 = Signal(LOW)
 
     posEdge = PosEdge(clk=clk, reset=reset, input=rec_strobe_in,
                       output=rec_strobe_edge)
 
     @always_comb
     def comb():
-        rec_addr_out.next = scan_address
+        if sel_rec_23:
+            rec_addr_out.next = scan_address ^ 2048
+        else:
+            rec_addr_out.next = scan_address
         pb0_out.next = pb0
         pb1_out.next = pb1
         scan_active_out.next = csr[SGDBRMANAGER_CSR_SCAN_ACTIVE_B]
@@ -259,11 +271,12 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
                     seq_state.next = SeqState.AWAIT_REC_STROBE
 
                 elif seq_state == SeqState.AWAIT_REC_STROBE:
-                    # Wait for sample_time (by couting rec_strobe edges)
+                    # Wait for sample_time (by counting rec_strobe edges)
                     #  then proceed to read record data
                     if rec_strobe_edge:
                         rec_wfm_sel_out.next = 0
                         rec_data_out.next = rec0_in
+                        sel_rec_23.next = 0
                         seq_state.next = SeqState.WRITE_REC_WFM0
                         mem_flag.next = 1
 
@@ -273,7 +286,19 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
                         mem_flag.next = 0
                         rec_we_out.next = 1
                     else:
+                        rec_data_out.next = rec2_in
+                        sel_rec_23.next = 1
+                        mem_flag.next = 1
+                        seq_state.next = SeqState.WRITE_REC_WFM2
+
+                elif seq_state == SeqState.WRITE_REC_WFM2:
+                    # Write the record wavefom 2, waiting for a cycle
+                    if mem_flag:
+                        mem_flag.next = 0
+                        rec_we_out.next = 1
+                    else:
                         rec_data_out.next = rec1_in
+                        sel_rec_23.next = 0
                         rec_wfm_sel_out.next = 1
                         mem_flag.next = 1
                         seq_state.next = SeqState.WRITE_REC_WFM1
@@ -284,6 +309,18 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
                         mem_flag.next = 0
                         rec_we_out.next = 1
                     else:
+                        rec_data_out.next = rec3_in
+                        sel_rec_23.next = 1
+                        mem_flag.next = 1
+                        seq_state.next = SeqState.WRITE_REC_WFM3
+
+                elif seq_state == SeqState.WRITE_REC_WFM3:
+                    # Write the record wavefom 3, waiting for a cycle
+                    if mem_flag:
+                        mem_flag.next = 0
+                        rec_we_out.next = 1
+                    else:
+                        sel_rec_23.next = 0
                         seq_state.next = SeqState.ADVANCE_ADDRESS
                 else:
                     seq_state.next = SeqState.ADVANCE_ADDRESS
@@ -300,6 +337,8 @@ if __name__ == "__main__":
     dsp_wr = Signal(LOW)
     rec0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rec1_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    rec2_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+    rec3_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     rec_strobe_in = Signal(LOW)
     pb0_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
     pb1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -320,6 +359,7 @@ if __name__ == "__main__":
                          dsp_data_out=dsp_data_out,
                          dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
                          rec0_in=rec0_in, rec1_in=rec1_in,
+                         rec2_in=rec2_in, rec3_in=rec3_in,
                          rec_strobe_in=rec_strobe_in, pb0_out=pb0_out,
                          pb1_out=pb1_out, pb_strobe_out=pb_strobe_out,
                          rec_addr_out=rec_addr_out,

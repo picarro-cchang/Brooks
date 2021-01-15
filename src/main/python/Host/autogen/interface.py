@@ -10,7 +10,7 @@
 # SEE ALSO:
 #   Specify any related information.
 #
-#  Copyright (c) 2008-2020 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
 #
 
 from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
@@ -104,7 +104,9 @@ class RingdownMetadataType(Structure):
     ("pztValue",c_uint),
     ("lockerOffset",c_uint),
     ("fineLaserCurrent",c_uint),
-    ("lockerError",c_int)
+    ("lockerError",c_int),
+    ("average1",c_uint),
+    ("average2",c_uint)
     ]
 
 class RingdownMetadataDoubleType(Structure):
@@ -114,7 +116,9 @@ class RingdownMetadataDoubleType(Structure):
     ("pztValue",c_double),
     ("lockerOffset",c_double),
     ("fineLaserCurrent",c_double),
-    ("lockerError",c_double)
+    ("lockerError",c_double),
+    ("average1",c_double),
+    ("average2",c_double)
     ]
 
 class RingdownParamsType(Structure):
@@ -179,7 +183,10 @@ class RingdownEntryType(Structure):
     ("soaCurrentDac",c_ushort),
     ("coarsePhaseDac",c_ushort),
     ("finePhaseDac",c_ushort),
-    ("padToCacheLine",c_ushort*24)
+    ("sequenceNumber",c_uint),
+    ("average1",c_ushort),
+    ("average2",c_ushort),
+    ("padToCacheLine",c_ushort*20)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -219,7 +226,10 @@ class ProcessedRingdownEntryType(Structure):
     ("extra1",c_uint),
     ("extra2",c_uint),
     ("extra3",c_uint),
-    ("extra4",c_uint)
+    ("extra4",c_uint),
+    ("sequenceNumber",c_uint),
+    ("average1",c_ushort),
+    ("average2",c_ushort)
     ]
 
 class SensorEntryType(Structure):
@@ -373,13 +383,13 @@ DSP_DATA_ADDRESS = 0x80800000
 # Offset for ringdown results in DSP data memory
 RDRESULTS_OFFSET = 0x0
 # Number of ringdown entries
-NUM_RINGDOWN_ENTRIES = 2048
+NUM_RINGDOWN_ENTRIES = 1024
 # Size of a ringdown entry in 32 bit ints
 RINGDOWN_ENTRY_SIZE = (sizeof(RingdownEntryType)/4)
 # Offset for scheme table in DSP shared memory
 SCHEME_OFFSET = (RDRESULTS_OFFSET+NUM_RINGDOWN_ENTRIES*RINGDOWN_ENTRY_SIZE)
 # Number of scheme tables
-NUM_SCHEME_TABLES = 16
+NUM_SCHEME_TABLES = 8
 # Maximum rows in a scheme table
 NUM_SCHEME_ROWS = 8192
 # Size of a scheme row in 32 bit ints
@@ -1066,7 +1076,6 @@ HARDWARE_PRESENT_FanCntrlDisabledBit = 11 # Fan Control Disabled
 HARDWARE_PRESENT_FlowSensorBit = 12 # Flow Sensor
 HARDWARE_PRESENT_RddVarGainBit = 13 # Variable gain ringdown detector
 HARDWARE_PRESENT_AccelerometerBit = 14 # Accelerometer
-HARDWARE_PRESENT_FilterHeaterBit = 15 # Filter Heater
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -1085,7 +1094,6 @@ HARDWARE_PRESENT_BitTypeDict[11] = 'HARDWARE_PRESENT_FanCntrlDisabledBit' # Fan 
 HARDWARE_PRESENT_BitTypeDict[12] = 'HARDWARE_PRESENT_FlowSensorBit' # Flow Sensor
 HARDWARE_PRESENT_BitTypeDict[13] = 'HARDWARE_PRESENT_RddVarGainBit' # Variable gain ringdown detector
 HARDWARE_PRESENT_BitTypeDict[14] = 'HARDWARE_PRESENT_AccelerometerBit' # Accelerometer
-HARDWARE_PRESENT_BitTypeDict[15] = 'HARDWARE_PRESENT_FilterHeaterBit' # Filter Heater
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
@@ -1180,7 +1188,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 603
+INTERFACE_NUMBER_OF_REGISTERS = 604
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1785,6 +1793,7 @@ SGDBR_B_CNTRL_CHIRP_REGISTER = 599
 SGDBR_B_CNTRL_SPARE_DAC_REGISTER = 600
 SGDBR_B_CNTRL_RD_CONFIG_REGISTER = 601
 PZT_UPDATE_MODE_REGISTER = 602
+SGDBR_FILTER_BY_TRAJECTORY_REGISTER = 603
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -3683,6 +3692,9 @@ registerInitialValue["SGDBR_B_CNTRL_RD_CONFIG_REGISTER"] = 0
 registerByName["PZT_UPDATE_MODE_REGISTER"] = PZT_UPDATE_MODE_REGISTER
 registerInfo.append(RegInfo("PZT_UPDATE_MODE_REGISTER",PZT_UPDATE_ModeType,1,1.0,"rw"))
 registerInitialValue["PZT_UPDATE_MODE_REGISTER"] = PZT_UPDATE_UseVLOffset_Mode
+registerByName["SGDBR_FILTER_BY_TRAJECTORY_REGISTER"] = SGDBR_FILTER_BY_TRAJECTORY_REGISTER
+registerInfo.append(RegInfo("SGDBR_FILTER_BY_TRAJECTORY_REGISTER",c_int,0,1.0,"rw"))
+registerInitialValue["SGDBR_FILTER_BY_TRAJECTORY_REGISTER"] = -1
 
 # FPGA block definitions
 
@@ -4495,6 +4507,8 @@ ACTION_SGDBR_PROGRAM_FPGA = 95
 ACTION_READ_THERMISTOR_RESISTANCE_SGDBR = 96
 ACTION_SGDBR_CNTRL_INIT = 97
 ACTION_SGDBR_CNTRL_STEP = 98
+ACTION_SGDBR_A_SET_CURRENTS = 99
+ACTION_SGDBR_B_SET_CURRENTS = 100
 
 # Aliases
 PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER # Old name for number of samples spent in triggered state
@@ -5083,6 +5097,7 @@ parameter_forms.append(('Wavelength Monitor Simulator Parameters',__p))
 
 __p = []
 
+__p.append([None, ('dsp','int32',SGDBR_FILTER_BY_TRAJECTORY_REGISTER,'Restrict WLM lookup to trajectory (-1 for no restriction)','','%d',1,1)])
 __p.append([None, ('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_CS,[(1, u'Stop/Run', [(0, u'Stop'), (1, u'Run')]), (2, u'Single/Continuous', [(0, u'Single'), (2, u'Continuous')]), (4, u'Generate PRBS', [(0, u'Idle'), (4, u'Send PRBS')]), (8, u'Enable fine current acc', [(0, u'Reset'), (8, u'Accumulate')]), (16, u'Sample dark currents', [(0, u'Idle'), (16, u'Sample')]), (32, u'Load WLM ADC values', [(0, u'Idle'), (32, u'Load')]), (64, u'Tuner offset source', [(0, u'Register'), (64, u'Input port')]), (128, u'Laser frequency in window', [(0, u'Out of range'), (128, u'In Window')]), (256, u'Fine current calculation', [(0, u'In progress'), (256, u'Complete')])],None,None,1,1)])
 __p.append([None, ('fpga','mask',FPGA_LASERLOCKER+LASERLOCKER_OPTIONS,[(1, u'Wavelength Monitor Data Source', [(0, u'Simulator'), (1, u'Actual WLM')]), (2, u'Route tuner input to fine current output', [(0, u'No'), (2, u'Yes')]), (12, u'Select source of ratio outputs', [(0, u'WLM ratios'), (4, u'WLM etalon1 photodiodes'), (8, u'WLM etalon2 photodiodes')])],None,None,1,1)])
 __p.append([None, ('fpga','uint16',FPGA_LASERLOCKER+LASERLOCKER_ETA1,'Etalon 1 reading','digU','%d',1,1)])
