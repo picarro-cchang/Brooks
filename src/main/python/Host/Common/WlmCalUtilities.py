@@ -1071,7 +1071,7 @@ class AutoCal(object):
             else:
                 return bspEval(self.sLinear, self.coeffs, x)
 
-    def calcInjectSettings(self, waveNum, schemeRows):
+    def calcInjectSettings(self, waveNum, schemeRows, traj_filt=-1):
         result = dict(laserType=self.laserType)
         if self.laserType == 0:
             wlmAngle = self.waveNumber2ThetaCal(waveNum)
