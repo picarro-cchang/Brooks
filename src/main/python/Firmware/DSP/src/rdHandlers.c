@@ -235,7 +235,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     // Responds to the EXT4 interrupt, indicating that a ringdown
     //  (or a timeout) has occured
     unsigned int gie, status;
-    int allowDither, abortedRingdown, timedOut;
+    int allowDither, abortedRingdown, timedOut, i;
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
     TUNER_ModeType mode;
 
