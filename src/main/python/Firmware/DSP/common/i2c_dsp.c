@@ -88,7 +88,7 @@ int initializeI2C(I2C_Handle hI2c)
     int loops = 0;
     Uint32 i2coar = I2C_I2COAR_A_OF(0x44);  // Own address
     Uint32 i2cimr = 0x0;    // Interrupt enable mask
-    Uint32 i2cclkl = I2C_I2CCLKL_ICCL_OF(0x8);  // I2C Clock divider (low)
+    Uint32 i2cclkl = I2C_I2CCLKL_ICCL_OF(0x9); // I2C Clock divider (low)
     Uint32 i2cclkh = I2C_I2CCLKH_ICCH_OF(0x1); // I2C Clock divider (high)
     Uint32 i2ccnt  = I2C_I2CCNT_ICDC_OF(3); // Transfer 3 words
     Uint32 i2csar  = I2C_I2CSAR_A_OF(0x10); // Slave address

@@ -505,7 +505,7 @@ void rdFitting(void)
     volatile RingdownEntryType *ringdownEntry;
     volatile VirtualLaserParamsType *vLaserParams;
     double *metaDoublePtr = (double *)&metaDouble;
-    int metaSigned[8] = {0, 0, 0, 0, 0, 1};
+    int metaSigned[8] = {0, 0, 0, 0, 0, 1, 0, 0};
     int x, m, N, cltmode;
     float pztTarget;
     double s1, sx;
@@ -671,6 +671,8 @@ void rdFitting(void)
             }
             ringdownEntry->ratio1 = metaDouble.ratio1;
             ringdownEntry->ratio2 = metaDouble.ratio2;
+            ringdownEntry->average1 = metaDouble.average1;
+            ringdownEntry->average2 = metaDouble.average2;
             ringdownEntry->fineLaserCurrent = metaDouble.fineLaserCurrent;
             ringdownEntry->coarseLaserCurrent = rdParams->coarseLaserCurrent;
             ringdownEntry->laserTemperature = rdParams->laserTemperature;

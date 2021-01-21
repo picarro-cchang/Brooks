@@ -32,6 +32,8 @@
                   ((((unsigned long)(n)&0xFF000000)) >> 24))
 
 SgdbrCntrl sgdbrACntrl, sgdbrBCntrl;
+SgdbrCntrl *sA = NULL, *sB = NULL;
+static char last_auto_sgdbr = ' ';
 
 #define state (*(s->state_))
 #define front_mirror (*(s->front_mirror_))
@@ -46,10 +48,22 @@ SgdbrCntrl sgdbrACntrl, sgdbrBCntrl;
 #define laserTemp (*(s->laser_temp_))
 #define laserTempSetpoint (*(s->laser_temp_setpoint_))
 
+static inline int get_extinguish_deselected()
+{
+    return 0 != (readFPGA(FPGA_INJECT + INJECT_CONTROL2) & (1 << INJECT_CONTROL2_EXTINGUISH_DESELECTED_B));
+}
+
+static inline char get_selected_sgdbr_laser()
+{
+    int sel = (readFPGA(FPGA_INJECT + INJECT_CONTROL) >> INJECT_CONTROL_LASER_SELECT_B) & 3;
+    if (sel == 0) return 'A';
+    if (sel == 2) return 'B';
+    return ' '; 
+}
+
 static inline void wait_done(SgdbrCntrl *s)
 {
-    while (0 == (readFPGA(s->fpga_csr) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)))
-        ;
+    while (0 == (readFPGA(s->fpga_csr) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
 }
 
 static void sgdbrProgramFpga(SgdbrCntrl *s)
@@ -166,63 +180,120 @@ static int sgdbrCntrlStep(SgdbrCntrl *s)
         rd_config_set = 0;
     }
     // Set the currents
-    if (front_mirror_set != s->front_mirror_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (front_mirror_set != s->front_mirror_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_FRONT_MIRROR_DAC | (0xFFFF & (int)front_mirror_set));
         wait_done(s);
         s->front_mirror_old = front_mirror_set;
     }
-    if (back_mirror_set != s->back_mirror_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (back_mirror_set != s->back_mirror_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_BACK_MIRROR_DAC | (0xFFFF & (int)back_mirror_set));
         wait_done(s);
         s->back_mirror_old = back_mirror_set;
     }
-    if (gain_set != s->gain_old)
-    {
-        writeFPGA(s->fpga_mosi_data, SGDBR_GAIN_DAC | (0xFFFF & (int)gain_set));
-        wait_done(s);
-        s->gain_old = gain_set;
-    }
-    if (soa_set != s->soa_old)
-    {
-        writeFPGA(s->fpga_mosi_data, SGDBR_SOA_DAC | (0xFFFF & (int)soa_set));
-        wait_done(s);
-        s->soa_old = soa_set;
-    }
-    if (coarse_phase_set != s->coarse_phase_old)
+
+    if ((state != SGDBR_CNTRL_AutomaticState) || (coarse_phase_set != s->coarse_phase_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_COARSE_PHASE_DAC | (0xFFFF & (int)coarse_phase_set));
         wait_done(s);
         s->coarse_phase_old = coarse_phase_set;
     }
-    if (fine_phase_set != s->fine_phase_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (fine_phase_set != s->fine_phase_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_FINE_PHASE_DAC | (0xFFFF & (int)fine_phase_set));
         wait_done(s);
         s->fine_phase_old = fine_phase_set;
     }
-    if (chirp_set != s->chirp_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (chirp_set != s->chirp_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_CHIRP_DAC | (0xFFFF & (int)chirp_set));
         wait_done(s);
         s->chirp_old = chirp_set;
     }
-    if (spare_set != s->spare_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (spare_set != s->spare_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_SPARE_DAC | (0xFFFF & (int)spare_set));
         wait_done(s);
         s->spare_old = spare_set;
     }
-    if (rd_config_set != s->rd_config_old)
+    if ((state != SGDBR_CNTRL_AutomaticState) || (rd_config_set != s->rd_config_old))
     {
         writeFPGA(s->fpga_mosi_data, SGDBR_RD_CONFIG | (0xFFFF & rd_config_set));
         wait_done(s);
         s->rd_config_old = rd_config_set;
     }
+    // In order to support multiple lasers with combiners, we need to be able to support extinguishing 
+    //  deselected lasers. This involves turning off the gain and soa currents when in the Manual or Disabled 
+    //  control state and this is not the selected laser. In automatic mode, the current setting 
+    //  will be dealt with in spectrumCntrl.
+    if (state != SGDBR_CNTRL_AutomaticState) {
+        if (get_extinguish_deselected() && s->name != get_selected_sgdbr_laser()) {
+            gain_set = 0;
+            soa_set = 0;
+        }
+        if (gain_set != s->gain_old)
+        {
+            writeFPGA(s->fpga_mosi_data, SGDBR_GAIN_DAC | (0xFFFF & (int)gain_set));
+            wait_done(s);
+            s->gain_old = gain_set;
+        }
+        if (soa_set != s->soa_old)
+        {
+            writeFPGA(s->fpga_mosi_data, SGDBR_SOA_DAC | (0xFFFF & (int)soa_set));
+            wait_done(s);
+            s->soa_old = soa_set;
+        }
+        last_auto_sgdbr = ' ';
+    }
+    else {
+        s->gain_old = -1;
+        s->soa_old = -1;
+    }
+
     IRQ_globalRestore(gie);
     return STATUS_OK;
 }
+
+void setup_all_gain_and_soa_currents(void)
+// This is called by spectrumCntrl.c to set up the gain and SOA currents for all SGDBR
+//  lasers when the system is in automatic mode.
+{
+    char sel = get_selected_sgdbr_laser();
+    if ((sel != last_auto_sgdbr) && get_extinguish_deselected()) {
+        if (sel == 'A') {
+            if (sB != NULL) {
+                writeFPGA(sB->fpga_mosi_data, SGDBR_GAIN_DAC | 0);
+                wait_done(sB);
+                writeFPGA(sB->fpga_mosi_data, SGDBR_SOA_DAC | 0);
+                wait_done(sB);
+            }
+            if (sA != NULL) {
+                writeFPGA(sA->fpga_mosi_data, SGDBR_GAIN_DAC | (int)*(sA->gain_));
+                wait_done(sA);
+                writeFPGA(sA->fpga_mosi_data, SGDBR_SOA_DAC | (int)*(sA->soa_));
+                wait_done(sA);
+            }
+            last_auto_sgdbr = 'A';
+        }
+        else if (sel == 'B') {
+            if (sA != NULL) {
+                writeFPGA(sA->fpga_mosi_data, SGDBR_GAIN_DAC | 0);
+                wait_done(sA);
+                writeFPGA(sA->fpga_mosi_data, SGDBR_SOA_DAC | 0);
+                wait_done(sA);
+            }
+            if (sB != NULL) {
+                writeFPGA(sB->fpga_mosi_data, SGDBR_GAIN_DAC | (int)*(sB->gain_));
+                wait_done(sB);
+                writeFPGA(sB->fpga_mosi_data, SGDBR_SOA_DAC | (int)*(sB->soa_));
+                wait_done(sB);
+            }
+            last_auto_sgdbr = 'B';
+        }
+    }
+}
+
 
 static double sgdbrReadThermistorAdc(SgdbrCntrl *s)
 {
@@ -247,6 +318,7 @@ static double sgdbrReadThermistorAdc(SgdbrCntrl *s)
 int sgdbrACntrlInit(void)
 {
     SgdbrCntrl *s = &sgdbrACntrl;
+    s->name = 'A';
     s->state_ = (unsigned int *)registerAddr(SGDBR_A_CNTRL_STATE_REGISTER);
     s->front_mirror_ = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER);
     s->back_mirror_ = (float *)registerAddr(SGDBR_A_CNTRL_BACK_MIRROR_REGISTER);
@@ -274,12 +346,14 @@ int sgdbrACntrlInit(void)
     s->spare_old = -1;
     s->rd_config_old = -1;
 
+    sA = s;
     return 0;
 }
 
 int sgdbrBCntrlInit(void)
 {
     SgdbrCntrl *s = &sgdbrBCntrl;
+    s->name = 'B';
     s->state_ = (unsigned int *)registerAddr(SGDBR_B_CNTRL_STATE_REGISTER);
     s->front_mirror_ = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER);
     s->back_mirror_ = (float *)registerAddr(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER);
@@ -307,6 +381,7 @@ int sgdbrBCntrlInit(void)
     s->spare_old = -1;
     s->rd_config_old = -1;
 
+    sB = s;
     return 0;
 }
 

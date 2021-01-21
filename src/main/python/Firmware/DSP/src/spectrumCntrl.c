@@ -23,6 +23,7 @@
 #include "dspData.h"
 #include "fpga.h"
 #include "rdHandlers.h"
+#include "sgdbrCurrentSource.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -371,6 +372,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
             sgdbr_wait_done(s, sgdbrIndex);
             writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_COARSE_PHASE_DAC | schemeRowPtr->coarsePhaseDac);
             sgdbr_wait_done(s, sgdbrIndex);
+            setup_all_gain_and_soa_currents();
         }
 
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate

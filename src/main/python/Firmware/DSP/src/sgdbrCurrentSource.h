@@ -18,6 +18,7 @@
 
 typedef struct SGDBR_CNTRL
 {
+    char name;                   // 'A' or 'B' depending on laser
     // References to registers
     unsigned int *state_;        // Controller state
     float *front_mirror_;        // Manual front mirror current setting
@@ -58,5 +59,6 @@ void sgdbrAProgramFpga(void);
 void sgdbrBProgramFpga(void);
 double sgdbrAReadThermistorAdc(void);
 double sgdbrBReadThermistorAdc(void);
+void setup_all_gain_and_soa_currents(void);
 
 #endif /* _SGDBR_CURRENT_SOURCE_H_ */
