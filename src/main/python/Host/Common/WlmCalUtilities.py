@@ -465,8 +465,21 @@ class NoWlmFile(object):
 
 
 class SgdbrLookup(object):
-    def __init__(self, min_freq, max_freq, nfreq_to_front_coeffs, nfreq_to_back_coeffs, freq_to_phase_coeffs, freq_to_phase_xoff,
-                 freq_to_phase_yoff):
+    def __init__(self,
+                 min_freq,
+                 max_freq,
+                 nfreq_to_front_coeffs,
+                 nfreq_to_back_coeffs,
+                 freq_to_phase_coeffs,
+                 freq_to_phase_xoff,
+                 freq_to_phase_yoff,
+                 traj,
+                 traj_num,
+                 knots=None,
+                 kindex=None,
+                 mindex=None,
+                 sfront=None,
+                 sback=None):
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.nfreq_to_front_coeffs = nfreq_to_front_coeffs
