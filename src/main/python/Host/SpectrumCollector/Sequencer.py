@@ -162,6 +162,18 @@ class Sequencer(object):
         if ss in [interface.SPECT_CNTRL_RunningState] and self.state not in [Sequencer.IDLE]:
             return self.inDas.get(active, None)
 
+    def setupSgdbrSyncUpdates(self):
+        # Specify that all SGDBR lasers update their fine phase currents synchronously
+        sources = {"front": 0, "back": 1, "gain": 2, "soa": 3, "coarse_phase": 4, "fine_phase": 5}
+        Driver.wrFPGA("FPGA_SGDBRCURRENTSOURCE_A", "SGDBRCURRENTSOURCE_SYNC_REGISTER",
+                      (1 << interface.SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_B
+                       | sources['fine_phase'] << interface.SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_B))
+        Driver.wrFPGA("FPGA_SGDBRCURRENTSOURCE_A", "SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT", 65535)
+        Driver.wrFPGA("FPGA_SGDBRCURRENTSOURCE_B", "SGDBRCURRENTSOURCE_SYNC_REGISTER",
+                      (1 << interface.SGDBRCURRENTSOURCE_SYNC_REGISTER_SOURCE_B
+                       | sources['fine_phase'] << interface.SGDBRCURRENTSOURCE_SYNC_REGISTER_REG_SELECT_B))
+        Driver.wrFPGA("FPGA_SGDBRCURRENTSOURCE_B", "SGDBRCURRENTSOURCE_MAX_SYNC_CURRENT", 65535)
+
     def runFsm(self):
         # This implements a state machine running in an infinite loop that supervises loading of schemes
         #  by the driver
@@ -174,6 +186,8 @@ class Sequencer(object):
                         for vLaserNum in range(1, interface.NUM_VIRTUAL_LASERS + 1):
                             RDFreqConv.useSpline(vLaserNum)
                         Log("Sequencer enters STARTUP state")
+                        # Set up SGDBR lasers to use fine phase current for synchronous updates
+                        self.setupSgdbrSyncUpdates()
                         Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
                         self.activeIndex = Driver.rdDasReg(interface.SPECT_CNTRL_ACTIVE_SCHEME_REGISTER)
                         seqList = self.sequences[self.sequence]
@@ -235,21 +249,29 @@ class Sequencer(object):
                         scheme.compile()
                         # Frequency-based schemes need to be converted, whereas angle-based schemes are sent directly
                         #  to the DAS
-                        if freqBased:
-                            RDFreqConv.wrFreqScheme(self.useIndex, scheme)
-                            RDFreqConv.convertScheme(self.useIndex)
-                            RDFreqConv.uploadSchemeToDAS(self.useIndex)
-                        else:
-                            # Added writing of angle schemes (2018/09/10 sze) so that schemeInfo can be broadcast
-                            #  by the RDFrequencyConverter to the SpectrumCollector
-                            RDFreqConv.wrAngleScheme(self.useIndex, scheme)
-                            Driver.wrScheme(self.useIndex, *(scheme.repack()))
-                        # Specify the just-loaded scheme to be the next one to
-                        # execute
-                        Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.useIndex)
-                        if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
-                            Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
-                        self.state = Sequencer.WAIT_UNTIL_ACTIVE
+                        try:
+                            if freqBased:
+                                RDFreqConv.wrFreqScheme(self.useIndex, scheme)
+                                try:
+                                    RDFreqConv.convertScheme(self.useIndex)
+                                except (RuntimeError, SchemeError):
+                                    raise SchemeError("Error in scheme conversion")
+                                RDFreqConv.uploadSchemeToDAS(self.useIndex)
+                            else:
+                                # Added writing of angle schemes (2018/09/10 sze) so that schemeInfo can be broadcast
+                                #  by the RDFrequencyConverter to the SpectrumCollector
+                                RDFreqConv.wrAngleScheme(self.useIndex, scheme)
+                                Driver.wrScheme(self.useIndex, *(scheme.repack()))
+                            # Specify the just-loaded scheme to be the next one to
+                            # execute
+                            Driver.wrDasReg(interface.SPECT_CNTRL_NEXT_SCHEME_REGISTER, self.useIndex)
+                            if Driver.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState:
+                                Driver.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
+                            self.state = Sequencer.WAIT_UNTIL_ACTIVE
+                        except SchemeError:
+                            LogExc("Scheme error (e.g. all frequencies inaccessible) - stopping acquisition")
+                            Driver.stopScan()
+                            self.state = Sequencer.IDLE
                     elif self.state == Sequencer.WAIT_UNTIL_ACTIVE:
                         # Loop around until the active scheme index is equal to the one we are expecting (in self.useIndex).
                         #  When this is the case, we can send the next scheme or stop, if the SPECT_CNTRL_STATE_REGISTER

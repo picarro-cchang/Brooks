@@ -474,16 +474,35 @@ class SgdbrLookup(object):
         self.freq_to_phase_coeffs = freq_to_phase_coeffs
         self.freq_to_phase_xoff = freq_to_phase_xoff
         self.freq_to_phase_yoff = freq_to_phase_yoff
+        # traj is the trajectory number in the section name [SGDBR_n_LOOKUP_traj]
+        self.traj = traj
+        # traj_num is the trajectory number initially assigned during calibration while finding trajectories
+        #  from the tuning surface. This may be different from traj if some trajectories were discarded during
+        #  calibration
+        self.traj_num = traj_num
+        self.knots = knots
+        self.kindex = kindex
+        self.mindex = mindex
+        self.sfront = sfront
+        self.sback = sback
 
     def freq_to_front(self, freq):
-        nfreq = (freq - self.min_freq) / (self.max_freq - self.min_freq)
-        return np.polyval(self.nfreq_to_front_coeffs, nfreq)
+        if self.knots is None:
+            nfreq = (freq - self.min_freq) / (self.max_freq - self.min_freq)
+            return np.polyval(self.nfreq_to_front_coeffs, nfreq)
+        else:
+            indices = np.interp(freq, self.knots, self.kindex)
+            return np.interp(indices, self.mindex, self.sfront)**2
 
     def freq_to_back(self, freq):
-        nfreq = (freq - self.min_freq) / (self.max_freq - self.min_freq)
-        return np.polyval(self.nfreq_to_back_coeffs, nfreq)
+        if self.knots is None:
+            nfreq = (freq - self.min_freq) / (self.max_freq - self.min_freq)
+            return np.polyval(self.nfreq_to_back_coeffs, nfreq)
+        else:
+            indices = np.interp(freq, self.knots, self.kindex)
+            return np.interp(indices, self.mindex, self.sback)**2
 
-    def freq_to_phase(self, freq, ymin=80.0):
+    def freq_to_phase(self, freq, ymin=80.0, ymax=None):
         output = np.zeros(len(freq), dtype=float)
         p = self.freq_to_phase_coeffs
         xoff = self.freq_to_phase_xoff
@@ -493,63 +512,139 @@ class SgdbrLookup(object):
             a = p[4]
             b = p[2] + p[5] * xi
             c = p[0] + p[1] * xi + p[3] * xi * xi
-            eta_min = ymin - yoff
-            n = np.floor(np.polyval(np.asarray([a, b, c]), eta_min) / np.pi)
-            eta = (-b - np.sqrt(b * b - 4 * a * (c - n * np.pi))) / (2 * a)
+            if ymax is None:
+                eta_min = ymin - yoff
+                n = np.floor(np.polyval(np.asarray([a, b, c]), eta_min) / np.pi)
+            else:
+                eta_max = ymax - yoff
+                n = np.ceil(np.polyval(np.asarray([a, b, c]), eta_max) / np.pi)
+            disc = b * b - 4 * a * (c - n * np.pi)
+            if disc > 0:
+                eta = (-b - np.sqrt(disc)) / (2 * a)
+            else:
+                eta = -b / (2 * a)
             output[i] = (eta + yoff)**2
 
         return output
 
     @classmethod
-    def from_ini(cls, ini):
-        min_freq = ini.as_float("MIN_FREQ")
-        max_freq = ini.as_float("MAX_FREQ")
-        nfreq_to_front_dict = {}
-        nfreq_to_back_dict = {}
-        freq_to_phase_dict = {}
-        freq_to_phase_xoff = None
-        freq_to_phase_yoff = None
-        for opt in ini:
-            m = re.match("NFREQ_TO_FRONT_([0-9]+)", opt)
-            if m:
-                nfreq_to_front_dict[int(m.group(1))] = ini.as_float(opt)
-            m = re.match("NFREQ_TO_BACK_([0-9]+)", opt)
-            if m:
-                nfreq_to_back_dict[int(m.group(1))] = ini.as_float(opt)
-            m = re.match("FREQ_TO_PHASE_([0-9]+)", opt)
-            if m:
-                freq_to_phase_dict[int(m.group(1))] = ini.as_float(opt)
-            m = re.match("FREQ_TO_PHASE_XOFF", opt)
-            if m:
-                freq_to_phase_xoff = ini.as_float(opt)
-            m = re.match("FREQ_TO_PHASE_YOFF", opt)
-            if m:
-                freq_to_phase_yoff = ini.as_float(opt)
+    def from_ini(cls, ini, traj):
+        try:
+            min_freq = ini.as_float("MIN_FREQ")
+            max_freq = ini.as_float("MAX_FREQ")
+            nfreq_to_front_dict = {}
+            nfreq_to_back_dict = {}
+            freq_to_phase_dict = {}
+            freq_to_phase_xoff = None
+            freq_to_phase_yoff = None
+            knots_dict = {}
+            kindex_dict = {}
+            mindex_dict = {}
+            sfront_dict = {}
+            sback_dict = {}
 
-        nfreq_to_front_coeffs = np.zeros(max(nfreq_to_front_dict.keys()) + 1)
-        nfreq_to_back_coeffs = np.zeros(max(nfreq_to_back_dict.keys()) + 1)
-        freq_to_phase_coeffs = np.zeros(max(freq_to_phase_dict.keys()) + 1)
-        for k in nfreq_to_front_dict:
-            nfreq_to_front_coeffs[k] = nfreq_to_front_dict[k]
-        for k in nfreq_to_back_dict:
-            nfreq_to_back_coeffs[k] = nfreq_to_back_dict[k]
-        for k in freq_to_phase_dict:
-            freq_to_phase_coeffs[k] = freq_to_phase_dict[k]
-        return cls(min_freq, max_freq, nfreq_to_front_coeffs, nfreq_to_back_coeffs, freq_to_phase_coeffs, freq_to_phase_xoff,
-                   freq_to_phase_yoff)
+            for opt in ini:
+                m = re.match("NFREQ_TO_FRONT_([0-9]+)", opt)
+                if m:
+                    nfreq_to_front_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("NFREQ_TO_BACK_([0-9]+)", opt)
+                if m:
+                    nfreq_to_back_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("KNOTS_([0-9]+)", opt)
+                if m:
+                    knots_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("KINDEX_([0-9]+)", opt)
+                if m:
+                    kindex_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("MINDEX_([0-9]+)", opt)
+                if m:
+                    mindex_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("SFRONT_([0-9]+)", opt)
+                if m:
+                    sfront_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("SBACK_([0-9]+)", opt)
+                if m:
+                    sback_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("FREQ_TO_PHASE_([0-9]+)", opt)
+                if m:
+                    freq_to_phase_dict[int(m.group(1))] = ini.as_float(opt)
+                m = re.match("FREQ_TO_PHASE_XOFF", opt)
+                if m:
+                    freq_to_phase_xoff = ini.as_float(opt)
+                m = re.match("FREQ_TO_PHASE_YOFF", opt)
+                if m:
+                    freq_to_phase_yoff = ini.as_float(opt)
+                m = re.match("TRAJ_NUM", opt)
+                if m:
+                    traj_num = ini.as_int(opt)
+
+            if knots_dict:
+                knots_coeffs = np.zeros(max(knots_dict.keys()) + 1)
+                kindex_coeffs = np.zeros(max(kindex_dict.keys()) + 1)
+                mindex_coeffs = np.zeros(max(mindex_dict.keys()) + 1)
+                sfront_coeffs = np.zeros(max(sfront_dict.keys()) + 1)
+                sback_coeffs = np.zeros(max(sback_dict.keys()) + 1)
+                for k in knots_dict:
+                    knots_coeffs[k] = knots_dict[k]
+                for k in kindex_dict:
+                    kindex_coeffs[k] = kindex_dict[k]
+                for k in mindex_dict:
+                    mindex_coeffs[k] = mindex_dict[k]
+                for k in sfront_dict:
+                    sfront_coeffs[k] = sfront_dict[k]
+                for k in sback_dict:
+                    sback_coeffs[k] = sback_dict[k]
+                nfreq_to_front_coeffs = None
+                nfreq_to_back_coeffs = None
+            else:
+                nfreq_to_front_coeffs = np.zeros(max(nfreq_to_front_dict.keys()) + 1)
+                nfreq_to_back_coeffs = np.zeros(max(nfreq_to_back_dict.keys()) + 1)
+                freq_to_phase_coeffs = np.zeros(max(freq_to_phase_dict.keys()) + 1)
+                for k in nfreq_to_front_dict:
+                    nfreq_to_front_coeffs[k] = nfreq_to_front_dict[k]
+                for k in nfreq_to_back_dict:
+                    nfreq_to_back_coeffs[k] = nfreq_to_back_dict[k]
+                knots_coeffs = None
+                kindex_coeffs = None
+                mindex_coeffs = None
+                sfront_coeffs = None
+                sback_coeffs = None
+
+            freq_to_phase_coeffs = np.zeros(max(freq_to_phase_dict.keys()) + 1)
+            for k in freq_to_phase_dict:
+                freq_to_phase_coeffs[k] = freq_to_phase_dict[k]
+
+            return cls(min_freq, max_freq, nfreq_to_front_coeffs, nfreq_to_back_coeffs, freq_to_phase_coeffs, freq_to_phase_xoff,
+                       freq_to_phase_yoff, traj, traj_num, knots_coeffs, kindex_coeffs, mindex_coeffs, sfront_coeffs, sback_coeffs)
+        except:
+            LogExc("Exception while loading SGDBR lookup section")
 
     def to_ini(self, ini, sec_name):
         ini[sec_name] = {}
         ini[sec_name]["MIN_FREQ"] = self.min_freq
         ini[sec_name]["MAX_FREQ"] = self.max_freq
-        for j, coeff in enumerate(self.nfreq_to_front_coeffs):
-            ini[sec_name]["NFREQ_TO_FRONT_%d" % j] = coeff
-        for j, coeff in enumerate(self.nfreq_to_back_coeffs):
-            ini[sec_name]["NFREQ_TO_BACK_%d" % j] = coeff
+        if self.knots is None:
+            for j, coeff in enumerate(self.nfreq_to_front_coeffs):
+                ini[sec_name]["NFREQ_TO_FRONT_%d" % j] = coeff
+            for j, coeff in enumerate(self.nfreq_to_back_coeffs):
+                ini[sec_name]["NFREQ_TO_BACK_%d" % j] = coeff
+        else:
+            for j, coeff in enumerate(self.knots):
+                ini[sec_name]["KNOTS_%d" % j] = coeff
+            for j, coeff in enumerate(self.kindex):
+                ini[sec_name]["KINDEX_%d" % j] = coeff
+            for j, coeff in enumerate(self.mindex):
+                ini[sec_name]["MINDEX_%d" % j] = coeff
+            for j, coeff in enumerate(self.sfront):
+                ini[sec_name]["SFRONT_%d" % j] = coeff
+            for j, coeff in enumerate(self.sback):
+                ini[sec_name]["SBACK_%d" % j] = coeff
+
         for j, coeff in enumerate(self.freq_to_phase_coeffs):
             ini[sec_name]["FREQ_TO_PHASE_%d" % j] = coeff
         ini[sec_name]["FREQ_TO_PHASE_XOFF"] = self.freq_to_phase_xoff
         ini[sec_name]["FREQ_TO_PHASE_YOFF"] = self.freq_to_phase_yoff
+        ini[sec_name]["TRAJ_NUM"] = self.traj_num
 
 
 class WidebandWlm(object):
@@ -576,6 +671,7 @@ class WidebandWlm(object):
                           3 + int(np.ceil((self.phiMax - self.phiMin) / self.phiSamp)))
         self.phiArray = phi
         self.nuArray = np.zeros_like(self.phiArray)
+        self.filt = np.zeros(phi.shape, dtype=bool)
         if self.phiBins == 0:
             for optName in ini[paramSec]:
                 m = re.match("([CS])([0-9])([0-9])", optName)
@@ -590,9 +686,16 @@ class WidebandWlm(object):
                     paramSec,
                     bin,
                 )
-                phiMin = float(ini[binSec]["PHI_MIN"])
-                phiMax = float(ini[binSec]["PHI_MAX"])
-                which = (self.phiArray >= phiMin - 1.5 * self.phiSamp) & (self.phiArray < phiMax + 1.5 * self.phiSamp)
+                phiValidMin = phiMin = float(ini[binSec]["PHI_MIN"])
+                phiValidMax = float(ini[binSec]["PHI_MAX"])
+                # Introduce valid range of WLM angles within the region
+                #  so that we can ignore regions for which there are no data
+                if "PHI_VALID_MIN" in ini[binSec]:
+                    phiValidMin = float(ini[binSec]["PHI_VALID_MIN"])
+                if "PHI_VALID_MAX" in ini[binSec]:
+                    phiValidMax = float(ini[binSec]["PHI_VALID_MAX"])
+                which = (self.phiArray >= phiValidMin) & (self.phiArray <= phiValidMax)
+                self.filt |= which
                 self.nuArray[which] = 0
                 for optName in ini[binSec]:
                     phi = self.phiArray[which] - phiMin
@@ -602,7 +705,9 @@ class WidebandWlm(object):
                         ftype, harmonic, power = (m.group(1), int(m.group(2)), int(m.group(3)))
                         self.nuArray[which] += coeff * phi**power * \
                             (np.cos if ftype == "C" else np.sin)(harmonic * phi)
-
+        # Calculate splines for rapid computation of transformations
+        self.phiArray = self.phiArray[self.filt]
+        self.nuArray = self.nuArray[self.filt]
         tck1 = splrep(self.phiArray, self.nuArray, s=0)
         self.phiToFreq = lambda x, wlmOffsetValue: splev(x, tck1) + wlmOffsetValue
         tck2 = splrep(self.nuArray, self.phiArray, s=0)
@@ -617,6 +722,8 @@ class SgdbrCal(object):
            can be 'A' or 'B'"""
         self.widebandWlm = None
         self.sgdbrLuts = []
+        self.breaks = None
+        self.trajs = None
         prefix = "SGDBR_%s" % laserIdent
         paramSec = prefix + "_PHI_TO_FREQ"
         if paramSec in ini:
@@ -626,7 +733,23 @@ class SgdbrCal(object):
                 sec_name = prefix + "_LOOKUP_%d" % traj
                 if sec_name not in ini:
                     break
-                self.sgdbrLuts.append(SgdbrLookup.from_ini(ini[sec_name]))
+                self.sgdbrLuts.append(SgdbrLookup.from_ini(ini[sec_name], traj))
+        traj_select = prefix + "_TRAJ_SELECT"
+        if traj_select in ini:
+            breaks = {}
+            trajs = {}
+            for key in ini[traj_select]:
+                if key.startswith("BREAK_"):
+                    breaks[int(key[len("BREAK_"):])] = float(ini[traj_select][key])
+                elif key.startswith("TRAJ_"):
+                    if ini[traj_select][key].strip():
+                        trajs[int(key[len("TRAJ_"):])] = [int(x) for x in ini[traj_select][key].split(',')]
+                    else:
+                        trajs[int(key[len("TRAJ_"):])] = []
+            if breaks.keys() != trajs.keys():
+                raise ValueError("Mismatch between BREAK and TRAJ entries")
+            self.breaks = np.asarray([breaks[i] for i in sorted(breaks)])
+            self.trajs = [trajs[i] for i in sorted(trajs)]
 
 
 class AutoCal(object):
@@ -952,10 +1075,25 @@ class AutoCal(object):
                 #  (NaN is not handled properly by TI C compiler)
                 angleSetpoint = {}
                 laserTemp = {}
+                if self.sgdbrCal.breaks is not None:
+                    # Determine trajectories for each wavenumber by looking these up within the collection of breakpoints
+                    #  Choose the first suitable trajectory for subiterval associated with the breakpoints
+                    # -1 indicates that no suitable trajectory exists
+                    traj_selected = np.zeros(waveNum.shape, int)
+                    for i, subinterval in enumerate(np.digitize(waveNum, self.sgdbrCal.breaks)):
+                        traj_selected[i] = self.sgdbrCal.trajs[subinterval - 1][0] if subinterval > 0 else -1
                 for sgdbrLut in self.sgdbrCal.sgdbrLuts:
+                    if traj_filt >= 0 and sgdbrLut.traj != traj_filt:
+                        continue
                     if done.all():
                         break
-                    sel = ((sgdbrLut.min_freq <= waveNum) & (waveNum < sgdbrLut.max_freq) & ~done)
+                    # We select the trajectory either on the basis of the min_freq to max_freq
+                    #  range in the [SGDBR_x_LOOKUP_n] section of the calibration file or on the basis
+                    #  of the [SGDBR_x_TRAJ_SELECT] section if this exists
+                    if self.sgdbrCal.breaks is None or traj_filt >= 0:
+                        sel = ((sgdbrLut.min_freq <= waveNum) & (waveNum < sgdbrLut.max_freq) & ~done)
+                    else:
+                        sel = (traj_selected == sgdbrLut.traj)
                     if sel.any():
                         front = sgdbrLut.freq_to_front(waveNum[sel])
                         back = sgdbrLut.freq_to_back(waveNum[sel])

@@ -662,6 +662,7 @@ class RDFrequencyConverter(Singleton):
 
     def __init__(self, configPath=None, virtualMode=False):
         if not self.initialized:
+            self.last_rd_sequence_number = 0
             self.tunerCenter = None
             self.virtualMode = virtualMode
             self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
@@ -856,6 +857,12 @@ class RDFrequencyConverter(Singleton):
                         while not self.rdQueue.empty() and not self.freqConvertersLoaded:
                             try:
                                 rdData = self.rdQueue.get(False)
+                                if self.last_rd_sequence_number != 0:
+                                    if rdData.sequenceNumber != (self.last_rd_sequence_number + 1) & 0xFFFFFFFF:
+                                        Log("Unexpected sequence number %d follows %d" %
+                                            (rdData.sequenceNumber, self.last_rd_sequence_number),
+                                            Level=2)
+                                self.last_rd_sequence_number = rdData.sequenceNumber
                                 pickledRd = StringPickler.ObjAsString(rdData)
                                 data = ("rawRd", pickledRd)
                                 self.unifiedRdBroadcaster.send(StringPickler.PackArbitraryObject(data))
@@ -899,6 +906,11 @@ class RDFrequencyConverter(Singleton):
                     event_manager_proxy.Log("Restart request to supervisor not sent", Level=2)
                 while not self.rdQueue.empty():
                     self.rdQueue.get(False)
+                    if self.last_rd_sequence_number != 0:
+                        if rdData.sequenceNumber != (self.last_rd_sequence_number + 1) & 0xFFFFFFFF:
+                            Log("Unexpected sequence number %d follows %d" % (rdData.sequenceNumber, self.last_rd_sequence_number),
+                                Level=2)
+                    self.last_rd_sequence_number = rdData.sequenceNumber
                 self.rdProcessedCache = []
                 time.sleep(0.02)
         event_manager_proxy.Log("RD Frequency Converter RPC handler shut down")
@@ -921,6 +933,11 @@ class RDFrequencyConverter(Singleton):
                     continue
                 rdProcessedData = interface.ProcessedRingdownEntryType()
                 rdData = self.rdQueue.get(False)
+                if self.last_rd_sequence_number != 0:
+                    if rdData.sequenceNumber != (self.last_rd_sequence_number + 1) & 0xFFFFFFFF:
+                        Log("Unexpected sequence number %d follows %d" % (rdData.sequenceNumber, self.last_rd_sequence_number),
+                            Level=2)
+                self.last_rd_sequence_number = rdData.sequenceNumber
                 for name, _ctype in rdData._fields_:
                     if name != "padToCacheLine":
                         setattr(rdProcessedData, name, getattr(rdData, name))
@@ -1034,6 +1051,8 @@ class RDFrequencyConverter(Singleton):
         return self.sbc.clearCalibrationDone(vLaserNumList)
 
     def RPC_convertScheme(self, schemeNum):
+        # See if we need to filter by trajectory for SGDBR system
+        traj_filt = Driver.rdDasReg("SGDBR_FILTER_BY_TRAJECTORY_REGISTER")
         # Convert scheme from frequency (wave number) to angle
         scheme = self.freqScheme[schemeNum]
         angleScheme = self.angleScheme[schemeNum]
@@ -1052,21 +1071,23 @@ class RDFrequencyConverter(Singleton):
             dataByLaser[vLaserNum][0].append(i)
             dataByLaser[vLaserNum][1].append(waveNum)
 
+        all_bad = True
         for vLaserNum in dataByLaser:
             self._assertVLaserNum(vLaserNum)
             freqConv = self.freqConverter[vLaserNum - 1]
             waveNum = array(dataByLaser[vLaserNum][1])
             schemeRows = asarray(dataByLaser[vLaserNum][0])
-
-            result = freqConv.calcInjectSettings(waveNum, schemeRows)
+            result = freqConv.calcInjectSettings(waveNum, schemeRows, traj_filt=traj_filt)
             npts = len(waveNum)
             if result["laserType"] == 0:
                 for j, i in enumerate(schemeRows):
+                    all_bad = False
                     angleScheme.setpoint[i] = result["angleSetpoint"][j]
                     angleScheme.laserTemp[i] = result["laserTemp"][j] + scheme.laserTemp[i]
             elif result["laserType"] == 1:
                 for i in schemeRows:
                     if i in result["frontMirrorDac"]:
+                        all_bad = False
                         angleScheme.frontMirrorDac[i] = result["frontMirrorDac"][i]
                         angleScheme.backMirrorDac[i] = result["backMirrorDac"][i]
                         angleScheme.coarsePhaseDac[i] = result["coarsePhaseDac"][i]
@@ -1078,6 +1099,9 @@ class RDFrequencyConverter(Singleton):
                         angleScheme.setpoint[i] = -1.0e6
 
         self.isAngleSchemeConverted[schemeNum] = True
+        if all_bad:
+            raise SchemeError("No frequencies are accessible")
+        return angleScheme
 
     def RPC_getHotBoxCalFilePath(self):
         return self.hotBoxCalFilePath
@@ -1224,8 +1248,34 @@ class RDFrequencyConverter(Singleton):
                 if laserType == 1:
                     if aLaserNum == 1:
                         freqConv.sgdbrCal = self.sgdbrCals['A']
+                        # Modify the SOA and GAIN currents if these are in the warm box cal file
+                        if "SOASETTING" in ini['ACTUAL_LASER_1']:
+                            setSoa("SGDBR_A", ini['ACTUAL_LASER_1'].as_float("SOASETTING"))
+                        else:
+                            soaDu = Driver.rdDasReg("SGDBR_A_CNTRL_SOA_REGISTER")
+                            soaDu = int(ini['ACTUAL_LASER_1'].get("SOA_DU", soaDu))
+                            Driver.wrDasReg("SGDBR_A_CNTRL_SOA_REGISTER", soaDu)
+                        if "GAINSETTING" in ini['ACTUAL_LASER_1']:
+                            setGain("SGDBR_A", ini['ACTUAL_LASER_1'].as_float("GAINSETTING"))
+                        else:
+                            gainDu = Driver.rdDasReg("SGDBR_A_CNTRL_GAIN_REGISTER")
+                            gainDu = int(ini['ACTUAL_LASER_1'].get("GAIN_DU", gainDu))
+                            Driver.wrDasReg("SGDBR_A_CNTRL_GAIN_REGISTER", gainDu)
                     elif aLaserNum == 3:
                         freqConv.sgdbrCal = self.sgdbrCals['B']
+                        # Modify the SOA and GAIN currents if these are in the warm box cal file
+                        if "SOASETTING" in ini['ACTUAL_LASER_3']:
+                            setSoa("SGDBR_B", ini['ACTUAL_LASER_3'].as_float("SOASETTING"))
+                        else:
+                            soaDu = Driver.rdDasReg("SGDBR_B_CNTRL_SOA_REGISTER")
+                            soaDu = int(ini['ACTUAL_LASER_3'].get("SOA_DU", soaDu))
+                            Driver.wrDasReg("SGDBR_B_CNTRL_SOA_REGISTER", soaDu)
+                        if "GAINSETTING" in ini['ACTUAL_LASER_3']:
+                            setGain("SGDBR_B", ini['ACTUAL_LASER_3'].as_float("GAINSETTING"))
+                        else:
+                            gainDu = Driver.rdDasReg("SGDBR_B_CNTRL_GAIN_REGISTER")
+                            gainDu = int(ini['ACTUAL_LASER_3'].get("GAIN_DU", gainDu))
+                            Driver.wrDasReg("SGDBR_B_CNTRL_GAIN_REGISTER", gainDu)
                     else:
                         raise ValueError("SGDBR laser must be Laser 1 or Laser 3")
         # Start the ringdown listener only once there are frequency converters

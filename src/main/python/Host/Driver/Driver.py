@@ -1277,6 +1277,8 @@ class Driver(SharedTypes.Singleton):
 
         def ringdownProcessor(data):
             # TODO: Normalize the data format here
+            data.sequenceNumber = self.rd_sequence_num
+            self.rd_sequence_num = (self.rd_sequence_num + 1) & 0xFFFFFFFF
             self.resultsCast.send(StringPickler.ObjAsString(data))
 
         def ringdownBlockProcessor(blockDict):
@@ -1284,6 +1286,8 @@ class Driver(SharedTypes.Singleton):
             block = blockDict['block']
             for i in range(validEntries):
                 data = block[i]
+                data.sequenceNumber = self.rd_sequence_num
+                self.rd_sequence_num = (self.rd_sequence_num + 1) & 0xFFFFFFFF
                 self.resultsCast.send(StringPickler.ObjAsString(data))
             return validEntries
 

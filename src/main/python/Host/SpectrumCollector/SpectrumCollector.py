@@ -130,6 +130,7 @@ class SpectrumCollector(object):
     On creation of an instance, a file header is written.
     """
     def __init__(self, configPath):
+        self.last_rd_sequence_number = 0
         # Read from .ini file
         cp = CustomConfigObj(configPath)
         basePath = os.path.split(configPath)[0]
@@ -165,6 +166,9 @@ class SpectrumCollector(object):
             if callable(attr) and s.startswith("RPC_") and (not inspect.isclass(attr)):
                 self.rpcServer.register_function(attr, name=s, NameSlice=4)
 
+        self.latestSensors = {}
+        self.latestSensors["timestamp"] = 0.0
+
         # Sensor data handling
         self.sensorListener = Listener.Listener(
             None,  # no queuing, we'll just be tracking the latest
@@ -174,8 +178,6 @@ class SpectrumCollector(object):
             retry=True,
             name="Spectrum collector listener",
             logFunc=Log)
-        self.latestSensors = {}
-        self.latestSensors["timestamp"] = 0.0
         for key in interface.STREAM_MemberTypeDict:
             self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
         self.sensorsUpdated = True
@@ -219,7 +221,7 @@ class SpectrumCollector(object):
         self.avgSensors = {}
         self.sumSensors = {}
         self.rdBuffer = {}
-        self.schemeInfo = deque(maxlen=4)
+        self.schemeInfo = deque(maxlen=16)
         self.useSequencer = True
         self.sequencer = None
         self.schemesUsed = {}
@@ -263,7 +265,6 @@ class SpectrumCollector(object):
                 try:
                     rdData = self.getFromRdQueue(timeToRetry=0.005)
                     if rdData is None:
-                        time.sleep(0.005)
                         loops = 0
                         continue
                     now = TimeStamp()
@@ -317,6 +318,7 @@ class SpectrumCollector(object):
                         Log("Closing spectrum and scheme due to data timeout (count = %d)" % thisCount, Level=0)
                         endOfSpectrum = True
                         endOfScheme = True
+                        self.closeSpectrumWhenDone = False
 
                 # A spectrum is composed of one or more sub-schemes.
                 # As each spectrum is collected, broadcast them to the fitters, collecting them
@@ -400,20 +402,30 @@ class SpectrumCollector(object):
         if self.tempRdDataBuffer:
             # The last time a spectrum was read it read one too many points,
             # and this is it.
-            rdData = self.tempRdDataBuffer
+            data = self.tempRdDataBuffer
             self.tempRdDataBuffer = None
             self.emptyCount = 0
+            return data
         else:
             try:
                 rdData = self.rdQueue.get(True, timeToRetry)
                 self.emptyCount = 0
+                # We get schemeInfo data on every ringdown, but only need to
+                # save it when the schemeCount changes.
                 if rdData[0] == "schemeInfo":
                     schemeCount = rdData[1]["schemeCount"]
                     schemeInfo = rdData[1]["schemeInfo"]
-                    self.schemeInfo.append((schemeCount, schemeInfo))
+                    if len(self.schemeInfo) == 0 or self.schemeInfo[-1][0] != schemeCount:
+                        self.schemeInfo.append((schemeCount, schemeInfo))
                     return None
                 elif rdData[0] == self.rdEntryName:
-                    return StringPickler.StringAsObject(rdData[1], self.rdEntryType)
+                    data = StringPickler.StringAsObject(rdData[1], self.rdEntryType)
+                    if self.last_rd_sequence_number != 0:
+                        if data.sequenceNumber != (self.last_rd_sequence_number + 1) & 0xFFFFFFFF:
+                            Log("Unexpected sequence number %d follows %d" % (data.sequenceNumber, self.last_rd_sequence_number),
+                                Level=2)
+                    self.last_rd_sequence_number = data.sequenceNumber
+                    return data
                 else:
                     return None
             except Queue.Empty:
