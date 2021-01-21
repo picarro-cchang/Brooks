@@ -399,7 +399,39 @@ class RingdownPanel(RingdownPanelGui):
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "Loss"
             self.appendData = lossVsFineCurrent
+        elif choice == 17:
 
+            def sgdbrCurrentsVsWavenumber(data):
+                if dataGood(data):
+                    wavenumber = data.waveNumber
+                    waveforms["Ringdown"]["frontMirrorCurrent"].Add(wavenumber, data.frontMirrorDac)
+                    waveforms["Ringdown"]["backMirrorCurrent"].Add(wavenumber, data.backMirrorDac)
+                    waveforms["Ringdown"]["coarsePhaseCurrent"].Add(wavenumber, data.coarsePhaseDac)
+
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False, False),
+                                                  xlabel='Wavenumber (1/cm)',
+                                                  ylabel='SGDBR [red=front, green=back, blue=coarse phase]',
+                                                  grid=True,
+                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "SGDBRCurrents"
+            self.appendData = sgdbrCurrentsVsWavenumber
+        elif choice == 18:
+
+            def sgdbrCurrentsVsTime(data):
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    waveforms["Ringdown"]["frontMirrorCurrent"].Add(utime, data.frontMirrorDac)
+                    waveforms["Ringdown"]["backMirrorCurrent"].Add(utime, data.backMirrorDac)
+                    waveforms["Ringdown"]["coarsePhaseCurrent"].Add(utime, data.coarsePhaseDac)
+
+            self.ringdownGraph.SetGraphProperties(timeAxes=(True, False),
+                                                  ylabel='SGDBR [red=front, green=back, blue=coarse phase]',
+                                                  grid=True,
+                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "SGDBRCurrents"
+            self.appendData = sgdbrCurrentsVsTime
         self.ringdownGraph.RemoveAllSeries()
 
         if y == "Loss":
