@@ -127,6 +127,21 @@ class DasConfigure(SharedTypes.Singleton):
                 Log("Cavity2 Thermistor4 Disabled", 1)
             self.cavity2ThermistorList.append("CAVITY2_TEMPERATURE_REGISTER")
             self.is_dual_cavity = self.installed.get("DUAL_CAVITY", 0)
+            # Get the mappings between actual lasers and cavities
+            self.actual_lasers_to_cavities = {}
+            if self.installCheck("LASER1_PRESENT"):
+                self.actual_lasers_to_cavities[1] = self.installed.get("ACTUAL_LASER1_CAVITY", 1)
+                Log("Actual laser 1 is mapped to cavity %d" % self.actual_lasers_to_cavities[1])
+            if self.installCheck("LASER2_PRESENT"):
+                self.actual_lasers_to_cavities[2] = self.installed.get("ACTUAL_LASER2_CAVITY", 1)
+                Log("Actual laser 2 is mapped to cavity %d" % self.actual_lasers_to_cavities[2])
+            if self.installCheck("LASER3_PRESENT"):
+                self.actual_lasers_to_cavities[3] = self.installed.get("ACTUAL_LASER3_CAVITY", 1)
+                Log("Actual laser 3 is mapped to cavity %d" % self.actual_lasers_to_cavities[3])
+            if self.installCheck("LASER4_PRESENT"):
+                self.actual_lasers_to_cavities[4] = self.installed.get("ACTUAL_LASER4_CAVITY", 1)
+                Log("Actual laser 4 is mapped to cavity %d" % self.actual_lasers_to_cavities[4])
+
             self.initialized = True
             self.parameter_forms = self.processParameterForms(interface.parameter_forms)
             self.extraSchedule = None
@@ -1153,3 +1168,4 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_SENTRY_INIT"))
         # Set the scheduler running
         sender.wrRegUint("SCHEDULER_CONTROL_REGISTER", 1)
+
