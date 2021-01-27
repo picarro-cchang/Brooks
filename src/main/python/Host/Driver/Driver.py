@@ -1150,6 +1150,7 @@ class StreamSaver(SharedTypes.Singleton):
 
 class Driver(SharedTypes.Singleton):
     def __init__(self, configFile):
+        self.rd_sequence_num = 0
         self.looping = True
         self.config = CustomConfigObj(configFile)
         #basePath = os.path.split(configFile)[0]
