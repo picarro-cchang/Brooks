@@ -716,6 +716,7 @@
             <enum_value ident="HARDWARE_PRESENT_FlowSensorBit" value="12" caption="Flow Sensor" />
             <enum_value ident="HARDWARE_PRESENT_RddVarGainBit" value="13" caption="Variable gain ringdown detector" />
             <enum_value ident="HARDWARE_PRESENT_AccelerometerBit" value="14" caption="Accelerometer" />
+            <enum_value ident="HARDWARE_PRESENT_FilterHeaterBit"   value="15" caption="Filter Heater" />
         </enum>
         <enum type="FLOAT_ARITHMETIC_OperatorType">
             <description>Enumeration specifying floating point operation to carry out on regiters</description>

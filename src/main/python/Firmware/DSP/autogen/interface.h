@@ -791,7 +791,8 @@ typedef enum {
     HARDWARE_PRESENT_FanCntrlDisabledBit = 11, // Fan Control Disabled
     HARDWARE_PRESENT_FlowSensorBit = 12, // Flow Sensor
     HARDWARE_PRESENT_RddVarGainBit = 13, // Variable gain ringdown detector
-    HARDWARE_PRESENT_AccelerometerBit = 14 // Accelerometer
+    HARDWARE_PRESENT_AccelerometerBit = 14, // Accelerometer
+    HARDWARE_PRESENT_FilterHeaterBit = 15 // Filter Heater
 } HARDWARE_PRESENT_BitType;
 
 typedef enum {

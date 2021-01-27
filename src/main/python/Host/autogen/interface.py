@@ -1076,6 +1076,7 @@ HARDWARE_PRESENT_FanCntrlDisabledBit = 11 # Fan Control Disabled
 HARDWARE_PRESENT_FlowSensorBit = 12 # Flow Sensor
 HARDWARE_PRESENT_RddVarGainBit = 13 # Variable gain ringdown detector
 HARDWARE_PRESENT_AccelerometerBit = 14 # Accelerometer
+HARDWARE_PRESENT_FilterHeaterBit = 15 # Filter Heater
 
 # Dictionary for enumerated constants in HARDWARE_PRESENT_BitType
 HARDWARE_PRESENT_BitTypeDict = {}
@@ -1094,6 +1095,7 @@ HARDWARE_PRESENT_BitTypeDict[11] = 'HARDWARE_PRESENT_FanCntrlDisabledBit' # Fan 
 HARDWARE_PRESENT_BitTypeDict[12] = 'HARDWARE_PRESENT_FlowSensorBit' # Flow Sensor
 HARDWARE_PRESENT_BitTypeDict[13] = 'HARDWARE_PRESENT_RddVarGainBit' # Variable gain ringdown detector
 HARDWARE_PRESENT_BitTypeDict[14] = 'HARDWARE_PRESENT_AccelerometerBit' # Accelerometer
+HARDWARE_PRESENT_BitTypeDict[15] = 'HARDWARE_PRESENT_FilterHeaterBit' # Filter Heater
 
 # Enumerated definitions for FLOAT_ARITHMETIC_OperatorType
 FLOAT_ARITHMETIC_OperatorType = c_uint
