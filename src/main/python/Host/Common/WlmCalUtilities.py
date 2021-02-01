@@ -1126,7 +1126,7 @@ class AutoCal(object):
                             laserTemp[i] = self.baseTemp
                         done[sel] = True
                 if not done.all():
-                    Log("%d scheme frequencies are not accessible and will be skipped" % (len(done) - sum(done), ), Level=2)
+                    Log("%d scheme frequencies are not accessible and will be skipped" % (len(done) - sum(done), ), Level=1)
                 result["frontMirrorDac"] = frontMirrorDac
                 result["backMirrorDac"] = backMirrorDac
                 result["coarsePhaseDac"] = coarsePhaseDac
