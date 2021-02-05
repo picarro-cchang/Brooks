@@ -11,6 +11,7 @@ raw_version=$1
 installer_type=$2
 git_hash=$3
 project_name=$4
+include_config=${5:-true}
 git_directory=$(pwd)
 git_directory="$(dirname $git_directory)"
 version_file_path=$git_directory/buildTools/versions/${project_name,,}_types.json
@@ -76,15 +77,18 @@ fi
 
 
 # copy commonconfig
-if [ -d "$dist_common_config_directory" ]
-then
-  rm -rf $dist_common_config_directory
-fi
+if [ $include_config == "true" ]
+  then
+    if [ -d "$dist_common_config_directory" ]
+      then
+      rm -rf $dist_common_config_directory
+  fi
 
-if ! cp -R "$git_common_config_directory/." $dist_common_config_directory
-then
-  echo -e "\n****Error during copying files from $git_common_config_directory to $dist_common_config_directory*"
-  exit 1
+  if ! cp -R "$git_common_config_directory/." $dist_common_config_directory
+    then
+      echo -e "\n****Error during copying files from $git_common_config_directory to $dist_common_config_directory*"
+      exit 1
+  fi
 fi
 
 # create python path file
@@ -109,23 +113,26 @@ then
 fi
 
 # copy config files
-if [ -d "$dist_instr_config_directory" ]
+if [ $include_config == "true" ]
 then
-  rm -rf $dist_instr_config_directory
-fi
+  if [ -d "$dist_instr_config_directory" ]
+  then
+    rm -rf $dist_instr_config_directory
+  fi
 
-cp -R "$git_instr_config_directory/." $dist_instr_config_directory
+  cp -R "$git_instr_config_directory/." $dist_instr_config_directory
 
-if [ -d "$dist_app_config_directory" ]
-then
-  rm -rf $dist_app_config_directory
-fi
+  if [ -d "$dist_app_config_directory" ]
+  then
+    rm -rf $dist_app_config_directory
+  fi
 
-cp -R "$git_app_config_directory/." $dist_app_config_directory
+  cp -R "$git_app_config_directory/." $dist_app_config_directory
 
-if [ -d "$dist_bin_config_directory" ]
-then
-  rm -rf $dist_bin_config_directory
+  if [ -d "$dist_bin_config_directory" ]
+  then
+    rm -rf $dist_bin_config_directory
+  fi
 fi
 
 cp $git_signature_file $dist_dir_new
@@ -155,4 +162,5 @@ fi
 
 # move package to installer folder
 mv "$dist_directory.deb" "$resource_directory/${project_name}_${installer_type}_${species}_${raw_version}_${git_hash}.deb"
+
 
