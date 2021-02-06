@@ -518,6 +518,7 @@ class SpectrumCollector(object):
             for sc, si in self.schemeInfo:
                 if schemeCount == sc:
                     spectrumDict["schemeInfo"] = si
+                    break
             spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
             spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
 
@@ -579,7 +580,7 @@ class SpectrumCollector(object):
         if numSchemes == 1:
             scheme = self.schemesUsed.values()[0]
             if scheme is not None:
-                attrs["schemeFile"] = scheme[3]
+                attrs["schemeFile"] = os.path.abspath(scheme[3])
                 attrs["modeName"] = scheme[0]
         else:
             Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]),
