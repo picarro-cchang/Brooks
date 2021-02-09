@@ -34,7 +34,7 @@ from Host.autogen import interface
 from Host.autogen.interface import ProcessedRingdownEntryType
 from Host.autogen.interface import RingdownEntryType
 from Host.Common import CmdFIFO, Broadcaster, Listener, StringPickler
-from Host.Common.SharedTypes import BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
+from Host.Common.SharedTypes import Bunch, BROADCAST_PORT_SENSORSTREAM, BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDRESULTS
 from Host.Common.SharedTypes import BROADCAST_PORT_SPECTRUM_COLLECTOR, BROADCAST_PORT_RD_UNIFIED
 from Host.Common.SharedTypes import RPC_PORT_SPECTRUM_COLLECTOR, RPC_PORT_DRIVER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.SharedTypes import CrdsException
@@ -518,6 +518,7 @@ class SpectrumCollector(object):
             for sc, si in self.schemeInfo:
                 if schemeCount == sc:
                     spectrumDict["schemeInfo"] = si
+                    break
             spectrumDict["rdData"]["pztValue"] = numpy.asarray(spectrumDict["rdData"]["pztValue"], dtype='float32')
             spectrumDict["rdData"]["tunerValue"] = numpy.asarray(spectrumDict["rdData"]["tunerValue"], dtype='float32')
 
@@ -579,7 +580,7 @@ class SpectrumCollector(object):
         if numSchemes == 1:
             scheme = self.schemesUsed.values()[0]
             if scheme is not None:
-                attrs["schemeFile"] = scheme[3]
+                attrs["schemeFile"] = os.path.abspath(scheme[3])
                 attrs["modeName"] = scheme[0]
         else:
             Log("Only one scheme (not %d) was expected in file %s" % (numSchemes, os.path.split(fileName)[-1]),
@@ -615,6 +616,13 @@ class SpectrumCollector(object):
             LogExc("Archiver call error")
 
     # RPC functions which are handled by the sequencer
+
+    @CmdFIFO.rpc_wrap
+    def RPC_addNamedSchemeConfigsAsDicts(self, name, sc_as_dict):
+        schemeConfigs = {}
+        for name_suffix in sc_as_dict:
+            schemeConfigs[name_suffix] = Bunch(**sc_as_dict[name_suffix])
+        self.sequencer.addNamedSequenceOfSchemeConfigs(name, schemeConfigs)
 
     @CmdFIFO.rpc_wrap
     def RPC_addNamedSequenceOfSchemeConfigs(self, name, schemeConfigs):

@@ -709,6 +709,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         #  the communications region starting at offset
         return self.dasInterface.hostToDspSender.rdBlock(offset, numInt)
 
+    def doAction(self, cmd, params=None, env=0):
+        """Perform the action specified by "cmd" with the list of parameters specified by "params" passing the
+        specified environment in "env"
+        String values will be looked up in the interface definition file"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation(cmd, params, env))
+
     def doOperation(self, op):
         """Perform an operation"""
         return self.dasInterface.hostToDspSender.doOperation(op)
