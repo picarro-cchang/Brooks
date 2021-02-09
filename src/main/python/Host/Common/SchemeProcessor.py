@@ -105,7 +105,6 @@ class Scheme(object):
         self.frontMirrorDac = []
         self.backMirrorDac = []
         self.coarsePhaseDac = []
-        #
         if self.fileName is not None:
             self.compile()
         if self.numErrors > 0:

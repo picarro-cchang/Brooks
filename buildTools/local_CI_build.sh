@@ -1,16 +1,16 @@
 #!/bin/bash
 #
 #
-
+include_config=${1:-true}
 # Build the Debian package locally using the same
 # steps run by the TeamCity build agent.
 #
 #cd /home/picarro/git/host
-./Prepare_Build.sh 1.2.3.4 NDDS abcd1234 I2000
+./Prepare_Build.sh 1.2.999.999 VOC-PROTO 77dcfac2 I2000
 ./Compile_Dependency.sh
 ./Cythonize_Source.sh
-./Copy_Source.sh 1.2.3.4 I2000
-./Make_Installer.sh 1.2.3.4 NDDS abcd1234 I2000
+./Copy_Source.sh 1.2.999.999 I2000
+./Make_Installer.sh 1.2.999.999 VOC-PROTO 77dcfac2 I2000 $include_config
 
 # Install the package locally and run it to make
 # sure all the necessary files are in place and

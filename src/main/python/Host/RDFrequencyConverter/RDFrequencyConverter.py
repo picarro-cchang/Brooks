@@ -50,6 +50,7 @@ from Host.Common.SharedTypes import BROADCAST_PORT_RD_RECALC, BROADCAST_PORT_RDR
 from Host.Common.SharedTypes import RPC_PORT_DRIVER, RPC_PORT_FREQ_CONVERTER, RPC_PORT_ARCHIVER, RPC_PORT_SUPERVISOR
 from Host.Common.WlmCalUtilities import AutoCal, SgdbrCal
 from Host.Common.sgdbrCalCommon import setSoa, setGain
+from Host.Common.SchemeProcessor import SchemeError
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common.AppRequestRestart import RequestRestart

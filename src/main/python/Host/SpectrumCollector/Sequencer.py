@@ -27,7 +27,7 @@ from threading import Lock, RLock, Thread
 from Host.autogen import interface
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 from Host.Common import SharedTypes, CmdFIFO
-from Host.Common.SchemeProcessor import Scheme
+from Host.Common.SchemeProcessor import Scheme, SchemeError
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SharedTypes import RPC_PORT_FREQ_CONVERTER, RPC_PORT_DRIVER
 

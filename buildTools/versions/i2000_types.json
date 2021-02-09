@@ -69,6 +69,10 @@
         "BDDS": {
             "species": "H2S",
             "installerSignature": "BDDS"
+        },
+        "VOC-PROTO": {
+            "species": "_",
+            "installerSignature": "NUV"
         }
     }
 }
