@@ -1160,7 +1160,7 @@ class Driver(SharedTypes.Singleton):
         self.rd_sequence_num = 0
         self.looping = True
         self.config = CustomConfigObj(configFile)
-        #basePath = os.path.split(configFile)[0]
+        self.installerId = "NULL"
         basePath = ""  # RSF
         self.autoStreamFile = False
         maxStreamLines = 0
