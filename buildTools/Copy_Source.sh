@@ -68,7 +68,7 @@ done
 
 # We also need dsp, usb, fitter utils and FPGA compiled code
 # lets get all compiled files for the same
-includeFileList=("Host/__init__.py" "Host/Utilities/__init__.py" "Firmware/CypressUSB/analyzer/analyzerUsb.hex" "Firmware/DSP/src/Debug/dspMain.hex" "Firmware/MyHDL/Spartan3/top_io_map.bit" "Host/Fitter/fitutils.so" "Host/Fitter/cluster_analyzer.so")
+includeFileList=("Host/__init__.py" "Host/Utilities/__init__.py" "Firmware/CypressUSB/analyzer/analyzerUsb.hex" "Firmware/DSP/src/Debug/dspMain.hex" "Firmware/MyHDL/Spartan3/top_io_map.bit" "Firmware/Lattice/sgdbr_bitmap_90060B.bin" "Host/Fitter/fitutils.so" "Host/Fitter/cluster_analyzer.so")
 for file_in_dir in ${includeFileList[*]}
 do
   source_list+=($dir_source_main_python/$file_in_dir)
