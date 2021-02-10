@@ -12,6 +12,7 @@ installer_type=$2
 git_hash=$3
 project_name=$4
 include_config=${5:-true}
+include_installer_signature=${6:-true}
 git_directory=$(pwd)
 git_directory="$(dirname $git_directory)"
 version_file_path=$git_directory/buildTools/versions/${project_name,,}_types.json
@@ -135,9 +136,12 @@ then
   fi
 fi
 
-cp $git_signature_file $dist_dir_new
-cp -R "$git_bin_config_directory/." $dist_bin_config_directory
-chmod -R 755 $dist_bin_config_directory
+if [ $include_installer_signature == "true" ]
+then
+  cp $git_signature_file $dist_dir_new
+  cp -R "$git_bin_config_directory/." $dist_bin_config_directory
+  chmod -R 755 $dist_bin_config_directory
+fi
 
 # make control file
 cat <<EOM > "$debian_directory/control"
