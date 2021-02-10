@@ -1205,17 +1205,15 @@ class Driver(SharedTypes.Singleton):
                 print "Driver 1136:", err
                 self.ver[ver] = "N/A"
         # Get installer ID
-        signaturePath = os.path.join(basePath, self.config.get("Files", "SignaturePath", "../../../installerSignature.txt"))
-        try:
-            with open(signaturePath, "r") as sig_file:
-                self.installerId = sig_file.readline().strip()
-        except IOError:
-            signaturePath = os.path.join(basePath, "/home/picarro/I2000/installerSignature.txt")
-            with open(signaturePath, "r") as sig_file:
-                self.installerId = sig_file.readline().strip()
-        except Exception, err:
-            print "Driver 1175, can't load %s: %r" % (signaturePath, err)
-            self.installerId = None
+        signaturePath = os.path.join(basePath, "/home/picarro/I2000/installerSignature.txt")
+        if not os.path.isfile(signaturePath):
+            Log("Cannot load: %s" % signaturePath)
+        else:
+            try:
+                with open(signaturePath, "r") as sig_file:
+                    self.installerId = sig_file.readline().strip()
+            except (IOError, OSError):
+                    self.installerId = 'NULL'
         self.analyzerType = None  # Will be retrieved from EEPROM in run() function
         self.validInstallerId = True
 
