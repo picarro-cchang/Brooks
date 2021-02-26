@@ -297,22 +297,26 @@ void setup_all_gain_and_soa_currents(void)
 
 static double sgdbrReadThermistorAdc(SgdbrCntrl *s)
 {
-    int flags, result;
+    int complete, flags, result;
     writeFPGA(s->fpga_mosi_data, SGDBR_ADC_CONFIG);
     wait_done(s);
     result = readFPGA_long(s->fpga_miso_data);
-    flags = (result >> 23) & 0x3;
-    result = (result & 0x1FFFFFF) << 1;
-    if (flags == 0)
-        result = -0x1000000;
-    else if (flags == 3)
-        result = 0xFFFFFF;
-    else
-    {
-        if (result >= 0x1000000)
-            result = result - 0x2000000;
+    complete = (result & 0x04000000) == 0;
+    if (complete) {
+        flags = (result >> 23) & 0x3;
+        result = (result & 0x1FFFFFF) << 1;
+        if (flags == 0)
+            result = -0x1000000;
+        else if (flags == 3)
+            result = 0xFFFFFF;
+        else
+        {
+            if (result >= 0x1000000)
+                result = result - 0x2000000;
+        }
+        return result / 33554432.0;
     }
-    return result / 33554432.0;
+    else return -9999.0; // Indicates conversion incomplete
 }
 
 int sgdbrACntrlInit(void)
@@ -407,10 +411,24 @@ void sgdbrBProgramFpga(void)
 
 double sgdbrAReadThermistorAdc(void)
 {
-    return sgdbrReadThermistorAdc(&sgdbrACntrl);
+    static double last_valid = 0.0;
+    double result = sgdbrReadThermistorAdc(&sgdbrACntrl);
+    if (result >= -1.0) {
+        last_valid = result;
+    } else { // Incomplete conversion, return last valid
+        result = last_valid;
+    }
+    return result;
 }
 
 double sgdbrBReadThermistorAdc(void)
 {
-    return sgdbrReadThermistorAdc(&sgdbrBCntrl);
+    static double last_valid = 0.0;
+    double result = sgdbrReadThermistorAdc(&sgdbrBCntrl);
+    if (result >= -1.0) {
+        last_valid = result;
+    } else { // Incomplete conversion, return last valid
+        result = last_valid;
+    }
+    return result;
 }
