@@ -79,8 +79,8 @@ The algorithm for deleting files is simple.
 
 What this code won't do.
 1. Monitor the size of files or directories.
-2. Erase the zip files or temporary files outside of Log/Archive.  These need
-    to be managed by the Archiver or originating processes.
+2. Erase the zip files or temporary files outside of Log/Archive/ComboLogger.
+    These need to be managed by the Archiver or originating processes.
 
 The number of days of data to retain is determined empirically by running an
 analyzer continuously and measuring the typical size for one day's worth of data
@@ -97,7 +97,7 @@ Usage:
     M = number of days of RDF files to retain
 
     Both arguments are optional.  The default retention is 365 days of dat
-    files and 60 days of RDF files.
+    files and 60 days of RDF/ComboLog files.
 """
 
 import sys
@@ -117,6 +117,8 @@ from Host.Common.SingleInstance import SingleInstance
 APP_NAME = "FileEraserSimplified"
 CONFIG_DIR = os.environ["PICARRO_CONF_DIR"]
 LOG_DIR = os.environ["PICARRO_LOG_DIR"]
+ROOT_DIR = os.getenv("I2000_LOG_ARCHIVE_DIR", "/home/picarro/I2000/Log/Archive")
+COMBO_LOG_ROOT_DIR = os.path.join(os.getenv("HOME"), ".combo_logger")
 
 EventManagerProxy_Init(APP_NAME, DontCareConnection=True)
 
@@ -127,12 +129,15 @@ class FileEraserSimplified(object):
         #
         # Retain 1 year of dat files
         # Retain 2 months of RDFs
+        # Retain 2 months of ComboLogger logs
         #
         self.days_of_dat_files_to_keep = \
             config["dat_days"] if "dat_days" in config else 365
         self.days_of_rdf_files_to_keep = \
             config["rdf_days"] if "rdf_days" in config else 60
-        self.root_dir = "/home/picarro/I2000/Log/Archive"
+        self.days_of_combo_logs_to_keep = \
+            config["combo_log_days"] if "combo_log_days" in config else 60
+        #self.root_dir = ROOT_DIR
 
         #Now set up the RPC server...
         self.RpcServer = CmdFIFO.CmdFIFOServer(("", RPC_PORT_FILE_ERASER),
@@ -152,38 +157,49 @@ class FileEraserSimplified(object):
             time.sleep(300)
         return
 
-    def generateDirectoryList(self):
+    def generateDirectoryList(self, root_dir=ROOT_DIR):
         """
-        Inspect /home/picarro/I2000/Log/Archive and create two sorted lists
-        of directories that fit the format YYYY-MM-DD or YYYY-MM-DD-RDF.
+        Inspect root_dir and create three sorted lists
+        of directories that fit the formats YYYY-MM-DD, YYYY-MM-DD-RDF
+        or YYYYMMDD/YYYYDDMM.
         :return:
         """
         noRDF = []
         RDF = []
-        if os.path.exists(self.root_dir):
-            list1 = os.listdir(self.root_dir)
+        combo_logs = []
+        if os.path.exists(root_dir):
+            list1 = os.listdir(root_dir)
             for dir in list1:
                 if re.match(r'.*\d{4}-\d{2}-\d{2}$', dir):
-                    noRDF.append(os.path.join(self.root_dir, dir))
+                    noRDF.append(os.path.join(root_dir, dir))
                 if re.match(r'.*\d{4}-\d{2}-\d{2}-RDF$', dir):
-                    RDF.append(os.path.join(self.root_dir, dir))
-        return (sorted(noRDF), sorted(RDF))
+                    RDF.append(os.path.join(root_dir, dir))
+                if re.match(r'.*\d{8}$', dir):
+                    combo_logs.append(os.path.join(root_dir, dir))
+        return (sorted(noRDF), sorted(RDF), sorted(combo_logs))
 
     def deleteOldestDirectories(self):
         noRDF = []
         RDF = []
+        combo_logs = []
         noRDF_deletion_count = 0
         RDF_deletion_count = 0
-        noRDF, RDF = self.generateDirectoryList()
+        combo_log_deletion_count = 0
+        noRDF, RDF, _ = self.generateDirectoryList()
+        _, _, combo_logs = self.generateDirectoryList(root_dir=COMBO_LOG_ROOT_DIR)
         while len(noRDF) > self.days_of_dat_files_to_keep:
             noRDF_deletion_count += 1
             shutil.rmtree(noRDF[0])
-            noRDF, RDF = self.generateDirectoryList()
+            noRDF, RDF, _ = self.generateDirectoryList()
         while len(RDF) > self.days_of_rdf_files_to_keep:
             RDF_deletion_count += 1
             shutil.rmtree(RDF[0])
-            noRDF, RDF = self.generateDirectoryList()
-        print("Deleted {} dat directories and {} RDF directories.".format(noRDF_deletion_count, RDF_deletion_count))
+            noRDF, RDF, _ = self.generateDirectoryList()
+        while len(combo_logs) > self.days_of_combo_logs_to_keep:
+            combo_log_deletion_count += 1
+            shutil.rmtree(combo_logs[0])
+            _, _, combo_logs = self.generateDirectoryList(root_dir=COMBO_LOG_ROOT_DIR)
+        print("Deleted {} dat directories, {} RDF directories, and {} ComboLog directories.".format(noRDF_deletion_count, RDF_deletion_count, combo_log_deletion_count))
         return
 
     def runApp(self):
@@ -196,7 +212,7 @@ class FileEraserSimplified(object):
 def HandleCommandSwitches():
     config = {}
     shortOpts = ''
-    longOpts = ["dat_days=", "rdf_days="]
+    longOpts = ["dat_days=", "rdf_days=", "combo_log_days="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
     except getopt.GetoptError as data:
@@ -213,6 +229,8 @@ def HandleCommandSwitches():
         config["dat_days"] = int(options["--dat_days"])
     if "--rdf_days" in options:
         config["rdf_days"] = int(options["--rdf_days"])
+    if "--combo_log_days" in options:
+        config["combo_log_days"] = int(options["--combo_log_days"])
     return (config)
 
 
