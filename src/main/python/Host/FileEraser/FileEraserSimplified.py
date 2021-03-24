@@ -161,7 +161,7 @@ class FileEraserSimplified(object):
         """
         Inspect root_dir and create three sorted lists
         of directories that fit the formats YYYY-MM-DD, YYYY-MM-DD-RDF
-        or YYYYMMDDD/YYYYDDMM.
+        or YYYYMMDD/YYYYDDMM.
         :return:
         """
         noRDF = []
