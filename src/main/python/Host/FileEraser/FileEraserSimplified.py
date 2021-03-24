@@ -174,7 +174,7 @@ class FileEraserSimplified(object):
                     noRDF.append(os.path.join(root_dir, dir))
                 if re.match(r'.*\d{4}-\d{2}-\d{2}-RDF$', dir):
                     RDF.append(os.path.join(root_dir, dir))
-                if re.match(r'.*\d{4}\d{2}\d{2}$', dir):
+                if re.match(r'.*\d{8}$', dir):
                     combo_logs.append(os.path.join(root_dir, dir))
         return (sorted(noRDF), sorted(RDF), sorted(combo_logs))
 
