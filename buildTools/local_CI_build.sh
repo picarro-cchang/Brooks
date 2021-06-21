@@ -9,11 +9,11 @@ git_hash_short=${git_hash:0:8}
 # steps run by the TeamCity build agent.
 #
 #cd /home/picarro/git/host
-./Prepare_Build.sh 1.2.999.999 VOC-PROTO $git_hash_short I2000
+./Prepare_Build.sh 1.3.999.920 GENERIC $git_hash_short I2000
 ./Compile_Dependency.sh
 ./Cythonize_Source.sh
-./Copy_Source.sh 1.2.999.999 I2000
-./Make_Installer.sh 1.2.999.999 VOC-PROTO $git_hash_short I2000 $include_config $include_installer_signature
+./Copy_Source.sh 1.3.999.920 I2000
+./Make_Installer.sh 1.3.999.920 GENERIC $git_hash_short I2000 $include_config $include_installer_signature
 
 # Install the package locally and run it to make
 # sure all the necessary files are in place and

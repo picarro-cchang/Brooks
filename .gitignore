@@ -23,3 +23,4 @@ src/main/python/Log/
 /experiments/grafana/bin/
 /experiments/grafana/pkg
 /experiments/grafana/src/github.com/golang
+.DS_Store
