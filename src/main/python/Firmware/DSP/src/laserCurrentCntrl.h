@@ -30,6 +30,7 @@ typedef struct LASER_CURRENT_CNTRL
     int *extra_offset_; // Offset when applying extra current
     float *laser_temp_; // Temperature of laser
     float *laser_temp_setpoint_; // Temperature setpoint of laser
+    float *laser_temp_window_; // Temperature window outside of which to turn off currents
     // FPGA register indices
     unsigned int fpga_control;
     unsigned int fpga_coarse;

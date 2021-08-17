@@ -130,7 +130,7 @@ if __name__ == "__main__":
     dsp_data_out = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_wr, clk, reset, pwm_out, pwm_inv_out = [Signal(LOW) for i in range(5)]
-    map_base = 0
+    map_base = FPGA_PWMA
 
     toVHDL(Pwm, clk=clk, reset=reset, dsp_addr=dsp_addr, dsp_data_out=dsp_data_out, dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
            pwm_out=pwm_out, pwm_inv_out=pwm_inv_out, map_base=map_base, width=16, main_width=8)

@@ -49,6 +49,8 @@ dsp_data_in_sm = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 dsp_wr = Signal(LOW)
 rec0_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rec1_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+rec2_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
+rec3_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
 rec_strobe_in = Signal(LOW)
 pb0_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 pb1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
@@ -152,6 +154,7 @@ def bench():
                                  dsp_data_out=dsp_data_out,
                                  dsp_data_in=dsp_data_in, dsp_wr=dsp_wr,
                                  rec0_in=rec0_in, rec1_in=rec1_in,
+                                 rec2_in=rec2_in, rec3_in=rec3_in,
                                  rec_strobe_in=rec_strobe_in,
                                  pb0_out=pb0_out, pb1_out=pb1_out,
                                  pb_strobe_out=pb_strobe_out,
@@ -172,6 +175,8 @@ def bench():
         dsp_data_in.next = dsp_data_in_am or dsp_data_in_sm
         rec0_in.next = pb1_out
         rec1_in.next = pb0_out
+        rec2_in.next = pb1_out << 8
+        rec3_in.next = pb0_out << 4
 
     @instance
     def rec_strobe():
@@ -186,6 +191,8 @@ def bench():
     def stimulus():
         result0 = Signal(intbv(0))
         result1 = Signal(intbv(0))
+        result2 = Signal(intbv(0))
+        result3 = Signal(intbv(0))
         scanSamples = 20
         yield assertReset()
         yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_SCAN_SAMPLES,
@@ -227,7 +234,12 @@ def bench():
             yield rdRingdownMem(addr, result0)
             addr = 0x4000 + iter
             yield rdRingdownMem(addr, result1)
-            print "%04x: %04x %04x" % (iter, result0, result1)
+            addr = 0x800 + iter
+            yield rdRingdownMem(addr, result2)
+            addr = 0x4800 + iter
+            yield rdRingdownMem(addr, result3)
+
+            print "%04x: %04x %04x %04x %04x" % (iter, result0, result1, result2, result3)
         # Select mode 0 to switch to ringdowns
         yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, 0)
         yield delay(5000 * PERIOD)

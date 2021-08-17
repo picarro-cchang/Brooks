@@ -62,6 +62,7 @@ from Host.autogen.interface import LASERLOCKER_CS_CURRENT_OK_B, LASERLOCKER_CS_C
 from Host.autogen.interface import LASERLOCKER_OPTIONS_SIM_ACTUAL_B, LASERLOCKER_OPTIONS_SIM_ACTUAL_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_DIRECT_TUNE_B, LASERLOCKER_OPTIONS_DIRECT_TUNE_W
 from Host.autogen.interface import LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B, LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W
+from Host.autogen.interface import LASERLOCKER_OPTIONS_MANUAL_LOCK_B, LASERLOCKER_OPTIONS_MANUAL_LOCK_W
 
 from Divider import Divider
 from SignedMultiplier import SignedMultiplier
@@ -180,6 +181,8 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     LASERLOCKER_OPTIONS_SIM_ACTUAL -- Selects between actual and simulated WLM
     LASERLOCKER_OPTIONS_DIRECT_TUNE -- Directs tuner input (instead of PID locking loop integrator) to laser fine current output
     LASERLOCKER_OPTIONS_RATIO_OUT_SEL -- Select between ratios and individual WLM photodiodes for ratio output ports
+    LASERLOCKER_OPTIONS_MANUAL_LOCK -- When HIGH this ignores the acc_en_in signal and allows the control loop to be turned on and off
+                                        manually using the ACC_EN bit of the control/status register
     """
     laserlocker_cs_addr = map_base + LASERLOCKER_CS
     laserlocker_options_addr = map_base + LASERLOCKER_OPTIONS
@@ -210,7 +213,7 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
     laserlocker_fine_current_addr = map_base + LASERLOCKER_FINE_CURRENT
     laserlocker_cycle_counter_addr = map_base + LASERLOCKER_CYCLE_COUNTER
     cs = Signal(modbv(0)[FPGA_REG_WIDTH:])
-    options = Signal(intbv(0)[4:])
+    options = Signal(intbv(0)[5:])
     eta1 = Signal(modbv(0)[WLM_ADC_WIDTH:])
     ref1 = Signal(modbv(0)[WLM_ADC_WIDTH:])
     eta2 = Signal(modbv(0)[WLM_ADC_WIDTH:])
@@ -430,6 +433,8 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                         ref2.next = ref2_in
                         cs.next[LASERLOCKER_CS_ACC_EN_B] = acc_en_in
                         cs.next[LASERLOCKER_CS_ADC_STROBE_B] = adc_strobe_in
+                        if not options[LASERLOCKER_OPTIONS_MANUAL_LOCK_B]:
+                            cs.next[LASERLOCKER_CS_ACC_EN_B] = acc_en_in
 
                     # If the tuning offset select bit is 1, use the input
                     #  rather than the register
@@ -453,7 +458,7 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                             ratio1_out.next = eta1 - eta1_offset
                             ratio2_out.next = ref1 - ref1_offset
                     elif cycle_counter == 1:
-                        average1_out.next = (div_num + div_den) >> 1
+                        average1_out.next = (div_num >> 1) + (div_den >> 1)
                     elif cycle_counter == DIV_LATENCY:
                         div_num.next = eta2 - eta2_offset
                         div_den.next = ref2 - ref2_offset
@@ -462,7 +467,7 @@ def LaserLocker(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                             ratio2_out.next = ref2 - ref2_offset
                     # Load the multiplier inputs
                     elif cycle_counter == DIV_LATENCY+1:
-                        average2_out.next = (div_num + div_den) >> 1
+                        average2_out.next = (div_num >> 1) + (div_den >> 1)
                         # assert div_rfd == HIGH
                         ratio1.next = div_quot
                         if options[LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B+LASERLOCKER_OPTIONS_RATIO_OUT_SEL_W:LASERLOCKER_OPTIONS_RATIO_OUT_SEL_B]==0:

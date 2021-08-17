@@ -145,6 +145,14 @@
             <field ident="countAndSubschemeId" type="uint32"/>
             <field ident="ringdownThreshold" type="uint32"/>
             <field ident="status" type="uint32"/>
+<!--  >
+            <field ident="param10" type="uint32"/>
+            <field ident="param11" type="uint32"/>
+            <field ident="param12" type="uint32"/>
+            <field ident="param13" type="uint32"/>
+            <field ident="param14" type="uint32"/>
+            <field ident="param15" type="uint32"/>
+</!-->
             <field ident="tunerAtRingdown" type="uint32"/>
             <field ident="addressAtRingdown" type="uint32"/>
             <field ident="extLaserLevelCounter" type="uint32"/>
@@ -346,7 +354,7 @@
         <constant ident="SCHEDULER_PERIOD" description="Scheduler period (ms)">100</constant>
         <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">2500</constant>
-        <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">25000</constant>
+        <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">35000</constant>
         <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
         <constant ident="DSP_DATA_ADDRESS" description="Base address for DSP data memory">0x80800000</constant>
         <constant ident="RDRESULTS_OFFSET" description="Offset for ringdown results in DSP data memory">0x0</constant>
@@ -370,9 +378,9 @@
         <constant ident="SENSOR_OFFSET" description="Offset for sensor stream area in DSP shared memory">0x1B00</constant>
         <constant ident="MESSAGE_OFFSET" description="Offset for message area in DSP shared memory">0x2B00</constant>
         <constant ident="GROUP_OFFSET" description="Offset for group table in DSP shared memory">0x2F00</constant>
-        <constant ident="OPERATION_OFFSET" description="Offset for operation table in DSP shared memory">0x3000</constant>
-        <constant ident="OPERAND_OFFSET" description="Offset for operand table in DSP shared memory">0x3400</constant>
-        <constant ident="ENVIRONMENT_OFFSET" description="Offset for environment table in DSP shared memory">0x3800</constant>
+        <constant ident="OPERATION_OFFSET" description="Offset for operation table in DSP shared memory">0x2F20</constant>
+        <constant ident="OPERAND_OFFSET" description="Offset for operand table in DSP shared memory">0x3300</constant>
+        <constant ident="ENVIRONMENT_OFFSET" description="Offset for environment table in DSP shared memory">0x3700</constant>
         <constant ident="HOST_OFFSET" description="Offset for host area in DSP shared memory">0x3F00</constant>
         <constant ident="RINGDOWN_BUFFER_OFFSET" description="Offset for ringdown buffer area in DSP shared memory">0x4000</constant>
         <constant ident="NUM_RINGDOWN_BUFFERS" description="Number of ringdown buffer areas in DSP shared memory">2</constant>
@@ -524,6 +532,8 @@
             <enum_value ident="STREAM_FilterHeaterTemp" />
             <enum_value ident="STREAM_FilterHeater" />
             <enum_value ident="STREAM_Cavity2Temp" />
+            <enum_value ident="STREAM_SgdbrAPulseTempPtp" />
+            <enum_value ident="STREAM_SgdbrBPulseTempPtp" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -625,6 +635,7 @@
             <enum_value ident="SGDBR_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
             <enum_value ident="SGDBR_CNTRL_ManualState" value="1" caption="Manual Control" />
             <enum_value ident="SGDBR_CNTRL_AutomaticState" value="2" caption="Automatic Control" />
+            <enum_value ident="SGDBR_CNTRL_PulseGenState" value="3" caption="Pulse Generation" />
         </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description>
@@ -858,6 +869,11 @@
             <description>Register containing quantity to be controlled by heater</description>
             <initial>0.0</initial>
         </register>
+        <register ident="TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser temperature range around setpoint outside which it is shut down</description>
+            <initial>3.0</initial>
+            <display format="%.1f" units="degC">Laser temperature window to enable currents</display>
+        </register>
         <register ident="CONVERSION_LASER1_THERM_CONSTA_REGISTER" type="float" minver="1.0" access="rw">
             <description>Laser1 thermistor constant A</description>
             <initial>0.00112789997365</initial>
@@ -1014,6 +1030,18 @@
             <initial>10000.0</initial>
             <save/>
             <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC feed forward from front mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from front mirror current</display>
+        </register>
+        <register ident="LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser1 TEC feed forward from back mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from back mirror current</display>
         </register>
         <register ident="LASER1_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Laser1 TEC PRBS generator polynomial</description>
@@ -1486,6 +1514,18 @@
             <initial>10000.0</initial>
             <save/>
             <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 TEC feed forward from front mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from front mirror current</display>
+        </register>
+        <register ident="LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser3 TEC feed forward from back mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from back mirror current</display>
         </register>
         <register ident="LASER3_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Laser3 TEC PRBS generator polynomial</description>
@@ -4023,6 +4063,76 @@
             <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
             <save/>
         </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A pulse generator front mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse front mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A pulse generator back mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse back mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A pulse generator coarse phase step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse coarse phase step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A pulse generator SOA step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse SOA step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_A pulse generator semiperiod register</description>
+            <initial>1</initial>
+            <display format="%d" units="samples">Pulse generator semi-period</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_A temperature amplitude due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature amplitude</display>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_A temperature peak-to-peak due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature peak-to-peak</display>
+        </register>
+        <register ident="SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A front mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Front mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A back mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Back mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A coarse phase to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Coarse phase to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A mirror dead zone for SOA compensation</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Mirror dead zone for SOA compensation</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_A minimum SOA value during scan</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Minimum SOA value during scan</display>
+            <save/>
+        </register>
         <register ident="SGDBR_B_CNTRL_STATE_REGISTER" type="SGDBR_CNTRL_StateType" minver="1.0" access="rw">
             <description>State register for SGDBR_B laser control</description>
             <initial>SGDBR_CNTRL_DisabledState</initial>
@@ -4080,6 +4190,76 @@
             <description>SGDBR_B ringdown configuration register</description>
             <initial>0</initial>
             <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B pulse generator front mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse front mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B pulse generator back mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse back mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B pulse generator coarse phase step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse coarse phase step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B pulse generator SOA step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse SOA step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_B pulse generator semiperiod register</description>
+            <initial>1</initial>
+            <display format="%d" units="samples">Pulse generator semi-period</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_B temperature amplitude due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature amplitude</display>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_B temperature peak-to-peak due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature peak-to-peak</display>
+        </register>
+        <register ident="SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B front mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Front mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B back mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Back mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B coarse phase to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Coarse phase to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B mirror dead zone for SOA compensation</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Mirror dead zone for SOA compensation</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_B minimum SOA value during scan</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Minimum SOA value during scan</display>
             <save/>
         </register>
         <register ident="PZT_UPDATE_MODE_REGISTER" type="PZT_UPDATE_ModeType" minver="1.0" access="rw">
@@ -4460,6 +4640,10 @@
                     <fielddef value="0">WLM ratios</fielddef>
                     <fielddef value="1">WLM etalon1 photodiodes</fielddef>
                     <fielddef value="2">WLM etalon2 photodiodes</fielddef>
+                </bitfield>
+                <bitfield ident="MANUAL_LOCK" description="Manual control of laser locking loop" lsb="4" width="1">
+                    <fielddef value="0">Automatic</fielddef>
+                    <fielddef value="1">Manual</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="ETA1" description="Etalon 1 reading" access="rw">
