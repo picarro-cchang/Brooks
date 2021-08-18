@@ -479,7 +479,8 @@ class SgdbrLookup(object):
                  kindex=None,
                  mindex=None,
                  sfront=None,
-                 sback=None):
+                 sback=None,
+                 coarse_phase_lookup=None):
         self.min_freq = min_freq
         self.max_freq = max_freq
         self.nfreq_to_front_coeffs = nfreq_to_front_coeffs
@@ -498,6 +499,7 @@ class SgdbrLookup(object):
         self.mindex = mindex
         self.sfront = sfront
         self.sback = sback
+        self.coarse_phase_lookup = coarse_phase_lookup
 
     def freq_to_front(self, freq):
         if self.knots is None:
@@ -515,33 +517,63 @@ class SgdbrLookup(object):
             indices = np.interp(freq, self.knots, self.kindex)
             return np.interp(indices, self.mindex, self.sback)**2
 
-    def freq_to_phase(self, freq, ymin=80.0, ymax=None):
-        output = np.zeros(len(freq), dtype=float)
-        p = self.freq_to_phase_coeffs
-        xoff = self.freq_to_phase_xoff
-        yoff = self.freq_to_phase_yoff
+    def freq_to_phase(self, freqs, ymin=80.0, ymax=None):
+        output = np.zeros(len(freqs), dtype=float)
 
-        for i, xi in enumerate(freq - xoff):
-            a = p[4]
-            b = p[2] + p[5] * xi
-            c = p[0] + p[1] * xi + p[3] * xi * xi
-            if ymax is None:
-                eta_min = ymin - yoff
-                n = np.floor(np.polyval(np.asarray([a, b, c]), eta_min) / np.pi)
-            else:
-                eta_max = ymax - yoff
-                n = np.ceil(np.polyval(np.asarray([a, b, c]), eta_max) / np.pi)
-            disc = b * b - 4 * a * (c - n * np.pi)
-            if disc > 0:
-                eta = (-b - np.sqrt(disc)) / (2 * a)
-            else:
-                eta = -b / (2 * a)
-            output[i] = (eta + yoff)**2
+        if self.coarse_phase_lookup is None:
+            p = self.freq_to_phase_coeffs
+            xoff = self.freq_to_phase_xoff
+            yoff = self.freq_to_phase_yoff
+
+            for i, xi in enumerate(freqs - xoff):
+                a = p[4]
+                b = p[2] + p[5] * xi
+                c = p[0] + p[1] * xi + p[3] * xi * xi
+                if ymax is None:
+                    eta_min = ymin - yoff
+                    n = np.floor(np.polyval(np.asarray([a, b, c]), eta_min) / np.pi)
+                else:
+                    eta_max = ymax - yoff
+                    n = np.ceil(np.polyval(np.asarray([a, b, c]), eta_max) / np.pi)
+                disc = b * b - 4 * a * (c - n * np.pi)
+                if disc > 0:
+                    eta = (-b - np.sqrt(disc)) / (2 * a)
+                else:
+                    eta = -b / (2 * a)
+                output[i] = (eta + yoff)**2
+        else:
+            # Use coarse phase lookup object to calculate
+            #  coarse phase current
+            bins = np.digitize(freqs, self.coarse_phase_lookup["ref_freqs"])
+            periods = self.coarse_phase_lookup["periods"]
+            ripples = np.zeros(2*len(periods), dtype=float)
+            for i, freq in enumerate(freqs):
+                frag_index = max(bins[i] - 1, 0)
+                xoff = self.coarse_phase_lookup["ref_freqs"][frag_index]
+                coeffs = self.coarse_phase_lookup["coeffs"][frag_index]
+                x = freq - xoff
+                ripples[0::2] = np.cos(2.0*np.pi*x/periods)
+                ripples[1::2] = np.sin(2.0*np.pi*x/periods)
+                output[i] = (np.polyval(coeffs[:3], x) + np.dot(coeffs[3:], ripples))**2
+                if output[i] > 32000:
+                    output[i] = 0
+                    raise ValueError("Overcurrent in spline calculation")
 
         return output
 
     @classmethod
     def from_ini(cls, ini, traj):
+        # Functions to read in coarse phase lookup coefficients
+        def get_coeffs(config, ncoeffs):
+            return np.asarray([config.as_float("C%d" % n) for n in range(ncoeffs)])
+
+        def freq_to_phase_lookup(config):
+            periods = np.asarray([config.as_float("PERIOD_%d" % n) for n in range(config.as_int("PERIODS"))])
+            ref_freqs = np.asarray([config["FRAGMENT_%d" % n].as_float("REF_FREQ") for n in range(config.as_int("FRAGMENTS"))])
+            ncoeffs = 3 + 2*len(periods)
+            coeffs = [get_coeffs(config["FRAGMENT_%d" % n], ncoeffs) for n in range(config.as_int("FRAGMENTS"))]
+            return dict(periods=periods, ref_freqs=ref_freqs, coeffs=coeffs)
+
         try:
             min_freq = ini.as_float("MIN_FREQ")
             max_freq = ini.as_float("MAX_FREQ")
@@ -555,6 +587,9 @@ class SgdbrLookup(object):
             mindex_dict = {}
             sfront_dict = {}
             sback_dict = {}
+            traj_num = None
+            fragments = 0
+            coarse_phase_lookup = None
 
             for opt in ini:
                 m = re.match("NFREQ_TO_FRONT_([0-9]+)", opt)
@@ -590,6 +625,9 @@ class SgdbrLookup(object):
                 m = re.match("TRAJ_NUM", opt)
                 if m:
                     traj_num = ini.as_int(opt)
+                m = re.match("FRAGMENTS", opt)
+                if m:
+                    fragments = ini.as_int(opt)
 
             if knots_dict:
                 knots_coeffs = np.zeros(max(knots_dict.keys()) + 1)
@@ -627,8 +665,12 @@ class SgdbrLookup(object):
             for k in freq_to_phase_dict:
                 freq_to_phase_coeffs[k] = freq_to_phase_dict[k]
 
+            if fragments > 0:
+                coarse_phase_lookup = freq_to_phase_lookup(ini)
+
             return cls(min_freq, max_freq, nfreq_to_front_coeffs, nfreq_to_back_coeffs, freq_to_phase_coeffs, freq_to_phase_xoff,
-                       freq_to_phase_yoff, traj, traj_num, knots_coeffs, kindex_coeffs, mindex_coeffs, sfront_coeffs, sback_coeffs)
+                       freq_to_phase_yoff, traj, traj_num, knots_coeffs, kindex_coeffs, mindex_coeffs, sfront_coeffs, sback_coeffs,
+                       coarse_phase_lookup)
         except:
             LogExc("Exception while loading SGDBR lookup section")
 
@@ -686,6 +728,7 @@ class WidebandWlm(object):
         self.nuArray = np.zeros_like(self.phiArray)
         self.filt = np.zeros(phi.shape, dtype=bool)
         if self.phiBins == 0:
+            self.filt = (self.phiArray >= self.phiMin) & (self.phiArray <= self.phiMax)
             for optName in ini[paramSec]:
                 m = re.match("([CS])([0-9])([0-9])", optName)
                 if m:
@@ -693,6 +736,19 @@ class WidebandWlm(object):
                     ftype, harmonic, power = (m.group(1), int(m.group(2)), int(m.group(3)))
                     self.nuArray += coeff * self.phiArray**power * \
                         (np.cos if ftype == "C" else np.sin)(harmonic * self.phiArray)
+        elif self.phiBins < 0:
+            # Handle Chebyshev-weighted coefficients
+            phi_norm = 2.0 * (self.phiArray - self.phiMin)/(self.phiMax - self.phiMin) - 1.0
+            phi_norm = np.maximum(np.minimum(phi_norm, 1.0), -1.0)
+            self.filt = (self.phiArray >= self.phiMin) & (self.phiArray <= self.phiMax)
+            for optName in ini[paramSec]:
+                m = re.match("T([CS])([0-9])([0-9])", optName)
+                if m:
+                    coeff = float(ini[paramSec][optName])
+                    ftype, harmonic, power = (m.group(1), int(m.group(2)), int(m.group(3)))
+                    cheby = np.cos(power*np.arccos(phi_norm))
+                    self.nuArray += coeff * cheby * \
+                        (np.cos if ftype == "C" else np.sin)(harmonic * (self.phiArray - self.phiMin))
         else:
             for bin in range(self.phiBins):
                 binSec = "%s_%d" % (
@@ -1088,6 +1144,7 @@ class AutoCal(object):
                 #  (NaN is not handled properly by TI C compiler)
                 angleSetpoint = {}
                 laserTemp = {}
+                traj_selected = None
                 if self.sgdbrCal.breaks is not None:
                     # Determine trajectories for each wavenumber by looking these up within the collection of breakpoints
                     #  Choose the first suitable trajectory for subiterval associated with the breakpoints
@@ -1110,12 +1167,13 @@ class AutoCal(object):
                     if sel.any():
                         front = sgdbrLut.freq_to_front(waveNum[sel])
                         back = sgdbrLut.freq_to_back(waveNum[sel])
-                        # The offset 5672 (used to be 1418) depends on the relative gain of
+                        # The offset 5439.5 (used to be 1418) depends on the relative gain of
                         #  the fine and coarse phase current sources. It represents the
                         #  coarse digitizer units which give the same current as 32768
                         #  fine digitizer units
-                        #  rella - 20180825 - at current fine phase of 1/5.777 of coarse, this should be 5672
-                        coarsePhase = sgdbrLut.freq_to_phase(waveNum[sel]) - 5672
+                        # Based on resistor values R23=15k, R21=2490, offset is 32768 * R21 / R23
+                        # coarsePhase = sgdbrLut.freq_to_phase(waveNum[sel]) - 5439.5
+                        coarsePhase = np.maximum(500.0, sgdbrLut.freq_to_phase(waveNum[sel], ymin=75) - 5439.5)
                         setpoint = self.sgdbrCal.widebandWlm.freqToPhi(waveNum[sel], self.offset)
                         # Populate the results
                         for j, i in enumerate(schemeRows[sel]):
