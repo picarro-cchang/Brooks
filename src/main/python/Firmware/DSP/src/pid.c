@@ -33,14 +33,14 @@
 #define Amax (*(params->Amax_))
 #define ffwd (*(params->ffwd_))
 
-void pid_step(float processVar, float extVar, PidState *state,
+void pid_step(float processVar, float extVar, float actuatorOffset, PidState *state,
               PidParamsRef *params)
 {
     float err, perr, derr, Pincr, Iincr, Dincr, change;
     err = r-y;
     perr = b*r-y;
     derr = c*r-y;
-    change = ffwd*(y-x);
+    change = actuatorOffset + ffwd*(y-x);
     Pincr = K*(perr - state->perr);
     Iincr = K*h/Ti * err + (state->a-state->u-change)/S;
     Dincr = Td/(Td+N*h)*(state->Dincr +

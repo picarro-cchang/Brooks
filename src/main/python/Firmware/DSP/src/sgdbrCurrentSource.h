@@ -30,8 +30,16 @@ typedef struct SGDBR_CNTRL
     float *chirp_;               // Manual chirp current setting
     float *spare_;               // Manual spare DAC setting
     int *rd_config_;             // Manual ring down configuration
+    float *front_step_;          // Step in front mirror current for pulse generator
+    float *back_step_;           // Step in back mirror current for pulse generator
+    float *phase_step_;           // Step in coarse phase current for pulse generator
+    float *soa_step_;             // Step in SOA current for pulse generator
+    unsigned int *semi_period_;   // Semi-period for pulse generator mode
     float *laser_temp_;          // Laser temperature
     float *laser_temp_setpoint_; // Laser temperature setpoint
+    float *laser_temp_window_;    // Temperature window outside of which to turn off currents
+    float *pulse_temp_amplitude_; // Amplitude of temperature fluctuations due to pulse generator
+    float *pulse_temp_ptp_;       // Peak-to-peak value of temperature fluctuations due to pulse generator 
 
     float front_mirror_old; // Old front mirror current setting
     float back_mirror_old;  // Old back mirror current setting
@@ -42,6 +50,12 @@ typedef struct SGDBR_CNTRL
     float chirp_old;        // Old chirp current setting
     float spare_old;        // Old spare DAC setting
     int rd_config_old;      // Old rd_config setting
+    int pulse_gen_counter;  // Counter within pulse generator period
+    float temp_peak, temp_valley;  // Most recent local extrema of temperature
+    float temp_history[3];   // Most recent temperature data
+
+    // Stream indices   
+    unsigned int stream_pulse_temp_ptp;
 
     // FPGA register indices
     unsigned int fpga_csr;

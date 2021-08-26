@@ -45,8 +45,16 @@ static char last_auto_sgdbr = ' ';
 #define chirp (*(s->chirp_))
 #define spare (*(s->spare_))
 #define rd_config (*(s->rd_config_))
+#define front_step (*(s->front_step_))
+#define back_step (*(s->back_step_))
+#define phase_step (*(s->phase_step_))
+#define soa_step (*(s->soa_step_))
+#define semi_period (*(s->semi_period_))
+#define pulse_temp_ptp (*(s->pulse_temp_ptp_))
+
 #define laserTemp (*(s->laser_temp_))
 #define laserTempSetpoint (*(s->laser_temp_setpoint_))
+#define laserTempWindow   (*(s->laser_temp_window_))
 
 static inline int get_extinguish_deselected()
 {
@@ -129,15 +137,33 @@ static void sgdbrProgramFpga(SgdbrCntrl *s)
 
 static int sgdbrCntrlStep(SgdbrCntrl *s)
 {
+    static int peak_loc = 0;
     unsigned int gie;
     int front_mirror_set, back_mirror_set, gain_set, soa_set;
     int coarse_phase_set, fine_phase_set, chirp_set, spare_set;
     int rd_config_set;
 
     gie = IRQ_globalDisable();
+    s->temp_history[2] = s->temp_history[1];
+    s->temp_history[1] = s->temp_history[0];
+    s->temp_history[0] = laserTemp;
+
+    if ((s->temp_history[1] <= s->temp_history[0]) && (s->temp_history[1] <= s->temp_history[2])) {
+        s->temp_valley = s->temp_history[1];
+        pulse_temp_ptp = (int)(1000*(s->temp_peak - s->temp_valley)) + 0.001 * peak_loc;
+    }
+
+    if ((s->temp_history[1] >= s->temp_history[0]) && (s->temp_history[1] >= s->temp_history[2])) {
+        s->temp_peak = s->temp_history[1];
+        peak_loc = s->pulse_gen_counter;
+        // Record the peak to peak amplitude and where in the cycle the peak occured
+        pulse_temp_ptp = (int)(1000*(s->temp_peak - s->temp_valley)) + 0.001 * peak_loc;
+    }
+
     switch (state)
     {
     case SGDBR_CNTRL_DisabledState:
+        s->pulse_gen_counter = 0;
         changeInMaskFPGA(s->fpga_csr, 1 << SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B, 0);
         front_mirror_set = 0;
         back_mirror_set = 0;
@@ -149,10 +175,35 @@ static int sgdbrCntrlStep(SgdbrCntrl *s)
         spare_set = 0;
         rd_config_set = 0;
         break;
+    case SGDBR_CNTRL_PulseGenState:
+        changeInMaskFPGA(s->fpga_csr, 1 << SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B, 0);
+        if (s->pulse_gen_counter >= 2*semi_period) {
+            s->pulse_gen_counter = 0;
+            sensor_put_from(s->stream_pulse_temp_ptp, pulse_temp_ptp);
+        }
+        else if (s->pulse_gen_counter == semi_period) {
+            sensor_put_from(s->stream_pulse_temp_ptp, pulse_temp_ptp);
+        }
+        s->pulse_gen_counter++;
+        if (s->pulse_gen_counter <= semi_period) {
+            front_mirror_set = front_mirror + front_step;
+            back_mirror_set = back_mirror + back_step;
+            gain_set = gain;
+            soa_set = soa + soa_step;
+            coarse_phase_set = coarse_phase + phase_step;
+            fine_phase_set = fine_phase;
+            chirp_set = chirp;
+            spare_set = spare;
+            rd_config_set = rd_config;
+            break;
+        }
+        goto update_registers;
     case SGDBR_CNTRL_ManualState:
+        s->pulse_gen_counter = 0;
         changeInMaskFPGA(s->fpga_csr, 1 << SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B, 0);
         goto update_registers;
     case SGDBR_CNTRL_AutomaticState:
+        s->pulse_gen_counter = 0;
         changeInMaskFPGA(s->fpga_csr, 1 << SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B, 1 << SGDBRCURRENTSOURCE_CSR_SYNC_UPDATE_B);
     update_registers:
         front_mirror_set = front_mirror;
@@ -167,7 +218,7 @@ static int sgdbrCntrlStep(SgdbrCntrl *s)
         break;
     }
     // Set everything to zero if laser temperature is outside range (+/- 3 degrees) of setpoint
-    if (!((laserTempSetpoint - laserTemp) <= 3.0 && (laserTempSetpoint - laserTemp) >= -3.0))
+    if (!((laserTempSetpoint - laserTemp) <= laserTempWindow && (laserTempSetpoint - laserTemp) >= -laserTempWindow))
     {
         front_mirror_set = 0;
         back_mirror_set = 0;
@@ -333,13 +384,25 @@ int sgdbrACntrlInit(void)
     s->chirp_ = (float *)registerAddr(SGDBR_A_CNTRL_CHIRP_REGISTER);
     s->spare_ = (float *)registerAddr(SGDBR_A_CNTRL_SPARE_DAC_REGISTER);
     s->rd_config_ = (int *)registerAddr(SGDBR_A_CNTRL_RD_CONFIG_REGISTER);
+    s->front_step_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER);
+    s->back_step_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER);
+    s->phase_step_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER);
+    s->soa_step_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER);
+    s->semi_period_ = (unsigned int *)registerAddr(SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER);
     s->laser_temp_ = (float *)registerAddr(LASER1_TEMPERATURE_REGISTER);
     s->laser_temp_setpoint_ = (float *)registerAddr(LASER1_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
+    s->pulse_temp_amplitude_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER);
+    s->pulse_temp_ptp_ = (float *)registerAddr(SGDBR_A_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER);
+
+    s->stream_pulse_temp_ptp = STREAM_SgdbrAPulseTempPtp;
 
     s->fpga_csr = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_CSR;
     s->fpga_mosi_data = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MOSI_DATA;
     s->fpga_miso_data = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MISO_DATA;
 
+    s->pulse_gen_counter = 0;
+    s->temp_history[0] = s->temp_history[1] = s->temp_history[2] = s->temp_peak = s->temp_valley = laserTemp;
     s->front_mirror_old = -1;
     s->back_mirror_old = -1;
     s->gain_old = -1;
@@ -368,13 +431,24 @@ int sgdbrBCntrlInit(void)
     s->chirp_ = (float *)registerAddr(SGDBR_B_CNTRL_CHIRP_REGISTER);
     s->spare_ = (float *)registerAddr(SGDBR_B_CNTRL_SPARE_DAC_REGISTER);
     s->rd_config_ = (int *)registerAddr(SGDBR_B_CNTRL_RD_CONFIG_REGISTER);
+    s->front_step_ = (float *)registerAddr(SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER);
+    s->back_step_ = (float *)registerAddr(SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER);
+    s->phase_step_ = (float *)registerAddr(SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER);
+    s->soa_step_ = (float *)registerAddr(SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER);
+    s->semi_period_ = (unsigned int *)registerAddr(SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER);
     s->laser_temp_ = (float *)registerAddr(LASER3_TEMPERATURE_REGISTER);
     s->laser_temp_setpoint_ = (float *)registerAddr(LASER3_TEMP_CNTRL_SETPOINT_REGISTER);
+    s->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
+    s->pulse_temp_ptp_ = (float *)registerAddr(SGDBR_B_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER);
+
+    s->stream_pulse_temp_ptp = STREAM_SgdbrBPulseTempPtp;
 
     s->fpga_csr = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR;
     s->fpga_mosi_data = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MOSI_DATA;
     s->fpga_miso_data = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MISO_DATA;
 
+    s->pulse_gen_counter = 0;
+    s->temp_history[0] = s->temp_history[1] = s->temp_history[2] = s->temp_peak = s->temp_valley = laserTemp;
     s->front_mirror_old = -1;
     s->back_mirror_old = -1;
     s->gain_old = -1;

@@ -43,9 +43,9 @@ typedef struct PID_PARAMS_BY_REF
     float *ffwd_; // Feed-forward factor based on external temperature
 } PidParamsRef;
 
-void pid_step(float processVar,float extVar,PidState *state,
+void pid_step(float processVar, float extVar, float actuatorOffset, PidState *state,
               PidParamsRef *params);
-void pid_bumpless_restart(float processVar,float controlVar,
-                          PidState *state,PidParamsRef *params);
+void pid_bumpless_restart(float processVar, float controlVar,
+                          PidState *state, PidParamsRef *params);
 
 #endif

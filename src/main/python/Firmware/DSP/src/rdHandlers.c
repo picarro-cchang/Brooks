@@ -235,7 +235,7 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     // Responds to the EXT4 interrupt, indicating that a ringdown
     //  (or a timeout) has occured
     unsigned int gie, status;
-    int allowDither, abortedRingdown, timedOut, i;
+    int allowDither, abortedRingdown, timedOut;
     int *counter = (int*)(REG_BASE+4*RD_IRQ_COUNT_REGISTER);
     TUNER_ModeType mode;
 
@@ -244,14 +244,13 @@ void ringdownInterrupt(unsigned int funcArg, unsigned int eventId)
     // Set bit 0 of DIAG_1 at start of ringdownInterrupt
     changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 0, 1, 1);
 
-    for (i=0; i<5; i++) {
-        // Acknowledge the interrupt
-        changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
-	           RDMAN_CONTROL_RD_IRQ_ACK_W,1);
-        // Clear interrupt source
-        IRQ_clear(IRQ_EVT_EXTINT4);
-        if (0 == (readFPGA(FPGA_RDMAN+RDMAN_STATUS) & (1<<RDMAN_STATUS_RD_IRQ_B))) break;
-    }
+	do {
+	    // Acknowledge the interrupt
+    	changeBitsFPGA(FPGA_RDMAN+RDMAN_CONTROL,RDMAN_CONTROL_RD_IRQ_ACK_B,
+        	           RDMAN_CONTROL_RD_IRQ_ACK_W,1);
+	    // Clear interrupt source
+    	IRQ_clear(IRQ_EVT_EXTINT4);
+	} while (readFPGA(FPGA_RDMAN+RDMAN_STATUS) & (1<<RDMAN_STATUS_RD_IRQ_B));
     // Reset bit 0 of DIAG_1 at start of ringdownInterrupt
     changeBitsFPGA(FPGA_KERNEL+KERNEL_DIAG_1, 0, 1, 0);
 

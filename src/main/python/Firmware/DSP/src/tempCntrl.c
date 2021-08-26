@@ -79,6 +79,10 @@ int tempCntrlWrite(TempCntrl *t)
 #define userSetpoint (*(t->userSetpoint_))
 #define manualTec (*(t->manualTec_))
 #define pidParams (&(t->pidParamsRef))
+#define frontMirrorFfwd (*(t->front_mirror_ffwd_))
+#define backMirrorFfwd (*(t->back_mirror_ffwd_))
+#define frontMirrorDac (*(t->front_mirror_dac_))
+#define backMirrorDac (*(t->back_mirror_dac_))
 #define r (*(pidParams->r_))
 #define b (*(pidParams->b_))
 #define c (*(pidParams->c_))
@@ -103,7 +107,7 @@ int tempCntrlWrite(TempCntrl *t)
 int tempCntrlStep(TempCntrl *t)
 {
     // Step the temperature controller, computing the new TEC value
-    float error, tecNext;
+    float actuatorOffset, error, tecNext;
     int inRange;
 
     switch (state)
@@ -138,7 +142,12 @@ int tempCntrlStep(TempCntrl *t)
         }
         else
         {
-            pid_step(temp, dasTemp, pidState, pidParams);
+            actuatorOffset = 0.0;
+            if ((t->front_mirror_ffwd_ != NULL) && (t->back_mirror_ffwd_ != NULL) && 
+                (t->front_mirror_dac_ != NULL) && (t->back_mirror_dac_ != NULL)) {
+                actuatorOffset = frontMirrorFfwd * frontMirrorDac + backMirrorFfwd * backMirrorDac;
+            }
+            pid_step(temp, dasTemp, actuatorOffset, pidState, pidParams);
         }
         // Update locked state
         if (getDasStatusBit(lockBit))
@@ -176,7 +185,12 @@ int tempCntrlStep(TempCntrl *t)
             r = swpMin;
             swpDir = 1;
         }
-        pid_step(temp, dasTemp, pidState, pidParams);
+        actuatorOffset = 0.0;
+        if ((t->front_mirror_ffwd_ != NULL) && (t->back_mirror_ffwd_ != NULL) && 
+            (t->front_mirror_dac_ != NULL) && (t->back_mirror_dac_ != NULL)) {
+            actuatorOffset = frontMirrorFfwd * frontMirrorDac + backMirrorFfwd * backMirrorDac;
+        }
+        pid_step(temp, dasTemp, actuatorOffset, pidState, pidParams);
         tec = pidState->a;
         prbsReg = 0x1;
         break;
@@ -235,6 +249,10 @@ int tempCntrlStep(TempCntrl *t)
 #undef tec
 #undef manualTec
 #undef pidParams
+#undef frontMirrorFfwd
+#undef backMirrorFfwd
+#undef frontMirrorDac
+#undef backMirrorDac
 #undef r
 #undef b
 #undef c
@@ -302,6 +320,10 @@ int tempCntrlLaser1Init(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(LASER1_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(LASER1_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER);
+    t->back_mirror_dac_ = (float *)registerAddr(SGDBR_A_CNTRL_BACK_MIRROR_REGISTER);
+    t->front_mirror_ffwd_ = (float *)registerAddr(LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER);
+    t->back_mirror_ffwd_ = (float *)registerAddr(LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER);
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -363,6 +385,10 @@ int tempCntrlLaser2Init(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(LASER2_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(LASER2_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -423,6 +449,10 @@ int tempCntrlLaser3Init(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(LASER3_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(LASER3_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER);
+    t->back_mirror_dac_ = (float *)registerAddr(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER);
+    t->front_mirror_ffwd_ = (float *)registerAddr(LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER);
+    t->back_mirror_ffwd_ = (float *)registerAddr(LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER);
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -483,6 +513,10 @@ int tempCntrlLaser4Init(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(LASER4_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(LASER4_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -544,6 +578,10 @@ int tempCntrlWarmBoxInit(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(WARM_BOX_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(WARM_BOX_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -609,6 +647,10 @@ int tempCntrlCavityInit(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(CAVITY_TEC_REGISTER);
     t->manualTec_ = (float *)registerAddr(CAVITY_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);
@@ -676,6 +718,10 @@ int tempCntrlHeaterInit(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(HEATER_MARK_REGISTER);
     t->manualTec_ = (float *)registerAddr(HEATER_MANUAL_MARK_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);

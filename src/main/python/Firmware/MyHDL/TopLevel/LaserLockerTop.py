@@ -853,7 +853,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                 elif intronix_1 == 8:
                     channel_1.next = lock_error_low
                 elif intronix_1 == 9:
-                    channel_1.next = lock_error_low
+                    channel_1.next = lock_error_high
                 elif intronix_1 == 10:
                     channel_1.next = ratio1_low
                 elif intronix_1 == 11:
@@ -910,7 +910,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                 elif intronix_2 == 8:
                     channel_2.next = lock_error_low
                 elif intronix_2 == 9:
-                    channel_2.next = lock_error_low
+                    channel_2.next = lock_error_high
                 elif intronix_2 == 10:
                     channel_2.next = ratio1_low
                 elif intronix_2 == 11:
@@ -967,7 +967,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                 elif intronix_3 == 8:
                     channel_3.next = lock_error_low
                 elif intronix_3 == 9:
-                    channel_3.next = lock_error_low
+                    channel_3.next = lock_error_high
                 elif intronix_3 == 10:
                     channel_3.next = ratio1_low
                 elif intronix_3 == 11:

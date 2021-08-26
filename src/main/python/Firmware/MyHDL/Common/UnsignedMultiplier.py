@@ -14,7 +14,8 @@
 #
 from Host.autogen.interface import EMIF_ADDR_WIDTH, EMIF_DATA_WIDTH, FPGA_REG_MASK
 from MyHDL.Common.SignedMultiplier import SignedMultiplier
-from myhdl import *
+from myhdl import always_comb, instances, intbv, Signal
+
 
 def UnsignedMultiplier(p,a,b):
     # Multiplies a and b to yield p
