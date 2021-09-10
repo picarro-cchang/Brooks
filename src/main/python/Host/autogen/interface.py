@@ -4660,6 +4660,7 @@ __p.append([None, ('dsp','uint32',RD_DATA_MOVING_COUNT_REGISTER,'QDMA start coun
 __p.append([None, ('dsp','uint32',RD_QDMA_DONE_COUNT_REGISTER,'QDMA done interrupt count','','%d',1,0)])
 __p.append([None, ('dsp','uint32',RD_FITTING_COUNT_REGISTER,'RD fitting count','','%d',1,0)])
 __p.append([None, ('dsp','int32',KEEP_ALIVE_REGISTER,'Keep alive register','','%d',1,1)])
+__p.append([None, ('dsp','float',TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER,'Laser temperature window to enable currents','degC','%.1f',1,1)])
 __p.append([None, ('fpga','uint16',FPGA_KERNEL+KERNEL_OVERLOAD,'Overload status','','$%X',1,0)])
 __p.append([None, ('fpga','mask',FPGA_KERNEL+KERNEL_CONTROL,[(1, u'Reset Cypress FX2 and FPGA', [(0, u'Idle'), (1, u'Reset')]), (2, u'Reset overload register', [(0, u'Idle'), (2, u'Reset')]), (4, u'Reset i2c multiplexers', [(0, u'Idle'), (4, u'Reset')]), (8, u'Manually set FPGA digital outputs', [(0, u'Automatic control'), (8, u'Manual control')])],None,None,1,1)])
 __p.append([None, ('fpga','mask',FPGA_KERNEL+KERNEL_CONFIG,[(1, u'Auxiliary PZT Enable', [(0, u'Disable'), (1, u'Enable')]), (2, u'Engine 1 TEC Enable', [(0, u'Disable'), (2, u'Enable')]), (4, u'Engine 2 TEC Enable', [(0, u'Disable'), (4, u'Enable')])],None,None,1,1)])
@@ -4852,6 +4853,44 @@ __p.append([None, ('dsp','float',LASER4_EXTRA_COARSE_SCALE_REGISTER,'Extra Curre
 __p.append([None, ('dsp','float',LASER4_EXTRA_FINE_SCALE_REGISTER,'Extra Current Mode Fine Scale Factor (0 to 1)','','%.5f',1,1)])
 __p.append([None, ('dsp','int32',LASER4_EXTRA_OFFSET_REGISTER,'Extra Current Mode Offset','digU','%d',1,1)])
 parameter_forms.append(('Laser 4 Parameters',__p))
+
+# Form: SGDBR A Tuning Parameters
+
+__p = []
+
+__p.append([u'sgdbr1', ('dsp','float',LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,'TEC feed forward from front mirror current','','%.3f',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,'TEC feed forward from back mirror current','','%.3f',1,1)])
+__p.append([u'sgdbr1', ('dsp','choices',SGDBR_A_CNTRL_STATE_REGISTER,'SGDBR laser control state','',[(SGDBR_CNTRL_DisabledState,"Controller Disabled"),(SGDBR_CNTRL_ManualState,"Manual Control"),(SGDBR_CNTRL_AutomaticState,"Automatic Control"),(SGDBR_CNTRL_PulseGenState,"Pulse Generation"),],1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER,'Pulse front mirror step','digU','%d',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER,'Pulse back mirror step','digU','%d',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER,'Pulse coarse phase step','digU','%d',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER,'Pulse SOA step','digU','%d',1,1)])
+__p.append([u'sgdbr1', ('dsp','uint32',SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER,'Pulse generator semi-period','samples','%d',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER,'Front mirror to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER,'Back mirror to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER,'Coarse phase to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER,'Mirror dead zone for SOA compensation','','%.0f',1,1)])
+__p.append([u'sgdbr1', ('dsp','float',SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER,'Minimum SOA value during scan','','%.0f',1,1)])
+parameter_forms.append(('SGDBR A Tuning Parameters',__p))
+
+# Form: SGDBR B Tuning Parameters
+
+__p = []
+
+__p.append([u'sgdbr3', ('dsp','float',LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,'TEC feed forward from front mirror current','','%.3f',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,'TEC feed forward from back mirror current','','%.3f',1,1)])
+__p.append([u'sgdbr3', ('dsp','choices',SGDBR_B_CNTRL_STATE_REGISTER,'SGDBR laser control state','',[(SGDBR_CNTRL_DisabledState,"Controller Disabled"),(SGDBR_CNTRL_ManualState,"Manual Control"),(SGDBR_CNTRL_AutomaticState,"Automatic Control"),(SGDBR_CNTRL_PulseGenState,"Pulse Generation"),],1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER,'Pulse front mirror step','digU','%d',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER,'Pulse back mirror step','digU','%d',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER,'Pulse coarse phase step','digU','%d',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER,'Pulse SOA step','digU','%d',1,1)])
+__p.append([u'sgdbr3', ('dsp','uint32',SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER,'Pulse generator semi-period','samples','%d',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER,'Front mirror to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER,'Back mirror to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER,'Coarse phase to SOA coefficient','','%.3f',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER,'Mirror dead zone for SOA compensation','','%.0f',1,1)])
+__p.append([u'sgdbr3', ('dsp','float',SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER,'Minimum SOA value during scan','','%.0f',1,1)])
+parameter_forms.append(('SGDBR B Tuning Parameters',__p))
 
 # Form: Warm Box Temperature Parameters
 

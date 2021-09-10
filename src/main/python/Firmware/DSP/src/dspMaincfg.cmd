@@ -151,11 +151,8 @@ SECTIONS {
    .clk: {
         
         CLK_F_gethtime = CLK_F_getshtime;
-        CLK_A_TABBEG = .;
-        *(.clk)
-        CLK_A_TABEND = .;
-        CLK_A_TABLEN = (. - CLK_A_TABBEG) / 4;
-   } > IRAM 
+        *(.clk) 
+   } > IRAM, RUN_START(CLK_A_TABBEG) 
 }
 _CLK_PRD = CLK_PRD;
 _CLK_COUNTSPMS = CLK_COUNTSPMS;
@@ -166,13 +163,10 @@ _CLK_TDDR = CLK_TDDR;
 
 /* MODULE PRD */
 SECTIONS {
-   .prd: {
-        PRD_A_TABBEG = .;
-        *(.prd)
-        PRD_A_TABEND = .;
-        PRD_A_TABLEN = (. - PRD_A_TABBEG) / 32;
+   .prd: RUN_START(PRD_A_TABBEG), RUN_END(PRD_A_TABEND) {
    } > IRAM
 }
+PRD_A_TABLEN = 2;
 
 /* MODULE RTDX */
 _RTDX_interrupt_mask = 0x0;
@@ -196,38 +190,33 @@ _HWI_CFGDISPATCHED = HWI_CFGDISPATCHED;
 
 /* MODULE SWI */
 SECTIONS {
-   .swi: {
-        SWI_A_TABBEG = .;
-        *(.swi)
-        SWI_A_TABEND = .;
-        SWI_A_TABLEN = (. - SWI_A_TABBEG) / 44;
+   .swi: RUN_START(SWI_A_TABBEG), RUN_END(SWI_A_TABEND) {
    } > IRAM
 }
+SWI_A_TABLEN = 2;
 
 /* MODULE TSK */
 SECTIONS {
    .tsk: {
-        TSK_A_TABBEG = .;
-        *(.tsk)
-        TSK_A_TABEND = .;
-        TSK_A_TABLEN = (. - TSK_A_TABBEG) / 96;
+        *(.tsk) 
    } > IRAM
 }
 
 /* MODULE IDL */
 SECTIONS {
    .idl: {
-        IDL_A_TABBEG = .;
-        *(.idl)
-        IDL_A_TABEND = .;
-        IDL_A_TABLEN = (. - IDL_A_TABBEG) / 4;
-        IDL_A_CALBEG = .;
-        *(.idlcal)
-        IDL_A_CALEND = .;
-        IDL_A_CALLEN = (. - IDL_A_CALBEG) / 4;
-   } > IRAM
+        *(.idl) 
+   } > IRAM, RUN_START(IDL_A_TABBEG)
+   
+   .idlcal: {
+        *(.idlcal) 
+   } > IRAM, RUN_START(IDL_A_CALBEG) 
 }
 
+
+LOG_A_TABLEN = 2; _LOG_A_TABLEN = 2;
+
+PIP_A_TABLEN = 2;
 
 
 SECTIONS {
@@ -312,61 +301,29 @@ SECTIONS {
            _SYS_PUTCEND = . - 1;
         } > IRAM
 
-        .stack: {
+        .hst: RUN_START(HST_A_TABBEG), RUN_START(_HST_A_TABBEG), RUN_END(HST_A_TABEND), RUN_END(_HST_A_TABEND) {
+        } > IRAM
+
+        .log: RUN_START(LOG_A_TABBEG), RUN_START(_LOG_A_TABBEG), RUN_END(LOG_A_TABEND), RUN_END(_LOG_A_TABEND) {
+        } > IRAM
+
+        .pip: RUN_START(PIP_A_TABBEG), RUN_START(_PIP_A_TABBEG), RUN_END(PIP_A_TABEND), RUN_END(_PIP_A_TABEND) {
+        } > IRAM
+
+        .sts: RUN_START(STS_A_TABBEG), RUN_START(_STS_A_TABBEG), RUN_END(STS_A_TABEND), RUN_END(_STS_A_TABEND) {
+        } > IRAM
+
+        .stack: align = 0x8 {
             GBL_stackbeg = .;
             *(.stack)
             GBL_stackend = GBL_stackbeg + 0x400 - 1;
-            _HWI_STKBOTTOM = GBL_stackbeg + 0x400 - 4 & ~7;
+            _HWI_STKBOTTOM = GBL_stackbeg + 0x400 - 8;
             _HWI_STKTOP = GBL_stackbeg;
         } > IRAM
 
-        .hst: {
-             HST_A_TABBEG = .;
-            _HST_A_TABBEG = .;
-            *(.hst)
-            HST_A_TABEND = .;
-            _HST_A_TABEND = .;
-             HST_A_TABLEN = (. - _HST_A_TABBEG) / 20;
-            _HST_A_TABLEN = (. - _HST_A_TABBEG) / 20;
-        } > IRAM
-
-        .log: {
-             LOG_A_TABBEG = .;
-            _LOG_A_TABBEG = .;
-            *(.log)
-            LOG_A_TABEND = .;
-            _LOG_A_TABEND = .;
-             LOG_A_TABLEN = (. - _LOG_A_TABBEG) / 24;
-            _LOG_A_TABLEN = (. - _LOG_A_TABBEG) / 24;
-        } > IRAM
-
-        .pip: {
-             PIP_A_TABBEG = .;
-            _PIP_A_TABBEG = .;
-            *(.pip)
-            PIP_A_TABEND = .;
-            _PIP_A_TABEND = .;
-             PIP_A_TABLEN = (. - _PIP_A_TABBEG) / 100;
-            _PIP_A_TABLEN = (. - _PIP_A_TABBEG) / 100;
-        } > IRAM
-
-        .sts: {
-             STS_A_TABBEG = .;
-            _STS_A_TABBEG = .;
-            *(.sts)
-            STS_A_TABEND = .;
-            _STS_A_TABEND = .;
-             STS_A_TABLEN = (. - _STS_A_TABBEG) / 16;
-            _STS_A_TABLEN = (. - _STS_A_TABBEG) / 16;
-        } > IRAM
-
         .SDRAM$heap: {
-            SDRAM$B = .;
-            _SDRAM_base = .;
-            SDRAM$L = 0x8000;
-            _SDRAM_length = 0x8000;
             . += 0x8000;
-        } > SDRAM
+        } RUN_START(SDRAM$B), RUN_START(_SDRAM_base), RUN_SIZE(SDRAM$L), RUN_SIZE(_SDRAM_length) > SDRAM
 
 }
 

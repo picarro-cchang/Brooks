@@ -783,6 +783,10 @@ int tempCntrlFilterHeaterInit(void)
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(FILTER_HEATER_REGISTER);
     t->manualTec_ = (float *)registerAddr(FILTER_HEATER_MANUAL_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
     t->swpDir = 1;
     *(t->state_) = TEMP_CNTRL_DisabledState;
     resetDasStatusBit(t->lockBit_);

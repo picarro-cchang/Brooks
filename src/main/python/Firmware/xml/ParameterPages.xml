@@ -40,6 +40,7 @@
             <register>RD_QDMA_DONE_COUNT_REGISTER</register>
             <register>RD_FITTING_COUNT_REGISTER</register>
             <register>KEEP_ALIVE_REGISTER</register>
+            <register>TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER</register>
             <fpga_register offset="FPGA_KERNEL">OVERLOAD</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONTROL</fpga_register>
             <fpga_register offset="FPGA_KERNEL">CONFIG</fpga_register>
@@ -219,6 +220,38 @@
             <register>LASER4_EXTRA_COARSE_SCALE_REGISTER</register>
             <register>LASER4_EXTRA_FINE_SCALE_REGISTER</register>
             <register>LASER4_EXTRA_OFFSET_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>SGDBR A Tuning Parameters</title>
+            <register cond="sgdbr1">LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER</register>
+            <register cond="sgdbr1">LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_STATE_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER</register>
+            <register cond="sgdbr1">SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>SGDBR B Tuning Parameters</title>
+            <register cond="sgdbr3">LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER</register>
+            <register cond="sgdbr3">LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_STATE_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER</register>
+            <register cond="sgdbr3">SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER</register>
         </gui_page>
         <gui_page>
             <title>Warm Box Temperature Parameters</title>
