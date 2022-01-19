@@ -21,7 +21,7 @@ library ieee;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use std.textio.all;
-use work.pck_myhdl_06.all;
+use work.pck_myhdl_090.all;
 
 ---- Uncomment the following library declaration if instantiating
 ---- any Xilinx primitives in this code.

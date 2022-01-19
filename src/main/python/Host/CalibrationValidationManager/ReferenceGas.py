@@ -11,6 +11,7 @@ class GasEnum(Enum):
     O2 = 5
     NH3 = 6
     H2O = 7
+    ISOPROPYL_ALCOHOL = 8
 
 
 # ComponentGas

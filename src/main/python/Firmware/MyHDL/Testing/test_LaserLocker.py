@@ -83,6 +83,8 @@ pid_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 laser_freq_ok_out = Signal(LOW)
 current_ok_out = Signal(LOW)
 sim_actual_out = Signal(LOW)
+average1_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
+average2_out = Signal(intbv(0)[FPGA_REG_WIDTH:])
 map_base = FPGA_LASERLOCKER
 
 mod = (1<<FPGA_REG_WIDTH)
@@ -182,6 +184,8 @@ def bench():
                                laser_freq_ok_out=laser_freq_ok_out,
                                current_ok_out=current_ok_out,
                                sim_actual_out=sim_actual_out,
+                               average1_out=average1_out,
+                               average2_out=average2_out,
                                map_base=map_base )
     @instance
     def stimulus():
@@ -275,6 +279,8 @@ def bench():
                 ratio1 = div_sim(sub_sim(eta1,eta1_offset),sub_sim(ref1,ref1_offset))
                 ratio2 = div_sim(sub_sim(eta2,eta2_offset),sub_sim(ref2,ref2_offset))
 
+                average1 = (sub_sim(eta1,eta1_offset) + sub_sim(ref1,ref1_offset)) >> 1
+                average2 = (sub_sim(eta2,eta2_offset) + sub_sim(ref2,ref2_offset)) >> 1
                 print "Ratio1 = %04x, Ratio2 = %04x" % (ratio1,ratio2)
                 ratio1c = sub_sim(ratio1,ratio1_cen)
                 ratio2c = sub_sim(ratio2,ratio2_cen)
@@ -337,6 +343,9 @@ def bench():
                 assert ratio2 == result
                 assert ratio2 == ratio2_out
 
+                assert average1 == average1_out
+                assert average2 == average2_out
+                
                 yield readFPGA(FPGA_LASERLOCKER + LASERLOCKER_FINE_CURRENT,result)
                 assert fine_current == result
                 assert fine_current_out == result

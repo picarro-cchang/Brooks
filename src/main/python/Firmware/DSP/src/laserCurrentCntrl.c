@@ -36,6 +36,7 @@
 #define extraOffset       (*(c->extra_offset_))
 #define laserTemp         (*(c->laser_temp_))
 #define laserTempSetpoint (*(c->laser_temp_setpoint_))
+#define laserTempWindow   (*(c->laser_temp_window_))
 
 int laserCurrentCntrlStep(LaserCurrentCntrl *c)
 /*
@@ -107,7 +108,7 @@ int laserCurrentCntrlStep(LaserCurrentCntrl *c)
         break;
     }
     // Only allow laser current once laser temperature is in range of setpoint
-    if ((laserTempSetpoint - laserTemp) <= 3.0 && (laserTempSetpoint - laserTemp) >= -3.0) {
+    if ((laserTempSetpoint - laserTemp) <= laserTempWindow && (laserTempSetpoint - laserTemp) >= -laserTempWindow) {
         writeFPGA(c->fpga_coarse, (unsigned short)coarse);
         writeFPGA(c->fpga_fine, (unsigned short)fine);
     }
@@ -152,7 +153,7 @@ int currentCntrlLaser1Init(void)
     c->extra_coarse_scale_ =  (float *)registerAddr(LASER1_EXTRA_COARSE_SCALE_REGISTER);
     c->extra_fine_scale_ =  (float *)registerAddr(LASER1_EXTRA_FINE_SCALE_REGISTER);
     c->extra_offset_ =  (int *)registerAddr(LASER1_EXTRA_OFFSET_REGISTER);
-
+    c->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -185,6 +186,7 @@ int currentCntrlLaser2Init(void)
     c->extra_coarse_scale_ =  (float *)registerAddr(LASER2_EXTRA_COARSE_SCALE_REGISTER);
     c->extra_fine_scale_ =  (float *)registerAddr(LASER2_EXTRA_FINE_SCALE_REGISTER);
     c->extra_offset_ =  (int *)registerAddr(LASER2_EXTRA_OFFSET_REGISTER);
+    c->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -217,6 +219,7 @@ int currentCntrlLaser3Init(void)
     c->extra_coarse_scale_ =  (float *)registerAddr(LASER3_EXTRA_COARSE_SCALE_REGISTER);
     c->extra_fine_scale_ =  (float *)registerAddr(LASER3_EXTRA_FINE_SCALE_REGISTER);
     c->extra_offset_ =  (int *)registerAddr(LASER3_EXTRA_OFFSET_REGISTER);
+    c->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;
@@ -249,6 +252,7 @@ int currentCntrlLaser4Init(void)
     c->extra_coarse_scale_ =  (float *)registerAddr(LASER4_EXTRA_COARSE_SCALE_REGISTER);
     c->extra_fine_scale_ =  (float *)registerAddr(LASER4_EXTRA_FINE_SCALE_REGISTER);
     c->extra_offset_ =  (int *)registerAddr(LASER4_EXTRA_OFFSET_REGISTER);
+    c->laser_temp_window_ = (float *)registerAddr(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER);
     c->coarse = 0.0;
     c->swpDir    = 1;
     *(c->state_)  = LASER_CURRENT_CNTRL_DisabledState;

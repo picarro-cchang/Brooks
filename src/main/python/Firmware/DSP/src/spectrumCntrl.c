@@ -93,12 +93,25 @@ int spectCntrlInit(void)
     s->backMirrorDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER);
     s->gainDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_GAIN_REGISTER);
     s->gainDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_GAIN_REGISTER);
-    s->soaDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_SOA_REGISTER);
-    s->soaDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_SOA_REGISTER);
+    s->soaSetting_[0] = (float *)registerAddr(SGDBR_A_CNTRL_SOA_REGISTER);
+    s->soaSetting_[1] = (float *)registerAddr(SGDBR_B_CNTRL_SOA_REGISTER);
+    s->soaDac[0] = 0.0;
+    s->soaDac[1] = 0.0;
     s->coarsePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_COARSE_PHASE_REGISTER);
     s->coarsePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_COARSE_PHASE_REGISTER);
     s->finePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FINE_PHASE_REGISTER);
     s->finePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FINE_PHASE_REGISTER);
+    s->front_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
+    s->front_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
+    s->back_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
+    s->back_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
+    s->phase_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
+    s->phase_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
+    s->dead_zone_[0] = (float *)registerAddr(SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
+    s->dead_zone_[1] = (float *)registerAddr(SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
+    s->minimum_soa_[0] = (float *)registerAddr(SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER);
+    s->minimum_soa_[1] = (float *)registerAddr(SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER);
+
     s->sgdbr_csr_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_CSR;
     s->sgdbr_csr_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR;
     s->sgdbr_mosi_data_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MOSI_DATA;
@@ -319,6 +332,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     unsigned int aLaserNum, vLaserNum;
     volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
     volatile VirtualLaserParamsType *vLaserParams;
+    float soa_offset;
     int pztOffset;
     float laserTemp;
 
@@ -373,6 +387,19 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
             writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_COARSE_PHASE_DAC | schemeRowPtr->coarsePhaseDac);
             sgdbr_wait_done(s, sgdbrIndex);
             setup_all_gain_and_soa_currents();
+            // Calculate the SOA current offset and update the SOA current
+            soa_offset = 0;
+            if (schemeRowPtr->frontMirrorDac > *(s->dead_zone_[sgdbrIndex])) {
+                soa_offset += *(s->front_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->frontMirrorDac - *(s->dead_zone_[sgdbrIndex]));
+            }
+            if (schemeRowPtr->backMirrorDac > *(s->dead_zone_[sgdbrIndex])) {
+                soa_offset += *(s->back_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->backMirrorDac - *(s->dead_zone_[sgdbrIndex]));
+            }
+            soa_offset += *(s->phase_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->coarsePhaseDac);
+            s->soaDac[sgdbrIndex] = *(s->soaSetting_[sgdbrIndex]) + soa_offset;
+            if (s->soaDac[sgdbrIndex] < *(s->minimum_soa_[sgdbrIndex])) s->soaDac[sgdbrIndex] = *(s->minimum_soa_[sgdbrIndex]);
+            writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_SOA_DAC | s->soaDac[sgdbrIndex]);
+            sgdbr_wait_done(s, sgdbrIndex);
         }
 
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
@@ -576,7 +603,7 @@ void setupNextRdParams(void)
 
     sgdbrIndex = sgdbr_find_index(laserNum + 1);
     r->frontAndBackMirrorCurrentDac = ((0xFFFF & (int)(*(s->frontMirrorDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->backMirrorDac_[sgdbrIndex])));
-    r->gainAndSoaCurrentDac = ((0xFFFF & (int)(*(s->gainDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->soaDac_[sgdbrIndex])));
+    r->gainAndSoaCurrentDac = ((0xFFFF & (int)(*(s->gainDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(s->soaDac[sgdbrIndex]));
     r->coarseAndFinePhaseCurrentDac = ((0xFFFF & (int)(*(s->coarsePhaseDac_[sgdbrIndex]))) << 16) | (0xFFFF & (int)(*(s->finePhaseDac_[sgdbrIndex])));
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM0, *(uint32 *)&r->injectionSettings);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM1, *(uint32 *)&r->laserTemperature);

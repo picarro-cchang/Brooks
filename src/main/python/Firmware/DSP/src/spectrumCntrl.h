@@ -46,9 +46,16 @@ typedef struct SPECT_CNTRL_PARAMS
     float *frontMirrorDac_[2];  // SGDBR laser front mirror current DAC
     float *backMirrorDac_[2];   // SGDBR laser back mirror current DAC
     float *gainDac_[2];         // SGDBR laser gain current DAC
-    float *soaDac_[2];          // SGDBR laser SOA current DAC
+    float *soaSetting_[2];      // SGDBR laser SOA nominal setting 
+    unsigned int soaDac[2];     // SGDBR laser SOA current DAC value during ringdown
     float *coarsePhaseDac_[2];  // SGDBR coarse phase current DAC
     float *finePhaseDac_[2];    // SGDBR fine phase current DAC
+    float *front_to_soa_coeff_[2]; // Coefficient for modifying SOA current based on front mirror current
+    float *back_to_soa_coeff_[2];  // Coefficient for modifying SOA current based on back mirror current
+    float *phase_to_soa_coeff_[2];  // Coefficient for modifying SOA current based on coarse phase current
+    float *dead_zone_[2];   // When mirror currents are less than this value, do not apply correction to SOA
+    float *minimum_soa_[2]; // Minimum SOA value allowed during scans
+
     // SGDBR current source register indices
     unsigned int sgdbr_csr_[2];    // SGDBR current source CSR
     unsigned int sgdbr_mosi_data_[2];    // SGDBR current source MOSI data

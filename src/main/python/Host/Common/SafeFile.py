@@ -25,6 +25,7 @@
 # 06-07-21 russ  Added FileExists; Set for use with * imports
 # 06-07-27 russ  Fix for strange/intermittent win32 file-locking; Fixes to temp-file handling
 
+import io
 import os
 import os.path
 import shutil  #for file copying
@@ -42,7 +43,7 @@ _FIRST_TIME_PREFIX = '!FirstWrite!'
 MAX_RETRY_DURATION_s = 0.5
 
 
-class SafeFile(file):
+class SafeFile(io.FileIO):
     """A file object replacement that protects against mid-write crashes.
 
     Use this anywhere you would normally use a file object.
@@ -62,7 +63,7 @@ class SafeFile(file):
     """
     def __init__(self, filename, mode='r', bufsize=-1, *args, **kwargs):
         self._Prepare(filename, mode)
-        file.__init__(self, self._UsedPath, mode, bufsize, *args, **kwargs)
+        io.FileIO.__init__(self, self._UsedPath, mode, bufsize, *args, **kwargs)
 
     def LogFunc(self, ErrMsg, ErrData):
         """Log function called when special cases are encountered.  Should be overridden.
@@ -136,7 +137,7 @@ class SafeFile(file):
         if self._UsedPath != self._RequestedPath:
             #We must be writing to the file.  We want to close it, then get it
             #transferred to the primary location.
-            file.close(self)  #the base class closure
+            io.FileIO.close(self)  #the base class closure
             #clear a spot...
             if os.path.exists(self._RequestedPath): os.remove(self._RequestedPath)
             #Now we want to transform our "temporary" file into the primary...

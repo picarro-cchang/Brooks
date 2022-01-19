@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[604];
+RegTypes regTypes[633];
 
 /* I2C devices */
 I2C_device i2c_devices[41] = {
@@ -91,6 +91,8 @@ void initRegisters()
     writeRegister(DAS_TEMPERATURE_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(HEATER_CNTRL_SENSOR_REGISTER,d);
+    d.asFloat = 3.0;
+    writeRegister(TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER,d);
     d.asFloat = 0.00112789997365;
     writeRegister(CONVERSION_LASER1_THERM_CONSTA_REGISTER,d);
     d.asFloat = 0.000234289997024;
@@ -145,6 +147,10 @@ void initRegisters()
     writeRegister(LASER1_TEMP_CNTRL_AMAX_REGISTER,d);
     d.asFloat = 10000.0;
     writeRegister(LASER1_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,d);
     d.asUint = 0x481;
     writeRegister(LASER1_TEC_PRBS_GENPOLY_REGISTER,d);
     d.asFloat = 5000.0;
@@ -309,6 +315,10 @@ void initRegisters()
     writeRegister(LASER3_TEMP_CNTRL_AMAX_REGISTER,d);
     d.asFloat = 10000.0;
     writeRegister(LASER3_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,d);
     d.asUint = 0x481;
     writeRegister(LASER3_TEC_PRBS_GENPOLY_REGISTER,d);
     d.asFloat = 5000.0;
@@ -1151,6 +1161,30 @@ void initRegisters()
     writeRegister(SGDBR_A_CNTRL_SPARE_DAC_REGISTER,d);
     d.asUint = 0;
     writeRegister(SGDBR_A_CNTRL_RD_CONFIG_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER,d);
+    d.asUint = 1;
+    writeRegister(SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_A_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER,d);
     d.asUint = SGDBR_CNTRL_DisabledState;
     writeRegister(SGDBR_B_CNTRL_STATE_REGISTER,d);
     d.asFloat = 0.0;
@@ -1171,6 +1205,30 @@ void initRegisters()
     writeRegister(SGDBR_B_CNTRL_SPARE_DAC_REGISTER,d);
     d.asUint = 0;
     writeRegister(SGDBR_B_CNTRL_RD_CONFIG_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER,d);
+    d.asUint = 1;
+    writeRegister(SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER,d);
+    d.asFloat = 0;
+    writeRegister(SGDBR_B_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER,d);
     d.asUint = PZT_UPDATE_UseVLOffset_Mode;
     writeRegister(PZT_UPDATE_MODE_REGISTER,d);
     d.asInt = -1;
@@ -1191,6 +1249,7 @@ void initRegisters()
     regTypes[DAS_STATUS_REGISTER] = uint_type;
     regTypes[DAS_TEMPERATURE_REGISTER] = float_type;
     regTypes[HEATER_CNTRL_SENSOR_REGISTER] = float_type;
+    regTypes[TEMPERATURE_WINDOW_FOR_LASER_SHUTDOWN_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTA_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTB_REGISTER] = float_type;
     regTypes[CONVERSION_LASER1_THERM_CONSTC_REGISTER] = float_type;
@@ -1220,6 +1279,8 @@ void initRegisters()
     regTypes[LASER1_TEMP_CNTRL_AMIN_REGISTER] = float_type;
     regTypes[LASER1_TEMP_CNTRL_AMAX_REGISTER] = float_type;
     regTypes[LASER1_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER] = float_type;
+    regTypes[LASER1_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER] = float_type;
     regTypes[LASER1_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
     regTypes[LASER1_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[LASER1_TEC_PRBS_MEAN_REGISTER] = float_type;
@@ -1306,6 +1367,8 @@ void initRegisters()
     regTypes[LASER3_TEMP_CNTRL_AMIN_REGISTER] = float_type;
     regTypes[LASER3_TEMP_CNTRL_AMAX_REGISTER] = float_type;
     regTypes[LASER3_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER] = float_type;
+    regTypes[LASER3_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER] = float_type;
     regTypes[LASER3_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
     regTypes[LASER3_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[LASER3_TEC_PRBS_MEAN_REGISTER] = float_type;
@@ -1767,6 +1830,18 @@ void initRegisters()
     regTypes[SGDBR_A_CNTRL_CHIRP_REGISTER] = float_type;
     regTypes[SGDBR_A_CNTRL_SPARE_DAC_REGISTER] = float_type;
     regTypes[SGDBR_A_CNTRL_RD_CONFIG_REGISTER] = uint_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_FRONT_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_BACK_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_PHASE_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_SOA_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_SEMI_PERIOD_REGISTER] = uint_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER] = float_type;
+    regTypes[SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER] = float_type;
     regTypes[SGDBR_B_CNTRL_STATE_REGISTER] = uint_type;
     regTypes[SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER] = float_type;
     regTypes[SGDBR_B_CNTRL_BACK_MIRROR_REGISTER] = float_type;
@@ -1777,6 +1852,18 @@ void initRegisters()
     regTypes[SGDBR_B_CNTRL_CHIRP_REGISTER] = float_type;
     regTypes[SGDBR_B_CNTRL_SPARE_DAC_REGISTER] = float_type;
     regTypes[SGDBR_B_CNTRL_RD_CONFIG_REGISTER] = uint_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_FRONT_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_BACK_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_PHASE_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_SOA_STEP_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_SEMI_PERIOD_REGISTER] = uint_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER] = float_type;
+    regTypes[SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER] = float_type;
     regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
     regTypes[SGDBR_FILTER_BY_TRAJECTORY_REGISTER] = int_type;
 }

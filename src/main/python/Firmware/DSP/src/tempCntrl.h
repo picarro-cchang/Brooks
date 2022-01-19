@@ -36,6 +36,10 @@ typedef struct TEMP_CNTRL
     float *userSetpoint_; // User-specified temperature setpoint
     float *manualTec_;  // Manual control TEC value
     float *tec_;        // TEC actuator value
+    float *front_mirror_ffwd_; // Feed forward coefficient for front mirror current
+    float *back_mirror_ffwd_; // Feed forward coefficient for back mirror current
+    float *front_mirror_dac_; // Front mirror DAC value
+    float *back_mirror_dac_; // Back mirror DAC value
     // Local variables for controller
     unsigned int prbsReg; // Pseudo-random binary sequence generator register
     int swpDir;
