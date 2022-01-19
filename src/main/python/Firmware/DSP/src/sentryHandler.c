@@ -256,7 +256,7 @@ void sentryHandler(void)
         {
             if (0 == (ticksSinceStartup % ticksPerSecond))
             { // Things to check once every second
-                if (schedulerFailed || schedulerAlive < 4)
+                if (schedulerFailed || schedulerAlive < 2)
                 { // Should be 5, since heartbeat occurs every 200ms
                     schedulerFailed = 1;
                     safeMode();
