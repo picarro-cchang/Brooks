@@ -45,12 +45,8 @@ typedef struct RDD_CNTRL
     unsigned int *rddGain_;
     unsigned int currentBalance;
     unsigned int currentGain;
-    unsigned int *rdd2Balance_;
-    unsigned int *rdd2Gain_;
-    unsigned int current2Balance;
-    unsigned int current2Gain;
     int pendingCommand;
-    int pending2Command;
+    int readback;
 } RddCntrl;
 
 int rddCntrlInit(void);

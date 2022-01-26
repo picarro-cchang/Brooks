@@ -33,6 +33,8 @@
  * HISTORY:
  *   10-Nov-2012  sze  Initial version.
  *   09-06-2019   HBC  add second detector gain and offset adjust
+ *   08-Jul-2021  sze  Correct handling of master file values
+ *
  *  Copyright (c) 2012 Picarro, Inc. All rights reserved
  */
 #include "interface.h"
@@ -42,35 +44,30 @@
 #include "dspAutogen.h"
 #include <math.h>
 
-#define rddBalance      (*(r->rddBalance_))
-#define rddGain         (*(r->rddGain_))
-#define rdd2Balance      (*(r->rdd2Balance_))
-#define rdd2Gain         (*(r->rdd2Gain_))
+#define rddBalance (*(r->rddBalance_))
+#define rddGain (*(r->rddGain_))
 
-RddCntrl rddCntrl;
-int readBack = 1;
-int read2Back = 1;
+RddCntrl rddCntrl, rdd2Cntrl;
 
 int rddCntrlStep(void)
 {
     RddCntrl *r = &rddCntrl;
-    if (readBack) {
+    if (r->readback)
+    {
         unsigned int gains = rdd_read(RDD_POTENTIOMETERS);
-        rddBalance = r->currentBalance = (gains>>16) & 0xFF;
+        rddBalance = r->currentBalance = (gains >> 16) & 0xFF;
         rddGain = r->currentGain = gains & 0xFF;
-        readBack = 0;
+        r->readback = 0;
     }
-    if (rddBalance != r->currentBalance) {
-        rdd_write(RDD_POTENTIOMETERS,(rddBalance & 0xFF)<<8 | 1,2);
-        readBack = 1;
+    if ((rddBalance != r->currentBalance) || (rddGain != r->currentGain))
+    {
+        rdd_write(RDD_POTENTIOMETERS, ((rddGain & 0xFF) << 24) | (rddBalance & 0xFF) << 8 | 1, 4);
+        r->readback = 1;
     }
-    if (rddGain != r->currentGain) {
-        rdd_write(RDD_POTENTIOMETERS,((rddGain & 0xFF)<<8) | 3,2);
-        readBack = 1;
-    }
-    if (r->pendingCommand >= 0) {
-        rdd_write(RDD_POTENTIOMETERS,(r->pendingCommand & 0xFF),1);
-        readBack = 1;
+    else if (r->pendingCommand >= 0)
+    {
+        rdd_write(RDD_POTENTIOMETERS, (r->pendingCommand & 0xFF), 1);
+        r->readback = 1;
         r->pendingCommand = -1;
     }
     return STATUS_OK;
@@ -78,29 +75,27 @@ int rddCntrlStep(void)
 
 int rdd2CntrlStep(void)
 {
-    RddCntrl *r = &rddCntrl;
-    if (read2Back) {
+    RddCntrl *r = &rdd2Cntrl;
+    if (r->readback)
+    {
         unsigned int gains = rdd_read(RDD2_POTENTIOMETERS);
-        rdd2Balance = r->current2Balance = (gains>>16) & 0xFF;
-        rdd2Gain = r->current2Gain = gains & 0xFF;
-        read2Back = 0;
+        rddBalance = r->currentBalance = (gains >> 16) & 0xFF;
+        rddGain = r->currentGain = gains & 0xFF;
+        r->readback = 0;
     }
-    if (rdd2Balance != r->current2Balance) {
-        rdd_write(RDD2_POTENTIOMETERS,(rdd2Balance & 0xFF)<<8 | 1,2);
-        read2Back = 1;
+    if ((rddBalance != r->currentBalance) || (rddGain != r->currentGain))
+    {
+        rdd_write(RDD2_POTENTIOMETERS, ((rddGain & 0xFF) << 24) | (rddBalance & 0xFF) << 8 | 1, 4);
+        r->readback = 1;
     }
-    if (rdd2Gain != r->current2Gain) {
-        rdd_write(RDD2_POTENTIOMETERS,((rdd2Gain & 0xFF)<<8) | 3,2);
-        read2Back = 1;
-    }
-    if (r->pending2Command >= 0) {
-        rdd_write(RDD2_POTENTIOMETERS,(r->pending2Command & 0xFF),1);
-        read2Back = 1;
-        r->pending2Command = -1;
+    else if (r->pendingCommand >= 0)
+    {
+        rdd_write(RDD2_POTENTIOMETERS, (r->pendingCommand & 0xFF), 1);
+        r->readback = 1;
+        r->pendingCommand = -1;
     }
     return STATUS_OK;
 }
-
 
 int rddCntrlInit(void)
 {
@@ -109,8 +104,9 @@ int rddCntrlInit(void)
     r->rddBalance_ = (unsigned int *)registerAddr(RDD_BALANCE_REGISTER);
     r->rddGain_ = (unsigned int *)registerAddr(RDD_GAIN_REGISTER);
     gains = rdd_read(RDD_POTENTIOMETERS);
+    r->readback = 0;
     r->pendingCommand = -1; // No command pending
-    r->currentBalance = (gains>>16) & 0xFF;
+    r->currentBalance = (gains >> 16) & 0xFF;
     r->currentGain = gains & 0xFF;
     return STATUS_OK;
 }
@@ -118,16 +114,16 @@ int rddCntrlInit(void)
 int rdd2CntrlInit(void)
 {
     unsigned int gains;
-    RddCntrl *r = &rddCntrl;
-    r->rdd2Balance_ = (unsigned int *)registerAddr(RDD2_BALANCE_REGISTER);
-    r->rdd2Gain_ = (unsigned int *)registerAddr(RDD2_GAIN_REGISTER);
+    RddCntrl *r = &rdd2Cntrl;
+    r->rddBalance_ = (unsigned int *)registerAddr(RDD2_BALANCE_REGISTER);
+    r->rddGain_ = (unsigned int *)registerAddr(RDD2_GAIN_REGISTER);
     gains = rdd_read(RDD2_POTENTIOMETERS);
-    r->pending2Command = -1; // No command pending
-    r->current2Balance = (gains>>16) & 0xFF;
-    r->current2Gain = gains & 0xFF;
+    r->readback = 0;
+    r->pendingCommand = -1; // No command pending
+    r->currentBalance = (gains >> 16) & 0xFF;
+    r->currentGain = gains & 0xFF;
     return STATUS_OK;
 }
-
 
 int rddCntrlDoCommand(int command)
 {
@@ -138,12 +134,10 @@ int rddCntrlDoCommand(int command)
 
 int rdd2CntrlDoCommand(int command)
 {
-    RddCntrl *r = &rddCntrl;
-    r->pending2Command = command;
+    RddCntrl *r = &rdd2Cntrl;
+    r->pendingCommand = command;
     return STATUS_OK;
 }
 
-#undef  rddBalance
-#undef  rddGain
-#undef  rdd2Balance
-#undef  rdd2Gain
+#undef rddBalance
+#undef rddGain
