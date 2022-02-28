@@ -32,8 +32,16 @@ class InstrEEPROMAccessFrame(wx.Frame):
         try:
             co = CustomConfigObj(configFile, list_values=True)
             analyzerTypes = co.get("Main", "AnalyzerTypes")
+            # If we only have one type we need to make that a list
+            if isinstance(co.get('Main', 'ChassisTypes'), str):
+                chassis_types = [co.get('Main', 'ChassisTypes')]
+                chassis_identifiers = [co.get('Main', 'ChassisIdentifiers')]
+            else:
+                chassis_types = co.get('Main', 'ChassisTypes')
+                chassis_identifiers = co.get('Main', 'ChassisIdentifiers')
         except:
             analyzerTypes = DEFAULT_TYPES
+            print('We have an issue accessing proper data in the InstrEEPROMAccess.ini file')
         try:
             signaturePath = co.get("Main", "SignaturePath", "/home/picarro/I2000/installerSignature")
         except:
@@ -97,13 +105,15 @@ class InstrEEPROMAccessFrame(wx.Frame):
         self.labelNewEEPROM.SetFont(wx.Font(10, wx.DEFAULT, style=wx.NORMAL, weight=wx.BOLD))
         self.labelNewChassis = wx.StaticText(self.panel2, -1, "Chassis Number", size=(100, -1))
         if defaultChassis == None:
+            chassisChoices = []
             try:
-                chassisChoices = [
-                    elem['identifier'].split("CHAS2K")[1] for elem in DB.get_values("chassis2k", dict(status__in=["I", "U"]))
-                ]
-                chassisChoices.sort()
+                for chassis_t, chassis_i in zip(chassis_types, chassis_identifiers):
+                    chassis_options = [elem['identifier'].split(chassis_i)[1] for elem in DB.get_values(chassis_t, dict(status__in=["I", "U"]))
+                        if len(elem['identifier'].split(chassis_i))>1]
+                    chassisChoices.extend(chassis_options)
+                chassisChoices = sorted(chassisChoices, reverse=True)
             except:
-                chassisChoices = []
+                print 'failed to access DB'                
         else:
             chassisChoices = [defaultChassis]
         if self.chassisNum != "NONE":
@@ -124,7 +134,10 @@ class InstrEEPROMAccessFrame(wx.Frame):
 
         self.labelNewType = wx.StaticText(self.panel2, -1, "Analyzer Type", size=(100, -1))
         typeChoices = analyzerTypes
-        typeChoices.sort()
+        if isinstance(typeChoices, str):
+            typeChoices = [typeChoices]
+        else:
+            typeChoices.sort()
         if self.analyzerType != "NONE":
             if self.analyzerType not in typeChoices:
                 typeChoices.insert(0, self.analyzerType)

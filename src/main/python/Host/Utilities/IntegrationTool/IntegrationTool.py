@@ -51,7 +51,7 @@ except:
 
 
 class IntegrationToolFrame(wx.Frame):
-    def __init__(self, *args, **kwds):
+    def __init__(self, configFile, *args, **kwds):
         #kwds["style"] = wx.DEFAULT_FRAME_STYLE|wx.STAY_ON_TOP
         wx.Frame.__init__(self, *args, **kwds)
         self.panel1 = wx.Panel(self, -1, style=wx.SUNKEN_BORDER | wx.TAB_TRAVERSAL | wx.ALWAYS_SHOW_SB)
@@ -79,37 +79,29 @@ class IntegrationToolFrame(wx.Frame):
         # Analyzer information section
         self.labelAnalyzer = wx.StaticText(self.panel1, -1, "Analyzer Information", style=wx.ALIGN_CENTER)
         self.labelAnalyzer.SetFont(wx.Font(10, wx.DEFAULT, style=wx.NORMAL, weight=wx.BOLD))
+        if not os.path.exists(configFile):
+            raise Exception("Config file not found: %s" % configFile)
+        cp = CustomConfigObj(configFile)
+        chassis_type = cp.get('Main', 'CHASSIS_TYPE')
         analyzerChassis = None
         try:
-            analyzerChassis = "CHAS2K" + Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]
+            analyzerChassis = chassis_type + Driver.fetchObject("LOGIC_EEPROM")[0]["Chassis"]
         except:
             # If we can't read the EEPROM assume we are running a simulator and put
             # a dummy name so the application will start.
+            print('unable to get chassis information from EEPROM, please update EEPROM and relaunch')
             analyzerChassis = "SIMULATOR_MODE"
-
-        try:
-            #analyzerChoices = [elem['identifier'] for elem in DB.get_values("Analyzer",dict(status="I"))]
-            analyzerChoices = [elem['identifier'] for elem in DB.get_values("chassis2k", dict(status__in=["I", "U"]))]
-            analyzerChoices.sort()
+        if analyzerChassis:
+            analyzerChoices = [analyzerChassis]
             self.comboBoxSelect = wx.ComboBox(self.panel1,
                                               -1,
                                               choices=analyzerChoices,
+                                              value=analyzerChassis,
                                               size=(250, -1),
                                               style=wx.CB_READONLY | wx.CB_DROPDOWN)
-            if analyzerChassis:
-                self.comboBoxSelect.SetValue(analyzerChassis)
-        except:
-            if analyzerChassis:
-                analyzerChoices = [analyzerChassis]
-                self.comboBoxSelect = wx.ComboBox(self.panel1,
-                                                  -1,
-                                                  choices=analyzerChoices,
-                                                  value=analyzerChassis,
-                                                  size=(250, -1),
-                                                  style=wx.CB_READONLY | wx.CB_DROPDOWN)
                 #self.comboBoxSelect = wx.ComboBox(self.panel1, -1, value = analyzerChoices[0], choices = analyzerChoices, size = (250, -1), style = wx.CB_READONLY|wx.CB_DROPDOWN)
-            else:
-                raise Exception, "Failed to connect to manufacturing database or read instrument ID from EEPROM"
+        else:
+            raise Exception, "Failed to read instrument ID from EEPROM"
         self.labelSelect = wx.TextCtrl(self.panel1, -1, "Analyzer", size=(80, -1), style=wx.TE_READONLY | wx.NO_BORDER)
         self.labelSelect.SetBackgroundColour("#E0FFFF")
 
@@ -188,7 +180,7 @@ class IntegrationToolFrame(wx.Frame):
 
 class IntegrationTool(IntegrationToolFrame):
     def __init__(self, configFile, *args, **kwds):
-        IntegrationToolFrame.__init__(self, *args, **kwds)
+        IntegrationToolFrame.__init__(self, configFile, *args, **kwds)
         if not os.path.exists(configFile):
             raise Exception("Config file not found: %s" % configFile)
         else:
@@ -264,8 +256,8 @@ class IntegrationTool(IntegrationToolFrame):
 
         try:
             self.warmbox = [
-                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer, type="chassis2k"))
-                if elem['type'] == 'warmbox2k'
+                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer))
+                if 'warmbox' in elem['type']
             ][0]
             self.testButtonList[1].Enable(True)
             self.testButtonList[2].Enable(True)
@@ -282,8 +274,8 @@ class IntegrationTool(IntegrationToolFrame):
 
         try:
             self.wlm = [
-                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.warmbox, type="warmbox2k"))
-                if elem['type'] == 'wlm2k'
+                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.warmbox))
+                if 'wlm' in elem['type']
             ][0]
         except Exception, err:
             #print err
@@ -292,8 +284,8 @@ class IntegrationTool(IntegrationToolFrame):
 
         try:
             self.hotbox = [
-                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer, type="chassis2k"))
-                if elem['type'] == 'hotbox2k'
+                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer))
+                if 'hotbox' in elem['type']
             ][0]
             self.testButtonList[5].Enable(True)
             self.testButtonList[6].Enable(True)
@@ -322,17 +314,18 @@ class IntegrationTool(IntegrationToolFrame):
         # Get laser PCB serial numbers
         self.laserSerNumDict = {}
         laserNumStr = ""
+
         try:
             self.numLasers = len([
-                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer, type="chassis2k"))
-                if elem['type'] == 'laserpcb2k'
+                elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer))
+                if 'laser' in elem['type']
             ])
             for idx in range(self.numLasers):
                 laserId = [
-                    elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer, type="chassis2k"))
-                    if elem['slot'] == 'Laser%dPcb' % (idx + 1)
-                ][0]
-                laserSerNum, laserTypeKey = DB.get_contents(dict(identifier=laserId, type="laserpcb2k"))[0]["identifier"].split("-")
+                    elem['identifier'] for elem in DB.get_contents(dict(identifier=self.analyzer))
+                    if 'Laser' in elem['slot']
+                ][idx]
+                laserSerNum, laserTypeKey = DB.get_contents(dict(identifier=laserId))[0]["identifier"].split("-")
                 laserType = self.LaserTypeDict[laserTypeKey]
                 self.laserSerNumDict[idx + 1] = (laserSerNum, laserType)
                 laserSer = laserSerNum + "-" + laserType
@@ -374,8 +367,10 @@ class IntegrationTool(IntegrationToolFrame):
             info = None
         executable = self.cp.get("InstrEEPROMAccess", "Executable")
         args = self.cp.get("InstrEEPROMAccess", "LaunchArgs")
-        commandList = executable.split() + args.split() + ["-d", self.analyzer.split("CHAS2K")[1]]
-        subprocess.Popen(commandList, startupinfo=info)
+        command_list = executable.split() + args.split()
+        print(command_list)
+        #commandList = executable.split() + args.split() + ["-d", self.analyzer.split("CHAS2K")[1]]
+        subprocess.Popen(command_list, startupinfo=info)
         self.showAnalyzerName()
 
     def onMakeIniFiles(self, event):
