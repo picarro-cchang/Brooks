@@ -111,8 +111,8 @@ class Window(QtGui.QMainWindow):
 
     def run_uu_laser_cal(self):
         """Run the UU laser cal"""
-        self.SGDBR_CAL = self.cp["FieldLaserCalibration"]["NN"]["SGDBR_CAL_FIELD"]
-        self.msg_signal.emit('Preparing laser cal for NN laser')
+        self.SGDBR_CAL = self.cp["FieldLaserCalibration"]["UU"]["SGDBR_CAL_FIELD"]
+        self.msg_signal.emit('Preparing laser cal for UU laser')
         self.disable_buttons()
         pressure_mode = self.cp.get('Main', 'PRESSUREMODE')
         self.setPressureMode(pressure_mode)
