@@ -96,6 +96,7 @@ class SQLiteServer(object):
                 pass
 
     def check_login_requester(self, roles, requester):
+        # Assign numerical value to role representing permissions level.
         if "Admin" in roles:
             level = 3
         elif "Technician" in roles:
@@ -104,9 +105,11 @@ class SQLiteServer(object):
             level = 1
         else:
             level = 0
+
+        # Validate that the user ("level") is of an adiquate permission level to access the "requester" (application page).
         if requester in ["UserAdmin", "qtLauncher_Config", "NetworkSettingsWidget"] and level < 3:
             return {"error": "Permission denied. Only Admin users can log in."}, 403
-        elif (requester == "H2O2Validation" or requester == "CalibrationValidationTool") and level < 2:
+        elif (requester == "H2O2Validation" or requester == "CalibrationValidationTool" or requester == "FileManager") and level < 2:
             return {"error": "Permission denied. Only Admin and Technician can log in."}, 403
         return {}
 
