@@ -224,6 +224,7 @@ class DataLog(object):
             try:
                 self.fp.close()
             except Exception:
+                Log("Ignoring file close exception: %s %s" % (sys.exc_info()[0], sys.exc_info()[1]))
                 pass
             self.table = None
             self.fp = None
@@ -374,6 +375,7 @@ class DataLog(object):
             try:
                 del self.maxDuration[self.LogPath]
             except KeyError:
+                Log("Ignoring KeyError exception in _Create(): del self.maxDuration[self.LogPath]")
                 pass
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
