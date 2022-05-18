@@ -191,9 +191,24 @@ class DataLog(object):
             action, args = self.queue.get()
             now = TimeStamp()
             if action == "write":
-                self._Write(*args)
+                try:
+                    self._Write(*args)
+                except Exception, err:
+                    # Log exception and wait a few seconds so as not to flood the event log in case this is recurring
+                    # Set up to start on a new file
+                    Log("Write EXCEPTION from qHandler: %s %s" % (sys.exc_info()[0], sys.exc_info()[1]))
+                    time.sleep(10)
+                    self.restart = True
+                    continue
             elif action == "copyToMailboxAndArchive":
-                self._CopyToMailboxAndArchive(*args)
+                try:
+                    self._CopyToMailboxAndArchive(*args)
+                except Exception, err:
+                    # Log exception and wait a few seconds so as not to flood the event log in case this is recurring
+                    # Set up to start on a new file
+                    Log("CopyToMailboxAndArchive EXCEPTION from qHandler: %s %s" % (sys.exc_info()[0], sys.exc_info()[1]))
+                    time.sleep(10)
+                    continue
             duration = TimeStamp() - now
             if duration > 10:
                 Log("Datalog: %s action %s takes %.3fs" % (self.LogPath, action, duration))
@@ -206,7 +221,10 @@ class DataLog(object):
 
     def Close(self):
         if self.fp is not None:
-            self.fp.close()
+            try:
+                self.fp.close()
+            except Exception:
+                pass
             self.table = None
             self.fp = None
         if self.liveArchive:
@@ -353,7 +371,10 @@ class DataLog(object):
                 self.table.flush()
                 self.table = None
             self.Close()
-            del self.maxDuration[self.LogPath]
+            try:
+                del self.maxDuration[self.LogPath]
+            except KeyError:
+                pass
             self._CopyToMailboxAndArchive(self.LogPath)
             self.LogPath = ""
 
