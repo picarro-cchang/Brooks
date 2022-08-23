@@ -344,6 +344,8 @@ def RunAlarmScript(ScriptCodeObj, SourceTime_s, AlarmParamsDict, ReportDict, Rep
     #Now check for magic keywords created by the script...
     alarmsData = dataEnviron[ALARM_REPORT_ID]
     for i, value in enumerate(dataEnviron[ALARMS_ID]):
+        if value > 0:
+            value = 1
         alarmsData["ALARM_WORD_%d" % i] = value
 
     return alarmsData
