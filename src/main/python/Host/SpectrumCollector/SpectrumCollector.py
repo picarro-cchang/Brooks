@@ -178,8 +178,8 @@ class SpectrumCollector(object):
             retry=True,
             name="Spectrum collector listener",
             logFunc=Log)
-        for key in interface.STREAM_MemberTypeDict:
-            self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
+        # for key in interface.STREAM_MemberTypeDict:
+        #     self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
         self.sensorsUpdated = True
         self.cachedSensors = None
 
@@ -471,7 +471,8 @@ class SpectrumCollector(object):
         broadcast.
         """
         self.latestSensors["timestamp"] = entry.timestamp
-        self.latestSensors[interface.STREAM_MemberTypeDict[entry.streamNum][7:]] = entry.value
+        key = interface.STREAM_MemberTypeDict[entry.streamNum][7:]
+        self.latestSensors[key] = entry.value
         self.sensorsUpdated = True
 
     def getLatestSensors(self):
@@ -486,7 +487,10 @@ class SpectrumCollector(object):
         """Append sensorData into the variables for computing statistics.
         """
         self.sensorAvgCount += 1.
-        for k in self.avgSensors:
+        for k in self.latestSensors:
+            if k not in self.avgSensors:
+                self.avgSensors[k] = 0.0
+                self.sumSensors[k] = 0.0    
             self.sumSensors[k] += sensorData[k]
             newAvg = self.sumSensors[k] / self.sensorAvgCount
             self.avgSensors[k] = newAvg

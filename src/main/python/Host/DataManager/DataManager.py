@@ -75,6 +75,7 @@ import Host.DataManager.ScriptRunner as ScriptRunner
 from Host.DataManager.AlarmSystemV3 import *
 import pprint
 import heapq
+import traceback
 
 from Host.DataManager.PulseAnalyzer import PulseAnalyzer
 from Host.autogen import interface
@@ -1353,58 +1354,56 @@ class DataManager(object):
             raise Queue.Empty
 
         avgTimestamp, spectrumId, results, latency = self.dataQueue[0]
-        self.dataQueueLock.acquire()
-        stragglers = 0
-        while avgTimestamp <= self.lastFitAnalyzed:
-            heapq.heappop(self.dataQueue)
-            stragglers += 1
-            if len(self.dataQueue) == 0: break
-            avgTimestamp, spectrumId, results, latency = self.dataQueue[0]
-        if stragglers > 0:
-            self.dataQueueLock.release()
-            self.minQueueSamples += 1
-            Log("%d stragglers removed from fitter data queue. MinQueueSamples = %d." % (stragglers, self.minQueueSamples))
-            time.sleep(0.01)
-            raise Queue.Empty
-        # Now coalasce all queue entries with the same timestamp
-        #  and make a list of MeasData objects from them, one for each
-        #  analyzer
-        analyzers = set()
-        spectrumNames = set()
-        avgTimestamp, spectrumId, results, maxLatency = self.dataQueue[0]
-        self.lastFitAnalyzed = avgTimestamp
-        measDataList = []
-        try:
-            while self.lastFitAnalyzed == avgTimestamp:
-                avgTimestamp, spectrumId, results, latency = heapq.heappop(self.dataQueue)
-                maxLatency = max(maxLatency, latency)
-                spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
-                # Log("CurrentMeasMode: %s, Analyzers: %s" % (self.CurrentMeasMode, self.CurrentMeasMode.Analyzers))
-                analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
-                if analyzer in self.resultsByAnalyzer:
-                    self.resultsByAnalyzer[analyzer].update(results)
-                    analyzers.add(analyzer)
-                    spectrumNames.add(spectrumName)
-                else:
-                    if results:
-                        self.resultsByAnalyzer[analyzer] = results.copy()
+        with self.dataQueueLock:
+            stragglers = 0
+            while avgTimestamp <= self.lastFitAnalyzed:
+                heapq.heappop(self.dataQueue)
+                stragglers += 1
+                if len(self.dataQueue) == 0: break
+                avgTimestamp, spectrumId, results, latency = self.dataQueue[0]
+            if stragglers > 0:
+                self.minQueueSamples += 1
+                Log("%d stragglers removed from fitter data queue. MinQueueSamples = %d." % (stragglers, self.minQueueSamples))
+                time.sleep(0.01)
+                raise Queue.Empty
+            # Now coalasce all queue entries with the same timestamp
+            #  and make a list of MeasData objects from them, one for each
+            #  analyzer
+            analyzers = set()
+            spectrumNames = set()
+            avgTimestamp, spectrumId, results, maxLatency = self.dataQueue[0]
+            self.lastFitAnalyzed = avgTimestamp
+            measDataList = []
+            try:
+                while self.lastFitAnalyzed == avgTimestamp:
+                    avgTimestamp, spectrumId, results, latency = heapq.heappop(self.dataQueue)
+                    maxLatency = max(maxLatency, latency)
+                    spectrumName = self.CurrentMeasMode.SpectrumIdLookup[spectrumId]
+                    # Log("CurrentMeasMode: %s, Analyzers: %s" % (self.CurrentMeasMode, self.CurrentMeasMode.Analyzers))
+                    analyzer = self.CurrentMeasMode.Analyzers[spectrumName].ScriptPath
+                    if analyzer in self.resultsByAnalyzer:
+                        self.resultsByAnalyzer[analyzer].update(results)
                         analyzers.add(analyzer)
                         spectrumNames.add(spectrumName)
-                if len(self.dataQueue) == 0:
-                    break
-                avgTimestamp, spectrumId, results, latency = self.dataQueue[0]
-            self.dataQueueLock.release()
-            for name in spectrumNames:
-                analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
-                results = self.resultsByAnalyzer[analyzer]
-                if results:
-                    results["max_fitter_latency"] = maxLatency
-                # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
-                #  the spectra to be analyzed
-                measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
-        except KeyError:
-            self._ShutdownRequested = True
-        return measDataList
+                    else:
+                        if results:
+                            self.resultsByAnalyzer[analyzer] = results.copy()
+                            analyzers.add(analyzer)
+                            spectrumNames.add(spectrumName)
+                    if len(self.dataQueue) == 0:
+                        break
+                    avgTimestamp, spectrumId, results, latency = self.dataQueue[0]
+                for name in spectrumNames:
+                    analyzer = self.CurrentMeasMode.Analyzers[name].ScriptPath
+                    results = self.resultsByAnalyzer[analyzer]
+                    if results:
+                        results["max_fitter_latency"] = maxLatency
+                    # Note: We must use self.lastFitAnalyzed below as this is the common timestamp of
+                    #  the spectra to be analyzed
+                    measDataList.append(MeasData(name, timestamp.unixTime(self.lastFitAnalyzed), results))
+            except KeyError:
+                LogExc("getFitterData raised an exception")
+            return measDataList
 
     # def removeStragglers(self):
     # """Remove entries from the data queue which have timestamps before self.lastFitAnalyzed.
