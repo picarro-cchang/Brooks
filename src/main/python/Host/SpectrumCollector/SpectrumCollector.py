@@ -178,8 +178,6 @@ class SpectrumCollector(object):
             retry=True,
             name="Spectrum collector listener",
             logFunc=Log)
-        # for key in interface.STREAM_MemberTypeDict:
-        #     self.latestSensors[interface.STREAM_MemberTypeDict[key][7:]] = 0.0
         self.sensorsUpdated = True
         self.cachedSensors = None
 
