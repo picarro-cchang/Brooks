@@ -9,6 +9,7 @@
 #
 # HISTORY:
 #   09-Apr-2018  sze  Initial version.
+#   23-Oct-2022  sze  Four SGDBR laser version.
 #
 #  Copyright (c) 2016 Picarro, Inc. All rights reserved
 #
@@ -34,6 +35,8 @@ from Host.autogen.interface import SGDBRMANAGER_CONFIG_MODE_B, SGDBRMANAGER_CONF
 from Host.autogen.interface import SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W
 from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W
 from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W
+from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_W
+from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_W
 
 from MyHDL.Common.AnalyzerMemory import AnalyzerMemory
 from MyHDL.Common.SgdbrManager import SgdbrManager
@@ -63,8 +66,8 @@ pb_data = Signal(intbv(0)[RDMEM_META_WIDTH:])
 pb_wfm_sel = Signal(LOW)
 mode = Signal(LOW)
 scan_active_out = Signal(LOW)
-sgdbr_present_out = Signal(intbv(0)[2:])
-sgdbr_select_out = Signal(LOW)
+sgdbr_present_out = Signal(intbv(0)[4:])
+sgdbr_select_out = Signal(intbv(0)[2:])
 bank = Signal(LOW)
 data_addr = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
 data = Signal(intbv(0)[RDMEM_DATA_WIDTH:])
@@ -170,13 +173,17 @@ def bench():
                                  sgdbr_select_out=sgdbr_select_out,
                                  map_base=map_base )
 
+    shift1 = 7
+    shift2 = 2
+    stim_list = []
+
     @always_comb
     def comb():
         dsp_data_in.next = dsp_data_in_am or dsp_data_in_sm
         rec0_in.next = pb1_out
         rec1_in.next = pb0_out
-        rec2_in.next = pb1_out << 8
-        rec3_in.next = pb0_out << 4
+        rec2_in.next = pb1_out << shift1
+        rec3_in.next = pb0_out << shift2
 
     @instance
     def rec_strobe():
@@ -195,6 +202,20 @@ def bench():
         result3 = Signal(intbv(0))
         scanSamples = 20
         yield assertReset()
+        # Check operation of SGDBR_PRESENT register
+        for i in range(16):
+            yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_SGDBR_PRESENT, i)
+            yield clk.posedge
+            assert sgdbr_present_out == i
+        print("SGDBR_PRESENT register operation verified")
+
+        # Check operation of SELECT field in CONFIG register
+        for i in range(4):
+            yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, i << SGDBRMANAGER_CONFIG_SELECT_B)
+            yield clk.posedge
+            assert sgdbr_select_out == i
+        print("SGDBR_CONFIG register SELECT bitfield operation verified")
+
         yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_SCAN_SAMPLES,
                         scanSamples)
         yield delay(10 * PERIOD)
@@ -215,12 +236,13 @@ def bench():
         # Write playback waveforms
         for iter in range(scanSamples):
             addr = 0x1000 + iter
-            d = 64 + 16 * iter
-            yield wrRingdownMem(addr, d)
+            d1 = 64 + 16 * iter
+            yield wrRingdownMem(addr, d1)
             addr = 0x5000 + iter
-            d = 17 + 8 * iter
-            yield wrRingdownMem(addr, d)
-        print "Wrote playback waveforms"
+            d2 = 17 + 8 * iter
+            yield wrRingdownMem(addr, d2)
+            stim_list.append((d1, d2))
+        print("Wrote playback waveforms")
 
         yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CSR,
                         1 << SGDBRMANAGER_CSR_START_SCAN_B)
@@ -239,10 +261,16 @@ def bench():
             addr = 0x4800 + iter
             yield rdRingdownMem(addr, result3)
 
-            print "%04x: %04x %04x %04x %04x" % (iter, result0, result1, result2, result3)
+            print("%04x: %04x %04x %04x %04x" % (iter, result0, result1, result2, result3))
+            stim = stim_list.pop(0)
+            assert result0 == stim[1]
+            assert result1 == stim[0]
+            assert result2 == stim[1] << shift1
+            assert result3 == stim[0] << shift2
         # Select mode 0 to switch to ringdowns
         yield writeFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, 0)
         yield delay(5000 * PERIOD)
+        print("Readback of memory values verified")
 
         raise StopSimulation
     return instances()

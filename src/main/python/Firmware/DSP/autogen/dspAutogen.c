@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2022 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>

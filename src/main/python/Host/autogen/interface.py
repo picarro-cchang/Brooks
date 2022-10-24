@@ -10,7 +10,7 @@
 # SEE ALSO:
 #   Specify any related information.
 #
-#  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
+#  Copyright (c) 2008-2022 Picarro, Inc. All rights reserved
 #
 
 from ctypes import c_ubyte, c_byte, c_uint, c_int, c_ushort, c_short
@@ -4263,7 +4263,7 @@ SGDBRMANAGER_CONFIG = 1 # Configuration of SGDBR
 SGDBRMANAGER_CONFIG_MODE_B = 0 # Analyzer memory mode bit position
 SGDBRMANAGER_CONFIG_MODE_W = 1 # Analyzer memory mode bit width
 SGDBRMANAGER_CONFIG_SELECT_B = 1 # Select SGDBR laser to control bit position
-SGDBRMANAGER_CONFIG_SELECT_W = 1 # Select SGDBR laser to control bit width
+SGDBRMANAGER_CONFIG_SELECT_W = 2 # Select SGDBR laser to control bit width
 
 SGDBRMANAGER_SCAN_SAMPLES = 2 # Number of samples in a scan
 SGDBRMANAGER_SAMPLE_TIME = 3 # Intersample duration
@@ -4274,6 +4274,10 @@ SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B = 0 # SGDBR laser A present bit pos
 SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W = 1 # SGDBR laser A present bit width
 SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B = 1 # SGDBR laser B present bit position
 SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W = 1 # SGDBR laser B present bit width
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B = 2 # SGDBR laser C present bit position
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_W = 1 # SGDBR laser C present bit width
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B = 3 # SGDBR laser D present bit position
+SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_W = 1 # SGDBR laser D present bit width
 
 
 # FPGA registers by name
@@ -5012,9 +5016,9 @@ parameter_forms.append(('Filter Heater Parameters',__p))
 
 __p = []
 
-__p.append([None, ('fpga','mask',FPGA_SGDBRMANAGER+SGDBRMANAGER_SGDBR_PRESENT,[(1, u'SGDBR laser A present', [(0, u'No'), (1, u'Yes')]), (2, u'SGDBR laser B present', [(0, u'No'), (2, u'Yes')])],None,None,1,1)])
+__p.append([None, ('fpga','mask',FPGA_SGDBRMANAGER+SGDBRMANAGER_SGDBR_PRESENT,[(1, u'SGDBR laser A present', [(0, u'No'), (1, u'Yes')]), (2, u'SGDBR laser B present', [(0, u'No'), (2, u'Yes')]), (4, u'SGDBR laser C present', [(0, u'No'), (4, u'Yes')]), (8, u'SGDBR laser D present', [(0, u'No'), (8, u'Yes')])],None,None,1,1)])
 __p.append([None, ('fpga','mask',FPGA_SGDBRMANAGER+SGDBRMANAGER_CSR,[(1, u'Start SGDBR scan', [(0, u'Idle'), (1, u'Start')]), (2, u'Scan done', [(0, u'Not done'), (2, u'Done')]), (4, u'Scan in progress', [(0, u'Idle'), (4, u'In progress')])],None,None,1,1)])
-__p.append([None, ('fpga','mask',FPGA_SGDBRMANAGER+SGDBRMANAGER_CONFIG,[(1, u'Analyzer memory mode', [(0, u'Ringdown'), (1, u'SGDBR recorder')]), (2, u'Select SGDBR laser to control', [(0, u'SGDBR laser A'), (2, u'SGDBR laser B')])],None,None,1,1)])
+__p.append([None, ('fpga','mask',FPGA_SGDBRMANAGER+SGDBRMANAGER_CONFIG,[(1, u'Analyzer memory mode', [(0, u'Ringdown'), (1, u'SGDBR recorder')]), (6, u'Select SGDBR laser to control', [(0, u'SGDBR laser A'), (2, u'SGDBR laser B'), (4, u'SGDBR laser C'), (6, u'SGDBR laser D')])],None,None,1,1)])
 __p.append([None, ('fpga','uint16',FPGA_SGDBRMANAGER+SGDBRMANAGER_SCAN_SAMPLES,'Number of samples in a scan (1-4096)','','%d',1,1)])
 __p.append([None, ('fpga','uint16',FPGA_SGDBRMANAGER+SGDBRMANAGER_SAMPLE_TIME,'Intersample duration (1-127)','x 10us','%d',1,1)])
 __p.append([None, ('fpga','uint16',FPGA_SGDBRMANAGER+SGDBRMANAGER_DELAY_SAMPLES,'Delay at start of scan (0-65535)','samples','%d',1,1)])

@@ -5390,9 +5390,11 @@
                     <fielddef value="0">Ringdown</fielddef>
                     <fielddef value="1">SGDBR recorder</fielddef>
                 </bitfield>
-                <bitfield ident="SELECT" description="Select SGDBR laser to control" lsb="1" width="1">
+                <bitfield ident="SELECT" description="Select SGDBR laser to control" lsb="1" width="2">
                     <fielddef value="0">SGDBR laser A</fielddef>
                     <fielddef value="1">SGDBR laser B</fielddef>
+                    <fielddef value="2">SGDBR laser C</fielddef>
+                    <fielddef value="3">SGDBR laser D</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="SCAN_SAMPLES" description="Number of samples in a scan" access="rw">
@@ -5416,6 +5418,14 @@
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
                 <bitfield ident="SGDBR_B_PRESENT" description="SGDBR laser B present" lsb="1" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="SGDBR_C_PRESENT" description="SGDBR laser C present" lsb="2" width="1">
+                    <fielddef value="0">No</fielddef>
+                    <fielddef value="1">Yes</fielddef>
+                </bitfield>
+                <bitfield ident="SGDBR_D_PRESENT" description="SGDBR laser D present" lsb="3" width="1">
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>

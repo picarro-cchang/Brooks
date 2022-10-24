@@ -18,6 +18,7 @@
 #
 # HISTORY:
 #   06-Apr-2018  sze  Initial version.
+#   23-Oct-2022  sze  Allow for up to four SGDBR lasers.
 #
 #  Copyright (c) 2016 Picarro, Inc. All rights reserved
 #
@@ -44,6 +45,9 @@ from Host.autogen.interface import SGDBRMANAGER_CONFIG_MODE_B, SGDBRMANAGER_CONF
 from Host.autogen.interface import SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W
 from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W
 from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W
+from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_W
+from Host.autogen.interface import SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B, SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_W
+
 
 LOW, HIGH = bool(0), bool(1)
 
@@ -84,8 +88,8 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
     pb_wfm_sel_out      -- playback waveform (channel) select output
     mode_out            -- mode output (0=>ringdown, 1=>recorder)
     scan_active_out     -- high while scan is in progress
-    sgdbr_present_out   -- indicates which SGDBR lasers are present (2 bits)
-    sgdbr_select_out    -- indicates which SDBR laser is selected for synchronous updates
+    sgdbr_present_out   -- indicates which SGDBR lasers are present (4 bits representig DCBA)
+    sgdbr_select_out    -- indicates which SDBR laser is selected for synchronous updates (00=A, 01=B, 10=C, 11=D)
     map_base
 
     Registers:
@@ -104,11 +108,13 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
 
     Fields in SGDBRMANAGER_CONFIG:
     SGDBRMANAGER_CONFIG_MODE -- Set analyzer memory mode: 0 for ringdown mode, 1 for SGDBR laser recorder mode
-    SGDBRMANAGER_CONFIG_SELECT -- Select SGDBR laser for control: 0 for laser A, 1 for laser B
+    SGDBRMANAGER_CONFIG_SELECT -- Select SGDBR laser for control: 00 for laser A, 01 for laser B, 10 for laser C, 11 for laser D
 
     Fields in SGDBRMANAGER_SGDBR_PRESENT:
     SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT -- Indicates SGDBR_A is installed in slot for laser 1
     SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT -- Indicates SGDBR_B is installed in slot for laser 3
+    SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT -- Indicates SGDBR_C is installed in slot for laser 2
+    SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT -- Indicates SGDBR_D is installed in slot for laser 4
     """
     sgdbrmanager_csr_addr = map_base + SGDBRMANAGER_CSR
     sgdbrmanager_config_addr = map_base + SGDBRMANAGER_CONFIG
@@ -118,12 +124,12 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
     sgdbrmanager_scan_address_addr = map_base + SGDBRMANAGER_SCAN_ADDRESS
     sgdbrmanager_sgdbr_present_addr = map_base + SGDBRMANAGER_SGDBR_PRESENT
     csr = Signal(intbv(0)[3:])
-    config = Signal(intbv(0)[2:])
+    config = Signal(intbv(0)[3:])
     scan_samples = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH+1:])
     sample_time = Signal(intbv(0)[16:])
     delay_samples = Signal(intbv(0)[16:])
     scan_address = Signal(intbv(0)[DATA_BANK_ADDR_WIDTH:])
-    sgdbr_present = Signal(intbv(0)[2:])
+    sgdbr_present = Signal(intbv(0)[4:])
     scan_address = Signal(modbv(0)[DATA_BANK_ADDR_WIDTH:])
     holdoff_counter = Signal(modbv(0)[16:])
     seq_state = Signal(SeqState.AWAIT_REC_STROBE)
@@ -146,8 +152,10 @@ def SgdbrManager(clk, reset, dsp_addr, dsp_data_out, dsp_data_in,
         pb0_out.next = pb0
         pb1_out.next = pb1
         scan_active_out.next = csr[SGDBRMANAGER_CSR_SCAN_ACTIVE_B]
-        sgdbr_select_out.next = config[SGDBRMANAGER_CONFIG_SELECT_B]
+        sgdbr_select_out.next = config[SGDBRMANAGER_CONFIG_SELECT_B+SGDBRMANAGER_CONFIG_SELECT_W:SGDBRMANAGER_CONFIG_SELECT_B]
         sgdbr_present_out.next = concat(
+            sgdbr_present[SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B],  
+            sgdbr_present[SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B],  
             sgdbr_present[SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B],  
             sgdbr_present[SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B])
 
@@ -351,8 +359,8 @@ if __name__ == "__main__":
     pb_wfm_sel_out = Signal(LOW)
     mode_out = Signal(LOW)
     scan_active_out = Signal(LOW)
-    sgdbr_present_out = Signal(intbv(0)[2:])
-    sgdbr_select_out = Signal(LOW)
+    sgdbr_present_out = Signal(intbv(0)[4:])
+    sgdbr_select_out = Signal(intbv(0)[2:])
     map_base = FPGA_SGDBRMANAGER
 
     toVHDL(SgdbrManager, clk=clk, reset=reset, dsp_addr=dsp_addr,

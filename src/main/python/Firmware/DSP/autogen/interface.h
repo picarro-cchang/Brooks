@@ -9,7 +9,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2021 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2022 Picarro, Inc. All rights reserved
  */
 #ifndef _INTERFACE_H
 #define _INTERFACE_H
@@ -1987,7 +1987,7 @@ typedef enum {
 #define SGDBRMANAGER_CONFIG_MODE_B (0) // Analyzer memory mode bit position
 #define SGDBRMANAGER_CONFIG_MODE_W (1) // Analyzer memory mode bit width
 #define SGDBRMANAGER_CONFIG_SELECT_B (1) // Select SGDBR laser to control bit position
-#define SGDBRMANAGER_CONFIG_SELECT_W (1) // Select SGDBR laser to control bit width
+#define SGDBRMANAGER_CONFIG_SELECT_W (2) // Select SGDBR laser to control bit width
 
 #define SGDBRMANAGER_SCAN_SAMPLES (2) // Number of samples in a scan
 #define SGDBRMANAGER_SAMPLE_TIME (3) // Intersample duration
@@ -1998,6 +1998,10 @@ typedef enum {
 #define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_W (1) // SGDBR laser A present bit width
 #define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B (1) // SGDBR laser B present bit position
 #define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_W (1) // SGDBR laser B present bit width
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B (2) // SGDBR laser C present bit position
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_W (1) // SGDBR laser C present bit width
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B (3) // SGDBR laser D present bit position
+#define SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_W (1) // SGDBR laser D present bit width
 
 
 /* FPGA map indices */
