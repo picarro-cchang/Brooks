@@ -4262,6 +4262,264 @@
             <display format="%.0f">Minimum SOA value during scan</display>
             <save/>
         </register>
+        <register ident="SGDBR_C_CNTRL_STATE_REGISTER" type="SGDBR_CNTRL_StateType" minver="1.0" access="rw">
+            <description>State register for SGDBR_C laser control</description>
+            <initial>SGDBR_CNTRL_DisabledState</initial>
+            <display>SGDBR laser control state</display>
+        </register>
+        <register ident="SGDBR_C_CNTRL_FRONT_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C front mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Front Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_BACK_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C back mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Back Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C gain current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Gain Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C SOA current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">SOA Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_COARSE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C coarse phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Coarse Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_FINE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C fine phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Fine Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_CHIRP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C chirp current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Chirp Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_SPARE_DAC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C spare DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Spare DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_RD_CONFIG_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_C ringdown configuration register</description>
+            <initial>0</initial>
+            <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_FRONT_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C pulse generator front mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse front mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_BACK_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C pulse generator back mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse back mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_PHASE_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C pulse generator coarse phase step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse coarse phase step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_SOA_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C pulse generator SOA step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse SOA step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_SEMI_PERIOD_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_C pulse generator semiperiod register</description>
+            <initial>1</initial>
+            <display format="%d" units="samples">Pulse generator semi-period</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_C temperature amplitude due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature amplitude</display>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_C temperature peak-to-peak due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature peak-to-peak</display>
+        </register>
+        <register ident="SGDBR_C_CNTRL_FRONT_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C front mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Front mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_BACK_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C back mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Back mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_PHASE_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C coarse phase to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Coarse phase to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_MIRROR_DEAD_ZONE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C mirror dead zone for SOA compensation</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Mirror dead zone for SOA compensation</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_C_CNTRL_MINIMUM_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_C minimum SOA value during scan</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Minimum SOA value during scan</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_STATE_REGISTER" type="SGDBR_CNTRL_StateType" minver="1.0" access="rw">
+            <description>State register for SGDBR_D laser control</description>
+            <initial>SGDBR_CNTRL_DisabledState</initial>
+            <display>SGDBR laser control state</display>
+        </register>
+        <register ident="SGDBR_D_CNTRL_FRONT_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D front mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Front Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_BACK_MIRROR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D back mirror current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Back Mirror Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_GAIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D gain current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Gain Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D SOA current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">SOA Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_COARSE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D coarse phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Coarse Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_FINE_PHASE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D fine phase current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Fine Phase Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_CHIRP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D chirp current DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Chirp Current DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_SPARE_DAC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D spare DAC register</description>
+            <initial>0.0</initial>
+            <display format="%.0f" units="digU">Spare DAC</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_RD_CONFIG_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_D ringdown configuration register</description>
+            <initial>0</initial>
+            <display format="$%02X">Ringdown configuration mask (Chirp, PH, BM, FM, GAIN, SOA)</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_FRONT_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D pulse generator front mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse front mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_BACK_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D pulse generator back mirror step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse back mirror step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_PHASE_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D pulse generator coarse phase step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse coarse phase step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_SOA_STEP_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D pulse generator SOA step register</description>
+            <initial>0</initial>
+            <display format="%d" units="digU">Pulse SOA step</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_SEMI_PERIOD_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SGDBR_D pulse generator semiperiod register</description>
+            <initial>1</initial>
+            <display format="%d" units="samples">Pulse generator semi-period</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_TEMP_AMPLITUDE_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_D temperature amplitude due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature amplitude</display>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PULSE_TEMP_PEAK_TO_PEAK_REGISTER" type="float" minver="1.0" access="r">
+            <description>SGDBR_D temperature peak-to-peak due to pulse generator</description>
+            <initial>0</initial>
+            <display format="%.0f" units="digU">Generator-correlated temperature peak-to-peak</display>
+        </register>
+        <register ident="SGDBR_D_CNTRL_FRONT_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D front mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Front mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_BACK_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D back mirror to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Back mirror to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_PHASE_TO_SOA_COEFF_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D coarse phase to SOA coefficient</description>
+            <initial>0.0</initial>
+            <display format="%.3f">Coarse phase to SOA coefficient</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_MIRROR_DEAD_ZONE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D mirror dead zone for SOA compensation</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Mirror dead zone for SOA compensation</display>
+            <save/>
+        </register>
+        <register ident="SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SGDBR_D minimum SOA value during scan</description>
+            <initial>0.0</initial>
+            <display format="%.0f">Minimum SOA value during scan</display>
+            <save/>
+        </register>
         <register ident="PZT_UPDATE_MODE_REGISTER" type="PZT_UPDATE_ModeType" minver="1.0" access="rw">
             <description>PZT update mode register</description>
             <initial>PZT_UPDATE_UseVLOffset_Mode</initial>
@@ -5502,6 +5760,12 @@
         <fpga_map ident="FPGA_SGDBRCURRENTSOURCE_B" block="SGDBRCURRENTSOURCE">
             <description>SGDBR current source B</description>
         </fpga_map>
+        <fpga_map ident="FPGA_SGDBRCURRENTSOURCE_C" block="SGDBRCURRENTSOURCE">
+            <description>SGDBR current source C</description>
+        </fpga_map>
+        <fpga_map ident="FPGA_SGDBRCURRENTSOURCE_D" block="SGDBRCURRENTSOURCE">
+            <description>SGDBR current source D</description>
+        </fpga_map>
         <fpga_map ident="FPGA_SGDBRMANAGER" block="SGDBRMANAGER">
             <description>SGDBR manager</description>
         </fpga_map>
@@ -5638,6 +5902,8 @@
         <action ident="ACTION_SGDBR_CNTRL_STEP">r_sgdbr_cntrl_step</action>
         <action ident="ACTION_SGDBR_A_SET_CURRENTS">r_sgdbr_a_set_currents</action>
         <action ident="ACTION_SGDBR_B_SET_CURRENTS">r_sgdbr_b_set_currents</action>
+        <action ident="ACTION_SGDBR_C_SET_CURRENTS">r_sgdbr_c_set_currents</action>
+        <action ident="ACTION_SGDBR_D_SET_CURRENTS">r_sgdbr_d_set_currents</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

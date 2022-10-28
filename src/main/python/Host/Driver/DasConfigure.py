@@ -46,6 +46,9 @@ schedulerPriorities = dict(UPDATE=0,
 # Periods are expressed in tenths of a second
 schedulerPeriods = dict(FAST=2, MEDIUM=10, SLOW=50)
 
+def laserNum2SgdbrIndex(laserNum):
+    # Map laser number to SGDBR Index (1 => 'A' (0), 2 => 'C' (2), 3 => 'B' (1), 4 => 'D' (3))
+    return {1: 0, 2: 2, 3: 1, 4: 3}[laserNum]
 
 class DasConfigure(SharedTypes.Singleton):
     initialized = False
@@ -164,13 +167,21 @@ class DasConfigure(SharedTypes.Singleton):
     def processParameterForms(self, forms):
         conditions = []
         if self.installCheck("LASER1_PRESENT") == 2:
-            conditions.append("sgdbr1")
+            conditions.append("sgdbrA")
         else:
             conditions.append("dfb1")
+        if self.installCheck("LASER2_PRESENT") == 2:
+            conditions.append("sgdbrC")
+        else:
+            conditions.append("dfb2")
         if self.installCheck("LASER3_PRESENT") == 2:
-            conditions.append("sgdbr3")
+            conditions.append("sgdbrB")
         else:
             conditions.append("dfb3")
+        if self.installCheck("LASER4_PRESENT") == 2:
+            conditions.append("sgdbrD")
+        else:
+            conditions.append("dfb4")
 
         newForms = []
         for name, form in forms:
@@ -259,7 +270,7 @@ class DasConfigure(SharedTypes.Singleton):
         soa = self.installCheck("SOA_PRESENT")
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
         if soa and fiber_amp:
-            raise ValueError, "Cannot have both SOA and fiber amplifier present"
+            raise ValueError("Cannot have both SOA and fiber amplifier present")
 
         injCtrl = sender.rdFPGA("FPGA_INJECT", "INJECT_CONTROL")
 
@@ -277,28 +288,17 @@ class DasConfigure(SharedTypes.Singleton):
             injCtrl2 = sender.rdFPGA("FPGA_INJECT", "INJECT_CONTROL2")
             sender.wrFPGA("FPGA_INJECT", "INJECT_CONTROL2", injCtrl2 | (1 << interface.INJECT_CONTROL2_FIBER_AMP_PRESENT_B))
 
-        # Poll the ADC reader on the SGDBR board periodically
-        if self.installCheck("LASER1_PRESENT") == 2:
-            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                Operation("ACTION_READ_THERMISTOR_RESISTANCE_SGDBR",
-                          [0, "LASER1_RESISTANCE_REGISTER", "LASER1_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-
-        if self.installCheck("LASER3_PRESENT") == 2:
-            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                Operation("ACTION_READ_THERMISTOR_RESISTANCE_SGDBR",
-                          [1, "LASER3_RESISTANCE_REGISTER", "LASER3_THERMISTOR_SERIES_RESISTANCE_REGISTER"]))
-
         for laserNum in range(1, 5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
             if laserNum == 4:
                 if soa:
                     if present:
-                        raise ValueError, "Cannot have both laser 4 and SOA present"
+                        raise ValueError("Cannot have both laser 4 and SOA present")
                     else:
                         present = soa
                 elif fiber_amp:
                     if present:
-                        raise ValueError, "Cannot have both laser 4 and fiber amplifier present"
+                        raise ValueError("Cannot have both laser 4 and fiber amplifier present")
                     # The fiber amplifier thermal control operates on a slower
                     # timescale
                     if fiber_amp > 0:
@@ -335,10 +335,15 @@ class DasConfigure(SharedTypes.Singleton):
             if present:
                 # Set present to a negative number to disable I2C reads
                 if present > 0:
-                    # Temperature reading for laser 1 is done using SGDBR board
-                    if not ((laserNum == 1 and self.installCheck("LASER1_PRESENT") == 2) or
-                            (laserNum == 3 and self.installCheck("LASER3_PRESENT") == 2)):
-                        print "I2C reading thermistor for laser %d" % laserNum
+                    # Check if we need to use SPI or I2C to read laser temperature (i.e., if we have a SGDBR or DFB laser)
+                    if self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
+                        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                            Operation("ACTION_READ_THERMISTOR_RESISTANCE_SGDBR",
+                                      [laserNum-1, 
+                                       "LASER%d_RESISTANCE_REGISTER" % laserNum, 
+                                       "LASER%d_THERMISTOR_SERIES_RESISTANCE_REGISTER" % laserNum]))
+                    else:
+                        print("I2C reading thermistor for laser %d" % laserNum)
                         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                             Operation("ACTION_READ_THERMISTOR_RESISTANCE", [
                                 "I2C_LASER%d_THERMISTOR_ADC" % laserNum,
@@ -395,34 +400,32 @@ class DasConfigure(SharedTypes.Singleton):
                               ["STREAM_Laser%dTec" % laserNum, "LASER%d_TEC_REGISTER" % laserNum]))
                 self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_STEP" % laserNum))
 
-                # Laser current
-                self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
-                if laserNum == 4 and (soa or fiber_amp):
-                    pass
-                else:
-                    if present > 0:
-                        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_READ_LASER_CURRENT", [
-                                laserNum,
-                                "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
-                                "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
-                                "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum
-                            ]))
+                # Laser current for DFB lasers
+                if self.installCheck("LASER%d_PRESENT" % laserNum) == 1:
+                    self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
+                    if laserNum == 4 and (soa or fiber_amp):
+                        pass
                     else:
-                        self.opGroups["FAST"]["SENSOR_READ"].addOperation(
-                            Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
-                                      [laserNum, "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
-                    self.opGroups["FAST"]["STREAMER"].addOperation(
-                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                                  ["STREAM_Laser%dCurrent" % laserNum,
-                                   "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                        if present > 0:
+                            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_READ_LASER_CURRENT", [
+                                    laserNum,
+                                    "CONVERSION_LASER%d_CURRENT_SLOPE_REGISTER" % laserNum,
+                                    "CONVERSION_LASER%d_CURRENT_OFFSET_REGISTER" % laserNum,
+                                    "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum
+                                ]))
+                        else:
+                            self.opGroups["FAST"]["SENSOR_READ"].addOperation(
+                                Operation("ACTION_SIMULATE_LASER_CURRENT_READING",
+                                        [laserNum, "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
+                        self.opGroups["FAST"]["STREAMER"].addOperation(
+                            Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                    ["STREAM_Laser%dCurrent" % laserNum,
+                                     "LASER%d_CURRENT_MONITOR_REGISTER" % laserNum]))
 
-        # SGDBR current source
-        if self.installCheck("LASER1_PRESENT") == 2:
-            self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SGDBR_CNTRL_STEP", [0]))
-
-        if self.installCheck("LASER3_PRESENT") == 2:
-            self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SGDBR_CNTRL_STEP", [1]))
+                # Laser current for SGDBR lasers
+                elif self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
+                    self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SGDBR_CNTRL_STEP", [laserNum2SgdbrIndex(laserNum)]))
 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
         if self.installCheck("DAS_TEMP_MONITOR"):
@@ -538,7 +541,7 @@ class DasConfigure(SharedTypes.Singleton):
                     status = sender.doOperation(Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
                     self.i2cConfig[ident] = (status >= 0)
 
-                    print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
+                    print("%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False"))
                 if self.cavityThermistorConfig == 0:
                     # This represents the legacy mode in which the hot box heatsink thermistor is connected
                     #  to CAVITY_THERMISTOR_1_ADC and the combined cavity thermistor is connected to
@@ -1025,10 +1028,12 @@ class DasConfigure(SharedTypes.Singleton):
         self.dasInterface.uploadSchedule(groups)
 
         # Send the lattice FPGA file
-        if self.installCheck("LASER1_PRESENT") == 2 or self.installCheck("LASER3_PRESENT") == 2:
-            with open(self.driver.latticeFile, "rb") as fp:
-                programAsString = fp.read()
-            sender.wrLatticeFpgaProgram(programAsString)
+        for laserNum in range(1, 5):
+            if self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
+                with open(self.driver.latticeFile, "rb") as fp:
+                    programAsString = fp.read()
+                sender.wrLatticeFpgaProgram(programAsString)
+                break
 
         # Perform one-time initializations
 
@@ -1044,21 +1049,14 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [code, "FPGA_SGDBRMANAGER", "SGDBRMANAGER_SGDBR_PRESENT"]))
 
         time.sleep(1.0)
-        print "Checking SGDBR_PRESENT", sender.rdFPGA("FPGA_SGDBRMANAGER", "SGDBRMANAGER_SGDBR_PRESENT")
+        print("Checking SGDBR_PRESENT", sender.rdFPGA("FPGA_SGDBRMANAGER", "SGDBRMANAGER_SGDBR_PRESENT"))
 
-        if self.installCheck("LASER1_PRESENT") == 2:
-            sender.doOperation(Operation("ACTION_SGDBR_CNTRL_INIT", [0]))
-
-        if self.installCheck("LASER3_PRESENT") == 2:
-            sender.doOperation(Operation("ACTION_SGDBR_CNTRL_INIT", [1]))
-
-        if self.installCheck("LASER1_PRESENT") == 2:
-            print "Programming Lattice FPGA for SGDBR_A"
-            sender.doOperation(Operation("ACTION_SGDBR_PROGRAM_FPGA", [0]))
-
-        if self.installCheck("LASER3_PRESENT") == 2:
-            print "Programming Lattice FPGA for SGDBR_B"
-            sender.doOperation(Operation("ACTION_SGDBR_PROGRAM_FPGA", [1]))
+        # Perform one-off actions for handling SGDBR lasers
+        for laserNum in range(1, 5):
+            if self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
+                sender.doOperation(Operation("ACTION_SGDBR_CNTRL_INIT", [laserNum2SgdbrIndex(laserNum)]))
+                print("Programming Lattice FPGA for SGDBR laser in slot %d" % laserNum)
+                sender.doOperation(Operation("ACTION_SGDBR_PROGRAM_FPGA", [laserNum2SgdbrIndex(laserNum)]))
 
         # Schedule code specified in the initialization file
         if self.extraInitCode is not None:
@@ -1107,23 +1105,23 @@ class DasConfigure(SharedTypes.Singleton):
             ident = interface.i2cByIndex[i]
             status = sender.doOperation(Operation("ACTION_I2C_CHECK", interface.i2cByIdent[ident][-3:]))
             self.i2cConfig[ident] = (status >= 0)
-            print "%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False")
+            print("%s present: %s" % (ident, "True" if self.i2cConfig[ident] else "False"))
 
         if accelerometerPresent:
             ADXL345_REG_DEVID = 0
             ADXL345_REG_BW_RATE = 0x2C
             ADXL345_REG_POWER_CTL = 0x2D
             ADXL345_REG_DATA_FORMAT = 0x31
-            print "Accelerometer ID: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG", [ADXL345_REG_DEVID])), )
+            print("Accelerometer ID: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG", [ADXL345_REG_DEVID])), ))
             sender.doOperation(Operation("ACTION_ACC_WRITE_REG", [ADXL345_REG_BW_RATE, 9]))
-            print "Data rate code: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG", [ADXL345_REG_BW_RATE])), )
+            print("Data rate code: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG", [ADXL345_REG_BW_RATE])), ))
             data_format_and_range = sender.doOperation(Operation("ACTION_ACC_READ_REG", [ADXL345_REG_DATA_FORMAT]))
             data_format_and_range &= ~0x0F
             data_format_and_range |= 0x3  # 0=2g, 1=4g, 2=8g, 3=16g
             data_format_and_range |= 0x8
             sender.doOperation(Operation("ACTION_ACC_WRITE_REG", [ADXL345_REG_DATA_FORMAT, data_format_and_range]))
-            print "Data format and range code: %x" % (sender.doOperation(Operation("ACTION_ACC_READ_REG",
-                                                                                   [ADXL345_REG_DATA_FORMAT])), )
+            print("Data format and range code: %x" % (sender.doOperation(Operation(
+                "ACTION_ACC_READ_REG", [ADXL345_REG_DATA_FORMAT])), ))
             sender.doOperation(Operation("ACTION_ACC_WRITE_REG", [ADXL345_REG_POWER_CTL, 0x08]))
 
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))

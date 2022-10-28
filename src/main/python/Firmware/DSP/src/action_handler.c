@@ -674,12 +674,7 @@ int r_read_thermistor_resistance_sgdbr(unsigned int numInt, void *params, void *
     float Vfrac = 0.0, Rseries;
     if (3 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    if (reg[0] == 0)
-        Vfrac = sgdbrAReadThermistorAdc();
-    else if (reg[0] == 1)
-        Vfrac = sgdbrBReadThermistorAdc();
-    else
-        return ERROR_BAD_VALUE;
+	Vfrac = sgdbrReadThermistorAdc(reg[0]);
     READ_REG(reg[2], Rseries);
     if (Vfrac < 0.0 || Vfrac > 1.0)
         return ERROR_BAD_VALUE;
@@ -692,12 +687,7 @@ int r_sgdbr_cntrl_init(unsigned int numInt, void *params, void *env)
     unsigned int *reg = (unsigned int *)params;
     if (1 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    if (reg[0] == 0)
-        return sgdbrACntrlInit();
-    else if (reg[0] == 1)
-        return sgdbrBCntrlInit();
-    else
-        return ERROR_BAD_VALUE;
+	return sgdbrCntrlInit(reg[0]);
 }
 
 int r_sgdbr_cntrl_step(unsigned int numInt, void *params, void *env)
@@ -705,12 +695,7 @@ int r_sgdbr_cntrl_step(unsigned int numInt, void *params, void *env)
     unsigned int *reg = (unsigned int *)params;
     if (1 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    if (reg[0] == 0)
-        return sgdbrACntrlStep();
-    else if (reg[0] == 1)
-        return sgdbrBCntrlStep();
-    else
-        return ERROR_BAD_VALUE;
+	return sgdbrCntrlStep(reg[0]);
 }
 
 int r_read_thermistor_resistance(unsigned int numInt, void *params, void *env)
@@ -1420,10 +1405,7 @@ int r_action_sgdbr_program_fpga(unsigned int numInt, void *params, void *env)
     unsigned int *reg = (unsigned int *)params;
     if (1 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    if (reg[0] == 0)
-        sgdbrAProgramFpga();
-    else if (reg[0] == 1)
-        sgdbrBProgramFpga();
+    sgdbrProgramFpga(reg[0]);
     return STATUS_OK;
 }
 
@@ -1468,6 +1450,50 @@ int r_sgdbr_b_set_currents(unsigned int numInt, void *params, void *env)
     while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
     writeFPGA(FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_FINE_PHASE_DAC | (reg[3] & 0xFFFF));
     while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    return STATUS_OK;
+}
+
+int r_sgdbr_c_set_currents(unsigned int numInt, void *params, void *env)
+{
+    // Use the values passed in to set the front mirror, back mirror, coarse phase and fine phase
+    //  currents (in digitizer units) of the SGDBR_C laser. We set values in both the DAS register 
+    //  and the FPGA registers.
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    WRITE_REG(SGDBR_C_CNTRL_FRONT_MIRROR_REGISTER, (reg[0] & 0xFFFF));
+    WRITE_REG(SGDBR_C_CNTRL_BACK_MIRROR_REGISTER, (reg[1] & 0xFFFF));
+    WRITE_REG(SGDBR_C_CNTRL_COARSE_PHASE_REGISTER, (reg[2] & 0xFFFF));
+    WRITE_REG(SGDBR_C_CNTRL_FINE_PHASE_REGISTER, (reg[3] & 0xFFFF));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_FRONT_MIRROR_DAC | (reg[0] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_BACK_MIRROR_DAC | (reg[1] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_COARSE_PHASE_DAC | (reg[2] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_FINE_PHASE_DAC | (reg[3] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    return STATUS_OK;
+}
+
+int r_sgdbr_d_set_currents(unsigned int numInt, void *params, void *env)
+{
+    // Use the values passed in to set the front mirror, back mirror, coarse phase and fine phase
+    //  currents (in digitizer units) of the SGDBR_C laser. We set values in both the DAS register 
+    //  and the FPGA registers.
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt) return ERROR_BAD_NUM_PARAMS;
+    WRITE_REG(SGDBR_D_CNTRL_FRONT_MIRROR_REGISTER, (reg[0] & 0xFFFF));
+    WRITE_REG(SGDBR_D_CNTRL_BACK_MIRROR_REGISTER, (reg[1] & 0xFFFF));
+    WRITE_REG(SGDBR_D_CNTRL_COARSE_PHASE_REGISTER, (reg[2] & 0xFFFF));
+    WRITE_REG(SGDBR_D_CNTRL_FINE_PHASE_REGISTER, (reg[3] & 0xFFFF));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_FRONT_MIRROR_DAC | (reg[0] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_BACK_MIRROR_DAC | (reg[1] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_COARSE_PHASE_DAC | (reg[2] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
+    writeFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MOSI_DATA, SGDBR_FINE_PHASE_DAC | (reg[3] & 0xFFFF));
+    while (0 == (readFPGA(FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_CSR) & (1 << SGDBRCURRENTSOURCE_CSR_DONE_B)));
     return STATUS_OK;
 }
 

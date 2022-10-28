@@ -41,7 +41,8 @@ from Host.autogen.interface import (DATA_BANK_ADDR_WIDTH, EMIF_ADDR_WIDTH, EMIF_
                                     FPGA_DYNAMICPWM_OUTLET, FPGA_INJECT, FPGA_KERNEL, FPGA_LASERLOCKER, FPGA_PWM_ENGINE1,
                                     FPGA_PWM_ENGINE2, FPGA_PWM_FILTER_HEATER, FPGA_PWM_HEATER, FPGA_PWM_HOTBOX, FPGA_PWM_LASER1, FPGA_PWM_LASER2,
                                     FPGA_PWM_LASER3, FPGA_PWM_LASER4, FPGA_PWM_WARMBOX, FPGA_RDMAN, FPGA_RDSIM, FPGA_REG_WIDTH,
-                                    FPGA_SCALER, FPGA_SGDBRCURRENTSOURCE_A, FPGA_SGDBRCURRENTSOURCE_B, FPGA_SGDBRMANAGER,
+                                    FPGA_SCALER, FPGA_SGDBRCURRENTSOURCE_A, FPGA_SGDBRCURRENTSOURCE_B, FPGA_SGDBRCURRENTSOURCE_C, 
+                                    FPGA_SGDBRCURRENTSOURCE_D, FPGA_SGDBRMANAGER,
                                     FPGA_TWGEN, FPGA_WLMSIM, KERNEL_CONFIG_AUX_PZT_B, KERNEL_CONFIG_ENGINE1_TEC_B,
                                     KERNEL_CONFIG_ENGINE2_TEC_B, META_BANK_ADDR_WIDTH, PARAM_BANK_ADDR_WIDTH, RDMEM_DATA_WIDTH,
                                     RDMEM_META_WIDTH, RDMEM_PARAM_WIDTH, OVERLOAD_HotBoxTecBit, OVERLOAD_WarmBoxTecBit)
@@ -86,13 +87,15 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     dsp_data_in_pwm_laser4 = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_rdman = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_analyzermemory = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_rdsim = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    # dsp_data_in_rdsim = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_twGen = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_warmbox = Signal(intbv(0)[EMIF_DATA_WIDTH:])
-    dsp_data_in_wlmsim = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    # dsp_data_in_wlmsim = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_scaler = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_sgdbrcurrentsource_a = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_sgdbrcurrentsource_b = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_sgdbrcurrentsource_c = Signal(intbv(0)[EMIF_DATA_WIDTH:])
+    dsp_data_in_sgdbrcurrentsource_d = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_sgdbrmanager = Signal(intbv(0)[EMIF_DATA_WIDTH:])
     dsp_data_in_pwm_filter_heater = Signal(intbv(0)[EMIF_DATA_WIDTH:])
 
@@ -262,9 +265,25 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     sgdbr_b_done = Signal(LOW)
     sgdbr_b_sync_register = Signal(intbv(0)[4:])
 
+    sgdbr_c_sck = Signal(HIGH)
+    sgdbr_c_csn = Signal(HIGH)
+    sgdbr_c_miso = Signal(LOW)
+    sgdbr_c_mosi = Signal(LOW)
+    sgdbr_c_resetn = Signal(LOW)
+    sgdbr_c_done = Signal(LOW)
+    sgdbr_c_sync_register = Signal(intbv(0)[4:])
+
+    sgdbr_d_sck = Signal(HIGH)
+    sgdbr_d_csn = Signal(HIGH)
+    sgdbr_d_miso = Signal(LOW)
+    sgdbr_d_mosi = Signal(LOW)
+    sgdbr_d_resetn = Signal(LOW)
+    sgdbr_d_done = Signal(LOW)
+    sgdbr_d_sync_register = Signal(intbv(0)[4:])
+
     sgdbr_mode = Signal(LOW)
-    sgdbr_present = Signal(intbv(0)[2:])
-    sgdbr_select = Signal(LOW)
+    sgdbr_present = Signal(intbv(0)[4:])
+    sgdbr_select = Signal(intbv(0)[2:])
 
     pb_data = Signal(intbv(0)[RDMEM_META_WIDTH:])
     pb_wfm_sel = Signal(LOW)
@@ -279,6 +298,8 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
     sync_current_in = Signal(intbv(0)[FPGA_REG_WIDTH:])
     sgdbr_a_sync_strobe_in = Signal(LOW)
     sgdbr_b_sync_strobe_in = Signal(LOW)
+    sgdbr_c_sync_strobe_in = Signal(LOW)
+    sgdbr_d_sync_strobe_in = Signal(LOW)
 
     dsp_interface = Dsp_interface(clk=clk0,
                                   reset=reset,
@@ -616,19 +637,19 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                 sgdbr_select_out=sgdbr_select,
                                 map_base=FPGA_SGDBRMANAGER)
 
-    rdsim = RdSim(clk=clk0,
-                  reset=reset,
-                  dsp_addr=dsp_addr,
-                  dsp_data_out=dsp_data_out,
-                  dsp_data_in=dsp_data_in_rdsim,
-                  dsp_wr=dsp_wr,
-                  rd_trig_in=rd_trig,
-                  pzt_value_in=pzt,
-                  rd_adc_clk_in=adc_clk,
-                  pzt_center_in=sim_pzt,
-                  decay_in=sim_loss,
-                  rdsim_value_out=rdsim_value,
-                  map_base=FPGA_RDSIM)
+    # rdsim = RdSim(clk=clk0,
+    #               reset=reset,
+    #               dsp_addr=dsp_addr,
+    #               dsp_data_out=dsp_data_out,
+    #               dsp_data_in=dsp_data_in_rdsim,
+    #               dsp_wr=dsp_wr,
+    #               rd_trig_in=rd_trig,
+    #               pzt_value_in=pzt,
+    #               rd_adc_clk_in=adc_clk,
+    #               pzt_center_in=sim_pzt,
+    #               decay_in=sim_loss,
+    #               rdsim_value_out=rdsim_value,
+    #               map_base=FPGA_RDSIM)
 
     sgdbrCurrentSourceA = SgdbrCurrentSource(clk=clk0,
                                              reset=reset,
@@ -664,6 +685,40 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                              done_out=sgdbr_b_done,
                                              map_base=FPGA_SGDBRCURRENTSOURCE_B)
 
+    sgdbrCurrentSourceC = SgdbrCurrentSource(clk=clk0,
+                                             reset=reset,
+                                             dsp_addr=dsp_addr,
+                                             dsp_data_out=dsp_data_out,
+                                             dsp_data_in=dsp_data_in_sgdbrcurrentsource_c,
+                                             dsp_wr=dsp_wr,
+                                             sck_out=sgdbr_c_sck,
+                                             csn_out=sgdbr_c_csn,
+                                             data_in=sgdbr_c_miso,
+                                             sync_current_in=sync_current_in,
+                                             sync_register_in=sgdbr_c_sync_register,
+                                             sync_strobe_in=sgdbr_c_sync_strobe_in,
+                                             data_out=sgdbr_c_mosi,
+                                             resetn_out=sgdbr_c_resetn,
+                                             done_out=sgdbr_c_done,
+                                             map_base=FPGA_SGDBRCURRENTSOURCE_C)
+
+    sgdbrCurrentSourceD = SgdbrCurrentSource(clk=clk0,
+                                             reset=reset,
+                                             dsp_addr=dsp_addr,
+                                             dsp_data_out=dsp_data_out,
+                                             dsp_data_in=dsp_data_in_sgdbrcurrentsource_d,
+                                             dsp_wr=dsp_wr,
+                                             sck_out=sgdbr_d_sck,
+                                             csn_out=sgdbr_d_csn,
+                                             data_in=sgdbr_d_miso,
+                                             sync_current_in=sync_current_in,
+                                             sync_register_in=sgdbr_d_sync_register,
+                                             sync_strobe_in=sgdbr_d_sync_strobe_in,
+                                             data_out=sgdbr_d_mosi,
+                                             resetn_out=sgdbr_d_resetn,
+                                             done_out=sgdbr_d_done,
+                                             map_base=FPGA_SGDBRCURRENTSOURCE_D)
+
     twGen = TWGen(clk=clk0,
                   reset=reset,
                   dsp_addr=dsp_addr,
@@ -693,40 +748,40 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                                 eta2_out=eta2_actual,
                                 ref2_out=ref2_actual)
 
-    wlmsim = WlmSim(clk=clk0,
-                    reset=reset,
-                    dsp_addr=dsp_addr,
-                    dsp_data_out=dsp_data_out,
-                    dsp_data_in=dsp_data_in_wlmsim,
-                    dsp_wr=dsp_wr,
-                    start_in=pulse_100k,
-                    coarse_current_in=sel_coarse_current,
-                    fine_current_in=sel_fine_current,
-                    eta1_out=eta1_sim,
-                    ref1_out=ref1_sim,
-                    eta2_out=eta2_sim,
-                    ref2_out=ref2_sim,
-                    loss_out=sim_loss,
-                    pzt_cen_out=sim_pzt,
-                    done_out=data_available_sim,
-                    map_base=FPGA_WLMSIM)
+    # wlmsim = WlmSim(clk=clk0,
+    #                 reset=reset,
+    #                 dsp_addr=dsp_addr,
+    #                 dsp_data_out=dsp_data_out,
+    #                 dsp_data_in=dsp_data_in_wlmsim,
+    #                 dsp_wr=dsp_wr,
+    #                 start_in=pulse_100k,
+    #                 coarse_current_in=sel_coarse_current,
+    #                 fine_current_in=sel_fine_current,
+    #                 eta1_out=eta1_sim,
+    #                 ref1_out=ref1_sim,
+    #                 eta2_out=eta2_sim,
+    #                 ref2_out=ref2_sim,
+    #                 loss_out=sim_loss,
+    #                 pzt_cen_out=sim_pzt,
+    #                 done_out=data_available_sim,
+    #                 map_base=FPGA_WLMSIM)
 
-    wlmmux = WlmMux(sim_actual_in=wlm_sim_actual,
-                    eta1_sim_in=eta1_sim,
-                    ref1_sim_in=ref1_sim,
-                    eta2_sim_in=eta2_sim,
-                    ref2_sim_in=ref2_sim,
-                    data_available_sim_in=data_available_sim,
-                    eta1_actual_in=eta1_actual,
-                    ref1_actual_in=ref1_actual,
-                    eta2_actual_in=eta2_actual,
-                    ref2_actual_in=ref2_actual,
-                    data_available_actual_in=data_available_actual,
-                    eta1_out=eta1,
-                    ref1_out=ref1,
-                    eta2_out=eta2,
-                    ref2_out=ref2,
-                    data_available_out=wlm_data_available)
+    # wlmmux = WlmMux(sim_actual_in=wlm_sim_actual,
+    #                 eta1_sim_in=eta1_sim,
+    #                 ref1_sim_in=ref1_sim,
+    #                 eta2_sim_in=eta2_sim,
+    #                 ref2_sim_in=ref2_sim,
+    #                 data_available_sim_in=data_available_sim,
+    #                 eta1_actual_in=eta1_actual,
+    #                 ref1_actual_in=ref1_actual,
+    #                 eta2_actual_in=eta2_actual,
+    #                 ref2_actual_in=ref2_actual,
+    #                 data_available_actual_in=data_available_actual,
+    #                 eta1_out=eta1,
+    #                 ref1_out=ref1,
+    #                 eta2_out=eta2,
+    #                 ref2_out=ref2,
+    #                 data_available_out=wlm_data_available)
 
     # pztValveDac = Ltc2604Dac(clk=clk0, reset=reset, dac_clock_in=clk_10M,
     #                         chanA_data_in=inlet_valve_dac,
@@ -1013,9 +1068,15 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                             | dsp_data_in_inject | dsp_data_in_kernel | dsp_data_in_laserlocker
                             | dsp_data_in_pwm_heater | dsp_data_in_pwm_hotbox | dsp_data_in_pwm_engine1 | dsp_data_in_pwm_engine2
                             | dsp_data_in_pwm_laser1 | dsp_data_in_pwm_laser2 | dsp_data_in_pwm_laser3 | dsp_data_in_pwm_laser4
-                            | dsp_data_in_rdman | dsp_data_in_rdsim | dsp_data_in_sgdbrcurrentsource_a
-                            | dsp_data_in_sgdbrcurrentsource_b | dsp_data_in_sgdbrmanager | dsp_data_in_twGen
-                            | dsp_data_in_pwm_warmbox | dsp_data_in_wlmsim | dsp_data_in_scaler | dsp_data_in_pwm_filter_heater)
+                            | dsp_data_in_rdman #  | dsp_data_in_rdsim 
+                            | dsp_data_in_sgdbrcurrentsource_a
+                            | dsp_data_in_sgdbrcurrentsource_b | dsp_data_in_sgdbrcurrentsource_c 
+                            | dsp_data_in_sgdbrcurrentsource_d | dsp_data_in_sgdbrmanager | dsp_data_in_twGen
+                            | dsp_data_in_pwm_warmbox #  | dsp_data_in_wlmsim 
+                            | dsp_data_in_scaler | dsp_data_in_pwm_filter_heater)
+
+        wlm_data_available.next = data_available_actual
+
         # dsp_data_in_lasercurrentgenerator
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload
         overload_in.next[OVERLOAD_HotBoxTecBit] = hot_box_tec_overload
@@ -1034,6 +1095,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
             intronix.next[33] = 0
 
         monitor.next = rd_trig
+        aux_din.next = 0
         aux_din[3].next = rd_trig
 
         ce2.next = dsp_emif_ce[2]
@@ -1092,6 +1154,7 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
         cyp_reset.next = 0
 
         # Set up laser1 and laser3 to map to SGDBR_A and SGDBR_B
+        sgdbr_a_miso.next = 0
         if sgdbr_present[0]:
             sgdbr_a_miso.next = lsr1_miso
             lsr1_sck.next = sgdbr_a_sck
@@ -1104,11 +1167,20 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
             lsr1_mosi.next = lsr1_mosi_temp
             lsr1_disable.next = lsr1_disable_temp
 
-        lsr2_sck.next = clk_5M
-        lsr2_ss.next = lsr2_ss_temp
-        lsr2_mosi.next = lsr2_mosi_temp
-        lsr2_disable.next = lsr2_disable_temp
+        sgdbr_c_miso.next = 0
+        if sgdbr_present[2]:
+            sgdbr_c_miso.next = lsr2_miso
+            lsr2_sck.next = sgdbr_c_sck
+            lsr2_ss.next = not sgdbr_c_csn
+            lsr2_mosi.next = sgdbr_c_mosi
+            lsr2_disable.next = sgdbr_c_resetn
+        else:
+            lsr2_sck.next = clk_5M
+            lsr2_ss.next = lsr2_ss_temp
+            lsr2_mosi.next = lsr2_mosi_temp
+            lsr2_disable.next = lsr2_disable_temp
 
+        sgdbr_b_miso.next = 0
         if sgdbr_present[1]:
             sgdbr_b_miso.next = lsr3_miso
             lsr3_sck.next = sgdbr_b_sck
@@ -1121,31 +1193,53 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
             lsr3_mosi.next = lsr3_mosi_temp
             lsr3_disable.next = lsr3_disable_temp
 
-        lsr4_sck.next = clk_5M
-        lsr4_ss.next = lsr4_ss_temp
-        lsr4_mosi.next = lsr4_mosi_temp
-        lsr4_disable.next = lsr4_disable_temp
+        sgdbr_d_miso.next = 0
+        if sgdbr_present[3]:
+            sgdbr_d_miso.next = lsr4_miso
+            lsr4_sck.next = sgdbr_d_sck
+            lsr4_ss.next = not sgdbr_d_csn
+            lsr4_mosi.next = sgdbr_d_mosi
+            lsr4_disable.next = sgdbr_d_resetn
+        else:
+            lsr4_sck.next = clk_5M
+            lsr4_ss.next = lsr4_ss_temp
+            lsr4_mosi.next = lsr4_mosi_temp
+            lsr4_disable.next = lsr4_disable_temp
 
         sgdbr_a_sync_register.next = 5  # Fine phase current
         sgdbr_b_sync_register.next = 5  # Fine phase current
+        sgdbr_c_sync_register.next = 5  # Fine phase current
+        sgdbr_d_sync_register.next = 5  # Fine phase current
 
         # Multiplex the SGDBR sync update port
         if sgdbr_mode:
             sync_current_in.next = pb0_out
-            if sgdbr_select:
-                sgdbr_a_sync_strobe_in.next = 0
-                sgdbr_b_sync_strobe_in.next = pb_strobe_out
-            else:
+            sgdbr_a_sync_strobe_in.next = 0
+            sgdbr_b_sync_strobe_in.next = 0
+            sgdbr_c_sync_strobe_in.next = 0
+            sgdbr_d_sync_strobe_in.next = 0
+            if sgdbr_select == 0:
                 sgdbr_a_sync_strobe_in.next = pb_strobe_out
-                sgdbr_b_sync_strobe_in.next = 0
+            elif sgdbr_select == 1:
+                sgdbr_b_sync_strobe_in.next = pb_strobe_out
+            elif sgdbr_select == 2:
+                sgdbr_c_sync_strobe_in.next = pb_strobe_out
+            else:
+                sgdbr_d_sync_strobe_in.next = pb_strobe_out
         else:
             sync_current_in.next = laser_fine_current
-            if sgdbr_select:
-                sgdbr_a_sync_strobe_in.next = 0
-                sgdbr_b_sync_strobe_in.next = metadata_strobe
-            else:
+            sgdbr_a_sync_strobe_in.next = 0
+            sgdbr_b_sync_strobe_in.next = 0
+            sgdbr_c_sync_strobe_in.next = 0
+            sgdbr_d_sync_strobe_in.next = 0
+            if sgdbr_select == 0:
                 sgdbr_a_sync_strobe_in.next = metadata_strobe
-                sgdbr_b_sync_strobe_in.next = 0
+            elif sgdbr_select == 1:
+                sgdbr_b_sync_strobe_in.next = metadata_strobe
+            elif sgdbr_select == 2:
+                sgdbr_c_sync_strobe_in.next = metadata_strobe
+            else:
+                sgdbr_d_sync_strobe_in.next = metadata_strobe
 
     return instances()
 

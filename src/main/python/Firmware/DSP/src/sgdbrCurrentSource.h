@@ -10,6 +10,7 @@
  *
  * HISTORY:
  *   6-Feb-2018  sze  Initial version.
+ *   27-Oct-2022 sze  Four laser version.
  *
  *  Copyright (c) 2018 Picarro, Inc. All rights reserved
  */
@@ -18,7 +19,7 @@
 
 typedef struct SGDBR_CNTRL
 {
-    char name;                   // 'A' or 'B' depending on laser
+    char name;                   // 'A', 'B', 'C' or 'D' depending on laser
     // References to registers
     unsigned int *state_;        // Controller state
     float *front_mirror_;        // Manual front mirror current setting
@@ -65,14 +66,10 @@ typedef struct SGDBR_CNTRL
     unsigned int fpga_miso_data;
 } SgdbrCntrl;
 
-int sgdbrACntrlInit(void);
-int sgdbrBCntrlInit(void);
-int sgdbrACntrlStep(void);
-int sgdbrBCntrlStep(void);
-void sgdbrAProgramFpga(void);
-void sgdbrBProgramFpga(void);
-double sgdbrAReadThermistorAdc(void);
-double sgdbrBReadThermistorAdc(void);
+int sgdbrCntrlInit(int laserIndex);
+int sgdbrCntrlStep(int laserIndex);
+void sgdbrProgramFpga(int laserIndex);
+double sgdbrReadThermistorAdc(int laserIndex);
 void setup_all_gain_and_soa_currents(void);
 
 #endif /* _SGDBR_CURRENT_SOURCE_H_ */
