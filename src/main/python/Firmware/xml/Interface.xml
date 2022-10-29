@@ -534,6 +534,8 @@
             <enum_value ident="STREAM_Cavity2Temp" />
             <enum_value ident="STREAM_SgdbrAPulseTempPtp" />
             <enum_value ident="STREAM_SgdbrBPulseTempPtp" />
+            <enum_value ident="STREAM_SgdbrCPulseTempPtp" />
+            <enum_value ident="STREAM_SgdbrDPulseTempPtp" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>

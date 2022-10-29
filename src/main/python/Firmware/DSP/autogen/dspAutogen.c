@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[677];
+RegTypes regTypes[681];
 
 /* I2C devices */
 I2C_device i2c_devices[41] = {
@@ -233,6 +233,10 @@ void initRegisters()
     writeRegister(LASER2_TEMP_CNTRL_AMAX_REGISTER,d);
     d.asFloat = 10000.0;
     writeRegister(LASER2_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER2_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER2_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,d);
     d.asUint = 0x481;
     writeRegister(LASER2_TEC_PRBS_GENPOLY_REGISTER,d);
     d.asFloat = 5000.0;
@@ -401,6 +405,10 @@ void initRegisters()
     writeRegister(LASER4_TEMP_CNTRL_AMAX_REGISTER,d);
     d.asFloat = 10000.0;
     writeRegister(LASER4_TEMP_CNTRL_IMAX_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER4_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(LASER4_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER,d);
     d.asUint = 0x481;
     writeRegister(LASER4_TEC_PRBS_GENPOLY_REGISTER,d);
     d.asFloat = 5000.0;
@@ -1412,6 +1420,8 @@ void initRegisters()
     regTypes[LASER2_TEMP_CNTRL_AMIN_REGISTER] = float_type;
     regTypes[LASER2_TEMP_CNTRL_AMAX_REGISTER] = float_type;
     regTypes[LASER2_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER] = float_type;
+    regTypes[LASER2_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER] = float_type;
     regTypes[LASER2_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
     regTypes[LASER2_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[LASER2_TEC_PRBS_MEAN_REGISTER] = float_type;
@@ -1500,6 +1510,8 @@ void initRegisters()
     regTypes[LASER4_TEMP_CNTRL_AMIN_REGISTER] = float_type;
     regTypes[LASER4_TEMP_CNTRL_AMAX_REGISTER] = float_type;
     regTypes[LASER4_TEMP_CNTRL_IMAX_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER] = float_type;
+    regTypes[LASER4_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER] = float_type;
     regTypes[LASER4_TEC_PRBS_GENPOLY_REGISTER] = uint_type;
     regTypes[LASER4_TEC_PRBS_AMPLITUDE_REGISTER] = float_type;
     regTypes[LASER4_TEC_PRBS_MEAN_REGISTER] = float_type;
