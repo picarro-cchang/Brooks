@@ -1075,7 +1075,12 @@ def main(clk0, clk180, clk3f, clk3f180, clk_locked, reset, intronix, fpga_led, d
                             | dsp_data_in_pwm_warmbox #  | dsp_data_in_wlmsim 
                             | dsp_data_in_scaler | dsp_data_in_pwm_filter_heater)
 
+        # The following are used to hard-wire the WLM MUX so that we do not need the WlmSim block
         wlm_data_available.next = data_available_actual
+        eta1.next = eta1_actual
+        eta2.next = eta2_actual
+        ref1.next = ref1_actual
+        ref2.next = ref2_actual
 
         # dsp_data_in_lasercurrentgenerator
         overload_in.next[OVERLOAD_WarmBoxTecBit] = warm_box_tec_overload

@@ -2197,4 +2197,3 @@ typedef enum {
 /* Aliases */
 #define PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER (PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER) // Old name for number of samples spent in triggered state
 #define PEAK_DETECT_CNTRL_REMAINING_TRIGGERED_SAMPLES_REGISTER (PEAK_DETECT_CNTRL_REMAINING_SAMPLES_REGISTER) // Old name for register tracking number of samples left in capture mode
-#endif

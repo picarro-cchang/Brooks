@@ -123,4 +123,3 @@ int r_sgdbr_a_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_b_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_c_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_d_set_currents(unsigned int numInt,void *params,void *env);
-#endif

@@ -1044,8 +1044,12 @@ class DasConfigure(SharedTypes.Singleton):
         code = 0
         if self.installCheck("LASER1_PRESENT") == 2:
             code |= (1 << interface.SGDBRMANAGER_SGDBR_PRESENT_SGDBR_A_PRESENT_B)
+        if self.installCheck("LASER2_PRESENT") == 2:
+            code |= (1 << interface.SGDBRMANAGER_SGDBR_PRESENT_SGDBR_C_PRESENT_B)
         if self.installCheck("LASER3_PRESENT") == 2:
             code |= (1 << interface.SGDBRMANAGER_SGDBR_PRESENT_SGDBR_B_PRESENT_B)
+        if self.installCheck("LASER4_PRESENT") == 2:
+            code |= (1 << interface.SGDBRMANAGER_SGDBR_PRESENT_SGDBR_D_PRESENT_B)
         sender.doOperation(Operation("ACTION_INT_TO_FPGA", [code, "FPGA_SGDBRMANAGER", "SGDBRMANAGER_SGDBR_PRESENT"]))
 
         time.sleep(1.0)

@@ -1279,6 +1279,18 @@
             <save/>
             <display format="%.1f">Maximum actuator increment (Imax)</display>
         </register>
+        <register ident="LASER2_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 TEC feed forward from front mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from front mirror current</display>
+        </register>
+        <register ident="LASER2_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser2 TEC feed forward from back mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from back mirror current</display>
+        </register>
         <register ident="LASER2_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Laser2 TEC PRBS generator polynomial</description>
             <initial>0x481</initial>
@@ -1762,6 +1774,18 @@
             <initial>10000.0</initial>
             <save/>
             <display format="%.1f">Maximum actuator increment (Imax)</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_FRONT_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 TEC feed forward from front mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from front mirror current</display>
+        </register>
+        <register ident="LASER4_TEMP_CNTRL_BACK_MIRROR_FFWD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>Laser4 TEC feed forward from back mirror current</description>
+            <initial>0.0</initial>
+            <save/>
+            <display format="%.3f">TEC feed forward from back mirror current</display>
         </register>
         <register ident="LASER4_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Laser4 TEC PRBS generator polynomial</description>
