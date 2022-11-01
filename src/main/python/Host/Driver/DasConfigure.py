@@ -339,7 +339,7 @@ class DasConfigure(SharedTypes.Singleton):
                     if self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
                         self.opGroups["FAST"]["SENSOR_READ"].addOperation(
                             Operation("ACTION_READ_THERMISTOR_RESISTANCE_SGDBR",
-                                      [laserNum-1, 
+                                      [laserNum2SgdbrIndex(laserNum), 
                                        "LASER%d_RESISTANCE_REGISTER" % laserNum, 
                                        "LASER%d_THERMISTOR_SERIES_RESISTANCE_REGISTER" % laserNum]))
                     else:
