@@ -5391,10 +5391,11 @@
                     <fielddef value="0">No</fielddef>
                     <fielddef value="1">Yes</fielddef>
                 </bitfield>
-                <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="9" width="2">
+                <bitfield ident="OPTICAL_SWITCH_SELECT" description="Select optical switch type" lsb="9" width="3">
                     <fielddef value="0">2-way Crystalatch</fielddef>
                     <fielddef value="1">2-way MEMS</fielddef>
                     <fielddef value="2">4-way Crystalatch</fielddef>
+                    <fielddef value="3">4-way MEMS</fielddef>
                 </bitfield>
             </reg>
             <reg type="uint16" ident="LASER1_COARSE_CURRENT" description="Sets coarse current for laser 1"/>

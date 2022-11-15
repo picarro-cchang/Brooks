@@ -29,6 +29,7 @@
 #                      is set).
 #   26-Oct-2015  sze  Added control bits to allow SOA to be turned off when some lasers are selected
 #   20-Mar-2018  sze  For a 2-way switch, select channel A for lasers 1 and 4, channel B for lasers 2 and 3
+#   10-Nov-2022  sze  Add support for 4-way MEMS switch
 #
 #  Copyright (c) 2015 Picarro, Inc. All rights reserved
 #
@@ -91,7 +92,7 @@ LOW, HIGH = bool(0), bool(1)
 SWITCH_2WAY_XTALATCH = 0
 SWITCH_2WAY_MEMS = 1
 SWITCH_4WAY_XTALATCH = 2
-
+SWITCH_4WAY_MEMS = 3
 
 def Inject(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
            laser_dac_clk_in, strobe_in, laser_fine_current_in,
@@ -164,6 +165,11 @@ def Inject(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
         optical_switch1_out  -- Used for laser selection
         optical_switch2_out  -- Used for laser selection
         optical_switch4_out  -- Goes low for 1ms when any laser is selected.
+
+    For 4 way MEMS switch:
+        optical_switch1_out: goes high while laser 2 or 4 selected
+        optical_switch2_out: goes high while laser 3 or 4 selected
+    The outputs are 00 for laser 1, 01 for laser 2, 10 for laser 3 and 11 for laser 4.
 
     If INJECT_CONTROL2_FIBER_AMP_PRESENT is asserted, optical_switch4_out is connected to
     fiber_amp_pwm_in, since this signal is also used for the PWM of the fiber amplifier
@@ -638,7 +644,7 @@ def Inject(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
                         optical_switch_counter.next = 0
 
                 # State machine for generating low-going pulse on laser change
-                # for 4-way optical switch
+                # for 4-way crystal latch optical switch
 
                 bl = INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B
                 bh = bl + INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W
@@ -767,9 +773,12 @@ def Inject(clk, reset, dsp_addr, dsp_data_out, dsp_data_in, dsp_wr,
         elif control2[bh:bl] == SWITCH_2WAY_XTALATCH:
             optical_switch1_out.next = sw1_2way
             optical_switch2_out.next = sw2_2way
-        else:  # This is SWITCH_2WAY_MEMS
+        elif control2[bh:bl] == SWITCH_2WAY_MEMS:
             optical_switch1_out.next = (s[2:0] == 2) or (s[2:0] == 1)
             optical_switch2_out.next = (s[2:0] == 2) or (s[2:0] == 1)
+        else:  # This is SWITCH_4WAY_MEMS
+            optical_switch1_out.next = s[0]
+            optical_switch2_out.next = s[1]
 
         optical_switch4_out.next = sw4_4way
 
