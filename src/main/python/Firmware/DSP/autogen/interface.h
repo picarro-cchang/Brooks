@@ -1907,7 +1907,7 @@ typedef enum {
 #define INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_B (8) // Disable SOA for laser 4 bit position
 #define INJECT_CONTROL2_DISABLE_SOA_WITH_LASER4_W (1) // Disable SOA for laser 4 bit width
 #define INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_B (9) // Select optical switch type bit position
-#define INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W (2) // Select optical switch type bit width
+#define INJECT_CONTROL2_OPTICAL_SWITCH_SELECT_W (3) // Select optical switch type bit width
 
 #define INJECT_LASER1_COARSE_CURRENT (2) // Sets coarse current for laser 1
 #define INJECT_LASER2_COARSE_CURRENT (3) // Sets coarse current for laser 2
