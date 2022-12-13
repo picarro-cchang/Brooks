@@ -1205,8 +1205,8 @@ class RDFrequencyConverter(Singleton):
         ini = CustomConfigObj(self.warmBoxCalFilePath)
 
         # Load the calibration objects for the SGDBR lasers
-        self.sgdbrCals["A"] = SgdbrCal(ini, "A")
-        self.sgdbrCals["B"] = SgdbrCal(ini, "B")
+        for ident in ["A", "B", "C", "D"]:
+            self.sgdbrCals[ident] = SgdbrCal(ini, ident)
 
         # Load up the frequency converters for each virtual laser
         # N.B. In AutoCal, laser indices are 1 based
@@ -1248,38 +1248,25 @@ class RDFrequencyConverter(Singleton):
                 if not self.virtualMode:
                     Driver.wrVirtualLaserParams(vLaserNum, laserParams)
                 if laserType == 1:
-                    if aLaserNum == 1:
-                        freqConv.sgdbrCal = self.sgdbrCals['A']
-                        # Modify the SOA and GAIN currents if these are in the warm box cal file
-                        if "SOASETTING" in ini['ACTUAL_LASER_1']:
-                            setSoa("SGDBR_A", ini['ACTUAL_LASER_1'].as_float("SOASETTING"))
-                        else:
-                            soaDu = Driver.rdDasReg("SGDBR_A_CNTRL_SOA_REGISTER")
-                            soaDu = int(ini['ACTUAL_LASER_1'].get("SOA_DU", soaDu))
-                            Driver.wrDasReg("SGDBR_A_CNTRL_SOA_REGISTER", soaDu)
-                        if "GAINSETTING" in ini['ACTUAL_LASER_1']:
-                            setGain("SGDBR_A", ini['ACTUAL_LASER_1'].as_float("GAINSETTING"))
-                        else:
-                            gainDu = Driver.rdDasReg("SGDBR_A_CNTRL_GAIN_REGISTER")
-                            gainDu = int(ini['ACTUAL_LASER_1'].get("GAIN_DU", gainDu))
-                            Driver.wrDasReg("SGDBR_A_CNTRL_GAIN_REGISTER", gainDu)
-                    elif aLaserNum == 3:
-                        freqConv.sgdbrCal = self.sgdbrCals['B']
-                        # Modify the SOA and GAIN currents if these are in the warm box cal file
-                        if "SOASETTING" in ini['ACTUAL_LASER_3']:
-                            setSoa("SGDBR_B", ini['ACTUAL_LASER_3'].as_float("SOASETTING"))
-                        else:
-                            soaDu = Driver.rdDasReg("SGDBR_B_CNTRL_SOA_REGISTER")
-                            soaDu = int(ini['ACTUAL_LASER_3'].get("SOA_DU", soaDu))
-                            Driver.wrDasReg("SGDBR_B_CNTRL_SOA_REGISTER", soaDu)
-                        if "GAINSETTING" in ini['ACTUAL_LASER_3']:
-                            setGain("SGDBR_B", ini['ACTUAL_LASER_3'].as_float("GAINSETTING"))
-                        else:
-                            gainDu = Driver.rdDasReg("SGDBR_B_CNTRL_GAIN_REGISTER")
-                            gainDu = int(ini['ACTUAL_LASER_3'].get("GAIN_DU", gainDu))
-                            Driver.wrDasReg("SGDBR_B_CNTRL_GAIN_REGISTER", gainDu)
+                    # Handle SGDBR lasers
+                    laser_ident = {1: "A", 2: "C", 3: "B", 4: "D"}[aLaserNum]
+                    prefix = "SGDBR_" + laser_ident
+                    suffix = "_" + laser_ident
+                    freqConv.sgdbrCal = self.sgdbrCals[laser_ident]
+                    # Modify the SOA and GAIN currents if these are in the warm box cal file
+                    if "SOASETTING" in ini['ACTUAL_LASER_%d' % aLaserNum]:
+                        setSoa(prefix, ini['ACTUAL_LASER_%d' % aLaserNum].as_float("SOASETTING"))
                     else:
-                        raise ValueError("SGDBR laser must be Laser 1 or Laser 3")
+                        soaDu = Driver.rdDasReg(prefix + "_CNTRL_SOA_REGISTER")
+                        soaDu = int(ini['ACTUAL_LASER_%d' % aLaserNum].get("SOA_DU", soaDu))
+                        Driver.wrDasReg(prefix + "_CNTRL_SOA_REGISTER", soaDu)
+                    if "GAINSETTING" in ini['ACTUAL_LASER_%d' % aLaserNum]:
+                        setGain(prefix, ini['ACTUAL_LASER_%d' % aLaserNum].as_float("GAINSETTING"))
+                    else:
+                        gainDu = Driver.rdDasReg(prefix + "_CNTRL_GAIN_REGISTER")
+                        gainDu = int(ini['ACTUAL_LASER_%d' % aLaserNum].get("GAIN_DU", gainDu))
+                        Driver.wrDasReg(prefix + "_CNTRL_GAIN_REGISTER", gainDu)
+                        
         # Start the ringdown listener only once there are frequency converters
         # available to do the conversion
         if not self.freqConvertersLoaded:

@@ -89,35 +89,65 @@ int spectCntrlInit(void)
     s->schemeOffsetByVirtualLaser_[7] = (float *)registerAddr(SCHEME_OFFSET_VIRTUAL_LASER8);
     s->frontMirrorDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_MIRROR_REGISTER);
     s->frontMirrorDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_MIRROR_REGISTER);
+    s->frontMirrorDac_[2] = (float *)registerAddr(SGDBR_C_CNTRL_FRONT_MIRROR_REGISTER);
+    s->frontMirrorDac_[3] = (float *)registerAddr(SGDBR_D_CNTRL_FRONT_MIRROR_REGISTER);
     s->backMirrorDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_BACK_MIRROR_REGISTER);
     s->backMirrorDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_BACK_MIRROR_REGISTER);
+    s->backMirrorDac_[2] = (float *)registerAddr(SGDBR_C_CNTRL_BACK_MIRROR_REGISTER);
+    s->backMirrorDac_[3] = (float *)registerAddr(SGDBR_D_CNTRL_BACK_MIRROR_REGISTER);
     s->gainDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_GAIN_REGISTER);
     s->gainDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_GAIN_REGISTER);
+    s->gainDac_[2] = (float *)registerAddr(SGDBR_C_CNTRL_GAIN_REGISTER);
+    s->gainDac_[3] = (float *)registerAddr(SGDBR_D_CNTRL_GAIN_REGISTER);
     s->soaSetting_[0] = (float *)registerAddr(SGDBR_A_CNTRL_SOA_REGISTER);
     s->soaSetting_[1] = (float *)registerAddr(SGDBR_B_CNTRL_SOA_REGISTER);
+    s->soaSetting_[2] = (float *)registerAddr(SGDBR_C_CNTRL_SOA_REGISTER);
+    s->soaSetting_[3] = (float *)registerAddr(SGDBR_D_CNTRL_SOA_REGISTER);
     s->soaDac[0] = 0.0;
     s->soaDac[1] = 0.0;
+    s->soaDac[2] = 0.0;
+    s->soaDac[3] = 0.0;
     s->coarsePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_COARSE_PHASE_REGISTER);
     s->coarsePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_COARSE_PHASE_REGISTER);
+    s->coarsePhaseDac_[2] = (float *)registerAddr(SGDBR_C_CNTRL_COARSE_PHASE_REGISTER);
+    s->coarsePhaseDac_[3] = (float *)registerAddr(SGDBR_D_CNTRL_COARSE_PHASE_REGISTER);
     s->finePhaseDac_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FINE_PHASE_REGISTER);
     s->finePhaseDac_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FINE_PHASE_REGISTER);
+    s->finePhaseDac_[2] = (float *)registerAddr(SGDBR_C_CNTRL_FINE_PHASE_REGISTER);
+    s->finePhaseDac_[3] = (float *)registerAddr(SGDBR_D_CNTRL_FINE_PHASE_REGISTER);
     s->front_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
     s->front_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
+    s->front_to_soa_coeff_[2] = (float *)registerAddr(SGDBR_C_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
+    s->front_to_soa_coeff_[3] = (float *)registerAddr(SGDBR_D_CNTRL_FRONT_TO_SOA_COEFF_REGISTER);
     s->back_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
     s->back_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
+    s->back_to_soa_coeff_[2] = (float *)registerAddr(SGDBR_C_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
+    s->back_to_soa_coeff_[3] = (float *)registerAddr(SGDBR_D_CNTRL_BACK_TO_SOA_COEFF_REGISTER);
     s->phase_to_soa_coeff_[0] = (float *)registerAddr(SGDBR_A_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
     s->phase_to_soa_coeff_[1] = (float *)registerAddr(SGDBR_B_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
+    s->phase_to_soa_coeff_[2] = (float *)registerAddr(SGDBR_C_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
+    s->phase_to_soa_coeff_[3] = (float *)registerAddr(SGDBR_D_CNTRL_PHASE_TO_SOA_COEFF_REGISTER);
     s->dead_zone_[0] = (float *)registerAddr(SGDBR_A_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
     s->dead_zone_[1] = (float *)registerAddr(SGDBR_B_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
+    s->dead_zone_[2] = (float *)registerAddr(SGDBR_C_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
+    s->dead_zone_[3] = (float *)registerAddr(SGDBR_D_CNTRL_MIRROR_DEAD_ZONE_REGISTER);
     s->minimum_soa_[0] = (float *)registerAddr(SGDBR_A_CNTRL_MINIMUM_SOA_REGISTER);
     s->minimum_soa_[1] = (float *)registerAddr(SGDBR_B_CNTRL_MINIMUM_SOA_REGISTER);
+    s->minimum_soa_[2] = (float *)registerAddr(SGDBR_C_CNTRL_MINIMUM_SOA_REGISTER);
+    s->minimum_soa_[3] = (float *)registerAddr(SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER);
 
     s->sgdbr_csr_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_CSR;
     s->sgdbr_csr_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_CSR;
+    s->sgdbr_csr_[2] = FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_CSR;
+    s->sgdbr_csr_[3] = FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_CSR;
     s->sgdbr_mosi_data_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MOSI_DATA;
     s->sgdbr_mosi_data_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MOSI_DATA;
+    s->sgdbr_mosi_data_[2] = FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MOSI_DATA;
+    s->sgdbr_mosi_data_[3] = FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MOSI_DATA;
     s->sgdbr_miso_data_[0] = FPGA_SGDBRCURRENTSOURCE_A + SGDBRCURRENTSOURCE_MISO_DATA;
     s->sgdbr_miso_data_[1] = FPGA_SGDBRCURRENTSOURCE_B + SGDBRCURRENTSOURCE_MISO_DATA;
+    s->sgdbr_miso_data_[2] = FPGA_SGDBRCURRENTSOURCE_C + SGDBRCURRENTSOURCE_MISO_DATA;
+    s->sgdbr_miso_data_[3] = FPGA_SGDBRCURRENTSOURCE_D + SGDBRCURRENTSOURCE_MISO_DATA;
     s->schemeThresholdFactorByVirtualLaser_[0] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER1);
     s->schemeThresholdFactorByVirtualLaser_[1] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER2);
     s->schemeThresholdFactorByVirtualLaser_[2] = (float *)registerAddr(THRESHOLD_FACTOR_VIRTUAL_LASER3);
@@ -323,7 +353,18 @@ static inline void sgdbr_wait_done(SpectCntrlParams *s, int sgdbrIndex)
 
 static inline int sgdbr_find_index(int aLaserNum)
 {
-    return (aLaserNum == 1) ? 0 : 1; // Actual laser 1 = SGDBR_A, 3 = SGDBR_B
+    // Return index 0 for SGDBR_A, 1 for SGDBR_B, 2 for SGDBR_C and 3 for SGDBR_D, given
+    //  the actual laser number (1-4)
+    switch (aLaserNum) {
+    case 1:
+        return 0;
+    case 2:
+        return 2;
+    case 3:
+        return 1;
+    case 4:
+        return 3;
+    }
 }
 
 void setupLaserTemperatureAndPztOffset(int useMemo)
@@ -677,6 +718,8 @@ void setAutomaticLaserCurrentControl(void)
     data.asInt = SGDBR_CNTRL_AutomaticState;
     writeRegister(SGDBR_A_CNTRL_STATE_REGISTER, data);
     writeRegister(SGDBR_B_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_C_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_D_CNTRL_STATE_REGISTER, data);
 
     // Setting the FPGA optical injection block to automatic mode has to be done independently
     //  of setting the individual current controllers. Care is needed since the current controllers
@@ -701,6 +744,8 @@ void setManualControl(void)
     data.asInt = SGDBR_CNTRL_ManualState;
     writeRegister(SGDBR_A_CNTRL_STATE_REGISTER, data);
     writeRegister(SGDBR_B_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_C_CNTRL_STATE_REGISTER, data);
+    writeRegister(SGDBR_D_CNTRL_STATE_REGISTER, data);
 }
 
 void validateSchemePosition(void)

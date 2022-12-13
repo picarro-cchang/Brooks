@@ -788,7 +788,7 @@ class SgdbrCal(object):
     #  angle and a list of SgdbrLookup objects for the tuning trajectories
     def __init__(self, ini, laserIdent):
         """Reads the WidebandWlm and SgdbrLookup information for 'laserIdent' which
-           can be 'A' or 'B'"""
+           can be 'A', 'B', 'C' or 'D'"""
         self.widebandWlm = None
         self.sgdbrLuts = []
         self.breaks = None
