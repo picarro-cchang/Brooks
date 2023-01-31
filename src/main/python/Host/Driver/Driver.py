@@ -643,10 +643,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
                     if lockStatus & (1 << self._value("DAS_STATUS_Laser%dTempCntrlLockedBit" % laserNum)):
                         # SGDBR lasers need to have the currents turned on separate source board
                         if present == 2:
-                            if laserNum == 1:
-                                self.wrDasReg("SGDBR_A_CNTRL_STATE_REGISTER", interface.SGDBR_CNTRL_ManualState)
-                            elif laserNum == 3:
-                                self.wrDasReg("SGDBR_B_CNTRL_STATE_REGISTER", interface.SGDBR_CNTRL_ManualState)
+                            # Handle SGDBR lasers
+                            laser_ident = {1: "A", 2: "C", 3: "B", 4: "D"}[laserNum]
+                            self.wrDasReg("SGDBR_%s_CNTRL_STATE_REGISTER" % laser_ident, interface.SGDBR_CNTRL_ManualState)
                         # All lasers need to have the state in the laser current controller changed as well, since
                         #  this deasserts the shorting transistor
                         self.wrDasReg("LASER%d_CURRENT_CNTRL_STATE_REGISTER" % laserNum, interface.LASER_CURRENT_CNTRL_ManualState)
@@ -1035,7 +1034,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
                self.rdDasReg('LASER3_CURRENT_CNTRL_STATE_REGISTER') != auto and \
                self.rdDasReg('LASER4_CURRENT_CNTRL_STATE_REGISTER') != auto and \
                self.rdDasReg('SGDBR_A_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState and \
-               self.rdDasReg('SGDBR_B_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState:
+               self.rdDasReg('SGDBR_B_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState and \
+               self.rdDasReg('SGDBR_C_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState and \
+               self.rdDasReg('SGDBR_D_CNTRL_STATE_REGISTER') != interface.SGDBR_CNTRL_AutomaticState:
                 break
             else:
                 time.sleep(0.1)

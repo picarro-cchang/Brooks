@@ -672,7 +672,8 @@ class SgdbrLookup(object):
                        freq_to_phase_yoff, traj, traj_num, knots_coeffs, kindex_coeffs, mindex_coeffs, sfront_coeffs, sback_coeffs,
                        coarse_phase_lookup)
         except:
-            LogExc("Exception while loading SGDBR lookup section")
+            print("Exception while loading SGDBR lookup section")
+            raise ValueError
 
     def to_ini(self, ini, sec_name):
         ini[sec_name] = {}
@@ -1165,6 +1166,8 @@ class AutoCal(object):
                     else:
                         sel = (traj_selected == sgdbrLut.traj)
                     if sel.any():
+                        # Log("In calcInjectSettings", 
+                        #     Verbose="Selection vector for ringdowns: %s for trajectory %s" % (sel, sgdbrLut.traj))
                         front = sgdbrLut.freq_to_front(waveNum[sel])
                         back = sgdbrLut.freq_to_back(waveNum[sel])
                         # The offset 5439.5 (used to be 1418) depends on the relative gain of
@@ -1184,7 +1187,7 @@ class AutoCal(object):
                             laserTemp[i] = self.baseTemp
                         done[sel] = True
                 if not done.all():
-                    Log("%d scheme frequencies are not accessible and will be skipped" % (len(done) - sum(done), ), Level=1)
+                    print("%d scheme frequencies are not accessible and will be skipped" % (len(done) - sum(done), ))
                 result["frontMirrorDac"] = frontMirrorDac
                 result["backMirrorDac"] = backMirrorDac
                 result["coarsePhaseDac"] = coarsePhaseDac
