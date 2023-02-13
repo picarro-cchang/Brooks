@@ -57,6 +57,7 @@ import sys
 import ctypes
 import ttyLinux
 import signal  # to handle SIGTERM
+
 libc = ctypes.CDLL("libc.so.6")
 sched_getaffinity = libc.sched_getaffinity
 sched_setaffinity = libc.sched_setaffinity
@@ -68,7 +69,7 @@ import getopt
 import threading
 import Queue
 import traceback
-import SocketServer  #for Mode 3 apps
+import SocketServer  # for Mode 3 apps
 import psutil
 from os import getpid as os_getpid
 
@@ -76,21 +77,29 @@ from os import getpid as os_getpid
 # module which has many bug fixes and can prevent
 # subprocess deadlocks.
 #
-if os.name == 'posix' and sys.version_info[0] < 3:
+if os.name == "posix" and sys.version_info[0] < 3:
     import subprocess32 as subprocess
 else:
     import subprocess
 from subprocess import Popen, call
 
 from Host.Common import CmdFIFO
-from Host.Common.SharedTypes import ACCESS_PICARRO_ONLY, RPC_PORT_LOGGER, RPC_PORT_RESTART_SUPERVISOR
-from Host.Common.SharedTypes import RPC_PORT_SUPERVISOR, RPC_PORT_SUPERVISOR_BACKUP, RPC_PORT_CONTAINER
+from Host.Common.SharedTypes import (
+    ACCESS_PICARRO_ONLY,
+    RPC_PORT_LOGGER,
+    RPC_PORT_RESTART_SUPERVISOR,
+)
+from Host.Common.SharedTypes import (
+    RPC_PORT_SUPERVISOR,
+    RPC_PORT_SUPERVISOR_BACKUP,
+    RPC_PORT_CONTAINER,
+)
 from Host.Common.SharedTypes import CrdsException
 from Host.Common.CustomConfigObj import CustomConfigObj
 from Host.Common.SingleInstance import SingleInstance
 from Host.Supervisor.SupervisorUtilities import SupervisorFIFO, RunningApps
 
-if hasattr(sys, "frozen"):  #we're running compiled with py2exe
+if hasattr(sys, "frozen"):  # we're running compiled with py2exe
     AppPath = sys.executable
 else:
     AppPath = sys.argv[0]
@@ -98,7 +107,7 @@ AppPath = os.path.abspath(AppPath)
 
 from time import time as TimeStamp
 
-#Global constants...
+# Global constants...
 APP_NAME = "Supervisor"
 MAX_LAUNCH_COUNT = 3
 DEFAULT_BACKUP_MAX_WAIT_TIME_s = 180
@@ -118,7 +127,7 @@ _MODE3_TCP_SERVER_PORT = 23456
 
 CONSOLE_MODE_OWN_WINDOW = 1
 CONSOLE_MODE_NO_WINDOW = 2
-CONSOLE_MODE_SHARED_WINDOW = 3  #can't get this to function.  spawnv does it, but the apps are slave to the parent: if the parent dies so do they (when they try to write to a non-existent console).
+CONSOLE_MODE_SHARED_WINDOW = 3  # can't get this to function.  spawnv does it, but the apps are slave to the parent: if the parent dies so do they (when they try to write to a non-existent console).
 
 if sys.platform == "linux2":
     _PRIORITY_LOOKUP = {"1": 10, "2": 5, "3": 0, "4": -5, "5": -10, "6": -15}
@@ -130,18 +139,41 @@ SQL_LITE_APP = "SQLiteServer"
 PROTECTED_APPS = ["Driver", SQL_LITE_APP]
 
 # Only the below apps are allowed to run in the virtual mode
-APPS_IN_VIRTUAL_MODE = ("EventManager", "Archiver", "DataManager", "InstMgr", "rdReprocessor", "QuickGui", "DataLogger", \
-                        "BackupSupervisor", "RDFreqConverter", "AlarmSystem", "Fitter", "Fitter1", "Fitter2", "Fitter3")
+APPS_IN_VIRTUAL_MODE = (
+    "EventManager",
+    "Archiver",
+    "DataManager",
+    "InstMgr",
+    "rdReprocessor",
+    "QuickGui",
+    "DataLogger",
+    "BackupSupervisor",
+    "RDFreqConverter",
+    "AlarmSystem",
+    "Fitter",
+    "Fitter1",
+    "Fitter2",
+    "Fitter3",
+)
 
-#set up the main logger connection...
-CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(\
-    uri = "http://localhost:%d" % RPC_PORT_LOGGER,\
-    ClientName = APP_NAME, IsDontCareConnection = True)
+# set up the main logger connection...
+CRDS_EventLogger = CmdFIFO.CmdFIFOServerProxy(
+    uri="http://localhost:%d" % RPC_PORT_LOGGER,
+    ClientName=APP_NAME,
+    IsDontCareConnection=True,
+)
 
 
-def Log(Desc, Data=None, Level=1, Code=-1, AccessLevel=ACCESS_PICARRO_ONLY, Verbose="", SourceTime=0):
-    """Short global log function that sends a log to the EventLogger
-    """
+def Log(
+    Desc,
+    Data=None,
+    Level=1,
+    Code=-1,
+    AccessLevel=ACCESS_PICARRO_ONLY,
+    Verbose="",
+    SourceTime=0,
+):
+    """Short global log function that sends a log to the EventLogger"""
     if __debug__:
         if Level >= 2:
             print "*** LOGEVENT (%d) = %s; Data = %r" % (Level, Desc, Data)
@@ -181,10 +213,9 @@ class IniVerifyErr(CrdsException):
 
 
 def Print(s, SuppressLineFeed=False):
-    """Prints s to stdout, but only if in debug mode.
-    """
+    """Prints s to stdout, but only if in debug mode."""
     if __debug__:
-        Log("PRINTED - %s" % (s, ), 0)
+        Log("PRINTED - %s" % (s,), 0)
         if SuppressLineFeed:
             print s,
         else:
@@ -204,32 +235,34 @@ def PrepareBackupAndWaitForAction(WDTWaitTime_s):
     """
 
     rpcPort = RPC_SERVER_PORT_BACKUP
-    #Set up the RPC Server for the backup mode...
-    rpcServer = BackupSupervisorRPCServer(addr=("", rpcPort),
-                                          ServerName="Backup_Supervisor",
-                                          ServerDescription="The rpc server for a Supervisor running in backup mode.")
+    # Set up the RPC Server for the backup mode...
+    rpcServer = BackupSupervisorRPCServer(
+        addr=("", rpcPort),
+        ServerName="Backup_Supervisor",
+        ServerDescription="The rpc server for a Supervisor running in backup mode.",
+    )
     rpcServer.BackupWDTWaitTime = WDTWaitTime_s
     rpcServer.serve_forever()
 
-    #we got out for one of a few reasons:
+    # we got out for one of a few reasons:
     #   - A StopServer request
     #   - A KillServer request
     #   - The backup WDT expired and we need to act as the backup!
-    #The stop/kill requests were made on the backup so we should just fall
-    #through and die.  If the WDT expired, we need to take over...
+    # The stop/kill requests were made on the backup so we should just fall
+    # through and die.  If the WDT expired, we need to take over...
     if rpcServer.BackupWDTExpired:
-        #There was a problem with the master and the backup (the active instance)
-        #needs to take over.
+        # There was a problem with the master and the backup (the active instance)
+        # needs to take over.
 
-        #First - we need to be sure the old master is completely gone.
-        #Second - we need to take over.
+        # First - we need to be sure the old master is completely gone.
+        # Second - we need to take over.
 
-        #Destroy the master (do NOT do a StopServer since this is the legitimate
-        #shutdown technique which also shuts the backup down - just be nasty
-        #right away).
+        # Destroy the master (do NOT do a StopServer since this is the legitimate
+        # shutdown technique which also shuts the backup down - just be nasty
+        # right away).
         rpcServer.MasterApp.ShutDown(_METHOD_KILLFIRST)
-        #we don't need the backup's rpc server anymore (and we want the socket
-        #free for the new backup we'll be launching)...
+        # we don't need the backup's rpc server anymore (and we want the socket
+        # free for the new backup we'll be launching)...
         del rpcServer
         Log("Backup Supervisor taking over (Backup RPC server destroyed)", Level=3)
         return True
@@ -258,7 +291,7 @@ if sys.platform == "linux2":
         return ttyLinux.readLookAhead()
 
     def launchProcess(appName, exeName, exeArgs, priority, consoleMode, affinity, cwd):
-        #launch the process...
+        # launch the process...
         Log("Launching application: %s" % appName)
         argList = [exeName]
         for arg in exeArgs[1:]:
@@ -271,15 +304,25 @@ if sys.platform == "linux2":
             #
             time.sleep(1.0)
             if consoleMode == CONSOLE_MODE_NO_WINDOW:
-                process = Popen(argList, bufsize=-1, stderr=file('/dev/null', 'w'), stdout=file('/dev/null', 'w'), cwd=cwd)
+                process = Popen(
+                    argList,
+                    bufsize=-1,
+                    start_new_session=True,
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    cwd=cwd,
+                )
                 # process = Popen(argList, bufsize=-1, cwd=cwd)
             elif consoleMode == CONSOLE_MODE_OWN_WINDOW:
-                termList = ["xterm", "-hold", "-T", appName, "-e"]
-                process = Popen(termList + argList,
-                                bufsize=-1,
-                                stderr=file('/dev/null', 'w'),
-                                stdout=file('/dev/null', 'w'),
-                                cwd=cwd)
+                termList = ["xterm", "-fn", "9x15", "-T", appName, "-e"]
+                process = Popen(
+                    termList + argList,
+                    start_new_session=True,
+                    bufsize=-1,
+                    stderr=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    cwd=cwd,
+                )
         except OSError:
             Log("Cannot launch application", dict(appName=appName), 2)
             raise
@@ -293,14 +336,25 @@ if sys.platform == "linux2":
         # Set the affinity
         pAffinity = ctypes.c_int64()
         sAffinity = ctypes.c_int64()
-        if sched_getaffinity(process.pid, ctypes.sizeof(sAffinity), ctypes.byref(sAffinity)) == 0:
+        if (
+            sched_getaffinity(
+                process.pid, ctypes.sizeof(sAffinity), ctypes.byref(sAffinity)
+            )
+            == 0
+        ):
             mask = sAffinity.value & eval(affinity)
-            if mask == 0: mask = sAffinity.value
+            if mask == 0:
+                mask = sAffinity.value
             mask = ctypes.c_int32(mask)
-            if sched_setaffinity(process.pid, ctypes.sizeof(mask), ctypes.byref(mask)) != 0:
+            if (
+                sched_setaffinity(process.pid, ctypes.sizeof(mask), ctypes.byref(mask))
+                != 0
+            ):
                 Log("Unable to set affinity for application", dict(appName=appName), 2)
             else:
-                sched_getaffinity(process.pid, ctypes.sizeof(pAffinity), ctypes.byref(pAffinity))
+                sched_getaffinity(
+                    process.pid, ctypes.sizeof(pAffinity), ctypes.byref(pAffinity)
+                )
         else:
             Log("Cannot get affinity for application", dict(appName=appName), 2)
         # Set the scheduling priority
@@ -315,13 +369,13 @@ if sys.platform == "linux2":
             result = processHandle.poll()
             if result == None:
                 return True
-        elif isinstance(processHandle, int):
+        if isinstance(processHandle, int):
             return psutil.pid_exists(processHandle)
         else:
             return psutil.pid_exists(processHandle.pid)
 
     def terminateProcess(processHandle):
-        print "Calling terminateProcess on process %s" % (processHandle.pid, )
+        print "Calling terminateProcess on process %s" % (processHandle.pid,)
         # print("TerminateProcess disabled") # RSF
         os.kill(processHandle.pid, 15)  # Don't kill for debug RSF
 
@@ -329,7 +383,7 @@ if sys.platform == "linux2":
         [path, filename] = os.path.split(name)
         [base, ext] = os.path.splitext(filename)
         Log("Terminating process %s using pkill" % base)
-        call(["pkill", "-f", base], stderr=file("NUL", "w"))
+        call(["pkill", "-f", base], stderr=open("/dev/null", "w"))
 
     def getProcessHandle(pid):
         class ProcessHandle(object):
@@ -345,6 +399,7 @@ class TcpRequestHandler(SocketServer.BaseRequestHandler):
     This derived class is an implementation of how to use the SocketServer.TCPServer
     implementation.
     """
+
     def handle(self):
         rxBuf = ""
         terminatorLoc = -1
@@ -353,47 +408,55 @@ class TcpRequestHandler(SocketServer.BaseRequestHandler):
         while 1:
             rxBuf += self.request.recv(1024)
             if not rxBuf:
-                #Print("No data received!?")
+                # Print("No data received!?")
                 break
-            #strip out any chr(10)'s in case someone is sending CR+LF...
+            # strip out any chr(10)'s in case someone is sending CR+LF...
             rxBuf.replace(chr(10), "")
             terminatorLoc = rxBuf.find(chr(13))
             if terminatorLoc >= 0:
-                #we have a message
+                # we have a message
                 msg = ""
                 msg = rxBuf[:terminatorLoc]
-                rxBuf = rxBuf[terminatorLoc + 2:]
+                rxBuf = rxBuf[terminatorLoc + 2 :]
                 splitMsg = msg.split(":")
-                #should be in the form: 'AppName:Command'
+                # should be in the form: 'AppName:Command'
                 if len(splitMsg) > 2:
-                    response = "Incorrect syntax for message '%s'" % (msg, )
+                    response = "Incorrect syntax for message '%s'" % (msg,)
                 else:
                     appName = splitMsg[0]
                     if len(splitMsg) == 2:
                         command = splitMsg[1]
                     if not appName in self.server.AppDict:
-                        response = "App name '%s' not recognized." % (appName, )
-                    elif not command:  #no command specified, so it is watchdog kick
+                        response = "App name '%s' not recognized." % (appName,)
+                    elif not command:  # no command specified, so it is watchdog kick
                         if not self.server.AppDict[appName].Mode == 3:
-                            response = "Specified App ('%s') is not running in mode 3." % (appName, )
+                            response = (
+                                "Specified App ('%s') is not running in mode 3."
+                                % (appName,)
+                            )
                         else:
                             self.server.AppDict[appName]._RemotePingCount += 1
                             response = "OK"
                     else:
-                        #execute the command...
+                        # execute the command...
                         if command == "TerminateApplications":
-                            Log("TCP TerminateApplications request received", Data=appName)
+                            Log(
+                                "TCP TerminateApplications request received",
+                                Data=appName,
+                            )
                             self.server.ParentSupervisor.RPC_TerminateApplications()
                             ret = "OK"
                         elif command == "RestartApplications":
-                            Log("TCP RestartApplications request received", Data=appName)
+                            Log(
+                                "TCP RestartApplications request received", Data=appName
+                            )
                             self.server.ParentSupervisor.RPC_RestartApplications()
                             ret = "OK"
                         else:
-                            response = "Command '%s' is not recognized" % (command, )
+                            response = "Command '%s' is not recognized" % (command,)
                 response += chr(13)
                 self.request.send(response)
-                #print "msg = ", [repr(c) for c in msg]
+                # print "msg = ", [repr(c) for c in msg]
 
 
 class SupervisorTcpServer(SocketServer.ThreadingTCPServer):
@@ -404,21 +467,24 @@ class SupervisorTcpServer(SocketServer.ThreadingTCPServer):
     clear what is going on (could have just bound it anyway but it is more
     confusing).
     """
+
     def __init__(self, server_address, RequestHandlerClass, SupervisorParent):
         self.ParentSupervisor = SupervisorParent
         assert isinstance(self.ParentSupervisor, Supervisor)
         self.AppDict = {}
         self.AppDict = self.ParentSupervisor.AppDict
         assert RequestHandlerClass.__name__ == "TcpRequestHandler"
-        SocketServer.ThreadingTCPServer.__init__(self, server_address, RequestHandlerClass)
+        SocketServer.ThreadingTCPServer.__init__(
+            self, server_address, RequestHandlerClass
+        )
 
 
 class App(object):
     def __init__(self, AppName, Parent, DefaultSettings=None):
         """DefaultSettings is optionally a dictionary containing default App options."""
-        #set property names and defaults (all attributes without a _ prefix can be
-        #set via a named option in the ini file (in the section with the right
-        #AppName)
+        # set property names and defaults (all attributes without a _ prefix can be
+        # set via a named option in the ini file (in the section with the right
+        # AppName)
         #  - keep it like this because then it is REALLY easy to add
         #    variables to the ini file
 
@@ -433,7 +499,7 @@ class App(object):
         self.Mode = 1
         self.Port = -1
         self.CheckInterval_ms = 2000
-        #self.VerifyTimeout_ms = 30000
+        # self.VerifyTimeout_ms = 30000
         self.VerifyTimeout_ms = 1000
         self.DispatcherTimeout_ms = _DEFAULT_PING_DISPATCHER_TIMEOUT_ms
         self.ConsoleMode = CONSOLE_MODE_OWN_WINDOW
@@ -456,7 +522,7 @@ class App(object):
         #
         self.DebugMode = False
 
-        #now override any defaults with the passed in dictionary values...
+        # now override any defaults with the passed in dictionary values...
         if DefaultSettings:
             assert isinstance(DefaultSettings, dict)
             for k in DefaultSettings.keys():
@@ -481,7 +547,12 @@ class App(object):
         return self._AppName
 
     def __repr__(self):
-        return "<class App: '%s' Mode = %s  Port = %s PID = %s>" % (self, self.Mode, self.Port, self._ProcessId)
+        return "<class App: '%s' Mode = %s  Port = %s PID = %s>" % (
+            self,
+            self.Mode,
+            self.Port,
+            self._ProcessId,
+        )
 
     def ReadAppOptions(self, CO):
         """Reads the options from the appropriate section in the ini file.
@@ -493,18 +564,28 @@ class App(object):
         options and values.
         """
         assert isinstance(CO, CustomConfigObj)
-        #First check if there are any illegal/unrecognized options in the file...
-        settableOptions = [o for o in self.__dict__.keys() if not (o.startswith("_") or callable(self.__getattribute__(o)))]
+        # First check if there are any illegal/unrecognized options in the file...
+        settableOptions = [
+            o
+            for o in self.__dict__.keys()
+            if not (o.startswith("_") or callable(self.__getattribute__(o)))
+        ]
         lcaseSettableOptions = []
         for o in settableOptions:
             lcaseSettableOptions.append(o.lower())
         for o in CO.list_options(self._AppName):
             if not o.lower() in lcaseSettableOptions:
-                raise AppOptionErr("Option '%s' found in section '%s' is not a supported option." % (o, self._AppName))
-                raise "Option '%s' found in section '%s' is not a supported option." % (o, self._AppName)
-        #Now try and retrieve the options we care about (do it by looking for options
-        #rather than checking the now-known-good options so that we can preserve
-        #case in the code and be case-insensitive in the file)...
+                raise AppOptionErr(
+                    "Option '%s' found in section '%s' is not a supported option."
+                    % (o, self._AppName)
+                )
+                raise "Option '%s' found in section '%s' is not a supported option." % (
+                    o,
+                    self._AppName,
+                )
+        # Now try and retrieve the options we care about (do it by looking for options
+        # rather than checking the now-known-good options so that we can preserve
+        # case in the code and be case-insensitive in the file)...
         loadedOptions = {}
         for optionName in settableOptions:
             try:
@@ -514,44 +595,54 @@ class App(object):
                 elif isinstance(self.__getattribute__(optionName), int):
                     option = int(option)
                 self.__setattr__(optionName, option)
-                #add it to the dictionary we're using to keep track of what was loaded...
+                # add it to the dictionary we're using to keep track of what was loaded...
                 loadedOptions[optionName] = option
             except KeyError:
                 pass
 
-        #put Executable path correction here (and fix the other Executable path corrections with AppPath)
+        # put Executable path correction here (and fix the other Executable path corrections with AppPath)
         if self.Mode == 0:
-            #It is a backup supervisor...
+            # It is a backup supervisor...
             appOptions = CO.list_options(self._AppName)
             if len(appOptions) != 1:
                 raise AppOptionErr(
                     "The backup supervisor application ('%s' with Mode == 0) only accepts a 'Mode' option.  Other options have been specified: %r"
-                    % (self._AppName, appOptions))
+                    % (self._AppName, appOptions)
+                )
             self.Port = RPC_SERVER_PORT_BACKUP
             self.Executable = os.path.basename(AppPath)
-            #The -t switch will never actually be different, it is ONLY there for debugging purposes
-            #where I can change the value to what I want from the command line.
-            self.LaunchArgs = "-c%s -t%f --backup" % (self._Parent.FileName, DEFAULT_BACKUP_MAX_WAIT_TIME_s)
+            # The -t switch will never actually be different, it is ONLY there for debugging purposes
+            # where I can change the value to what I want from the command line.
+            self.LaunchArgs = "-c%s -t%f --backup" % (
+                self._Parent.FileName,
+                DEFAULT_BACKUP_MAX_WAIT_TIME_s,
+            )
         if str(self.Priority) not in _PRIORITY_LOOKUP.keys():
-            raise AppOptionErr("Priority level specified for app '%s' is not valid.  Priority = '%s'." %
-                               (self._AppName, self.Priority))
+            raise AppOptionErr(
+                "Priority level specified for app '%s' is not valid.  Priority = '%s'."
+                % (self._AppName, self.Priority)
+            )
         if self.ConsoleMode not in [CONSOLE_MODE_NO_WINDOW, CONSOLE_MODE_OWN_WINDOW]:
-            raise AppOptionErr("Console mode specified for app '%s' is not valid.  Mode = '%s'." %
-                               (self._AppName, self.ConsoleMode))
+            raise AppOptionErr(
+                "Console mode specified for app '%s' is not valid.  Mode = '%s'."
+                % (self._AppName, self.ConsoleMode)
+            )
         if self.MaxWait_ms > self.VerifyTimeout_ms:
             raise AppOptionErr(
-                "The VerifyTimeout_ms specified for app '%s' is not valid.  It cannot be < MaxWaitTime_ms (%s < %s)" %
-                (self._AppName, self.VerifyTimeout_ms, self.MaxWait_ms))
+                "The VerifyTimeout_ms specified for app '%s' is not valid.  It cannot be < MaxWaitTime_ms (%s < %s)"
+                % (self._AppName, self.VerifyTimeout_ms, self.MaxWait_ms)
+            )
 
-        #Now that we're loaded, for many things we'll need an rpc connection.  Although the app
-        #does not necessarily exist yet, it should (can still be) be set up now...
+        # Now that we're loaded, for many things we'll need an rpc connection.  Although the app
+        # does not necessarily exist yet, it should (can still be) be set up now...
         if self.Port > 0:
-            proxyURL = "http://localhost:%s" % (self.Port, )
-            self._ServerProxy = CmdFIFO.CmdFIFOServerProxy( \
-                uri = proxyURL, \
-                ClientName = APP_NAME, \
-                CallbackURI = "", \
-                Timeout_s = self.MaxWait_ms/100)
+            proxyURL = "http://localhost:%s" % (self.Port,)
+            self._ServerProxy = CmdFIFO.CmdFIFOServerProxy(
+                uri=proxyURL,
+                ClientName=APP_NAME,
+                CallbackURI="",
+                Timeout_s=self.MaxWait_ms / 100,
+            )
         if self.Mode in [0, 1, 4]:
             self._HasCmdFIFO = True
         return loadedOptions
@@ -562,7 +653,7 @@ class App(object):
         If self.VerifyTimeout_ms is > 0 the routine will wait for the application
         to be up and running (serving rpc requests) before exiting.
         """
-        assert (isinstance(supervisor, Supervisor))
+        assert isinstance(supervisor, Supervisor)
 
         exeArgs = []
         root, ext = os.path.splitext(self.Executable)
@@ -578,16 +669,16 @@ class App(object):
             # *.py or *.pyc.  If the optimize flag is set (i.e. python -O Supervisor.py)
             # use the optimize flag on the subprocesses.
             exeName = sys.executable
-            exeArgs.append(exeName)  #first arg must be the appname as in sys.argv[0]
-            #if sys.flags.optimize:
+            exeArgs.append(exeName)  # first arg must be the appname as in sys.argv[0]
+            # if sys.flags.optimize:
             #    if not self.DebugMode:
             #        exeArgs.append("-OO")
             if not self.DebugMode and sys.flags.optimize:
                 exeArgs.append("-OO")
             if os.path.isabs(self.Executable):
-                launchPath = "%s" % (self.Executable, )
+                launchPath = "%s" % (self.Executable,)
             else:
-                #The path will be relative to the location of the supervisor app...
+                # The path will be relative to the location of the supervisor app...
                 launchPath = os.path.join(os.path.dirname(AppPath), self.Executable)
             launchPath = os.path.normpath(launchPath)
             exeArgs.append(launchPath)
@@ -599,12 +690,12 @@ class App(object):
                 terminateProcessByName(self.Executable)
             #
             if os.path.isabs(self.Executable):
-                exeName = "%s" % (self.Executable, )
+                exeName = "%s" % (self.Executable,)
             else:
-                #The path will be relative to the location of the supervisor app...
+                # The path will be relative to the location of the supervisor app...
                 exeName = os.path.join(os.path.dirname(AppPath), self.Executable)
             exeName = os.path.normpath(exeName)
-            exeArgs.append(exeName)  #first arg must be the appname as in sys.argv[0]
+            exeArgs.append(exeName)  # first arg must be the appname as in sys.argv[0]
             exeArgs.append(launchArgs)
 
         appStarted = False
@@ -612,13 +703,25 @@ class App(object):
         if supervisor.CheckForStopRequests():
             raise TerminationRequest
 
-        r = launchProcess(self._AppName, exeName, exeArgs, self.Priority, self.ConsoleMode, self.AffinityMask,
-                          os.path.dirname(AppPath))
+        r = launchProcess(
+            self._AppName,
+            exeName,
+            exeArgs,
+            self.Priority,
+            self.ConsoleMode,
+            self.AffinityMask,
+            os.path.dirname(AppPath),
+        )
         self._ProcessId, self._ProcessHandle, pAffinity = r
 
-        #self._ProcessHandle = hProcess.handle
-        print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (time.strftime("%d-%b-%y %H:%M:%S"), "'%s'" % self._AppName, self.Port,
-                                                             self._ProcessId, pAffinity)
+        # self._ProcessHandle = hProcess.handle
+        print "%s %-20s, port = %5s, pid = %4s, aff = %s" % (
+            time.strftime("%d-%b-%y %H:%M:%S"),
+            "'%s'" % self._AppName,
+            self.Port,
+            self._ProcessId,
+            pAffinity,
+        )
 
         Log("%s started" % self._AppName, Level=0)
 
@@ -630,35 +733,36 @@ class App(object):
         update_supervisor_fifo = SupervisorFIFO()
         update_supervisor_fifo.write_to_fifo(self._AppName)
 
-        self._Stat_LaunchCount += 1  #we're tracking launch attempts, not successful launches
+        self._Stat_LaunchCount += (
+            1  # we're tracking launch attempts, not successful launches
+        )
 
         if self.VerifyTimeout_ms > 0 and self.Port > 0:  # and self.Mode in [0,1,4]:
-            #mode 1 & 4 = normal apps to be monitored
-            #mode 0 = a unique mode for the backup supervisor app
-            #we're supposed to verify that the application started successfully.  We'll do so with a FIFO ping..
+            # mode 1 & 4 = normal apps to be monitored
+            # mode 0 = a unique mode for the backup supervisor app
+            # we're supposed to verify that the application started successfully.  We'll do so with a FIFO ping..
             startTime = TimeStamp()
             appStarted = False
-            while (TimeStamp() - startTime) < (self.VerifyTimeout_ms / 1000.):
+            while (TimeStamp() - startTime) < (self.VerifyTimeout_ms / 1000.0):
                 if supervisor.CheckForStopRequests():
                     raise TerminationRequest
                 try:
-                    self.CheckFIFO(
-                    )  #should be quick since the Rx timeout is only when the dispatcher has responded, and if it has the Ping should work fine.
-                    #only gets here if the FIFO responded
+                    self.CheckFIFO()  # should be quick since the Rx timeout is only when the dispatcher has responded, and if it has the Ping should work fine.
+                    # only gets here if the FIFO responded
                     appStarted = True
                     Log("Application start confirmed", self._AppName, Level=1)
                     break
-                except AppErr, E:
-                    #Just sucking it up since we're waiting for the app to start and we do expect errors.
-                    #Log("Trapped Exception","%s %r" % (E,E), 0)
+                except AppErr as E:
+                    # Just sucking it up since we're waiting for the app to start and we do expect errors.
+                    # Log("Trapped Exception","%s %r" % (E,E), 0)
                     pass
-                #time.sleep(0.5)
+                # time.sleep(0.5)
         else:
-            #Not verifying, so assume it did start...
+            # Not verifying, so assume it did start...
             appStarted = True
 
         if appStarted and self.Mode == 0:
-            #It is a backup supervisor.  We need to let it know our (we're the master right now) process ID...
+            # It is a backup supervisor.  We need to let it know our (we're the master right now) process ID...
             self._ServerProxy.SetMasterProcessID(os_getpid())
 
         if appStarted:
@@ -666,11 +770,13 @@ class App(object):
             self._LaunchFailureCount = 0
         else:
             self._LaunchFailureCount += 1
-            #Make sure that the application is completely gone...
+            # Make sure that the application is completely gone...
             self.LaunchFailureHandler()
             self.ShutDown(_METHOD_DESTROYFIRST)
-            raise AppLaunchFailure("Application '%s' did not start within specified timeframe of %s ms." %
-                                   (self._AppName, self.VerifyTimeout_ms))
+            raise AppLaunchFailure(
+                "Application '%s' did not start within specified timeframe of %s ms."
+                % (self._AppName, self.VerifyTimeout_ms)
+            )
         self._LaunchTime = TimeStamp()
 
     def IsProcessActive(self):
@@ -691,106 +797,147 @@ class App(object):
         #
         if len(self.ResetScript):
             Log("Application won't start... rebooting NOW", self._AppName, Level=3)
-            print("running:", self.ResetScript.split())
+            print ("running:", self.ResetScript.split())
             subprocess.Popen(self.ResetScript.split())
         return
 
-    def ShutDown(self, StopMethod=_METHOD_STOPFIRST, StopWaitTime_s=-1, KillWaitTime_s=-1, NoKillByName=False, NoWait=False):
-        """Shuts down the application.  If NoWait is True, return immediately after performing StopMethod.
+    def ShutDown(
+        self,
+        StopMethod=_METHOD_STOPFIRST,
+        StopWaitTime_s=-1,
+        KillWaitTime_s=-1,
+        NoKillByName=False,
+        NoWait=False,
+    ):
+        """
+        Shuts down the application.  If NoWait is True, return immediately after performing StopMethod.
            If NoWait is False, keep escalating severity of kill method so that the application WILL be dead by the
            end of call.
         """
-        #See if our work is already done somehow... if so we just get out...
+        # See if our work is already done somehow... if so we just get out...
         if not self.IsProcessActive():
             if self.ShowDispatcherWarning:
-                Log("App shutdown attempted, but app already closed", self._AppName, Level=1)
+                Log(
+                    "App shutdown attempted, but app already closed",
+                    self._AppName,
+                    Level=1,
+                )
             return
 
-        #Now sort out our args...
+        # Now sort out our args...
         if StopWaitTime_s == -1:
-            #Wait for the same time we would wait for the application to respond to a FIFO ping...
-            StopWaitTime_s = self.MaxWait_ms / 1000.
+            # Wait for the same time we would wait for the application to respond to a FIFO ping...
+            StopWaitTime_s = self.MaxWait_ms / 1000.0
         if KillWaitTime_s == -1:
             KillWaitTime_s = _DEFAULT_KILL_WAIT_TIME_s
 
-        #Now get to our multi-tier shtdown attempts
+        # Now get to our multi-tier shtdown attempts
 
-        appLives = True  #start with this assumption
+        appLives = True  # start with this assumption
 
         msg = ""
 
-        #First - the weakest shutdown is a simple StopServer request...
-        if appLives and self._HasCmdFIFO and StopMethod not in [_METHOD_KILLFIRST, _METHOD_DESTROYFIRST]:
+        # First - the weakest shutdown is a simple StopServer request...
+        if (
+            appLives
+            and self._HasCmdFIFO
+            and StopMethod not in [_METHOD_KILLFIRST, _METHOD_DESTROYFIRST]
+        ):
             Log("Stopping application", self._AppName, 2)
             startTime = TimeStamp()
-            #Politely request a shutdown...
+            # Politely request a shutdown...
             try:
                 self._ServerProxy.CmdFIFO.StopServer()
-                if NoWait: return
-                #Wait for it to disappear...
+                if NoWait:
+                    return
+                # Wait for it to disappear...
                 while (TimeStamp() - startTime) < StopWaitTime_s:
-                    time.sleep(0.05)  #without this we pin the processor while we poll
+                    time.sleep(0.05)  # without this we pin the processor while we poll
                     if not self.IsProcessActive():
                         appLives = False
                         break
-            except Exception, E:
-                Log("Exception raised during StopServer attempt", str(self), Verbose="Exception = %r %s" % (E, E))
-                if NoWait: return
-                #assume that it still lives to be safe.
+            except Exception as E:
+                Log(
+                    "Exception raised during StopServer attempt",
+                    str(self),
+                    Verbose="Exception = %r %s" % (E, E),
+                )
+                if NoWait:
+                    return
+                # assume that it still lives to be safe.
 
-        #Second - a KillServer request is a bit more rough...
+        # Second - a KillServer request is a bit more rough...
         if appLives and self._HasCmdFIFO and StopMethod not in [_METHOD_DESTROYFIRST]:
             if StopMethod in [_METHOD_STOPFIRST]:
                 Log("Application Stop attempt failed", str(self), 2)
             Log("Killing application", str(self), 2)
             startTime = TimeStamp()
-            #Request instant seppuku...
+            # Request instant seppuku...
             try:
-                self._ServerProxy.CmdFIFO.KillServer('please')
-                if NoWait: return
-                #Wait for it to disappear...
+                self._ServerProxy.CmdFIFO.KillServer("please")
+                if NoWait:
+                    return
+                # Wait for it to disappear...
                 while (TimeStamp() - startTime) < KillWaitTime_s:
                     if not self.IsProcessActive():
                         appLives = False
                         break
-            except Exception, E:
-                Log("Exception raised during KillServer attempt", str(self), Verbose="Exception = %r %s" % (E, E))
-                if NoWait: return
-                #assume that it still lives to be safe.
+            except Exception as E:
+                Log(
+                    "Exception raised during KillServer attempt",
+                    str(self),
+                    Verbose="Exception = %r %s" % (E, E),
+                )
+                if NoWait:
+                    return
+                # assume that it still lives to be safe.
 
-        #Third - if the app is not responding, now we brutally axe it with a system call...
+        # Third - if the app is not responding, now we brutally axe it with a system call...
         if appLives:
-            if StopMethod in [_METHOD_STOPFIRST, _METHOD_KILLFIRST] and self._HasCmdFIFO:
+            if (
+                StopMethod in [_METHOD_STOPFIRST, _METHOD_KILLFIRST]
+                and self._HasCmdFIFO
+            ):
                 Log("Application Kill attempt failed", str(self), 2)
             Log("Terminating application", str(self), 2)
             startTime = TimeStamp()
-            #Smite with extreme prejudice (and a nice meaningless but identifiable error code of 42)...
+            # Smite with extreme prejudice (and a nice meaningless but identifiable error code of 42)...
             try:
                 terminateProcess(self._ProcessHandle)
-                if NoWait: return
-                #Wait for it to disappear...
+                if NoWait:
+                    return
+                # Wait for it to disappear...
                 while (TimeStamp() - startTime) < _DEFAULT_PROCESS_KILL_WAIT_TIME_s:
                     if not self.IsProcessActive():
                         appLives = False
                         break
-            except Exception, E:
-                #It is possible we tried to destroy a process that is already gone - so check...
-                if NoWait: return
+            except Exception as E:
+                # It is possible we tried to destroy a process that is already gone - so check...
+                if NoWait:
+                    return
                 if self.IsProcessActive():
-                    Log("Exception raised during TerminateProcess attempt", str(self), Verbose="Exception = %r %s" % (E, E))
-                    #app is still considered alive at this point
+                    Log(
+                        "Exception raised during TerminateProcess attempt",
+                        str(self),
+                        Verbose="Exception = %r %s" % (E, E),
+                    )
+                    # app is still considered alive at this point
                 else:
                     #'tis dead!
                     appLives = False
 
         # Try killing by process name as a last resort, if this option is selected
         if appLives and self.KillByName and not NoKillByName:
-            print "Calling KillByName for application %s (appLives = %s)" % (self.Executable, appLives)
+            print "Calling KillByName for application %s (appLives = %s)" % (
+                self.Executable,
+                appLives,
+            )
             terminateProcessByName(self.Executable)
-            if NoWait: return
+            if NoWait:
+                return
 
-        if appLives:  #shouldn't be possible by here!
-            #the #$@#$!!! operating system can't even kill it... we're screwed.
+        if appLives:  # shouldn't be possible by here!
+            # the #$@#$!!! operating system can't even kill it... we're screwed.
             Log("Unable to terminate application", self._AppName, 3)
             ## raise AppInvincable("Fatal error.  Unable to terminate application '%s'." % (self._AppName,))
 
@@ -802,11 +949,11 @@ class App(object):
         """
         if self._ServerProxy == None:
             raise AppErr("No RPC server present - check configuration")
-        waitTime = self._Parent.PingDispatcherTimeout_ms / 1000.
+        waitTime = self._Parent.PingDispatcherTimeout_ms / 1000.0
         oldWaitTime = self._ServerProxy.GetTimeout()
         try:
             self._ServerProxy.SetTimeout(waitTime)
-            responseTime = waitTime  #assume a long time to start with
+            responseTime = waitTime  # assume a long time to start with
             startTime = TimeStamp()
             try:
                 ret = self._ServerProxy.CmdFIFO.PingDispatcher()
@@ -815,19 +962,28 @@ class App(object):
                     self._Stat_DispatcherResponseTime = responseTime
                     return True
                 else:
-                    raise AppErr("Unexpected ping response after %.1fs from dispatcher. ('%s')" % (
-                        TimeStamp() - startTime,
-                        ret,
-                    ))
+                    raise AppErr(
+                        "Unexpected ping response after %.1fs from dispatcher. ('%s')"
+                        % (
+                            TimeStamp() - startTime,
+                            ret,
+                        )
+                    )
             except CmdFIFO.TimeoutError:
-                raise AppSocketTimeout("Ping to application dispatcher timed out after %.1fs." % (TimeStamp() - startTime, ))
-            except Exception, E:
-                raise AppErr("Unexpected exception raised after %.1fs in call to dispatcher: %s" % (
-                    TimeStamp() - startTime,
-                    str(E),
-                ))
+                raise AppSocketTimeout(
+                    "Ping to application dispatcher timed out after %.1fs."
+                    % (TimeStamp() - startTime,)
+                )
+            except Exception as E:
+                raise AppErr(
+                    "Unexpected exception raised after %.1fs in call to dispatcher: %s"
+                    % (
+                        TimeStamp() - startTime,
+                        str(E),
+                    )
+                )
         finally:
-            #be sure to restore the old rx timeout time...
+            # be sure to restore the old rx timeout time...
             self._ServerProxy.SetTimeout(oldWaitTime)
 
     def CheckFIFO(self):
@@ -842,88 +998,105 @@ class App(object):
             it waits for the response that should be coming (this behaviour is handled by
             the special transport that has been set up)
         """
-        responseTime = self.MaxWait_ms  #assume a long time to start with (for stats purposes)
+        responseTime = (
+            self.MaxWait_ms
+        )  # assume a long time to start with (for stats purposes)
         startTime = TimeStamp()
         fifoOk = False
         try:
             ret = self._ServerProxy.CmdFIFO.PingFIFO()
             if ret == "Ping OK":
                 fifoOk = True
-                #calc some stats...
+                # calc some stats...
                 responseTime = TimeStamp() - startTime
                 self._Stat_FIFOResponseTime = responseTime
                 return True
             else:
-                raise AppErr("Unexpected ping response after %.1fs from FIFO handler." % (TimeStamp() - startTime, ))
+                raise AppErr(
+                    "Unexpected ping response after %.1fs from FIFO handler."
+                    % (TimeStamp() - startTime,)
+                )
         except CmdFIFO.TimeoutError:
-            raise AppSocketTimeout("Ping to FIFO queue timed out after %.1fs." % (TimeStamp() - startTime, ))
-        except Exception, E:
-            raise AppErr("Unexpected exception after %.1f raised in FIFO ping attempt: %s" % (
-                TimeStamp() - startTime,
-                str(E),
-            ))
+            raise AppSocketTimeout(
+                "Ping to FIFO queue timed out after %.1fs." % (TimeStamp() - startTime,)
+            )
+        except Exception as E:
+            raise AppErr(
+                "Unexpected exception after %.1f raised in FIFO ping attempt: %s"
+                % (
+                    TimeStamp() - startTime,
+                    str(E),
+                )
+            )
 
     def UpTime(self):
-        """Returns the applications uptime since launch (in hrs).
-        """
-        return (TimeStamp() - self._LaunchTime) / 60.
+        """Returns the applications uptime since launch (in hrs)."""
+        return (TimeStamp() - self._LaunchTime) / 60.0
 
     def FindAndAttach(self):
         try:
             appExists = False
-            #First do a quick check if it exists (on the off chance that we somehow have
-            #a handle to it already)...
+            # First do a quick check if it exists (on the off chance that we somehow have
+            # a handle to it already)...
             if self._ProcessHandle != -1:
                 appExists = self.IsProcessActive()
             if not appExists:
-                #if we don't think it is alive there is still chance the handle was wrong, so
-                #we'll check another way...
+                # if we don't think it is alive there is still chance the handle was wrong, so
+                # we'll check another way...
                 if self.Port <= 0:
-                    #No handle AND no port to check... we're out of luck. No port == no easy way to check!
-                    #could try checking by process name I suppose... maybe later.  Could be risky, though.
-                    #Value add of this?  Only if we have applications we launched that have no CmdFIFOServer
-                    #and we didn't retain the process handle.
+                    # No handle AND no port to check... we're out of luck. No port == no easy way to check!
+                    # could try checking by process name I suppose... maybe later.  Could be risky, though.
+                    # Value add of this?  Only if we have applications we launched that have no CmdFIFOServer
+                    # and we didn't retain the process handle.
                     pass
                 else:
-                    #We have a port to check, so we'll check this way.
+                    # We have a port to check, so we'll check this way.
                     pid = -1
                     try:
                         self.CheckDispatcher()
-                        #if we get here we got a response, so the app exists...
+                        # if we get here we got a response, so the app exists...
                         appExists = True
-                    except AppErr, E:
-                        #Exception thrown when checking for a dispatcher.  ie: no such app
-                        #If there is no App, this is fine since it is what we were checking, so
-                        #just indicate the app isn't there.
+                    except AppErr as E:
+                        # Exception thrown when checking for a dispatcher.  ie: no such app
+                        # If there is no App, this is fine since it is what we were checking, so
+                        # just indicate the app isn't there.
                         appExists = False
                     if appExists:
-                        #Now to get a handle to it in case we need to terminate it with the OS...
+                        # Now to get a handle to it in case we need to terminate it with the OS...
                         try:
                             pid = int(self._ServerProxy.CmdFIFO.GetProcessID())
                             self._ProcessId = pid
-                            #Need to set the process handle in order to enable use of all aspects of APP.ShutDown()...
+                            # Need to set the process handle in order to enable use of all aspects of APP.ShutDown()...
                             self._ProcessHandle = getProcessHandle(pid)
-                        except Exception, E:
-                            if pid == -1:  #we didn't get a pid to figure out who was listening :(
+                        except Exception as E:
+                            if (
+                                pid == -1
+                            ):  # we didn't get a pid to figure out who was listening :(
                                 raise AppErr(
-                                    "Unable to determine pid for existing app '%s' on port '%s'. (in FindExistingApps) <%s %r>" %
-                                    (self, self.Port, E, E))
+                                    "Unable to determine pid for existing app '%s' on port '%s'. (in FindExistingApps) <%s %r>"
+                                    % (self, self.Port, E, E)
+                                )
                             else:
-                                raise AppErr("Unexpected Exception when getting handle to existing app '%s' with process id '%s'." %
-                                             (self, pid))
+                                raise AppErr(
+                                    "Unexpected Exception when getting handle to existing app '%s' with process id '%s'."
+                                    % (self, pid)
+                                )
             if appExists:
-                self._Parent.messageQueue.put("  %-20s has been found!  (pid = %s)" % ("'%s'" % self, self._ProcessId))
+                self._Parent.messageQueue.put(
+                    "  %-20s has been found!  (pid = %s)"
+                    % ("'%s'" % self, self._ProcessId)
+                )
                 Log("Application found and attached to", self._AppName)
             else:
-                self._Parent.messageQueue.put("  %-20s NOT found." % ("'%s'" % self, ))
+                self._Parent.messageQueue.put("  %-20s NOT found." % ("'%s'" % self,))
                 Log("Application not found", self._AppName)
         finally:
             self._SearchComplete.set()
 
 
 class WorkerThread(threading.Thread):
-    """A simple Thread class that is daemonic and acquires a semaphore on run if needed.
-    """
+    """A simple Thread class that is daemonic and acquires a semaphore on run if needed."""
+
     def __init__(self, target, args=(), kwargs={}, Semaphore=None):
         threading.Thread.__init__(self, target=target, args=args, kwargs=kwargs)
         self.setDaemon(1)
@@ -952,14 +1125,18 @@ class Supervisor(object):
         co = CustomConfigObj(FileName)
         self.RPCServer = None
         self.RPCServerProblem = False
-        self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR,
-                                                          APP_NAME,
-                                                          IsDontCareConnection=False)
-        self.supervisor = CmdFIFO.CmdFIFOServerProxy("http://localhost:%d" % RPC_PORT_SUPERVISOR,
-                                                     APP_NAME,
-                                                     IsDontCareConnection=False)
+        self.restartSurveyor = CmdFIFO.CmdFIFOServerProxy(
+            "http://localhost:%d" % RPC_PORT_RESTART_SUPERVISOR,
+            APP_NAME,
+            IsDontCareConnection=False,
+        )
+        self.supervisor = CmdFIFO.CmdFIFOServerProxy(
+            "http://localhost:%d" % RPC_PORT_SUPERVISOR,
+            APP_NAME,
+            IsDontCareConnection=False,
+        )
         self.AppMonitorCount = 0
-        self.AppNameList = []  #keeps the app ordering intact
+        self.AppNameList = []  # keeps the app ordering intact
         self.AppDict = {}
         self.PrintMessages = True
         self._ShutdownRequested = False
@@ -986,34 +1163,40 @@ class Supervisor(object):
             def getHostIp():
                 """Within a docker container, get the IP of the host (for bridge networking)"""
                 for line in subprocess.check_output(["netstat", "-nr"]).split("\n"):
-                    if line.startswith('0.0.0.0'):
+                    if line.startswith("0.0.0.0"):
                         return line.split()[1]
 
             hostIp = getHostIp()
-            self.ContainerServer = CmdFIFO.CmdFIFOServerProxy("http://%s:%d" % (hostIp, RPC_PORT_CONTAINER),
-                                                              "Container Client",
-                                                              IsDontCareConnection=False)
-        print("Supervisor PID:", os.getpid())
+            self.ContainerServer = CmdFIFO.CmdFIFOServerProxy(
+                "http://%s:%d" % (hostIp, RPC_PORT_CONTAINER),
+                "Container Client",
+                IsDontCareConnection=False,
+            )
+        print ("Supervisor PID:", os.getpid())
 
         # start to use CustomConfigObj
         try:
-            self.PingDispatcherTimeout_ms = co.getint("GlobalDefaults", "DispatcherTimeout_ms")
+            self.PingDispatcherTimeout_ms = co.getint(
+                "GlobalDefaults", "DispatcherTimeout_ms"
+            )
         except KeyError:
             self.PingDispatcherTimeout_ms = _DEFAULT_PING_DISPATCHER_TIMEOUT_ms
 
         try:
-            self.SpecialKilledByNameList = [c.strip() for c in co.get("SpecialKilledByNameList", "List").split(",")]
+            self.SpecialKilledByNameList = [
+                c.strip() for c in co.get("SpecialKilledByNameList", "List").split(",")
+            ]
         except:
             self.SpecialKilledByNameList = []
 
-        #Read any global defaults that are to be applied..
+        # Read any global defaults that are to be applied..
         defaultSettings = None
         if co.has_section("GlobalDefaults"):
             bogusApp = App("GlobalDefaults", self)
             defaultSettings = bogusApp.ReadAppOptions(co)
             del bogusApp
 
-        #Cruise through the application names (and port shortcut values)...
+        # Cruise through the application names (and port shortcut values)...
         for appInfo in co[_MAIN_SECTION].items():
             appName = appInfo[0]
             if self.virtualMode:
@@ -1021,45 +1204,52 @@ class Supervisor(object):
                     continue
             appPort = appInfo[1].strip()
             self.AppNameList.append(appName)
-            #generate the defaults for the app...
+            # generate the defaults for the app...
             self.AppDict[appName] = App(appName, self, defaultSettings)
             if appPort != "":
                 self.AppDict[appName].Port = int(appPort)
 
-        #Now read the options for each listed app from the named sections...
+        # Now read the options for each listed app from the named sections...
         for appName in self.AppNameList:
             A = self.AppDict[appName]
-            #see if there are overrides to the default options...
+            # see if there are overrides to the default options...
             A.ReadAppOptions(co)
 
-        #Append rdReprocessor for virtual mode, just before the first Fitter
+        # Append rdReprocessor for virtual mode, just before the first Fitter
         if self.virtualMode and "rdReprocessor" not in self.AppNameList:
             firstFitter = next(a for a in self.AppNameList if a.startswith("Fitter"))
             firstFitterIndex = self.AppNameList.index(firstFitter)
             self.AppNameList.insert(firstFitterIndex, "rdReprocessor")
             self.AppDict["rdReprocessor"] = App("rdReprocessor", self, defaultSettings)
             assert isinstance(self.AppDict["rdReprocessor"], App)
-            #Read options for rdReprocessor if in virtual mode
+            # Read options for rdReprocessor if in virtual mode
             co_vi = CustomConfigObj(viFileName)
             self.AppDict["rdReprocessor"].ReadAppOptions(co_vi)
 
-        #Now check the options...
+        # Now check the options...
         for appName in self.AppNameList:
             A = self.AppDict[appName]
-            #Make sure the executable exists!
-            exePath = os.path.normpath(os.path.join(os.path.dirname(AppPath), A.Executable))
+            # Make sure the executable exists!
+            exePath = os.path.normpath(
+                os.path.join(os.path.dirname(AppPath), A.Executable)
+            )
             if not os.path.exists(exePath):
-                raise AppErr("File '%s' does not exist for AppName '%s'." % (exePath, appName))
+                raise AppErr(
+                    "File '%s' does not exist for AppName '%s'." % (exePath, appName)
+                )
 
-            #Launch apps in virtual mode
+            # Launch apps in virtual mode
             if self.virtualMode and appName in ["InstMgr", "RDFreqConverter"]:
                 A.LaunchArgs += " --vi"
 
-            #check the dependency list...
+            # check the dependency list...
             if not self.virtualMode:
-                for a in [s.strip() for s in A.Dependencies.split("|") if not s == '']:
+                for a in [s.strip() for s in A.Dependencies.split("|") if not s == ""]:
                     if not a in self.AppNameList:
-                        raise AppErr("Unrecognized dependency listed for application (D = '%s' for A = '%s')." % (a, appName))
+                        raise AppErr(
+                            "Unrecognized dependency listed for application (D = '%s' for A = '%s')."
+                            % (a, appName)
+                        )
 
             if A.Mode in [0, 1, 3, 4]:
                 self.AppMonitorCount += 1
@@ -1067,8 +1257,9 @@ class Supervisor(object):
             if A.Mode == 0:
                 if self.BackupExists:
                     raise AppErr(
-                        "There can only be one backup supervisor.  '%s' is an additional app illegally specified as mode 0." %
-                        (appName, ))
+                        "There can only be one backup supervisor.  '%s' is an additional app illegally specified as mode 0."
+                        % (appName,)
+                    )
                 else:
                     self.BackupExists = True
                     self.BackupApp = A
@@ -1076,43 +1267,56 @@ class Supervisor(object):
                 self.Mode3Exists = True
 
         if self.BackupExists:
-            #We'll check that the backup WDT time makes sense...
+            # We'll check that the backup WDT time makes sense...
             wdtTimeOk = True
             for appName in self.AppNameList:
                 A = self.AppDict[appName]
-                if (DEFAULT_BACKUP_MAX_WAIT_TIME_s < (2.5 * A.MaxWait_ms / 1000)):
+                if DEFAULT_BACKUP_MAX_WAIT_TIME_s < (2.5 * A.MaxWait_ms / 1000):
                     wdtTimeOk = False
-                    print "Backup WDT too short.  WDT = %3s s  MaxWait for '%s' = %s s" % (DEFAULT_BACKUP_MAX_WAIT_TIME_s, appName,
-                                                                                           A.MaxWait_ms / 1000)
-                if (DEFAULT_BACKUP_MAX_WAIT_TIME_s < (2.5 * A.VerifyTimeout_ms / 1000)):
+                    print "Backup WDT too short.  WDT = %3s s  MaxWait for '%s' = %s s" % (
+                        DEFAULT_BACKUP_MAX_WAIT_TIME_s,
+                        appName,
+                        A.MaxWait_ms / 1000,
+                    )
+                if DEFAULT_BACKUP_MAX_WAIT_TIME_s < (2.5 * A.VerifyTimeout_ms / 1000):
                     wdtTimeOk = False
-                    print "Backup WDT too short.  WDT = %3s s  VerifyTimeout for '%s' = %s s" % (DEFAULT_BACKUP_MAX_WAIT_TIME_s,
-                                                                                                 appName, A.VerifyTimeout_ms / 1000)
+                    print "Backup WDT too short.  WDT = %3s s  VerifyTimeout for '%s' = %s s" % (
+                        DEFAULT_BACKUP_MAX_WAIT_TIME_s,
+                        appName,
+                        A.VerifyTimeout_ms / 1000,
+                    )
             if not wdtTimeOk:
-                raise AppErr("CODE ERROR - The WDT duration for the backup Supervisor is too short and must be lengthened.")
+                raise AppErr(
+                    "CODE ERROR - The WDT duration for the backup Supervisor is too short and must be lengthened."
+                )
 
-        #We need to set up a TCP server to listen to incoming kicks/pings from Mode 3 apps...
+        # We need to set up a TCP server to listen to incoming kicks/pings from Mode 3 apps...
         #   - set it up even if here are no mode 3 apps to make development of 'potential'
         #     mode 3 apps a bit easier.
         if self.Mode3Exists:
-            self._TcpServer = SupervisorTcpServer(('', _MODE3_TCP_SERVER_PORT), TcpRequestHandler, self)
-            self._TcpServerThread = threading.Thread(target=self._TcpServer.serve_forever)
+            self._TcpServer = SupervisorTcpServer(
+                ("", _MODE3_TCP_SERVER_PORT), TcpRequestHandler, self
+            )
+            self._TcpServerThread = threading.Thread(
+                target=self._TcpServer.serve_forever
+            )
             self._TcpServerThread.setDaemon(True)
             self._TcpServerThread.start()
 
     def AddExtraArgs(self, ExtraAppArgs):
-        """Appends any options to the application LaunchArgs.
-
-         Coded to work with the -o command-line switch.
         """
-        if 0: assert isinstance(ExtraAppArgs, dict)
+        Appends any options to the application LaunchArgs.
+        Coded to work with the -o command-line switch.
+        """
+        if 0:
+            assert isinstance(ExtraAppArgs, dict)
 
         if ExtraAppArgs:
             for k in ExtraAppArgs:
                 if k in self.AppDict:
-                    self.AppDict[k].LaunchArgs += (" " + ExtraAppArgs[k])
+                    self.AppDict[k].LaunchArgs += " " + ExtraAppArgs[k]
                 else:
-                    print "Unrecognized application used with -o switch: '%s'" % (k, )
+                    print "Unrecognized application used with -o switch: '%s'" % (k,)
                     sys.exit(1)
 
     def FindExistingApps(self):
@@ -1125,19 +1329,20 @@ class Supervisor(object):
         """
         foundApps = []
         checkingSemaphore = threading.Semaphore(len(self.AppNameList))
-        #Go through each app, check if anyone listening on the port...
+        # Go through each app, check if anyone listening on the port...
         print "Checking for existing applications..."
-        if 0: assert isinstance(A, App)
+        if 0:
+            assert isinstance(A, App)
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]
             threading.Thread(target=A.FindAndAttach).start()
-        #Now wait for the searches to complete...
+        # Now wait for the searches to complete...
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]
             A._SearchComplete.wait(1)
         while not self.messageQueue.empty():
             print self.messageQueue.get()
-        #Now build our list of found apps...
+        # Now build our list of found apps...
         for appName in self.AppNameList[::-1]:
             A = self.AppDict[appName]
             if A._ProcessHandle != -1:
@@ -1145,8 +1350,7 @@ class Supervisor(object):
         return foundApps
 
     def LaunchApps(self, AppList, ExclusionList=[], IsRestart=False):
-        """Launches all apps in the list in order of the list index.
-        """
+        """Launches all apps in the list in order of the list index."""
         if self.appList == None:
             # Use the first complete list as the standard list
             self.appList = AppList
@@ -1168,7 +1372,7 @@ class Supervisor(object):
             # Don't monitor apps as we're restarting/launching them
             if index == (len(appsToLaunch) - 1):
                 self._restartRequested = False
-            #check to make sure they are not dependents of apps that failed to launch
+            # check to make sure they are not dependents of apps that failed to launch
             for failedAppName in failedAppDependents:
                 if appName == failedAppName:
                     failedAppDependent = True
@@ -1182,25 +1386,43 @@ class Supervisor(object):
                         self.AppDict[appName].Launch(self, IsRestart)
                         appStarted = True
                         break
-                    except AppLaunchFailure, E:
-                        Log("Failed to launch application",
-                            dict(AppName=appName, AttemptNum=self.AppDict[appName]._LaunchFailureCount),
-                            Level=2)
-                        #Sleep a short time before trying again...
+                    except AppLaunchFailure as E:
+                        Log(
+                            "Failed to launch application",
+                            dict(
+                                AppName=appName,
+                                AttemptNum=self.AppDict[appName]._LaunchFailureCount,
+                            ),
+                            Level=2,
+                        )
+                        # Sleep a short time before trying again...
                         time.sleep(1)
                     except TerminationRequest:
-                        Log("Terminate requested during application launch process", dict(AppName=appName), Level=2)
+                        Log(
+                            "Terminate requested during application launch process",
+                            dict(AppName=appName),
+                            Level=2,
+                        )
                         self.ShutDownAll()
                         raise
 
                 if not appStarted:
-                    if not self.virtualMode: failedAppDependents = failedAppDependents + self.GetDependents(appName)
-                    Log("FATAL - Unable to successfully launch application",
-                        "App = %s, NumAttempts = %s" % (appName, MAX_LAUNCH_COUNT))
+                    if not self.virtualMode:
+                        failedAppDependents = failedAppDependents + self.GetDependents(
+                            appName
+                        )
+                    Log(
+                        "FATAL - Unable to successfully launch application",
+                        "App = %s, NumAttempts = %s" % (appName, MAX_LAUNCH_COUNT),
+                    )
                     # errMsg = "FATAL ERROR - Launching the '%s' application failed after %s attempts." % (appName, MAX_LAUNCH_COUNT)
                     # raise Exception(errMsg)
             else:
-                Log("Not launching because of dependence on app which is not launched", dict(AppName=appName), Level=2)
+                Log(
+                    "Not launching because of dependence on app which is not launched",
+                    dict(AppName=appName),
+                    Level=2,
+                )
 
             self.KickBackup()
 
@@ -1229,7 +1451,10 @@ class Supervisor(object):
                             continueFlag = True
         # Remove MasterAppName from list
         dependentList = dependentList[1:]
-        Log("Application dependents identified", dict(Master=MasterAppName, Dependents=dependentList))
+        Log(
+            "Application dependents identified",
+            dict(Master=MasterAppName, Dependents=dependentList),
+        )
         return dependentList
 
     def RestartApp(self, AppName, RestartDependents=True, StopMethod=_METHOD_STOPFIRST):
@@ -1258,32 +1483,36 @@ class Supervisor(object):
 
         if restartApp:
             appDependents = []
-            #Get all of the dependants shut down if any exist
+            # Get all of the dependants shut down if any exist
             if RestartDependents:
                 appDependents = self.GetDependents(AppName)
                 if len(appDependents) > 0:
                     for a in appDependents:
                         assert isinstance(self.AppDict[a], App)
                         # Remove app specific .pid file
-                        print("Removing pid file %s" % a)
+                        print ("Removing pid file %s" % a)
                         current_apps.remove_pid_file(a)
-                        self.AppDict[a].ShutDown(StopMethod=_METHOD_KILLFIRST)  #blocks until it IS shut down
+                        self.AppDict[a].ShutDown(
+                            StopMethod=_METHOD_KILLFIRST
+                        )  # blocks until it IS shut down
 
-            #Shutdown the app itself and remove .pid file
+            # Shutdown the app itself and remove .pid file
             if current_apps.is_running(AppName):
                 current_apps.remove_pid_file(AppName)
                 self.AppDict[AppName].ShutDown(StopMethod=_METHOD_KILLFIRST)
 
-            #the app (and all dependents) are now shut down... we're ready to re-launch...
-            Log("Application and all dependents successfully shut down.  Restarting from bottom up.",
-                dict(AppName=AppName, Dependents=appDependents))
+            # the app (and all dependents) are now shut down... we're ready to re-launch...
+            Log(
+                "Application and all dependents successfully shut down.  Restarting from bottom up.",
+                dict(AppName=AppName, Dependents=appDependents),
+            )
             launchList = []
             launchList.append(AppName)
             launchList += appDependents
             self.LaunchApps(launchList, IsRestart=True)
 
             # report restart of apps to Instrument Manager
-            if 'InstMgr' not in launchList:
+            if "InstMgr" not in launchList:
                 portList = []
                 for a in launchList:
                     try:
@@ -1292,18 +1521,28 @@ class Supervisor(object):
                     except:
                         pass
                 try:
-                    self.AppDict['InstMgr']._ServerProxy.INSTMGR_ReportRestartRpc(portList)
+                    self.AppDict["InstMgr"]._ServerProxy.INSTMGR_ReportRestartRpc(
+                        portList
+                    )
                 except:
                     Log("Report Restart Rpc failed")
 
         else:
-            Log("Not restarting because of dependence on app which is not launched", dict(AppName=AppName), Level=2)
+            Log(
+                "Not restarting because of dependence on app which is not launched",
+                dict(AppName=AppName),
+                Level=2,
+            )
 
     def RPC_TerminateApplications(self, powerDown=False, stopProtected=False):
         """Terminates all applications (in the proper order) and closes the Supervisor. Optionally powers down
         (by shutting down Windows) after termination. If stopProtected is True, protected applications (currently the
-        Driver) are also terminated. """
-        Log("TerminateApplications request received via RPC", dict(Client=self.RPCServer.CurrentCmd_ClientName), Level=2)
+        Driver) are also terminated."""
+        Log(
+            "TerminateApplications request received via RPC",
+            dict(Client=self.RPCServer.CurrentCmd_ClientName),
+            Level=2,
+        )
         self._TerminateAllRequested = True
         self.powerDownAfterTermination = powerDown
         self._TerminateProtected = stopProtected
@@ -1319,13 +1558,17 @@ class Supervisor(object):
             always be True and is True by default in Host.Common.AppRequestRestart
         :return: Returns and "OK" to CmdFIFO to acknowledge receipt
         """
-        Log("RestartApplications request received via RPC", dict(Client=self.RPCServer.CurrentCmd_ClientName), Level=0)
+        Log(
+            "RestartApplications request received via RPC",
+            dict(Client=self.RPCServer.CurrentCmd_ClientName),
+            Level=0,
+        )
         self._restartRequested = True
         try:
             self.RestartApp(AppName, RestartDependants)
-        except KeyError, e:
+        except KeyError as  e:
             Log("KeyError: %s" % e)
-        except Exception, e:
+        except Exception as e:
             Log("Error Restarting %s %s: " % AppName % e)
         return "OK"
 
@@ -1339,23 +1582,30 @@ class Supervisor(object):
         NOTE - This RPC server is not required for operation!  If it crashes it will
                NOT affect operation in any way.
         """
-        #Set up the Master RPC Server... going to launch it on a thread so it can run in
-        #the background while we do the monitoring in the main thread/loop...
+        # Set up the Master RPC Server... going to launch it on a thread so it can run in
+        # the background while we do the monitoring in the main thread/loop...
         try:
-            self.RPCServer = CmdFIFO.CmdFIFOServer(addr=("", RPC_SERVER_PORT_MASTER),
-                                                   ServerName="Supervisor",
-                                                   ServerDescription="The rpc server for the master Supervisor application.")
+            self.RPCServer = CmdFIFO.CmdFIFOServer(
+                addr=("", RPC_SERVER_PORT_MASTER),
+                ServerName="Supervisor",
+                ServerDescription="The rpc server for the master Supervisor application.",
+            )
 
-            #register any RPC calls here...
-            self.RPCServer.register_function(self.RPC_TerminateApplications, NameSlice=4)
+            # register any RPC calls here...
+            self.RPCServer.register_function(
+                self.RPC_TerminateApplications, NameSlice=4
+            )
             self.RPCServer.register_function(self.RPC_RestartApplications, NameSlice=4)
 
-            #Launch the server on its own thread...
+            # Launch the server on its own thread...
             th = threading.Thread(target=self.RPCServer.serve_forever)
             th.setDaemon(True)
             th.start()
-        except Exception, E:
-            Log("Exception trapped when configuring and launching the Master RPC server", Verbose="Exception = %s %r" % (E, E))
+        except Exception as E:
+            Log(
+                "Exception trapped when configuring and launching the Master RPC server",
+                Verbose="Exception = %s %r" % (E, E),
+            )
 
     def sigint_handler(self, signum, frame):
         self._TerminateAllRequested = True
@@ -1390,12 +1640,14 @@ class Supervisor(object):
                 start_rawkb()
                 while True:
                     key = read_rawkb()
-                    if key == "": break
-                    if len(key) > 1: break
-                    if ord(key) in [17, 24]:  #ctrl-q and ctrl-x
+                    if key == "":
+                        break
+                    if len(key) > 1:
+                        break
+                    if ord(key) in [17, 24]:  # ctrl-q and ctrl-x
                         Log("Exit request received via keyboard input (Ctrl-X)")
                         self._ShutdownRequested = True
-                    elif ord(key) == 20:  #ctrl-t
+                    elif ord(key) == 20:  # ctrl-t
                         Log("Terminate request received via keyboard input (Ctrl-T)")
                         self._TerminateAllRequested = True
                         self.powerDownAfterTermination = False
@@ -1410,23 +1662,29 @@ class Supervisor(object):
                 if self.RPCServer.ServerStopRequested:
                     self._ShutdownRequested = True
                     return True
-            except Exception, E:
-                #don't want ANY rpc server problems to cause us grief...
-                Log("Exception trapped when checking the Master RPC Server.  Ignoring server from now on.",
+            except Exception as E:
+                # don't want ANY rpc server problems to cause us grief...
+                Log(
+                    "Exception trapped when checking the Master RPC Server.  Ignoring server from now on.",
                     Level=2,
-                    Verbose="Exception = %s %r" % (E, E))
-                self.RPCServerProblem = True  #so we don't keep reporting it
+                    Verbose="Exception = %s %r" % (E, E),
+                )
+                self.RPCServerProblem = True  # so we don't keep reporting it
         return False
 
     def KickBackup(self):
         if self.BackupExists and self.BackupApp._StartedOk:
-            #give it a kick - need to make sure it doesn't get left alone...
+            # give it a kick - need to make sure it doesn't get left alone...
             try:
                 self.BackupApp.CheckFIFO()
-            except Exception, E:
-                #ignoring it at this point.  We'll deal with it come time to
-                #actually check the backup (this is just a kick)
-                Log("Exception occurred when kicking the backup Supervisor", Level=1, Verbose="Exception = %s %r" % (E, E))
+            except Exception as E:
+                # ignoring it at this point.  We'll deal with it come time to
+                # actually check the backup (this is just a kick)
+                Log(
+                    "Exception occurred when kicking the backup Supervisor",
+                    Level=1,
+                    Verbose="Exception = %s %r" % (E, E),
+                )
 
     def MonitorApps(self):
         """Eternal loop that monitors/restarts-if-needed appropriate applications.
@@ -1436,58 +1694,78 @@ class Supervisor(object):
         """
         Log("Application monitoring loop started")
         while (not self._ShutdownRequested) and (not self._TerminateAllRequested):
-            sys.stdout.flush()
-            # Let's not slam the CPU
-            time.sleep(5)
-            # Let's check the OS for running apps.. we will accomplish this by
-            # looping through all of the apps that have been launched by Supervisor and
-            # use the SingleInstance class to write a .pid file to /run/user/1000/picarro,
-            # get their respective process ID (PID) and cross-reference the OS process table.
-            running_apps = RunningApps()
-            # Get a list of all running apps
-            running_apps_list = running_apps.get_list()
-            for this_app in running_apps_list:
-                # Don't monitor apps if we're trying to shutdown, reboot, restart, etc
-                if self.CheckForStopRequests():
-                    break
-                if self.CheckForRestartRequests():
-                    break
-                else:
-                    # Check the state of the app
-                    is_running = running_apps.is_running(this_app)
-                    # False will be returned if the process does not have a .pid file,
-                    # the process does not exist in the OS process table, or the process
-                    # is a zombie process.
-                    if is_running is False:
-                        # Restart the app
-                        try:
-                            Log("Dead application detected, restarting: %s" % this_app, Level=2)
-                            self.RestartApp(this_app, RestartDependents=True, StopMethod=_METHOD_DESTROYFIRST)
-                        except KeyError, e:
-                            # You will get a KeyError if the APP_NAME does not match the
-                            # names under [Applications] at the top of your applicable
-                            # supervisor.ini file
-                            Log("KeyError: %s" % e)
-                        except ValueError, e:
-                            # You should not get a ValueError
-                            Log("ValueError: %s" % e)
-                        except Exception, e:
-                            Log("Error restarting %s: %s" % (this_app, e))
+            try:
+                sys.stdout.flush()
+                # Let's not slam the CPU
+                time.sleep(5)
+                # Let's check the OS for running apps.. we will accomplish this by
+                # looping through all of the apps that have been launched by Supervisor and
+                # use the SingleInstance class to write a .pid file to /run/user/1000/picarro,
+                # get their respective process ID (PID) and cross-reference the OS process table.
+                running_apps = RunningApps()
+                # Get a list of all running apps
+                running_apps_list = running_apps.get_list()
+                for this_app in running_apps_list:
+                    # Don't monitor apps if we're trying to shutdown, reboot, restart, etc
+                    if self.CheckForStopRequests():
+                        break
+                    if self.CheckForRestartRequests():
+                        break
+                    else:
+                        # Check the state of the app
+                        is_running = running_apps.is_running(this_app)
+                        # False will be returned if the process does not have a .pid file,
+                        # the process does not exist in the OS process table, or the process
+                        # is a zombie process.
+                        if is_running is False:
+                            # Restart the app
+                            try:
+                                Log(
+                                    "Dead application detected, restarting: %s" % this_app,
+                                    Level=2,
+                                )
+                                self.RestartApp(
+                                    this_app,
+                                    RestartDependents=True,
+                                    StopMethod=_METHOD_DESTROYFIRST,
+                                )
+                            except KeyError as e:
+                                # You will get a KeyError if the APP_NAME does not match the
+                                # names under [Applications] at the top of your applicable
+                                # supervisor.ini file
+                                Log("KeyError: %s" % e)
+                            except ValueError as e:
+                                # You should not get a ValueError
+                                Log("ValueError: %s" % e)
+                            except Exception as e:
+                                Log("Error restarting %s: %s" % (this_app, e))
+            except KeyboardInterrupt:
+                print("Shutdown by ctrl-C")
+                self._TerminateAllRequested = True
+
         try:
             self.RPCServer._CmdFIFO_StopServer()
-        except Exception, E:
-            Log("Exception trapped when trying to stop the Master RPC Server", Level=2, Verbose="Exception = %s %r" % (E, E))
+        except Exception as E:
+            Log(
+                "Exception trapped when trying to stop the Master RPC Server",
+                Level=2,
+                Verbose="Exception = %s %r" % (E, E),
+            )
             self.RPCServerProblem = True
 
         if self._TerminateAllRequested:
-            Log("Shutting down all applications ('terminate all' request " "received while monitoring)", Level=2)
+            Log(
+                "Shutting down all applications ('terminate all' request "
+                "received while monitoring)",
+                Level=2,
+            )
             self.ShutDownAll()
         elif self._ShutdownRequested:
             Log("Supervisor shutting down.  Apps will stay alive.", Level=2)
-            #All stay alive... except the backup supervisor!
-            #In this case we have a legit stop request, we don't want the backup to
-            #enable and have us caught in an eternal backup recovery loop!
-            if self.BackupExists:  #may not exist if no Mode 0 specified
+            # All stay alive... except the backup supervisor!
+            # In this case we have a legit stop request, we don't want the backup to
+            # enable and have us caught in an eternal backup recovery loop!
+            if self.BackupExists:  # may not exist if no Mode 0 specified
                 assert isinstance(self.BackupApp, App)
                 Log("Closing backup supervisor")
                 self.BackupApp.ShutDown()
@@ -1496,7 +1774,7 @@ class Supervisor(object):
         """
         Shuts down all monitored applications and then itself.
         """
-        #Get rid of any backup supervisor first...
+        # Get rid of any backup supervisor first...
         if self.BackupExists:
             self.BackupApp.ShutDown(_METHOD_KILLFIRST, NoKillByName=True, NoWait=True)
 
@@ -1507,12 +1785,15 @@ class Supervisor(object):
         # as we shut down applications
         apps_running = RunningApps()
 
-        #Now shut applications down in the reverse order of launching...
-        #for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
+        # Now shut applications down in the reverse order of launching...
+        # for severity in [_METHOD_STOPFIRST,_METHOD_KILLFIRST,_METHOD_DESTROYFIRST]:
         for severity in [_METHOD_KILLFIRST, _METHOD_DESTROYFIRST]:
             anyAlive = False
             for appName in self.AppNameList[::-1]:
-                if not (self.AppDict[appName] is self.BackupApp) and not appName in PROTECTED_APPS:
+                if (
+                    not (self.AppDict[appName] is self.BackupApp)
+                    and not appName in PROTECTED_APPS
+                ):
                     # Remove pid file and shutdown application
                     if self.AppDict[appName].IsProcessActive():
                         anyAlive = True
@@ -1547,24 +1828,38 @@ class Supervisor(object):
         self._ShutdownRequested = True
 
     def GetAppStats(self, PrintStats=False):
-        """Prints the supervisory stats for each application.
-        """
+        """Prints the supervisory stats for each application."""
         #    Print("---")
         #    Print("Application Stats:")
         #    Print("---")
         s = ""
         s += 50 * "-" + "\n"
-        s += "%s%s%s%s" % ("App Name".ljust(20), "PID".ljust(8), "Uptime".ljust(11), "# Restarts".ljust(10)) + "\n"
+        s += (
+            "%s%s%s%s"
+            % (
+                "App Name".ljust(20),
+                "PID".ljust(8),
+                "Uptime".ljust(11),
+                "# Restarts".ljust(10),
+            )
+            + "\n"
+        )
         s += 50 * "-" + "\n"
         for appName in self.AppNameList:
             app = self.AppDict[appName]
             assert isinstance(app, App)
-            s += "%20s%8s%8.2f%10s" % (appName.ljust(20), app._ProcessHandle, app.UpTime, app._Stat_LaunchCount - 1)
+            s += "%20s%8s%8.2f%10s" % (
+                appName.ljust(20),
+                app._ProcessHandle,
+                app.UpTime,
+                app._Stat_LaunchCount - 1,
+            )
         Print("-" * 50)
 
-    def Execute(self, KillExistingApps=False, LaunchNonExistent=True, DoMonitoring=True):
-        """Launches all applications in order and proceeds to appropriate monitoring.
-        """
+    def Execute(
+        self, KillExistingApps=False, LaunchNonExistent=True, DoMonitoring=True
+    ):
+        """Launches all applications in order and proceeds to appropriate monitoring."""
         existingApps = self.FindExistingApps()
         if KillExistingApps:
             for a in existingApps:
@@ -1575,27 +1870,27 @@ class Supervisor(object):
             self.LaunchApps(self.AppNameList, ExclusionList=existingApps)
 
         if DoMonitoring:
-            self.MonitorApps()  #will monitor all that need it (mode 1 apps)
+            self.MonitorApps()  # will monitor all that need it (mode 1 apps)
         else:
             if self.BackupExists:
                 self.BackupApp.ShutDown()
 
 
 class MasterSupervisorRPCServer(CmdFIFO.CmdFIFOServer):
-    """
-    """
     def __init__(self, *args, **kwargs):
         if kwargs.has_key("threaded"):
-            raise Exception("It is illegal to set the threaded parameter in an instance of MasterSupervisorRPCServer")
+            raise Exception(
+                "It is illegal to set the threaded parameter in an instance of MasterSupervisorRPCServer"
+            )
 
-        #The entire Supervisor app is to be left with a single thread, so we force
-        #threading to be false here.
+        # The entire Supervisor app is to be left with a single thread, so we force
+        # threading to be false here.
         CmdFIFO.CmdFIFOServer.__init__(self, threaded=False, *args, **kwargs)
 
 
 class BackupSupervisorRPCServer(CmdFIFO.CmdFIFOServer):
-    """Supervisor server class to get special behaviour needed for running as a backup.
-    """
+    """Supervisor server class to get special behaviour needed for running as a backup."""
+
     def __init__(self, *args, **kwargs):
         self.BackupWDTWaitTime = DEFAULT_BACKUP_MAX_WAIT_TIME_s
         self.BackupWDTTimeStamp = TimeStamp()
@@ -1606,9 +1901,9 @@ class BackupSupervisorRPCServer(CmdFIFO.CmdFIFOServer):
 
         self.MasterApp = App("Master_Supervisor", self)
 
-        #The entire Supervisor app is to be left with a single thread.  Setting
-        #threaded = false here shouldn't matter since we don't use it due to the
-        #server_forever replacement, but it makes the point and is just in case.
+        # The entire Supervisor app is to be left with a single thread.  Setting
+        # threaded = false here shouldn't matter since we don't use it due to the
+        # server_forever replacement, but it makes the point and is just in case.
         CmdFIFO.CmdFIFOServer.__init__(self, threaded=False, *args, **kwargs)
 
         self._register_priority_function(self._SetMasterProcessID, "SetMasterProcessID")
@@ -1626,9 +1921,9 @@ class BackupSupervisorRPCServer(CmdFIFO.CmdFIFOServer):
         self.MasterApp._ProcessHandle = getProcessHandle(PID)
 
     def _CmdFIFO_Ping(self):
-        #reset the WDT seed...
+        # reset the WDT seed...
 
-        #Print("Ping received - resetting WDT after %.2f s.  WDT stamp = %.2f" % (TimeStamp() - self.BackupWDTTimeStamp, self.BackupWDTTimeStamp))
+        # Print("Ping received - resetting WDT after %.2f s.  WDT stamp = %.2f" % (TimeStamp() - self.BackupWDTTimeStamp, self.BackupWDTTimeStamp))
         self.BackupWDTTimeStamp = TimeStamp()
         self.BackupWDTWarningStamp = self.BackupWDTTimeStamp
         if self.BackupWDTWarningCount > 0:
@@ -1638,20 +1933,25 @@ class BackupSupervisorRPCServer(CmdFIFO.CmdFIFOServer):
         return CmdFIFO.CmdFIFOServer._CmdFIFO_Ping(self)
 
     def serving_action(self):
-        """Override to enable backup server code during the main monitoring loop.
-        """
-        #We will break out of this loop if our backup WDT has expired...
+        """Override to enable backup server code during the main monitoring loop."""
+        # We will break out of this loop if our backup WDT has expired...
         timeNow = TimeStamp()
         wdtElapsedTime = timeNow - self.BackupWDTTimeStamp
-        #print "Looping", self.ServerKillRequested, self.ServerStopRequested, round(wdtElapsedTime,1),  round(self.BackupWDTWaitTime,1), (wdtElapsedTime > self.BackupWDTWaitTime)
+        # print "Looping", self.ServerKillRequested, self.ServerStopRequested, round(wdtElapsedTime,1),  round(self.BackupWDTWaitTime,1), (wdtElapsedTime > self.BackupWDTWaitTime)
         if wdtElapsedTime > self.BackupWDTWaitTime:
-            Log("WatchDog Timer Expired - There is a problem with the Master Supervisor",
+            Log(
+                "WatchDog Timer Expired - There is a problem with the Master Supervisor",
                 dict(Timeout_s=self.BackupWDTWaitTime),
-                Level=3)
+                Level=3,
+            )
             self.BackupWDTExpired = True
-            self.ServerStopRequested = True  #to get out of the serve_forever loop
+            self.ServerStopRequested = True  # to get out of the serve_forever loop
         elif (timeNow - self.BackupWDTWarningStamp) > self.BackupWDTWarningInterval:
-            Log("WDT Warning", dict(ElapsedTime_s=int(round(wdtElapsedTime, 0))), Level=2)
+            Log(
+                "WDT Warning",
+                dict(ElapsedTime_s=int(round(wdtElapsedTime, 0))),
+                Level=2,
+            )
             self.BackupWDTWarningCount += 1
             self.BackupWDTWarningStamp = timeNow
 
@@ -1690,43 +1990,48 @@ def PrintUsage():
           To exit the Supervisor when it is in monitoring mode:
           - Ctrl-q (or Ctrl-x) cleanly exits and leave the applications running.
           - Ctrl-t terminates all monitored applications and then shuts down.
-          """ % (APP_NAME, APP_NAME, _DEFAULT_CONFIG_NAME)
+          """ % (
+        APP_NAME,
+        APP_NAME,
+        _DEFAULT_CONFIG_NAME,
+    )
 
 
 def HandleCommandSwitches():
-    shortOpts = 'hc:ifkt:o:'
+    shortOpts = "hc:ifkt:o:"
     longOpts = ["ke", "nl", "nm", "backup", "inilog", "vi="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
-    except getopt.GetoptError, E:
+    except getopt.GetoptError as E:
         print "%s %r" % (E, E)
         sys.exit(1)
-    #assemble a dictionary where the keys are the switches and values are switch args...
+    # assemble a dictionary where the keys are the switches and values are switch args...
     options = {}
     extraAppArgs = {}
     appName = ""
     appArgs = ""
     for o, a in switches:
         if o == "-o":
-            #multiple occurrences of -o can exist
+            # multiple occurrences of -o can exist
             try:
                 appName, appArgs = a.split(":")
                 quoteCount = appArgs.count('"')
-                if not ((quoteCount == 2) or (quoteCount == 0)): raise
+                if not ((quoteCount == 2) or (quoteCount == 0)):
+                    raise
                 if not appName in extraAppArgs:
                     extraAppArgs[appName] = appArgs
                 else:
-                    extraAppArgs[appName] += (" " + appArgs)
-            except Exception, E:
-                print "Parameter format incorrect - '-o%s'" % (a, )
+                    extraAppArgs[appName] += " " + appArgs
+            except Exception as E:
+                print "Parameter format incorrect - '-o%s'" % (a,)
                 sys.exit(1)
         else:
             options.setdefault(o, a)
 
     if "/?" in args or "/h" in args:
-        options.setdefault('-h', "")
+        options.setdefault("-h", "")
 
-    #Start with option defaults...
+    # Start with option defaults...
     backupMode = False
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
     killExisting = False
@@ -1742,7 +2047,7 @@ def HandleCommandSwitches():
     macroModeSetCount = 0
     flagCount = 0
 
-    if '-h' in options:
+    if "-h" in options:
         PrintUsage()
         sys.exit()
 
@@ -1751,12 +2056,14 @@ def HandleCommandSwitches():
     if "-t" in options:
         waitTime = float(options["-t"])
 
-    if '-c' in options:
+    if "-c" in options:
         configFile = options["-c"]
         # print "Config file specified at command line: %s" % configFile
         Log("Config file specified at command line", dict(Path=configFile))
     else:
-        print "No config file specified.  Using default: '%s'." % os.path.basename(configFile)
+        print "No config file specified.  Using default: '%s'." % os.path.basename(
+            configFile
+        )
 
     if "-i" in options:
         macroModeSetCount += 1
@@ -1793,7 +2100,7 @@ def HandleCommandSwitches():
         viConfigFile = options["--vi"]
         print "'Virtual Mode' macro mode requested on commandline."
 
-    #if here, the options make sense...
+    # if here, the options make sense...
     if listMode:
         killExisting = False
         suppressLaunch = True
@@ -1806,18 +2113,27 @@ def HandleCommandSwitches():
         killExisting = True
         suppressLaunch = True
         suppressMonitoring = True
-    return (configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs, viConfigFile)
+    return (
+        configFile,
+        killExisting,
+        suppressLaunch,
+        suppressMonitoring,
+        backupMode,
+        waitTime,
+        extraAppArgs,
+        viConfigFile,
+    )
 
 
 def GetConfigFileAndIniLog():
     # default configFile
     configFile = os.path.dirname(AppPath) + "/" + _DEFAULT_CONFIG_NAME
     # Get configFile from command line
-    shortOpts = 'hc:ifkt:o:'
+    shortOpts = "hc:ifkt:o:"
     longOpts = ["ke", "nl", "nm", "backup", "inilog", "vi="]
     try:
         switches, args = getopt.getopt(sys.argv[1:], shortOpts, longOpts)
-    except getopt.GetoptError, E:
+    except getopt.GetoptError as E:
         print "%s %r" % (E, E)
         sys.exit(1)
     switchDict = dict(switches)
@@ -1833,45 +2149,65 @@ def GetConfigFileAndIniLog():
 def main():
     try:
         performDuties = False
-        #Get and handle the command line options...
-        configFile, killExisting, suppressLaunch, suppressMonitoring, backupMode, waitTime, extraAppArgs, viConfigFile = HandleCommandSwitches(
-        )
+        # Get and handle the command line options...
+        (
+            configFile,
+            killExisting,
+            suppressLaunch,
+            suppressMonitoring,
+            backupMode,
+            waitTime,
+            extraAppArgs,
+            viConfigFile,
+        ) = HandleCommandSwitches()
 
         if backupMode:
             try:
-                #The instance we are running right now is a backup!
+                # The instance we are running right now is a backup!
                 performDuties = PrepareBackupAndWaitForAction(waitTime)
-            except Exception, E:
-                Log("Exception trapped when preparing the backup Supervisor", Level=3, Verbose="Exception = %s %r" % (E, E))
+            except Exception as E:
+                Log(
+                    "Exception trapped when preparing the backup Supervisor",
+                    Level=3,
+                    Verbose="Exception = %s %r" % (E, E),
+                )
                 sys.stdout.flush()
-                #x = prompt_wait("Problem detected!!")
+                # x = prompt_wait("Problem detected!!")
         else:
             performDuties = True
 
-        #Now get to the actual program...
+        # Now get to the actual program...
         if performDuties:
             # Grab the mutex, as we should be the only one up at this stage
             supervisorApp = SingleInstance(APP_NAME)
             if supervisorApp.alreadyrunning():
                 sys.exit(0)
             try:
-                supe = Supervisor(FileName=configFile, viFileName=viConfigFile)  #loads all the app info
+                supe = Supervisor(
+                    FileName=configFile, viFileName=viConfigFile
+                )  # loads all the app info
                 supe.AddExtraArgs(extraAppArgs)
                 supe.LaunchMasterRPCServer()  # in separate thread, only supports TerminateApplications RPC
-                supe.Execute(KillExistingApps=killExisting,
-                             LaunchNonExistent=(not suppressLaunch),
-                             DoMonitoring=(not suppressMonitoring))
-            except AppErr, E:
+                supe.Execute(
+                    KillExistingApps=killExisting,
+                    LaunchNonExistent=(not suppressLaunch),
+                    DoMonitoring=(not suppressMonitoring),
+                )
+            except AppErr as E:
                 print "Exception trapped outside Supervisor execution: %s %r" % (E, E)
-                Log("Exception trapped outside Supervisor execution", Level=3, Verbose="Exception = %s %r" % (E, E))
+                Log(
+                    "Exception trapped outside Supervisor execution",
+                    Level=3,
+                    Verbose="Exception = %s %r" % (E, E),
+                )
             except TerminationRequest:
                 pass
-            #PUT NO MORE CODE HERE - code above relies on falling through.
+            # PUT NO MORE CODE HERE - code above relies on falling through.
 
     finally:
-        #Print("'FINALLY' catch in module Supervisor.py reached!")
+        # Print("'FINALLY' catch in module Supervisor.py reached!")
         sys.stdout.flush()
-        #x = prompt_wait("At final!")
+        # x = prompt_wait("At final!")
 
 
 def start():
@@ -1886,10 +2222,12 @@ def start():
     except:
         # tbMsg = BetterTraceback.get_advanced_traceback()
         tbMsg = traceback.format_exc()
-        Log("Unhandled exception trapped by last chance handler",
+        Log(
+            "Unhandled exception trapped by last chance handler",
             Data=dict(Note="<See verbose for debug info>"),
             Level=3,
-            Verbose=tbMsg)
+            Verbose=tbMsg,
+        )
         print tbMsg
     finally:
         Log("Exiting program")
