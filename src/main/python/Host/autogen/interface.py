@@ -652,6 +652,18 @@ STREAM_SgdbrAPulseTempPtp = 59 #
 STREAM_SgdbrBPulseTempPtp = 60 # 
 STREAM_SgdbrCPulseTempPtp = 61 # 
 STREAM_SgdbrDPulseTempPtp = 62 # 
+STREAM_Soa1Temp = 63 # 
+STREAM_Soa2Temp = 64 # 
+STREAM_Soa3Temp = 65 # 
+STREAM_Soa4Temp = 66 # 
+STREAM_Soa1TecVoltage = 67 # 
+STREAM_Soa2TecVoltage = 68 # 
+STREAM_Soa3TecVoltage = 69 # 
+STREAM_Soa4TecVoltage = 70 # 
+STREAM_Soa1TecCurrent = 71 # 
+STREAM_Soa2TecCurrent = 72 # 
+STREAM_Soa3TecCurrent = 73 # 
+STREAM_Soa4TecCurrent = 74 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -718,6 +730,18 @@ STREAM_MemberTypeDict[59] = 'STREAM_SgdbrAPulseTempPtp' #
 STREAM_MemberTypeDict[60] = 'STREAM_SgdbrBPulseTempPtp' # 
 STREAM_MemberTypeDict[61] = 'STREAM_SgdbrCPulseTempPtp' # 
 STREAM_MemberTypeDict[62] = 'STREAM_SgdbrDPulseTempPtp' # 
+STREAM_MemberTypeDict[63] = 'STREAM_Soa1Temp' # 
+STREAM_MemberTypeDict[64] = 'STREAM_Soa2Temp' # 
+STREAM_MemberTypeDict[65] = 'STREAM_Soa3Temp' # 
+STREAM_MemberTypeDict[66] = 'STREAM_Soa4Temp' # 
+STREAM_MemberTypeDict[67] = 'STREAM_Soa1TecVoltage' # 
+STREAM_MemberTypeDict[68] = 'STREAM_Soa2TecVoltage' # 
+STREAM_MemberTypeDict[69] = 'STREAM_Soa3TecVoltage' # 
+STREAM_MemberTypeDict[70] = 'STREAM_Soa4TecVoltage' # 
+STREAM_MemberTypeDict[71] = 'STREAM_Soa1TecCurrent' # 
+STREAM_MemberTypeDict[72] = 'STREAM_Soa2TecCurrent' # 
+STREAM_MemberTypeDict[73] = 'STREAM_Soa3TecCurrent' # 
+STREAM_MemberTypeDict[74] = 'STREAM_Soa4TecCurrent' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint

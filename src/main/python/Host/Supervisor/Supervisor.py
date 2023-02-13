@@ -307,9 +307,8 @@ if sys.platform == "linux2":
                 process = Popen(
                     argList,
                     bufsize=-1,
-                    start_new_session=True,
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
+                    stderr=open("/dev/null", "w"),
+                    stdout=open("/dev/null", "w"),
                     cwd=cwd,
                 )
                 # process = Popen(argList, bufsize=-1, cwd=cwd)
@@ -317,10 +316,9 @@ if sys.platform == "linux2":
                 termList = ["xterm", "-fn", "9x15", "-T", appName, "-e"]
                 process = Popen(
                     termList + argList,
-                    start_new_session=True,
                     bufsize=-1,
-                    stderr=subprocess.DEVNULL,
-                    stdout=subprocess.DEVNULL,
+                    stderr=open("/dev/null", "w"),
+                    stdout=open("/dev/null", "w"),
                     cwd=cwd,
                 )
         except OSError:

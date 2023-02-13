@@ -603,7 +603,19 @@ typedef enum {
     STREAM_SgdbrAPulseTempPtp = 59, // 
     STREAM_SgdbrBPulseTempPtp = 60, // 
     STREAM_SgdbrCPulseTempPtp = 61, // 
-    STREAM_SgdbrDPulseTempPtp = 62 // 
+    STREAM_SgdbrDPulseTempPtp = 62, // 
+    STREAM_Soa1Temp = 63, // 
+    STREAM_Soa2Temp = 64, // 
+    STREAM_Soa3Temp = 65, // 
+    STREAM_Soa4Temp = 66, // 
+    STREAM_Soa1TecVoltage = 67, // 
+    STREAM_Soa2TecVoltage = 68, // 
+    STREAM_Soa3TecVoltage = 69, // 
+    STREAM_Soa4TecVoltage = 70, // 
+    STREAM_Soa1TecCurrent = 71, // 
+    STREAM_Soa2TecCurrent = 72, // 
+    STREAM_Soa3TecCurrent = 73, // 
+    STREAM_Soa4TecCurrent = 74 // 
 } STREAM_MemberType;
 
 typedef enum {
