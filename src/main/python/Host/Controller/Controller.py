@@ -65,6 +65,14 @@ class Controller(ControllerFrameGui):
         self.laser3Panel.setLaserNum(3)
         panels["Laser4"] = self.laser4Panel
         self.laser4Panel.setLaserNum(4)
+        panels["Soa1"] = self.soa1Panel
+        self.soa1Panel.setSoaNum(1)
+        panels["Soa2"] = self.soa2Panel
+        self.soa2Panel.setSoaNum(2)
+        panels["Soa3"] = self.soa3Panel
+        self.soa3Panel.setSoaNum(3)
+        panels["Soa4"] = self.soa4Panel
+        self.soa4Panel.setSoaNum(4)
         panels["WarmBox"] = self.warmBoxPanel
         panels["HotBox"] = self.hotBoxPanel
         panels["FilterHeater"] = self.filterHeaterPanel
@@ -95,6 +103,18 @@ class Controller(ControllerFrameGui):
         waveforms["Laser4"] = dict(temperature=self.laser4Panel.temperatureWfm,
                                    tec=self.laser4Panel.tecWfm,
                                    current=self.laser4Panel.currentWfm)
+        waveforms["Soa1"] = dict(temperature=self.soa1Panel.temperatureWfm,
+                                 tecVoltage=self.soa1Panel.tecVoltageWfm,
+                                 tecCurrent=self.soa1Panel.tecCurrentWfm)
+        waveforms["Soa2"] = dict(temperature=self.soa2Panel.temperatureWfm,
+                                 tecVoltage=self.soa2Panel.tecVoltageWfm,
+                                 tecCurrent=self.soa2Panel.tecCurrentWfm)
+        waveforms["Soa3"] = dict(temperature=self.soa3Panel.temperatureWfm,
+                                 tecVoltage=self.soa3Panel.tecVoltageWfm,
+                                 tecCurrent=self.soa3Panel.tecCurrentWfm)
+        waveforms["Soa4"] = dict(temperature=self.soa4Panel.temperatureWfm,
+                                 tecVoltage=self.soa4Panel.tecVoltageWfm,
+                                 tecCurrent=self.soa4Panel.tecCurrentWfm)
         waveforms["WarmBox"] = dict(etalonTemperature=self.warmBoxPanel.etalonTemperatureWfm,
                                     warmBoxTemperature=self.warmBoxPanel.warmBoxTemperatureWfm,
                                     heatsinkTemperature=self.warmBoxPanel.heatsinkTemperatureWfm,
@@ -155,10 +175,11 @@ class Controller(ControllerFrameGui):
 
     def setupParameterDialogs(self):
         idmin = None
+        idmax = None
         for f in Driver.getParameterForms():
             title, details = f
             id = wx.NewId()
-            if idmin == None:
+            if idmin is None:
                 idmin = id
             item = wx.MenuItem(self.parameters, id, title, "", wx.ITEM_NORMAL)
             self.parameters.AppendItem(item)
@@ -169,13 +190,15 @@ class Controller(ControllerFrameGui):
     def onParameterDialog(self, e):
         """Either open a new parameter dialog form or shift focus
            to a pre-existing one"""
+        # print "In onParameterDialog"
         id = e.GetId()
         if id in self.openParamDialogs:
             try:
                 self.openParamDialogs[id].Show()
                 self.openParamDialogs[id].SetFocus()
                 return
-            except Exception, e:
+            except Exception as e:
+                # print "Cannot give focus to parameter dialog form: %s" % (e,)
                 del self.openParamDialogs[id]
         title, details = parameterForms[id]
         pd = ParameterDialog(None, wx.ID_ANY, "")
@@ -183,7 +206,9 @@ class Controller(ControllerFrameGui):
         pd.getRegisterValues = Driver.rdRegList
         pd.putRegisterValues = Driver.wrRegList
         self.openParamDialogs[id] = pd
+        # print "About to call ReadFromDas"
         pd.readParams()
+        # print "About to show dialog"
         pd.Show()
 
     def onAbout(self, evt):
@@ -254,6 +279,14 @@ class Controller(ControllerFrameGui):
             self.laser3Panel.update()
         elif pageText == "Laser4":
             self.laser4Panel.update()
+        elif pageText == "SOA1":
+            self.soa1Panel.update()
+        elif pageText == "SOA2":
+            self.soa2Panel.update()
+        elif pageText == "SOA3":
+            self.soa3Panel.update()
+        elif pageText == "SOA4":
+            self.soa4Panel.update()
         elif pageText == "WarmBox":
             self.warmBoxPanel.update()
         elif pageText == "Filter":
@@ -271,12 +304,11 @@ class Controller(ControllerFrameGui):
         elif pageText == "Statistics":
             self.statsPanel.update()
 
+    def onIdle(self, evt):
         # Deal with updating the command log panel
         self.commandLogPanel.setStreamFileState()
         acqState = self.commandLogPanel.updateAcquisitionState()
         self.controllerFrameGui_statusbar.SetStatusText(acqState, 0)
-
-    def onIdle(self, evt):
         # Deal with event manager log messages
         while True:
             msg = self.logListener.getLogMessage()

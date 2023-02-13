@@ -68,4 +68,11 @@ int accel_getDeviceId(int ident);
 int accel_read_reg(int ident, int reg);
 int accel_write_reg(int ident, int reg, int value);
 int accel_read_accel(int ident, short int *ax, short int *ay, short int *az);
+int ltc2493se_read(int ident, int channel, int *status);
+void ltc2606_write(int ident, int value);
+void ad5248_write(int ident, int channel, int position);
+int ad5248_read(int ident, int channel);
+int pca8574_write(int ident, int value);
+int pca8574_read(int ident);
+
 #endif

@@ -362,7 +362,7 @@ static inline int sgdbr_find_index(int aLaserNum)
         return 2;
     case 3:
         return 1;
-    case 4:
+    default:
         return 3;
     }
 }

@@ -364,6 +364,13 @@ class DriverRpcHandler(SharedTypes.Singleton):
         except:
             return "undefined"
 
+    def doAction(self, cmd, params=None, env=0):
+        """Perform the action specified by "cmd" with the list of parameters specified by "params" passing the
+        specified environment in "env"
+        String values will be looked up in the interface definition file"""
+        sender = self.dasInterface.hostToDspSender
+        sender.doOperation(Operation(cmd, params, env))
+
     def wrDasRegList(self, regList, values):
         for r, value in zip(regList, values):
             self.wrDasReg(r, value)
@@ -692,7 +699,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_StartingState)
 
     def stopScan(self):
-        self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
+        while self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) != interface.SPECT_CNTRL_IdleState:
+            self.wrDasReg(interface.SPECT_CNTRL_STATE_REGISTER, interface.SPECT_CNTRL_IdleState)
+            time.sleep(0.2)
 
     def scanIdle(self):
         return self.rdDasReg(interface.SPECT_CNTRL_STATE_REGISTER) == interface.SPECT_CNTRL_IdleState
@@ -1337,7 +1346,7 @@ class Driver(SharedTypes.Singleton):
             self.auxAccessor = AuxAccessor(self.dasInterface.analyzerUsb)
             analogInterfacePresent = 0 != (self.dasInterface.hostToDspSender.rdRegUint("HARDWARE_PRESENT_REGISTER") &
                                            (1 << interface.HARDWARE_PRESENT_AnalogInterface))
-            print "Analog interface present: %s" % analogInterfacePresent
+            print("Analog interface present: %s" % analogInterfacePresent)
             if analogInterfacePresent:
                 self.analogInterface.initializeClock()
 
@@ -1347,7 +1356,7 @@ class Driver(SharedTypes.Singleton):
                 try:
                     self.analyzerType = self.rpcHandler.fetchInstrInfo("analyzer")
                 except Exception, err:
-                    print "Driver 1303: %r" % err
+                    print("Driver 1303: %r" % err)
                     self.analyzerType = None
 
                 if self.analyzerType != None:

@@ -234,6 +234,31 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["FilterHeater"]["temperature"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_FilterHeater:
             waveforms["FilterHeater"]["heater"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa1Temp:
+            waveforms["Soa1"]["temperature"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa1TecVoltage:
+            waveforms["Soa1"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa1TecCurrent:
+            waveforms["Soa1"]["tecCurrent"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa2Temp:
+            waveforms["Soa2"]["temperature"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa2TecVoltage:
+            waveforms["Soa2"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa2TecCurrent:
+            waveforms["Soa2"]["tecCurrent"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa3Temp:
+            waveforms["Soa3"]["temperature"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa3TecVoltage:
+            waveforms["Soa3"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa3TecCurrent:
+            waveforms["Soa3"]["tecCurrent"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa4Temp:
+            waveforms["Soa4"]["temperature"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa4TecVoltage:
+            waveforms["Soa4"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa4TecCurrent:
+            waveforms["Soa4"]["tecCurrent"].Add(utime, data.value)
+
 
 
 class LogListener(SharedTypes.Singleton):

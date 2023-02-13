@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2022 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2023 Picarro, Inc. All rights reserved
  */
 #ifndef _DSP_AUTOGEN_H
 #define _DSP_AUTOGEN_H
@@ -16,10 +16,10 @@
 #include "interface.h"
 
 typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
-extern I2C_device i2c_devices[41];
+extern I2C_device i2c_devices[57];
 
 void initRegisters(void);
-extern RegTypes regTypes[681];
+extern RegTypes regTypes[702];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -123,4 +123,16 @@ int r_sgdbr_a_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_b_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_c_set_currents(unsigned int numInt,void *params,void *env);
 int r_sgdbr_d_set_currents(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa1_init(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa1_step(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa2_init(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa2_step(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa3_init(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa3_step(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa4_init(unsigned int numInt,void *params,void *env);
+int r_soa_cntrl_soa4_step(unsigned int numInt,void *params,void *env);
+int r_read_soa_monitor(unsigned int numInt,void *params,void *env);
+int r_set_soa_current(unsigned int numInt,void *params,void *env);
+int r_set_soa_temperature(unsigned int numInt,void *params,void *env);
+int r_set_soa_control(unsigned int numInt,void *params,void *env);
 #endif

@@ -32,7 +32,7 @@ from Host.Controller.ControllerModels import ringdowns, ringdownLock
 from Host.Controller.ControllerPanelsGui import CommandLogPanelGui, LaserPanelGui, PressurePanelGui
 from Host.Controller.ControllerPanelsGui import WarmBoxPanelGui, HotBoxPanelGui, RingdownPanelGui
 from Host.Controller.ControllerPanelsGui import WlmPanelGui, ProcessedLossPanelGui, StatsPanelGui
-from Host.Controller.ControllerPanelsGui import AccelerometerPanelGui
+from Host.Controller.ControllerPanelsGui import AccelerometerPanelGui, SoaPanelGui
 from Host.Controller.ControllerPanelsGui import FilterHeaterPanelGui
 
 from Host.autogen import interface
@@ -43,6 +43,7 @@ from Host.Common import CmdFIFO, SharedTypes, timestamp
 from Host.Common.EventManagerProxy import EventManagerProxy_Init, Log, LogExc
 import threading
 
+EventManagerProxy_Init("Controller")
 statsPoints = interface.CONTROLLER_STATS_POINTS
 wfmPoints = interface.CONTROLLER_WAVEFORM_POINTS
 ringdownPoints = interface.CONTROLLER_RINGDOWN_POINTS
@@ -68,7 +69,8 @@ class RingdownPanel(RingdownPanelGui):
         wx.CallAfter(self.onSelectGraphType, None)
 
     def update(self):
-        if self.appendData is None: return
+        if self.appendData is None:
+            return
         ringdownLock.acquire()
         try:
             if self.latestRingdown is None or self.appendData != self.oldAppendData:
@@ -99,7 +101,8 @@ class RingdownPanel(RingdownPanelGui):
         fillColours = [wx.NamedColour(c).GetRGB() for c in colourNames]
 
         def printData(data):
-            print data.timestamp, data.uncorrectedAbsorbance
+            # print data.timestamp, data.uncorrectedAbsorbance
+            pass
 
         def dataGood(data):
             return not (data.status & interface.RINGDOWN_STATUS_RingdownTimeout)
@@ -117,7 +120,7 @@ class RingdownPanel(RingdownPanelGui):
 
             def lossVsWavenumber(data):
                 if dataGood(data):
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     loss_u = data.uncorrectedAbsorbance
                     loss_c = data.correctedAbsorbance
@@ -190,7 +193,7 @@ class RingdownPanel(RingdownPanelGui):
 
             def ratioVsWavenumber(data):
                 if dataGood(data):
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     ratio1 = data.ratio1
                     ratio2 = data.ratio2
@@ -209,7 +212,7 @@ class RingdownPanel(RingdownPanelGui):
 
             def tunerVsWavenumber(data):
                 if dataGood(data):
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["tuner"].Add(wavenumber, data.tunerValue, fillColours[vLaser])
@@ -267,7 +270,7 @@ class RingdownPanel(RingdownPanelGui):
 
             def pztVsWavenumber(data):
                 if dataGood(data):
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["pzt"].Add(wavenumber, data.pztValue, fillColours[vLaser])
@@ -333,7 +336,7 @@ class RingdownPanel(RingdownPanelGui):
             def wavenumberVsTime(data):
                 if dataGood(data):
                     utime = timestamp.unixTime(data.timestamp)
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["wavenumber"].Add(utime, wavenumber, fillColours[vLaser])
@@ -350,7 +353,7 @@ class RingdownPanel(RingdownPanelGui):
 
             def fineCurrentVsWavenumber(data):
                 if dataGood(data):
-                    #wavenumber = data.wlmAngle
+                    # wavenumber = data.wlmAngle
                     wavenumber = data.waveNumber
                     vLaser = (data.laserUsed >> 2) & 7
                     waveforms["Ringdown"]["fineCurrent"].Add(wavenumber, data.fineLaserCurrent, fillColours[vLaser])
@@ -584,6 +587,45 @@ class LaserPanel(LaserPanelGui):
 
     def onClear(self, evt):
         for w in waveforms["Laser%d" % self.laserNum].values():
+            w.Clear()
+
+
+class SoaPanel(SoaPanelGui):
+    def __init__(self, *a, **k):
+        SoaPanelGui.__init__(self, *a, **k)
+        self.temperatureGraph.SetGraphProperties(ylabel='Temperature (degC)',
+                                                 timeAxes=(True, False),
+                                                 frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                 grid=True,
+                                                 backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+        self.tecVoltageGraph.SetGraphProperties(ylabel='TEC Voltage (V)',
+                                                grid=True,
+                                                timeAxes=(True, False),
+                                                frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+        self.tecCurrentGraph.SetGraphProperties(ylabel='TEC Current (A)',
+                                                grid=True,
+                                                timeAxes=(True, False),
+                                                frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+        self.temperatureWfm = Series(wfmPoints)
+        self.temperatureGraph.AddSeriesAsLine(self.temperatureWfm, colour='red', width=2)
+        self.tecVoltageWfm = Series(wfmPoints)
+        self.tecVoltageGraph.AddSeriesAsLine(self.tecVoltageWfm, colour='red', width=2)
+        self.tecCurrentWfm = Series(wfmPoints)
+        self.tecCurrentGraph.AddSeriesAsLine(self.tecCurrentWfm, colour='red', width=2)
+        self.soaNum = None
+
+    def setSoaNum(self, soaNum):
+        self.soaNum = soaNum
+
+    def update(self):
+        self.temperatureGraph.Update(delay=0)
+        self.tecVoltageGraph.Update(delay=0)
+        self.tecCurrentGraph.Update(delay=0)
+
+    def onClear(self, evt):
+        for w in waveforms["Soa%d" % self.soaNum].values():
             w.Clear()
 
 
@@ -1178,26 +1220,31 @@ class StatsPanel(StatsPanelGui):
         n, v = self.lossAllanVar.getVariances()
         self.ringdownsTextCtrl.SetValue("%d" % n)
         for k in range(statsPoints):
-            if v[k] > 0: self.lossStats.Add(log10(2**k), 0.5 * log10(v[k]))
+            if v[k] > 0:
+                self.lossStats.Add(log10(2**k), 0.5 * log10(v[k]))
         self.stdLossTextCtrl.SetValue("%.4f" % (1000.0 * sqrt(v[0]), ))
         if rate != 0.0:
             self.sensitivityTextCtrl.SetValue("%.5f" % (1000.0 * sqrt(v[0] / rate), ))
-        if meanLoss != 0.0: self.shotToShotTextCtrl.SetValue("%.3f" % (100.0 * sqrt(v[0]) / meanLoss))
+        if meanLoss != 0.0:
+            self.shotToShotTextCtrl.SetValue("%.3f" % (100.0 * sqrt(v[0]) / meanLoss))
         self.waveNumberStats.Clear()
         n, v = self.waveNumberAllanVar.getVariances()
         for k in range(statsPoints):
-            if v[k] > 0: self.waveNumberStats.Add(log10(2**k), 0.5 * log10(v[k]))
+            if v[k] > 0:
+                self.waveNumberStats.Add(log10(2**k), 0.5 * log10(v[k]))
         # TO DO: Replace with proper calculation of frequency standard deviation (MHz) from wavenumber
         fStdDev = 29979.2458 * sqrt(v[0])
         self.freqStdDevTextCtrl.SetValue("%.3f" % fStdDev)
         self.ratio1Stats.Clear()
         n, v = self.ratio1AllanVar.getVariances()
         for k in range(statsPoints):
-            if v[k] > 0: self.ratio1Stats.Add(log10(2**k), 0.5 * log10(v[k]))
+            if v[k] > 0:
+                self.ratio1Stats.Add(log10(2**k), 0.5 * log10(v[k]))
         self.ratio2Stats.Clear()
         n, v = self.ratio2AllanVar.getVariances()
         for k in range(statsPoints):
-            if v[k] > 0: self.ratio2Stats.Add(log10(2**k), 0.5 * log10(v[k]))
+            if v[k] > 0:
+                self.ratio2Stats.Add(log10(2**k), 0.5 * log10(v[k]))
 
     def update(self):
         self.updateSeriesAndStats()

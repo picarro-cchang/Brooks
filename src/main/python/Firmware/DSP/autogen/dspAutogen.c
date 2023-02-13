@@ -8,7 +8,7 @@
  * SEE ALSO:
  *   Specify any related information.
  *
- *  Copyright (c) 2008-2022 Picarro, Inc. All rights reserved
+ *  Copyright (c) 2008-2023 Picarro, Inc. All rights reserved
  */
 
 #include <stdlib.h>
@@ -16,10 +16,10 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[681];
+RegTypes regTypes[702];
 
 /* I2C devices */
-I2C_device i2c_devices[41] = {
+I2C_device i2c_devices[57] = {
     {0, -1, 0x55},
     {0, 0, 0x26},
     {0, 0, 0x14},
@@ -59,6 +59,22 @@ I2C_device i2c_devices[41] = {
     {1, 4, 0x70},
     {0, 4, 0x10},
     {0, 5, 0x64},
+    {0, 3, 0x2c},
+    {0, 3, 0x38},
+    {0, 3, 0x10},
+    {0, 3, 0x16},
+    {0, 3, 0x2d},
+    {0, 3, 0x39},
+    {0, 3, 0x12},
+    {0, 3, 0x15},
+    {0, 3, 0x2e},
+    {0, 3, 0x3a},
+    {0, 3, 0x22},
+    {0, 3, 0x34},
+    {0, 3, 0x2f},
+    {0, 3, 0x3b},
+    {0, 3, 0x30},
+    {0, 3, 0x27},
     {0, -1, 0x70},
     {1, -1, 0x71}};
 
@@ -1329,6 +1345,48 @@ void initRegisters()
     writeRegister(PZT_UPDATE_MODE_REGISTER,d);
     d.asInt = -1;
     writeRegister(SGDBR_FILTER_BY_TRAJECTORY_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA1_CURRENT_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA1_TEMPERATURE_SETPOINT_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA1_TEC_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA1_TEC_VOLTAGE_MONITOR_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA1_TEMPERATURE_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA2_CURRENT_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA2_TEMPERATURE_SETPOINT_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA2_TEC_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA2_TEC_VOLTAGE_MONITOR_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA2_TEMPERATURE_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA3_CURRENT_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA3_TEMPERATURE_SETPOINT_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA3_TEC_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA3_TEC_VOLTAGE_MONITOR_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA3_TEMPERATURE_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA4_CURRENT_SETPOINT_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA4_TEMPERATURE_SETPOINT_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA4_TEC_CURRENT_MONITOR_REGISTER,d);
+    d.asFloat = 0.0;
+    writeRegister(SOA4_TEC_VOLTAGE_MONITOR_REGISTER,d);
+    d.asFloat = 25.0;
+    writeRegister(SOA4_TEMPERATURE_MONITOR_REGISTER,d);
+    d.asUint = 0xF;
+    writeRegister(SOA_ENABLE_MASK_REGISTER,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -2010,6 +2068,27 @@ void initRegisters()
     regTypes[SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER] = float_type;
     regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
     regTypes[SGDBR_FILTER_BY_TRAJECTORY_REGISTER] = int_type;
+    regTypes[SOA1_CURRENT_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA1_TEMPERATURE_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA1_TEC_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[SOA1_TEC_VOLTAGE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA1_TEMPERATURE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA2_CURRENT_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA2_TEMPERATURE_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA2_TEC_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[SOA2_TEC_VOLTAGE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA2_TEMPERATURE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA3_CURRENT_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA3_TEMPERATURE_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA3_TEC_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[SOA3_TEC_VOLTAGE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA3_TEMPERATURE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA4_CURRENT_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA4_TEMPERATURE_SETPOINT_REGISTER] = float_type;
+    regTypes[SOA4_TEC_CURRENT_MONITOR_REGISTER] = float_type;
+    regTypes[SOA4_TEC_VOLTAGE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA4_TEMPERATURE_MONITOR_REGISTER] = float_type;
+    regTypes[SOA_ENABLE_MASK_REGISTER] = uint_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
@@ -2219,6 +2298,30 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_sgdbr_c_set_currents(numInt,params,env);
         case ACTION_SGDBR_D_SET_CURRENTS:
             return r_sgdbr_d_set_currents(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA1_INIT:
+            return r_soa_cntrl_soa1_init(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA1_STEP:
+            return r_soa_cntrl_soa1_step(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA2_INIT:
+            return r_soa_cntrl_soa2_init(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA2_STEP:
+            return r_soa_cntrl_soa2_step(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA3_INIT:
+            return r_soa_cntrl_soa3_init(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA3_STEP:
+            return r_soa_cntrl_soa3_step(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA4_INIT:
+            return r_soa_cntrl_soa4_init(numInt,params,env);
+        case ACTION_SOA_CNTRL_SOA4_STEP:
+            return r_soa_cntrl_soa4_step(numInt,params,env);
+        case ACTION_READ_SOA_MONITOR:
+            return r_read_soa_monitor(numInt,params,env);
+        case ACTION_SET_SOA_CURRENT:
+            return r_set_soa_current(numInt,params,env);
+        case ACTION_SET_SOA_TEMPERATURE:
+            return r_set_soa_temperature(numInt,params,env);
+        case ACTION_SET_SOA_CONTROL:
+            return r_set_soa_control(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

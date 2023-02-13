@@ -22,12 +22,12 @@
 unsigned char pca8574_rdByte(I2C_device *i2c)
 {
     unsigned char reply;
-    I2C_read_bytes(hI2C[i2c->chain],i2c->addr,&reply,1);
+    I2C_read_bytes(hI2C[i2c->chain], i2c->addr, &reply, 1);
     return reply;
 }
 
-void pca8574_wrByte(I2C_device *i2c,unsigned char byte)
+void pca8574_wrByte(I2C_device *i2c, unsigned char byte)
 {
-    I2C_write_bytes(hI2C[i2c->chain],i2c->addr,&byte,1);
+    I2C_write_bytes(hI2C[i2c->chain], i2c->addr, &byte, 1);
     I2C_sendStop(hI2C[i2c->chain]);
 }

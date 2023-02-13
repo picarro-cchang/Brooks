@@ -48,6 +48,7 @@
 #include "rddCntrl.h"
 #include "adxl345.h"
 #include "sgdbrCurrentSource.h"
+#include "soa_cntrl.h"
 
 static char message[120];
 
@@ -1509,6 +1510,139 @@ int r_tempCntrlFilterHeaterStep(unsigned int numInt, void *params, void *env)
     if (0 != numInt)
         return ERROR_BAD_NUM_PARAMS;
     return tempCntrlFilterHeaterStep();
+}
+
+int r_soa_cntrl_soa1_init(unsigned int numInt, void *params, void *env)
+/* Initialize SOA controller for SOA Board 1 (A1:A0 = 00)
+    Input:
+        i2c_current_ident (int):  Index of I2C device for digital potentiometer which sets SOA current
+        i2c_control_ident (int):  Index of I2C device for parallel port which disables SOA current source
+        i2c_tec_ident (int):  Index of I2C device for DAC which sets TEC controller temperature setpoint for SOA 
+        i2c_monitor_ident (int):  Index of I2C device for ADC which monitors TEC voltage, current and SOA temperature 
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return soa_cntrl_soa1_init(reg[0], reg[1], reg[2], reg[3]);
+}
+
+int r_soa_cntrl_soa1_step(unsigned int numInt, void *params, void *env)
+{
+    return soa_cntrl_soa1_step();
+}
+
+int r_soa_cntrl_soa2_init(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return soa_cntrl_soa2_init(reg[0], reg[1], reg[2], reg[3]);
+}
+
+int r_soa_cntrl_soa2_step(unsigned int numInt, void *params, void *env)
+{
+    return soa_cntrl_soa2_step();
+}
+
+int r_soa_cntrl_soa3_init(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return soa_cntrl_soa3_init(reg[0], reg[1], reg[2], reg[3]);
+}
+
+int r_soa_cntrl_soa3_step(unsigned int numInt, void *params, void *env)
+{
+    return soa_cntrl_soa3_step();
+}
+
+int r_soa_cntrl_soa4_init(unsigned int numInt, void *params, void *env)
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return soa_cntrl_soa4_init(reg[0], reg[1], reg[2], reg[3]);
+}
+
+int r_soa_cntrl_soa4_step(unsigned int numInt, void *params, void *env)
+{
+    return soa_cntrl_soa4_step();
+}
+
+int r_read_soa_monitor(unsigned int numInt, void *params, void *env)
+/*
+    Reads SOA monitor ADC of specified SOA
+    Input:
+        i2c_index (int):  Index of I2C device for LTC2493 quad ADC
+        adc_index (int):  ADC channel to read (0 = voltage, 1 = current, 2 = temperature)
+    Output:
+        Register (float): Register to receive result
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    int status;
+    float result;
+    float Vref, Vcom;
+	Vref = 2.5;
+	Vcom = 1.25;
+    if (3 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    result = ltc2493se_read(reg[0], reg[1], &status) / 33554432.0;
+    if (status != 0) return status;
+    if (result < 0.0 || result > 1.0)
+        return ERROR_BAD_VALUE;    
+    WRITE_REG(reg[2], Vcom + Vref*(result - 0.5));
+    return STATUS_OK;
+}
+
+int r_set_soa_current(unsigned int numInt, void *params, void *env)
+/*
+    Set digital potentiometer for SOA current
+    Input:
+        i2c_index (int):  Index of I2C device for AD5248 digital potentiomenter
+        channel (int):  Which digital potentiomater to set (0-1)
+        value (int):  Value to set on digital potentiomater (0-255)
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (3 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    ad5248_write(reg[0], reg[1], reg[2]);
+    return STATUS_OK;
+}
+
+int r_set_soa_temperature(unsigned int numInt, void *params, void *env)
+/*
+    Set DAC controlling SOA temperature
+    Input:
+        i2c_index (int):  Index of I2C device for LTC2606 DAC
+        value (int): Value to write to control register
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (2 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+
+    ltc2606_write(reg[0], reg[1]);
+    return STATUS_OK;
+}
+
+int r_set_soa_control(unsigned int numInt, void *params, void *env)
+/*
+    Set parallel port for controlling SOA
+    Input:
+        i2c_index (int):  Index of I2C device for PCF8574 I/O expander
+        value (int): Value to write to control register
+*/
+{
+    unsigned int *reg = (unsigned int *)params;
+    if (2 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+
+    pca8574_write(reg[0], reg[1]);
+    return STATUS_OK;
 }
 
 

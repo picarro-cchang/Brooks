@@ -312,6 +312,18 @@
             <register cond="sgdbrD">SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER</register>
         </gui_page>
         <gui_page>
+            <title>SOA Parameters</title>
+            <register>SOA1_CURRENT_SETPOINT_REGISTER</register>
+            <register>SOA1_TEMPERATURE_SETPOINT_REGISTER</register>
+            <register>SOA2_CURRENT_SETPOINT_REGISTER</register>
+            <register>SOA2_TEMPERATURE_SETPOINT_REGISTER</register>
+            <register>SOA3_CURRENT_SETPOINT_REGISTER</register>
+            <register>SOA3_TEMPERATURE_SETPOINT_REGISTER</register>
+            <register>SOA4_CURRENT_SETPOINT_REGISTER</register>
+            <register>SOA4_TEMPERATURE_SETPOINT_REGISTER</register>
+            <register>SOA_ENABLE_MASK_REGISTER</register>
+        </gui_page>
+        <gui_page>
             <title>Warm Box Temperature Parameters</title>
             <register>WARM_BOX_TEMP_CNTRL_STATE_REGISTER</register>
             <register>TEC_CNTRL_REGISTER</register>

@@ -426,6 +426,22 @@ class DasConfigure(SharedTypes.Singleton):
                 # Laser current for SGDBR lasers
                 elif self.installCheck("LASER%d_PRESENT" % laserNum) == 2:
                     self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SGDBR_CNTRL_STEP", [laserNum2SgdbrIndex(laserNum)]))
+        # SOA boards
+        for board_num in range(1, 5):
+            if self.installCheck("SOA%d_PRESENT" % board_num):
+                self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SOA_CNTRL_SOA%d_STEP" % board_num))
+                self.opGroups["FAST"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_Soa%dTecVoltage" % board_num,
+                               "SOA%d_TEC_VOLTAGE_MONITOR_REGISTER" % board_num]))
+                self.opGroups["FAST"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_Soa%dTecCurrent" % board_num,
+                               "SOA%d_TEC_CURRENT_MONITOR_REGISTER" % board_num]))
+                self.opGroups["FAST"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                              ["STREAM_Soa%dTemp" % board_num,
+                               "SOA%d_TEMPERATURE_MONITOR_REGISTER" % board_num]))
 
         # Read the DAS temperature into DAS_TEMPERATURE_REGISTER and stream it
         if self.installCheck("DAS_TEMP_MONITOR"):
@@ -1131,6 +1147,17 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_VALVE_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_SPECTRUM_CNTRL_INIT"))
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
+
+        # SOA boards
+        for board_num in range(1, 5):
+            if self.installCheck("SOA%d_PRESENT" % board_num):
+                sender.doOperation(
+                    Operation("ACTION_SOA_CNTRL_SOA%d_INIT" % board_num, [
+                        "I2C_SOA%d_CURRENT" % board_num,
+                        "I2C_SOA%d_CONTROL" % board_num,
+                        "I2C_SOA%d_TEC" % board_num,
+                        "I2C_SOA%d_MONITOR" % board_num
+                    ]))
 
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER", 10000.0)
         sender.wrRegFloat("LASER2_RESISTANCE_REGISTER", 9000.0)

@@ -4557,6 +4557,121 @@
             <initial>-1</initial>
             <display format="%d">Restrict WLM lookup to trajectory (-1 for no restriction)</display>
         </register>
+        <register ident="SOA1_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 1 current setpoint</description>
+            <initial>0.0</initial>
+            <display format="%.1f" units="mA">SOA1 current setpoint (0.0 - 770mA)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 1 temperature setpoint</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA1 temperature setpoint (0.0 - 50.0C)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEC_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 1 TEC current monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="mA">SOA1 TEC current monitor</display>
+        </register>
+        <register ident="SOA1_TEC_VOLTAGE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 1 TEC voltage monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="V">SOA1 TEC voltage monitor</display>
+        </register>
+        <register ident="SOA1_TEMPERATURE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 1 SOA temperature monitor</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA1 temperature monitor</display>
+        </register>
+        <register ident="SOA2_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 2 current setpoint</description>
+            <initial>0.0</initial>
+            <display format="%.1f" units="mA">SOA2 current setpoint (0.0 - 770mA)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 2 temperature setpoint</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA2 temperature setpoint (0.0 - 50.0C)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEC_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 2 TEC current monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="mA">SOA2 TEC current monitor</display>
+        </register>
+        <register ident="SOA2_TEC_VOLTAGE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 2 TEC voltage monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="V">SOA2 TEC voltage monitor</display>
+        </register>
+        <register ident="SOA2_TEMPERATURE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 2 SOA temperature monitor</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA2 temperature monitor</display>
+        </register>
+        <register ident="SOA3_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 3 current setpoint</description>
+            <initial>0.0</initial>
+            <display format="%.1f" units="mA">SOA3 current setpoint (0.0 - 770mA)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 3 temperature setpoint</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA3 temperature setpoint (0.0 - 50.0C)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEC_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 3 TEC current monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="mA">SOA3 TEC current monitor</display>
+        </register>
+        <register ident="SOA3_TEC_VOLTAGE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 3 TEC voltage monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="V">SOA3 TEC voltage monitor</display>
+        </register>
+        <register ident="SOA3_TEMPERATURE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 3 SOA temperature monitor</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA3 temperature monitor</display>
+        </register>
+        <register ident="SOA4_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 4 current setpoint</description>
+            <initial>0.0</initial>
+            <display format="%.1f" units="mA">SOA4 current setpoint (0.0 - 770mA)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 4 temperature setpoint</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA4 temperature setpoint (0.0 - 50.0C)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEC_CURRENT_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 4 TEC current monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="mA">SOA4 TEC current monitor</display>
+        </register>
+        <register ident="SOA4_TEC_VOLTAGE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 4 TEC voltage monitor</description>
+            <initial>0.0</initial>
+            <display format="%.2f" units="V">SOA4 TEC voltage monitor</display>
+        </register>
+        <register ident="SOA4_TEMPERATURE_MONITOR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA board 4 SOA temperature monitor</description>
+            <initial>25.0</initial>
+            <display format="%.3f" units="degC">SOA4 temperature monitor</display>
+        </register>
+        <register ident="SOA_ENABLE_MASK_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>Bit mask to enable SOA board current sources</description>
+            <initial>0xF</initial>
+            <display format="$%X">SOA current source enable mask</display>
+            <save/>
+        </register>
+
     </register_list>
     <i2c_list>
         <i2c ident="LOGIC_EEPROM" chain="0" address="0x55" />
@@ -4603,7 +4718,22 @@
         <i2c ident="VALVE_PUMP_TEC_PORT" chain="1" mux="4" address="0x70" />
         <i2c ident="ANALOG_INTERFACE" chain="0" mux="4" address="0x10" />
         <i2c ident="BATTERY_MONITOR" chain="0" mux="5" address="0x64" />
-
+        <i2c ident="SOA1_CURRENT" chain="0" mux="3" address="0x2C" />
+        <i2c ident="SOA1_CONTROL" chain="0" mux="3" address="0x38" />
+        <i2c ident="SOA1_TEC" chain="0" mux="3" address="0x10" />
+        <i2c ident="SOA1_MONITOR" chain="0" mux="3" address="0x16" />
+        <i2c ident="SOA2_CURRENT" chain="0" mux="3" address="0x2D" />
+        <i2c ident="SOA2_CONTROL" chain="0" mux="3" address="0x39" />
+        <i2c ident="SOA2_TEC" chain="0" mux="3" address="0x12" />
+        <i2c ident="SOA2_MONITOR" chain="0" mux="3" address="0x15" />
+        <i2c ident="SOA3_CURRENT" chain="0" mux="3" address="0x2E" />
+        <i2c ident="SOA3_CONTROL" chain="0" mux="3" address="0x3A" />
+        <i2c ident="SOA3_TEC" chain="0" mux="3" address="0x22" />
+        <i2c ident="SOA3_MONITOR" chain="0" mux="3" address="0x34" />
+        <i2c ident="SOA4_CURRENT" chain="0" mux="3" address="0x2F" />
+        <i2c ident="SOA4_CONTROL" chain="0" mux="3" address="0x3B" />
+        <i2c ident="SOA4_TEC" chain="0" mux="3" address="0x30" />
+        <i2c ident="SOA4_MONITOR" chain="0" mux="3" address="0x27" />
         <i2c ident="CHAIN0_MUX" chain="0" address="0x70" />
         <i2c ident="CHAIN1_MUX" chain="1" address="0x71" />
     </i2c_list>
@@ -5862,26 +5992,7 @@
         <action ident="ACTION_PEAK_DETECT_CNTRL_INIT">r_peakDetectCntrlInit</action>
         <action ident="ACTION_PEAK_DETECT_CNTRL_STEP">r_peakDetectCntrlStep</action>
         <action ident="ACTION_MODIFY_VALVE_PUMP_TEC_FROM_REGISTER">r_modifyValvePumpTec</action>
-        <!-- Pulse generator:
-        Inputs:
-            Register (int):   Duration of low level
-            Register (int):   Duration of high level
-        Output:
-            Register (float): Generator output
-        Environment:
-            PulseGenType
-        Comments:
-            The output levels are 0.0 and 1.0 -->
         <action ident="ACTION_PULSE_GENERATOR">r_pulseGenerator</action>
-        <!-- Discrete time filter:
-        Input:
-            Register (float):   Input sequence
-        Output:
-            Register (float):   Output sequence
-        Environment:
-            FilterEnvType
-        Comments:
-            The filter coefficients and state are in FilterEnvType -->
         <action ident="ACTION_FILTER">r_filter</action>
         <action ident="ACTION_DS1631_READTEMP">r_ds1631_readTemp</action>
         <action ident="ACTION_READ_THERMISTOR_RESISTANCE">r_read_thermistor_resistance</action>
@@ -5931,6 +6042,18 @@
         <action ident="ACTION_SGDBR_B_SET_CURRENTS">r_sgdbr_b_set_currents</action>
         <action ident="ACTION_SGDBR_C_SET_CURRENTS">r_sgdbr_c_set_currents</action>
         <action ident="ACTION_SGDBR_D_SET_CURRENTS">r_sgdbr_d_set_currents</action>
+        <action ident="ACTION_SOA_CNTRL_SOA1_INIT">r_soa_cntrl_soa1_init</action>
+        <action ident="ACTION_SOA_CNTRL_SOA1_STEP">r_soa_cntrl_soa1_step</action>
+        <action ident="ACTION_SOA_CNTRL_SOA2_INIT">r_soa_cntrl_soa2_init</action>
+        <action ident="ACTION_SOA_CNTRL_SOA2_STEP">r_soa_cntrl_soa2_step</action>
+        <action ident="ACTION_SOA_CNTRL_SOA3_INIT">r_soa_cntrl_soa3_init</action>
+        <action ident="ACTION_SOA_CNTRL_SOA3_STEP">r_soa_cntrl_soa3_step</action>
+        <action ident="ACTION_SOA_CNTRL_SOA4_INIT">r_soa_cntrl_soa4_init</action>
+        <action ident="ACTION_SOA_CNTRL_SOA4_STEP">r_soa_cntrl_soa4_step</action>
+        <action ident="ACTION_READ_SOA_MONITOR">r_read_soa_monitor</action>
+        <action ident="ACTION_SET_SOA_CURRENT">r_set_soa_current</action>
+        <action ident="ACTION_SET_SOA_TEMPERATURE">r_set_soa_temperature</action>
+        <action ident="ACTION_SET_SOA_CONTROL">r_set_soa_control</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

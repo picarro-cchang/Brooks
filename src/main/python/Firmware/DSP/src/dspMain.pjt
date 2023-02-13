@@ -1,7 +1,7 @@
 ; Code Composer Project File, Version 2.0 (do not modify or remove this line)
 
 [Project Settings]
-ProjectDir="C:\GitHub\host\src\main\python\Firmware\DSP\src\"
+ProjectDir="C:\GitHub\I2000-Host\src\main\python\Firmware\DSP\src\"
 ProjectType=Executable
 CPUFamily=TMS320C67XX
 Tool="Compiler"
@@ -24,6 +24,7 @@ Source="..\common\i2cEeprom.c"
 Source="..\common\ltc2451.c"
 Source="..\common\ltc2485.c"
 Source="..\common\ltc2499.c"
+Source="..\common\pca8574.c"
 Source="..\common\pca9538.c"
 Source="..\common\pca9547.c"
 Source="..\common\rdFitting.c"
@@ -44,6 +45,7 @@ Source="scheduler.c"
 Source="scopeHandler.c"
 Source="sentryHandler.c"
 Source="sgdbrCurrentSource.c"
+Source="soa_cntrl.c"
 Source="spectrumCntrl.c"
 Source="tempCntrl.c"
 Source="tunerCntrl.c"
