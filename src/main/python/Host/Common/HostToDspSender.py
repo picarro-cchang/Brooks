@@ -594,7 +594,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
         Args:
             schemeNum: Scheme table number (0 origin)
             numRepeats: Number of repetitions of the scheme
-            schemeRows: A list of rows, where each row has up to 12 entries
+            schemeRows: A list of rows, where each row has up to 11 entries
         """
         assert isinstance(schemeNum, (int, long))
         assert isinstance(numRepeats, (int, long))
@@ -620,6 +620,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             schemeTable.rows[i].frontMirrorDac = int(row[7]) if len(row) >= 8 else 0
             schemeTable.rows[i].backMirrorDac = int(row[8]) if len(row) >= 9 else 0
             schemeTable.rows[i].coarsePhaseDac = int(row[9]) if len(row) >= 10 else 0
+            schemeTable.rows[i].modeIndex = int(row[10]) if len(row) >= 11 else 0
         self.dspAccessor.hpiWrite(schemeTableAddr, schemeTable)
 
     @usbLockProtect
@@ -630,9 +631,9 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             schemeNum: Scheme table number (0 origin)
         Returns:
             A dictionary with numRepeats as the number of repetitions and schemeRows as a list of
-            10-tuples containing:
+            11-tuples containing:
             (setpoint, dwellCount, subschemeId, virtualLaser, threshold, pztSetpoint, laserTemp,
-             frontMirrorDac, backMirrorDac, coarsePhaseDac)
+             frontMirrorDac, backMirrorDac, coarsePhaseDac, modeIndex)
 
         """
         assert isinstance(schemeNum, (int, long))
@@ -651,7 +652,7 @@ class HostToDspSender(Singleton):  # pylint: disable=R0902, R0904
             "numRepeats":
             schemeTable.numRepeats,
             "schemeRows": [(row.setpoint, row.dwellCount, row.subschemeId, row.virtualLaser, row.threshold, row.pztSetpoint,
-                            0.001 * row.laserTemp, row.frontMirrorDac, row.backMirrorDac, row.coarsePhaseDac)
+                            0.001 * row.laserTemp, row.frontMirrorDac, row.backMirrorDac, row.coarsePhaseDac, row.modeIndex)
                            for row in schemeTable.rows]
         }
 

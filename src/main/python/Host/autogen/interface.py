@@ -141,7 +141,7 @@ class RingdownParamsType(Structure):
     ("frontAndBackMirrorCurrentDac",c_uint),
     ("gainAndSoaCurrentDac",c_uint),
     ("coarseAndFinePhaseCurrentDac",c_uint),
-    ("param14",c_uint),
+    ("modeIndex",c_uint),
     ("param15",c_uint)
     ]
 
@@ -186,7 +186,8 @@ class RingdownEntryType(Structure):
     ("sequenceNumber",c_uint),
     ("average1",c_ushort),
     ("average2",c_ushort),
-    ("padToCacheLine",c_ushort*20)
+    ("modeIndex",c_ushort),
+    ("padToCacheLine",c_ushort*19)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -229,7 +230,8 @@ class ProcessedRingdownEntryType(Structure):
     ("extra4",c_uint),
     ("sequenceNumber",c_uint),
     ("average1",c_ushort),
-    ("average2",c_ushort)
+    ("average2",c_ushort),
+    ("modeIndex",c_ushort)
     ]
 
 class SensorEntryType(Structure):
@@ -303,7 +305,8 @@ class SchemeRowType(Structure):
     ("frontMirrorDac",c_ushort),
     ("backMirrorDac",c_ushort),
     ("coarsePhaseDac",c_ushort),
-    ("padding",c_ushort*5)
+    ("modeIndex",c_ushort),
+    ("padding",c_ushort*4)
     ]
 
 class SchemeTableHeaderType(Structure):

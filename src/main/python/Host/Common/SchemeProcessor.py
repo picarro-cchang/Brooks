@@ -41,10 +41,11 @@ class Row(object):
         'frontMirrorDac': 11,
         'backMirrorDac': 12,
         'coarsePhaseDac': 13,
+        'modeIndex': 14,
     }
 
     def __init__(self, *a, **k):
-        self.data = 14 * [0]
+        self.data = 15 * [0]
         self.data[:len(a)] = a
         for n in k:
             if n in self.keynames:
@@ -65,9 +66,9 @@ class Row(object):
             object.__setattr__(self, n, v)
 
     def __str__(self):
-        return "%.5f,%d,%d,%d,%d,%d,%.4f,%d,%d,%d,%d,%d,%d,%d" % (
+        return "%.5f,%d,%d,%d,%d,%d,%.4f,%d,%d,%d,%d,%d,%d,%d,%d" % (
             self.setpoint, self.dwell, self.subschemeId, self.virtualLaser, self.threshold, self.pzt, self.laserTemp, self.extra1,
-            self.extra2, self.extra3, self.extra4, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac)
+            self.extra2, self.extra3, self.extra4, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac, self.modeIndex)
 
     def __repr__(self):
         return "Row(%s)" % self.__str__()
@@ -105,6 +106,7 @@ class Scheme(object):
         self.frontMirrorDac = []
         self.backMirrorDac = []
         self.coarsePhaseDac = []
+        self.modeIndex = []
         if self.fileName is not None:
             self.compile()
         if self.numErrors > 0:
@@ -122,14 +124,14 @@ class Scheme(object):
     def evalInEnv(self, x):
         try:
             return eval(x, self.env)
-        except Exception, e:
+        except Exception as e:
             self.numErrors += 1
             self.errors.append("Line %d [%s]: %s" % (self.lineNum, e.__class__.__name__, e))
 
     def execInEnv(self, x):
         try:
             exec x in self.env
-        except Exception, e:
+        except Exception as e:
             self.numErrors += 1
             self.errors.append("Line %d [%s]: %s" % (self.lineNum, e.__class__.__name__, e))
 
@@ -140,7 +142,7 @@ class Scheme(object):
             def getConfig(relPath):
                 path = os.path.abspath(os.path.join(self.schemePath, relPath))
                 if path not in configMemo:
-                    fp = file(path, 'r')
+                    fp = open(path, 'r')
                     try:
                         configMemo[path] = ConfigObj(fp)
                     finally:
@@ -149,8 +151,8 @@ class Scheme(object):
 
             self.env['getConfig'] = getConfig
         try:
-            fp = file(self.fileName, "r")
-        except Exception, e:
+            fp = open(self.fileName, "r")
+        except Exception as e:
             self.numErrors += 1
             self.errors.append("[%s]: %s" % (e.__class__.__name__, e))
             return
@@ -228,6 +230,7 @@ class Scheme(object):
                 self.frontMirrorDac = [s.frontMirrorDac for s in schemeRows]
                 self.backMirrorDac = [s.backMirrorDac for s in schemeRows]
                 self.coarsePhaseDac = [s.coarsePhaseDac for s in schemeRows]
+                self.modeIndex = [s.modeIndex for s in schemeRows]
                 self.schemeInfo = self.env.get('schemeInfo', None)
             else:
                 raise SchemeError(self.__str__())
@@ -258,16 +261,18 @@ class Scheme(object):
         s.frontMirrorDac = self.frontMirrorDac[:]
         s.backMirrorDac = self.backMirrorDac[:]
         s.coarsePhaseDac = self.coarsePhaseDac[:]
+        s.modeIndex = self.modeIndex
         s.schemeInfo = self.schemeInfo
 
         return s
 
     def repack(self):
-        # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp))
-        #  from the scheme, which is appropriate for sending it to the DAS
+        # Generate a tuple (repeats,zip(setpoint,dwell,subschemeId,virtualLaser,threshold,pztSetpoint,laserTemp,
+        #  frontMirrorDac,backMirrorDac,coarsePhaseDac,modeIndex)) from the scheme, which is appropriate for 
+        #  writing it to the DAS
         return (self.nrepeat,
                 zip(self.setpoint, self.dwell, self.subschemeId, self.virtualLaser, self.threshold, self.pztSetpoint,
-                    self.laserTemp, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac))
+                    self.laserTemp, self.frontMirrorDac, self.backMirrorDac, self.coarsePhaseDac, self.modeIndex))
 
 
 from sys import argv
@@ -283,9 +288,10 @@ if __name__ == "__main__":
     print "%-10d # Repetitions" % s.nrepeat
     print "%-10d # Scheme rows" % s.numEntries
     for i in range(s.numEntries):
-        print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d, %d, %d, %d" % (
+        print "%11.5f,%6d,%6d, %1d,%6d,%6d,%8.4f, %d, %d, %d, %d, %d, %d, %d, %d" % (
             s.setpoint[i], s.dwell[i], s.subschemeId[i], s.virtualLaser[i], s.threshold[i], s.pztSetpoint[i], s.laserTemp[i],
-            s.extra1[i], s.extra2[i], s.extra3[i], s.extra4[i], s.frontMirrorDac[i], s.backMirrorDac[i], s.coarsePhaseDac[i])
+            s.extra1[i], s.extra2[i], s.extra3[i], s.extra4[i], s.frontMirrorDac[i], s.backMirrorDac[i], s.coarsePhaseDac[i],
+            s.modeIndex[i])
     if s.schemeInfo is not None:
         print "Scheme info: %s" % (s.schemeInfo, )
     # fname = "../Tests/RDFrequencyConverter/SampleScheme.sch"

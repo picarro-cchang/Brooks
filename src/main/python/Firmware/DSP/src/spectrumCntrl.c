@@ -169,6 +169,7 @@ int spectCntrlInit(void)
     s->incrCounter_ = 0;
     s->incrCounterNext_ = 1;
     s->useMemo_ = 0;
+    s->modeIndex_ = 0;
     switchToRampMode();
     return STATUS_OK;
 }
@@ -498,6 +499,7 @@ void setupNextRdParams(void)
         changeBitsFPGA(FPGA_INJECT + INJECT_CONTROL, INJECT_CONTROL_LASER_SELECT_B, INJECT_CONTROL_LASER_SELECT_W, laserNum);
         changeBitsFPGA(FPGA_SGDBRMANAGER + SGDBRMANAGER_CONFIG, SGDBRMANAGER_CONFIG_SELECT_B, SGDBRMANAGER_CONFIG_SELECT_W, sgdbr_find_index(laserNum + 1));
         writeFPGA(FPGA_RDMAN + RDMAN_THRESHOLD, r->ringdownThreshold);
+        s->modeIndex_ = 0;
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
     {
@@ -518,6 +520,7 @@ void setupNextRdParams(void)
         r->status = 0;
         r->angleSetpoint = 0.0;
         laserTempAsInt = 1000.0 * r->laserTemperature;
+        s->modeIndex_ = 0;
         // Set up the FPGA registers for this ringdown
         writeFPGA(FPGA_RDMAN + RDMAN_THRESHOLD, r->ringdownThreshold);
     }
@@ -551,7 +554,7 @@ void setupNextRdParams(void)
             s->incrCounter_ = s->incrCounterNext_;
         } while (1);
         // while (*(s->row_) != 0);
-
+        s->modeIndex_ = schemeTable->rows[*(s->row_)].modeIndex;
         laserNum = vLaserParams->actualLaser & 0x3;
         // The loss tag is used to classify ringdowns for storage in the LOSS_BUFFER_n registers
         lossTag = schemeTable->rows[*(s->row_)].pztSetpoint & 0x7;
@@ -660,6 +663,7 @@ void setupNextRdParams(void)
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM11, *(uint32 *)&r->frontAndBackMirrorCurrentDac);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM12, *(uint32 *)&r->gainAndSoaCurrentDac);
     writeFPGA(FPGA_RDMAN + RDMAN_PARAM13, *(uint32 *)&r->coarseAndFinePhaseCurrentDac);
+    writeFPGA(FPGA_RDMAN + RDMAN_PARAM14, s->modeIndex_);
 }
 
 void modifyParamsOnTimeout(unsigned int schemeCount)

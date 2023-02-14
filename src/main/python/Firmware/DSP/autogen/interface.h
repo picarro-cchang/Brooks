@@ -121,7 +121,7 @@ typedef struct {
     uint32 frontAndBackMirrorCurrentDac;
     uint32 gainAndSoaCurrentDac;
     uint32 coarseAndFinePhaseCurrentDac;
-    uint32 param14;
+    uint32 modeIndex;
     uint32 param15;
 } RingdownParamsType;
 
@@ -164,7 +164,8 @@ typedef struct {
     uint32 sequenceNumber;
     uint16 average1;
     uint16 average2;
-    uint16 padToCacheLine[20];
+    uint16 modeIndex;
+    uint16 padToCacheLine[19];
 } RingdownEntryType;
 
 typedef struct {
@@ -207,6 +208,7 @@ typedef struct {
     uint32 sequenceNumber;
     uint16 average1;
     uint16 average2;
+    uint16 modeIndex;
 } ProcessedRingdownEntryType;
 
 typedef struct {
@@ -269,7 +271,8 @@ typedef struct {
     uint16 frontMirrorDac;
     uint16 backMirrorDac;
     uint16 coarsePhaseDac;
-    uint16 padding[5];
+    uint16 modeIndex;
+    uint16 padding[4];
 } SchemeRowType;
 
 typedef struct {

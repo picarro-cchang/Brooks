@@ -68,6 +68,7 @@ typedef struct SPECT_CNTRL_PARAMS
     unsigned int incrCounterNext_; // Records schemeCounter_ on last increment of incrCounter_
     int useMemo_;
     unsigned int *pztUpdateMode_; // PZT update mode
+    unsigned short modeIndex_;     // Mode index sent by scheme
 } SpectCntrlParams;
 
 extern RingdownParamsType nextRdParams;

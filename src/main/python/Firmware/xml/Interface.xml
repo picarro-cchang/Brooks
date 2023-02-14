@@ -161,7 +161,7 @@
             <field ident="frontAndBackMirrorCurrentDac" type="uint32"/>
             <field ident="gainAndSoaCurrentDac" type="uint32"/>
             <field ident="coarseAndFinePhaseCurrentDac" type="uint32"/>
-            <field ident="param14" type="uint32"/>
+            <field ident="modeIndex" type="uint32"/>
             <field ident="param15" type="uint32"/>
         </struct>
         <struct type="RingdownBufferType">
@@ -204,7 +204,8 @@
             <field ident="sequenceNumber" type="uint32"/>
             <field ident="average1" type="uint16"/>
             <field ident="average2" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="20"/>
+            <field ident="modeIndex" type="uint16"/>
+            <field ident="padToCacheLine" type="uint16" size="19"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -248,6 +249,7 @@
             <field ident="sequenceNumber" type="uint32"/>
             <field ident="average1" type="uint16"/>
             <field ident="average2" type="uint16"/>
+            <field ident="modeIndex" type="uint16"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
@@ -299,7 +301,8 @@
             <field ident="frontMirrorDac" type="uint16"/>
             <field ident="backMirrorDac" type="uint16"/>
             <field ident="coarsePhaseDac" type="uint16"/>
-            <field ident="padding" type="uint16" size="5"/>
+            <field ident="modeIndex" type="uint16"/>
+            <field ident="padding" type="uint16" size="4"/>
         </struct>
         <struct type="SchemeTableHeaderType">
             <field ident="numRepeats" type="uint32"/>
