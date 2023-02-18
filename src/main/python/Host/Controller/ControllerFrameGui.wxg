@@ -79,10 +79,10 @@
                         <tab window="soa4Pane">SOA4</tab>
                         <tab window="warmBoxPane">WarmBox</tab>
                         <tab window="hotBoxPane">HotBox</tab>
-                        <tab window="filterHeaterPane">FilterHeater</tab>
+                        <tab window="filterHeaterPane">Filter</tab>
                         <tab window="pressurePane">Pressure</tab>
                         <tab window="accelerationPane">Accelerometer</tab>
-                        <tab window="wlmPane">WavelengthMonitor</tab>
+                        <tab window="wlmPane">WLM</tab>
                         <tab window="ringdownPane">Ringdowns</tab>
                         <tab window="processedLossPane">ProcessedLoss</tab>
                         <tab window="statsPane">Statistics</tab>
