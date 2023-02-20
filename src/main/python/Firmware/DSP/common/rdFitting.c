@@ -566,6 +566,7 @@ void rdFitting(void)
             ringdownEntry->soaCurrentDac = rdParams->gainAndSoaCurrentDac & 0xFFFF;
             ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
             ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
+            ringdownEntry->modeIndex = rdParams->modeIndex;
             ringdown_put();
             if (SPECT_CNTRL_RunningState == *(int *)registerAddr(SPECT_CNTRL_STATE_REGISTER))
                 SEM_postBinary(&SEM_startRdCycle);
