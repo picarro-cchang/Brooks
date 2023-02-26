@@ -4689,25 +4689,25 @@
         <register ident="PZT_CNTRL_WLM_ANGLE_MODULUS" type="float" minver="1.0" access="rw">
             <description>Modulus for wavelength monitor angle setpoint difference</description>
             <initial>0.0747</initial>
-            <display format=".5f" units="radians">WLM angle per cavity FSR</display>
+            <display format="%.5f" units="radians">WLM angle per cavity FSR</display>
             <save/>
         </register>
         <register ident="PZT_CNTRL_UPDATE_TIME_CONSTANT" type="float" minver="1.0" access="rw">
             <description>Time constant for updating reference offsets</description>
             <initial>1200</initial>
-            <display format=".1f" units="s">Time constant for updating reference offsets</display>
+            <display format="%.1f" units="s">Time constant for updating reference offsets</display>
             <save/>
         </register>
         <register ident="PZT_CNTRL_SCALE_FACTOR" type="float" minver="1.0" access="rw">
             <description>Scale factor for updating PZT position</description>
             <initial>0.001</initial>
-            <display format=".3e" units="FSR/radian/rd">Scale factor for updating PZT position</display>
+            <display format="%.3e" units="FSR/radian/rd">Scale factor for updating PZT position</display>
             <save/>
         </register>
         <register ident="PZT_CNTRL_UPDATE_CLAMP" type="float" minver="1.0" access="rw">
             <description>Clamp value for maximum change in PZT position per ringdown</description>
             <initial>0.0005</initial>
-            <display format=".3e" units="FSR/rd">Maximum rate of change of PZT position</display>
+            <display format="%.3e" units="FSR/rd">Maximum rate of change of PZT position</display>
             <save/>
         </register>
     </register_list>

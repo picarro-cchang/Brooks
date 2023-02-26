@@ -5543,10 +5543,10 @@ parameter_forms.append(('Sample Handling Parameters',__p))
 
 __p = []
 
-__p.append([None, ('dsp','float',PZT_CNTRL_WLM_ANGLE_MODULUS,'WLM angle per cavity FSR','radians','.5f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_TIME_CONSTANT,'Time constant for updating reference offsets','s','.1f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SCALE_FACTOR,'Scale factor for updating PZT position','FSR/radian/rd','.3e',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_CLAMP,'Maximum rate of change of PZT position','FSR/rd','.3e',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_WLM_ANGLE_MODULUS,'WLM angle per cavity FSR','radians','%.5f',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_TIME_CONSTANT,'Time constant for updating reference offsets','s','%.1f',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_SCALE_FACTOR,'Scale factor for updating PZT position','FSR/radian/rd','%.3e',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_CLAMP,'Maximum rate of change of PZT position','FSR/rd','%.3e',1,1)])
 __p.append([None, ('dsp','float',PZT_INCR_PER_CAVITY_FSR,'PZT increment per cavity FSR','','%.0f',1,1)])
 parameter_forms.append(('PZT Control Parameters for Laser Current Tuning',__p))
 
