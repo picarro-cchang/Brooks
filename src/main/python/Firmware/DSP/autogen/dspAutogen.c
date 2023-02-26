@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[702];
+RegTypes regTypes[706];
 
 /* I2C devices */
 I2C_device i2c_devices[57] = {
@@ -1387,6 +1387,14 @@ void initRegisters()
     writeRegister(SOA4_TEMPERATURE_MONITOR_REGISTER,d);
     d.asUint = 0xF;
     writeRegister(SOA_ENABLE_MASK_REGISTER,d);
+    d.asFloat = 0.0747;
+    writeRegister(PZT_CNTRL_WLM_ANGLE_MODULUS,d);
+    d.asFloat = 1200;
+    writeRegister(PZT_CNTRL_UPDATE_TIME_CONSTANT,d);
+    d.asFloat = 0.001;
+    writeRegister(PZT_CNTRL_SCALE_FACTOR,d);
+    d.asFloat = 0.0005;
+    writeRegister(PZT_CNTRL_UPDATE_CLAMP,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
     regTypes[COMM_STATUS_REGISTER] = uint_type;
@@ -2089,6 +2097,10 @@ void initRegisters()
     regTypes[SOA4_TEC_VOLTAGE_MONITOR_REGISTER] = float_type;
     regTypes[SOA4_TEMPERATURE_MONITOR_REGISTER] = float_type;
     regTypes[SOA_ENABLE_MASK_REGISTER] = uint_type;
+    regTypes[PZT_CNTRL_WLM_ANGLE_MODULUS] = float_type;
+    regTypes[PZT_CNTRL_UPDATE_TIME_CONSTANT] = float_type;
+    regTypes[PZT_CNTRL_SCALE_FACTOR] = float_type;
+    regTypes[PZT_CNTRL_UPDATE_CLAMP] = float_type;
 }
 
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env)

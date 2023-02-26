@@ -40,10 +40,21 @@
 RingdownParamsType nextRdParams;
 SpectCntrlParams spectCntrlParams;
 
+// The pztOffsets array which is used to set the position of the PZT during ringowns is kept separate from
+//  the values in the registers s->pztOffsetByVirtualLaser so that we can keep the PZT position fixed during
+//  the execution of a scheme for those applications (typically using laser current tuning) which rely on
+//  precisely spaced cavity modes over a scheme. For such applications, the pztOffsets are updated from the
+//  register values at the start of each scheme (in advanceScheme) so that offset changes made the registers do
+//  not take effect until the next scheme starts.
 static float pztOffsets[NUM_VIRTUAL_LASERS];
+// The pztLctOffsets are used to provide an update for the PZT position on a fast (per-ringdown) timescale in
+//  laser current tuning mode for applications where gas composition and pressure changes affect the refractive
+//  index. The frequency separation between the cavity modes can no longer be relied upon to be preciesly equal
+float pztLctOffsets[NUM_VIRTUAL_LASERS];
 
 int spectCntrlInit(void)
 {
+    int i;
     SpectCntrlParams *s = &spectCntrlParams;
     s->state_ = (SPECT_CNTRL_StateType *)registerAddr(SPECT_CNTRL_STATE_REGISTER);
     s->mode_ = (unsigned int *)registerAddr(SPECT_CNTRL_MODE_REGISTER);
@@ -170,6 +181,13 @@ int spectCntrlInit(void)
     s->incrCounterNext_ = 1;
     s->useMemo_ = 0;
     s->modeIndex_ = 0;
+    s->wlm_angle_modulus_ = (float *)registerAddr(PZT_CNTRL_WLM_ANGLE_MODULUS);
+    s->ref_update_time_constant_ = (float *)registerAddr(PZT_CNTRL_UPDATE_TIME_CONSTANT);
+    s->pzt_update_scale_factor_ = (float *)registerAddr(PZT_CNTRL_SCALE_FACTOR);
+    s->pzt_update_clamp_ = (float *)registerAddr(PZT_CNTRL_UPDATE_CLAMP);
+
+    for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
+        pztLctOffsets[i] = 0.0;
     switchToRampMode();
     return STATUS_OK;
 }
@@ -356,7 +374,8 @@ static inline int sgdbr_find_index(int aLaserNum)
 {
     // Return index 0 for SGDBR_A, 1 for SGDBR_B, 2 for SGDBR_C and 3 for SGDBR_D, given
     //  the actual laser number (1-4)
-    switch (aLaserNum) {
+    switch (aLaserNum)
+    {
     case 1:
         return 0;
     case 2:
@@ -374,8 +393,8 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     unsigned int aLaserNum, vLaserNum;
     volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
     volatile VirtualLaserParamsType *vLaserParams;
-    float soa_offset;
     int pztOffset;
+    float soa_offset;
     float laserTemp;
 
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
@@ -404,6 +423,30 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
         vLaserParams = &virtualLaserParams[vLaserNum - 1];
+
+        // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
+        //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
+        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_CavityLengthTuningMode)
+        {
+            // In cavity length tunining mode, update the PZT offset directly from the pztOffsetByVirtualLaser_
+            //  register which is being recentered in rdFitting.c
+            pztOffsets[vLaserNum - 1] = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
+        }
+        // In other modes, the pztOffset is only updated when we go from one scheme to the next since this is done
+        //  in advanceScheme()
+        pztOffset = pztOffsets[vLaserNum - 1] + schemeTable->rows[*(s->row_)].pztSetpoint;
+
+        // In Laser current tuning mode, we apply an additional pztLctOffset which is updated on a per ringdown
+        //  basis to compensate for pressure and composition changes
+        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode))
+            {
+                pztOffset += pztLctOffsets[vLaserNum - 1];
+            }
+        if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
+        {
+            writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
+        }
+
         laserTemp = 0.001 * schemeTable->rows[*(s->row_)].laserTemp; // Scheme temperatures are in milli-degrees C
         aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
         if (laserTemp != 0.0)
@@ -416,7 +459,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         schemeRowPtr = &(schemeTable->rows[*(s->row_)]);
         if (vLaserParams->laserType == 1)
         {
-			int sgdbrIndex;
+            int sgdbrIndex;
             sgdbrIndex = sgdbr_find_index(aLaserNum);
             *(s->frontMirrorDac_[sgdbrIndex]) = schemeRowPtr->frontMirrorDac;
             *(s->backMirrorDac_[sgdbrIndex]) = schemeRowPtr->backMirrorDac;
@@ -431,35 +474,22 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
             setup_all_gain_and_soa_currents();
             // Calculate the SOA current offset and update the SOA current
             soa_offset = 0;
-            if (schemeRowPtr->frontMirrorDac > *(s->dead_zone_[sgdbrIndex])) {
+            if (schemeRowPtr->frontMirrorDac > *(s->dead_zone_[sgdbrIndex]))
+            {
                 soa_offset += *(s->front_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->frontMirrorDac - *(s->dead_zone_[sgdbrIndex]));
             }
-            if (schemeRowPtr->backMirrorDac > *(s->dead_zone_[sgdbrIndex])) {
+            if (schemeRowPtr->backMirrorDac > *(s->dead_zone_[sgdbrIndex]))
+            {
                 soa_offset += *(s->back_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->backMirrorDac - *(s->dead_zone_[sgdbrIndex]));
             }
             soa_offset += *(s->phase_to_soa_coeff_[sgdbrIndex]) * (schemeRowPtr->coarsePhaseDac);
             s->soaDac[sgdbrIndex] = *(s->soaSetting_[sgdbrIndex]) + soa_offset;
-            if (s->soaDac[sgdbrIndex] < *(s->minimum_soa_[sgdbrIndex])) s->soaDac[sgdbrIndex] = *(s->minimum_soa_[sgdbrIndex]);
+            if (s->soaDac[sgdbrIndex] < *(s->minimum_soa_[sgdbrIndex]))
+                s->soaDac[sgdbrIndex] = *(s->minimum_soa_[sgdbrIndex]);
             writeFPGA(s->sgdbr_mosi_data_[sgdbrIndex], SGDBR_SOA_DAC | s->soaDac[sgdbrIndex]);
             sgdbr_wait_done(s, sgdbrIndex);
         }
 
-        // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
-        //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
-
-        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_CavityLengthTuningMode)
-        {
-            // In cavity length tunining mode, update the PZT offset directly from the pztOffsetByVirtualLaser_
-            //  register which is being recentered in rdFitting.c
-            pztOffsets[vLaserNum - 1] = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
-        }
-        // In other modes, the pztOffset is only updated when we go from one scheme to the next since this is done
-        //  in advanceScheme()
-        pztOffset = pztOffsets[vLaserNum - 1] + schemeTable->rows[*(s->row_)].pztSetpoint;
-        if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
-        {
-            writeFPGA(FPGA_TWGEN + TWGEN_PZT_OFFSET, pztOffset % 65536);
-        }
         activeMemo = *(s->active_);
         rowMemo = *(s->row_);
     }
@@ -467,6 +497,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
 
 void setupNextRdParams(void)
 {
+    int pztOffset;
     SpectCntrlParams *s = &spectCntrlParams;
     RingdownParamsType *r = &nextRdParams;
 
@@ -568,7 +599,7 @@ void setupNextRdParams(void)
         r->ambientPressure = *(s->ambientPressure_);
         r->schemeTableAndRow = (*(s->active_) << 16) | (*(s->row_) & 0xFFFF);
 
-        //laserTempAsInt = schemeTable->rows[*(s->row_)].laserTemp;
+        // laserTempAsInt = schemeTable->rows[*(s->row_)].laserTemp;
         laserTempAsInt = 1000.0 * r->laserTemperature;
 
         // If SUBSCHEME_ID_IncrMask is set, this means that we should increment
@@ -581,10 +612,10 @@ void setupNextRdParams(void)
         else
         {
             float base = *(s->schemeThresholdBase_);
-			unsigned int vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
+            unsigned int vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
             r->ringdownThreshold = base + (r->ringdownThreshold - base) * (*(s->schemeThresholdFactorByVirtualLaser_[vLaserNum - 1]));
         }
-        
+
         r->status = (s->schemeCounter_ & RINGDOWN_STATUS_SequenceMask);
         if (SPECT_CNTRL_SchemeSingleMode == *(s->mode_) ||
             SPECT_CNTRL_SchemeMultipleMode == *(s->mode_) ||

@@ -1227,7 +1227,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 702
+INTERFACE_NUMBER_OF_REGISTERS = 706
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1931,6 +1931,10 @@ SOA4_TEC_CURRENT_MONITOR_REGISTER = 698
 SOA4_TEC_VOLTAGE_MONITOR_REGISTER = 699
 SOA4_TEMPERATURE_MONITOR_REGISTER = 700
 SOA_ENABLE_MASK_REGISTER = 701
+PZT_CNTRL_WLM_ANGLE_MODULUS = 702
+PZT_CNTRL_UPDATE_TIME_CONSTANT = 703
+PZT_CNTRL_SCALE_FACTOR = 704
+PZT_CNTRL_UPDATE_CLAMP = 705
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -4174,6 +4178,18 @@ registerInitialValue["SOA4_TEMPERATURE_MONITOR_REGISTER"] = 25.0
 registerByName["SOA_ENABLE_MASK_REGISTER"] = SOA_ENABLE_MASK_REGISTER
 registerInfo.append(RegInfo("SOA_ENABLE_MASK_REGISTER",c_uint,1,1.0,"rw"))
 registerInitialValue["SOA_ENABLE_MASK_REGISTER"] = 0xF
+registerByName["PZT_CNTRL_WLM_ANGLE_MODULUS"] = PZT_CNTRL_WLM_ANGLE_MODULUS
+registerInfo.append(RegInfo("PZT_CNTRL_WLM_ANGLE_MODULUS",c_float,1,1.0,"rw"))
+registerInitialValue["PZT_CNTRL_WLM_ANGLE_MODULUS"] = 0.0747
+registerByName["PZT_CNTRL_UPDATE_TIME_CONSTANT"] = PZT_CNTRL_UPDATE_TIME_CONSTANT
+registerInfo.append(RegInfo("PZT_CNTRL_UPDATE_TIME_CONSTANT",c_float,1,1.0,"rw"))
+registerInitialValue["PZT_CNTRL_UPDATE_TIME_CONSTANT"] = 1200
+registerByName["PZT_CNTRL_SCALE_FACTOR"] = PZT_CNTRL_SCALE_FACTOR
+registerInfo.append(RegInfo("PZT_CNTRL_SCALE_FACTOR",c_float,1,1.0,"rw"))
+registerInitialValue["PZT_CNTRL_SCALE_FACTOR"] = 0.001
+registerByName["PZT_CNTRL_UPDATE_CLAMP"] = PZT_CNTRL_UPDATE_CLAMP
+registerInfo.append(RegInfo("PZT_CNTRL_UPDATE_CLAMP",c_float,1,1.0,"rw"))
+registerInitialValue["PZT_CNTRL_UPDATE_CLAMP"] = 0.0005
 
 # FPGA block definitions
 
@@ -5522,6 +5538,17 @@ __p.append([None, ('dsp','choices',FLOW_CNTRL_STATE_REGISTER,'Flow Controller Mo
 __p.append([None, ('dsp','float',FLOW_CNTRL_SETPOINT_REGISTER,'Flow setpoint','sccm','%.1f',1,1)])
 __p.append([None, ('dsp','float',FLOW_CNTRL_GAIN_REGISTER,'Flow control gain','','%.1f',1,1)])
 parameter_forms.append(('Sample Handling Parameters',__p))
+
+# Form: PZT Control Parameters for Laser Current Tuning
+
+__p = []
+
+__p.append([None, ('dsp','float',PZT_CNTRL_WLM_ANGLE_MODULUS,'WLM angle per cavity FSR','radians','.5f',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_TIME_CONSTANT,'Time constant for updating reference offsets','s','.1f',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_SCALE_FACTOR,'Scale factor for updating PZT position','FSR/radian/rd','.3e',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_CLAMP,'Maximum rate of change of PZT position','FSR/rd','.3e',1,1)])
+__p.append([None, ('dsp','float',PZT_INCR_PER_CAVITY_FSR,'PZT increment per cavity FSR','','%.0f',1,1)])
+parameter_forms.append(('PZT Control Parameters for Laser Current Tuning',__p))
 
 # Form: Virtual Laser Parameters
 

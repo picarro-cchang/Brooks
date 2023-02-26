@@ -488,6 +488,88 @@ DataType medianFiltBank(int filtNum, DataType data)
     return result;
 }
 
+// ------------------------------------------------------------
+// Fast calculation of sine and cosine
+// ------------------------------------------------------------
+#define NPTS (360)
+
+static int init_tab = 1;
+void sincos(float phi, float *cphi, float *sphi)
+{
+    float th, temp;
+    unsigned int dphi;
+    int i;
+
+    static float ctab[NPTS + 1], stab[NPTS + 1];
+    if (init_tab)
+    {
+        for (i = 0; i <= NPTS; i++)
+        {
+            th = (2 * PI * i) / NPTS;
+            ctab[i] = cossp(th);
+            stab[i] = sinsp(th);
+        }
+        init_tab = 0;
+    }
+    temp = (phi * NPTS) / (2 * PI);
+    dphi = ((int)(temp)) % NPTS;
+    temp = temp - (int)(temp);
+    *cphi = (1.0 - temp) * ctab[dphi] + temp * ctab[dphi + 1];
+    *sphi = (1.0 - temp) * stab[dphi] + temp * stab[dphi + 1];
+}
+
+#define NUM_MODE_INDICES (65536)
+// Arrays maintaining reference values of wlmAngle setpoint differences
+static float cos_dphi[NUM_MODE_INDICES], sin_dphi[NUM_MODE_INDICES];
+static uint32 timestamps[NUM_MODE_INDICES];
+
+void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEntry)
+{
+    SpectCntrlParams *s = &spectCntrlParams;
+    if (ringdownEntry->uncorrectedAbsorbance != 0)
+    {
+        float dpzt_fsr; // Amount to move the PZT in units of cavity FSR
+        int clamped = 0; // Set to 1 if the PZT motion has been clamped
+        float alpha, cdisc, sdisc;
+        uint32 ms_since_last;
+        int virtLaserNum = (ringdownEntry->laserUsed & INJECTION_SETTINGS_virtualLaserMask) >> INJECTION_SETTINGS_virtualLaserShift;
+        int modeIndex = ringdownEntry->modeIndex;
+        float wlmAngleDiff = ringdownEntry->wlmAngle - ringdownEntry->angleSetpoint;
+        float dphi = 2.0 * PI * wlmAngleDiff / *(s->wlm_angle_modulus_);
+        // Calculate difference (disc) compared to reference value in ranges -PI to PI
+        float ref = atan2sp(sin_dphi[modeIndex], cos_dphi[modeIndex]);
+        float disc = fmod(dphi - ref, 2.0 * PI);
+        if (disc > PI)
+            disc -= 2.0 * PI;
+        // Multiply the discrepency by the scale factor and apply clamp if needed
+        dpzt_fsr = *(s->pzt_update_scale_factor_) * disc;
+        if (dpzt_fsr > *(s->pzt_update_clamp_)) {
+            dpzt_fsr = *(s->pzt_update_clamp_);
+            clamped = 1;
+        }
+        else if (dpzt_fsr < -(*(s->pzt_update_clamp_))) {
+            dpzt_fsr = -(*(s->pzt_update_clamp_));
+            clamped = 1;
+        }
+        // Update the reference arrays
+        ms_since_last = (ringdownEntry->timestamp & 0xFFFFFFFF) - timestamps[modeIndex];
+        // Calculate weight to be given to the new measurement
+        alpha = 1.0 - exp(-0.001 * ms_since_last/ *(s->ref_update_time_constant_));
+        sincos(disc, &cdisc, &sdisc);
+        if (!clamped) {
+            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc;
+            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc;
+            timestamps[modeIndex] = ringdownEntry->timestamp & 0xFFFFFFFF;
+        }
+        else {  // Reduce update weight by a factor of 10 and do not record the timestamp
+            alpha = 0.1 * alpha;
+            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc;
+            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc;
+        }
+        pztLctOffsets[virtLaserNum] -= *(s->pztIncrPerFsr_) * dpzt_fsr;
+    }
+}
+
 // This is a task function associated with TSK_rdFitting which does the ringdown fitting
 void rdFitting(void)
 {
@@ -512,10 +594,20 @@ void rdFitting(void)
     // double si, si2, six;
     int wrapped;
     int *counter = (int *)(REG_BASE + 4 * RD_FITTING_COUNT_REGISTER);
+    int tuning_mode;
+    // Initialize the reference arrays for storing WLM angle setpoint differences
+    //  The non-zero value is to avoid errors when calculating arctan2
+    for (i = 0; i < NUM_MODE_INDICES; i++)
+    {
+        cos_dphi[i] = 1.0e-7;
+        sin_dphi[i] = 0.0;
+        timestamps[i] = 0;
+    }
 
     while (1)
     {
         SEM_pend(&SEM_rdFitting, SYS_FOREVER);
+        tuning_mode = *(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER);
         (*counter)++;
         if (!get_queue(&rdBufferQueue, &bufferNum))
         {
@@ -523,6 +615,9 @@ void rdFitting(void)
             spectCntrlError();
         }
         if (bufferNum == MISSING_RINGDOWN)
+        // ------------------------------------------------------------
+        // Handle unsuccessful ringdown
+        // ------------------------------------------------------------
         {
             //  Get the information from nextRdParams, since no ringdown actually took place
             rdParams = &nextRdParams;
@@ -535,11 +630,11 @@ void rdFitting(void)
             ringdownEntry->count = rdParams->countAndSubschemeId >> 16;
             ringdownEntry->tunerValue = 0;
             ringdownEntry->pztValue = 0;
-            //ringdownEntry->lockerOffset = 0;
+            // ringdownEntry->lockerOffset = 0;
             ringdownEntry->laserUsed = (rdParams->injectionSettings) & (INJECTION_SETTINGS_virtualLaserMask | INJECTION_SETTINGS_actualLaserMask);
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            if (*(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode)
+            if (tuning_mode == ANALYZER_TUNING_FsrHoppingTuningMode)
             {
                 ringdownEntry->schemeRow = 0;
                 ringdownEntry->schemeVersionAndTable = 0;
@@ -556,7 +651,7 @@ void rdFitting(void)
             ringdownEntry->laserTemperature = rdParams->laserTemperature;
             ringdownEntry->etalonTemperature = rdParams->etalonTemperature;
             ringdownEntry->cavityPressure = rdParams->cavityPressure;
-            //ringdownEntry->lockerError = 0;
+            // ringdownEntry->lockerError = 0;
             ringdownEntry->fitAmplitude = 0;
             ringdownEntry->fitBackground = 0;
             ringdownEntry->fitRmsResidual = 0;
@@ -567,11 +662,14 @@ void rdFitting(void)
             ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
             ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
             ringdownEntry->modeIndex = rdParams->modeIndex;
-            ringdown_put();
+            ringdown_put(); // The timestamp field of the ringdownEntry is updated here
             if (SPECT_CNTRL_RunningState == *(int *)registerAddr(SPECT_CNTRL_STATE_REGISTER))
                 SEM_postBinary(&SEM_startRdCycle);
         }
         else
+        // ------------------------------------------------------------
+        // Handle successful ringdown
+        // ------------------------------------------------------------
         {
             ringdownBuffer = &ringdownBuffers[bufferNum];
             rdFittingProcessRingdown(ringdownBuffer->ringdownWaveform, &uncorrectedLoss, &correctedLoss,
@@ -660,7 +758,7 @@ void rdFitting(void)
             ringdownEntry->laserUsed = rdParams->injectionSettings & (INJECTION_SETTINGS_virtualLaserMask | INJECTION_SETTINGS_actualLaserMask);
             ringdownEntry->ringdownThreshold = rdParams->ringdownThreshold;
             ringdownEntry->subschemeId = rdParams->countAndSubschemeId & 0xFFFF;
-            if (*(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_FsrHoppingTuningMode)
+            if (tuning_mode == ANALYZER_TUNING_FsrHoppingTuningMode)
             {
                 ringdownEntry->schemeRow = rdParams->extLaserLevelCounter;
                 ringdownEntry->schemeVersionAndTable = rdParams->extLaserSequenceId;
@@ -689,9 +787,10 @@ void rdFitting(void)
             ringdownEntry->soaCurrentDac = rdParams->gainAndSoaCurrentDac & 0xFFFF;
             ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
             ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
+            ringdownEntry->modeIndex = rdParams->modeIndex;
 
             // Next lines are used to recenter the PZT offsets
-            cltmode = *(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER) == ANALYZER_TUNING_CavityLengthTuningMode;
+            cltmode = (tuning_mode == ANALYZER_TUNING_CavityLengthTuningMode);
             pztTarget = (cltmode) ? 0.0 : 32768.0;
             // Patch to use this even in LCT mode
             if (0 != (ringdownEntry->subschemeId & SUBSCHEME_ID_RecenterMask))
@@ -709,7 +808,9 @@ void rdFitting(void)
                 SEM_postBinary(&SEM_rdBuffer0Available);
             else
                 SEM_postBinary(&SEM_rdBuffer1Available);
-            ringdown_put();
+            ringdown_put(); // The timestamp field of the ringdownEntry is updated here
+            if (tuning_mode == ANALYZER_TUNING_LaserCurrentTuningMode)
+                update_wlmAngle_setpoint_differences(ringdownEntry);
             // Reset bit 2 of DIAG_1 after fitting
             changeBitsFPGA(FPGA_KERNEL + KERNEL_DIAG_1, 2, 1, 0);
         }

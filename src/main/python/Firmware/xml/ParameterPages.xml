@@ -502,6 +502,14 @@
             <register>FLOW_CNTRL_GAIN_REGISTER</register>
         </gui_page>
         <gui_page>
+            <title>PZT Control Parameters for Laser Current Tuning</title>
+            <register>PZT_CNTRL_WLM_ANGLE_MODULUS</register>
+            <register>PZT_CNTRL_UPDATE_TIME_CONSTANT</register>
+            <register>PZT_CNTRL_SCALE_FACTOR</register>
+            <register>PZT_CNTRL_UPDATE_CLAMP</register>
+            <register>PZT_INCR_PER_CAVITY_FSR</register>
+        </gui_page>
+        <gui_page>
             <title>Virtual Laser Parameters</title>
             <register>PZT_INCR_PER_CAVITY_FSR</register>
             <register>PZT_OFFSET_UPDATE_FACTOR</register>
