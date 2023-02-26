@@ -438,7 +438,7 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
 
         // In Laser current tuning mode, we apply an additional pztLctOffset which is updated on a per ringdown
         //  basis to compensate for pressure and composition changes
-        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode))
+        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode)
             {
                 pztOffset += pztLctOffsets[vLaserNum - 1];
             }
@@ -497,7 +497,6 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
 
 void setupNextRdParams(void)
 {
-    int pztOffset;
     SpectCntrlParams *s = &spectCntrlParams;
     RingdownParamsType *r = &nextRdParams;
 
