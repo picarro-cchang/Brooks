@@ -615,7 +615,7 @@ void rdFitting(void)
                 sin_dphi[i] = 0.0;
                 timestamps[i] = 0;
             }
-            *(s->pzt_cntrl_state_) == PZT_CNTRL_ResetOffsetState;
+            *(s->pzt_cntrl_state_) = PZT_CNTRL_ResetOffsetState;
         }
 
         (*counter)++;

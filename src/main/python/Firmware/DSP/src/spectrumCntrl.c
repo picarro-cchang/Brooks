@@ -520,7 +520,7 @@ void setupNextRdParams(void)
     RingdownParamsType *r = &nextRdParams;
 
     unsigned int laserNum, laserTempAsInt, lossTag;
-    int sgdbrIndex;
+    int i, sgdbrIndex;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
     float phi, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
@@ -528,7 +528,7 @@ void setupNextRdParams(void)
     if (*(s->pzt_cntrl_state_) == PZT_CNTRL_ResetOffsetState) {
         for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
             pztLctOffsets[i] = 0.0;
-        *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState;
+        *(s->pzt_cntrl_state_) = PZT_CNTRL_EnabledState;
     }
 
     s->incrCounter_ = s->incrCounterNext_;

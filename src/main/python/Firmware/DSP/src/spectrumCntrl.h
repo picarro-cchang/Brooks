@@ -55,10 +55,12 @@ typedef struct SPECT_CNTRL_PARAMS
     float *phase_to_soa_coeff_[4];  // Coefficient for modifying SOA current based on coarse phase current
     float *dead_zone_[4];   // When mirror currents are less than this value, do not apply correction to SOA
     float *minimum_soa_[4]; // Minimum SOA value allowed during scans
+    unsigned int *pzt_cntrl_state_;  // State of PZT controller
     float *wlm_angle_modulus_; // Change in WLM angle corresponding to one cavity FSR
     float *ref_update_time_constant_; // Update time constant for reference arrays
     float *pzt_update_scale_factor_; // Scale factor to convert to PZT update (in units of cavity FSR)
     float *pzt_update_clamp_;   // Maximum change in PZT position between ringdowns (in units of cavity FSR)
+    float *pzt_cntrl_shift_[8];   // Shift of PZT in units of cavity FSR per virtual laser
 
     // SGDBR current source register indices
     unsigned int sgdbr_csr_[4];    // SGDBR current source CSR
