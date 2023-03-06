@@ -185,7 +185,15 @@ int spectCntrlInit(void)
     s->ref_update_time_constant_ = (float *)registerAddr(PZT_CNTRL_UPDATE_TIME_CONSTANT);
     s->pzt_update_scale_factor_ = (float *)registerAddr(PZT_CNTRL_SCALE_FACTOR);
     s->pzt_update_clamp_ = (float *)registerAddr(PZT_CNTRL_UPDATE_CLAMP);
-
+    s->pzt_cntrl_state_ = (unsigned int *)registerAddr(PZT_CNTRL_STATE_REGISTER);
+    s->pzt_cntrl_shift_[0] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER1);
+    s->pzt_cntrl_shift_[1] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER2);
+    s->pzt_cntrl_shift_[2] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER3);
+    s->pzt_cntrl_shift_[3] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER4);
+    s->pzt_cntrl_shift_[4] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER5);
+    s->pzt_cntrl_shift_[5] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER6);
+    s->pzt_cntrl_shift_[6] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER7);
+    s->pzt_cntrl_shift_[7] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER8);
     for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
         pztLctOffsets[i] = 0.0;
     switchToRampMode();
@@ -418,7 +426,8 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     else
     { // We are running a scheme
         volatile SchemeRowType *schemeRowPtr;
-        if (useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo)
+        // Do not use cached information if the pzt control is enabled
+        if (*(s->pzt_cntrl_state_) == PZT_CNTRL_DisabledState && useMemo && *(s->active_) == activeMemo && *(s->row_) == rowMemo)
             return;
         *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
@@ -426,10 +435,10 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
 
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
         //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536
-        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_CavityLengthTuningMode)
+        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_CavityLengthTuningMode || *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState)
         {
-            // In cavity length tunining mode, update the PZT offset directly from the pztOffsetByVirtualLaser_
-            //  register which is being recentered in rdFitting.c
+            // In cavity length tunining mode, or if the PZT controller is enabled, update the PZT offset directly from the 
+            //  pztOffsetByVirtualLaser_ register
             pztOffsets[vLaserNum - 1] = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
         }
         // In other modes, the pztOffset is only updated when we go from one scheme to the next since this is done
@@ -438,9 +447,19 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
 
         // In Laser current tuning mode, we apply an additional pztLctOffset which is updated on a per ringdown
         //  basis to compensate for pressure and composition changes
-        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode)
+        if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode && *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState)
             {
                 pztOffset += pztLctOffsets[vLaserNum - 1];
+                // Now check if the pztOffset lies outside the permitted range of 8192 to 57344. If so, we move the pztOffsetByVirtualLaser
+                //  by +/- *(s->pztIncrPerFsr_) to recenter the position
+                if (pztOffset >= 57344) {
+                    pztOffset -= *(s->pztIncrPerFsr_);
+                    *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) -= *(s->pztIncrPerFsr_);
+                }
+                else if (pztOffset < 8192) {
+                    pztOffset += *(s->pztIncrPerFsr_);
+                    *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) += *(s->pztIncrPerFsr_);
+                }
             }
         if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
         {
@@ -505,6 +524,12 @@ void setupNextRdParams(void)
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
     float phi, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
+
+    if (*(s->pzt_cntrl_state_) == PZT_CNTRL_ResetOffsetState) {
+        for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
+            pztLctOffsets[i] = 0.0;
+        *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState;
+    }
 
     s->incrCounter_ = s->incrCounterNext_;
 

@@ -654,6 +654,13 @@
             <enum_value ident="SGDBR_CNTRL_AutomaticState" value="2" caption="Automatic Control" />
             <enum_value ident="SGDBR_CNTRL_PulseGenState" value="3" caption="Pulse Generation" />
         </enum>
+        <enum type="PZT_CNTRL_StateType">
+            <description>State of PZT controller</description>
+            <enum_value ident="PZT_CNTRL_DisabledState" value="0" caption="Controller Disabled" />
+            <enum_value ident="PZT_CNTRL_EnabledState" value="1" caption="Controller Enabled" />
+            <enum_value ident="PZT_CNTRL_ResetOffsetState" value="2" caption="Reset Offsets" />
+            <enum_value ident="PZT_CNTRL_ResetRefState" value="2" caption="Reset References" />
+        </enum>
         <enum type="VIRTUAL_LASER_Type">
             <description>Virtual laser selection</description>
             <enum_value ident="VIRTUAL_LASER_1" value="0" caption="Virtual laser 1" />
@@ -4686,6 +4693,12 @@
             <display format="$%X">SOA current source enable mask</display>
             <save/>
         </register>
+        <register ident="PZT_CNTRL_STATE_REGISTER" type="PZT_CNTRL_StateType" minver="1.0" access="rw">
+            <description>PZT control for LCT state register</description>
+            <initial>PZT_CNTRL_DisabledState</initial>
+            <display>PZT Controller Mode</display>
+            <save/>
+        </register>
         <register ident="PZT_CNTRL_WLM_ANGLE_MODULUS" type="float" minver="1.0" access="rw">
             <description>Modulus for wavelength monitor angle setpoint difference</description>
             <initial>0.0747</initial>
@@ -4701,14 +4714,62 @@
         <register ident="PZT_CNTRL_SCALE_FACTOR" type="float" minver="1.0" access="rw">
             <description>Scale factor for updating PZT position</description>
             <initial>0.001</initial>
-            <display format="%.3e" units="FSR/radian/rd">Scale factor for updating PZT position</display>
+            <display format="%.1e" units="FSR/radian/rd">Scale factor for updating PZT position</display>
             <save/>
         </register>
         <register ident="PZT_CNTRL_UPDATE_CLAMP" type="float" minver="1.0" access="rw">
             <description>Clamp value for maximum change in PZT position per ringdown</description>
-            <initial>0.0005</initial>
-            <display format="%.3e" units="FSR/rd">Maximum rate of change of PZT position</display>
+            <initial>0.001</initial>
+            <display format="%.1e" units="FSR/rd">Maximum rate of change of PZT position</display>
             <save/>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER1" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 1</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 1 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER2" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 2</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 2 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER3" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 3</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 3 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER4" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 4</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 4 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER5" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 5</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 5 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER6" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 6</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 6 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER7" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 7</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 7 PZT shift</display>
+        </register>
+        <register ident="PZT_CNTRL_SHIFT_VIRTUAL_LASER8" type="float" minver="1.0" access="rw">
+            <description>PZT shift for virtual laser 8</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.3f" units="FSR">Virtual laser 8 PZT shift</display>
         </register>
     </register_list>
     <i2c_list>

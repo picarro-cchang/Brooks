@@ -724,6 +724,13 @@ typedef enum {
 } SGDBR_CNTRL_StateType;
 
 typedef enum {
+    PZT_CNTRL_DisabledState = 0, // Controller Disabled
+    PZT_CNTRL_EnabledState = 1, // Controller Enabled
+    PZT_CNTRL_ResetOffsetState = 2, // Reset Offsets
+    PZT_CNTRL_ResetRefState = 2 // Reset References
+} PZT_CNTRL_StateType;
+
+typedef enum {
     VIRTUAL_LASER_1 = 0, // Virtual laser 1
     VIRTUAL_LASER_2 = 1, // Virtual laser 2
     VIRTUAL_LASER_3 = 2, // Virtual laser 3
@@ -882,7 +889,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (706)
+#define INTERFACE_NUMBER_OF_REGISTERS (715)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1586,10 +1593,19 @@ typedef enum {
 #define SOA4_TEC_VOLTAGE_MONITOR_REGISTER (699)
 #define SOA4_TEMPERATURE_MONITOR_REGISTER (700)
 #define SOA_ENABLE_MASK_REGISTER (701)
-#define PZT_CNTRL_WLM_ANGLE_MODULUS (702)
-#define PZT_CNTRL_UPDATE_TIME_CONSTANT (703)
-#define PZT_CNTRL_SCALE_FACTOR (704)
-#define PZT_CNTRL_UPDATE_CLAMP (705)
+#define PZT_CNTRL_STATE_REGISTER (702)
+#define PZT_CNTRL_WLM_ANGLE_MODULUS (703)
+#define PZT_CNTRL_UPDATE_TIME_CONSTANT (704)
+#define PZT_CNTRL_SCALE_FACTOR (705)
+#define PZT_CNTRL_UPDATE_CLAMP (706)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER1 (707)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER2 (708)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER3 (709)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER4 (710)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER5 (711)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER6 (712)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER7 (713)
+#define PZT_CNTRL_SHIFT_VIRTUAL_LASER8 (714)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

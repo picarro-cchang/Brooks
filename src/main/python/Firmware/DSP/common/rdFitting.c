@@ -536,9 +536,9 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         int modeIndex = ringdownEntry->modeIndex;
         float wlmAngleDiff = ringdownEntry->wlmAngle - ringdownEntry->angleSetpoint;
         float dphi = 2.0 * PI * wlmAngleDiff / *(s->wlm_angle_modulus_);
-        // Calculate difference (disc) compared to reference value in ranges -PI to PI
+        // Calculate difference (disc) compared to reference value in range -PI to PI
         float ref = atan2sp(sin_dphi[modeIndex], cos_dphi[modeIndex]);
-        float disc = fmod(dphi - ref, 2.0 * PI);
+        float disc = fmod(dphi - ref - *(s->pzt_cntrl_shift_[virtLaserNum]), 2.0 * PI);
         if (disc > PI)
             disc -= 2.0 * PI;
         // Multiply the discrepency by the scale factor and apply clamp if needed
@@ -608,6 +608,16 @@ void rdFitting(void)
     {
         SEM_pend(&SEM_rdFitting, SYS_FOREVER);
         tuning_mode = *(int *)registerAddr(ANALYZER_TUNING_MODE_REGISTER);
+        if (*(s->pzt_cntrl_state_) == PZT_CNTRL_ResetRefState) {
+            for (i = 0; i < NUM_MODE_INDICES; i++)
+            {
+                cos_dphi[i] = 1.0e-7;
+                sin_dphi[i] = 0.0;
+                timestamps[i] = 0;
+            }
+            *(s->pzt_cntrl_state_) == PZT_CNTRL_ResetOffsetState;
+        }
+
         (*counter)++;
         if (!get_queue(&rdBufferQueue, &bufferNum))
         {
@@ -809,7 +819,7 @@ void rdFitting(void)
             else
                 SEM_postBinary(&SEM_rdBuffer1Available);
             ringdown_put(); // The timestamp field of the ringdownEntry is updated here
-            if (tuning_mode == ANALYZER_TUNING_LaserCurrentTuningMode)
+            if (tuning_mode == ANALYZER_TUNING_LaserCurrentTuningMode && *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState)
                 update_wlmAngle_setpoint_differences(ringdownEntry);
             // Reset bit 2 of DIAG_1 after fitting
             changeBitsFPGA(FPGA_KERNEL + KERNEL_DIAG_1, 2, 1, 0);
