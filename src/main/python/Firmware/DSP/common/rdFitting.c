@@ -538,7 +538,7 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         float dphi = 2.0 * PI * wlmAngleDiff / *(s->wlm_angle_modulus_);
         // Calculate difference (disc) compared to reference value in range -PI to PI
         float ref = atan2sp(sin_dphi[modeIndex], cos_dphi[modeIndex]);
-        float disc = fmod(dphi - ref - *(s->pzt_cntrl_shift_[virtLaserNum]), 2.0 * PI);
+        float disc = fmod(dphi - ref - (*(s->pzt_cntrl_shift_[virtLaserNum]) * 2.0 * PI), 2.0 * PI);
         if (disc > PI)
             disc -= 2.0 * PI;
         // Multiply the discrepency by the scale factor and apply clamp if needed
