@@ -60,7 +60,7 @@ typedef struct SPECT_CNTRL_PARAMS
     float *ref_update_time_constant_; // Update time constant for reference arrays
     float *pzt_update_scale_factor_; // Scale factor to convert to PZT update (in units of cavity FSR)
     float *pzt_update_clamp_;   // Maximum change in PZT position between ringdowns (in units of cavity FSR)
-    float *pzt_cntrl_shift_[8];   // Shift of PZT in units of cavity FSR per virtual laser
+    float *pzt_cntrl_shift_;   // Shift of PZT in units of cavity FSR per virtual laser
 
     // SGDBR current source register indices
     unsigned int sgdbr_csr_[4];    // SGDBR current source CSR
@@ -79,7 +79,7 @@ typedef struct SPECT_CNTRL_PARAMS
 
 extern RingdownParamsType nextRdParams;
 extern SpectCntrlParams spectCntrlParams;
-extern float pztLctOffsets[NUM_VIRTUAL_LASERS];
+extern float pztLctOffset;
 
 int  spectCntrlInit(void);
 void spectCntrl(void);

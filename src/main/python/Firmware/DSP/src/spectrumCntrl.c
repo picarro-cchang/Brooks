@@ -47,14 +47,13 @@ SpectCntrlParams spectCntrlParams;
 //  register values at the start of each scheme (in advanceScheme) so that offset changes made the registers do
 //  not take effect until the next scheme starts.
 static float pztOffsets[NUM_VIRTUAL_LASERS];
-// The pztLctOffsets are used to provide an update for the PZT position on a fast (per-ringdown) timescale in
+// The pztLctOffset is used to provide an update for the PZT position on a fast (per-ringdown) timescale in
 //  laser current tuning mode for applications where gas composition and pressure changes affect the refractive
-//  index. The frequency separation between the cavity modes can no longer be relied upon to be preciesly equal
-float pztLctOffsets[NUM_VIRTUAL_LASERS];
+//  index. The frequency separation between the cavity modes can no longer be relied upon to be preciesly equal.
+float pztLctOffset;
 
 int spectCntrlInit(void)
 {
-    int i;
     SpectCntrlParams *s = &spectCntrlParams;
     s->state_ = (SPECT_CNTRL_StateType *)registerAddr(SPECT_CNTRL_STATE_REGISTER);
     s->mode_ = (unsigned int *)registerAddr(SPECT_CNTRL_MODE_REGISTER);
@@ -186,16 +185,8 @@ int spectCntrlInit(void)
     s->pzt_update_scale_factor_ = (float *)registerAddr(PZT_CNTRL_SCALE_FACTOR);
     s->pzt_update_clamp_ = (float *)registerAddr(PZT_CNTRL_UPDATE_CLAMP);
     s->pzt_cntrl_state_ = (unsigned int *)registerAddr(PZT_CNTRL_STATE_REGISTER);
-    s->pzt_cntrl_shift_[0] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER1);
-    s->pzt_cntrl_shift_[1] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER2);
-    s->pzt_cntrl_shift_[2] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER3);
-    s->pzt_cntrl_shift_[3] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER4);
-    s->pzt_cntrl_shift_[4] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER5);
-    s->pzt_cntrl_shift_[5] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER6);
-    s->pzt_cntrl_shift_[6] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER7);
-    s->pzt_cntrl_shift_[7] = (float *)registerAddr(PZT_CNTRL_SHIFT_VIRTUAL_LASER8);
-    for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
-        pztLctOffsets[i] = 0.0;
+    s->pzt_cntrl_shift_ = (float *)registerAddr(PZT_CNTRL_SHIFT);
+    pztLctOffset = 0.0;
     switchToRampMode();
     return STATUS_OK;
 }
@@ -449,17 +440,16 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         //  basis to compensate for pressure and composition changes
         if (*(s->analyzerTuningMode_) == ANALYZER_TUNING_LaserCurrentTuningMode && *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState)
             {
-                pztOffset += pztLctOffsets[vLaserNum - 1];
+                pztOffset = pztLctOffset;
                 // Now check if the pztOffset lies outside the permitted range of 8192 to 57344. If so, we move the pztOffsetByVirtualLaser
                 //  by +/- *(s->pztIncrPerFsr_) to recenter the position
                 if (pztOffset >= 57344) {
                     pztOffset -= *(s->pztIncrPerFsr_);
-                    *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) -= *(s->pztIncrPerFsr_);
                 }
                 else if (pztOffset < 8192) {
                     pztOffset += *(s->pztIncrPerFsr_);
-                    *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]) += *(s->pztIncrPerFsr_);
                 }
+                pztLctOffset = pztOffset;
             }
         if (*(s->pztUpdateMode_) == PZT_UPDATE_UseVLOffset_Mode)
         {
@@ -520,14 +510,13 @@ void setupNextRdParams(void)
     RingdownParamsType *r = &nextRdParams;
 
     unsigned int laserNum, laserTempAsInt, lossTag;
-    int i, sgdbrIndex;
+    int sgdbrIndex;
     volatile SchemeTableType *schemeTable;
     volatile VirtualLaserParamsType *vLaserParams;
     float phi, dp, minScale, ratio1Multiplier, ratio2Multiplier, theta;
 
     if (*(s->pzt_cntrl_state_) == PZT_CNTRL_ResetOffsetState) {
-        for (i = 0; i < NUM_VIRTUAL_LASERS; i++)
-            pztLctOffsets[i] = 0.0;
+        pztLctOffset = 0.0;
         *(s->pzt_cntrl_state_) = PZT_CNTRL_EnabledState;
     }
 

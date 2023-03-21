@@ -1241,7 +1241,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 715
+INTERFACE_NUMBER_OF_REGISTERS = 708
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1950,14 +1950,7 @@ PZT_CNTRL_WLM_ANGLE_MODULUS = 703
 PZT_CNTRL_UPDATE_TIME_CONSTANT = 704
 PZT_CNTRL_SCALE_FACTOR = 705
 PZT_CNTRL_UPDATE_CLAMP = 706
-PZT_CNTRL_SHIFT_VIRTUAL_LASER1 = 707
-PZT_CNTRL_SHIFT_VIRTUAL_LASER2 = 708
-PZT_CNTRL_SHIFT_VIRTUAL_LASER3 = 709
-PZT_CNTRL_SHIFT_VIRTUAL_LASER4 = 710
-PZT_CNTRL_SHIFT_VIRTUAL_LASER5 = 711
-PZT_CNTRL_SHIFT_VIRTUAL_LASER6 = 712
-PZT_CNTRL_SHIFT_VIRTUAL_LASER7 = 713
-PZT_CNTRL_SHIFT_VIRTUAL_LASER8 = 714
+PZT_CNTRL_SHIFT = 707
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -4216,30 +4209,9 @@ registerInitialValue["PZT_CNTRL_SCALE_FACTOR"] = 0.001
 registerByName["PZT_CNTRL_UPDATE_CLAMP"] = PZT_CNTRL_UPDATE_CLAMP
 registerInfo.append(RegInfo("PZT_CNTRL_UPDATE_CLAMP",c_float,1,1.0,"rw"))
 registerInitialValue["PZT_CNTRL_UPDATE_CLAMP"] = 0.001
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER1"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER1
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER1",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER1"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER2"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER2
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER2",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER2"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER3"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER3
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER3",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER3"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER4"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER4
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER4",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER4"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER5"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER5
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER5",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER5"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER6"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER6
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER6",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER6"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER7"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER7
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER7",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER7"] = 0
-registerByName["PZT_CNTRL_SHIFT_VIRTUAL_LASER8"] = PZT_CNTRL_SHIFT_VIRTUAL_LASER8
-registerInfo.append(RegInfo("PZT_CNTRL_SHIFT_VIRTUAL_LASER8",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_SHIFT_VIRTUAL_LASER8"] = 0
+registerByName["PZT_CNTRL_SHIFT"] = PZT_CNTRL_SHIFT
+registerInfo.append(RegInfo("PZT_CNTRL_SHIFT",c_float,1,1.0,"rw"))
+registerInitialValue["PZT_CNTRL_SHIFT"] = 0
 
 # FPGA block definitions
 
@@ -5599,14 +5571,7 @@ __p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_TIME_CONSTANT,'Time constant f
 __p.append([None, ('dsp','float',PZT_CNTRL_SCALE_FACTOR,'Scale factor for updating PZT position','FSR/radian/rd','%.1e',1,1)])
 __p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_CLAMP,'Maximum rate of change of PZT position','FSR/rd','%.1e',1,1)])
 __p.append([None, ('dsp','float',PZT_INCR_PER_CAVITY_FSR,'PZT increment per cavity FSR','','%.0f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER1,'Virtual laser 1 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER2,'Virtual laser 2 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER3,'Virtual laser 3 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER4,'Virtual laser 4 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER5,'Virtual laser 5 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER6,'Virtual laser 6 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER7,'Virtual laser 7 PZT shift','FSR','%.3f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT_VIRTUAL_LASER8,'Virtual laser 8 PZT shift','FSR','%.3f',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_SHIFT,'PZT shift','FSR','%.3f',1,1)])
 parameter_forms.append(('PZT Control Parameters for Laser Current Tuning',__p))
 
 # Form: Virtual Laser Parameters
