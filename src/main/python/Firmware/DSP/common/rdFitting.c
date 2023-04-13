@@ -538,6 +538,7 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         float dphi = 2.0 * PI * wlmAngleDiff / *(s->wlm_angle_modulus_);
         // Calculate difference (disc) compared to reference value in range -PI to PI
         float ref = atan2sp(sin_dphi[modeIndex], cos_dphi[modeIndex]);
+        ringdownEntry->pztCntrlRef = ref;
         float disc = fmod(dphi - ref - (*(s->pzt_cntrl_shift_) * 2.0 * PI), 2.0 * PI);
         if (disc > PI)
             disc -= 2.0 * PI;
@@ -672,6 +673,7 @@ void rdFitting(void)
             ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
             ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
             ringdownEntry->modeIndex = rdParams->modeIndex;
+            ringdownEntry->pztCntrlRef = 0;
             ringdown_put(); // The timestamp field of the ringdownEntry is updated here
             if (SPECT_CNTRL_RunningState == *(int *)registerAddr(SPECT_CNTRL_STATE_REGISTER))
                 SEM_postBinary(&SEM_startRdCycle);
@@ -798,6 +800,7 @@ void rdFitting(void)
             ringdownEntry->coarsePhaseDac = (rdParams->coarseAndFinePhaseCurrentDac >> 16) & 0xFFFF;
             ringdownEntry->finePhaseDac = rdParams->coarseAndFinePhaseCurrentDac & 0xFFFF;
             ringdownEntry->modeIndex = rdParams->modeIndex;
+            ringdownEntry->pztCntrlRef = 0;
 
             // Next lines are used to recenter the PZT offsets
             cltmode = (tuning_mode == ANALYZER_TUNING_CavityLengthTuningMode);
@@ -818,9 +821,9 @@ void rdFitting(void)
                 SEM_postBinary(&SEM_rdBuffer0Available);
             else
                 SEM_postBinary(&SEM_rdBuffer1Available);
-            ringdown_put(); // The timestamp field of the ringdownEntry is updated here
             if (tuning_mode == ANALYZER_TUNING_LaserCurrentTuningMode && *(s->pzt_cntrl_state_) == PZT_CNTRL_EnabledState)
                 update_wlmAngle_setpoint_differences(ringdownEntry);
+            ringdown_put(); // The timestamp field of the ringdownEntry is updated here
             // Reset bit 2 of DIAG_1 after fitting
             changeBitsFPGA(FPGA_KERNEL + KERNEL_DIAG_1, 2, 1, 0);
         }

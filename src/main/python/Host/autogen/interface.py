@@ -187,7 +187,8 @@ class RingdownEntryType(Structure):
     ("average1",c_ushort),
     ("average2",c_ushort),
     ("modeIndex",c_ushort),
-    ("padToCacheLine",c_ushort*19)
+    ("pztCntrlRef",c_float),
+    ("padToCacheLine",c_ushort*17)
     ]
 
 class ProcessedRingdownEntryType(Structure):
@@ -231,7 +232,8 @@ class ProcessedRingdownEntryType(Structure):
     ("sequenceNumber",c_uint),
     ("average1",c_ushort),
     ("average2",c_ushort),
-    ("modeIndex",c_ushort)
+    ("modeIndex",c_ushort),
+    ("pztCntrlRef",c_float)
     ]
 
 class SensorEntryType(Structure):

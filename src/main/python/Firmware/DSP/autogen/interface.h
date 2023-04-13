@@ -165,7 +165,8 @@ typedef struct {
     uint16 average1;
     uint16 average2;
     uint16 modeIndex;
-    uint16 padToCacheLine[19];
+    float pztCntrlRef;
+    uint16 padToCacheLine[17];
 } RingdownEntryType;
 
 typedef struct {
@@ -209,6 +210,7 @@ typedef struct {
     uint16 average1;
     uint16 average2;
     uint16 modeIndex;
+    float pztCntrlRef;
 } ProcessedRingdownEntryType;
 
 typedef struct {

@@ -205,7 +205,8 @@
             <field ident="average1" type="uint16"/>
             <field ident="average2" type="uint16"/>
             <field ident="modeIndex" type="uint16"/>
-            <field ident="padToCacheLine" type="uint16" size="19"/>
+            <field ident="pztCntrlRef" type="float"/>
+            <field ident="padToCacheLine" type="uint16" size="17"/>
         </struct>
         <struct type="ProcessedRingdownEntryType">
             <field ident="timestamp" type="long long"/>
@@ -250,6 +251,7 @@
             <field ident="average1" type="uint16"/>
             <field ident="average2" type="uint16"/>
             <field ident="modeIndex" type="uint16"/>
+            <field ident="pztCntrlRef" type="float"/>
         </struct>
         <struct type="SensorEntryType">
             <field ident="timestamp" type="long long"/>
