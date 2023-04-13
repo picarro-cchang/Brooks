@@ -463,6 +463,35 @@ class RingdownPanel(RingdownPanelGui):
                                                   backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
             y = "wlmAngleDelta"
             self.appendData = wlmAngleDeltaVsTime
+        elif choice == 21:
+            def wlmAngleRefVsWavenumber(data):
+                if dataGood(data):
+                    wavenumber = data.waveNumber
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["wlmAngleRef"].Add(wavenumber, data.pztCntrlRef, fillColours[vLaser])
+
+            self.ringdownGraph.SetGraphProperties(timeAxes=(False, False),
+                                                  xlabel='Wavenumber (1/cm)',
+                                                  ylabel='WlmAngle Reference (radians)',
+                                                  grid=True,
+                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "wlmAngleRef"
+            self.appendData = wlmAngleRefVsWavenumber
+        elif choice == 22:
+            def wlmAngleRefVsTime(data):
+                if dataGood(data):
+                    utime = timestamp.unixTime(data.timestamp)
+                    vLaser = (data.laserUsed >> 2) & 7
+                    waveforms["Ringdown"]["wlmAngleRef"].Add(utime, data.pztCntrlRef, fillColours[vLaser])
+
+            self.ringdownGraph.SetGraphProperties(timeAxes=(True, False),
+                                                  ylabel='WlmAngle Reference (radians)',
+                                                  grid=True,
+                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
+                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
+            y = "wlmAngleRef"
+            self.appendData = wlmAngleRefVsTime
 
         self.ringdownGraph.RemoveAllSeries()
 
@@ -525,6 +554,8 @@ class RingdownPanel(RingdownPanelGui):
             self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["wavenumberDelta"], marker='square', size=1, width=1)
         elif y == "wlmAngleDelta":
             self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["wlmAngleDelta"], marker='square', size=1, width=1)
+        elif y == "wlmAngleRef":
+            self.ringdownGraph.AddSeriesAsPoints(waveforms["Ringdown"]["wlmAngleRef"], marker='square', size=1, width=1)
 
         for w in self.ringdownWfms:
             w.Clear()

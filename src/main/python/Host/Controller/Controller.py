@@ -174,6 +174,7 @@ class Controller(ControllerFrameGui):
                                      coarsePhaseCurrent=self.ringdownPanel.ringdownWfms[2],
                                      wavenumberDelta=self.ringdownPanel.ringdownWfms[0],
                                      wlmAngleDelta=self.ringdownPanel.ringdownWfms[0],
+                                     wlmAngleRef=self.ringdownPanel.ringdownWfms[0],
                                     )
 
     def setupParameterDialogs(self):
