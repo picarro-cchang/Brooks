@@ -4727,9 +4727,9 @@
         </register>
         <register ident="PZT_CNTRL_FLATTENING_FACTOR" type="float" minver="1.0" access="rw">
             <description>PZT flattenining feedback factor</description>
-            <initial>0</initial>
+            <initial>0.1</initial>
             <save/>
-            <display format="%.1e">PZT flattening feedback factor</display>
+            <display format="%.3f">PZT flattening feedback factor</display>
         </register>
         <register ident="PZT_CNTRL_AVERAGING_SAMPLES" type="float" minver="1.0" access="rw">
             <description>Ringdowns over which to average for flattening PZT</description>

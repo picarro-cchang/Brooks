@@ -1397,7 +1397,7 @@ void initRegisters()
     writeRegister(PZT_CNTRL_SCALE_FACTOR,d);
     d.asFloat = 0.001;
     writeRegister(PZT_CNTRL_UPDATE_CLAMP,d);
-    d.asFloat = 0;
+    d.asFloat = 0.1;
     writeRegister(PZT_CNTRL_FLATTENING_FACTOR,d);
     d.asFloat = 10000;
     writeRegister(PZT_CNTRL_AVERAGING_SAMPLES,d);

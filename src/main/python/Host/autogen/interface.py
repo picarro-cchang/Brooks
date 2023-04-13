@@ -4215,7 +4215,7 @@ registerInfo.append(RegInfo("PZT_CNTRL_UPDATE_CLAMP",c_float,1,1.0,"rw"))
 registerInitialValue["PZT_CNTRL_UPDATE_CLAMP"] = 0.001
 registerByName["PZT_CNTRL_FLATTENING_FACTOR"] = PZT_CNTRL_FLATTENING_FACTOR
 registerInfo.append(RegInfo("PZT_CNTRL_FLATTENING_FACTOR",c_float,1,1.0,"rw"))
-registerInitialValue["PZT_CNTRL_FLATTENING_FACTOR"] = 0
+registerInitialValue["PZT_CNTRL_FLATTENING_FACTOR"] = 0.1
 registerByName["PZT_CNTRL_AVERAGING_SAMPLES"] = PZT_CNTRL_AVERAGING_SAMPLES
 registerInfo.append(RegInfo("PZT_CNTRL_AVERAGING_SAMPLES",c_float,1,1.0,"rw"))
 registerInitialValue["PZT_CNTRL_AVERAGING_SAMPLES"] = 10000
@@ -5581,7 +5581,7 @@ __p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_TIME_CONSTANT,'Time constant f
 __p.append([None, ('dsp','float',PZT_CNTRL_SCALE_FACTOR,'Scale factor for updating PZT position','FSR/radian/rd','%.1e',1,1)])
 __p.append([None, ('dsp','float',PZT_CNTRL_UPDATE_CLAMP,'Maximum rate of change of PZT position','FSR/rd','%.1e',1,1)])
 __p.append([None, ('dsp','float',PZT_INCR_PER_CAVITY_FSR,'PZT increment per cavity FSR','','%.0f',1,1)])
-__p.append([None, ('dsp','float',PZT_CNTRL_FLATTENING_FACTOR,'PZT flattening feedback factor','','%.1e',1,1)])
+__p.append([None, ('dsp','float',PZT_CNTRL_FLATTENING_FACTOR,'PZT flattening feedback factor','','%.3f',1,1)])
 __p.append([None, ('dsp','float',PZT_CNTRL_AVERAGING_SAMPLES,'Ringdowns to average for flattening PZT','','%.0f',1,1)])
 __p.append([None, ('dsp','float',PZT_CNTRL_SHIFT,'PZT shift','FSR','%.3f',1,1)])
 parameter_forms.append(('PZT Control Parameters for Laser Current Tuning',__p))

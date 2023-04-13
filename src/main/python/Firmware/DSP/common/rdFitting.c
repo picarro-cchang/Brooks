@@ -572,8 +572,8 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
 		gamma = *(s->pzt_cntrl_flattening_factor_);
         if (!clamped)
         {
-            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc - gamma * (cdisc_norm - cdisc_bar_norm);
-            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc - gamma * (sdisc_norm - sdisc_bar_norm);
+            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc + gamma * (cdisc_norm - cdisc_bar_norm);
+            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc + gamma * (sdisc_norm - sdisc_bar_norm);
             timestamps[modeIndex] = ringdownEntry->timestamp & 0xFFFFFFFF;
         }
         else
