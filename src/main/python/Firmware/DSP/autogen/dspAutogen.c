@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[708];
+RegTypes regTypes[710];
 
 /* I2C devices */
 I2C_device i2c_devices[57] = {
@@ -1398,6 +1398,10 @@ void initRegisters()
     d.asFloat = 0.001;
     writeRegister(PZT_CNTRL_UPDATE_CLAMP,d);
     d.asFloat = 0;
+    writeRegister(PZT_CNTRL_FLATTENING_FACTOR,d);
+    d.asFloat = 10000;
+    writeRegister(PZT_CNTRL_AVERAGING_SAMPLES,d);
+    d.asFloat = 0;
     writeRegister(PZT_CNTRL_SHIFT,d);
     regTypes[NOOP_REGISTER] = uint_type;
     regTypes[VERIFY_INIT_REGISTER] = uint_type;
@@ -2106,6 +2110,8 @@ void initRegisters()
     regTypes[PZT_CNTRL_UPDATE_TIME_CONSTANT] = float_type;
     regTypes[PZT_CNTRL_SCALE_FACTOR] = float_type;
     regTypes[PZT_CNTRL_UPDATE_CLAMP] = float_type;
+    regTypes[PZT_CNTRL_FLATTENING_FACTOR] = float_type;
+    regTypes[PZT_CNTRL_AVERAGING_SAMPLES] = float_type;
     regTypes[PZT_CNTRL_SHIFT] = float_type;
 }
 

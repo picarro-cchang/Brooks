@@ -509,6 +509,8 @@
             <register>PZT_CNTRL_SCALE_FACTOR</register>
             <register>PZT_CNTRL_UPDATE_CLAMP</register>
             <register>PZT_INCR_PER_CAVITY_FSR</register>
+            <register>PZT_CNTRL_FLATTENING_FACTOR</register>
+            <register>PZT_CNTRL_AVERAGING_SAMPLES</register>
             <register>PZT_CNTRL_SHIFT</register>
         </gui_page>
         <gui_page>

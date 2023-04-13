@@ -891,7 +891,7 @@ typedef enum {
 #define INJECTION_SETTINGS_lossTagShift (5)
 
 /* Register definitions */
-#define INTERFACE_NUMBER_OF_REGISTERS (708)
+#define INTERFACE_NUMBER_OF_REGISTERS (710)
 
 #define NOOP_REGISTER (0)
 #define VERIFY_INIT_REGISTER (1)
@@ -1600,7 +1600,9 @@ typedef enum {
 #define PZT_CNTRL_UPDATE_TIME_CONSTANT (704)
 #define PZT_CNTRL_SCALE_FACTOR (705)
 #define PZT_CNTRL_UPDATE_CLAMP (706)
-#define PZT_CNTRL_SHIFT (707)
+#define PZT_CNTRL_FLATTENING_FACTOR (707)
+#define PZT_CNTRL_AVERAGING_SAMPLES (708)
+#define PZT_CNTRL_SHIFT (709)
 
 /* I2C device indices */
 #define LOGIC_EEPROM 0

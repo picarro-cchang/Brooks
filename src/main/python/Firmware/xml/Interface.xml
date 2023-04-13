@@ -4725,6 +4725,18 @@
             <display format="%.1e" units="FSR/rd">Maximum rate of change of PZT position</display>
             <save/>
         </register>
+        <register ident="PZT_CNTRL_FLATTENING_FACTOR" type="float" minver="1.0" access="rw">
+            <description>PZT flattenining feedback factor</description>
+            <initial>0</initial>
+            <save/>
+            <display format="%.1e">PZT flattening feedback factor</display>
+        </register>
+        <register ident="PZT_CNTRL_AVERAGING_SAMPLES" type="float" minver="1.0" access="rw">
+            <description>Ringdowns over which to average for flattening PZT</description>
+            <initial>10000</initial>
+            <save/>
+            <display format="%.0f">Ringdowns to average for flattening PZT</display>
+        </register>
         <register ident="PZT_CNTRL_SHIFT" type="float" minver="1.0" access="rw">
             <description>PZT shift</description>
             <initial>0</initial>

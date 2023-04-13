@@ -60,6 +60,8 @@ typedef struct SPECT_CNTRL_PARAMS
     float *ref_update_time_constant_; // Update time constant for reference arrays
     float *pzt_update_scale_factor_; // Scale factor to convert to PZT update (in units of cavity FSR)
     float *pzt_update_clamp_;   // Maximum change in PZT position between ringdowns (in units of cavity FSR)
+    float *pzt_cntrl_flattening_factor_;   // Feedback factor for flattening PZT motion
+    float *pzt_cntrl_averaging_samples_;   // Number of samples to average over to determine PZT reference
     float *pzt_cntrl_shift_;   // Shift of PZT in units of cavity FSR per virtual laser
 
     // SGDBR current source register indices
