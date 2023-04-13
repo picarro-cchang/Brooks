@@ -556,7 +556,8 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         ms_since_last = (ringdownEntry->timestamp & 0xFFFFFFFF) - timestamps[modeIndex];
         // Calculate weight to be given to the new measurement
         alpha = 1.0 - exp(-0.001 * ms_since_last/ *(s->ref_update_time_constant_));
-        sincos(disc, &cdisc, &sdisc);
+        cdisc = cossp(disc);
+        sdisc = sinsp(disc);
         if (!clamped) {
             cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc;
             sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc;
