@@ -522,7 +522,6 @@ void sincos(float phi, float *cphi, float *sphi)
 // Arrays maintaining reference values of wlmAngle setpoint differences
 static float cos_dphi[NUM_MODE_INDICES], sin_dphi[NUM_MODE_INDICES];
 static uint32 timestamps[NUM_MODE_INDICES];
-static float cdisc_bar = 0.0, sdisc_bar = 0.0;
 void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEntry)
 {
     SpectCntrlParams *s = &spectCntrlParams;
@@ -530,8 +529,7 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
     {
         float dpzt_fsr;  // Amount to move the PZT in units of cavity FSR
         int clamped = 0; // Set to 1 if the PZT motion has been clamped
-        float alpha, beta, gamma, cdisc, sdisc, cdisc_norm, sdisc_norm, cdisc_bar_norm, sdisc_bar_norm;
-        double norm;
+        float alpha, beta, cdisc, sdisc;
         uint32 ms_since_last;
         int virtLaserNum = (ringdownEntry->laserUsed & INJECTION_SETTINGS_virtualLaserMask) >> INJECTION_SETTINGS_virtualLaserShift;
         int modeIndex = ringdownEntry->modeIndex;
@@ -541,8 +539,8 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         float ref = atan2sp(sin_dphi[modeIndex], cos_dphi[modeIndex]);
         float disc = fmod(dphi - ref - (*(s->pzt_cntrl_shift_) * 2.0 * PI), 2.0 * PI);
         ringdownEntry->pztCntrlRef = ref;
-        if (disc > PI)
-            disc -= 2.0 * PI;
+		if (disc < 0) disc += 2.0 * PI;
+        if (disc > PI) disc -= 2.0 * PI;
         // Multiply the discrepency by the scale factor and apply clamp if needed
         dpzt_fsr = *(s->pzt_update_scale_factor_) * disc;
         if (dpzt_fsr > *(s->pzt_update_clamp_))
@@ -559,28 +557,21 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         ms_since_last = (ringdownEntry->timestamp & 0xFFFFFFFF) - timestamps[modeIndex];
         // Calculate weight to be given to the new measurement
         alpha = 1.0 - exp(-0.001 * ms_since_last / *(s->ref_update_time_constant_));
-        sincos(disc, &cdisc, &sdisc);
-        beta = 1.0 / *(s->pzt_cntrl_averaging_samples_);
-        cdisc_bar = (1.0 - beta) * cdisc_bar + beta * cdisc;
-        sdisc_bar = (1.0 - beta) * sdisc_bar + beta * sdisc;
-        norm = sqrt(cdisc * cdisc + sdisc * sdisc) + 1.0e-12;
-        cdisc_norm = cdisc / norm;
-        sdisc_norm = sdisc / norm;
-        norm = sqrt(cdisc_bar * cdisc_bar + sdisc_bar * sdisc_bar) + 1.0e-12;
-        cdisc_bar_norm = cdisc_bar / norm;
-        sdisc_bar_norm = sdisc_bar / norm;
-		gamma = *(s->pzt_cntrl_flattening_factor_);
+        // sincos(disc, &cdisc, &sdisc);
+		cdisc = cossp(disc);
+		sdisc = sinsp(disc);
+		beta = *(s->pzt_cntrl_flattening_factor_);
         if (!clamped)
         {
-            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc + gamma * (cdisc_norm - cdisc_bar_norm);
-            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc + gamma * (sdisc_norm - sdisc_bar_norm);
+            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cossp(dphi) + beta * cdisc;
+            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sinsp(dphi) + beta * sdisc;
             timestamps[modeIndex] = ringdownEntry->timestamp & 0xFFFFFFFF;
         }
         else
         { // Reduce update weight by a factor of 10 and do not record the timestamp
             alpha = 0.1 * alpha;
-            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cdisc;
-            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sdisc;
+            cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cossp(dphi);
+            sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sinsp(dphi);
         }
         pztLctOffset -= *(s->pztIncrPerFsr_) * dpzt_fsr;
     }
