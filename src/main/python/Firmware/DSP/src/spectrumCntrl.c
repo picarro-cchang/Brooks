@@ -187,7 +187,7 @@ int spectCntrlInit(void)
     s->pzt_cntrl_state_ = (unsigned int *)registerAddr(PZT_CNTRL_STATE_REGISTER);
     s->pzt_cntrl_shift_ = (float *)registerAddr(PZT_CNTRL_SHIFT);
     s->pzt_cntrl_flattening_factor_ = (float *)registerAddr(PZT_CNTRL_FLATTENING_FACTOR);
-    s->pzt_cntrl_averaging_samples_ = (float *)registerAddr(PZT_CNTRL_AVERAGING_SAMPLES);
+    s->pzt_cntrl_reference_centering_factor_ = (float *)registerAddr(PZT_CNTRL_REFERENCE_CENTERING_FACTOR);
     pztLctOffset = 0.0;
     switchToRampMode();
     return STATUS_OK;

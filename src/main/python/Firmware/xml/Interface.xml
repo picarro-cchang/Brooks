@@ -4727,15 +4727,15 @@
         </register>
         <register ident="PZT_CNTRL_FLATTENING_FACTOR" type="float" minver="1.0" access="rw">
             <description>PZT flattenining feedback factor</description>
-            <initial>0.1</initial>
+            <initial>0.01</initial>
             <save/>
-            <display format="%.3f">PZT flattening feedback factor</display>
+            <display format="%.1g">PZT flattening feedback factor</display>
         </register>
-        <register ident="PZT_CNTRL_AVERAGING_SAMPLES" type="float" minver="1.0" access="rw">
-            <description>Ringdowns over which to average for flattening PZT</description>
-            <initial>10000</initial>
+        <register ident="PZT_CNTRL_REFERENCE_CENTERING_FACTOR" type="float" minver="1.0" access="rw">
+            <description>Reference centering feedback factor</description>
+            <initial>0.01</initial>
             <save/>
-            <display format="%.0f">Ringdowns to average for flattening PZT</display>
+            <display format="%.1g">Reference centering feedback factor</display>
         </register>
         <register ident="PZT_CNTRL_SHIFT" type="float" minver="1.0" access="rw">
             <description>PZT shift</description>

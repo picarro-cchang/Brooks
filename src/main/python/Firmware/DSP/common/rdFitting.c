@@ -530,7 +530,7 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
     {
         float dpzt_fsr;  // Amount to move the PZT in units of cavity FSR
         int clamped = 0; // Set to 1 if the PZT motion has been clamped
-        float alpha, beta, gamma;
+        float alpha, beta, gamma, delta;
         uint32 ms_since_last;
         int virtLaserNum = (ringdownEntry->laserUsed & INJECTION_SETTINGS_virtualLaserMask) >> INJECTION_SETTINGS_virtualLaserShift;
         int modeIndex = ringdownEntry->modeIndex;
@@ -558,14 +558,15 @@ void update_wlmAngle_setpoint_differences(volatile RingdownEntryType *ringdownEn
         ms_since_last = (ringdownEntry->timestamp & 0xFFFFFFFF) - timestamps[modeIndex];
         // Calculate weight to be given to the new measurement
         alpha = 1.0 - exp(-0.001 * ms_since_last / *(s->ref_update_time_constant_));
-        // sincos(disc, &cdisc, &sdisc);
-		gamma = 1.0/ *(s->pzt_cntrl_averaging_samples_);
-		cref_bar = (1.0 - gamma) * cref_bar + gamma * cos_dphi[modeIndex];
-		sref_bar = (1.0 - gamma) * sref_bar + gamma * sin_dphi[modeIndex];
 		beta = *(s->pzt_cntrl_flattening_factor_);
+		gamma = *(s->pzt_cntrl_reference_centering_factor_);
+        // sincos(disc, &cdisc, &sdisc);
+		delta = 1.0e-4; // Exponential average 10000 points for centering reference
+		cref_bar = (1.0 - delta) * cref_bar + delta * cos_dphi[modeIndex];
+		sref_bar = (1.0 - delta) * sref_bar + delta * sin_dphi[modeIndex];
         if (!clamped)
         {
-			float eps = beta * atan2sp(sref_bar, cref_bar);
+			float eps = gamma * atan2sp(sref_bar, cref_bar) - beta * disc;
             cos_dphi[modeIndex] = (1.0 - alpha) * cos_dphi[modeIndex] + alpha * cossp(dphi) + eps * sin_dphi[modeIndex];
             sin_dphi[modeIndex] = (1.0 - alpha) * sin_dphi[modeIndex] + alpha * sinsp(dphi) - eps * cos_dphi[modeIndex];
             timestamps[modeIndex] = ringdownEntry->timestamp & 0xFFFFFFFF;
