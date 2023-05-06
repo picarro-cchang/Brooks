@@ -30,7 +30,7 @@ int soa_cntrl_step(SoaCntrl *s)
     Vcom = 1.25;
     Rwiper = 160.0;  // Digital potentiometer wiper resistance
     Rpot = 100000.0; // Digital potentiometer value
-    Rsense = 1.3;    // Sense resistor for current source
+    Rsense = 1.0;    // Sense resistor for current source
     Iref = 10.0e-6;  // Reference current for regulator
 
     // Check if we need to change the state of the IO line which disables 

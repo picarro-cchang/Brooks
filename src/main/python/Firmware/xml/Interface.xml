@@ -4584,7 +4584,7 @@
         <register ident="SOA1_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 1 current setpoint</description>
             <initial>0.0</initial>
-            <display format="%.1f" units="mA">SOA1 current setpoint (0.0 - 770mA)</display>
+            <display format="%.1f" units="mA">SOA1 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
         <register ident="SOA1_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
@@ -4611,7 +4611,7 @@
         <register ident="SOA2_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 2 current setpoint</description>
             <initial>0.0</initial>
-            <display format="%.1f" units="mA">SOA2 current setpoint (0.0 - 770mA)</display>
+            <display format="%.1f" units="mA">SOA2 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
         <register ident="SOA2_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
@@ -4638,7 +4638,7 @@
         <register ident="SOA3_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 3 current setpoint</description>
             <initial>0.0</initial>
-            <display format="%.1f" units="mA">SOA3 current setpoint (0.0 - 770mA)</display>
+            <display format="%.1f" units="mA">SOA3 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
         <register ident="SOA3_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
@@ -4665,7 +4665,7 @@
         <register ident="SOA4_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 4 current setpoint</description>
             <initial>0.0</initial>
-            <display format="%.1f" units="mA">SOA4 current setpoint (0.0 - 770mA)</display>
+            <display format="%.1f" units="mA">SOA4 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
         <register ident="SOA4_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">

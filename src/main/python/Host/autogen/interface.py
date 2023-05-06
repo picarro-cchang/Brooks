@@ -5387,13 +5387,13 @@ parameter_forms.append(('SGDBR D Tuning Parameters',__p))
 
 __p = []
 
-__p.append([None, ('dsp','float',SOA1_CURRENT_SETPOINT_REGISTER,'SOA1 current setpoint (0.0 - 770mA)','mA','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA1_CURRENT_SETPOINT_REGISTER,'SOA1 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
 __p.append([None, ('dsp','float',SOA1_TEMPERATURE_SETPOINT_REGISTER,'SOA1 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA2_CURRENT_SETPOINT_REGISTER,'SOA2 current setpoint (0.0 - 770mA)','mA','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA2_CURRENT_SETPOINT_REGISTER,'SOA2 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
 __p.append([None, ('dsp','float',SOA2_TEMPERATURE_SETPOINT_REGISTER,'SOA2 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA3_CURRENT_SETPOINT_REGISTER,'SOA3 current setpoint (0.0 - 770mA)','mA','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA3_CURRENT_SETPOINT_REGISTER,'SOA3 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
 __p.append([None, ('dsp','float',SOA3_TEMPERATURE_SETPOINT_REGISTER,'SOA3 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA4_CURRENT_SETPOINT_REGISTER,'SOA4 current setpoint (0.0 - 770mA)','mA','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA4_CURRENT_SETPOINT_REGISTER,'SOA4 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
 __p.append([None, ('dsp','float',SOA4_TEMPERATURE_SETPOINT_REGISTER,'SOA4 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
 __p.append([None, ('dsp','uint32',SOA_ENABLE_MASK_REGISTER,'SOA current source enable mask','','$%X',1,1)])
 parameter_forms.append(('SOA Parameters',__p))
