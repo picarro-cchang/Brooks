@@ -339,7 +339,9 @@ class VirtualLaserParamsType(Structure):
     ("pressureC0",c_float),
     ("pressureC1",c_float),
     ("pressureC2",c_float),
-    ("pressureC3",c_float)
+    ("pressureC3",c_float),
+    ("extSoaNumber",c_uint),
+    ("extSoaCurrent",c_float)
     ]
 
 class WLMCalRowType(Structure):

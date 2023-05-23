@@ -394,9 +394,10 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     unsigned int aLaserNum, vLaserNum;
     volatile SchemeTableType *schemeTable = &schemeTables[*(s->active_)];
     volatile VirtualLaserParamsType *vLaserParams;
-    int pztOffset;
-    float soa_offset;
+    int pztOffset, extSoaNumber;
+    float soa_offset, extSoaCurrent;
     float laserTemp;
+    int extSoaCurrentRegs[4] = {SOA1_CURRENT_SETPOINT_REGISTER, SOA2_CURRENT_SETPOINT_REGISTER, SOA3_CURRENT_SETPOINT_REGISTER, SOA4_CURRENT_SETPOINT_REGISTER};
 
     if (SPECT_CNTRL_ContinuousMode == *(s->mode_))
     {
@@ -404,6 +405,12 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         // In continuous mode, we use the parameter values currently in the registers
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
         aLaserNum = 1 + (vLaserParams->actualLaser & 0x3);
+        //
+        extSoaNumber = vLaserParams->extSoaNumber;
+        extSoaCurrent = vLaserParams->extSoaCurrent;
+        // Set the SOA current  
+        *(float *)registerAddr(extSoaCurrentRegs[extSoaNumber - 1]) = extSoaCurrent;
+
         // *(s->laserTempSetpoint_[aLaserNum - 1]) = *(s->laserTempUserSetpoint_[aLaserNum - 1]);
         // In continuous mode update the pztOffsets from the DSP registers immediately
         pztOffsets[vLaserNum - 1] = *(s->pztOffsetByVirtualLaser_[vLaserNum - 1]);
@@ -415,6 +422,12 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
     }
     else if (SPECT_CNTRL_ContinuousManualTempMode == *(s->mode_))
     { // With manual temperature control, do not adjust the PZT
+        vLaserParams = &virtualLaserParams[*(s->virtLaser_)];
+        //
+        extSoaNumber = vLaserParams->extSoaNumber;
+        extSoaCurrent = vLaserParams->extSoaCurrent;
+        // Set the SOA current  
+        *(float *)registerAddr(extSoaCurrentRegs[extSoaNumber - 1]) = extSoaCurrent;
     }
     else
     { // We are running a scheme
@@ -425,6 +438,11 @@ void setupLaserTemperatureAndPztOffset(int useMemo)
         *(s->virtLaser_) = (VIRTUAL_LASER_Type)schemeTable->rows[*(s->row_)].virtualLaser;
         vLaserNum = 1 + (unsigned int)*(s->virtLaser_);
         vLaserParams = &virtualLaserParams[vLaserNum - 1];
+        //
+        extSoaNumber = vLaserParams->extSoaNumber;
+        extSoaCurrent = vLaserParams->extSoaCurrent;
+        // Set the SOA current  
+        *(float *)registerAddr(extSoaCurrentRegs[extSoaNumber - 1]) = extSoaCurrent;
 
         // The PZT offset for this row is the sum of the PZT offset for the virtual laser from the appropriate
         //  register and any setpoint in the scheme file. Note that all PZT values are interpreted modulo 65536

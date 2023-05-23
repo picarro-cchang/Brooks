@@ -1223,6 +1223,8 @@ class RDFrequencyConverter(Singleton):
                     raise ValueError("loadFromIni failed due to missing section %s (required by virtual laser %d)" %
                                      (aLaserSec, vLaserNum))
                 laserType = int(ini[aLaserSec].get("LASER_TYPE", 0))
+                extSoaNumber = int(ini[aLaserSec].get("EXT_SOA_NUMBER", 0))
+                extSoaCurrent = float(ini[aLaserSec].get("EXT_SOA_CURRENT", 0.0))
                 laserParams = {
                     'actualLaser': aLaserNum - 1,
                     'laserType': laserType,
@@ -1237,7 +1239,10 @@ class RDFrequencyConverter(Singleton):
                     'pressureC0': float(param['PRESSURE_C0']),
                     'pressureC1': float(param['PRESSURE_C1']),
                     'pressureC2': float(param['PRESSURE_C2']),
-                    'pressureC3': float(param['PRESSURE_C3'])
+                    'pressureC3': float(param['PRESSURE_C3']),
+                    'extSoaNumber': extSoaNumber,
+                    'extSoaCurrent': extSoaCurrent,
+
                 }
                 if pCalOffset is not None:
                     laserParams['calPressure'] = 760.0

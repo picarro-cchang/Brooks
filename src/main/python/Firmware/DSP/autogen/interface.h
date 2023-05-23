@@ -303,6 +303,8 @@ typedef struct {
     float pressureC1;
     float pressureC2;
     float pressureC3;
+    uint32 extSoaNumber;
+    float extSoaCurrent;
 } VirtualLaserParamsType;
 
 typedef struct {
