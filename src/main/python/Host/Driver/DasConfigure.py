@@ -428,8 +428,11 @@ class DasConfigure(SharedTypes.Singleton):
                     self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SGDBR_CNTRL_STEP", [laserNum2SgdbrIndex(laserNum)]))
         # SOA boards
         for board_num in range(1, 5):
-            if self.installCheck("SOA%d_PRESENT" % board_num):
-                self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_SOA_CNTRL_SOA%d_STEP" % board_num))
+            soa_board_installed = self.installCheck("SOA%d_PRESENT" % board_num)
+            if soa_board_installed:
+                self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(Operation("ACTION_SOA_CNTRL_SOA%d_STEP" % board_num))
+                if soa_board_installed == 2:  # Use digital control
+                    self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_TEMP_CNTRL_SOA%d_STEP" % board_num))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                               ["STREAM_Soa%dTecVoltage" % board_num,
@@ -1149,14 +1152,16 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
         # SOA boards
-        for board_num in range(1, 5):
-            if self.installCheck("SOA%d_PRESENT" % board_num):
+         for board_num in range(1, 5):
+            soa_board_installed = self.installCheck("SOA%d_PRESENT" % board_num)
+            if soa_board_installed:
                 sender.doOperation(
                     Operation("ACTION_SOA_CNTRL_SOA%d_INIT" % board_num, [
                         "I2C_SOA%d_CURRENT" % board_num,
                         "I2C_SOA%d_CONTROL" % board_num,
                         "I2C_SOA%d_TEC" % board_num,
-                        "I2C_SOA%d_MONITOR" % board_num
+                        "I2C_SOA%d_MONITOR" % board_num,
+                        soa_board_installed
                     ]))
 
         sender.wrRegFloat("LASER1_RESISTANCE_REGISTER", 10000.0)
