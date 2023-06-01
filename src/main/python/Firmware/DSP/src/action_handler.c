@@ -1522,9 +1522,9 @@ int r_soa_cntrl_soa1_init(unsigned int numInt, void *params, void *env)
 */
 {
     unsigned int *reg = (unsigned int *)params;
-    if (4 != numInt)
+    if (5 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    return soa_cntrl_soa1_init(reg[0], reg[1], reg[2], reg[3]);
+    return soa_cntrl_soa1_init(reg[0], reg[1], reg[2], reg[3], reg[4]);
 }
 
 int r_soa_cntrl_soa1_step(unsigned int numInt, void *params, void *env)
@@ -1535,9 +1535,9 @@ int r_soa_cntrl_soa1_step(unsigned int numInt, void *params, void *env)
 int r_soa_cntrl_soa2_init(unsigned int numInt, void *params, void *env)
 {
     unsigned int *reg = (unsigned int *)params;
-    if (4 != numInt)
+    if (5 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    return soa_cntrl_soa2_init(reg[0], reg[1], reg[2], reg[3]);
+    return soa_cntrl_soa2_init(reg[0], reg[1], reg[2], reg[3], reg[4]);
 }
 
 int r_soa_cntrl_soa2_step(unsigned int numInt, void *params, void *env)
@@ -1548,9 +1548,9 @@ int r_soa_cntrl_soa2_step(unsigned int numInt, void *params, void *env)
 int r_soa_cntrl_soa3_init(unsigned int numInt, void *params, void *env)
 {
     unsigned int *reg = (unsigned int *)params;
-    if (4 != numInt)
+    if (5 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    return soa_cntrl_soa3_init(reg[0], reg[1], reg[2], reg[3]);
+    return soa_cntrl_soa3_init(reg[0], reg[1], reg[2], reg[3], reg[4]);
 }
 
 int r_soa_cntrl_soa3_step(unsigned int numInt, void *params, void *env)
@@ -1561,9 +1561,9 @@ int r_soa_cntrl_soa3_step(unsigned int numInt, void *params, void *env)
 int r_soa_cntrl_soa4_init(unsigned int numInt, void *params, void *env)
 {
     unsigned int *reg = (unsigned int *)params;
-    if (4 != numInt)
+    if (5 != numInt)
         return ERROR_BAD_NUM_PARAMS;
-    return soa_cntrl_soa4_init(reg[0], reg[1], reg[2], reg[3]);
+    return soa_cntrl_soa4_init(reg[0], reg[1], reg[2], reg[3], reg[4]);
 }
 
 int r_soa_cntrl_soa4_step(unsigned int numInt, void *params, void *env)
@@ -1655,6 +1655,7 @@ int r_set_soa_tec(unsigned int numInt, void *params, void *env)
         Register(float): Index of DAS register containing value to send
          
 */
+{
     float value;
     unsigned int *reg = (unsigned int *)params;
     if (2 != numInt)
@@ -1662,4 +1663,5 @@ int r_set_soa_tec(unsigned int numInt, void *params, void *env)
     READ_REG(reg[1], value);
     ltc2606_write(reg[0], (int) value);
     return STATUS_OK;
+}
 

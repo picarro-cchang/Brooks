@@ -577,7 +577,7 @@ int tempCntrlSoa1Init(void)
     t->prbsAmp_ = (float *)registerAddr(SOA1_TEC_PRBS_AMPLITUDE_REGISTER);
     t->prbsMean_ = (float *)registerAddr(SOA1_TEC_PRBS_MEAN_REGISTER);
     t->prbsGen_ = (unsigned int *)registerAddr(SOA1_TEC_PRBS_GENPOLY_REGISTER);
-    t->temp_ = (float *)registerAddr(SOA1_TEMPERATURE_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA1_TEMPERATURE_MONITOR_REGISTER);
     t->extTemp_ = 0;
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(SOA1_TEC_REGISTER);
@@ -641,7 +641,7 @@ int tempCntrlSoa2Init(void)
     t->prbsAmp_ = (float *)registerAddr(SOA2_TEC_PRBS_AMPLITUDE_REGISTER);
     t->prbsMean_ = (float *)registerAddr(SOA2_TEC_PRBS_MEAN_REGISTER);
     t->prbsGen_ = (unsigned int *)registerAddr(SOA2_TEC_PRBS_GENPOLY_REGISTER);
-    t->temp_ = (float *)registerAddr(SOA2_TEMPERATURE_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA2_TEMPERATURE_MONITOR_REGISTER);
     t->extTemp_ = 0;
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(SOA2_TEC_REGISTER);
@@ -705,7 +705,7 @@ int tempCntrlSoa3Init(void)
     t->prbsAmp_ = (float *)registerAddr(SOA3_TEC_PRBS_AMPLITUDE_REGISTER);
     t->prbsMean_ = (float *)registerAddr(SOA3_TEC_PRBS_MEAN_REGISTER);
     t->prbsGen_ = (unsigned int *)registerAddr(SOA3_TEC_PRBS_GENPOLY_REGISTER);
-    t->temp_ = (float *)registerAddr(SOA3_TEMPERATURE_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA3_TEMPERATURE_MONITOR_REGISTER);
     t->extTemp_ = 0;
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(SOA3_TEC_REGISTER);
@@ -769,7 +769,7 @@ int tempCntrlSoa4Init(void)
     t->prbsAmp_ = (float *)registerAddr(SOA4_TEC_PRBS_AMPLITUDE_REGISTER);
     t->prbsMean_ = (float *)registerAddr(SOA4_TEC_PRBS_MEAN_REGISTER);
     t->prbsGen_ = (unsigned int *)registerAddr(SOA4_TEC_PRBS_GENPOLY_REGISTER);
-    t->temp_ = (float *)registerAddr(SOA4_TEMPERATURE_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA4_TEMPERATURE_MONITOR_REGISTER);
     t->extTemp_ = 0;
     t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
     t->tec_ = (float *)registerAddr(SOA4_TEC_REGISTER);
@@ -791,7 +791,7 @@ int tempCntrlSoa4Init(void)
     return STATUS_OK;
 }
 
-int tempCntrlSoa1Step(void)
+int tempCntrlSoa4Step(void)
 {
     unsigned int regList[] = {SOA4_TEMP_CNTRL_SETPOINT_REGISTER,
                               SOA4_TEMP_CNTRL_STATE_REGISTER,

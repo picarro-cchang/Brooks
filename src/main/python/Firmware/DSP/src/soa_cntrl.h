@@ -39,13 +39,13 @@ typedef struct SOA_CNTRL
     int i2c_monitor_ident;
     int a_or_d_loop;
 } SoaCntrl;
-int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident);
+int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop);
 int soa_cntrl_soa1_step(void);
-int soa_cntrl_soa2_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident);
+int soa_cntrl_soa2_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop);
 int soa_cntrl_soa2_step(void);
-int soa_cntrl_soa3_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident);
+int soa_cntrl_soa3_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop);
 int soa_cntrl_soa3_step(void);
-int soa_cntrl_soa4_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident);
+int soa_cntrl_soa4_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop);
 int soa_cntrl_soa4_step(void);
 
 #endif /* _SOA_CNTRL_H_ */

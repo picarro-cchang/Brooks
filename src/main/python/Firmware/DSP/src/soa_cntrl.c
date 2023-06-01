@@ -152,7 +152,7 @@ int soa_cntrl_soa1_step(void)
     return status;
 }
 
-int soa_cntrl_soa2_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident)
+int soa_cntrl_soa2_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop)
 {
     SoaCntrl *s = &soa_cntrl_soa2;
     s->soa_index = 2;
@@ -182,7 +182,7 @@ int soa_cntrl_soa2_step(void)
     return status;
 }
 
-int soa_cntrl_soa3_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident)
+int soa_cntrl_soa3_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop)
 {
     SoaCntrl *s = &soa_cntrl_soa3;
     s->soa_index = 3;
@@ -212,7 +212,7 @@ int soa_cntrl_soa3_step(void)
     return status;
 }
 
-int soa_cntrl_soa4_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident)
+int soa_cntrl_soa4_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop)
 {
     SoaCntrl *s = &soa_cntrl_soa4;
     s->soa_index = 4;
