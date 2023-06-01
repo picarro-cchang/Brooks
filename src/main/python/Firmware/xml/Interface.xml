@@ -357,6 +357,7 @@
         </struct>
     </struct_list>
     <constant_list>
+        <constant ident="UNAVAILABLE" description="Unavailable">0xFFFFFFFF</constant>
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
         <constant ident="SCHEDULER_PERIOD" description="Scheduler period (ms)">100</constant>
         <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
@@ -4589,7 +4590,7 @@
             <display format="%.1f" units="mA">SOA1 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
-        <register ident="SOA1_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 1 temperature setpoint</description>
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA1 temperature setpoint (0.0 - 50.0C)</display>
@@ -4610,13 +4611,183 @@
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA1 temperature monitor</display>
         </register>
+        <register ident="SOA1_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>SOA1 TEC value</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="SOA1_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app proportional constant.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control derivative time constant.</description>
+            <initial>1.1</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app proportional setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app derivative setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app derivative regularization.</description>
+            <initial>100.0</initial>
+            <display format="%.2f">Derivative regularization (N)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app saturation regularization.</description>
+            <initial>5.0</initial>
+            <display format="%.2f">Saturation regularization (S)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app minimum TEC value.</description>
+            <initial>5.0</initial>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app maximum TEC value..</description>
+            <initial>55000.0</initial>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 Temperature control app maximum TEC change/step.</description>
+            <initial>10000.0</initial>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+            <save/>
+        </register>
+        <register ident="SOA1_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SOA1 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="SOA1_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="SOA1_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA1 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="SOA2_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>SOA2 TEC value</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="SOA2_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
         <register ident="SOA2_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 2 current setpoint</description>
             <initial>0.0</initial>
             <display format="%.1f" units="mA">SOA2 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
-        <register ident="SOA2_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 2 temperature setpoint</description>
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA2 temperature setpoint (0.0 - 50.0C)</display>
@@ -4637,13 +4808,140 @@
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA2 temperature monitor</display>
         </register>
+        <register ident="SOA2_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app proportional constant.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control derivative time constant.</description>
+            <initial>1.1</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app proportional setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app derivative setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app derivative regularization.</description>
+            <initial>100.0</initial>
+            <display format="%.2f">Derivative regularization (N)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app saturation regularization.</description>
+            <initial>5.0</initial>
+            <display format="%.2f">Saturation regularization (S)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app minimum TEC value.</description>
+            <initial>5.0</initial>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app maximum TEC value..</description>
+            <initial>55000.0</initial>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 Temperature control app maximum TEC change/step.</description>
+            <initial>10000.0</initial>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+            <save/>
+        </register>
+        <register ident="SOA2_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SOA2 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="SOA2_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="SOA2_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA2 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="SOA3_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>SOA3 TEC value</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="SOA3_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
         <register ident="SOA3_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 3 current setpoint</description>
             <initial>0.0</initial>
             <display format="%.1f" units="mA">SOA3 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
-        <register ident="SOA3_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 3 temperature setpoint</description>
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA3 temperature setpoint (0.0 - 50.0C)</display>
@@ -4664,13 +4962,140 @@
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA3 temperature monitor</display>
         </register>
+        <register ident="SOA3_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app proportional constant.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control derivative time constant.</description>
+            <initial>1.1</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app proportional setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app derivative setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app derivative regularization.</description>
+            <initial>100.0</initial>
+            <display format="%.2f">Derivative regularization (N)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app saturation regularization.</description>
+            <initial>5.0</initial>
+            <display format="%.2f">Saturation regularization (S)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app minimum TEC value.</description>
+            <initial>5.0</initial>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app maximum TEC value..</description>
+            <initial>55000.0</initial>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 Temperature control app maximum TEC change/step.</description>
+            <initial>10000.0</initial>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+            <save/>
+        </register>
+        <register ident="SOA3_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SOA3 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="SOA3_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="SOA3_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA3 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
+        </register>
+        <register ident="SOA4_TEC_REGISTER" type="float" minver="1.0" access="r">
+            <description>SOA4 TEC value</description>
+            <initial>32768.0</initial>
+        </register>
+        <register ident="SOA4_MANUAL_TEC_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 manual TEC value</description>
+            <initial>32768.0</initial>
+            <save/>
+            <display format="%.0f" units="digU">Manual TEC Value</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_STATE_REGISTER" type="TEMP_CNTRL_StateType" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app state register</description>
+            <initial>TEMP_CNTRL_DisabledState</initial>
+            <display>Temperature Controller Mode</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature Control app setpoint in degC.</description>
+            <initial>25.0</initial>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_TOLERANCE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature Control app lock tolerance in degC.</description>
+            <initial>0.1</initial>
+            <save/>
+            <display format="%.3f" units="degC">Lock tolerance</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature Control app maximum sweep value in degC.</description>
+            <initial>30.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Max sweep value</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature Control app minimum sweep value in degC.</description>
+            <initial>20.0</initial>
+            <save/>
+            <display format="%.3f" units="degC">Min sweep value</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature Control app sweep increment in degC.</description>
+            <initial>0.05</initial>
+            <save/>
+            <display format="%.4f" units="degC/sample">Sweep increment</display>
+        </register>
         <register ident="SOA4_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 4 current setpoint</description>
             <initial>0.0</initial>
             <display format="%.1f" units="mA">SOA4 current setpoint (0.0 - 1000mA)</display>
             <save/>
         </register>
-        <register ident="SOA4_TEMPERATURE_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
+        <register ident="SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 4 temperature setpoint</description>
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA4 temperature setpoint (0.0 - 50.0C)</display>
@@ -4690,6 +5115,90 @@
             <description>SOA board 4 SOA temperature monitor</description>
             <initial>25.0</initial>
             <display format="%.3f" units="degC">SOA4 temperature monitor</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_H_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app interval in seconds.</description>
+            <initial>0.2</initial>
+            <save/>
+            <display format="%.3f" units="s">Sample interval</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_K_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app proportional constant.</description>
+            <initial>25.0</initial>
+            <save/>
+            <display format="%.2f">Loop proportional gain (K)</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_TI_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app integrator time constant.</description>
+            <initial>1000.0</initial>
+            <save/>
+            <display format="%.2f" units="s">Integration time (Ti)</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_TD_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control derivative time constant.</description>
+            <initial>1.1</initial>
+            <save/>
+            <display format="%.2f" units="s">Derivative time (Td)</display>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_B_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app proportional setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Proportional setpoint gain (b)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_C_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app derivative setpoint gain.</description>
+            <initial>1.0</initial>
+            <display format="%.3f">Derivative setpoint gain (c)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_N_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app derivative regularization.</description>
+            <initial>100.0</initial>
+            <display format="%.2f">Derivative regularization (N)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_S_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app saturation regularization.</description>
+            <initial>5.0</initial>
+            <display format="%.2f">Saturation regularization (S)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_AMIN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app minimum TEC value.</description>
+            <initial>5.0</initial>
+            <display format="%.0f">Minimum TEC value (Amin)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_AMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app maximum TEC value..</description>
+            <initial>55000.0</initial>
+            <display format="%.0f">Maximum TEC value (Amax)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEMP_CNTRL_IMAX_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 Temperature control app maximum TEC change/step.</description>
+            <initial>10000.0</initial>
+            <display format="%.1f">Maximum actuator increment (Imax)</display>
+            <save/>
+        </register>
+        <register ident="SOA4_TEC_PRBS_GENPOLY_REGISTER" type="uint32" minver="1.0" access="rw">
+            <description>SOA4 TEC PRBS generator polynomial</description>
+            <initial>0x481</initial>
+            <save/>
+            <display format="$%X">PRBS generator</display>
+        </register>
+        <register ident="SOA4_TEC_PRBS_AMPLITUDE_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 TEC PRBS amplitude</description>
+            <initial>5000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS amplitude</display>
+        </register>
+        <register ident="SOA4_TEC_PRBS_MEAN_REGISTER" type="float" minver="1.0" access="rw">
+            <description>SOA4 TEC PRBS mean</description>
+            <initial>40000.0</initial>
+            <save/>
+            <display format="%.1f">PRBS mean</display>
         </register>
         <register ident="SOA_ENABLE_MASK_REGISTER" type="uint32" minver="1.0" access="rw">
             <description>Bit mask to enable SOA board current sources</description>
@@ -6127,6 +6636,7 @@
         <action ident="ACTION_SET_SOA_CURRENT">r_set_soa_current</action>
         <action ident="ACTION_SET_SOA_TEMPERATURE">r_set_soa_temperature</action>
         <action ident="ACTION_SET_SOA_CONTROL">r_set_soa_control</action>
+        <action ident="ACTION_SET_SOA_TEC">r_set_soa_tec</action>
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

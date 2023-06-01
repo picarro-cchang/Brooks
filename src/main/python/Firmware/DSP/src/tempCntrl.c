@@ -279,6 +279,10 @@ TempCntrl tempCntrlLaser1;
 TempCntrl tempCntrlLaser2;
 TempCntrl tempCntrlLaser3;
 TempCntrl tempCntrlLaser4;
+TempCntrl tempCntrlSoa1;
+TempCntrl tempCntrlSoa2;
+TempCntrl tempCntrlSoa3;
+TempCntrl tempCntrlSoa4;
 TempCntrl tempCntrlWarmBox;
 TempCntrl tempCntrlCavity;
 TempCntrl tempCntrlHeater;
@@ -541,6 +545,263 @@ int tempCntrlLaser4Step(void)
     writebackRegisters(regList, sizeof(regList) / sizeof(unsigned int));
     return status;
 }
+
+int tempCntrlSoa1Init(void)
+{
+    TempCntrl *t = &tempCntrlSoa1;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s = &(t->pidState);
+    p->r_ = (float *)registerAddr(SOA1_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_ = (float *)registerAddr(SOA1_TEMP_CNTRL_B_REGISTER);
+    p->c_ = (float *)registerAddr(SOA1_TEMP_CNTRL_C_REGISTER);
+    p->h_ = (float *)registerAddr(SOA1_TEMP_CNTRL_H_REGISTER);
+    p->K_ = (float *)registerAddr(SOA1_TEMP_CNTRL_K_REGISTER);
+    p->Ti_ = (float *)registerAddr(SOA1_TEMP_CNTRL_TI_REGISTER);
+    p->Td_ = (float *)registerAddr(SOA1_TEMP_CNTRL_TD_REGISTER);
+    p->N_ = (float *)registerAddr(SOA1_TEMP_CNTRL_N_REGISTER);
+    p->S_ = (float *)registerAddr(SOA1_TEMP_CNTRL_S_REGISTER);
+    p->Imax_ = (float *)registerAddr(SOA1_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_ = (float *)registerAddr(SOA1_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_ = (float *)registerAddr(SOA1_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_ = NULL;
+    t->disabledValue = 0x8000;
+    t->userSetpoint_ = (float *)registerAddr(SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_ = (unsigned int *)registerAddr(SOA1_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_ = (float *)registerAddr(SOA1_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->activeBit_ = UNAVAILABLE;
+    t->lockBit_ = UNAVAILABLE;
+    t->swpMin_ = (float *)registerAddr(SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_ = (float *)registerAddr(SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_ = (float *)registerAddr(SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_ = 0;
+    t->prbsAmp_ = (float *)registerAddr(SOA1_TEC_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(SOA1_TEC_PRBS_MEAN_REGISTER);
+    t->prbsGen_ = (unsigned int *)registerAddr(SOA1_TEC_PRBS_GENPOLY_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA1_TEMPERATURE_REGISTER);
+    t->extTemp_ = 0;
+    t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_ = (float *)registerAddr(SOA1_TEC_REGISTER);
+    t->manualTec_ = (float *)registerAddr(SOA1_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
+    t->swpDir = 1;
+    *(t->state_) = TEMP_CNTRL_DisabledState;
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlSoa1Step(void)
+{
+    unsigned int regList[] = {SOA1_TEMP_CNTRL_SETPOINT_REGISTER,
+                              SOA1_TEMP_CNTRL_STATE_REGISTER,
+                              SOA1_TEC_REGISTER};
+    int status;
+    status = tempCntrlStep(&tempCntrlSoa1);
+    writebackRegisters(regList, sizeof(regList) / sizeof(unsigned int));
+    return status;
+}
+
+int tempCntrlSoa2Init(void)
+{
+    TempCntrl *t = &tempCntrlSoa2;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s = &(t->pidState);
+    p->r_ = (float *)registerAddr(SOA2_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_ = (float *)registerAddr(SOA2_TEMP_CNTRL_B_REGISTER);
+    p->c_ = (float *)registerAddr(SOA2_TEMP_CNTRL_C_REGISTER);
+    p->h_ = (float *)registerAddr(SOA2_TEMP_CNTRL_H_REGISTER);
+    p->K_ = (float *)registerAddr(SOA2_TEMP_CNTRL_K_REGISTER);
+    p->Ti_ = (float *)registerAddr(SOA2_TEMP_CNTRL_TI_REGISTER);
+    p->Td_ = (float *)registerAddr(SOA2_TEMP_CNTRL_TD_REGISTER);
+    p->N_ = (float *)registerAddr(SOA2_TEMP_CNTRL_N_REGISTER);
+    p->S_ = (float *)registerAddr(SOA2_TEMP_CNTRL_S_REGISTER);
+    p->Imax_ = (float *)registerAddr(SOA2_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_ = (float *)registerAddr(SOA2_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_ = (float *)registerAddr(SOA2_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_ = NULL;
+    t->disabledValue = 0x8000;
+    t->userSetpoint_ = (float *)registerAddr(SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_ = (unsigned int *)registerAddr(SOA2_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_ = (float *)registerAddr(SOA2_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->activeBit_ = UNAVAILABLE;
+    t->lockBit_ = UNAVAILABLE;
+    t->swpMin_ = (float *)registerAddr(SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_ = (float *)registerAddr(SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_ = (float *)registerAddr(SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_ = 0;
+    t->prbsAmp_ = (float *)registerAddr(SOA2_TEC_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(SOA2_TEC_PRBS_MEAN_REGISTER);
+    t->prbsGen_ = (unsigned int *)registerAddr(SOA2_TEC_PRBS_GENPOLY_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA2_TEMPERATURE_REGISTER);
+    t->extTemp_ = 0;
+    t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_ = (float *)registerAddr(SOA2_TEC_REGISTER);
+    t->manualTec_ = (float *)registerAddr(SOA2_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
+    t->swpDir = 1;
+    *(t->state_) = TEMP_CNTRL_DisabledState;
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlSoa2Step(void)
+{
+    unsigned int regList[] = {SOA2_TEMP_CNTRL_SETPOINT_REGISTER,
+                              SOA2_TEMP_CNTRL_STATE_REGISTER,
+                              SOA2_TEC_REGISTER};
+    int status;
+    status = tempCntrlStep(&tempCntrlSoa2);
+    writebackRegisters(regList, sizeof(regList) / sizeof(unsigned int));
+    return status;
+}
+
+int tempCntrlSoa3Init(void)
+{
+    TempCntrl *t = &tempCntrlSoa3;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s = &(t->pidState);
+    p->r_ = (float *)registerAddr(SOA3_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_ = (float *)registerAddr(SOA3_TEMP_CNTRL_B_REGISTER);
+    p->c_ = (float *)registerAddr(SOA3_TEMP_CNTRL_C_REGISTER);
+    p->h_ = (float *)registerAddr(SOA3_TEMP_CNTRL_H_REGISTER);
+    p->K_ = (float *)registerAddr(SOA3_TEMP_CNTRL_K_REGISTER);
+    p->Ti_ = (float *)registerAddr(SOA3_TEMP_CNTRL_TI_REGISTER);
+    p->Td_ = (float *)registerAddr(SOA3_TEMP_CNTRL_TD_REGISTER);
+    p->N_ = (float *)registerAddr(SOA3_TEMP_CNTRL_N_REGISTER);
+    p->S_ = (float *)registerAddr(SOA3_TEMP_CNTRL_S_REGISTER);
+    p->Imax_ = (float *)registerAddr(SOA3_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_ = (float *)registerAddr(SOA3_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_ = (float *)registerAddr(SOA3_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_ = NULL;
+    t->disabledValue = 0x8000;
+    t->userSetpoint_ = (float *)registerAddr(SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_ = (unsigned int *)registerAddr(SOA3_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_ = (float *)registerAddr(SOA3_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->activeBit_ = UNAVAILABLE;
+    t->lockBit_ = UNAVAILABLE;
+    t->swpMin_ = (float *)registerAddr(SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_ = (float *)registerAddr(SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_ = (float *)registerAddr(SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_ = 0;
+    t->prbsAmp_ = (float *)registerAddr(SOA3_TEC_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(SOA3_TEC_PRBS_MEAN_REGISTER);
+    t->prbsGen_ = (unsigned int *)registerAddr(SOA3_TEC_PRBS_GENPOLY_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA3_TEMPERATURE_REGISTER);
+    t->extTemp_ = 0;
+    t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_ = (float *)registerAddr(SOA3_TEC_REGISTER);
+    t->manualTec_ = (float *)registerAddr(SOA3_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
+    t->swpDir = 1;
+    *(t->state_) = TEMP_CNTRL_DisabledState;
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlSoa3Step(void)
+{
+    unsigned int regList[] = {SOA3_TEMP_CNTRL_SETPOINT_REGISTER,
+                              SOA3_TEMP_CNTRL_STATE_REGISTER,
+                              SOA3_TEC_REGISTER};
+    int status;
+    status = tempCntrlStep(&tempCntrlSoa3);
+    writebackRegisters(regList, sizeof(regList) / sizeof(unsigned int));
+    return status;
+}
+
+int tempCntrlSoa4Init(void)
+{
+    TempCntrl *t = &tempCntrlSoa4;
+    PidParamsRef *p = &(t->pidParamsRef);
+    PidState *s = &(t->pidState);
+    p->r_ = (float *)registerAddr(SOA4_TEMP_CNTRL_SETPOINT_REGISTER);
+    p->b_ = (float *)registerAddr(SOA4_TEMP_CNTRL_B_REGISTER);
+    p->c_ = (float *)registerAddr(SOA4_TEMP_CNTRL_C_REGISTER);
+    p->h_ = (float *)registerAddr(SOA4_TEMP_CNTRL_H_REGISTER);
+    p->K_ = (float *)registerAddr(SOA4_TEMP_CNTRL_K_REGISTER);
+    p->Ti_ = (float *)registerAddr(SOA4_TEMP_CNTRL_TI_REGISTER);
+    p->Td_ = (float *)registerAddr(SOA4_TEMP_CNTRL_TD_REGISTER);
+    p->N_ = (float *)registerAddr(SOA4_TEMP_CNTRL_N_REGISTER);
+    p->S_ = (float *)registerAddr(SOA4_TEMP_CNTRL_S_REGISTER);
+    p->Imax_ = (float *)registerAddr(SOA4_TEMP_CNTRL_IMAX_REGISTER);
+    p->Amin_ = (float *)registerAddr(SOA4_TEMP_CNTRL_AMIN_REGISTER);
+    p->Amax_ = (float *)registerAddr(SOA4_TEMP_CNTRL_AMAX_REGISTER);
+    p->ffwd_ = NULL;
+    t->disabledValue = 0x8000;
+    t->userSetpoint_ = (float *)registerAddr(SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER);
+    t->state_ = (unsigned int *)registerAddr(SOA4_TEMP_CNTRL_STATE_REGISTER);
+    t->tol_ = (float *)registerAddr(SOA4_TEMP_CNTRL_TOLERANCE_REGISTER);
+    t->activeBit_ = UNAVAILABLE;
+    t->lockBit_ = UNAVAILABLE;
+    t->swpMin_ = (float *)registerAddr(SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER);
+    t->swpMax_ = (float *)registerAddr(SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER);
+    t->swpInc_ = (float *)registerAddr(SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER);
+    t->extMax_ = 0;
+    t->prbsAmp_ = (float *)registerAddr(SOA4_TEC_PRBS_AMPLITUDE_REGISTER);
+    t->prbsMean_ = (float *)registerAddr(SOA4_TEC_PRBS_MEAN_REGISTER);
+    t->prbsGen_ = (unsigned int *)registerAddr(SOA4_TEC_PRBS_GENPOLY_REGISTER);
+    t->temp_ = (float *)registerAddr(SOA4_TEMPERATURE_REGISTER);
+    t->extTemp_ = 0;
+    t->dasTemp_ = (float *)registerAddr(DAS_TEMPERATURE_REGISTER);
+    t->tec_ = (float *)registerAddr(SOA4_TEC_REGISTER);
+    t->manualTec_ = (float *)registerAddr(SOA4_MANUAL_TEC_REGISTER);
+    t->front_mirror_dac_ = NULL;
+    t->back_mirror_dac_ = NULL;
+    t->front_mirror_ffwd_ = NULL;
+    t->back_mirror_ffwd_ = NULL;
+    t->swpDir = 1;
+    *(t->state_) = TEMP_CNTRL_DisabledState;
+    t->lockCount = 0;
+    t->unlockCount = 0;
+    t->firstIteration = TRUE;
+    *(t->tec_) = t->lastTec = s->a = s->u = t->disabledValue;
+    s->perr = 0.0;
+    s->derr1 = 0.0;
+    s->derr2 = 0.0;
+    s->Dincr = 0.0;
+    return STATUS_OK;
+}
+
+int tempCntrlSoa1Step(void)
+{
+    unsigned int regList[] = {SOA4_TEMP_CNTRL_SETPOINT_REGISTER,
+                              SOA4_TEMP_CNTRL_STATE_REGISTER,
+                              SOA4_TEC_REGISTER};
+    int status;
+    status = tempCntrlStep(&tempCntrlSoa4);
+    writebackRegisters(regList, sizeof(regList) / sizeof(unsigned int));
+    return status;
+}
+
 
 int tempCntrlWarmBoxInit(void)
 {

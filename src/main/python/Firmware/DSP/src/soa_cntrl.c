@@ -69,16 +69,19 @@ int soa_cntrl_step(SoaCntrl *s)
     //  Temperature setpoint to voltage:
     //  V = (T+25.0)/40.0 where T is in Celsius
     // Vref for DAC is 2.5V
+    // This is done only if we are using analog loop control (a_to_d_loop = 1)
 
-    temp_set = *(s->temperature_setpoint_);
-    Tset = (int)((65536.0 / Vref) * (temp_set + 25.0)/40.0 + 0.5);
-    if (Tset > 65535) Tset = 65535;
-    if (Tset < 0) Tset = 0;
-    // Update setpoint to available value
-    *(s->temperature_setpoint_) = 40.0*Vref*Tset/65536.0 - 25.0;
-    if (Tset != s->prev_tset) {
-        ltc2606_write(s->i2c_tec_ident, Tset);
-        s->prev_tset = Tset;
+    if (s->a_or_d_loop == 1) {
+        temp_set = *(s->temperature_setpoint_);
+        Tset = (int)((65536.0 / Vref) * (temp_set + 25.0)/40.0 + 0.5);
+        if (Tset > 65535) Tset = 65535;
+        if (Tset < 0) Tset = 0;
+        // Update setpoint to available value
+        *(s->temperature_setpoint_) = 40.0*Vref*Tset/65536.0 - 25.0;
+        if (Tset != s->prev_tset) {
+            ltc2606_write(s->i2c_tec_ident, Tset);
+            s->prev_tset = Tset;
+        }
     }
 
     // Set up the ADC monitor reading
@@ -119,7 +122,7 @@ SoaCntrl soa_cntrl_soa2;
 SoaCntrl soa_cntrl_soa3;
 SoaCntrl soa_cntrl_soa4;
 
-int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident)
+int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident, int a_or_d_loop)
 {
     SoaCntrl *s = &soa_cntrl_soa1;
     s->soa_index = 1;
@@ -131,9 +134,10 @@ int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_te
     s->i2c_control_ident = i2c_control_ident;
     s->i2c_tec_ident = i2c_tec_ident;
     s->i2c_monitor_ident = i2c_monitor_ident;
+    s->a_or_d_loop = a_or_d_loop;
 
     s->current_setpoint_ = (float *)registerAddr(SOA1_CURRENT_SETPOINT_REGISTER);
-    s->temperature_setpoint_ = (float *)registerAddr(SOA1_TEMPERATURE_SETPOINT_REGISTER);
+    s->temperature_setpoint_ = (float *)registerAddr(SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     s->tec_current_monitor_ = (float *)registerAddr(SOA1_TEC_CURRENT_MONITOR_REGISTER);
     s->tec_voltage_monitor_ = (float *)registerAddr(SOA1_TEC_VOLTAGE_MONITOR_REGISTER);
     s->temperature_monitor_ = (float *)registerAddr(SOA1_TEMPERATURE_MONITOR_REGISTER);
@@ -160,9 +164,10 @@ int soa_cntrl_soa2_init(int i2c_current_ident, int i2c_control_ident, int i2c_te
     s->i2c_control_ident = i2c_control_ident;
     s->i2c_tec_ident = i2c_tec_ident;
     s->i2c_monitor_ident = i2c_monitor_ident;
+    s->a_or_d_loop = a_or_d_loop;
 
     s->current_setpoint_ = (float *)registerAddr(SOA2_CURRENT_SETPOINT_REGISTER);
-    s->temperature_setpoint_ = (float *)registerAddr(SOA2_TEMPERATURE_SETPOINT_REGISTER);
+    s->temperature_setpoint_ = (float *)registerAddr(SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     s->tec_current_monitor_ = (float *)registerAddr(SOA2_TEC_CURRENT_MONITOR_REGISTER);
     s->tec_voltage_monitor_ = (float *)registerAddr(SOA2_TEC_VOLTAGE_MONITOR_REGISTER);
     s->temperature_monitor_ = (float *)registerAddr(SOA2_TEMPERATURE_MONITOR_REGISTER);
@@ -189,9 +194,10 @@ int soa_cntrl_soa3_init(int i2c_current_ident, int i2c_control_ident, int i2c_te
     s->i2c_control_ident = i2c_control_ident;
     s->i2c_tec_ident = i2c_tec_ident;
     s->i2c_monitor_ident = i2c_monitor_ident;
+    s->a_or_d_loop = a_or_d_loop;
 
     s->current_setpoint_ = (float *)registerAddr(SOA3_CURRENT_SETPOINT_REGISTER);
-    s->temperature_setpoint_ = (float *)registerAddr(SOA3_TEMPERATURE_SETPOINT_REGISTER);
+    s->temperature_setpoint_ = (float *)registerAddr(SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     s->tec_current_monitor_ = (float *)registerAddr(SOA3_TEC_CURRENT_MONITOR_REGISTER);
     s->tec_voltage_monitor_ = (float *)registerAddr(SOA3_TEC_VOLTAGE_MONITOR_REGISTER);
     s->temperature_monitor_ = (float *)registerAddr(SOA3_TEMPERATURE_MONITOR_REGISTER);
@@ -218,9 +224,10 @@ int soa_cntrl_soa4_init(int i2c_current_ident, int i2c_control_ident, int i2c_te
     s->i2c_control_ident = i2c_control_ident;
     s->i2c_tec_ident = i2c_tec_ident;
     s->i2c_monitor_ident = i2c_monitor_ident;
+    s->a_or_d_loop = a_or_d_loop;
 
     s->current_setpoint_ = (float *)registerAddr(SOA4_CURRENT_SETPOINT_REGISTER);
-    s->temperature_setpoint_ = (float *)registerAddr(SOA4_TEMPERATURE_SETPOINT_REGISTER);
+    s->temperature_setpoint_ = (float *)registerAddr(SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER);
     s->tec_current_monitor_ = (float *)registerAddr(SOA4_TEC_CURRENT_MONITOR_REGISTER);
     s->tec_voltage_monitor_ = (float *)registerAddr(SOA4_TEC_VOLTAGE_MONITOR_REGISTER);
     s->temperature_monitor_ = (float *)registerAddr(SOA4_TEMPERATURE_MONITOR_REGISTER);

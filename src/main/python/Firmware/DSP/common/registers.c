@@ -173,25 +173,34 @@ void *registerAddr(unsigned int regNum)
 unsigned int getDasStatusBit(unsigned int bitNum)
 /* Gets a single bit in the DAS_STATUS_REGISTER  */
 {
-    unsigned int dasStatus = *(unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
-    unsigned int mask = 1<<bitNum;
-    return (0 != (dasStatus&mask));
+    if (bitNum != UNAVAILABLE) {
+        unsigned int dasStatus = *(unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+        unsigned int mask = 1<<bitNum;
+        return (0 != (dasStatus&mask));
+    }
+    else {
+        return 0;
+    }
 }
 
 void setDasStatusBit(unsigned int bitNum)
 /* Sets a single bit in the DAS_STATUS_REGISTER  */
 {
-    unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
-    unsigned int mask = 1<<bitNum;
-    (*dasStatus) = (*dasStatus) | mask;
+    if (bitNum != UNAVAILABLE) {
+        unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+        unsigned int mask = 1<<bitNum;
+        (*dasStatus) = (*dasStatus) | mask;
+    }
 }
 
 void resetDasStatusBit(unsigned int bitNum)
 /* Resets a single bit in the DAS_STATUS_REGISTER  */
 {
-    unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
-    unsigned int mask = 1<<bitNum;
-    (*dasStatus) = (*dasStatus) & (~mask);
+    if (bitNum != UNAVAILABLE) {
+        unsigned int *dasStatus = (unsigned int*)(registerAddr(DAS_STATUS_REGISTER));
+        unsigned int mask = 1<<bitNum;
+        (*dasStatus) = (*dasStatus) & (~mask);
+    }
 }
 
 /* The following variables are set in the hwiHpiInterrupt and used in the backend process

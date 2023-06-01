@@ -37,6 +37,7 @@ typedef struct SOA_CNTRL
     int i2c_control_ident;
     int i2c_tec_ident;
     int i2c_monitor_ident;
+    int a_or_d_loop;
 } SoaCntrl;
 int soa_cntrl_soa1_init(int i2c_current_ident, int i2c_control_ident, int i2c_tec_ident, int i2c_monitor_ident);
 int soa_cntrl_soa1_step(void);

@@ -1645,4 +1645,21 @@ int r_set_soa_control(unsigned int numInt, void *params, void *env)
     return STATUS_OK;
 }
 
+int r_set_soa_tec(unsigned int numInt, void *params, void *env)
+/*
+    Set SOA TEC value from a floating point DAS register by converting it to an integer between 0-65535
+    and writing it to the I2C based DAC (LTC2606).
+
+    Inputs:
+        i2c_index (int): Index of I2C device for LTC2606 DAC
+        Register(float): Index of DAS register containing value to send
+         
+*/
+    float value;
+    unsigned int *reg = (unsigned int *)params;
+    if (2 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[1], value);
+    ltc2606_write(reg[0], (int) value);
+    return STATUS_OK;
 

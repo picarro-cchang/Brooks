@@ -313,16 +313,109 @@
         </gui_page>
         <gui_page>
             <title>SOA Parameters</title>
-            <register>SOA1_CURRENT_SETPOINT_REGISTER</register>
-            <register>SOA1_TEMPERATURE_SETPOINT_REGISTER</register>
-            <register>SOA2_CURRENT_SETPOINT_REGISTER</register>
-            <register>SOA2_TEMPERATURE_SETPOINT_REGISTER</register>
-            <register>SOA3_CURRENT_SETPOINT_REGISTER</register>
-            <register>SOA3_TEMPERATURE_SETPOINT_REGISTER</register>
-            <register>SOA4_CURRENT_SETPOINT_REGISTER</register>
-            <register>SOA4_TEMPERATURE_SETPOINT_REGISTER</register>
             <register>SOA_ENABLE_MASK_REGISTER</register>
         </gui_page>
+        <gui_page>
+            <title>SOA1 Parameters</title>
+            <register>SOA1_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_H_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_K_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_TI_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_TD_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_B_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_C_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_N_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_S_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>SOA1_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>SOA1_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>SOA1_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>SOA1_TEC_PRBS_MEAN_REGISTER</register>
+            <register>SOA1_MANUAL_TEC_REGISTER</register>
+            <register>SOA1_CURRENT_SETPOINT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>SOA2 Parameters</title>
+            <register>SOA2_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_H_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_K_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_TI_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_TD_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_B_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_C_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_N_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_S_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>SOA2_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>SOA2_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>SOA2_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>SOA2_TEC_PRBS_MEAN_REGISTER</register>
+            <register>SOA2_MANUAL_TEC_REGISTER</register>
+            <register>SOA2_CURRENT_SETPOINT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>SOA3 Parameters</title>
+            <register>SOA3_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_H_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_K_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_TI_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_TD_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_B_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_C_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_N_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_S_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>SOA3_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>SOA3_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>SOA3_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>SOA3_TEC_PRBS_MEAN_REGISTER</register>
+            <register>SOA3_MANUAL_TEC_REGISTER</register>
+            <register>SOA3_CURRENT_SETPOINT_REGISTER</register>
+        </gui_page>
+        <gui_page>
+            <title>SOA4 Parameters</title>
+            <register>SOA4_TEMP_CNTRL_STATE_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_TOLERANCE_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_H_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_K_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_TI_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_TD_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_B_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_C_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_N_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_S_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_AMIN_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_AMAX_REGISTER</register>
+            <register>SOA4_TEMP_CNTRL_IMAX_REGISTER</register>
+            <register>SOA4_TEC_PRBS_GENPOLY_REGISTER</register>
+            <register>SOA4_TEC_PRBS_AMPLITUDE_REGISTER</register>
+            <register>SOA4_TEC_PRBS_MEAN_REGISTER</register>
+            <register>SOA4_MANUAL_TEC_REGISTER</register>
+            <register>SOA4_CURRENT_SETPOINT_REGISTER</register>
+        </gui_page>
+
         <gui_page>
             <title>Warm Box Temperature Parameters</title>
             <register>WARM_BOX_TEMP_CNTRL_STATE_REGISTER</register>

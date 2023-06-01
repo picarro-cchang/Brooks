@@ -21,8 +21,8 @@ typedef struct TEMP_CNTRL
     // References to registers
     unsigned int *state_;    // Controller state
     float *tol_;      // Lock tolerance
-    unsigned int lockBit_;   // Locked bit position in DAS status
-    unsigned int activeBit_;   // Active bit position in DAS status
+    int lockBit_;   // Locked bit position in DAS status
+    int activeBit_;   // Active bit position in DAS status
     float *swpMin_;   // Minimum sweep value
     float *swpMax_;   // Maximum sweep value
     float *swpInc_;   // Sweep increment
@@ -63,6 +63,14 @@ int tempCntrlLaser3Init(void);
 int tempCntrlLaser3Step(void);
 int tempCntrlLaser4Init(void);
 int tempCntrlLaser4Step(void);
+int tempCntrlSoa1Init(void);
+int tempCntrlSoa1Step(void);
+int tempCntrlSoa2Init(void);
+int tempCntrlSoa2Step(void);
+int tempCntrlSoa3Init(void);
+int tempCntrlSoa3Step(void);
+int tempCntrlSoa4Init(void);
+int tempCntrlSoa4Step(void);
 int tempCntrlCavityInit(void);
 int tempCntrlCavityStep(void);
 int tempCntrlWarmBoxInit(void);

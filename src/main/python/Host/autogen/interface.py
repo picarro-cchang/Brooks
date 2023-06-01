@@ -375,6 +375,8 @@ class LatticeFpgaProgramType(Structure):
     ]
 
 # Constant definitions
+# Unavailable
+UNAVAILABLE = 0xFFFFFFFF
 # Scheduler period (ms)
 SCHEDULER_PERIOD = 100
 # Maximum number of lasers
@@ -1245,7 +1247,7 @@ INJECTION_SETTINGS_virtualLaserShift = 2
 INJECTION_SETTINGS_lossTagShift = 5
 
 # Register definitions
-INTERFACE_NUMBER_OF_REGISTERS = 710
+INTERFACE_NUMBER_OF_REGISTERS = 798
 
 NOOP_REGISTER = 0
 VERIFY_INIT_REGISTER = 1
@@ -1929,34 +1931,122 @@ SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER = 678
 PZT_UPDATE_MODE_REGISTER = 679
 SGDBR_FILTER_BY_TRAJECTORY_REGISTER = 680
 SOA1_CURRENT_SETPOINT_REGISTER = 681
-SOA1_TEMPERATURE_SETPOINT_REGISTER = 682
+SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER = 682
 SOA1_TEC_CURRENT_MONITOR_REGISTER = 683
 SOA1_TEC_VOLTAGE_MONITOR_REGISTER = 684
 SOA1_TEMPERATURE_MONITOR_REGISTER = 685
-SOA2_CURRENT_SETPOINT_REGISTER = 686
-SOA2_TEMPERATURE_SETPOINT_REGISTER = 687
-SOA2_TEC_CURRENT_MONITOR_REGISTER = 688
-SOA2_TEC_VOLTAGE_MONITOR_REGISTER = 689
-SOA2_TEMPERATURE_MONITOR_REGISTER = 690
-SOA3_CURRENT_SETPOINT_REGISTER = 691
-SOA3_TEMPERATURE_SETPOINT_REGISTER = 692
-SOA3_TEC_CURRENT_MONITOR_REGISTER = 693
-SOA3_TEC_VOLTAGE_MONITOR_REGISTER = 694
-SOA3_TEMPERATURE_MONITOR_REGISTER = 695
-SOA4_CURRENT_SETPOINT_REGISTER = 696
-SOA4_TEMPERATURE_SETPOINT_REGISTER = 697
-SOA4_TEC_CURRENT_MONITOR_REGISTER = 698
-SOA4_TEC_VOLTAGE_MONITOR_REGISTER = 699
-SOA4_TEMPERATURE_MONITOR_REGISTER = 700
-SOA_ENABLE_MASK_REGISTER = 701
-PZT_CNTRL_STATE_REGISTER = 702
-PZT_CNTRL_WLM_ANGLE_MODULUS = 703
-PZT_CNTRL_UPDATE_TIME_CONSTANT = 704
-PZT_CNTRL_SCALE_FACTOR = 705
-PZT_CNTRL_UPDATE_CLAMP = 706
-PZT_CNTRL_FLATTENING_FACTOR = 707
-PZT_CNTRL_REFERENCE_CENTERING_FACTOR = 708
-PZT_CNTRL_SHIFT = 709
+SOA1_TEC_REGISTER = 686
+SOA1_MANUAL_TEC_REGISTER = 687
+SOA1_TEMP_CNTRL_STATE_REGISTER = 688
+SOA1_TEMP_CNTRL_SETPOINT_REGISTER = 689
+SOA1_TEMP_CNTRL_TOLERANCE_REGISTER = 690
+SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER = 691
+SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER = 692
+SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER = 693
+SOA1_TEMP_CNTRL_H_REGISTER = 694
+SOA1_TEMP_CNTRL_K_REGISTER = 695
+SOA1_TEMP_CNTRL_TI_REGISTER = 696
+SOA1_TEMP_CNTRL_TD_REGISTER = 697
+SOA1_TEMP_CNTRL_B_REGISTER = 698
+SOA1_TEMP_CNTRL_C_REGISTER = 699
+SOA1_TEMP_CNTRL_N_REGISTER = 700
+SOA1_TEMP_CNTRL_S_REGISTER = 701
+SOA1_TEMP_CNTRL_AMIN_REGISTER = 702
+SOA1_TEMP_CNTRL_AMAX_REGISTER = 703
+SOA1_TEMP_CNTRL_IMAX_REGISTER = 704
+SOA1_TEC_PRBS_GENPOLY_REGISTER = 705
+SOA1_TEC_PRBS_AMPLITUDE_REGISTER = 706
+SOA1_TEC_PRBS_MEAN_REGISTER = 707
+SOA2_TEC_REGISTER = 708
+SOA2_MANUAL_TEC_REGISTER = 709
+SOA2_TEMP_CNTRL_STATE_REGISTER = 710
+SOA2_TEMP_CNTRL_SETPOINT_REGISTER = 711
+SOA2_TEMP_CNTRL_TOLERANCE_REGISTER = 712
+SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER = 713
+SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER = 714
+SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER = 715
+SOA2_CURRENT_SETPOINT_REGISTER = 716
+SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER = 717
+SOA2_TEC_CURRENT_MONITOR_REGISTER = 718
+SOA2_TEC_VOLTAGE_MONITOR_REGISTER = 719
+SOA2_TEMPERATURE_MONITOR_REGISTER = 720
+SOA2_TEMP_CNTRL_H_REGISTER = 721
+SOA2_TEMP_CNTRL_K_REGISTER = 722
+SOA2_TEMP_CNTRL_TI_REGISTER = 723
+SOA2_TEMP_CNTRL_TD_REGISTER = 724
+SOA2_TEMP_CNTRL_B_REGISTER = 725
+SOA2_TEMP_CNTRL_C_REGISTER = 726
+SOA2_TEMP_CNTRL_N_REGISTER = 727
+SOA2_TEMP_CNTRL_S_REGISTER = 728
+SOA2_TEMP_CNTRL_AMIN_REGISTER = 729
+SOA2_TEMP_CNTRL_AMAX_REGISTER = 730
+SOA2_TEMP_CNTRL_IMAX_REGISTER = 731
+SOA2_TEC_PRBS_GENPOLY_REGISTER = 732
+SOA2_TEC_PRBS_AMPLITUDE_REGISTER = 733
+SOA2_TEC_PRBS_MEAN_REGISTER = 734
+SOA3_TEC_REGISTER = 735
+SOA3_MANUAL_TEC_REGISTER = 736
+SOA3_TEMP_CNTRL_STATE_REGISTER = 737
+SOA3_TEMP_CNTRL_SETPOINT_REGISTER = 738
+SOA3_TEMP_CNTRL_TOLERANCE_REGISTER = 739
+SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER = 740
+SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER = 741
+SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER = 742
+SOA3_CURRENT_SETPOINT_REGISTER = 743
+SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER = 744
+SOA3_TEC_CURRENT_MONITOR_REGISTER = 745
+SOA3_TEC_VOLTAGE_MONITOR_REGISTER = 746
+SOA3_TEMPERATURE_MONITOR_REGISTER = 747
+SOA3_TEMP_CNTRL_H_REGISTER = 748
+SOA3_TEMP_CNTRL_K_REGISTER = 749
+SOA3_TEMP_CNTRL_TI_REGISTER = 750
+SOA3_TEMP_CNTRL_TD_REGISTER = 751
+SOA3_TEMP_CNTRL_B_REGISTER = 752
+SOA3_TEMP_CNTRL_C_REGISTER = 753
+SOA3_TEMP_CNTRL_N_REGISTER = 754
+SOA3_TEMP_CNTRL_S_REGISTER = 755
+SOA3_TEMP_CNTRL_AMIN_REGISTER = 756
+SOA3_TEMP_CNTRL_AMAX_REGISTER = 757
+SOA3_TEMP_CNTRL_IMAX_REGISTER = 758
+SOA3_TEC_PRBS_GENPOLY_REGISTER = 759
+SOA3_TEC_PRBS_AMPLITUDE_REGISTER = 760
+SOA3_TEC_PRBS_MEAN_REGISTER = 761
+SOA4_TEC_REGISTER = 762
+SOA4_MANUAL_TEC_REGISTER = 763
+SOA4_TEMP_CNTRL_STATE_REGISTER = 764
+SOA4_TEMP_CNTRL_SETPOINT_REGISTER = 765
+SOA4_TEMP_CNTRL_TOLERANCE_REGISTER = 766
+SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER = 767
+SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER = 768
+SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER = 769
+SOA4_CURRENT_SETPOINT_REGISTER = 770
+SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER = 771
+SOA4_TEC_CURRENT_MONITOR_REGISTER = 772
+SOA4_TEC_VOLTAGE_MONITOR_REGISTER = 773
+SOA4_TEMPERATURE_MONITOR_REGISTER = 774
+SOA4_TEMP_CNTRL_H_REGISTER = 775
+SOA4_TEMP_CNTRL_K_REGISTER = 776
+SOA4_TEMP_CNTRL_TI_REGISTER = 777
+SOA4_TEMP_CNTRL_TD_REGISTER = 778
+SOA4_TEMP_CNTRL_B_REGISTER = 779
+SOA4_TEMP_CNTRL_C_REGISTER = 780
+SOA4_TEMP_CNTRL_N_REGISTER = 781
+SOA4_TEMP_CNTRL_S_REGISTER = 782
+SOA4_TEMP_CNTRL_AMIN_REGISTER = 783
+SOA4_TEMP_CNTRL_AMAX_REGISTER = 784
+SOA4_TEMP_CNTRL_IMAX_REGISTER = 785
+SOA4_TEC_PRBS_GENPOLY_REGISTER = 786
+SOA4_TEC_PRBS_AMPLITUDE_REGISTER = 787
+SOA4_TEC_PRBS_MEAN_REGISTER = 788
+SOA_ENABLE_MASK_REGISTER = 789
+PZT_CNTRL_STATE_REGISTER = 790
+PZT_CNTRL_WLM_ANGLE_MODULUS = 791
+PZT_CNTRL_UPDATE_TIME_CONSTANT = 792
+PZT_CNTRL_SCALE_FACTOR = 793
+PZT_CNTRL_UPDATE_CLAMP = 794
+PZT_CNTRL_FLATTENING_FACTOR = 795
+PZT_CNTRL_REFERENCE_CENTERING_FACTOR = 796
+PZT_CNTRL_SHIFT = 797
 
 # Dictionary for accessing registers by name, list of register information and dictionary of register initial values
 registerByName = {}
@@ -4140,9 +4230,9 @@ registerInitialValue["SGDBR_FILTER_BY_TRAJECTORY_REGISTER"] = -1
 registerByName["SOA1_CURRENT_SETPOINT_REGISTER"] = SOA1_CURRENT_SETPOINT_REGISTER
 registerInfo.append(RegInfo("SOA1_CURRENT_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
 registerInitialValue["SOA1_CURRENT_SETPOINT_REGISTER"] = 0.0
-registerByName["SOA1_TEMPERATURE_SETPOINT_REGISTER"] = SOA1_TEMPERATURE_SETPOINT_REGISTER
-registerInfo.append(RegInfo("SOA1_TEMPERATURE_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
-registerInitialValue["SOA1_TEMPERATURE_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = 25.0
 registerByName["SOA1_TEC_CURRENT_MONITOR_REGISTER"] = SOA1_TEC_CURRENT_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA1_TEC_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA1_TEC_CURRENT_MONITOR_REGISTER"] = 0.0
@@ -4152,12 +4242,102 @@ registerInitialValue["SOA1_TEC_VOLTAGE_MONITOR_REGISTER"] = 0.0
 registerByName["SOA1_TEMPERATURE_MONITOR_REGISTER"] = SOA1_TEMPERATURE_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA1_TEMPERATURE_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA1_TEMPERATURE_MONITOR_REGISTER"] = 25.0
+registerByName["SOA1_TEC_REGISTER"] = SOA1_TEC_REGISTER
+registerInfo.append(RegInfo("SOA1_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInitialValue["SOA1_TEC_REGISTER"] = 32768.0
+registerByName["SOA1_MANUAL_TEC_REGISTER"] = SOA1_MANUAL_TEC_REGISTER
+registerInfo.append(RegInfo("SOA1_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_MANUAL_TEC_REGISTER"] = 32768.0
+registerByName["SOA1_TEMP_CNTRL_STATE_REGISTER"] = SOA1_TEMP_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_STATE_REGISTER"] = TEMP_CNTRL_DisabledState
+registerByName["SOA1_TEMP_CNTRL_SETPOINT_REGISTER"] = SOA1_TEMP_CNTRL_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA1_TEMP_CNTRL_TOLERANCE_REGISTER"] = SOA1_TEMP_CNTRL_TOLERANCE_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_TOLERANCE_REGISTER"] = 0.1
+registerByName["SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = 30.0
+registerByName["SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = 20.0
+registerByName["SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = 0.05
+registerByName["SOA1_TEMP_CNTRL_H_REGISTER"] = SOA1_TEMP_CNTRL_H_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_H_REGISTER"] = 0.2
+registerByName["SOA1_TEMP_CNTRL_K_REGISTER"] = SOA1_TEMP_CNTRL_K_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_K_REGISTER"] = 25.0
+registerByName["SOA1_TEMP_CNTRL_TI_REGISTER"] = SOA1_TEMP_CNTRL_TI_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_TI_REGISTER"] = 1000.0
+registerByName["SOA1_TEMP_CNTRL_TD_REGISTER"] = SOA1_TEMP_CNTRL_TD_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_TD_REGISTER"] = 1.1
+registerByName["SOA1_TEMP_CNTRL_B_REGISTER"] = SOA1_TEMP_CNTRL_B_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_B_REGISTER"] = 1.0
+registerByName["SOA1_TEMP_CNTRL_C_REGISTER"] = SOA1_TEMP_CNTRL_C_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_C_REGISTER"] = 1.0
+registerByName["SOA1_TEMP_CNTRL_N_REGISTER"] = SOA1_TEMP_CNTRL_N_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_N_REGISTER"] = 100.0
+registerByName["SOA1_TEMP_CNTRL_S_REGISTER"] = SOA1_TEMP_CNTRL_S_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_S_REGISTER"] = 5.0
+registerByName["SOA1_TEMP_CNTRL_AMIN_REGISTER"] = SOA1_TEMP_CNTRL_AMIN_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_AMIN_REGISTER"] = 5.0
+registerByName["SOA1_TEMP_CNTRL_AMAX_REGISTER"] = SOA1_TEMP_CNTRL_AMAX_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_AMAX_REGISTER"] = 55000.0
+registerByName["SOA1_TEMP_CNTRL_IMAX_REGISTER"] = SOA1_TEMP_CNTRL_IMAX_REGISTER
+registerInfo.append(RegInfo("SOA1_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEMP_CNTRL_IMAX_REGISTER"] = 10000.0
+registerByName["SOA1_TEC_PRBS_GENPOLY_REGISTER"] = SOA1_TEC_PRBS_GENPOLY_REGISTER
+registerInfo.append(RegInfo("SOA1_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["SOA1_TEC_PRBS_GENPOLY_REGISTER"] = 0x481
+registerByName["SOA1_TEC_PRBS_AMPLITUDE_REGISTER"] = SOA1_TEC_PRBS_AMPLITUDE_REGISTER
+registerInfo.append(RegInfo("SOA1_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEC_PRBS_AMPLITUDE_REGISTER"] = 5000.0
+registerByName["SOA1_TEC_PRBS_MEAN_REGISTER"] = SOA1_TEC_PRBS_MEAN_REGISTER
+registerInfo.append(RegInfo("SOA1_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA1_TEC_PRBS_MEAN_REGISTER"] = 40000.0
+registerByName["SOA2_TEC_REGISTER"] = SOA2_TEC_REGISTER
+registerInfo.append(RegInfo("SOA2_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInitialValue["SOA2_TEC_REGISTER"] = 32768.0
+registerByName["SOA2_MANUAL_TEC_REGISTER"] = SOA2_MANUAL_TEC_REGISTER
+registerInfo.append(RegInfo("SOA2_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_MANUAL_TEC_REGISTER"] = 32768.0
+registerByName["SOA2_TEMP_CNTRL_STATE_REGISTER"] = SOA2_TEMP_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_STATE_REGISTER"] = TEMP_CNTRL_DisabledState
+registerByName["SOA2_TEMP_CNTRL_SETPOINT_REGISTER"] = SOA2_TEMP_CNTRL_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA2_TEMP_CNTRL_TOLERANCE_REGISTER"] = SOA2_TEMP_CNTRL_TOLERANCE_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_TOLERANCE_REGISTER"] = 0.1
+registerByName["SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = 30.0
+registerByName["SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = 20.0
+registerByName["SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = 0.05
 registerByName["SOA2_CURRENT_SETPOINT_REGISTER"] = SOA2_CURRENT_SETPOINT_REGISTER
 registerInfo.append(RegInfo("SOA2_CURRENT_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
 registerInitialValue["SOA2_CURRENT_SETPOINT_REGISTER"] = 0.0
-registerByName["SOA2_TEMPERATURE_SETPOINT_REGISTER"] = SOA2_TEMPERATURE_SETPOINT_REGISTER
-registerInfo.append(RegInfo("SOA2_TEMPERATURE_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
-registerInitialValue["SOA2_TEMPERATURE_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = 25.0
 registerByName["SOA2_TEC_CURRENT_MONITOR_REGISTER"] = SOA2_TEC_CURRENT_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA2_TEC_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA2_TEC_CURRENT_MONITOR_REGISTER"] = 0.0
@@ -4167,12 +4347,78 @@ registerInitialValue["SOA2_TEC_VOLTAGE_MONITOR_REGISTER"] = 0.0
 registerByName["SOA2_TEMPERATURE_MONITOR_REGISTER"] = SOA2_TEMPERATURE_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA2_TEMPERATURE_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA2_TEMPERATURE_MONITOR_REGISTER"] = 25.0
+registerByName["SOA2_TEMP_CNTRL_H_REGISTER"] = SOA2_TEMP_CNTRL_H_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_H_REGISTER"] = 0.2
+registerByName["SOA2_TEMP_CNTRL_K_REGISTER"] = SOA2_TEMP_CNTRL_K_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_K_REGISTER"] = 25.0
+registerByName["SOA2_TEMP_CNTRL_TI_REGISTER"] = SOA2_TEMP_CNTRL_TI_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_TI_REGISTER"] = 1000.0
+registerByName["SOA2_TEMP_CNTRL_TD_REGISTER"] = SOA2_TEMP_CNTRL_TD_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_TD_REGISTER"] = 1.1
+registerByName["SOA2_TEMP_CNTRL_B_REGISTER"] = SOA2_TEMP_CNTRL_B_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_B_REGISTER"] = 1.0
+registerByName["SOA2_TEMP_CNTRL_C_REGISTER"] = SOA2_TEMP_CNTRL_C_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_C_REGISTER"] = 1.0
+registerByName["SOA2_TEMP_CNTRL_N_REGISTER"] = SOA2_TEMP_CNTRL_N_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_N_REGISTER"] = 100.0
+registerByName["SOA2_TEMP_CNTRL_S_REGISTER"] = SOA2_TEMP_CNTRL_S_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_S_REGISTER"] = 5.0
+registerByName["SOA2_TEMP_CNTRL_AMIN_REGISTER"] = SOA2_TEMP_CNTRL_AMIN_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_AMIN_REGISTER"] = 5.0
+registerByName["SOA2_TEMP_CNTRL_AMAX_REGISTER"] = SOA2_TEMP_CNTRL_AMAX_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_AMAX_REGISTER"] = 55000.0
+registerByName["SOA2_TEMP_CNTRL_IMAX_REGISTER"] = SOA2_TEMP_CNTRL_IMAX_REGISTER
+registerInfo.append(RegInfo("SOA2_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEMP_CNTRL_IMAX_REGISTER"] = 10000.0
+registerByName["SOA2_TEC_PRBS_GENPOLY_REGISTER"] = SOA2_TEC_PRBS_GENPOLY_REGISTER
+registerInfo.append(RegInfo("SOA2_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["SOA2_TEC_PRBS_GENPOLY_REGISTER"] = 0x481
+registerByName["SOA2_TEC_PRBS_AMPLITUDE_REGISTER"] = SOA2_TEC_PRBS_AMPLITUDE_REGISTER
+registerInfo.append(RegInfo("SOA2_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEC_PRBS_AMPLITUDE_REGISTER"] = 5000.0
+registerByName["SOA2_TEC_PRBS_MEAN_REGISTER"] = SOA2_TEC_PRBS_MEAN_REGISTER
+registerInfo.append(RegInfo("SOA2_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA2_TEC_PRBS_MEAN_REGISTER"] = 40000.0
+registerByName["SOA3_TEC_REGISTER"] = SOA3_TEC_REGISTER
+registerInfo.append(RegInfo("SOA3_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInitialValue["SOA3_TEC_REGISTER"] = 32768.0
+registerByName["SOA3_MANUAL_TEC_REGISTER"] = SOA3_MANUAL_TEC_REGISTER
+registerInfo.append(RegInfo("SOA3_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_MANUAL_TEC_REGISTER"] = 32768.0
+registerByName["SOA3_TEMP_CNTRL_STATE_REGISTER"] = SOA3_TEMP_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_STATE_REGISTER"] = TEMP_CNTRL_DisabledState
+registerByName["SOA3_TEMP_CNTRL_SETPOINT_REGISTER"] = SOA3_TEMP_CNTRL_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA3_TEMP_CNTRL_TOLERANCE_REGISTER"] = SOA3_TEMP_CNTRL_TOLERANCE_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_TOLERANCE_REGISTER"] = 0.1
+registerByName["SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = 30.0
+registerByName["SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = 20.0
+registerByName["SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = 0.05
 registerByName["SOA3_CURRENT_SETPOINT_REGISTER"] = SOA3_CURRENT_SETPOINT_REGISTER
 registerInfo.append(RegInfo("SOA3_CURRENT_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
 registerInitialValue["SOA3_CURRENT_SETPOINT_REGISTER"] = 0.0
-registerByName["SOA3_TEMPERATURE_SETPOINT_REGISTER"] = SOA3_TEMPERATURE_SETPOINT_REGISTER
-registerInfo.append(RegInfo("SOA3_TEMPERATURE_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
-registerInitialValue["SOA3_TEMPERATURE_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = 25.0
 registerByName["SOA3_TEC_CURRENT_MONITOR_REGISTER"] = SOA3_TEC_CURRENT_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA3_TEC_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA3_TEC_CURRENT_MONITOR_REGISTER"] = 0.0
@@ -4182,12 +4428,78 @@ registerInitialValue["SOA3_TEC_VOLTAGE_MONITOR_REGISTER"] = 0.0
 registerByName["SOA3_TEMPERATURE_MONITOR_REGISTER"] = SOA3_TEMPERATURE_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA3_TEMPERATURE_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA3_TEMPERATURE_MONITOR_REGISTER"] = 25.0
+registerByName["SOA3_TEMP_CNTRL_H_REGISTER"] = SOA3_TEMP_CNTRL_H_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_H_REGISTER"] = 0.2
+registerByName["SOA3_TEMP_CNTRL_K_REGISTER"] = SOA3_TEMP_CNTRL_K_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_K_REGISTER"] = 25.0
+registerByName["SOA3_TEMP_CNTRL_TI_REGISTER"] = SOA3_TEMP_CNTRL_TI_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_TI_REGISTER"] = 1000.0
+registerByName["SOA3_TEMP_CNTRL_TD_REGISTER"] = SOA3_TEMP_CNTRL_TD_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_TD_REGISTER"] = 1.1
+registerByName["SOA3_TEMP_CNTRL_B_REGISTER"] = SOA3_TEMP_CNTRL_B_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_B_REGISTER"] = 1.0
+registerByName["SOA3_TEMP_CNTRL_C_REGISTER"] = SOA3_TEMP_CNTRL_C_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_C_REGISTER"] = 1.0
+registerByName["SOA3_TEMP_CNTRL_N_REGISTER"] = SOA3_TEMP_CNTRL_N_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_N_REGISTER"] = 100.0
+registerByName["SOA3_TEMP_CNTRL_S_REGISTER"] = SOA3_TEMP_CNTRL_S_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_S_REGISTER"] = 5.0
+registerByName["SOA3_TEMP_CNTRL_AMIN_REGISTER"] = SOA3_TEMP_CNTRL_AMIN_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_AMIN_REGISTER"] = 5.0
+registerByName["SOA3_TEMP_CNTRL_AMAX_REGISTER"] = SOA3_TEMP_CNTRL_AMAX_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_AMAX_REGISTER"] = 55000.0
+registerByName["SOA3_TEMP_CNTRL_IMAX_REGISTER"] = SOA3_TEMP_CNTRL_IMAX_REGISTER
+registerInfo.append(RegInfo("SOA3_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEMP_CNTRL_IMAX_REGISTER"] = 10000.0
+registerByName["SOA3_TEC_PRBS_GENPOLY_REGISTER"] = SOA3_TEC_PRBS_GENPOLY_REGISTER
+registerInfo.append(RegInfo("SOA3_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["SOA3_TEC_PRBS_GENPOLY_REGISTER"] = 0x481
+registerByName["SOA3_TEC_PRBS_AMPLITUDE_REGISTER"] = SOA3_TEC_PRBS_AMPLITUDE_REGISTER
+registerInfo.append(RegInfo("SOA3_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEC_PRBS_AMPLITUDE_REGISTER"] = 5000.0
+registerByName["SOA3_TEC_PRBS_MEAN_REGISTER"] = SOA3_TEC_PRBS_MEAN_REGISTER
+registerInfo.append(RegInfo("SOA3_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA3_TEC_PRBS_MEAN_REGISTER"] = 40000.0
+registerByName["SOA4_TEC_REGISTER"] = SOA4_TEC_REGISTER
+registerInfo.append(RegInfo("SOA4_TEC_REGISTER",c_float,0,1.0,"r"))
+registerInitialValue["SOA4_TEC_REGISTER"] = 32768.0
+registerByName["SOA4_MANUAL_TEC_REGISTER"] = SOA4_MANUAL_TEC_REGISTER
+registerInfo.append(RegInfo("SOA4_MANUAL_TEC_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_MANUAL_TEC_REGISTER"] = 32768.0
+registerByName["SOA4_TEMP_CNTRL_STATE_REGISTER"] = SOA4_TEMP_CNTRL_STATE_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_STATE_REGISTER",TEMP_CNTRL_StateType,0,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_STATE_REGISTER"] = TEMP_CNTRL_DisabledState
+registerByName["SOA4_TEMP_CNTRL_SETPOINT_REGISTER"] = SOA4_TEMP_CNTRL_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_SETPOINT_REGISTER",c_float,0,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA4_TEMP_CNTRL_TOLERANCE_REGISTER"] = SOA4_TEMP_CNTRL_TOLERANCE_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_TOLERANCE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_TOLERANCE_REGISTER"] = 0.1
+registerByName["SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER"] = 30.0
+registerByName["SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER"] = 20.0
+registerByName["SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER"] = 0.05
 registerByName["SOA4_CURRENT_SETPOINT_REGISTER"] = SOA4_CURRENT_SETPOINT_REGISTER
 registerInfo.append(RegInfo("SOA4_CURRENT_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
 registerInitialValue["SOA4_CURRENT_SETPOINT_REGISTER"] = 0.0
-registerByName["SOA4_TEMPERATURE_SETPOINT_REGISTER"] = SOA4_TEMPERATURE_SETPOINT_REGISTER
-registerInfo.append(RegInfo("SOA4_TEMPERATURE_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
-registerInitialValue["SOA4_TEMPERATURE_SETPOINT_REGISTER"] = 25.0
+registerByName["SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER"] = 25.0
 registerByName["SOA4_TEC_CURRENT_MONITOR_REGISTER"] = SOA4_TEC_CURRENT_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA4_TEC_CURRENT_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA4_TEC_CURRENT_MONITOR_REGISTER"] = 0.0
@@ -4197,6 +4509,48 @@ registerInitialValue["SOA4_TEC_VOLTAGE_MONITOR_REGISTER"] = 0.0
 registerByName["SOA4_TEMPERATURE_MONITOR_REGISTER"] = SOA4_TEMPERATURE_MONITOR_REGISTER
 registerInfo.append(RegInfo("SOA4_TEMPERATURE_MONITOR_REGISTER",c_float,0,1.0,"rw"))
 registerInitialValue["SOA4_TEMPERATURE_MONITOR_REGISTER"] = 25.0
+registerByName["SOA4_TEMP_CNTRL_H_REGISTER"] = SOA4_TEMP_CNTRL_H_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_H_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_H_REGISTER"] = 0.2
+registerByName["SOA4_TEMP_CNTRL_K_REGISTER"] = SOA4_TEMP_CNTRL_K_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_K_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_K_REGISTER"] = 25.0
+registerByName["SOA4_TEMP_CNTRL_TI_REGISTER"] = SOA4_TEMP_CNTRL_TI_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_TI_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_TI_REGISTER"] = 1000.0
+registerByName["SOA4_TEMP_CNTRL_TD_REGISTER"] = SOA4_TEMP_CNTRL_TD_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_TD_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_TD_REGISTER"] = 1.1
+registerByName["SOA4_TEMP_CNTRL_B_REGISTER"] = SOA4_TEMP_CNTRL_B_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_B_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_B_REGISTER"] = 1.0
+registerByName["SOA4_TEMP_CNTRL_C_REGISTER"] = SOA4_TEMP_CNTRL_C_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_C_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_C_REGISTER"] = 1.0
+registerByName["SOA4_TEMP_CNTRL_N_REGISTER"] = SOA4_TEMP_CNTRL_N_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_N_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_N_REGISTER"] = 100.0
+registerByName["SOA4_TEMP_CNTRL_S_REGISTER"] = SOA4_TEMP_CNTRL_S_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_S_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_S_REGISTER"] = 5.0
+registerByName["SOA4_TEMP_CNTRL_AMIN_REGISTER"] = SOA4_TEMP_CNTRL_AMIN_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_AMIN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_AMIN_REGISTER"] = 5.0
+registerByName["SOA4_TEMP_CNTRL_AMAX_REGISTER"] = SOA4_TEMP_CNTRL_AMAX_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_AMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_AMAX_REGISTER"] = 55000.0
+registerByName["SOA4_TEMP_CNTRL_IMAX_REGISTER"] = SOA4_TEMP_CNTRL_IMAX_REGISTER
+registerInfo.append(RegInfo("SOA4_TEMP_CNTRL_IMAX_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEMP_CNTRL_IMAX_REGISTER"] = 10000.0
+registerByName["SOA4_TEC_PRBS_GENPOLY_REGISTER"] = SOA4_TEC_PRBS_GENPOLY_REGISTER
+registerInfo.append(RegInfo("SOA4_TEC_PRBS_GENPOLY_REGISTER",c_uint,1,1.0,"rw"))
+registerInitialValue["SOA4_TEC_PRBS_GENPOLY_REGISTER"] = 0x481
+registerByName["SOA4_TEC_PRBS_AMPLITUDE_REGISTER"] = SOA4_TEC_PRBS_AMPLITUDE_REGISTER
+registerInfo.append(RegInfo("SOA4_TEC_PRBS_AMPLITUDE_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEC_PRBS_AMPLITUDE_REGISTER"] = 5000.0
+registerByName["SOA4_TEC_PRBS_MEAN_REGISTER"] = SOA4_TEC_PRBS_MEAN_REGISTER
+registerInfo.append(RegInfo("SOA4_TEC_PRBS_MEAN_REGISTER",c_float,1,1.0,"rw"))
+registerInitialValue["SOA4_TEC_PRBS_MEAN_REGISTER"] = 40000.0
 registerByName["SOA_ENABLE_MASK_REGISTER"] = SOA_ENABLE_MASK_REGISTER
 registerInfo.append(RegInfo("SOA_ENABLE_MASK_REGISTER",c_uint,1,1.0,"rw"))
 registerInitialValue["SOA_ENABLE_MASK_REGISTER"] = 0xF
@@ -5064,6 +5418,7 @@ ACTION_READ_SOA_MONITOR = 111
 ACTION_SET_SOA_CURRENT = 112
 ACTION_SET_SOA_TEMPERATURE = 113
 ACTION_SET_SOA_CONTROL = 114
+ACTION_SET_SOA_TEC = 115
 
 # Aliases
 PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER = PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER # Old name for number of samples spent in triggered state
@@ -5389,16 +5744,120 @@ parameter_forms.append(('SGDBR D Tuning Parameters',__p))
 
 __p = []
 
-__p.append([None, ('dsp','float',SOA1_CURRENT_SETPOINT_REGISTER,'SOA1 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
-__p.append([None, ('dsp','float',SOA1_TEMPERATURE_SETPOINT_REGISTER,'SOA1 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA2_CURRENT_SETPOINT_REGISTER,'SOA2 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
-__p.append([None, ('dsp','float',SOA2_TEMPERATURE_SETPOINT_REGISTER,'SOA2 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA3_CURRENT_SETPOINT_REGISTER,'SOA3 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
-__p.append([None, ('dsp','float',SOA3_TEMPERATURE_SETPOINT_REGISTER,'SOA3 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
-__p.append([None, ('dsp','float',SOA4_CURRENT_SETPOINT_REGISTER,'SOA4 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
-__p.append([None, ('dsp','float',SOA4_TEMPERATURE_SETPOINT_REGISTER,'SOA4 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
 __p.append([None, ('dsp','uint32',SOA_ENABLE_MASK_REGISTER,'SOA current source enable mask','','$%X',1,1)])
 parameter_forms.append(('SOA Parameters',__p))
+
+# Form: SOA1 Parameters
+
+__p = []
+
+__p.append([None, ('dsp','choices',SOA1_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER,'SOA1 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Min sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','degC/sample','%.4f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_H_REGISTER,'Sample interval','s','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_K_REGISTER,'Loop proportional gain (K)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_TI_REGISTER,'Integration time (Ti)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_TD_REGISTER,'Derivative time (Td)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_B_REGISTER,'Proportional setpoint gain (b)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_C_REGISTER,'Derivative setpoint gain (c)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_N_REGISTER,'Derivative regularization (N)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_S_REGISTER,'Saturation regularization (S)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Amin)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1)])
+__p.append([None, ('dsp','uint32',SOA1_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA1_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA1_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA1_CURRENT_SETPOINT_REGISTER,'SOA1 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
+parameter_forms.append(('SOA1 Parameters',__p))
+
+# Form: SOA2 Parameters
+
+__p = []
+
+__p.append([None, ('dsp','choices',SOA2_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_USER_SETPOINT_REGISTER,'SOA2 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Min sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','degC/sample','%.4f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_H_REGISTER,'Sample interval','s','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_K_REGISTER,'Loop proportional gain (K)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_TI_REGISTER,'Integration time (Ti)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_TD_REGISTER,'Derivative time (Td)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_B_REGISTER,'Proportional setpoint gain (b)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_C_REGISTER,'Derivative setpoint gain (c)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_N_REGISTER,'Derivative regularization (N)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_S_REGISTER,'Saturation regularization (S)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Amin)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1)])
+__p.append([None, ('dsp','uint32',SOA2_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA2_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA2_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA2_CURRENT_SETPOINT_REGISTER,'SOA2 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
+parameter_forms.append(('SOA2 Parameters',__p))
+
+# Form: SOA3 Parameters
+
+__p = []
+
+__p.append([None, ('dsp','choices',SOA3_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_USER_SETPOINT_REGISTER,'SOA3 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Min sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','degC/sample','%.4f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_H_REGISTER,'Sample interval','s','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_K_REGISTER,'Loop proportional gain (K)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_TI_REGISTER,'Integration time (Ti)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_TD_REGISTER,'Derivative time (Td)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_B_REGISTER,'Proportional setpoint gain (b)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_C_REGISTER,'Derivative setpoint gain (c)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_N_REGISTER,'Derivative regularization (N)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_S_REGISTER,'Saturation regularization (S)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Amin)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1)])
+__p.append([None, ('dsp','uint32',SOA3_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA3_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA3_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA3_CURRENT_SETPOINT_REGISTER,'SOA3 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
+parameter_forms.append(('SOA3 Parameters',__p))
+
+# Form: SOA4 Parameters
+
+__p = []
+
+__p.append([None, ('dsp','choices',SOA4_TEMP_CNTRL_STATE_REGISTER,'Temperature Controller Mode','',[(TEMP_CNTRL_DisabledState,"Controller Disabled"),(TEMP_CNTRL_EnabledState,"Controller Enabled"),(TEMP_CNTRL_SuspendedState,"Controller Suspended"),(TEMP_CNTRL_SweepingState,"Continuous Sweeping"),(TEMP_CNTRL_SendPrbsState,"Sending PRBS"),(TEMP_CNTRL_ManualState,"Manual Control"),(TEMP_CNTRL_AutomaticState,"Automatic Control"),],1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_USER_SETPOINT_REGISTER,'SOA4 temperature setpoint (0.0 - 50.0C)','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_TOLERANCE_REGISTER,'Lock tolerance','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_SWEEP_MAX_REGISTER,'Max sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_SWEEP_MIN_REGISTER,'Min sweep value','degC','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_SWEEP_INCR_REGISTER,'Sweep increment','degC/sample','%.4f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_H_REGISTER,'Sample interval','s','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_K_REGISTER,'Loop proportional gain (K)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_TI_REGISTER,'Integration time (Ti)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_TD_REGISTER,'Derivative time (Td)','s','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_B_REGISTER,'Proportional setpoint gain (b)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_C_REGISTER,'Derivative setpoint gain (c)','','%.3f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_N_REGISTER,'Derivative regularization (N)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_S_REGISTER,'Saturation regularization (S)','','%.2f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_AMIN_REGISTER,'Minimum TEC value (Amin)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_AMAX_REGISTER,'Maximum TEC value (Amax)','','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEMP_CNTRL_IMAX_REGISTER,'Maximum actuator increment (Imax)','','%.1f',1,1)])
+__p.append([None, ('dsp','uint32',SOA4_TEC_PRBS_GENPOLY_REGISTER,'PRBS generator','','$%X',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEC_PRBS_AMPLITUDE_REGISTER,'PRBS amplitude','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA4_TEC_PRBS_MEAN_REGISTER,'PRBS mean','','%.1f',1,1)])
+__p.append([None, ('dsp','float',SOA4_MANUAL_TEC_REGISTER,'Manual TEC Value','digU','%.0f',1,1)])
+__p.append([None, ('dsp','float',SOA4_CURRENT_SETPOINT_REGISTER,'SOA4 current setpoint (0.0 - 1000mA)','mA','%.1f',1,1)])
+parameter_forms.append(('SOA4 Parameters',__p))
 
 # Form: Warm Box Temperature Parameters
 
