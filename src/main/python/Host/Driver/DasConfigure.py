@@ -1098,6 +1098,10 @@ class DasConfigure(SharedTypes.Singleton):
                 # Enable the PWM state machines in the FPGA
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA", [runCont, "FPGA_PWM_LASER%d" % laserNum, "PWM_CS"]))
 
+        for soaNum in range(1, 5):
+            if self.installCheck("SOA%d_PRESENT" % soaNum):
+                sender.doOperation(Operation("ACTION_TEMP_CNTRL_SOA%d_INIT" % soaNum))
+
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_WARM_BOX_INIT"))
         sender.doOperation(Operation("ACTION_TEMP_CNTRL_CAVITY_INIT"))
         sender.doOperation(Operation("ACTION_HEATER_CNTRL_INIT"))
@@ -1152,7 +1156,7 @@ class DasConfigure(SharedTypes.Singleton):
         sender.doOperation(Operation("ACTION_TUNER_CNTRL_INIT"))
 
         # SOA boards
-         for board_num in range(1, 5):
+        for board_num in range(1, 5):
             soa_board_installed = self.installCheck("SOA%d_PRESENT" % board_num)
             if soa_board_installed:
                 sender.doOperation(

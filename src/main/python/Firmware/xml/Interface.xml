@@ -6637,6 +6637,15 @@
         <action ident="ACTION_SET_SOA_TEMPERATURE">r_set_soa_temperature</action>
         <action ident="ACTION_SET_SOA_CONTROL">r_set_soa_control</action>
         <action ident="ACTION_SET_SOA_TEC">r_set_soa_tec</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA1_INIT">r_tempCntrlSoa1Init</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA1_STEP">r_tempCntrlSoa1Step</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA2_INIT">r_tempCntrlSoa2Init</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA2_STEP">r_tempCntrlSoa2Step</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA3_INIT">r_tempCntrlSoa3Init</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA3_STEP">r_tempCntrlSoa3Step</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA4_INIT">r_tempCntrlSoa4Init</action>
+        <action ident="ACTION_TEMP_CNTRL_SOA4_STEP">r_tempCntrlSoa4Step</action>
+
     </action_list>
     <alias_list>
         <alias ident="PEAK_DETECT_CNTRL_RESET_DELAY_REGISTER" value="PEAK_DETECT_CNTRL_TRIGGERED_DURATION_REGISTER">

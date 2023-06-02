@@ -136,4 +136,12 @@ int r_set_soa_current(unsigned int numInt,void *params,void *env);
 int r_set_soa_temperature(unsigned int numInt,void *params,void *env);
 int r_set_soa_control(unsigned int numInt,void *params,void *env);
 int r_set_soa_tec(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa1Init(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa1Step(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa2Init(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa2Step(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa3Init(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa3Step(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa4Init(unsigned int numInt,void *params,void *env);
+int r_tempCntrlSoa4Step(unsigned int numInt,void *params,void *env);
 #endif

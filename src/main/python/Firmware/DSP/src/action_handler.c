@@ -1665,3 +1665,66 @@ int r_set_soa_tec(unsigned int numInt, void *params, void *env)
     return STATUS_OK;
 }
 
+int r_tempCntrlSoa1Init(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return tempCntrlSoa1Init();
+}
+
+int r_tempCntrlSoa1Step(unsigned int numInt, void *params, void *env)
+{
+    int status;
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    status = tempCntrlSoa1Step();
+    return status;
+}
+
+int r_tempCntrlSoa2Init(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return tempCntrlSoa2Init();
+}
+
+int r_tempCntrlSoa2Step(unsigned int numInt, void *params, void *env)
+{
+    int status;
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    status = tempCntrlSoa2Step();
+    return status;
+}
+
+int r_tempCntrlSoa3Init(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return tempCntrlSoa3Init();
+}
+
+int r_tempCntrlSoa3Step(unsigned int numInt, void *params, void *env)
+{
+    int status;
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    status = tempCntrlSoa3Step();
+    return status;
+}
+
+int r_tempCntrlSoa4Init(unsigned int numInt, void *params, void *env)
+{
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    return tempCntrlSoa4Init();
+}
+
+int r_tempCntrlSoa4Step(unsigned int numInt, void *params, void *env)
+{
+    int status;
+    if (0 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    status = tempCntrlSoa4Step();
+    return status;
+}

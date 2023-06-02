@@ -2612,6 +2612,22 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_set_soa_control(numInt,params,env);
         case ACTION_SET_SOA_TEC:
             return r_set_soa_tec(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA1_INIT:
+            return r_tempCntrlSoa1Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA1_STEP:
+            return r_tempCntrlSoa1Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA2_INIT:
+            return r_tempCntrlSoa2Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA2_STEP:
+            return r_tempCntrlSoa2Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA3_INIT:
+            return r_tempCntrlSoa3Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA3_STEP:
+            return r_tempCntrlSoa3Step(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA4_INIT:
+            return r_tempCntrlSoa4Init(numInt,params,env);
+        case ACTION_TEMP_CNTRL_SOA4_STEP:
+            return r_tempCntrlSoa4Step(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }
