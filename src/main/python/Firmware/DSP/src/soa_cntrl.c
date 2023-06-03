@@ -84,37 +84,49 @@ int soa_cntrl_step(SoaCntrl *s)
         }
     }
 
-    // Set up the ADC monitor reading
-    mon_adc = ltc2493se_read(s->i2c_monitor_ident, s->monitor_counter, &status) / 33554432.0;
-    if (status != 0)
-        return status;
-    if (mon_adc < 0.0 || mon_adc > 1.0)
-        return ERROR_BAD_VALUE;
-    mon_adc = Vcom + Vref * (mon_adc - 0.5); // Convert to voltage
-    // With digital control, do not read back TEC voltage and current
-    if (s->a_or_d_loop == 2) s->monitor_counter = 0;
-    switch (s->monitor_counter)
-    {
-    case 0:
-        // ADC readback is from channel 2
+    // With analog control, read back TEC voltage, current and temperature 
+	//  in round-robin fashion
+    if (s->a_or_d_loop == 1) {
+	    // Set up the ADC monitor reading
+	    mon_adc = ltc2493se_read(s->i2c_monitor_ident, s->monitor_counter, &status) / 33554432.0;
+	    if (status != 0)
+	        return status;
+	    if (mon_adc < 0.0 || mon_adc > 1.0)
+	        return ERROR_BAD_VALUE;
+	    mon_adc = Vcom + Vref * (mon_adc - 0.5); // Convert to voltage
+	    switch (s->monitor_counter)
+	    {
+	    case 0:
+	        // ADC readback is from channel 2
+	        *(s->temperature_monitor_) = 40.0 * mon_adc - 25.0;
+	        s->monitor_counter = 1;
+	        break;
+	    case 1:
+	        // ADC readback is from channel 0
+	        *(s->tec_voltage_monitor_) = (mon_adc - 1.25)/0.25;
+	        s->monitor_counter = 2;
+	        break;
+	    case 2:
+	        // ADC readback is from channel 1
+	        *(s->tec_current_monitor_) = (mon_adc - 1.25)/0.525;
+	        s->monitor_counter = 0;
+	        break;
+	    default:
+	        // Should not get here
+	        s->monitor_counter = 0;
+	        break;
+	    }
+	}
+    // With digital control, only read temperature monitor on channel 2
+    else if (s->a_or_d_loop == 2) {
+	    mon_adc = ltc2493se_read(s->i2c_monitor_ident, 2, &status) / 33554432.0;
+	    if (status != 0)
+	        return status;
+	    if (mon_adc < 0.0 || mon_adc > 1.0)
+	        return ERROR_BAD_VALUE;
+	    mon_adc = Vcom + Vref * (mon_adc - 0.5); // Convert to voltage
         *(s->temperature_monitor_) = 40.0 * mon_adc - 25.0;
-        s->monitor_counter = 1;
-        break;
-    case 1:
-        // ADC readback is from channel 0
-        *(s->tec_voltage_monitor_) = (mon_adc - 1.25)/0.25;
-        s->monitor_counter = 2;
-        break;
-    case 2:
-        // ADC readback is from channel 1
-        *(s->tec_current_monitor_) = (mon_adc - 1.25)/0.525;
-        s->monitor_counter = 0;
-        break;
-    default:
-        // Should not get here
-        s->monitor_counter = 0;
-        break;
-    }
+	}
 
     return STATUS_OK;
 }
