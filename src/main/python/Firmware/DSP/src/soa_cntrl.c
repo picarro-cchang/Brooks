@@ -91,6 +91,8 @@ int soa_cntrl_step(SoaCntrl *s)
     if (mon_adc < 0.0 || mon_adc > 1.0)
         return ERROR_BAD_VALUE;
     mon_adc = Vcom + Vref * (mon_adc - 0.5); // Convert to voltage
+    // With digital control, do not read back TEC voltage and current
+    if (s->a_or_d_loop == 2) s->monitor_counter = 0;
     switch (s->monitor_counter)
     {
     case 0:

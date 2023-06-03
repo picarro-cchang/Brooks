@@ -433,14 +433,21 @@ class DasConfigure(SharedTypes.Singleton):
                 self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(Operation("ACTION_SOA_CNTRL_SOA%d_STEP" % board_num))
                 if soa_board_installed == 2:  # Use digital control
                     self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_TEMP_CNTRL_SOA%d_STEP" % board_num))
-                self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_Soa%dTecVoltage" % board_num,
-                               "SOA%d_TEC_VOLTAGE_MONITOR_REGISTER" % board_num]))
-                self.opGroups["FAST"]["STREAMER"].addOperation(
-                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
-                              ["STREAM_Soa%dTecCurrent" % board_num,
-                               "SOA%d_TEC_CURRENT_MONITOR_REGISTER" % board_num]))
+                    self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
+                        Operation("ACTION_SET_SOA_TEC", ["I2C_SOA%d_TEC" % board_num, "SOA%d_TEC_REGISTER" % board_num]))
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Soa%dTecCurrent" % board_num,
+                                "SOA%d_TEC_REGISTER" % board_num]))
+                elif soa_board_installed == 1:  # For analog control                   
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Soa%dTecVoltage" % board_num,
+                                "SOA%d_TEC_VOLTAGE_MONITOR_REGISTER" % board_num]))
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Soa%dTecCurrent" % board_num,
+                                "SOA%d_TEC_CURRENT_MONITOR_REGISTER" % board_num]))
                 self.opGroups["FAST"]["STREAMER"].addOperation(
                     Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                               ["STREAM_Soa%dTemp" % board_num,
