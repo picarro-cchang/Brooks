@@ -677,10 +677,6 @@ STREAM_Soa1TecCurrent = 75 #
 STREAM_Soa2TecCurrent = 76 # 
 STREAM_Soa3TecCurrent = 77 # 
 STREAM_Soa4TecCurrent = 78 # 
-STREAM_Soa1Current = 79 # 
-STREAM_Soa2Current = 80 # 
-STREAM_Soa3Current = 81 # 
-STREAM_Soa4Current = 82 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -763,10 +759,6 @@ STREAM_MemberTypeDict[75] = 'STREAM_Soa1TecCurrent' #
 STREAM_MemberTypeDict[76] = 'STREAM_Soa2TecCurrent' # 
 STREAM_MemberTypeDict[77] = 'STREAM_Soa3TecCurrent' # 
 STREAM_MemberTypeDict[78] = 'STREAM_Soa4TecCurrent' # 
-STREAM_MemberTypeDict[79] = 'STREAM_Soa1Current' # 
-STREAM_MemberTypeDict[80] = 'STREAM_Soa2Current' # 
-STREAM_MemberTypeDict[81] = 'STREAM_Soa3Current' # 
-STREAM_MemberTypeDict[82] = 'STREAM_Soa4Current' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
@@ -1947,7 +1939,7 @@ SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER = 678
 PZT_UPDATE_MODE_REGISTER = 679
 SGDBR_FILTER_BY_TRAJECTORY_REGISTER = 680
 SOA_TEC_CURRENT_SLOPE_REGISTER = 681
-SOA_TEC_CURRENT_SLOPE_OFFSET = 682
+SOA_TEC_CURRENT_OFFSET_REGISTER = 682
 SOA1_CURRENT_SETPOINT_REGISTER = 683
 SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER = 684
 SOA1_TEC_CURRENT_MONITOR_REGISTER = 685
@@ -4248,9 +4240,9 @@ registerInitialValue["SGDBR_FILTER_BY_TRAJECTORY_REGISTER"] = -1
 registerByName["SOA_TEC_CURRENT_SLOPE_REGISTER"] = SOA_TEC_CURRENT_SLOPE_REGISTER
 registerInfo.append(RegInfo("SOA_TEC_CURRENT_SLOPE_REGISTER",c_float,1,1.0,"r"))
 registerInitialValue["SOA_TEC_CURRENT_SLOPE_REGISTER"] = -0.000111
-registerByName["SOA_TEC_CURRENT_SLOPE_OFFSET"] = SOA_TEC_CURRENT_SLOPE_OFFSET
-registerInfo.append(RegInfo("SOA_TEC_CURRENT_SLOPE_OFFSET",c_float,1,1.0,"r"))
-registerInitialValue["SOA_TEC_CURRENT_SLOPE_OFFSET"] = 3.734213
+registerByName["SOA_TEC_CURRENT_OFFSET_REGISTER"] = SOA_TEC_CURRENT_OFFSET_REGISTER
+registerInfo.append(RegInfo("SOA_TEC_CURRENT_OFFSET_REGISTER",c_float,1,1.0,"r"))
+registerInitialValue["SOA_TEC_CURRENT_OFFSET_REGISTER"] = 3.734213
 registerByName["SOA1_CURRENT_SETPOINT_REGISTER"] = SOA1_CURRENT_SETPOINT_REGISTER
 registerInfo.append(RegInfo("SOA1_CURRENT_SETPOINT_REGISTER",c_float,1,1.0,"rw"))
 registerInitialValue["SOA1_CURRENT_SETPOINT_REGISTER"] = 0.0

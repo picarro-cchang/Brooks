@@ -560,10 +560,6 @@
             <enum_value ident="STREAM_Soa2TecCurrent" />
             <enum_value ident="STREAM_Soa3TecCurrent" />
             <enum_value ident="STREAM_Soa4TecCurrent" />
-            <enum_value ident="STREAM_Soa1Current" /> 
-            <enum_value ident="STREAM_Soa2Current" />
-            <enum_value ident="STREAM_Soa3Current" />
-            <enum_value ident="STREAM_Soa4Current" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -4597,7 +4593,7 @@
             <initial>-0.000111</initial>
             <save/>
         </register>
-        <register ident="SOA_TEC_CURRENT_SLOPE_OFFSET" type="float" minver="1.0" access="r">
+        <register ident="SOA_TEC_CURRENT_OFFSET_REGISTER" type="float" minver="1.0" access="r">
             <description>SOA TEC digU to current conversion offset</description>
             <initial>3.734213</initial>
             <save/>

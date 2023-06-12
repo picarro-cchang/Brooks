@@ -628,11 +628,7 @@ typedef enum {
     STREAM_Soa1TecCurrent = 75, // 
     STREAM_Soa2TecCurrent = 76, // 
     STREAM_Soa3TecCurrent = 77, // 
-    STREAM_Soa4TecCurrent = 78, // 
-    STREAM_Soa1Current = 79, // 
-    STREAM_Soa2Current = 80, // 
-    STREAM_Soa3Current = 81, // 
-    STREAM_Soa4Current = 82 // 
+    STREAM_Soa4TecCurrent = 78 // 
 } STREAM_MemberType;
 
 typedef enum {
@@ -1587,7 +1583,7 @@ typedef enum {
 #define PZT_UPDATE_MODE_REGISTER (679)
 #define SGDBR_FILTER_BY_TRAJECTORY_REGISTER (680)
 #define SOA_TEC_CURRENT_SLOPE_REGISTER (681)
-#define SOA_TEC_CURRENT_SLOPE_OFFSET (682)
+#define SOA_TEC_CURRENT_OFFSET_REGISTER (682)
 #define SOA1_CURRENT_SETPOINT_REGISTER (683)
 #define SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER (684)
 #define SOA1_TEC_CURRENT_MONITOR_REGISTER (685)

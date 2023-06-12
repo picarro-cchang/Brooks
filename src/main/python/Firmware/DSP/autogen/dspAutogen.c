@@ -1348,7 +1348,7 @@ void initRegisters()
     d.asFloat = -0.000111;
     writeRegister(SOA_TEC_CURRENT_SLOPE_REGISTER,d);
     d.asFloat = 3.734213;
-    writeRegister(SOA_TEC_CURRENT_SLOPE_OFFSET,d);
+    writeRegister(SOA_TEC_CURRENT_OFFSET_REGISTER,d);
     d.asFloat = 0.0;
     writeRegister(SOA1_CURRENT_SETPOINT_REGISTER,d);
     d.asFloat = 25.0;
@@ -2265,7 +2265,7 @@ void initRegisters()
     regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
     regTypes[SGDBR_FILTER_BY_TRAJECTORY_REGISTER] = int_type;
     regTypes[SOA_TEC_CURRENT_SLOPE_REGISTER] = float_type;
-    regTypes[SOA_TEC_CURRENT_SLOPE_OFFSET] = float_type;
+    regTypes[SOA_TEC_CURRENT_OFFSET_REGISTER] = float_type;
     regTypes[SOA1_CURRENT_SETPOINT_REGISTER] = float_type;
     regTypes[SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
     regTypes[SOA1_TEC_CURRENT_MONITOR_REGISTER] = float_type;
