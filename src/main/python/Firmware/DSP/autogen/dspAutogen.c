@@ -16,7 +16,7 @@
 #include "interface.h"
 
 extern int writeRegister(unsigned int regNum,DataType data);
-RegTypes regTypes[798];
+RegTypes regTypes[800];
 
 /* I2C devices */
 I2C_device i2c_devices[57] = {
@@ -1345,6 +1345,10 @@ void initRegisters()
     writeRegister(PZT_UPDATE_MODE_REGISTER,d);
     d.asInt = -1;
     writeRegister(SGDBR_FILTER_BY_TRAJECTORY_REGISTER,d);
+    d.asFloat = -0.000111;
+    writeRegister(SOA_TEC_CURRENT_SLOPE_REGISTER,d);
+    d.asFloat = 3.734213;
+    writeRegister(SOA_TEC_CURRENT_SLOPE_OFFSET,d);
     d.asFloat = 0.0;
     writeRegister(SOA1_CURRENT_SETPOINT_REGISTER,d);
     d.asFloat = 25.0;
@@ -2260,6 +2264,8 @@ void initRegisters()
     regTypes[SGDBR_D_CNTRL_MINIMUM_SOA_REGISTER] = float_type;
     regTypes[PZT_UPDATE_MODE_REGISTER] = uint_type;
     regTypes[SGDBR_FILTER_BY_TRAJECTORY_REGISTER] = int_type;
+    regTypes[SOA_TEC_CURRENT_SLOPE_REGISTER] = float_type;
+    regTypes[SOA_TEC_CURRENT_SLOPE_OFFSET] = float_type;
     regTypes[SOA1_CURRENT_SETPOINT_REGISTER] = float_type;
     regTypes[SOA1_TEMP_CNTRL_USER_SETPOINT_REGISTER] = float_type;
     regTypes[SOA1_TEC_CURRENT_MONITOR_REGISTER] = float_type;
@@ -2628,6 +2634,8 @@ int doAction(unsigned int command,unsigned int numInt,void *params,void *env)
             return r_tempCntrlSoa4Init(numInt,params,env);
         case ACTION_TEMP_CNTRL_SOA4_STEP:
             return r_tempCntrlSoa4Step(numInt,params,env);
+        case ACTION_CONVERT_SOA_TEC_CURRENT:
+            return r_convertSoaTecCurrent(numInt,params,env);
         default:
             return ERROR_BAD_COMMAND;
     }

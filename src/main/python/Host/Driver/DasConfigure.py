@@ -431,14 +431,31 @@ class DasConfigure(SharedTypes.Singleton):
             soa_board_installed = self.installCheck("SOA%d_PRESENT" % board_num)
             if soa_board_installed:
                 self.opGroups["FAST"]["SENSOR_PROCESSING"].addOperation(Operation("ACTION_SOA_CNTRL_SOA%d_STEP" % board_num))
+                self.opGroups["FAST"]["STREAMER"].addOperation(
+                    Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                            ["STREAM_Soa%dCurrent" % board_num,
+                            "SOA%d_CURRENT_SETPOINT_REGISTER" % board_num]))
+
                 if soa_board_installed == 2:  # Use digital control
                     self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_TEMP_CNTRL_SOA%d_STEP" % board_num))
+                    self.opGroups["FAST"]["ACTUATOR_CONVERT"].addOperation(
+                        Operation("ACTION_CONVERT_SOA_TEC_CURRENT", ["SOA_TEC_CURRENT_SLOPE_REGISTER",
+                                                                     "SOA_TEC_CURRENT_OFFSET_REGISTER",
+                                                                     "SOA%d_TEC_REGISTER" % board_num, 
+                                                                     "SOA%d_TEC_CURRENT_MONITOR_REGISTER" % board_num,
+                                                                     ]))
                     self.opGroups["FAST"]["ACTUATOR_WRITE"].addOperation(
                         Operation("ACTION_SET_SOA_TEC", ["I2C_SOA%d_TEC" % board_num, "SOA%d_TEC_REGISTER" % board_num]))
                     self.opGroups["FAST"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",
+                                ["STREAM_Soa%dTec" % board_num,
+                                "SOA%d_TEC_REGISTER" % board_num]))                    
+                    self.opGroups["FAST"]["STREAMER"].addOperation(
+                        Operation("ACTION_STREAM_REGISTER_ASFLOAT",
                                 ["STREAM_Soa%dTecCurrent" % board_num,
-                                "SOA%d_TEC_REGISTER" % board_num]))
+                                "SOA%d_TEC_CURRENT_MONITOR_REGISTER" % board_num]))
+
+                                     
                 elif soa_board_installed == 1:  # For analog control                   
                     self.opGroups["FAST"]["STREAMER"].addOperation(
                         Operation("ACTION_STREAM_REGISTER_ASFLOAT",

@@ -1728,3 +1728,26 @@ int r_tempCntrlSoa4Step(unsigned int numInt, void *params, void *env)
     status = tempCntrlSoa4Step();
     return status;
 }
+
+int r_convertSoaTecCurrent(unsigned int numInt, void *params, void *env)
+{
+    Inputs:
+        Register (float): Index of DAS register with digU->current conversion slope
+        Register (float): Index of DAS register with digU->current conversion offset
+        Register (float): Index of DAS register with TEC digitizer units
+    Output:
+        Register (float): Index of DAS register with TEC current
+         
+*/
+{
+    float slope, offset, digU, current;
+    unsigned int *reg = (unsigned int *)params;
+    if (4 != numInt)
+        return ERROR_BAD_NUM_PARAMS;
+    READ_REG(reg[0], slope);
+    READ_REG(reg[1], offset);
+    READ_REG(reg[2], digU);
+    current = slope * digU + offset;
+    WRITE_REG(reg[3], current);
+    return STATUS_OK;
+}

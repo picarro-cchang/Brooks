@@ -19,7 +19,7 @@ typedef struct i2c_device{ int chain; int mux; int addr; } I2C_device;
 extern I2C_device i2c_devices[57];
 
 void initRegisters(void);
-extern RegTypes regTypes[798];
+extern RegTypes regTypes[800];
 int doAction(unsigned int command,unsigned int numInt,void *params,void *env);
 int writeBlock(unsigned int numInt,void *params,void *env);
 int setTimestamp(unsigned int numInt,void *params,void *env);
@@ -144,4 +144,5 @@ int r_tempCntrlSoa3Init(unsigned int numInt,void *params,void *env);
 int r_tempCntrlSoa3Step(unsigned int numInt,void *params,void *env);
 int r_tempCntrlSoa4Init(unsigned int numInt,void *params,void *env);
 int r_tempCntrlSoa4Step(unsigned int numInt,void *params,void *env);
+int r_convertSoaTecCurrent(unsigned int numInt,void *params,void *env);
 #endif

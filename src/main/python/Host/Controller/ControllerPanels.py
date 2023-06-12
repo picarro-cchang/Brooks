@@ -662,12 +662,12 @@ class SoaPanel(SoaPanelGui):
                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                  grid=True,
                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.tecVoltageGraph.SetGraphProperties(ylabel='TEC Voltage (V)',
+        self.tecVoltageGraph.SetGraphProperties(ylabel='TEC Current (A)',
                                                 grid=True,
                                                 timeAxes=(True, False),
                                                 frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                 backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.tecCurrentGraph.SetGraphProperties(ylabel='TEC Current (A)',
+        self.tecCurrentGraph.SetGraphProperties(ylabel='TEC (Digital Unit)',
                                                 grid=True,
                                                 timeAxes=(True, False),
                                                 frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),

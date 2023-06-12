@@ -548,6 +548,10 @@
             <enum_value ident="STREAM_Soa2Temp" />
             <enum_value ident="STREAM_Soa3Temp" />
             <enum_value ident="STREAM_Soa4Temp" />
+            <enum_value ident="STREAM_Soa1Tec" />
+            <enum_value ident="STREAM_Soa2Tec" />
+            <enum_value ident="STREAM_Soa3Tec" />
+            <enum_value ident="STREAM_Soa4Tec" />
             <enum_value ident="STREAM_Soa1TecVoltage" />
             <enum_value ident="STREAM_Soa2TecVoltage" />
             <enum_value ident="STREAM_Soa3TecVoltage" />
@@ -556,6 +560,10 @@
             <enum_value ident="STREAM_Soa2TecCurrent" />
             <enum_value ident="STREAM_Soa3TecCurrent" />
             <enum_value ident="STREAM_Soa4TecCurrent" />
+            <enum_value ident="STREAM_Soa1Current" /> 
+            <enum_value ident="STREAM_Soa2Current" />
+            <enum_value ident="STREAM_Soa3Current" />
+            <enum_value ident="STREAM_Soa4Current" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>
@@ -4584,6 +4592,16 @@
             <initial>-1</initial>
             <display format="%d">Restrict WLM lookup to trajectory (-1 for no restriction)</display>
         </register>
+        <register ident="SOA_TEC_CURRENT_SLOPE_REGISTER" type="float" minver="1.0" access="r">
+            <description>SOA TEC digU to current conversion slope</description>
+            <initial>-0.000111</initial>
+            <save/>
+        </register>
+        <register ident="SOA_TEC_CURRENT_SLOPE_OFFSET" type="float" minver="1.0" access="r">
+            <description>SOA TEC digU to current conversion offset</description>
+            <initial>3.734213</initial>
+            <save/>
+        </register>
         <register ident="SOA1_CURRENT_SETPOINT_REGISTER" type="float" minver="1.0" access="rw">
             <description>SOA board 1 current setpoint</description>
             <initial>0.0</initial>
@@ -6645,6 +6663,7 @@
         <action ident="ACTION_TEMP_CNTRL_SOA3_STEP">r_tempCntrlSoa3Step</action>
         <action ident="ACTION_TEMP_CNTRL_SOA4_INIT">r_tempCntrlSoa4Init</action>
         <action ident="ACTION_TEMP_CNTRL_SOA4_STEP">r_tempCntrlSoa4Step</action>
+        <action ident="ACTION_CONVERT_SOA_TEC_CURRENT">r_convertSoaTecCurrent</action>
 
     </action_list>
     <alias_list>
