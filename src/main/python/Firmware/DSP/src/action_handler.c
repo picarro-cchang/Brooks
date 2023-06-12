@@ -1730,14 +1730,14 @@ int r_tempCntrlSoa4Step(unsigned int numInt, void *params, void *env)
 }
 
 int r_convertSoaTecCurrent(unsigned int numInt, void *params, void *env)
-{
+/*
     Inputs:
         Register (float): Index of DAS register with digU->current conversion slope
         Register (float): Index of DAS register with digU->current conversion offset
         Register (float): Index of DAS register with TEC digitizer units
     Output:
         Register (float): Index of DAS register with TEC current
-         
+  ls       
 */
 {
     float slope, offset, digU, current;
