@@ -560,6 +560,10 @@
             <enum_value ident="STREAM_Soa2TecCurrent" />
             <enum_value ident="STREAM_Soa3TecCurrent" />
             <enum_value ident="STREAM_Soa4TecCurrent" />
+            <enum_value ident="STREAM_Soa1Current" />
+            <enum_value ident="STREAM_Soa2Current" />
+            <enum_value ident="STREAM_Soa3Current" />
+            <enum_value ident="STREAM_Soa4Current" />
         </enum>
         <enum type="TEMP_CNTRL_StateType">
             <description>State of temperature controller</description>

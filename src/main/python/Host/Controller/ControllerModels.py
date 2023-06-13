@@ -258,6 +258,14 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Soa4"]["tecVoltage"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa4TecCurrent:
             waveforms["Soa4"]["tecCurrent"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa1Current:
+            waveforms["Soa1"]["Current"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa2Current:
+            waveforms["Soa2"]["Current"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa3Current:
+            waveforms["Soa3"]["Current"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa4Current:
+            waveforms["Soa4"]["Current"].Add(utime, data.value)
 
 class LogListener(SharedTypes.Singleton):
     def __init__(self):
