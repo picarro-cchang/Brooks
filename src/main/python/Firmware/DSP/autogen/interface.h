@@ -628,7 +628,11 @@ typedef enum {
     STREAM_Soa1TecCurrent = 75, // 
     STREAM_Soa2TecCurrent = 76, // 
     STREAM_Soa3TecCurrent = 77, // 
-    STREAM_Soa4TecCurrent = 78 // 
+    STREAM_Soa4TecCurrent = 78, // 
+    STREAM_Soa1Current = 79, // 
+    STREAM_Soa2Current = 80, // 
+    STREAM_Soa3Current = 81, // 
+    STREAM_Soa4Current = 82 // 
 } STREAM_MemberType;
 
 typedef enum {

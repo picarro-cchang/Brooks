@@ -677,6 +677,10 @@ STREAM_Soa1TecCurrent = 75 #
 STREAM_Soa2TecCurrent = 76 # 
 STREAM_Soa3TecCurrent = 77 # 
 STREAM_Soa4TecCurrent = 78 # 
+STREAM_Soa1Current = 79 # 
+STREAM_Soa2Current = 80 # 
+STREAM_Soa3Current = 81 # 
+STREAM_Soa4Current = 82 # 
 
 # Dictionary for enumerated constants in STREAM_MemberType
 STREAM_MemberTypeDict = {}
@@ -759,6 +763,10 @@ STREAM_MemberTypeDict[75] = 'STREAM_Soa1TecCurrent' #
 STREAM_MemberTypeDict[76] = 'STREAM_Soa2TecCurrent' # 
 STREAM_MemberTypeDict[77] = 'STREAM_Soa3TecCurrent' # 
 STREAM_MemberTypeDict[78] = 'STREAM_Soa4TecCurrent' # 
+STREAM_MemberTypeDict[79] = 'STREAM_Soa1Current' # 
+STREAM_MemberTypeDict[80] = 'STREAM_Soa2Current' # 
+STREAM_MemberTypeDict[81] = 'STREAM_Soa3Current' # 
+STREAM_MemberTypeDict[82] = 'STREAM_Soa4Current' # 
 
 # Enumerated definitions for TEMP_CNTRL_StateType
 TEMP_CNTRL_StateType = c_uint
