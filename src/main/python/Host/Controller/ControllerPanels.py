@@ -662,22 +662,22 @@ class SoaPanel(SoaPanelGui):
                                                  frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                  grid=True,
                                                  backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.tecVoltageGraph.SetGraphProperties(ylabel='TEC Current (A)',
+        self.tecCurrentGraph.SetGraphProperties(ylabel='TEC Current (A)',
                                                 grid=True,
                                                 timeAxes=(True, False),
                                                 frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                 backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
-        self.tecCurrentGraph.SetGraphProperties(ylabel='TEC (Digital Unit)',
+        self.tecGraph.SetGraphProperties(ylabel='TEC (Digital Unit)',
                                                 grid=True,
                                                 timeAxes=(True, False),
                                                 frameColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE),
                                                 backgroundColour=wx.SystemSettings_GetColour(wx.SYS_COLOUR_3DFACE))
         self.temperatureWfm = Series(wfmPoints)
         self.temperatureGraph.AddSeriesAsLine(self.temperatureWfm, colour='red', width=2)
-        self.tecVoltageWfm = Series(wfmPoints)
-        self.tecVoltageGraph.AddSeriesAsLine(self.tecVoltageWfm, colour='red', width=2)
         self.tecCurrentWfm = Series(wfmPoints)
         self.tecCurrentGraph.AddSeriesAsLine(self.tecCurrentWfm, colour='red', width=2)
+        self.tecWfm = Series(wfmPoints)
+        self.tecGraph.AddSeriesAsLine(self.tecWfm, colour='red', width=2)
         self.soaNum = None
 
     def setSoaNum(self, soaNum):
@@ -685,7 +685,7 @@ class SoaPanel(SoaPanelGui):
 
     def update(self):
         self.temperatureGraph.Update(delay=0)
-        self.tecVoltageGraph.Update(delay=0)
+        self.tecGraph.Update(delay=0)
         self.tecCurrentGraph.Update(delay=0)
 
     def onClear(self, evt):

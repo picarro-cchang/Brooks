@@ -238,34 +238,26 @@ class SensorListener(SharedTypes.Singleton):
             waveforms["Soa1"]["temperature"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa1TecCurrent:
             waveforms["Soa1"]["tecCurrent"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa1TecVoltage:   
-            waveforms["Soa1"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa1Tec:   
+            waveforms["Soa1"]["tec"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa2Temp:
             waveforms["Soa2"]["temperature"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa2TecVoltage:
-            waveforms["Soa2"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa2Tec:
+            waveforms["Soa2"]["tec"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa2TecCurrent:
             waveforms["Soa2"]["tecCurrent"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa3Temp:
             waveforms["Soa3"]["temperature"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa3TecVoltage:
-            waveforms["Soa3"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa3Tec:
+            waveforms["Soa3"]["tec"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa3TecCurrent:
             waveforms["Soa3"]["tecCurrent"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa4Temp:
             waveforms["Soa4"]["temperature"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa4TecVoltage:
-            waveforms["Soa4"]["tecVoltage"].Add(utime, data.value)
+        elif data.streamNum == interface.STREAM_Soa4Tec:
+            waveforms["Soa4"]["tec"].Add(utime, data.value)
         elif data.streamNum == interface.STREAM_Soa4TecCurrent:
             waveforms["Soa4"]["tecCurrent"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa1Current:
-            waveforms["Soa1"]["Current"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa2Current:
-            waveforms["Soa2"]["Current"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa3Current:
-            waveforms["Soa3"]["Current"].Add(utime, data.value)
-        elif data.streamNum == interface.STREAM_Soa4Current:
-            waveforms["Soa4"]["Current"].Add(utime, data.value)
 
 class LogListener(SharedTypes.Singleton):
     def __init__(self):

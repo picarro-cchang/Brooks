@@ -104,17 +104,17 @@ class Controller(ControllerFrameGui):
                                    tec=self.laser4Panel.tecWfm,
                                    current=self.laser4Panel.currentWfm)
         waveforms["Soa1"] = dict(temperature=self.soa1Panel.temperatureWfm,
-                                 tecVoltage=self.soa1Panel.tecVoltageWfm,
-                                 tecCurrent=self.soa1Panel.tecCurrentWfm)
+                                 tecCurrent=self.soa1Panel.tecCurrentWfm,
+                                 tec=self.soa1Panel.tecWfm)
         waveforms["Soa2"] = dict(temperature=self.soa2Panel.temperatureWfm,
-                                 tecVoltage=self.soa2Panel.tecVoltageWfm,
-                                 tecCurrent=self.soa2Panel.tecCurrentWfm)
+                                 tecCurrent=self.soa2Panel.tecCurrentWfm,
+                                 tec=self.soa2Panel.tecWfm)
         waveforms["Soa3"] = dict(temperature=self.soa3Panel.temperatureWfm,
-                                 tecVoltage=self.soa3Panel.tecVoltageWfm,
-                                 tecCurrent=self.soa3Panel.tecCurrentWfm)
+                                 tecCurrent=self.soa3Panel.tecCurrentWfm,
+                                 tec=self.soa3Panel.tecWfm)
         waveforms["Soa4"] = dict(temperature=self.soa4Panel.temperatureWfm,
-                                 tecVoltage=self.soa4Panel.tecVoltageWfm,
-                                 tecCurrent=self.soa4Panel.tecCurrentWfm)
+                                 tecCurrent=self.soa4Panel.tecCurrentWfm,
+                                 tec=self.soa4Panel.tecWfm)
         waveforms["WarmBox"] = dict(etalonTemperature=self.warmBoxPanel.etalonTemperatureWfm,
                                     warmBoxTemperature=self.warmBoxPanel.warmBoxTemperatureWfm,
                                     heatsinkTemperature=self.warmBoxPanel.heatsinkTemperatureWfm,

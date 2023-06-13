@@ -770,8 +770,8 @@ class SoaPanelGui(wx.Panel):
         kwds["style"] = wx.TAB_TRAVERSAL
         wx.Panel.__init__(self, *args, **kwds)
         self.temperatureGraph = GraphPanel(self, wx.ID_ANY)
-        self.tecVoltageGraph = GraphPanel(self, wx.ID_ANY)
         self.tecCurrentGraph = GraphPanel(self, wx.ID_ANY)
+        self.tecGraph = GraphPanel(self, wx.ID_ANY)
         self.panel_1 = wx.Panel(self, wx.ID_ANY)
         self.clearButton = wx.Button(self.panel_1, wx.ID_CLEAR, "")
 
@@ -791,8 +791,8 @@ class SoaPanelGui(wx.Panel):
         sizer_1 = wx.BoxSizer(wx.VERTICAL)
         sizer_2 = wx.BoxSizer(wx.HORIZONTAL)
         sizer_1.Add(self.temperatureGraph, 1, wx.EXPAND, 0)
-        sizer_1.Add(self.tecVoltageGraph, 1, wx.EXPAND, 0)
         sizer_1.Add(self.tecCurrentGraph, 1, wx.EXPAND, 0)
+        sizer_1.Add(self.tecGraph, 1, wx.EXPAND, 0)
         sizer_2.Add(self.clearButton, 0, wx.ALIGN_CENTER_VERTICAL | wx.ALL, 10)
         sizer_2.Add((20, 20), 1, 0, 0)
         self.panel_1.SetSizer(sizer_2)
