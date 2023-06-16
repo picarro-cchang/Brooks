@@ -197,7 +197,6 @@ class DasConfigure(SharedTypes.Singleton):
                    ("LASER2_PRESENT", 1 << interface.HARDWARE_PRESENT_Laser2Bit),
                    ("LASER3_PRESENT", 1 << interface.HARDWARE_PRESENT_Laser3Bit),
                    ("LASER4_PRESENT", 1 << interface.HARDWARE_PRESENT_Laser4Bit),
-                   ("SOA_PRESENT", 1 << interface.HARDWARE_PRESENT_SoaBit),
                    ("POWER_BOARD_PRESENT", 1 << interface.HARDWARE_PRESENT_PowerBoardBit),
                    ("WARM_BOX_PRESENT", 1 << interface.HARDWARE_PRESENT_WarmBoxBit),
                    ("HOT_BOX_PRESENT", 1 << interface.HARDWARE_PRESENT_HotBoxBit),
@@ -267,21 +266,23 @@ class DasConfigure(SharedTypes.Singleton):
             except:
                 LogExc("Error processing extra scheduler code in Driver initialization file", Level=3)
 
-        soa = self.installCheck("SOA_PRESENT")
+        soa_original = self.installCheck("SOA_PRESENT")
+        soa_boards = [self.installCheck("SOA%d_PRESENT" % (i+1,)) for i in range(interface.MAX_SOA_BOARDS)]
+
         fiber_amp = self.installCheck("FIBER_AMPLIFIER_PRESENT")
-        if soa and fiber_amp:
-            raise ValueError("Cannot have both SOA and fiber amplifier present")
+        if soa_original and fiber_amp:
+            raise ValueError("Cannot have both original SOA and fiber amplifier present")
 
         injCtrl = sender.rdFPGA("FPGA_INJECT", "INJECT_CONTROL")
 
         # Disable SOA current bit in FPGA if both SOA_PRESENT and FIBER_AMPLIFIER_PRESENT flags are not set in
         #  the Master.ini file
 
-        soaPresent = 1 << interface.INJECT_CONTROL_SOA_PRESENT_B
-        if soa or fiber_amp:
-            injCtrl |= soaPresent
+        injectCntrlAnySoaMask = 1 << interface.INJECT_CONTROL_SOA_PRESENT_B
+        if soa_original or fiber_amp or any(soa_boards):
+            injCtrl |= injectCntrlAnySoaMask
         else:
-            injCtrl &= ~soaPresent
+            injCtrl &= ~injectCntrlAnySoaMask
         sender.wrFPGA("FPGA_INJECT", "INJECT_CONTROL", injCtrl)
 
         if fiber_amp:
@@ -291,11 +292,11 @@ class DasConfigure(SharedTypes.Singleton):
         for laserNum in range(1, 5):
             present = self.installCheck("LASER%d_PRESENT" % laserNum)
             if laserNum == 4:
-                if soa:
+                if soa_original:
                     if present:
                         raise ValueError("Cannot have both laser 4 and SOA present")
                     else:
-                        present = soa
+                        present = soa_original
                 elif fiber_amp:
                     if present:
                         raise ValueError("Cannot have both laser 4 and fiber amplifier present")
@@ -403,7 +404,7 @@ class DasConfigure(SharedTypes.Singleton):
                 # Laser current for DFB lasers
                 if self.installCheck("LASER%d_PRESENT" % laserNum) == 1:
                     self.opGroups["FAST"]["CONTROLLER"].addOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_STEP" % laserNum))
-                    if laserNum == 4 and (soa or fiber_amp):
+                    if laserNum == 4 and (soa_original or fiber_amp):
                         pass
                     else:
                         if present > 0:
@@ -1115,7 +1116,7 @@ class DasConfigure(SharedTypes.Singleton):
         runCont = (1 << interface.PWM_CS_RUN_B) | (1 << interface.PWM_CS_CONT_B)
 
         for laserNum in range(1, 5):
-            if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and (soa or fiber_amp)):
+            if self.installCheck("LASER%d_PRESENT" % laserNum) or (laserNum == 4 and (soa_original or fiber_amp)):
                 sender.doOperation(Operation("ACTION_TEMP_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_CURRENT_CNTRL_LASER%d_INIT" % laserNum))
                 sender.doOperation(Operation("ACTION_INT_TO_FPGA", [0x8000, "FPGA_PWM_LASER%d" % laserNum, "PWM_PULSE_WIDTH"]))

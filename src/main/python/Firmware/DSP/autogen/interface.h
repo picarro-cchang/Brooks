@@ -340,6 +340,8 @@ typedef struct {
 #define SCHEDULER_PERIOD (100)
 // Maximum number of lasers
 #define MAX_LASERS (4)
+// Maximum number of SOA boards
+#define MAX_SOA_BOARDS (4)
 // Number of points in controller waveforms
 #define CONTROLLER_WAVEFORM_POINTS (2500)
 // Number of points for waveforms on controller rindown pane
@@ -822,7 +824,7 @@ typedef enum {
     HARDWARE_PRESENT_Laser2Bit = 1, // Laser 2
     HARDWARE_PRESENT_Laser3Bit = 2, // Laser 3
     HARDWARE_PRESENT_Laser4Bit = 3, // Laser 4
-    HARDWARE_PRESENT_SoaBit = 4, // SOA
+    HARDWARE_PRESENT_Unused = 4, // Unused
     HARDWARE_PRESENT_PowerBoardBit = 5, // Power Board
     HARDWARE_PRESENT_WarmBoxBit = 6, // Warm Box
     HARDWARE_PRESENT_HotBoxBit = 7, // Hot Box

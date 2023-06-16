@@ -381,6 +381,8 @@ UNAVAILABLE = 0xFFFFFFFF
 SCHEDULER_PERIOD = 100
 # Maximum number of lasers
 MAX_LASERS = 4
+# Maximum number of SOA boards
+MAX_SOA_BOARDS = 4
 # Number of points in controller waveforms
 CONTROLLER_WAVEFORM_POINTS = 2500
 # Number of points for waveforms on controller rindown pane
@@ -1138,7 +1140,7 @@ HARDWARE_PRESENT_Laser1Bit = 0 # Laser 1
 HARDWARE_PRESENT_Laser2Bit = 1 # Laser 2
 HARDWARE_PRESENT_Laser3Bit = 2 # Laser 3
 HARDWARE_PRESENT_Laser4Bit = 3 # Laser 4
-HARDWARE_PRESENT_SoaBit = 4 # SOA
+HARDWARE_PRESENT_Unused = 4 # Unused
 HARDWARE_PRESENT_PowerBoardBit = 5 # Power Board
 HARDWARE_PRESENT_WarmBoxBit = 6 # Warm Box
 HARDWARE_PRESENT_HotBoxBit = 7 # Hot Box
@@ -1157,7 +1159,7 @@ HARDWARE_PRESENT_BitTypeDict[0] = 'HARDWARE_PRESENT_Laser1Bit' # Laser 1
 HARDWARE_PRESENT_BitTypeDict[1] = 'HARDWARE_PRESENT_Laser2Bit' # Laser 2
 HARDWARE_PRESENT_BitTypeDict[2] = 'HARDWARE_PRESENT_Laser3Bit' # Laser 3
 HARDWARE_PRESENT_BitTypeDict[3] = 'HARDWARE_PRESENT_Laser4Bit' # Laser 4
-HARDWARE_PRESENT_BitTypeDict[4] = 'HARDWARE_PRESENT_SoaBit' # SOA
+HARDWARE_PRESENT_BitTypeDict[4] = 'HARDWARE_PRESENT_Unused' # Unused
 HARDWARE_PRESENT_BitTypeDict[5] = 'HARDWARE_PRESENT_PowerBoardBit' # Power Board
 HARDWARE_PRESENT_BitTypeDict[6] = 'HARDWARE_PRESENT_WarmBoxBit' # Warm Box
 HARDWARE_PRESENT_BitTypeDict[7] = 'HARDWARE_PRESENT_HotBoxBit' # Hot Box

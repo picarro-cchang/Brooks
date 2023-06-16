@@ -361,6 +361,7 @@
         <!-- N.B. All SIZE and OFFSET variables are in 32 bit integers, all ADDRESS variables are in bytes -->
         <constant ident="SCHEDULER_PERIOD" description="Scheduler period (ms)">100</constant>
         <constant ident="MAX_LASERS" description="Maximum number of lasers">4</constant>
+        <constant ident="MAX_SOA_BOARDS" description="Maximum number of SOA boards">4</constant>
         <constant ident="CONTROLLER_WAVEFORM_POINTS" description="Number of points in controller waveforms">2500</constant>
         <constant ident="CONTROLLER_RINGDOWN_POINTS" description="Number of points for waveforms on controller rindown pane">35000</constant>
         <constant ident="CONTROLLER_STATS_POINTS" description="Number of points for Allan statistics plots in controller">32</constant>
@@ -753,7 +754,7 @@
             <enum_value ident="HARDWARE_PRESENT_Laser2Bit" value="1" caption="Laser 2" />
             <enum_value ident="HARDWARE_PRESENT_Laser3Bit" value="2" caption="Laser 3" />
             <enum_value ident="HARDWARE_PRESENT_Laser4Bit" value="3" caption="Laser 4" />
-            <enum_value ident="HARDWARE_PRESENT_SoaBit" value="4" caption="SOA" />
+            <enum_value ident="HARDWARE_PRESENT_Unused" value="4" caption="Unused" />
             <enum_value ident="HARDWARE_PRESENT_PowerBoardBit" value="5" caption="Power Board" />
             <enum_value ident="HARDWARE_PRESENT_WarmBoxBit" value="6" caption="Warm Box" />
             <enum_value ident="HARDWARE_PRESENT_HotBoxBit" value="7" caption="Hot Box" />

@@ -622,9 +622,9 @@ class DriverRpcHandler(SharedTypes.Singleton):
     #    self.wrFPGA("FPGA_INJECT","INJECT_CONTROL",injControl)
 
     def startEngine(self):
-        # Turn on lasers, warm box and cavity thermal control followed by
+        # Turn on lasers, warm box, cavity thermal control, and external SOA(BOA) followed by
         #  laser current sources
-        for laserNum in range(1, interface.MAX_LASERS + 1):
+        for laserNum in range(1, interface.MAX_LASERS+1):#):
             if DasConfigure().installCheck("LASER%d_PRESENT" % laserNum) or \
                (laserNum == 4 and DasConfigure().installCheck("SOA_PRESENT")):
                 self.wrDasReg("LASER%d_TEMP_CNTRL_STATE_REGISTER" % laserNum, interface.TEMP_CNTRL_EnabledState)
@@ -636,6 +636,11 @@ class DriverRpcHandler(SharedTypes.Singleton):
         elif DasConfigure().heaterCntrlMode in [interface.HEATER_CNTRL_MODE_HEATER_FIXED]:
             self.wrDasReg("HEATER_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_ManualState)
         self.wrDasReg("TEC_CNTRL_REGISTER", interface.TEC_CNTRL_Enabled)
+        for soa_board in range(1, interface.MAX_SOA_BOARDS+1):
+            if DasConfigure().installCheck("SOA%d_PRESENT" % soa_board):
+                self.wrDasReg("SOA%d_TEMP_CNTRL_STATE_REGISTER" % soa_board, interface.TEMP_CNTRL_EnabledState)
+            else:
+                self.wrDasReg("SOA%d_TEMP_CNTRL_STATE_REGISTER" % soa_board, interface.TEMP_CNTRL_DisabledState)
         startLasersThread = threading.Thread(target=self.startLaserCurrents, args=(0.0, ))
         startLasersThread.setDaemon(True)
         startLasersThread.start()
@@ -1066,6 +1071,10 @@ class DriverRpcHandler(SharedTypes.Singleton):
         self.wrDasReg('LASER3_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
         self.wrDasReg('LASER4_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
         self.wrDasReg('HEATER_TEMP_CNTRL_STATE_REGISTER', 'TEMP_CNTRL_DisabledState')
+        self.wrDasReg("SOA1_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_DisabledState)
+        self.wrDasReg("SOA2_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_DisabledState)
+        self.wrDasReg("SOA3_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_DisabledState)
+        self.wrDasReg("SOA4_TEMP_CNTRL_STATE_REGISTER", interface.TEMP_CNTRL_DisabledState)
         # Disable drive to warm box and hot box TECs
         self.wrDasReg('TEC_CNTRL_REGISTER', 'TEC_CNTRL_Disabled')
         # Disable proportional valve PWM
